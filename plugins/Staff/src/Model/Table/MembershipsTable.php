@@ -31,12 +31,8 @@ class MembershipsTable extends ControllerActionTable {
 
 	private function setupTabElements() {
 		$tabElements = $this->getProfessionalTabElements();
-		$action = $this->getAlias();
-        if($this->controller->getName() == 'Directories') {
-            $action = 'Staff'.$action;
-        }
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $action);
+		$this->controller->set('selectedAction', $this->getAlias());
 	}
 
 	public function afterAction(Event $event, ArrayObject $extra) {

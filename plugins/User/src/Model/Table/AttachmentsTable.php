@@ -320,8 +320,8 @@ class AttachmentsTable extends ControllerActionTable
         $userId = $this->getUserID();
         $user = $UserTable->get($userId);
         $this->field('file_content', ['type' => 'binary', 'visible' => true]);
-        $this->field('student_attachment_type_id', ['visible' => false]);
-        $this->field('staff_attachment_type_id', ['visible' => false]);
+        $this->field('student_attachment_type_id', ['visible' => true]);
+        $this->field('staff_attachment_type_id', ['visible' => true]);
         $UserTable = TableRegistry::getTableLocator()->get('User.Users');
         $user_id = $this->getUserID();
         $user = $UserTable->get($user_id); // POCOR-7485
@@ -344,7 +344,7 @@ class AttachmentsTable extends ControllerActionTable
             ]);
 
         } elseif ($user->is_student == 1) {
-            $studentAttachmentTypesTable = TableRegistry::get('student_attachment_types');
+            $studentAttachmentTypesTable = TableRegistry::getTableLocator()->get('Student.StudentAttachmentTypes');
             $studentAttachmentTypeOptions = $studentAttachmentTypesTable->find('list', ['keyField' => 'id', 'valueField' => 'name'])->toArray();
             $this->fields['student_attachment_type_id']['type'] = 'select';
             $this->fields['student_attachment_type_id']['default'] = '1';
@@ -391,7 +391,7 @@ class AttachmentsTable extends ControllerActionTable
             ]);
 
         } elseif ($user->is_student == 1) {
-            $studentAttachmentTypesTable = TableRegistry::get('student_attachment_types');
+            $studentAttachmentTypesTable = TableRegistry::getTableLocator()->get('Student.StudentAttachmentTypes');
             $studentAttachmentTypeOptions = $studentAttachmentTypesTable->find('list', ['keyField' => 'id', 'valueField' => 'name'])->toArray();
             $this->fields['student_attachment_type_id']['type'] = 'select';
             $this->fields['student_attachment_type_id']['default'] = '1';

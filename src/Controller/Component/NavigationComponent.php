@@ -208,7 +208,11 @@ class NavigationComponent extends Component
                 'SpecialNeedsServices',
                 'SpecialNeedsDevices',
                 'SpecialNeedsPlans',
-                'SpecialNeedsDiagnostics'
+                'SpecialNeedsDiagnostics',
+                'StudentBankAccounts',
+                'Counsellings',
+                'StudentFees',
+                'StudentLicenses',
                 
             ];
             if (in_array($controller->getName(), $institutionControllers) || (
@@ -264,10 +268,10 @@ class NavigationComponent extends Component
                         $userId = $this->controller->paramsDecode($requestData)['student_id'];
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
                     } //Start POCOR-7055
-                    elseif ($action == 'StudentReportCards') {
+                    elseif ($action == 'StudentReportCards' || $action == 'StudentAwards') {
                         $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][1])['student_id'];
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
-                    }//End POCOR-7055
+                    }//End POCOR-7055             
                     /*POCOR-6286 ends*/
                     // Start POCOR-7384
                     elseif ($this->request->getParam('plugin') == 'Directory' && $this->request->getParam('controller') == 'Directories' && $this->request->getAttribute('params')['pass'][0] == 'download' && $action == 'Attachments') {
@@ -283,6 +287,9 @@ class NavigationComponent extends Component
                         }
                         if(empty($userId)) {
                             $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][1])['security_user_id'];
+                        }
+                        if(empty($userId)) {
+                            $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][1])['student_id'];
                         }
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
                     }
@@ -1801,16 +1808,9 @@ class NavigationComponent extends Component
                 'title' => 'Health',
                 'parent' => 'Directories.Directories.index',
                 'params' => ['plugin' => 'Directory', 0 => $directorStaffId],
-                'selected' => ['Directories.Healths.index',
-                    'Directories.Healths.view',
-                    'Directories.HealthAllergies.index',
-                    'Directories.HealthAllergies.add',
-                    'Directories.HealthAllergies.view',
-                    'Directories.HealthAllergies.edit',
-                    'Directories.HealthConsultations.index',
-                    'Directories.HealthConsultations.add',
-                    'Directories.HealthConsultations.edit',
-                    'Directories.HealthConsultations.view',
+                'selected' => ['Directories.Healths',
+                    'Directories.HealthAllergies',
+                    'Directories.HealthConsultations',
                     'Directories.HealthFamilies.index',
                     'Directories.HealthFamilies.add',
                     'Directories.HealthFamilies.view',
@@ -1860,11 +1860,12 @@ class NavigationComponent extends Component
             ]
         ];
         //POCOR-7366 start
+        
         if ($session->read('Directory.Directories.is_student') == 1) {
-            $newNavigation = ['Directories.Counsellings' => [
+            $newNavigation = ['Directories.Counsellings.index' => [
                 'title' => 'Counsellings',
                 'parent' => 'Directories.Directories.index',
-                'params' => ['plugin' => 'Directory'],
+                'params' => ['plugin' => 'Directory', 0 => $directorStaffId],
                 'selected' => ['Directories.Counsellings']
             ]];
             $i = array_search('Directories.Employments', array_keys($navigation));
@@ -1980,7 +1981,34 @@ class NavigationComponent extends Component
     public function getDirectoryStudentNavigation()
     {
         $session = $this->getController()->getRequest()->getSession();
-        $id = $session->read('Guardian.Guardians.id');
+        // POCOR-8014-n
+        $id = 0;
+        $queryString = isset($this->request->pass[1]) ? $this->request->pass[1] : 0;
+        if ($queryString === 0) {
+            $queryString = isset($this->request->query['queryString']) ? $this->request->query['queryString'] : 0;
+        }
+        if ($queryString !== 0) {
+            try {
+                $id = $this->controller->paramsDecode($queryString)['id'];
+            } catch (\Exception $exception) {
+
+            }
+        }
+        if ($id === 0) {
+            $id = $session->check('Directory.Directories.id') ? $session->read('Directory.Directories.id') : 0;
+        }
+        if ($id) {
+            $StudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
+            $Student = $StudentsTable
+                ->find('all')
+                ->where([$StudentsTable->aliasField('student_id') => $id])
+                ->first();
+            if (!empty($Student)) {
+                $institution_id = $Student->institution_id;
+            }
+        }
+        $directorUserId = $this->controller->paramsEncode(['id' => $id]);
+        $directorStudentId = $this->controller->paramsEncode(['student_id' => $id,'institution_id'=>$institution_id,'security_user_id'=> $id]);
         $navigation = [
             'Directories.Student' => [
                 'title' => 'Student',
@@ -1990,15 +2018,15 @@ class NavigationComponent extends Component
             'Directories.StudentGuardians' => [
                 'title' => 'Guardians',
                 'parent' => 'Directories.Student',
-                'params' => ['plugin' => 'Directory'],
+                'params' => ['plugin' => 'Directory', 'queryString' => $directorUserId],
                 'selected' => ['Directories.StudentGuardians',
                     'Directories.StudentGuardianUser',
                     'Directories.Addguardian']
             ],//POCOR-7093 Addguardian condition
             'Directories.StudentProgrammes.index' => [
                 'title' => 'Academic',
-                'parent' => 'Directories.Student.index',
-                'params' => ['plugin' => 'Directory'],
+                'parent' => 'Directories.Student',
+                'params' => ['plugin' => 'Directory','queryString' => $directorStudentId],
                 'selected' => ['Directories.StudentProgrammes.index',
                     'Directories.StudentSubjects',
                     'Directories.StudentClasses',
@@ -2014,10 +2042,10 @@ class NavigationComponent extends Component
                     'Directories.StudentRisks', 'Directories.StudentAssociations',
                     'Directories.Absences']
             ],
-            'Directories.StudentBankAccounts' => [
+            'Directories.StudentBankAccounts.index' => [
                 'title' => 'Finance',
                 'parent' => 'Directories.Student',
-                'params' => ['plugin' => 'Directory',
+                'params' => ['plugin' => 'Directory',$directorStudentId,
                     'type' => 'student'],
                 'selected' => ['Directories.StudentBankAccounts',
                     'Directories.StudentFees']

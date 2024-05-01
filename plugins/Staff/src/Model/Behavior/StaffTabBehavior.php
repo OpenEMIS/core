@@ -194,7 +194,7 @@ die;*/
             return $controller->TabPermission->checkTabPermission($tabElements);
         }
 
-        if($controllerName == "Directory"){
+        if($controllerName == "Directories"){
             $userID = $this->getUserID();
             if(!is_numeric($userID)){
                 return [];
@@ -203,6 +203,7 @@ die;*/
             $user = $Users->get($userID);
             $isStaff = $user->is_staff;
             $isStudent = $user->is_student;
+            $tabElements = [];
             if ($isStaff) {
                 $staffTabElements = [
                     'Employments' => ['text' => __('Employments')],
@@ -215,7 +216,7 @@ die;*/
                 $staffTabElements = [
                     'Employments' => ['text' => __('Employments')],
                     'Qualifications' => ['text' => __('Qualifications')],
-                    'Licenses' => ['text' => __('Licenses')],
+                    'StudentLicenses' => ['text' => __('Licenses')],
                 ];
             } else {
                 $staffTabElements = [
@@ -224,8 +225,11 @@ die;*/
                     'Licenses' => ['text' => __('Licenses')],
                 ];
             }
+            $tabElements = array_merge($tabElements, $staffTabElements);
             foreach ($staffTabElements as $key => $tab) {
-                if ($key != 'Employments') {
+                if($key == 'StudentLicenses'){
+                    $url = array_merge($staffUrl, ['action' => $key, '0' => 'index']);
+                } else if($key != 'Employments') {
                     $url = array_merge($staffUrl, ['action' => 'Staff' . $key, '0' => 'index']);
 
                 } else {

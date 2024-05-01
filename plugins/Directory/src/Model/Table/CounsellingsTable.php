@@ -41,6 +41,11 @@ class CounsellingsTable extends ControllerActionTable
         ]);
         $this->toggle('view', true);
         $this->toggle('edit', true);
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['Counsellings' =>
+                ['id']
+            ]
+        ]);
       
     }
     public function validationDefault(Validator $validator): Validator

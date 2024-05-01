@@ -173,7 +173,8 @@ class ProgrammesTable extends ControllerActionTable
 				$studentId = $this->getUserID();
 			}
 		} else {
-				$studentId = $this->getStudentID();
+			$queryString = $this->getQueryString();
+			$studentId = $queryString['student_id'];
 		}
 		
 		// end POCOR-1893

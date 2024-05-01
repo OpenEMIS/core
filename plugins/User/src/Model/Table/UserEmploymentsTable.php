@@ -121,9 +121,6 @@ class UserEmploymentsTable extends ControllerActionTable {
 		$options['type'] = $this->controller->getName();
 		$tabElements = $this->getProfessionalTabElements($options);
 		$action = 'Employments';
-        if($this->controller->getName() == 'Directories') {
-            $action = 'Staff'.$action;
-        }
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $action);
 	}
