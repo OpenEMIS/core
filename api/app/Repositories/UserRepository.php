@@ -1636,15 +1636,25 @@ class UserRepository extends Controller
     //POCOR-7716 start
     public function getStudentAdmissionStatus()
     {
-        $configItemResult = ConfigItem::where('code', 'student_admission_status')->first();
-        $studentStatus = !empty($configItemResult->value) ? $configItemResult->value : $configItemResult->default_value;
-        if ($studentStatus === 0) {
-            $result_array[] = ["id" => 0, "name" => "Enrolled"];
-        } else {
-            $status = WorkflowSteps::findOrFail($studentStatus)->name;
-            $result_array[] = ["id" => $studentStatus, "name" => $status];
+        try {
+            $configItemResult = ConfigItem::where('code', 'student_admission_status')->first();
+            $studentStatus = !empty($configItemResult->value) ? $configItemResult->value : $configItemResult->default_value;
+            
+            if ($studentStatus == 0) {
+                $result_array[] = ["id" => 0, "name" => "Enrolled"];
+            } else {
+                $status = WorkflowSteps::findOrFail($studentStatus)->name;
+                $result_array[] = ["id" => $studentStatus, "name" => $status];
+            }
+            return $result_array;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Student Admission Status.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to get Student Admission Status.');
         }
-        return $result_array;
+        
     }
     //POCOR-7716 end
 
