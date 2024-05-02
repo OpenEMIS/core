@@ -208,7 +208,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
 
         if (!empty($data)) {
             $newEntities = $AppraisalScoreAnswers->newEntities($data);
-            $AppraisalScoreAnswers->connection()->transactional(function () use ($AppraisalScoreAnswers, $newEntities) {
+            $AppraisalScoreAnswers->getConnection()->transactional(function () use ($AppraisalScoreAnswers, $newEntities) {
                 foreach ($newEntities as $entity) {
                     $AppraisalScoreAnswers->save($entity);
                 }

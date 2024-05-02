@@ -13,7 +13,7 @@ use StaffAppraisal\Model\Table\AppraisalNumbersTable as AppraisalNumbers;
 
 class AppraisalNumberAnswersTable extends AppraisalAnswersTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
@@ -27,6 +27,7 @@ class AppraisalNumberAnswersTable extends AppraisalAnswersTable
 
     public function buildValidator(Event $event, Validator $validator, $name)
     {
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('answer', 'greaterThan', [
                 'rule' => function ($value, $context) {

@@ -636,11 +636,14 @@ class StaffController extends AppController
             $this->getStatusPermission($model);
             $pass = $this->request->getParam('pass');
             $subaction = isset($pass[0]) ? $pass[0] : null;
+            
+            if($model->alias = 'StaffAppraisals'){
+                return true;
+            }
             if ($subaction != 'index') {
                 if ($model->hasField('security_user_id')) {
                     $model->fields['security_user_id']['type'] = 'hidden';
                     $model->fields['security_user_id']['value'] = $userId;
-
                     if (count($this->request->getQueryParams()) > 1) {
                         $modelId = $this->request->pass[1]; // id of the sub model
 
@@ -668,7 +671,7 @@ class StaffController extends AppController
                         $ids = $this->ControllerAction->paramsDecode($modelId);
                         $idKey = $this->ControllerAction->getIdKeys($model, $ids);
                         $idKey[$model->aliasField('staff_id')] = $userId;
-
+                 
                         $exists = $model->exists($idKey);
 
                         /**
