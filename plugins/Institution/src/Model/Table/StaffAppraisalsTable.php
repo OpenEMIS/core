@@ -350,10 +350,11 @@ class StaffAppraisalsTable extends ControllerActionTable
                             ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $request->getSession();
-            if ($session->check('Institution.Institutions.id')) {
-                $institutionId = $session->read('Institution.Institutions.id');
-            }
+            // $session = $request->getSession();
+            // if ($session->check('Institution.Institutions.id')) {
+            //     $institutionId = $session->read('Institution.Institutions.id');
+            // }
+            $institutionId = $this->getInstitutionID();
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {
