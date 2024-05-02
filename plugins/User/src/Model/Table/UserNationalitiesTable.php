@@ -463,6 +463,7 @@ class UserNationalitiesTable extends ControllerActionTable {
 
     public function onUpdateFieldNationalityId(Event $event, array $attr, $action, Request $request)
     {
+        $request->data['UserNationalities']['security_user_id'] = $this->securityUserId;//POCOR-8243
         if ($action == 'add' || $action == 'edit') {
 
             if ($action == 'add') {
