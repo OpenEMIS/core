@@ -31,14 +31,14 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
         $this->belongsTo('SpecialNeedsDiagnosticsDegree', ['className' => 'SpecialNeeds.SpecialNeedsDiagnosticsDegree']);
 
         $this->addBehavior('SpecialNeeds.SpecialNeeds');
-        /*$this->addBehavior('ControllerAction.FileUpload', [
+        $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'file_name',
             'content' => 'file_content',
             'size' => '10MB',
             'contentEditable' => true,
             'allowable_file_types' => 'all',
             'useDefaultName' => true
-        ]);*/
+        ]);
         $this->addBehavior('Excel', ['pages' => ['index']]);
         $this->addBehavior('Excel', ['pages' => ['index']]);
         $this->addBehavior('User.UserTab', [

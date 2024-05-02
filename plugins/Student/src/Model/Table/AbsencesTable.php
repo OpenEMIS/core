@@ -12,6 +12,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Core\Configure;
 use App\Model\Table\ControllerActionTable;
+use Cake\ORM\Locator\TableLocator;
 
 class AbsencesTable extends ControllerActionTable
 {
@@ -344,6 +345,9 @@ class AbsencesTable extends ControllerActionTable
             if ($this->controller->getName() == 'Directories') {
                 $userData = $this->Session->read();
                 $userId =  $userData['Institution']['StudentUser']['primaryKey']['id'];
+                if(empty($userId)) {
+                    $userId = $queryString['student_id'];
+                }
                 $query
                     ->find('all')
                     ->where([
@@ -434,10 +438,12 @@ class AbsencesTable extends ControllerActionTable
                 }
             }
         }
-        $InstitutionStudentAbsenceDetails = TableRegistry::get('Institution.InstitutionStudentAbsenceDetails');
+        //$InstitutionStudentAbsenceDetails = TableRegistry::getTableLocator('Institution.InstitutionStudentAbsenceDetails');
+        $tableLocator = new TableLocator();
+        $InstitutionStudentAbsenceDetails = $tableLocator->get('InstitutionStudentAbsenceDetails');
         $query
             ->find('all')
-            ->autoFields(true)
+            ->enableAutoFields(true)
             ->select([
                 'comment' => $InstitutionStudentAbsenceDetails->aliasField('comment'),
                 'periods' => $InstitutionStudentAbsenceDetails->aliasField('period'),

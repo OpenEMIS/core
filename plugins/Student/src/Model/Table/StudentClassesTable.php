@@ -48,7 +48,7 @@ class StudentClassesTable extends ControllerActionTable
         if(!empty($contentHeader)) { 
             list($studentName, $module) = explode(' - ', $contentHeader);
             $module = __('Classes');
-            $contentHeader = $studentName . ' - ' . $module; echo $contentHeader;die;
+            $contentHeader = $studentName . ' - ' . $module;
             $this->controller->set('contentHeader', $contentHeader);
             $this->controller->Navigation->substituteCrumb(__('Student Classes'), __('Classes'));
         }
