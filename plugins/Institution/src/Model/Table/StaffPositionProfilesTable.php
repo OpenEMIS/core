@@ -349,8 +349,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-
-
         $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
         $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
                         ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
@@ -483,8 +481,10 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     $this->aliasField('staff_id') => $entity->staff_id,
                 ])
                 ->first();
-                $entity->end_date = $staffPositionProfilesRecord->end_date->format('Y-m-d');
-                // echo "<pre>";print_r($staffPositionProfilesRecord->end_date->format('Y-m-d'));die;
+                //POCOR-8258
+                if (!empty($staffPositionProfilesRecord->end_date)) {
+                    $entity->end_date = $staffPositionProfilesRecord->end_date->format('Y-m-d');
+                }
             }
             $entity->end_date =  date("Y-m-d", strtotime($entity->end_date) );
         }
