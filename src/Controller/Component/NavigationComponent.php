@@ -1981,22 +1981,10 @@ class NavigationComponent extends Component
     public function getDirectoryStudentNavigation()
     {
         $session = $this->getController()->getRequest()->getSession();
-        // POCOR-8014-n
-        $id = 0;
-        $queryString = isset($this->request->pass[1]) ? $this->request->pass[1] : 0;
-        if ($queryString === 0) {
-            $queryString = isset($this->request->query['queryString']) ? $this->request->query['queryString'] : 0;
-        }
-        if ($queryString !== 0) {
-            try {
-                $id = $this->controller->paramsDecode($queryString)['id'];
-            } catch (\Exception $exception) {
+        //$id = $session->read('Guardian.Guardians.id');
 
-            }
-        }
-        if ($id === 0) {
-            $id = $session->check('Directory.Directories.id') ? $session->read('Directory.Directories.id') : 0;
-        }
+        $pass = $this->controller->getQueryString();
+        $id = isset($pass['security_user_id']) ? $pass['security_user_id']: (isset($pass['student_id']) ? $pass['student_id']:(isset($pass['id']) ? $pass['id']:''));
         if ($id) {
             $StudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
             $Student = $StudentsTable
@@ -2007,7 +1995,7 @@ class NavigationComponent extends Component
                 $institution_id = $Student->institution_id;
             }
         }
-        $directorUserId = $this->controller->paramsEncode(['id' => $id]);
+        $directorUserId = $this->controller->paramsEncode(['id' => $id, 'security_user_id'=> $id]);
         $directorStudentId = $this->controller->paramsEncode(['student_id' => $id,'institution_id'=>$institution_id,'security_user_id'=> $id]);
         $navigation = [
             'Directories.Student' => [
@@ -2053,7 +2041,7 @@ class NavigationComponent extends Component
             'Directories.StudentProfiles' => [
                 'title' => 'Profiles',
                 'parent' => 'Directories.Student',
-                'params' => ['plugin' => 'Directory'],
+                'params' => ['plugin' => 'Directory','queryString' => $directorStudentId],
                 'selected' => ['Directories.StudentProfile']
             ],
 
@@ -2084,6 +2072,9 @@ class NavigationComponent extends Component
 
     public function getDirectoryGuardianNavigation()
     {
+        $pass = $this->controller->getQueryString();
+        $id = isset($pass['security_user_id']) ? $pass['security_user_id']: (isset($pass['student_id']) ? $pass['student_id']:(isset($pass['id']) ? $pass['id']:''));
+        $directorUserId = $this->controller->paramsEncode(['id' => $id, 'security_user_id'=> $id]);
         $navigation = [
             'Directories.Guardian' => [
                 'title' => 'Guardian',
@@ -2093,7 +2084,7 @@ class NavigationComponent extends Component
             'Directories.GuardianStudents' => [
                 'title' => 'Students',
                 'parent' => 'Directories.Guardian',
-                'params' => ['plugin' => 'Directory'],
+                'params' => ['plugin' => 'Directory','queryString' =>$directorUserId],
                 'selected' => ['Directories.GuardianStudents']
             ],
         ];

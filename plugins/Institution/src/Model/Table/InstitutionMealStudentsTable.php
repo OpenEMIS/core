@@ -16,7 +16,7 @@ class InstitutionMealStudentsTable extends ControllerActionTable
 {
     public function initialize(array $config): void
     {
-        $this->table('institution_meal_students');
+        $this->setTable('institution_meal_students');
         parent::initialize($config); 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);

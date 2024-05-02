@@ -1001,16 +1001,25 @@ class AcademicPeriodsTable extends ControllerActionTable
         $weekIndex = 1;
         $weeks = [];
 
-        do {
-            $endDate = $startDate->copy();
-            if ($endDate->greaterThan($period->end_date)) {
-                $endDate = $period->end_date;
-            }
+        $endDate = clone $startDate;
+        
+        while ($endDate <= $period->end_date) {
             $weeks[$weekIndex++] = [$startDate];
-            $startDate = $endDate->copy();
-            $startDate->addDay();
-        } while ($endDate->lessThan($period->end_date));
-
+            $startDate = clone $endDate;
+            $startDate = $startDate->addDay();
+            $endDate = clone $startDate;
+        }
+        
+        // do {
+        //     $endDate = $startDate->copy();
+        //     if ($endDate->gt($period->end_date)) {
+        //         $endDate = $period->end_date;
+        //     }
+        //     $weeks[$weekIndex++] = [$startDate];
+        //     $startDate = $endDate->copy();
+        //     $startDate->addDay();
+        // } while ($endDate->lt($period->end_date));
+        
         return $weeks;
     }
 
