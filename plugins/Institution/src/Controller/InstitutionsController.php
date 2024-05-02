@@ -8079,29 +8079,66 @@ public
 
 //POCOR-6673
 
-    public
-    function checkUserAge()
-    {
-        $this->autoRender = false;
-        $requestData = $this->request->input('json_decode', true);
-        $requestData = $requestData['params'];
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $minValuePattern = $ConfigItems->value('StaffMinimumAge');
-        $maxValuePattern = $ConfigItems->value('StaffMaximumAge');
-        $from = date('Y', strtotime($requestData['date_of_birth']));
-        $to = date('Y');
-        $dateDiff = ($to - $from);
-        //echo $dateDiff.'=='.$minValuePattern.'=='. $maxValuePattern;die;
-        if (($dateDiff < $minValuePattern)) {
-            echo json_encode(['user_exist' => 0, 'status_code' => 400, 'message' => __('The staff should be between (staff minimum age) to (staff maximum age) years old')]);
-        } else if ($dateDiff > $maxValuePattern) {
-            echo json_encode(['user_exist' => 0, 'status_code' => 400, 'message' => __('The staff should be between (staff minimum age) to (staff maximum age) years old')]);
-        } else {
-            echo json_encode(['user_exist' => 0, 'status_code' => 200, 'message' => __('valid Age')]);
-            }
+public
+function checkUserAge()
+{
+    $this->autoRender = false;
+    $requestData = $this->request->input('json_decode', true);
+    $requestData = $requestData['params'];
+    $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 
+    //POCOR-8209 -- Start
+    $configItemResult = $ConfigItems->find()
+    ->select(['code', 'value', 'default_value'])
+    ->where([
+        $ConfigItems->aliasField('code') . ' IN' => ['StaffMinimumAge', 'StaffMaximumAge'],
+        $ConfigItems->aliasField('visible') => 1
+    ])
+    ->toArray();
+
+    $minStaffDefault =  $minStaffValue = $maxStaffDefault = $maxStaffValue = null;
+
+    foreach ($configItemResult as $item) {
+        if ($item->code === 'StaffMinimumAge') {
+            $minStaffDefault = $item->default_value;
+            $minStaffValue = $item->value;
+        } elseif ($item->code === 'StaffMaximumAge') {
+            $maxStaffDefault = $item->default_value;
+            $maxStaffValue = $item->value;
+        }
+    }
+
+    try {
+        if (empty($requestData['date_of_birth'])) {
+            echo json_encode(['user_exist' => 0, 'status_code' => 400, 'message' => __('Date of birth is not set')]);
+            die;
+        } else {
+            $minValuePattern = ($minStaffValue == null || $minStaffValue == 0) ? $minStaffDefault : $minStaffValue;
+            $maxValuePattern = ($maxStaffValue == null || $maxStaffValue == 0) ? $maxStaffDefault : $maxStaffValue;
+        
+
+            $from = date('Y', strtotime($requestData['date_of_birth']));
+            $to = date('Y');
+            $dateDiff = ($to - $from);
+
+            $minValuePattern = ($minValuePattern == 0) ? '' : $minValuePattern;
+            $maxValuePattern = ($maxValuePattern == 0) ? '' : $maxValuePattern;
+
+            if ($dateDiff < $minValuePattern) {
+                echo json_encode(['user_exist' => 0, 'status_code' => 400, 'message' => __('Minimum staff age:'.$minValuePattern)]);
+            } else if ($dateDiff > $maxValuePattern) {
+                echo json_encode(['user_exist' => 0, 'status_code' => 400, 'message' => __('Maximum staff age:'.$maxValuePattern)]);
+            } else {
+                echo json_encode(['user_exist' => 0, 'status_code' => 200, 'message' => __('valid Age')]);
+            }
+            die;
+        }
+    } catch (Exception $e) {
+        echo json_encode(['user_exist' => 0, 'status_code' => 500, 'message' => __('Error fetching configuration values')]);
         die;
     }
+    //POCOR-8209 -- end
+}
 
     public
     function customFieldsUseJustForExample()
