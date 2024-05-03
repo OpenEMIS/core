@@ -252,7 +252,7 @@ class NavigationComponent extends Component
                 if (!empty($encodedParam)) {
                     //POCOR-6202 start
                     if ($action == 'GuardianStudents') {
-                        $userInfo = TableRegistry::getTableLocator()->get('student_guardians')->get($securityUserId);
+                        $userInfo = TableRegistry::getTableLocator()->get('Guardian.Students')->get($securityUserId);
                     } else if ($action == 'StudentGuardians') {
                         $requestData = $this->request->getAttribute('params')['pass'][1];
                         $securityUserId = $this->controller->paramsDecode($requestData);

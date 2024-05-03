@@ -397,9 +397,14 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         }else{
             $query
             ->where([
-                'academic_period_id =' .$academicPeriodId,
                 'security_user_id =' .$userId,
             ]);
+            if(!empty($academicPeriodId)){
+                $query
+                ->where([
+                    'academic_period_id =' .$academicPeriodId
+                ]);
+            }
         }
     }
 
