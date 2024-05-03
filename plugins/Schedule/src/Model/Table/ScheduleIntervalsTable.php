@@ -298,15 +298,17 @@ class ScheduleIntervalsTable extends ControllerActionTable
             $scheduleId = $this->request['data']['ScheduleIntervals']['id'];
             $timeslotList = $this->request['data']['ScheduleIntervals']['timeslots'];
             $institutionSchedule =  TableRegistry::get('institution_schedule_timeslots');
-
-           /* foreach($timeslotList as $key =>$value){
-                $institutionScheduledata = $institutionSchedule->updateAll(
-                    ['interval' => $value['interval']],    //field
-                    ['institution_schedule_interval_id' => $intervalId,
-                    ] //condition
-                );
-                                
-            }*/
+            $findRecord = $institutionSchedule->find()
+                        ->where(['institution_schedule_interval_id'=>$intervalId])->toArray();
+                       
+            foreach ($findRecord as $value) {
+                foreach ($timeslotList as $val) {
+                    $institutionScheduledata = $institutionSchedule->updateAll(
+                        ['interval' => $val['interval']], // Field
+                        ['id' => $value['id']] // Condition
+                    );
+                }
+            }
             if (array_key_exists('timeslots', $data) && !empty($data['timeslots'])) {
                 foreach ($data['timeslots'] as $i => $timeslot) {
                     $data['timeslots'][$i]['order'] = $i + 1;
@@ -347,6 +349,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
               
             }
         }
+       // echo "<pre>"; print_r($data);die;
     }
 
     // OnGet Events
@@ -514,14 +517,35 @@ class ScheduleIntervalsTable extends ControllerActionTable
         return compact('periodOptions', 'selectedPeriod');
     }
 
-   public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    //POCOR-8254
+    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
-        $institutionSchedule =  TableRegistry::get('Schedule.ScheduleTimeslots');
-        $institutionScheduleSlot = $institutionSchedule->find()->where(['institution_schedule_interval_id' => $entity->id])->toArray();
-        if(!empty($institutionScheduleSlot)){
-            $institutionSchedule->deleteAll(['institution_schedule_interval_id' => $entity->id]);
-        }
+         $entity['timeslots'] = array();
             
+    }
+
+    //POCOR-8254
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
+    {
+        $timeslotList = $this->request['data']['ScheduleIntervals']['timeslots'];
+        $institutionSchedule = TableRegistry::get('institution_schedule_timeslots');
+        $findRecord = $institutionSchedule->find()
+            ->where(['institution_schedule_interval_id' => $entity->id])
+            ->toArray();
+
+        // Check if the number of records matches the number of timeslots
+        if (count($findRecord) === count($timeslotList)) {
+            foreach ($findRecord as $key => $value) {
+                $val = $timeslotList[$key]; // Get the corresponding timeslot
+                $institutionScheduledata = $institutionSchedule->updateAll(
+                    ['interval' => $val['interval']], // Field
+                    ['id' => $value['id']] // Condition
+                );
+            }
+        } else {
+            return false;
+        }
+
     }
 
 }
