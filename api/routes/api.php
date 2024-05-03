@@ -450,5 +450,10 @@ Route::group(
         Route::get('themes', 'ThemeController@getAllThemes');
         Route::get('themes/{themeId}', 'ThemeController@getThemeId');
         //POCOR-8259 end...
+
+
+        //POCOR-8260 start...
+        Route::get('/institutions/classes/reportcards/comment/codes', 'ReportCardController@getReportCardCommentCodes');
+        //POCOR-8260 end...
     }
 );
