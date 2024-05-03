@@ -717,7 +717,7 @@ class InstitutionController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v4/pocor-openemis-core/api/v4/institutions/{institutionId}/classes/{classId}",
+     *     path="/api/v4/institutions/{institutionId}/classes/{classId}",
      *     summary="Get details of a specific class in an institution",
      *     description="Returns details of a specific class in an institution based on the provided class ID",
      *     tags={"Institutions"},
@@ -2979,7 +2979,7 @@ class InstitutionController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/v4/pocor-openemis-core/api/v4/institutions/{institutionId}/classes/{classId}/reportcardcomment",
+     *     path="/api/v4/institutions/{institutionId}/classes/{classId}/reportcardcomment",
      *     summary="Add a report card comment for a student",
      *     description="Creates a new report card comment for a specific student in a class.",
      *     tags={"Institutions"},
@@ -3071,7 +3071,7 @@ class InstitutionController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/pocor-openemis-core/api/v4/institutions/{institutionId}/classes/{classId}/reportcardcomment/homeroom",
+     *     path="/api/v4/institutions/{institutionId}/classes/{classId}/reportcardcomment/homeroom",
      *     summary="Add a report card comment for a homeroom class",
      *     description="Adds a report card comment for a homeroom class based on the provided parameters",
      *     tags={"Institutions"},
@@ -3156,7 +3156,7 @@ class InstitutionController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/v4/pocor-openemis-core/api/v4/institutions/{institutionId}/classes/{classId}/reportcardcomment/principal",
+     *     path="/api/v4/institutions/{institutionId}/classes/{classId}/reportcardcomment/principal",
      *     summary="Add a report card comment by the principal",
      *     description="Adds a report card comment by the principal for a specific student based on the provided parameters",
      *     tags={"Institutions"},
