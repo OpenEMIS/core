@@ -819,6 +819,11 @@ class StaffPositionProfilesTable extends ControllerActionTable
         if ($this->action == 'view') {
             $oldValue = $entity->institution_staff->end_date;
             $newValue = $entity->end_date;
+            if ($newValue->format('Y-m-d H:i:s') === '1969-12-31 00:00:00') {
+                $newValue = '';
+            } else {
+                $newValue = $newValue;
+            }
             if ($newValue != $oldValue) {
                 if (!empty($oldValue) && !empty($newValue)) {
                     // START POCOR-7216
