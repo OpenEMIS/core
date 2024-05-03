@@ -3315,6 +3315,53 @@ class InstitutionController extends Controller
 
 
 
+
+    /**
+     * @OA\Post(
+     *     path="/api/v4/institutions/students/competencies/results",
+     *     summary="Add competency results for a student",
+     *     description="Adds competency results for a student based on the provided parameters",
+     *     tags={"Institutions"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="JSON Payload",
+     *         @OA\JsonContent(
+     *             required={
+     *                 "academic_period_id",
+     *                 "student_id",
+     *                 "competency_template_id",
+     *                 "competency_period_id",
+     *                 "competency_item_id",
+     *                 "competency_criteria_id",
+     *                 "institution_id",
+     *                 "competency_grading_option_id",
+     *              },
+     *             @OA\Property(property="academic_period_id", type="integer", example=32),
+     *             @OA\Property(property="competency_grading_option_id", type="integer", example=1),
+     *             @OA\Property(property="comments", type="string", example="test comment"),
+     *             @OA\Property(property="student_id", type="integer", example=1311),
+     *             @OA\Property(property="competency_template_id", type="integer", example=39),
+     *             @OA\Property(property="competency_item_id", type="integer", example=148),
+     *             @OA\Property(property="competency_criteria_id", type="integer", example=279),
+     *             @OA\Property(property="competency_period_id", type="integer", example=20),
+     *             @OA\Property(property="institution_id", type="integer", example=6)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function addCompetencyResults(CompetencyResultsAddRequest $request)
     {
         try {
@@ -3349,6 +3396,50 @@ class InstitutionController extends Controller
     }
 
 
+    /**
+     * @OA\Post(
+     *     path="/api/v4/institutions/students/competencies/item/comments",
+     *     summary="Add competency item comments for a student",
+     *     description="Adds competency item comments for a student based on the provided parameters",
+     *     tags={"Institutions"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="JSON Payload",
+     *         @OA\JsonContent(
+     *             required={
+     *                 "academic_period_id",
+     *                 "student_id",
+     *                 "competency_template_id",
+     *                 "competency_period_id",
+     *                 "competency_item_id",
+     *                 "institution_id",
+     *              },
+     *             @OA\Property(property="academic_period_id", type="integer", example=32),
+     *             @OA\Property(property="education_grade_id", type="integer", example=189),  
+     *             @OA\Property(property="comments", type="string", example="test comment"),
+     *             @OA\Property(property="student_id", type="integer", example=1311),
+     *             @OA\Property(property="competency_template_id", type="integer", example=1),
+     *             @OA\Property(property="competency_item_id", type="integer", example=3),
+     *             @OA\Property(property="competency_period_id", type="integer", example=3),
+     *             @OA\Property(property="institution_id", type="integer", example=6),
+     *             @OA\Property(property="institution_class_id", type="integer", example=568)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function addCompetencyComments(CompetencyCommentAddRequest $request)
     {
         try {
@@ -3383,6 +3474,47 @@ class InstitutionController extends Controller
 
 
 
+    /**
+     * @OA\Post(
+     *     path="/api/v4/institutions/students/competencies/periods/comments",
+     *     summary="Add competency periods comments for a student",
+     *     description="Adds competency periods comments for a student based on the provided parameters",
+     *     tags={"Institutions"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="JSON Payload",
+     *         @OA\JsonContent(
+     *             required={
+     *                 "academic_period_id",
+     *                 "student_id",
+     *                 "competency_template_id",
+     *                 "competency_period_id",
+     *                 "institution_id",
+     *                 "comments"
+     *              },
+     *             @OA\Property(property="academic_period_id", type="integer", example=32), 
+     *             @OA\Property(property="comments", type="string", example="test comment"),
+     *             @OA\Property(property="student_id", type="integer", example=1311),
+     *             @OA\Property(property="competency_template_id", type="integer", example=39),
+     *             @OA\Property(property="competency_period_id", type="integer", example=26),
+     *             @OA\Property(property="institution_id", type="integer", example=6)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function addCompetencyPeriodComments(CompetencyPeriodCommentAddRequest $request)
     {
         try {
@@ -4520,6 +4652,47 @@ class InstitutionController extends Controller
 
     // POCOR-7394-S ends
 
+    /**
+     * @OA\Delete(
+     *     path="/api/v4/institutions/institution-classes/education-grades/class-attendance",
+     *     summary="Delete class attendance",
+     *     description="Delete class attendance",
+     *     tags={"Institutions"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="JSON Payload",
+     *         @OA\JsonContent(
+     *             required={
+     *                 "academic_period_id",
+     *                 "institution_id",
+     *                 "institution_class_id",
+     *                 "education_grade_id",
+     *                 "date"
+     *              },
+     *             @OA\Property(property="academic_period_id", type="integer", example=32), 
+     *             @OA\Property(property="institution_id", type="integer", example=6),
+     *             @OA\Property(property="institution_class_id", type="integer", example=568),
+     *             @OA\Property(property="education_grade_id", type="string", example=189),
+     *             @OA\Property(property="date", type="integer", example="2023-07-17"),
+     *             @OA\Property(property="period", type="integer", example=1),
+     *             @OA\Property(property="subject_id", type="integer", example=0)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function deleteClassAttendance(DeleteClassAttendanceRequest $request)
     {
         try {
@@ -4553,6 +4726,55 @@ class InstitutionController extends Controller
     }
 
 
+
+    /**
+     * @OA\Delete(
+     *     path="/api/v4/institutions/student/{studentId}/absence",
+     *     summary="Delete student attendance",
+     *     description="Delete student attendance",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="studentId",
+     *         in="path",
+     *         required=true,
+     *         description="Student id",
+     *         @OA\Schema(type="integer", example=8815)
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="JSON Payload",
+     *         @OA\JsonContent(
+     *             required={
+     *                 "academic_period_id",
+     *                 "institution_id",
+     *                 "institution_class_id",
+     *                 "education_grade_id",
+     *                 "date"
+     *              },
+     *             @OA\Property(property="academic_period_id", type="integer", example=32), 
+     *             @OA\Property(property="institution_id", type="integer", example=6),
+     *             @OA\Property(property="institution_class_id", type="integer", example=568),
+     *             @OA\Property(property="education_grade_id", type="string", example=189),
+     *             @OA\Property(property="date", type="integer", example="2023-07-17"),
+     *             @OA\Property(property="period", type="integer", example=1),
+     *             @OA\Property(property="subject_id", type="integer", example=0)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function deleteStudentAttendance(DeleteClassAttendanceRequest $request, $studentId)
     {
         try {
@@ -4745,6 +4967,56 @@ class InstitutionController extends Controller
         }
     }
 
+
+
+    /**
+     * @OA\Post(
+     *     path="/api/v4/institutions/students/assessment-item-results",
+     *     summary="Add a assessment item result for a particular student.",
+     *     description="Add a assessment item result for a particular student.",
+     *     tags={"Institutions"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="JSON Payload",
+     *         @OA\JsonContent(
+     *             required={
+     *                 "academic_period_id",
+     *                 "institution_id",
+     *                 "institution_classes_id",
+     *                 "education_grade_id",
+     *                 "student_id",
+     *                 "assessment_id",
+     *                 "education_subject_id",
+     *                 "assessment_period_id",
+     *                 "assessment_grading_option_id"
+     *              },
+     *             @OA\Property(property="academic_period_id", type="integer", example=32), 
+     *             @OA\Property(property="institution_id", type="integer", example=6),
+     *             @OA\Property(property="institution_classes_id", type="integer", example=568),
+     *             @OA\Property(property="education_grade_id", type="string", example=189),
+     *             @OA\Property(property="assessment_id", type="integer", example=205),
+     *             @OA\Property(property="assessment_period_id", type="integer", example=1226),
+     *             @OA\Property(property="education_subject_id", type="integer", example=163),
+     *             @OA\Property(property="marks", type="integer", example=25),
+     *             @OA\Property(property="student_id", type="integer", example=1131),
+     *             @OA\Property(property="assessment_grading_option_id", type="integer", example=20)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function addStudentAssessmentItemResult(AssessmentItemResultRequest $request)
     {
         try {
@@ -4779,6 +5051,52 @@ class InstitutionController extends Controller
         }
     }
 
+
+
+    /**
+     * @OA\Post(
+     *     path="/api/v4/institutions/students/behaviours",
+     *     summary="Add student behaviours.",
+     *     description="Add student behaviours.",
+     *     tags={"Institutions"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="JSON Payload",
+     *         @OA\JsonContent(
+     *             required={
+     *                 "description",
+     *                 "action",
+     *                 "date_of_behaviour",
+     *                 "student_id",
+     *                 "institution_id",
+     *                 "student_behaviour_category_id"
+     *              },
+     *             @OA\Property(property="academic_period_id", type="integer", example=32), 
+     *             @OA\Property(property="institution_id", type="integer", example=6),
+     *             @OA\Property(property="student_id", type="integer", example=1131),
+     *             @OA\Property(property="description", type="integer", example="Test"),
+     *             @OA\Property(property="action", type="string", example="Test action"),
+     *             @OA\Property(property="date_of_behaviour", type="integer", example="2023-08-02"),
+     *             @OA\Property(property="student_behaviour_category_id", type="integer", example=237),
+     *             @OA\Property(property="status_id", type="integer", example=128),
+     *             @OA\Property(property="assignee_id", type="integer", example=25)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function addStudentBehaviour(StudentBehavioursRequest $request)
     {
         try {
@@ -4962,6 +5280,50 @@ class InstitutionController extends Controller
         }
     }
 
+
+
+    /**
+     * @OA\Delete(
+     *     path="/api/v4/institutions/{institutionId}/students/{studentId}/behaviours/{behaviourId}",
+     *     summary="Delete student behaviours for a particular student.",
+     *     description="Delete student behaviours for a particular student.",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example="6")
+     *     ),
+     *     @OA\Parameter(
+     *         name="studentId",
+     *         in="path",
+     *         required=true,
+     *         description="Student Id",
+     *         @OA\Schema(type="integer", example="8815")
+     *     ),
+     *     @OA\Parameter(
+     *         name="behaviourId",
+     *         in="path",
+     *         required=true,
+     *         description="Behaviour Id",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function deleteStudentBehaviour(int $institutionId, int $studentId, int $behaviourId)
     {
         try {
@@ -5348,6 +5710,55 @@ class InstitutionController extends Controller
         }
     }
 
+    
+    /**
+     * @OA\Post(
+     *     path="/api/v4/institutions/students",
+     *     summary="Add student data record in institution.",
+     *     description="Add student data record in institution.",
+     *     tags={"Institutions"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Successful",
+     *         @OA\JsonContent(
+     *              required={
+     *                 "academic_period_id",
+     *                 "education_grade_id",
+     *                 "student_id",
+     *                 "student_status_id",
+     *                 "start_date",
+     *                 "start_year",
+     *                 "end_date",
+     *                 "end_year",
+     *                 "institution_id",
+     *              },
+     *              @OA\Property(property="academic_period_id", type="integer", example=32),
+     *              @OA\Property(property="education_grade_id", type="integer", example=189),
+     *              @OA\Property(property="student_id", type="integer", example=8815),
+     *              @OA\Property(property="student_status_id", type="string", example="1"),
+     *              @OA\Property(property="start_date", type="integer", example="2024-05-03"),
+     *              @OA\Property(property="start_year", type="integer", example="2024"),
+     *              @OA\Property(property="end_date", type="integer", example="2024-12-31"),
+     *              @OA\Property(property="end_year", type="integer", example="2024"),
+     *              @OA\Property(property="institution_id", type="integer", example="6"),
+     *              @OA\Property(property="previous_institution_student_id", type="integer", example="8814"),
+     *          )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function addInstitutionStudent(InstitutionStudentAddRequest $request)
     {
         try {
