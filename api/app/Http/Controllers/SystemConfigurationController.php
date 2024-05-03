@@ -19,6 +19,7 @@ class SystemConfigurationController extends Controller
      * @OA\Get(
      *      path="/api/v4/system-configurations",
      *      summary="Get list of system configuration ",
+     *      description="Get list of system configuration ",
      *      tags={"System Configuration"},
      *      @OA\Parameter(
      *         name="page",
@@ -103,7 +104,15 @@ class SystemConfigurationController extends Controller
      * @OA\Get(
      *      path="/api/v4/system-configurations/{configId}",
      *      summary="Get detail of system configuration by config id",
+     *      description="Get detail of system configuration by config id",
      *      tags={"System Configuration"},
+     *      @OA\Parameter(
+     *         name="configId",
+     *         in="path",
+     *         required=true,
+     *         description="config id",
+     *         @OA\Schema(type="integer", example="1")
+     *      ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",

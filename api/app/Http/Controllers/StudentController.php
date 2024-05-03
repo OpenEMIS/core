@@ -25,6 +25,7 @@ class StudentController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/students",
      *      summary="Get a list of students",
+     *      description="Get a list of students",
      *      tags={"Institutions"},
      *      @OA\Parameter(
      *         name="page",
@@ -110,6 +111,7 @@ class StudentController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/{institutionId}/students",
      *      summary="Get a list of institutions students",
+     *      description="Get a list of institutions students",
      *      tags={"Institutions"},
      *      @OA\Parameter(
      *         name="institutionId",
@@ -202,6 +204,7 @@ class StudentController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/{institutionId}/students/{studentId}",
      *      summary="Get a institution student detail",
+     *      description="Get a institution student detail",
      *      tags={"Institutions"},
      *      @OA\Parameter(
      *         name="institutionId",
@@ -284,6 +287,7 @@ class StudentController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/students/absences",
      *      summary="Get a list of students absences",
+     *      description="Get a list of students absences",
      *      tags={"Institutions"},
      *      @OA\Parameter(
      *         name="page",
@@ -379,6 +383,7 @@ class StudentController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/{institutionId}/students/absences",
      *      summary="Get a list of institution students absences",
+     *      description="Get a list of institution students absences",
      *      tags={"Institutions"},
      *      @OA\Parameter(
      *         name="institutionId",
@@ -478,8 +483,9 @@ class StudentController extends Controller
 
     /**
      * @OA\Get(
-     *      path="/api/v4/institutions/{institutionId}/students/{studentId}absences",
+     *      path="/api/v4/institutions/{institutionId}/students/{studentId}/absences",
      *      summary="Get details of institution student absences",
+     *      description="Get details of institution student absences",
      *      tags={"Institutions"},
      *      @OA\Parameter(
      *         name="institutionId",
@@ -574,14 +580,8 @@ class StudentController extends Controller
      * @OA\Get(
      *      path="/api/v4/attendance-mark-types/education-grades",
      *      summary="Get a list of education grades",
+     *      description="Get a list of education grades",
      *      tags={"Institutions"},
-     *      @OA\Parameter(
-     *         name="institutionId",
-     *         in="path",
-     *         required=true,
-     *         description="Instituton Id",
-     *         @OA\Schema(type="integer", example="1")
-     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -647,6 +647,7 @@ class StudentController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/{institutionId}/classes/subjects",
      *      summary="Get a list of institution class subjects",
+     *      description="Get a list of institution class subjects",
      *      tags={"Institutions"},
      *      @OA\Parameter(
      *         name="institutionId",
@@ -723,6 +724,7 @@ class StudentController extends Controller
      * @OA\Post(
      *      path="/api/v4/institutions/classes/attendances",
      *      summary="Add class attendances",
+     *      description="Add class attendances",
      *      tags={"Institutions"},
      *      @OA\RequestBody(
      *          required=true,
@@ -789,6 +791,7 @@ class StudentController extends Controller
      * @OA\Post(
      *      path="/api/v4/institutions/students/absences",
      *      summary="Add student absences",
+     *      description="Add student absences",
      *      tags={"Institutions"},
      *      @OA\RequestBody(
      *          required=true,
@@ -861,6 +864,7 @@ class StudentController extends Controller
      * @OA\Post(
      *      path="/api/v4/institutions/staff/attendances",
      *      summary="Add staff attendances",
+     *      description="Add staff attendances",
      *      tags={"Institutions"},
      *      @OA\RequestBody(
      *          required=true,
@@ -924,6 +928,7 @@ class StudentController extends Controller
      * @OA\Post(
      *      path="/api/v4/institutions/staff",
      *      summary="update staff",
+     *      description="update staff",
      *      tags={"Institutions"},
      *      @OA\RequestBody(
      *          required=true,

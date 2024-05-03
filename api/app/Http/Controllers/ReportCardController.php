@@ -24,6 +24,7 @@ class ReportCardController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/classes/reportcards/subject/comments",
      *      summary="Get list of report card comments",
+     *      description="Get list of report card comments",
      *      tags={"Report card"},
      *      @OA\Parameter(
      *         name="page",
@@ -115,6 +116,7 @@ class ReportCardController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/classes/reportcards/subjects",
      *      summary="Get list of report card subjects",
+     *      description="Get list of report card subjects",
      *      tags={"Report card"},
      *      @OA\Parameter(
      *         name="page",

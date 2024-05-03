@@ -21,6 +21,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/notices",
      *      summary="Get a list of notices",
+     *      description="Returns a list of notices",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -82,6 +83,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/staff/career/leave",
      *      summary="Get a list of staff leaves",
+     *      description="Returns a list of staff leaves",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -238,6 +240,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/survey/forms",
      *      summary="Get a list of survey forms",
+     *      description="Get a list of survey forms",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -331,6 +334,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/students/withdraw",
      *      summary="Get a list of withdrawn students requests",
+     *      description="Get a list of withdrawn students requests",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -429,6 +433,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/students/admission",
      *      summary="Get a list of students admission requests",
+     *      description="Get a list of students admission requests",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -528,6 +533,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/students/transferout",
      *      summary="Get a list of transfer out students request",
+     *      description="Get a list of transfer out students request",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -634,6 +640,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/students/transferin",
      *      summary="Get a list of transfer in students request",
+     *      description="Get a list of transfer in students request",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -739,6 +746,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/behaviour/students",
      *      summary="Get a list of student behaviour requests",
+     *      description="Get a list of student behaviour requests",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -838,6 +846,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/behaviour/staff",
      *      summary="Get a list of staff behaviour requests",
+     *      description="Get a list of staff behaviour requests",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -937,6 +946,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/staff/career/appraisals",
      *      summary="Get a list of staff appraisals",
+     *      description="Get a list of staff appraisals",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -1154,6 +1164,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/staff/transferout",
      *      summary="Get a list of transfer out staff request",
+     *      description="Get a list of transfer out staff request",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -1266,6 +1277,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/staff/transferin",
      *      summary="Get a list of transfer in staff request",
+     *      description="Get a list of transfer in staff request",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -1378,6 +1390,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/staff/changeinassignment",
      *      summary="Get a list of change in assignment staff request",
+     *      description="Get a list of change in assignment staff request",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -1476,6 +1489,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/staff/training/needs",
      *      summary="Get a list of training needs",
+     *      description="Get a list of training needs",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -1587,6 +1601,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/staff/professionaldevelopment/licenses",
      *      summary="Get a list of licenses",
+     *      description="Get a list of licenses",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -1689,6 +1704,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/administration/training/courses",
      *      summary="Get a list of training courses",
+     *      description="Get a list of training courses",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -1775,6 +1791,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/administration/training/sessions",
      *      summary="Get a list of training sessions",
+     *      description="Get a list of training sessions",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -1861,6 +1878,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/administration/training/results",
      *      summary="Get a list of training results",
+     *      description="Get a list of training results",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -1951,6 +1969,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/visits/requests",
      *      summary="Get a list of institutions visits",
+     *      description="Get a list of institutions visits",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -2043,6 +2062,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/administration/training/applications",
      *      summary="Get a list of training applications",
+     *      description="Get a list of training applications",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -2151,6 +2171,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/administration/scholarships/applications",
      *      summary="Get a list of scholarships applications",
+     *      description="Get a list of scholarships applications",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -2252,6 +2273,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/cases",
      *      summary="Get a list of institution cases",
+     *      description="Get a list of institution cases",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -2336,6 +2358,7 @@ class WorkbenchController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/positions",
      *      summary="Get a list of institution positions",
+     *      description="Get a list of institution positions",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",

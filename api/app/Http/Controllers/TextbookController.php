@@ -21,6 +21,7 @@ class TextbookController extends Controller
      * @OA\Get(
      *      path="/api/v4/textbooks-conditions",
      *      summary="Get list of textbook conditions",
+     *      description="Get list of textbook conditions",
      *      tags={"Textbook"},
      *      @OA\Parameter(
      *         name="page",
@@ -87,6 +88,7 @@ class TextbookController extends Controller
      * @OA\Get(
      *      path="/api/v4/textbooks/{textbookId}",
      *      summary="Get textbook detail by id",
+     *      description="Get textbook detail by id",
      *      tags={"Textbook"},
      *      @OA\Parameter(
      *         name="textbookId",
@@ -148,6 +150,7 @@ class TextbookController extends Controller
      * @OA\Get(
      *      path="/api/v4/textbooks-statuses",
      *      summary="Get list of textbook statuses",
+     *      description="Get list of textbook statuses",
      *      tags={"Textbook"},
      *      @OA\Parameter(
      *         name="page",
@@ -225,6 +228,7 @@ class TextbookController extends Controller
      * @OA\Get(
      *      path="/api/v4/textbooks-dimensions",
      *      summary="Get list of textbook dimensions",
+     *      description="Get list of textbook dimensions",
      *      tags={"Textbook"},
      *      @OA\Parameter(
      *         name="page",
@@ -291,6 +295,7 @@ class TextbookController extends Controller
      * @OA\Post(
      *      path="/api/v4/textbooks",
      *      summary="Add textbook",
+     *      description="Add textbook",
      *      tags={"Textbook"},
      *      @OA\RequestBody(
      *          required=true,
@@ -360,6 +365,7 @@ class TextbookController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/{institutionId}/textbooks/{textbookId}",
      *      summary="Get detail of institution textbook by institution id and textbook id",
+     *      description="Get detail of institution textbook by institution id and textbook id",
      *      tags={"Textbook"},
      *      @OA\Parameter(
      *         name="institutionId",
@@ -436,6 +442,7 @@ class TextbookController extends Controller
      * @OA\Post(
      *      path="/api/v4/institutions/{institutionId}/textbooks",
      *      summary="Add textbook to institution",
+     *      description="Add textbook to institution",
      *      tags={"Textbook"},
      *      @OA\Parameter(
      *         name="institutionId",

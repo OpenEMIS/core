@@ -20,6 +20,7 @@ class MealController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/{institutionId}/meal-programmes",
      *      summary="Get a list of meal programmes by institution",
+     *      description="Get a list of meal programmes by institution",
      *      tags={"Meals"},
      *      @OA\Parameter(
      *         name="institutionId",
@@ -94,6 +95,7 @@ class MealController extends Controller
      * @OA\Get(
      *      path="/api/v4/meal-benefit-types",
      *      summary="Get a list of meal benefits type",
+     *      description="Get a list of meal benefits type",
      *      tags={"Meals"},
      *      @OA\Parameter(
      *         name="page",
@@ -164,6 +166,7 @@ class MealController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/{institutionId}/meal-students",
      *      summary="Get a list of meal students by institution",
+     *      description="Get a list of meal students by institution",
      *      tags={"Meals"},
      *      @OA\Parameter(
      *         name="institutionId",
@@ -347,6 +350,7 @@ class MealController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/{institutionId}/meal-distributions",
      *      summary="Get a list of meal distribution",
+     *      description="Get a list of meal distribution",
      *      tags={"Meals"},
      *      @OA\Parameter(
      *         name="institutionId",
@@ -418,6 +422,7 @@ class MealController extends Controller
      * @OA\Get(
      *      path="/api/v4/meal-programmes/{mealProgrammeId}",
      *      summary="Get meal program by id",
+     *      description="Get meal program by id",
      *      tags={"Meals"},
      *      @OA\Parameter(
      *         name="mealProgrammeId",
@@ -478,6 +483,7 @@ class MealController extends Controller
      * @OA\Get(
      *      path="/api/v4/meal-targets",
      *      summary="Get a list of meal targets",
+     *      description="Get a list of meal targets",
      *      tags={"Meals"},
      *      @OA\Parameter(
      *         name="page",
@@ -548,6 +554,7 @@ class MealController extends Controller
      * @OA\Get(
      *      path="/api/v4/meal-implementers",
      *      summary="Get a list of meal implementers",
+     *      description="Get a list of meal implementers",
      *      tags={"Meals"},
      *      @OA\Parameter(
      *         name="page",
@@ -620,6 +627,7 @@ class MealController extends Controller
      * @OA\Get(
      *      path="/api/v4/meal-nutritions",
      *      summary="Get a list of meal nutritions",
+     *      description="Get a list of meal nutritions",
      *      tags={"Meals"},
      *      @OA\Parameter(
      *         name="page",
@@ -686,6 +694,7 @@ class MealController extends Controller
      * @OA\Get(
      *      path="/api/v4/meal-ratings",
      *      summary="Get a list of meal ratings",
+     *      description="Get a list of meal ratings",
      *      tags={"Meals"},
      *      @OA\Parameter(
      *         name="page",
@@ -757,6 +766,7 @@ class MealController extends Controller
      * @OA\Get(
      *      path="/api/v4/meal-statuses",
      *      summary="Get a list of meal statuses",
+     *      description="Get a list of meal statuses",
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -826,6 +836,7 @@ class MealController extends Controller
      * @OA\Get(
      *      path="/api/v4/meal-food-types",
      *      summary="Get a list of meal food types",
+     *      description="Get a list of meal food types",
      *      tags={"Meals"},
      *      @OA\Parameter(
      *         name="page",

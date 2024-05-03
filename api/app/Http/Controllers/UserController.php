@@ -24,6 +24,7 @@ class UserController extends Controller
      * @OA\Get(
      *      path="/api/v4/users",
      *      summary="Get a list of users",
+     *      description="Get a list of users",
      *      tags={"Users"},
      *      @OA\Parameter(
      *         name="page",
@@ -145,7 +146,15 @@ class UserController extends Controller
      * @OA\Get(
      *      path="/api/v4/users/{userId}",
      *      summary="Get user details",
+     *      description="Get user details",
      *      tags={"Users"},
+     *      @OA\Parameter(
+     *         name="userId",
+     *         in="path",
+     *         required=true,
+     *         description="User Id",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -464,6 +473,7 @@ class UserController extends Controller
      * @OA\Get(
      *      path="/api/v4/users/genders",
      *      summary="Get genders",
+     *      description="Get genders",
      *      tags={"Users"},
      *      @OA\Response(
      *          response=200,
