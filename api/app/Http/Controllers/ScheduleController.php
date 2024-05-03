@@ -21,6 +21,7 @@ class ScheduleController extends Controller
      * @OA\Delete(
      *      path="/api/v4/institutions/{institutionId}/schedules/timetables/lessons/{id}",
      *      summary="Delete lesson by id",
+     *      description="Delete lesson by id",
      *      tags={"Institution time table"},
      *      @OA\Parameter(
      *         name="institutionId",
@@ -80,6 +81,7 @@ class ScheduleController extends Controller
      * @OA\Get(
      *      path="/api/v4/schedules/timetables/{id}",
      *      summary="Get detail of time table by id",
+     *      description="Get detail of time table by id",
      *      tags={"Institution time table"},
      *      @OA\Parameter(
      *         name="id",
@@ -205,9 +207,17 @@ class ScheduleController extends Controller
 
     /**
      * @OA\Get(
-     *      path="/api/v4/schedules/timetables/3/lessons",
+     *      path="/api/v4/schedules/timetables/{id}/lessons",
      *      summary="Get list of lesson by timetable id",
+     *      description="Get list of lesson by timetable id",
      *      tags={"Institution time table"},
+     *      @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Timetable id",
+     *         @OA\Schema(type="integer", example="1")
+     *      ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -273,6 +283,7 @@ class ScheduleController extends Controller
      * @OA\Get(
      *      path="/api/v4/schedules/lessons/types",
      *      summary="Get list of lesson types",
+     *      description="Get list of lesson types",
      *      tags={"Institution time table"},
      *      @OA\Response(
      *          response=200,
@@ -308,6 +319,7 @@ class ScheduleController extends Controller
      * @OA\Get(
      *      path="/api/v4/schedules/timetables/statuses",
      *      summary="Get list of statuses",
+     *      description="Get list of statuses",
      *      tags={"Institution time table"},
      *      @OA\Response(
      *          response=200,
@@ -350,6 +362,7 @@ class ScheduleController extends Controller
      * @OA\Get(
      *      path="/api/v4/weekdays",
      *      summary="Get list of weekdays",
+     *      description="Get list of weekdays",
      *      tags={"Institution time table"},
      *      @OA\Response(
      *          response=200,
@@ -416,6 +429,7 @@ class ScheduleController extends Controller
      * @OA\Get(
      *      path="/api/v4/schedules/timeslots/{intervalId}",
      *      summary="Get details of timeslost by interval id",
+     *      description="Get details of timeslost by interval id",
      *      tags={"Institution time table"},
      *      @OA\Parameter(
      *         name="intervalId",
@@ -468,6 +482,7 @@ class ScheduleController extends Controller
      * @OA\Post(
      *      path="/api/v4/schedules/timetables/lessons",
      *      summary="Add Lesson",
+     *      description="Add Lesson",
      *      tags={"Institution time table"},
      *      @OA\RequestBody(
      *          required=true,

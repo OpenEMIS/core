@@ -25,6 +25,7 @@ class RegistrationController extends Controller
      * @OA\Get(
      *      path="/api/v4/academic-periods/list",
      *      summary="Get list of education grades",
+     *      description="Get list of education grades",
      *      tags={"Academic Period"},
      *      @OA\Parameter(
      *         name="page",
@@ -82,6 +83,7 @@ class RegistrationController extends Controller
      * @OA\Get(
      *      path="/api/v4/systems/levels/cycles/programmes/grades/list",
      *      summary="Get list of education grades",
+     *      description="Get list of education grades",
      *      tags={"Education Structure"},
      *      @OA\Parameter(
      *         name="academic_period_id",
@@ -144,7 +146,8 @@ class RegistrationController extends Controller
     /**
      * @OA\Get(
      *      path="/api/v4/institutions/list",
-     *      summary="Get list of Institutions on behalf of Institution Type Id and area id.",
+     *      summary="Get list of Institutions on behalf of Institution Type Id and area id",
+     *      description="Get list of Institutions on behalf of Institution Type Id and area id",
      *      tags={"Institutions"},
      *      @OA\Parameter(
      *         name="institution_type_id",
@@ -214,6 +217,7 @@ class RegistrationController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/areas/list",
      *      summary="Get a list of institution's areas",
+     *      description="Get a list of institution's areas",
      *      tags={"Institutions"},
      *      @OA\Parameter(
      *         name="page",
@@ -272,6 +276,7 @@ class RegistrationController extends Controller
      * @OA\Post(
      *      path="/api/v4/otp-generate",
      *      summary="Otp generate",
+     *      description="Otp generate",
      *      tags={"Authentication"},
      *      @OA\RequestBody(
      *          required=true,
@@ -324,6 +329,7 @@ class RegistrationController extends Controller
      * @OA\Post(
      *      path="/api/v4/otp-verify",
      *      summary="Otp Verify",
+     *      description="Otp Verify",
      *      tags={"Authentication"},
      *      @OA\RequestBody(
      *          required=true,
@@ -378,7 +384,15 @@ class RegistrationController extends Controller
      * @OA\Get(
      *      path="/api/v4/users/openemis_id/{openemisId}",
      *      summary="Get a list of users",
+     *      description="Get a list of users",
      *      tags={"Users"},
+     *      @OA\Parameter(
+     *         name="openemisId",
+     *         in="path",
+     *         required=true,
+     *         description="User open emis Id",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -453,20 +467,14 @@ class RegistrationController extends Controller
      * @OA\Get(
      *      path="/api/v4/details-by-emis/{id}",
      *      summary="Get detail of user by open emis id or identity number",
+     *      description="Get detail of user by open emis id or identity number",
      *      tags={"Users"},
      *      @OA\Parameter(
-     *         name="page",
-     *         in="query",
-     *         required=false,
-     *         description="Page number",
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="User open emis Id",
      *         @OA\Schema(type="integer", example="1")
-     *     ),
-     *     @OA\Parameter(
-     *         name="limit",
-     *         in="query",
-     *         required=false,
-     *         description="Limit",
-     *         @OA\Schema(type="integer", example="10")
      *     ),
      *      @OA\Response(
      *          response=200,
@@ -533,6 +541,7 @@ class RegistrationController extends Controller
      * @OA\Get(
      *      path="/api/v4/nationalities",
      *      summary="Get a list of nationalities",
+     *      description="Get a list of nationalities",
      *      tags={"Nationalities"},
      *      @OA\Parameter(
      *         name="page",
@@ -597,6 +606,7 @@ class RegistrationController extends Controller
      * @OA\Post(
      *      path="/api/v4/institutions/{institutionId}/student-admission",
      *      summary="Student admission",
+     *      description="Student admission",
      *      tags={"Users"},
      *      @OA\Parameter(
      *         name="institutionId",
@@ -707,6 +717,7 @@ class RegistrationController extends Controller
      * @OA\Get(
      *      path="/api/v4/student-custom-fields",
      *      summary="Get a list of student custom fields",
+     *      description="Get a list of student custom fields",
      *      tags={"Users"},
      *      @OA\Response(
      *          response=200,
@@ -763,6 +774,7 @@ class RegistrationController extends Controller
      * @OA\Get(
      *      path="/api/v4/identity-types/list",
      *      summary="Get a list of identity types",
+     *      description="Get a list of identity types",
      *      tags={"Identity types"},
      *      @OA\Parameter(
      *         name="page",
@@ -821,6 +833,7 @@ class RegistrationController extends Controller
      * @OA\Get(
      *      path="/api/v4/institutions/grades/{gradeId}/list",
      *      summary="Get a list of institution by grade id",
+     *      description="Get a list of institution by grade id",
      *      tags={"Institution Grades"},
      *      @OA\Parameter(
      *         name="gradeId",
@@ -897,6 +910,7 @@ class RegistrationController extends Controller
      * @OA\Get(
      *      path="/api/v4/institution-types/list",
      *      summary="Get a list of institution's type",
+     *      description="Get a list of institution's type",
      *      tags={"Institutions"},
      *      @OA\Parameter(
      *         name="page",
@@ -954,6 +968,7 @@ class RegistrationController extends Controller
      * @OA\Get(
      *      path="/api/v4/area-levels/list",
      *      summary="Get a list of area levels",
+     *      description="Get a list of area levels",
      *      tags={"Areas"},
      *      @OA\Parameter(
      *         name="page",
@@ -1011,6 +1026,7 @@ class RegistrationController extends Controller
      * @OA\Get(
      *      path="/api/v4/areas/list",
      *      summary="Get a list of area's",
+     *      description="Get a list of area's",
      *      tags={"Areas"},
      *      @OA\Parameter(
      *         name="page",
@@ -1068,6 +1084,7 @@ class RegistrationController extends Controller
      * @OA\Get(
      *      path="/api/v4/area-administrative-levels/list",
      *      summary="Get area administrative level list",
+     *      description="Get area administrative level list",
      *      tags={"Areas"},
      *      @OA\Parameter(
      *         name="page",
@@ -1126,6 +1143,7 @@ class RegistrationController extends Controller
      * @OA\Get(
      *      path="/api/v4/area-administratives/list",
      *      summary="Get area administrative list",
+     *      description="Get area administrative list",
      *      tags={"Areas"},
      *      @OA\Parameter(
      *         name="area_level_id",
