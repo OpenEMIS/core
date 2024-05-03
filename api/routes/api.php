@@ -269,6 +269,12 @@ Route::group(
                 Route::get("exams/{examId}", 'ExaminationController@getExaminationDetails');
                 Route::get("exams/{examId}/centres/{centreId}", 'ExaminationController@getCenterExaminationDetails');
                 Route::get("exams/{examId}/centres/{centreId}/students/{studentId}", 'ExaminationController@getCenterExaminationStudentDetails');
+                // start POCOR - 8076
+                Route::get("exams/{examId}/centres/{centreId}/subjects", 'ExaminationController@examinationCenterExaminationSubjects');
+                Route::get("exams/{examId}/centres/{centreId}/subjects/{subjectId}/students", 'ExaminationController@examinationCenterExaminationSubjectsStudents');
+                Route::post("exams/student-subject-result", 'ExaminationController@examStudentSubjectResult');
+
+                // end POCOR - 8076
             }
         );
 
@@ -449,5 +455,11 @@ Route::group(
         //POCOR-8194 starts
         Route::get('staff/position/grades', 'DirectoryController@getStaffPositionGrades');
         //POCOR-8194 ends
+
+
+        //POCOR-8259 start...
+        Route::get('themes', 'ThemeController@getAllThemes');
+        Route::get('themes/{themeId}', 'ThemeController@getThemeId');
+        //POCOR-8259 end...
     }
 );
