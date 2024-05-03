@@ -677,7 +677,7 @@ class UserController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/pocor-openemis-core/api/v4/institutions/getStudentAdmissionStatus",
+     *     path="/api/v4/pocor-openemis-core/api/v4/institutions/getStudentAdmissionStatus",
      *     summary="Get student admission status",
      *     description="Returns a list of student admission statuses.",
      *     tags={"Users"},
@@ -723,7 +723,7 @@ class UserController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/pocor-openemis-core/api/v4/permissions",
+     *     path="/api/v4/pocor-openemis-core/api/v4/permissions",
      *     summary="Get permissions for a user",
      *     description="Returns permissions for a user based on the provided user ID",
      *     tags={"Users"},
