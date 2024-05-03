@@ -444,5 +444,11 @@ Route::group(
         //POCOR-8194 starts
         Route::get('staff/position/grades', 'DirectoryController@getStaffPositionGrades');
         //POCOR-8194 ends
+
+
+        //POCOR-8259 start...
+        Route::get('themes', 'ThemeController@getAllThemes');
+        Route::get('themes/{themeId}', 'ThemeController@getThemeId');
+        //POCOR-8259 end...
     }
 );

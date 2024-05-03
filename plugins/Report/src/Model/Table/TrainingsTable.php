@@ -303,31 +303,33 @@ class TrainingsTable extends AppTable
             if (isset($this->request->data[$this->alias()]['feature'])) {
                 $feature = $this->request->data[$this->alias()]['feature'];
 
-            if (in_array($feature, ['Report.EmployeeTrainingCard'])) {
-            $attr['type'] = 'autocomplete';
-            $attr['target'] = ['key' => 'guardian_id', 'name' => $this->aliasField('guardian_id')];
-            $attr['noResults'] = __('No Guardian found.');
-            $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
-            $action = 'Guardians';
-            if ($this->controller->name == 'Reports') {
-                $action = 'StudentGuardians';
-            }
-            $attr['url'] = ['controller' => $this->controller->name, 'action' => $action, 'ajaxUserStaffAutocomplete'];
-            $requestData = $this->request->data;
-            if (isset($requestData) && !empty($requestData[$this->alias()]['guardian_id'])) {
-                $guardianId = $requestData[$this->alias()]['guardian_id'];
-                $guardianName = $this->Users->get($guardianId)->name_with_id;
+                if (in_array($feature, ['Report.EmployeeTrainingCard'])) {
+                    $attr['type'] = 'autocomplete';
+                    $attr['target'] = ['key' => 'guardian_id', 'name' => $this->aliasField('guardian_id')];
+                    $attr['noResults'] = __('No Guardian found.');
+                    $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
+                    $action = 'Guardians';
+                    if ($this->controller->name == 'Reports') {
+                        $action = 'Trainings';
+                    }
+                    //POCOR-8249 change ajax file 
+                    $attr['url'] = ['controller' => $this->controller->name, 'action' => $action, 'ajaxUserAutocomplete'];
+                   
+                    $requestData = $this->request->data;
+                    if (isset($requestData) && !empty($requestData[$this->alias()]['guardian_id'])) {
+                        $guardianId = $requestData[$this->alias()]['guardian_id'];
+                        $guardianName = $this->Users->get($guardianId)->name_with_id;
 
-                $attr['attr']['value'] = $guardianName;
-            }
+                        $attr['attr']['value'] = $guardianName;
+                    }
 
-            $iconSave = '<i class="fa fa-check"></i> ' . __('Save');
-            $iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
-            $attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
-            $attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
-            $attr['onSelect'] = "$('#reload').click();";
-        }
-        }
+                    $iconSave = '<i class="fa fa-check"></i> ' . __('Save');
+                    $iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
+                    $attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
+                    $attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
+                    $attr['onSelect'] = "$('#reload').click();";
+                }
+            }
         } elseif ($action == 'index') {
             $attr['sort'] = ['field' => 'Guardians.first_name'];
         }
@@ -337,7 +339,7 @@ class TrainingsTable extends AppTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['ControllerAction.Model.ajaxUserStaffAutocomplete'] = 'ajaxUserStaffAutocomplete';
+        $events['ControllerAction.Model.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete';
         return $events;
     }
 
@@ -602,4 +604,57 @@ class TrainingsTable extends AppTable
             }
         }
     }
+
+    //POCOR-8249
+    public function ajaxUserAutocomplete()
+    {
+        $this->controller->autoRender = false;
+        $this->ControllerAction->autoRender = false;
+        $Users = TableRegistry::get('Security.Users');
+        if ($this->request->is(['ajax'])) {
+            $term = $this->request->query['term'];
+
+            $UserIdentitiesTable = TableRegistry::get('User.Identities');
+
+            $query = $Users
+                ->find()
+                ->select([
+                    $Users->aliasField('openemis_no'),
+                    $Users->aliasField('first_name'),
+                    $Users->aliasField('middle_name'),
+                    $Users->aliasField('third_name'),
+                    $Users->aliasField('last_name'),
+                    $Users->aliasField('preferred_name'),
+                    $Users->aliasField('id')
+                ])
+                ->leftJoin(
+                    [$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()],
+                    [
+                        $UserIdentitiesTable->aliasField('security_user_id') . ' = ' . $Users->aliasField('id')
+                    ]
+                )
+                ->group([
+                    $Users->aliasField('id')
+                ])
+                ->limit(100);
+
+            $term = trim($term);
+
+            if (!empty($term)) {
+                $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $term, 'OR' => ['`Identities`.number LIKE ' => $term . '%']]);
+            }
+
+            $list = $query->all();
+
+            $data = [];
+            foreach ($list as $obj) {
+                $label = sprintf('%s - %s', $obj->openemis_no, $obj->name);
+                $data[] = ['label' => $label, 'value' => $obj->id];
+            }
+
+            echo json_encode($data);
+            die;
+        }
+    }
+    
 }

@@ -492,7 +492,8 @@ class SurveysTable extends AppTable
                 'Institutions.Areas',
                 'Institutions.AreaAdministratives',
                 'Institutions.Statuses'
-            ])->where([$condition]);
+            ])->where([$condition
+            ])->group(['Surveys.id']); //POCOR-8226 added group by to avoid duplicates
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)

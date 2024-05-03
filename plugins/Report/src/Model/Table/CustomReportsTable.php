@@ -312,7 +312,8 @@ class CustomReportsTable extends AppTable
 			$params['end_date'] = date("Y-m-d", strtotime($params['end_date']));	
 		}
 		
-        if (array_key_exists('requestQuery', $settings)) {
+        //if (array_key_exists('requestQuery', $settings)) {
+        if (isset($settings['requestQuery'])) {    //POCOR-8126
             $jsonQuery = json_decode($customReportData->query, true);
 
             // csvBehavior can only can handle one query

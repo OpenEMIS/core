@@ -220,8 +220,9 @@ class ReportsController extends AppController
             ];
         } elseif ($module == 'Examinations') {
             $options = [
-                'Report.RegisteredStudentsExaminationCentre' => __('Registered Students by Examination Centre'),
+                
                 'Report.NotRegisteredStudents' => __('Not Registered Students'),
+                'Report.RegisteredStudentsExaminationCentre' => __('Registered Students by Examination Centre'),
                 'Report.ExaminationResults' => __('Examination Results'),
             ];
         } elseif ($module == 'UisStatistics') {
