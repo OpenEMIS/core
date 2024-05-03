@@ -37,10 +37,11 @@ class PullBehavior extends Behavior
 
     public function initialize(array $config)
     {
+
         parent::initialize($config);
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $type = $ConfigItems->value('external_data_source_type');
-      
+
         $this->type = $type;
 
         if ($this->type != 'None') {

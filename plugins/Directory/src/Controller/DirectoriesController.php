@@ -2,18 +2,15 @@
 
 namespace Directory\Controller;
 
+use App\Controller\AppController;
 use ArrayObject;
-
 use Cake\Event\Event;
-use Cake\Log\Log;
-use Cake\ORM\Table;
+use Cake\Http\Client;
+use Cake\Network\Response;
 use Cake\ORM\Query;
+use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
-use Cake\Routing\Router;
-use App\Controller\AppController;
-use Cake\Network\Response;
-use Cake\Http\Client;
 
 class DirectoriesController extends AppController
 {
@@ -65,6 +62,58 @@ class DirectoriesController extends AppController
         $this->set('contentHeader', 'Directories');
     }
 
+    private function attachAngularModules()
+    {
+        $action = $this->request->action;
+
+        switch ($action) {
+            case 'StudentResults':
+                $this->Angular->addModules([
+                    'alert.svc',
+                    'student.results.ctrl',
+                    'student.results.svc'
+                ]);
+                break;
+            case 'StudentExaminationResults':
+                $this->Angular->addModules([
+                    'alert.svc',
+                    'student.examination_results.ctrl',
+                    'student.examination_results.svc'
+                ]);
+                break;
+            case 'StaffAttendances':
+                $this->Angular->addModules([
+                    'staff.attendances.ctrl',
+                    'staff.attendances.svc'
+                ]);
+                break;
+        }
+    }
+
+    // CAv4
+
+    private function attachAngularModulesForDirectory()
+    {
+        $action = $this->request->pass[0];
+        if ($action == '' || $this->request->params['action'] != 'Directories') {
+            $action = $this->request->params['action'];
+        }
+        switch ($action) {
+            case 'add':
+                $this->Angular->addModules([
+                    'directory.directoryadd.ctrl',
+                    'directory.directoryadd.svc'
+                ]);
+                break;
+            case 'Addguardian':
+                $this->Angular->addModules([
+                    'directory.directoryaddguardian.ctrl',
+                    'directory.directoryaddguardian.svc'
+                ]);
+                break;
+        }
+    }
+
     public function Directories()
     {
         $action = $this->request->pass[0];
@@ -76,7 +125,6 @@ class DirectoriesController extends AppController
         }
     }
 
-    // CAv4
     public function StudentFees()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentFees']);
@@ -279,6 +327,8 @@ class DirectoriesController extends AppController
 
     }
 
+    // health
+
     public function StudentRisks()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentRisks']);
@@ -289,7 +339,6 @@ class DirectoriesController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.InstitutionAssociationStudent']);
     }
 
-    // health
     public function Healths()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']);
@@ -319,6 +368,9 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Immunizations']);
     }
+    // End Health
+
+    // Special Needs
 
     public function HealthMedications()
     {
@@ -329,9 +381,7 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']);
     }
-    // End Health
 
-    // Special Needs
     public function SpecialNeedsReferrals()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsReferrals']);
@@ -346,34 +396,40 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsServices']);
     }
+    // Special Needs - End
+    //POCOR-7366 start
 
     public function SpecialNeedsDevices()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDevices']);
     }
 
+    //POCOR-7366 end
+
     public function SpecialNeedsPlans()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsPlans']);
     }
-    // Special Needs - End
-    //POCOR-7366 start
+
+    // Historical Data - End
+
     public function Counsellings()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.Counsellings']);
     }
 
-    //POCOR-7366 end
     public function Employments()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserEmployments']);
     }
 
-    // Historical Data - End
     public function HistoricalStaffPositions()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Historical.HistoricalStaffPositions']);
     }
+    // End
+
+    // AngularJS
 
     public function HistoricalStaffLeave()
     {
@@ -411,9 +467,7 @@ class DirectoriesController extends AppController
         $this->attachAngularModulesForDirectory();
         $this->set('ngController', 'DirectoryaddguardianCtrl as $ctrl');
     }
-    // End
 
-    // AngularJS
     public function StudentResults()
     {
         $session = $this->request->session();
@@ -446,6 +500,40 @@ class DirectoriesController extends AppController
             }
             // End POCOR-5188
         }
+    }
+
+    // End
+
+    public function getAcademicTabElements($options = [])
+    {
+        $id = (array_key_exists('id', $options)) ? $options['id'] : 0;
+        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
+        $tabElements = [];
+        $studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
+        $studentTabElements = [
+            'Programmes' => ['text' => __('Programmes')],
+            'Classes' => ['text' => __('Classes')],
+            'Subjects' => ['text' => __('Subjects')],
+            'Absences' => ['text' => __('Absences')],
+            'Behaviours' => ['text' => __('Behaviours')],
+            'Outcomes' => ['text' => __('Outcomes')],
+            'Results' => ['text' => __('Assessments')],
+            'ExaminationResults' => ['text' => __('Examinations')],
+            'ReportCards' => ['text' => __('Report Cards')],
+            'Awards' => ['text' => __('Awards')],
+            //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7648
+            'Textbooks' => ['text' => __('Textbooks')],
+            'Risks' => ['text' => __('Risks')],
+            'Associations' => ['text' => __('Houses')], //POCOR-7938
+        ];
+
+        $tabElements = array_merge($tabElements, $studentTabElements);
+
+        foreach ($studentTabElements as $key => $tab) {
+            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'index', 'type' => $type]);
+        }
+
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
     public function StudentExaminationResults()
@@ -513,56 +601,46 @@ class DirectoriesController extends AppController
         // End POCOR-5188
     }
 
-    // End
-
-    private function attachAngularModules()
+    public function getCareerTabElements($options = [])
     {
-        $action = $this->request->action;
+        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
+        $tabElements = [];
+        $studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
+        $studentTabElements = [
+            'EmploymentStatuses' => ['text' => __('Statuses')],
+            'Positions' => ['text' => __('Positions')],
+            'Classes' => ['text' => __('Classes')],
+            'Subjects' => ['text' => __('Subjects')],
+            'Leave' => ['text' => __('Leave')],
+            'Attendances' => ['text' => __('Attendances')],
+            'Behaviours' => ['text' => __('Behaviours')],
+            'Appraisals' => ['text' => __('Appraisals')],
+            'Duties' => ['text' => __('Duties')],
+            'Associations' => ['text' => __('Houses')], //POCOR-7938
+        ];
 
-        switch ($action) {
-            case 'StudentResults':
-                $this->Angular->addModules([
-                    'alert.svc',
-                    'student.results.ctrl',
-                    'student.results.svc'
-                ]);
-                break;
-            case 'StudentExaminationResults':
-                $this->Angular->addModules([
-                    'alert.svc',
-                    'student.examination_results.ctrl',
-                    'student.examination_results.svc'
-                ]);
-                break;
-            case 'StaffAttendances':
-                $this->Angular->addModules([
-                    'staff.attendances.ctrl',
-                    'staff.attendances.svc'
-                ]);
-                break;
+        $tabElements = array_merge($tabElements, $studentTabElements);
+
+        foreach ($studentTabElements as $key => $tab) {
+            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Staff' . $key, 'type' => 'staff']);
         }
+        return $this->TabPermission->checkTabPermission($tabElements);
     }
 
-    private function attachAngularModulesForDirectory()
+    private function getInstitutionID()
     {
-        $action = $this->request->pass[0];
-        if ($action == '' || $this->request->params['action'] != 'Directories') {
-            $action = $this->request->params['action'];
+        $session = $this->request->session();
+        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
+        $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
+        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
+            $this->request->params['institutionId'] :
+            $encodedInstitutionIDFromSession;
+        try {
+            $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
+        } catch (\Exception $exception) {
+            $institutionID = $insitutionIDFromSession;
         }
-        switch ($action) {
-            case 'add':
-                $this->Angular->addModules([
-                    'directory.directoryadd.ctrl',
-                    'directory.directoryadd.svc'
-                ]);
-                break;
-            case 'Addguardian':
-                $this->Angular->addModules([
-                    'directory.directoryaddguardian.ctrl',
-                    'directory.directoryaddguardian.svc'
-                ]);
-                break;
-        }
+        return $institutionID;
     }
 
     public function beforeFilter(Event $event)
@@ -847,6 +925,11 @@ class DirectoriesController extends AppController
         }
     }
 
+    public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra)
+    {
+        $this->beforePaginate($event, $model, $query, $extra);
+    }
+
     public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
     {
         $session = $this->request->session();
@@ -900,11 +983,6 @@ class DirectoriesController extends AppController
         }
     }
 
-    public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra)
-    {
-        $this->beforePaginate($event, $model, $query, $extra);
-    }
-
     public function excel($id = 0)
     {
         $this->Students->excel($id);
@@ -917,7 +995,6 @@ class DirectoriesController extends AppController
         $this->ControllerAction->autoRender = false;
         $this->Image->getUserImage($id);
     }
-
 
     public function getUserTabElements($options = [])
     {
@@ -1028,6 +1105,8 @@ class DirectoriesController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
+    // For staff
+
     public function getGuardianStudentTabElements($options = [])
     {
         // $type = (array_key_exists('type', $options))? $options['type']: null;
@@ -1039,38 +1118,6 @@ class DirectoriesController extends AppController
                 'text' => __('Students')
             ],
         ];
-        return $this->TabPermission->checkTabPermission($tabElements);
-    }
-
-    public function getAcademicTabElements($options = [])
-    {
-        $id = (array_key_exists('id', $options)) ? $options['id'] : 0;
-        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
-        $tabElements = [];
-        $studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
-        $studentTabElements = [
-            'Programmes' => ['text' => __('Programmes')],
-            'Classes' => ['text' => __('Classes')],
-            'Subjects' => ['text' => __('Subjects')],
-            'Absences' => ['text' => __('Absences')],
-            'Behaviours' => ['text' => __('Behaviours')],
-            'Outcomes' => ['text' => __('Outcomes')],
-            'Results' => ['text' => __('Assessments')],
-            'ExaminationResults' => ['text' => __('Examinations')],
-            'ReportCards' => ['text' => __('Report Cards')],
-            'Awards' => ['text' => __('Awards')],
-            //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7648
-            'Textbooks' => ['text' => __('Textbooks')],
-            'Risks' => ['text' => __('Risks')],
-            'Associations' => ['text' => __('Houses')], //POCOR-7938
-        ];
-
-        $tabElements = array_merge($tabElements, $studentTabElements);
-
-        foreach ($studentTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'index', 'type' => $type]);
-        }
-
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
@@ -1097,34 +1144,6 @@ class DirectoriesController extends AppController
         }
         return $this->TabPermission->checkTabPermission($studentTabElements);
     }
-
-    // For staff
-    public function getCareerTabElements($options = [])
-    {
-        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
-        $tabElements = [];
-        $studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
-        $studentTabElements = [
-            'EmploymentStatuses' => ['text' => __('Statuses')],
-            'Positions' => ['text' => __('Positions')],
-            'Classes' => ['text' => __('Classes')],
-            'Subjects' => ['text' => __('Subjects')],
-            'Leave' => ['text' => __('Leave')],
-            'Attendances' => ['text' => __('Attendances')],
-            'Behaviours' => ['text' => __('Behaviours')],
-            'Appraisals' => ['text' => __('Appraisals')],
-            'Duties' => ['text' => __('Duties')],
-            'Associations' => ['text' => __('Houses')], //POCOR-7938
-        ];
-
-        $tabElements = array_merge($tabElements, $studentTabElements);
-
-        foreach ($studentTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Staff' . $key, 'type' => 'staff']);
-        }
-        return $this->TabPermission->checkTabPermission($tabElements);
-    }
-
 
     public function getProfessionalTabElements($options = [])
     {
@@ -1229,10 +1248,19 @@ class DirectoriesController extends AppController
         $nationalities = TableRegistry::get('nationalities');
         $nationalities_result = $nationalities
             ->find()
-            ->select(['id', 'name'])
+            ->leftJoin(['IdentityTypes' => 'identity_types'],
+                [$nationalities->aliasField('identity_type_id') . ' = IdentityTypes.id'])
+            ->select(['id' => $nationalities->aliasField('id'),
+                'name' => $nationalities->aliasField('name'),
+                'identity_type_id' => $nationalities->aliasField('identity_type_id'),
+                'identity_type_name' => 'IdentityTypes.name'])
             ->toArray();
         foreach ($nationalities_result as $result) {
-            $result_array[] = array("id" => $result['id'], "name" => $result['name']);
+            $result_array[] = array("id" => $result['id'],
+                "name" => __($result['name']),
+                "identity_type_id" => $result['identity_type_id'],
+                "identity_type_name" => __($result['identity_type_name']),
+                );
         }
         echo json_encode($result_array);
         die;
@@ -1312,6 +1340,8 @@ class DirectoriesController extends AppController
             return true;
         }
     }
+
+    //POCOR-7072 starts
 
     public function directoryInternalSearch()
     {
@@ -1809,7 +1839,6 @@ class DirectoriesController extends AppController
         die;
     }
 
-    //POCOR-7072 starts
     public function getStaffCustomData($staff_id = null)
     {
         $staffCustomFieldValues = TableRegistry::get('staff_custom_field_values');
@@ -1875,7 +1904,7 @@ class DirectoriesController extends AppController
             }
         }
         return $custom_field;
-    }
+    }//POCOR-7072 ends
 
     public function getStudentCustomData($student_id = null)
     {
@@ -1942,7 +1971,7 @@ class DirectoriesController extends AppController
             }
         }
         return $custom_field;
-    }//POCOR-7072 ends
+    }
 
     public function getCountInernalSearch($conditions = [], $identityNumber, $identityCondition = [], $userTypeCondition = [])
     {
@@ -2093,41 +2122,60 @@ class DirectoriesController extends AppController
 
     public function directoryExternalSearch()
     {
+//        $this->log(__FUNCTION__, 'debug');
         $this->autoRender = false;
+
+        $requestInput = $this->request->input('json_decode', true);
+        $params = $requestInput['params'];
+        $firstName = (array_key_exists('first_name', $params)) ? $params['first_name'] : null;
+        $lastName = (array_key_exists('last_name', $params)) ? $params['last_name'] : null;
+        $openemisNo = (array_key_exists('openemis_no', $params)) ? $params['openemis_no'] : null;
+        $identityNumber = (array_key_exists('identity_number', $params)) ? $params['identity_number'] : null;
+        $nationalityID = (array_key_exists('nationality_id', $params)) ? $params['nationality_id'] : null;
+        $dateOfBirth = (array_key_exists('date_of_birth', $params) && !empty($params['date_of_birth'])) ? date('Y-m-d', strtotime($params['date_of_birth'])) : null;
+        $limit = (array_key_exists('limit', $params)) ? $params['limit'] : 10;
+        $page = (array_key_exists('page', $params)) ? $params['page'] : 1;
+        $id = (array_key_exists('id', $params)) ? $params['id'] : '';
+        $search_type = (array_key_exists('search_type', $params)) ? $params['search_type'] : '';
+        //POCOR-5672 starts new changes searching by identity number
+
         $ExternalAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
-        $attributes = $ExternalAttributes
+        $attributesQuery = $ExternalAttributes
             ->find('list', [
                 'keyField' => 'attribute_field',
                 'valueField' => 'value'
             ])
             ->innerJoin(['ConfigItems' => 'config_items'], [
-                'ConfigItems.code' => 'external_data_source_type',
-                $ExternalAttributes->aliasField('external_data_source_type') . ' = ConfigItems.value'
+                'ConfigItems.type' => 'External Data Source - Identity',
+                $ExternalAttributes->aliasField('external_data_source_type') . ' = ConfigItems.label'
             ])
+            ->innerJoin(['Nationalities' => 'nationalities'],
+                ['Nationalities.id = ' . $nationalityID,
+                    'Nationalities.external_validation = ConfigItems.id']);
+        $attributes = $attributesQuery
             ->toArray();
+        $noData = json_encode(['data' => [], 'total' => 0]);
+//        $this->log(__FUNCTION__ . ': search_type', 'debug');
+//        $this->log($search_type, 'debug');
+        if ($search_type !== 'UNHCR') {
+            try {
+                $response = $this->getTokenedData($attributes, $identityNumber, $noData, $id);
+            } catch (\Exception $exception) {
+                die($exception->getMessage());
 
-        $clientId = $attributes['client_id'];
-        $scope = $attributes['scope'];
-        $tokenUri = $attributes['token_uri'];
-        $privateKey = $attributes['private_key'];
-        $token = $ExternalAttributes->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
+            }
+        } else {
+            try {
+                $response = $this->getUNHCRData($attributes, $noData, $identityNumber, $dateOfBirth);
+            } catch (\Exception $exception) {
+                die($exception->getMessage());
+            }
+        }
+        return $response;
+    }
 
-        $data = [
-            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-            'assertion' => $token
-        ];
-
-        $requestData = $this->request->input('json_decode', true);
-        $requestData = $requestData['params'];
-        $firstName = (array_key_exists('first_name', $requestData)) ? $requestData['first_name'] : null;
-        $lastName = (array_key_exists('last_name', $requestData)) ? $requestData['last_name'] : null;
-        $openemisNo = (array_key_exists('openemis_no', $requestData)) ? $requestData['openemis_no'] : null;
-        $identityNumber = (array_key_exists('identity_number', $requestData)) ? $requestData['identity_number'] : null;
-        $dateOfBirth = (array_key_exists('date_of_birth', $requestData) && !empty($requestData['date_of_birth'])) ? date('Y-m-d', strtotime($requestData['date_of_birth'])) : null;
-        $limit = (array_key_exists('limit', $requestData)) ? $requestData['limit'] : 10;
-        $page = (array_key_exists('page', $requestData)) ? $requestData['page'] : 1;
-        $id = (array_key_exists('id', $requestData)) ? $requestData['id'] : '';
-        //POCOR-5672 starts new changes searching by identity number
+    private function getTokenedData($attributes, $identityNumber, $noData, $id = null)
+    {
         if (!empty($identityNumber)) {
             $fieldMapping = [
                 '{page}' => $page,
@@ -2147,12 +2195,23 @@ class DirectoriesController extends AppController
                 '{identity_number}' => $identityNumber
             ];
         }
+        $ExternalAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
 
+        $clientId = $attributes['client_id'];
+        $scope = $attributes['scope'];
+        $tokenUri = $attributes['token_uri'];
+        $privateKey = $attributes['private_key'];
+        $token = $ExternalAttributes->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
+        $data = [
+            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            'assertion' => $token
+        ];
         $http = new Client();
-        $response = $http->post($attributes['token_uri'], $data);
-        $noData = json_encode(['data' => [], 'total' => 0], JSON_PRETTY_PRINT);
+        $response = $http->post($tokenUri, $data);
+
+        $decodedResponse = $response->body('json_decode');
         if ($response->isOK()) {
-            $body = $response->body('json_decode');
+            $body = $decodedResponse;
             $recordUri = $attributes['record_uri'];
 
             foreach ($fieldMapping as $key => $map) {
@@ -2164,44 +2223,104 @@ class DirectoriesController extends AppController
             ]);
 
             $response = $http->get($recordUri);
-
+            $decodedResponse = $response->body('json_decode');
             if ($response->isOK()) {
-                $this->response->body(json_encode($response->body('json_decode'), JSON_PRETTY_PRINT));
+                $responseData = json_encode($decodedResponse, JSON_PRETTY_PRINT);
             } else {
-                $this->response->body($noData);
+                $responseData = $noData;
             }
         } else {
-            $this->response->body($noData);
+            $responseData = $noData;
         }
 
         if (!empty($id)) {
-            $mydata = json_decode(new Response(['body' => $this->response->body(json_encode($response->body('json_decode'), JSON_PRETTY_PRINT))]));
+            $mydata = json_decode(new Response(['body' => json_encode($decodedResponse, JSON_PRETTY_PRINT)]));
             $singleUserData = [];
             foreach ($mydata->data as $key => $value) {
                 if ($value->id == $id) {
                     $singleUserData['data'][] = $value;
                 }
             }
-            return new Response(['body' => $this->response->body(json_encode($singleUserData, JSON_PRETTY_PRINT))]);
+            $responseData = json_encode($singleUserData, JSON_PRETTY_PRINT);
         }
+//        $this->log(__FUNCTION__, 'debug');
+//        $this->log($responseData, 'debug');
+        $response = new Response(['body' => $responseData]);
+//        $this->log($response, 'debug');
+        return $response;
 
-        return new Response(['body' => $this->response->body(json_encode($response->body('json_decode'), JSON_PRETTY_PRINT))]);
     }
 
-//    public function getContactType()
-//    {
-//        $contact_types = TableRegistry::get('contact_types');
-//        $contact_types_result = $contact_types
-//            ->find()
-//            ->select(['id','name'])
-//            ->toArray();
-//        foreach($contact_types_result AS $result){
-//            $result_array[] = array("id" => $result['id'], "name"=> $result['name']);
-//        }
-//        echo json_encode($result_array);die;
-//    }
-
 // POCOR-8012-n
+
+    private function getUNHCRData($attributes, $noData, $identityNumber, $dateOfBirth)
+    {
+
+        $application_id = $attributes['application_id'];
+        $apiKey = $attributes['secret_code'];
+        $url = $attributes['url'];
+        $tokenUri = $url . "login"; // Replace with the actual URL
+        $userDataUri = $url . "validate/identity-number"; // Replace with the actual URL
+        // Prepare the body to obtain token
+        $tokenRequestBody = [
+            'api_key' => $apiKey
+        ];
+//        $this->log($tokenRequestBody, 'debug');
+        $headers = ['Authorization' => 'Basic ' . $application_id,
+            'Content-Type' => 'application/json',
+            'content-type' => 'application/json',
+            ];
+        $http = new \Cake\Network\Http\Client();
+        $response = $http->post($tokenUri, json_encode($tokenRequestBody, JSON_PRETTY_PRINT), ['headers' => $headers]);
+//        $response = $http->post($tokenUri,json_encode($tokenRequestBody));
+        // Decode the response body
+        $decodedResponse = $response->body('json_decode');
+        $responseData = $noData;
+        // Check if the response is successful
+        if ($response->isOK() && isset($decodedResponse->data->token)) {
+            // Extract the token
+            $token = $decodedResponse->data->token;
+            // Prepare headers with token
+            $headers = [
+                'token' => $token,
+                'Content-Type' => 'application/json',
+            ];
+//            $this->log($headers, 'debug');
+            $userRequestBody = [
+                "identity_number" => $identityNumber,
+                "date_of_birth" => $dateOfBirth
+            ];
+            $userRequestBody = json_encode($userRequestBody, JSON_PRETTY_PRINT);
+//            $this->log($userRequestBody, 'debug');
+            // Get user data using the obtained token
+            $http = new \Cake\Network\Http\Client();
+            $response = $http->post($userDataUri,
+                $userRequestBody, [
+                    'headers' => $headers,
+                    'type' => 'json'
+                ]);
+            $decodedResponse = $response->body('json_decode');
+            if ($response->isOK() && isset($decodedResponse->result)) {
+                $answer = [];
+                $decodedResponse = $response->body('json_decode');
+                if ($decodedResponse->result) {
+                    $answer['identity_number'] = $identityNumber;
+                }
+                $responseData = json_encode(['data' => [$answer]], JSON_PRETTY_PRINT);
+            } else {
+                $responseData = $noData;
+            }
+            // Return the response
+        }
+//        $this->log(__FUNCTION__, 'debug');
+//        $this->log($responseData, 'debug');
+        $response = new Response(['body' => $responseData]);
+//        $this->log($response, 'debug');
+        return $response;
+    }
+
+    //POCOR-5673 starts
+
     public function getContactType()
     {
         $contact_types = TableRegistry::get('contact_types');
@@ -2224,7 +2343,6 @@ class DirectoriesController extends AppController
         die;
     }
 
-    //POCOR-5673 starts
     public function getRedirectToGuardian()
     {
         $config_items = TableRegistry::get('config_items');
@@ -2241,7 +2359,7 @@ class DirectoriesController extends AppController
         }
         echo json_encode($result_array);
         die;
-    }
+    }//POCOR-5673 ends
 
     public function getRelationshipType()
     {
@@ -2256,52 +2374,38 @@ class DirectoriesController extends AppController
         }
         echo json_encode($result_array);
         die;
-    }//POCOR-5673 ends
+    }
 
     public function StudentAbsences()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']);
     }
 
+    /*POCOR-6286 starts - registering functions*/
+
     public function Absences()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']);
     }
 
-    /*POCOR-6286 starts - registering functions*/
     public function StaffProfiles()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.StaffProfiles']);
-    }
-
-    public function StudentProfiles()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.StudentProfiles']);
     }
     /*POCOR-6286 ends*/
 
 
     /*POCOR-6700 start - registering function*/
-    public function StudentExtracurriculars()
+
+    public function StudentProfiles()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Extracurriculars']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.StudentProfiles']);
     }
 
     /*POCOR-6700 ends*/
 
-    private function getInstitutionID()
+    public function StudentExtracurriculars()
     {
-        $session = $this->request->session();
-        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
-        $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
-        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
-            $this->request->params['institutionId'] :
-            $encodedInstitutionIDFromSession;
-        try {
-            $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
-        } catch (\Exception $exception) {
-            $institutionID = $insitutionIDFromSession;
-        }
-        return $institutionID;
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Extracurriculars']);
     }
 }

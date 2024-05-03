@@ -184,9 +184,11 @@ class InstitutionsTable extends ControllerActionTable
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionActivities', 'key' => 'institution_id', 'session' => 'Institution.Institutions.id']);
 
         // specify order of advanced search fields
+        // POCOR-8219 added
         $advancedSearchFieldOrder = [
             'code', 'name', 'classification', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id',
-            'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'education_programmes', 'alternative_name', 'shift_type'
+            'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id',
+            'education_systems', 'education_levels', 'education_programmes', 'alternative_name', 'shift_type'
         ];
         $this->addBehavior('AdvanceSearch', [
             'display_country' => false,
@@ -1426,9 +1428,19 @@ class InstitutionsTable extends ControllerActionTable
 
         $plugin = $this->controller->plugin;
         $name = $this->controller->name;
+
+// POCOR-8219 no pics if localhost
+// Get the base URL from configuration
+        $baseUrl = Configure::read('App.fullBaseUrl');
+
+// Check if the base URL contains 'localhost' or '127.0.0.1'
+        $isLocalhost = strpos($baseUrl, 'localhost') !== false || strpos($baseUrl, '127.0.0.1') !== false;
+
         $imageUrl = ['plugin' => $plugin, 'controller' => $name, 'action' => $this->alias(), 'image'];
         $imageDefault = 'fa kd-institutions';
+        if (!$isLocalhost){
         $this->field('logo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"' . $imageDefault . '"', 'order' => 0]);
+        }
         $this->field('area_id', ['sort' => ['field' => 'Areas.name']]); //POCOR-6849
         $this->field('institution_type_id', ['sort' => ['field' => 'Types.name']]); //POCOR-6849
         $this->setFieldOrder([
@@ -1563,7 +1575,7 @@ class InstitutionsTable extends ControllerActionTable
                 ])
                 ->first();
             $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
-            
+
             $securityRoleFunctions = TableRegistry::get('SecurityRoleFunctions');
 
             $securityRoleFunctionsData = $securityRoleFunctions

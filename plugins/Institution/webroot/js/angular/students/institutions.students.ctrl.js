@@ -159,7 +159,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.gotoAddStudentStep = gotoAddStudentStep;
     StudentController.handleFileSelection = handleFileSelection;
     StudentController.getContactTypes = getContactTypes;
-    StudentController.changeContactType = changeContactType;;
+    StudentController.changeContactType = changeContactType;
+    ;
 
     //POCOR-7224-HINDOL[END]
 
@@ -348,7 +349,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             last_name: StudentController.selectedStudentData.last_name,
             date_of_birth: StudentController.selectedStudentData.date_of_birth,
             identity_number: StudentController.selectedStudentData.identity_number,
-            openemis_no: StudentController.selectedStudentData.openemis_no
+            openemis_no: StudentController.selectedStudentData.openemis_no,
+            nationality_id: StudentController.selectedStudentData.nationality_id,
+            search_type: StudentController.externalSearchSourceName
         };
         var dataSource = {
             pageSize: StudentController.pageSize,
@@ -359,16 +362,38 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 InstitutionsStudentsSvc.getExternalSearchData(param)
                     .then(function (response) {
                         var gridData = response.data.data;
-                        if (!gridData)
+                        if (!gridData) {
                             gridData = [];
+                        }
+                        if (StudentController.externalSearchSourceName === 'UNHCR') {
+                            StudentController.selectedStudentData.identity_number = null;
+                        }
+
                         gridData.forEach((data, idx) => {
+                            if (StudentController.externalSearchSourceName === 'UNHCR') {
+                                StudentController.selectedStudentData.identity_number = null;
+                                data.name = StudentController.selectedStudentData.name;
+                                data.gender = StudentController.selectedStudentData.gender.name;
+                                data.gender_id = StudentController.selectedStudentData.gender_id;
+                                data.nationality_id = StudentController.selectedStudentData.nationality_id;
+                                data.nationality = StudentController.selectedStudentData.nationality_name;
+                                data.identity_type = StudentController.selectedStudentData.identity_type_name;
+                                data.identity_type_id = StudentController.selectedStudentData.identity_type_id;
+                                data.first_name = StudentController.selectedStudentData.first_name;
+                                data.last_name = StudentController.selectedStudentData.last_name;
+                                data.middle_name = StudentController.selectedStudentData.middle_name;
+                                data.third_name = StudentController.selectedStudentData.third_name;
+                                data.preferred_name = StudentController.selectedStudentData.preferred_name;
+                                data.date_of_birth = StudentController.selectedStudentData.date_of_birth;
+                            } else {
+                                data.gender_id = data['gender.id'];
+                                data.gender = data['gender.name'];
+                                data.nationality_id = data['main_nationality.id'];
+                                data.nationality = data['main_nationality.name'];
+                                data.identity_type = data['main_identity_type.name'];
+                                data.identity_type_id = data['main_identity_type.id'];
+                            }
                             data.id = idx;
-                            data.gender = data['gender.name'];
-                            data.nationality = data['main_nationality.name'];
-                            data.identity_type = data['main_identity_type.name'];
-                            data.gender_id = data['gender.id'];
-                            data.nationality_id = data['main_nationality.id'];
-                            data.identity_type_id = data['main_identity_type.id'];
                         });
                         StudentController.isSearchResultEmpty = gridData.length === 0;
                         var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
@@ -421,7 +446,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         // POCOR-7871:end
     }
 
-    function getContactTypes () {
+    function getContactTypes() {
         InstitutionsStudentsSvc.getContactTypes()
             .then(function (response) {
                 // console.log(response.data);
@@ -512,51 +537,51 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.addNewStudentConfig = resp.data;
             // console.log(StudentController.addNewStudentConfig);
             var addNewStudentConfigs = StudentController.addNewStudentConfig;
-            angular.forEach(addNewStudentConfigs, function(value, key) {
+            angular.forEach(addNewStudentConfigs, function (value, key) {
                 var configCode = value.code;
                 var configValue = parseInt(value.value);
-                if(configCode === "StudentContacts"){
-                    if(configValue === 0){
+                if (configCode === "StudentContacts") {
+                    if (configValue === 0) {
                         StudentController.contactSkipped = false;
                         StudentController.contactsRequired = '';
                     }
-                    if(configValue === 1){
+                    if (configValue === 1) {
                         StudentController.contactSkipped = false;
                         StudentController.contactsRequired = 'required'; // POCOR-7882
                     }
-                    if(configValue === 2){
+                    if (configValue === 2) {
                         StudentController.contactSkipped = true;
                         StudentController.contactsRequired = ''; // POCOR-7882
                     }
                 }
-                if(configCode === "StudentIdentities"){
-                    if(configValue === 0){
+                if (configCode === "StudentIdentities") {
+                    if (configValue === 0) {
                         StudentController.identitySkipped = false;
                         StudentController.identitiesRequired = ''; // POCOR-7882
                     }
-                    if(configValue === 1){
+                    if (configValue === 1) {
                         StudentController.identitySkipped = false;
                         StudentController.identitiesRequired = 'required'; // POCOR-7882
                     }
-                    if(configValue === 2){
+                    if (configValue === 2) {
                         StudentController.identitySkipped = true;
                         StudentController.identitiesRequired = ''; // POCOR-7882
                     }
                 }
-                if(configCode == "StudentNationalities"){
-                    if(configValue === 0){
+                if (configCode == "StudentNationalities") {
+                    if (configValue === 0) {
                         StudentController.nationalitySkipped = false;
                         StudentController.nationalitiesRequired = ''; // POCOR-7882
                     }
-                    if(configValue === 1){
+                    if (configValue === 1) {
                         StudentController.nationalitySkipped = false;
                         StudentController.nationalitiesRequired = 'required'; // POCOR-7882
                     }
-                    if(configValue === 2 && StudentController.identitySkipped === true){
+                    if (configValue === 2 && StudentController.identitySkipped === true) {
                         StudentController.nationalitySkipped = true;
                         StudentController.nationalitiesRequired = '';
                     }
-                    if(configValue === 2 && StudentController.identitySkipped === false){
+                    if (configValue === 2 && StudentController.identitySkipped === false) {
                         StudentController.nationalitySkipped = StudentController.identitySkipped;
                         StudentController.nationalitiesRequired = StudentController.identitiesRequired;
                     }
@@ -567,8 +592,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
-        StudentController.checkConfigForExternalSearch();
     }
+
     // POCOR-7882: end
 
     function getAcademicPeriods() {
@@ -859,6 +884,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var nationalityId = StudentController.selectedStudentData.nationality_id;
         if (nationalityId === null) {
             StudentController.selectedStudentData.nationality_name = "";
+            StudentController.isExternalSearchEnable = false;
+            StudentController.externalSearchSourceName = "";
         }
         var nationalityOptions = StudentController.nationalitiesOptions;
         var identityOptions = StudentController.identityTypeOptions;
@@ -869,15 +896,19 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     StudentController.selectedStudentData.identity_type_name = identityOptions['0'].name;
                 } else {
                     StudentController.selectedStudentData.identity_type_id = nationalityOptions[i].identity_type_id;
-                    StudentController.selectedStudentData.identity_type_name = nationalityOptions[i].identity_type.name;
+                    StudentController.selectedStudentData.identity_type_name = nationalityOptions[i].identity_type_name;
                 }
                 StudentController.selectedStudentData.nationality_name = nationalityOptions[i].name;
                 break;
             }
         }
+
+        StudentController.checkConfigForExternalSearch();
+
     }
 
     function changeIdentityType() {
+
         var identityType = StudentController.selectedStudentData.identity_type_id;
         if (identityType === null) {
             StudentController.selectedStudentData.identity_number = '';
@@ -891,6 +922,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 break;
             }
         }
+        StudentController.checkConfigForExternalSearch();
     }
 
     function changeContactType() {
@@ -955,7 +987,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         //POCOR-8170 -- End
     }
 
-    function changeContactType () {
+    function changeContactType() {
         var contactTypeId = StudentController.selectedStudentData.contact_type_id;
         var options = StudentController.contactTypeOptions;
         for (var i = 0; i < options.length; i++) {
@@ -966,6 +998,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             }
         }
     }
+
     async function changeEducationGrade() {
         var educationGrade = StudentController.selectedStudentData.education_grade_id;
         var academicPeriod = StudentController.selectedStudentData.academic_period_id;
@@ -1474,6 +1507,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     function gotoConfirmStep() {
         StudentController.step = 'confirmation';
         StudentController.selectedStudentData.endDate = '31-12-' + StudentController.currentYear;
+        StudentController.getUniqueOpenEmisId();
         StudentController.generatePassword();
     }
 
@@ -1573,6 +1607,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     //POCOR-7224-HINDOL[END]
 
     async function validateDetails() {
+        console.log('start_validate')
         const [blockName, hasError] = checkUserDetailValidationBlocksHasError();
 
         StudentController.error.first_name = '';
@@ -1624,35 +1659,35 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.nationalitiesRequired === 'required' &&
             !selectedStudentData.nationality_id) {
             StudentController.error.nationality_id = 'This field cannot be left empty';
-            console.log('StudentController.error.nationality_id');
+            console.error('StudentController.error.nationality_id');
             hasError = true;
         }
         if (!StudentController.identitySkipped &&
             StudentController.identitiesRequired === 'required' &&
             !selectedStudentData.identity_type_id) {
             StudentController.error.identity_type_id = 'This field cannot be left empty';
-            console.log('StudentController.error.identity_type_id');
+            console.error('StudentController.error.identity_type_id');
             hasError = true;
         }
         if (!StudentController.identitySkipped &&
             StudentController.identitiesRequired === 'required' &&
             !selectedStudentData.identity_number) {
             StudentController.error.identity_number = 'This field cannot be left empty';
-            console.log('StudentController.error.identity_number');
+            console.error('StudentController.error.identity_number');
             hasError = true;
         }
         if (!StudentController.contactSkipped &&
             StudentController.contactsRequired === 'required' &&
             !selectedStudentData.contact_type_id) {
             StudentController.error.contact_type_id = 'This field cannot be left empty';
-            console.log('StudentController.error.contact_type_id');
+            console.error('StudentController.error.contact_type_id');
             hasError = true;
         }
         if (!StudentController.contactSkipped &&
             StudentController.contactsRequired === 'required' &&
             !selectedStudentData.contact_value) {
             StudentController.error.contact_value = 'This field cannot be left empty';
-            console.log('StudentController.error.contact_value');
+            console.error('StudentController.error.contact_value');
             hasError = true;
         }
 
@@ -1695,64 +1730,48 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.error.startDate = 'This field cannot be left empty';
         }
         if (StudentController.error.date_of_birth !== '') return;
-
+    
+        // Validation logic for custom fields POCOR-8179
         StudentController.customFieldsArray.forEach((customField) => {
-            //POCOR-7993 start
-            var isCustomFieldNotValidated = false;
-
-            // Function to validate mandatory fields
-            function validateMandatoryField(field, isCustomFieldNotValidated) {
-                if (!field.answer) {
-                    field.errorMessage = 'This field is required.';
-                    isCustomFieldNotValidated = true;
-                }
-                return isCustomFieldNotValidated;
-            }
-
-// Function to validate checkbox field
-            function validateCheckboxField(field, isCustomFieldNotValidated) {
-                if (field.answer.length === 0) {
-                    field.errorMessage = 'This field is required.';
-                    isCustomFieldNotValidated = true;
-                }
-                return isCustomFieldNotValidated;
-            }
-
-// Function to validate file field
-
             customField.data.forEach((field) => {
+                field.errorMessage='';
                 if (field.is_mandatory === 1) {
-                    if (['TEXT', 'TEXTAREA', 'NOTE', 'DROPDOWN', 'NUMBER', 'DECIMAL', 'DATE', 'TIME', 'file'].includes(field.field_type)) {
-                        isCustomFieldNotValidated = validateMandatoryField(field, isCustomFieldNotValidated);
-                    } else if (field.field_type === 'CHECKBOX') {
-                        isCustomFieldNotValidated = validateCheckboxField(field, isCustomFieldNotValidated);
+                    if (!field.answer && ['TEXT', 'TEXTAREA', 'NOTE', 'DROPDOWN', 'NUMBER', 'DECIMAL', 'DATE', 'TIME', 'file'].includes(field.field_type)) {
+                        field.errorMessage = 'Custom field is required.';
+                        isCustomFieldNotValidated = true;
+                    } else if (field.field_type === 'CHECKBOX' && field.answer.length === 0) {
+                        field.errorMessage = 'Custom field is required.';
+                        isCustomFieldNotValidated = true;
                     }
                 }
             });
-            //POCOR-7993 end
         });
-
-        //POCOR-7871
+    
+        // Return if any custom field is not validated
+        if (isCustomFieldNotValidated) {
+            return;
+        }
+    
+        // other validations and save logic
         if (!StudentController.isInternalSearchSelected) {
             if (!StudentController.selectedStudentData.username ||
                 !StudentController.selectedStudentData.password ||
                 !StudentController.selectedStudentData.academic_period_id ||
-                !StudentController.selectedStudentData.startDate ||
-                isCustomFieldNotValidated) {
+                !StudentController.selectedStudentData.startDate) {
                 return;
             }
         } else {
             if (!StudentController.selectedStudentData.academic_period_id ||
-                !StudentController.selectedStudentData.startDate ||
-                isCustomFieldNotValidated) {
+                !StudentController.selectedStudentData.startDate) {
                 return;
             }
         }
+    
         timer = setTimeout(() => {
             var res1 = $window.localStorage.getItem('repeater_validation');
             if (res1 == '"no"') {
                 StudentController.saveStudentDetails();
-                $window.localStorage.removeItem('repeater_validation')
+                $window.localStorage.removeItem('repeater_validation');
             }
         }, 3000);
     }
@@ -2117,10 +2136,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         StudentController.selectedStudentData.contact_value = selectedData.contact_value; // POCOR-8012-n
         StudentController.selectedStudentData.identity_type_name = selectedData.identity_type;
         StudentController.selectedStudentData.identity_type_id = selectedData.identity_type_id;
-        if(selectedData.identity_number){
+        if (selectedData.identity_number) {
             StudentController.canSkipIdentity = true;
         }
-        if(selectedData.nationality){
+        if (selectedData.nationality) {
             StudentController.canSkipNationality = true;
         }
         StudentController.selectedStudentData.identity_number = selectedData.identity_number;
@@ -2659,13 +2678,17 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             identity_type_id,
             identity_number,
             openemis_no,
-            nationality_id
+            nationality_id,
+            identity_type_name
         } = StudentController.selectedStudentData;
         const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth)
         const isIdentityHasError = identity_number?.length > 1 && (nationality_id === undefined || nationality_id === "" || nationality_id === null || identity_type_id === undefined || identity_type_id === null || identity_type_id === "")
         const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
-        const isSkipableForIdentity = identity_number?.length > 1 && nationality_id > 0 && identity_type_id > 0;
+        let isSkipableForIdentity = identity_number?.length > 1 && nationality_id > 0 && identity_type_id > 0;
 
+        if (identity_type_name == 'UNHCR') {
+            isSkipableForIdentity = false;
+        }
         /**
          * New For POCOR-7351
          */
@@ -2687,7 +2710,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function checkConfigForExternalSearch() {
-        InstitutionsStudentsSvc.checkConfigForExternalSearch().then(function (resp) {
+
+        var identity_type_id = StudentController.selectedStudentData.identity_type_id;
+        var nationality_id = StudentController.selectedStudentData.nationality_id;
+        StudentController.isExternalSearchEnable = false;
+        InstitutionsStudentsSvc.checkConfigForExternalSearch(nationality_id, identity_type_id).then(function (resp) {
             StudentController.isExternalSearchEnable = resp.showExternalSearch;
             StudentController.externalSearchSourceName = resp.value;
             UtilsSvc.isAppendLoader(false);
@@ -2700,14 +2727,16 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
 
     function isNextButtonShouldDisable() {
-        const {step, selectedStudentData, isIdentityUserExist} = StudentController;
-        const {first_name, last_name, date_of_birth, gender_id} = selectedStudentData;
+        const {step, selectedStudentData, isIdentityUserExist, externalSearchSourceName} = StudentController;
+        const {first_name, last_name, date_of_birth, gender_id, identity_number} = selectedStudentData;
 
         if (isIdentityUserExist && step === "internal_search") {
             return true;
         }
-
-        if (step === "external_search" && (!first_name || !last_name || !date_of_birth || !gender_id)) {
+        if (step === 'external_search' && externalSearchSourceName === 'UNHCR' && !identity_number) {
+            return true;
+        }
+        if (step === "external_search" && externalSearchSourceName !== 'UNHCR' && (!first_name || !last_name || !date_of_birth || !gender_id)) {
             return true;
         }
         return false;

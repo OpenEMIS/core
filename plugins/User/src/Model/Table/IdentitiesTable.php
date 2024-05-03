@@ -50,6 +50,13 @@ class IdentitiesTable extends ControllerActionTable
     {
 //        $this->log('beforeSave', 'debug');
 //        $this->log($entity, 'debug');
+//POCOR-8243
+        if(!isset($entity->security_user_id)) {
+            $queryString = $this->getQueryString();
+            if (isset($queryString['security_user_id'])) {
+                $entity->security_user_id = $queryString['security_user_id'];
+            }
+        }
         $options = [];
         $options['identity_type_id'] = $entity->identity_type_id;
         $options['identity_number'] = $entity->number;

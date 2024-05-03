@@ -1,3 +1,45 @@
+### [3.105.0] - 2023-05-02
+- Implemented: Develop changes to OpenEMIS Core Institution v4 API
+- Implemented: Develop OpenEMIS Core Themes v4 APIs
+- Bug Fixed: Reports > Custom > Final Emis تقرير الفاينل ايمس : Error Message is showing for Final Emis Report
+- Bug Fixed: Create migration to update primary keys to prevent duplicates
+- Bug Fixed: Institutions > Staff > Add: If there is no configuration under Add New Staff, the system should allow user to add the staff
+- Bug Fixed: Report>Survey: Duplicate institutions in the survey report
+- Bug Fixed: Directory > Students > General > Identities: When adding Identity in Directory page, the page gives 404 error
+- Bug Fixed: Reports>Examinations: Unable to filter for examination centres
+- Bug Fixed: Report>Training: Employee Training Card is not able to filter for any candidates
+- Bug Fixed: Institutions > Staff > Edit > Change in FTE: The system shows 404 error when changing the FTE for staff
+
+### [3.104.0] - 2023-04-26
+- Implemented: Develop individual student and staff completeness feature
+- Implemented: Develop Examinations results feature v4 APIs
+- Bug Fixed: Reports > Students> Student Health Report: When generating Student Health Report and only selected area is selected, the report generated is showing all area
+- Bug Fixed: Institutions>Survey>Forms: When saving answer for one form(repeater question), it is saved across for other forms
+- Bug Fixed: Institutions>Survey>Forms: Survey gives 404 error when trying to save a survey with the question with Checkbox type
+- Bug Fixed: Institutions>Academic>Curriculars: Name change to Co-Curricular in the db instead of Curricular
+- Bug Fixed: Registrations: Custom fields are not working
+
+### [3.103.0] - 2023-04-22
+- Implemented: Develop placeholders for Institution Profile template
+- Implemented: Develop additional advanced search filters
+- Bug Fixed: Institutions > Academic > Institution Curricular: System allows user to select students that are enrolled in previous academic period
+- Bug Fixed: Institutions>Students>Custom Fields: Student with dropdown is not able to be saved
+- Bug Fixed: Registrations: User is not able to complete registrations
+
+### [3.102.0] - 2023-04-16
+- Implemented: Develop an option to allow multiple external data source: identity including "Jordan UNHCR database"
+- Bug Fixed: Institutions > Finance > Student Fees > Add/View: The ordering of the Student fees is not in order for adding or viewing
+- Bug Fixed: Swagger: Update documentation for api/v4/system-configurations/{configId
+- Bug Fixed: Institutions > Students > Add: When adding students, user can save and student is added successfully without entering mandatory custom fields
+- Bug Fixed: Report_queries table-The following queries should be executed without any error
+- Bug Fixed: Institutions>Students>Promote: Dropdown is showing wrongly
+- Bug Fixed: Institutions > Academic > Institutions Curriculars > View > Students tab: Users are not able to add students under Institution Curriculars even though permission is given
+- Bug Fixed: API: Attendance Type Api is not working
+- Bug Fixed: Update Swagger for Academic Period
+- Bug Fixed: Institutions > Survey > Forms: Cannot save survey when adding a number field as "unique"
+- Bug Fixed: Registration: Education grade api should be filtered by Institution
+- Bug Fixed: Add paramters to Student Meal API v4
+
 ### [3.101.0] - 2023-04-07
 - Implemented: Develop function to search by OpenEMIS ID when adding students, staff and guardians in Directory and Institution module
 - Implemented: Remove unused System Configurations
