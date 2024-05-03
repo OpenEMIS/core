@@ -13,7 +13,7 @@ use App\Model\Table\AppTable;
 use Directory\Model\Table\DirectoriesTable as UserTable;
 
 class GuardianUserTable extends UserTable {
-    public function initialize(array $config)
+    public function initialize(array $config):void
     {
         parent::initialize($config);
     }
