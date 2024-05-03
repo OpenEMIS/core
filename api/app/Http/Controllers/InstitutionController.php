@@ -623,7 +623,7 @@ class InstitutionController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/pocor-openemis-core/api/v4/institutions/{institutionId}/classes/{classId}",
+     *     path="/api/v4/pocor-openemis-core/api/v4/institutions/{institutionId}/classes/{classId}",
      *     summary="Get details of a specific class in an institution",
      *     description="Returns details of a specific class in an institution based on the provided class ID",
      *     tags={"Institutions"},
@@ -2882,6 +2882,65 @@ class InstitutionController extends Controller
     }
 
 
+
+    /**
+     * @OA\Post(
+     *     path="/api/v4/pocor-openemis-core/api/v4/institutions/{institutionId}/classes/{classId}/reportcardcomment",
+     *     summary="Add a report card comment for a student",
+     *     description="Creates a new report card comment for a specific student in a class.",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the institution",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="classId",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the class",
+     *         @OA\Schema(type="integer", example=240)
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Payload for adding report card comment",
+     *         @OA\JsonContent(
+     *             required={
+     *                 "academic_period_id",
+     *                 "education_grade_id",
+     *                 "student_id",
+     *                 "education_subject_id",
+     *                 "staff_id",
+     *                 "comment",
+     *                 "report_card_id"
+     *             },
+     *             @OA\Property(property="academic_period_id", type="integer", example=27),
+     *             @OA\Property(property="education_grade_id", type="integer", example=136),
+     *             @OA\Property(property="student_id", type="integer", example=8831),
+     *             @OA\Property(property="education_subject_id", type="integer", example=75),
+     *             @OA\Property(property="staff_id", type="integer", example=2),
+     *             @OA\Property(property="comment", type="string", example="This is a dummy comment"),
+     *             @OA\Property(property="report_card_id", type="integer", example=1),
+     *             @OA\Property(property="report_card_comment_code_id", type="string", example="")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function reportCardCommentAdd(ReportCardCommentAdd $request, int $institutionId, int $classId)
     {
         try {
@@ -2915,6 +2974,60 @@ class InstitutionController extends Controller
     }
 
 
+
+    /**
+     * @OA\Post(
+     *     path="/pocor-openemis-core/api/v4/institutions/{institutionId}/classes/{classId}/reportcardcomment/homeroom",
+     *     summary="Add a report card comment for a homeroom class",
+     *     description="Adds a report card comment for a homeroom class based on the provided parameters",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the institution",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="classId",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the class",
+     *         @OA\Schema(type="integer", example=568)
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Successful",
+     *         @OA\JsonContent(
+     *              required={
+     *                 "academic_period_id",
+     *                 "education_grade_id",
+     *                 "student_id",
+     *                 "comment",
+     *                 "report_card_id"
+     *              },
+     *              @OA\Property(property="academic_period_id", type="integer", example=32),
+     *              @OA\Property(property="education_grade_id", type="integer", example=189),
+     *              @OA\Property(property="student_id", type="integer", example=3540),
+     *              @OA\Property(property="comment", type="string", example="The student shows respect for teachers and peers."),
+     *              @OA\Property(property="report_card_id", type="integer", example=6)
+     *          )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function reportCardCommentHomeroomAdd(ReportCardCommentHomeroomAdd $request, int $institutionId, int $classId)
     {
         try {
@@ -2947,6 +3060,59 @@ class InstitutionController extends Controller
 
 
 
+    /**
+     * @OA\Post(
+     *     path="/api/v4/pocor-openemis-core/api/v4/institutions/{institutionId}/classes/{classId}/reportcardcomment/principal",
+     *     summary="Add a report card comment by the principal",
+     *     description="Adds a report card comment by the principal for a specific student based on the provided parameters",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the institution",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="classId",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the class",
+     *         @OA\Schema(type="integer", example=240)
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Successful",
+     *         @OA\JsonContent(
+     *              required={
+     *                 "academic_period_id",
+     *                 "education_grade_id",
+     *                 "student_id",
+     *                 "comment",
+     *                 "report_card_id"
+     *              },
+     *              @OA\Property(property="academic_period_id", type="integer", example=32),
+     *              @OA\Property(property="education_grade_id", type="integer", example=189),
+     *              @OA\Property(property="student_id", type="integer", example=3540),
+     *              @OA\Property(property="comment", type="string", example="The student shows respect for teachers and peers."),
+     *              @OA\Property(property="report_card_id", type="integer", example=6)
+     *          )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function reportCardCommentPrincipalAdd(ReportCardCommentHomeroomAdd $request, int $institutionId, int $classId)
     {
         try {
