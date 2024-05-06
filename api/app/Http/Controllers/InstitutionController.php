@@ -3026,7 +3026,9 @@ class InstitutionController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
-     *             @OA\Property(property="data", type="object")
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
      *         )
      *     ),
      *     @OA\Response(
@@ -3113,7 +3115,9 @@ class InstitutionController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
-     *             @OA\Property(property="data", type="object")
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
      *         )
      *     ),
      *     @OA\Response(
@@ -3198,7 +3202,9 @@ class InstitutionController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
-     *             @OA\Property(property="data", type="object")
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
      *         )
      *     ),
      *     @OA\Response(
@@ -3353,7 +3359,9 @@ class InstitutionController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
-     *             @OA\Property(property="data", type="object")
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
      *         )
      *     ),
      *     @OA\Response(
@@ -3431,7 +3439,9 @@ class InstitutionController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
-     *             @OA\Property(property="data", type="object")
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
      *         )
      *     ),
      *     @OA\Response(
@@ -3506,7 +3516,9 @@ class InstitutionController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
-     *             @OA\Property(property="data", type="object")
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
      *         )
      *     ),
      *     @OA\Response(
@@ -5008,7 +5020,9 @@ class InstitutionController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
-     *             @OA\Property(property="data", type="object")
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
      *         )
      *     ),
      *     @OA\Response(
@@ -5088,7 +5102,9 @@ class InstitutionController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
-     *             @OA\Property(property="data", type="object")
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
      *         )
      *     ),
      *     @OA\Response(
@@ -5750,7 +5766,9 @@ class InstitutionController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
-     *             @OA\Property(property="data", type="object")
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
      *         )
      *     ),
      *     @OA\Response(
@@ -5780,6 +5798,44 @@ class InstitutionController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/v4/institutions/staff/payslips",
+     *     summary="Add institution staff payslips",
+     *     description="Add institution staff payslips.",
+     *     tags={"Institutions"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Successful",
+     *         @OA\JsonContent(
+     *              required={
+     *                 "name",
+     *                 "file_content",
+     *                 "staff_id"
+     *              },
+     *              @OA\Property(property="name", type="string", example="test"),
+     *              @OA\Property(property="description", type="string", example="description"),
+     *              @OA\Property(property="file_content", type="string", example="file.xlsx"),
+     *              @OA\Property(property="staff_id", type="integer", example=1)
+     *          )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function addInstitutionStaffPayslip(StaffPayslipsRequest $request)
     {
         try {
@@ -5812,6 +5868,51 @@ class InstitutionController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/v4/institutions/students/meal-benefits",
+     *     summary="Add student meal benefits",
+     *     description="Add student meal benefits",
+     *     tags={"Institutions"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Successful",
+     *         @OA\JsonContent(
+     *              required={
+     *                 "student_id",
+     *                 "academic_period_id",
+     *                 "institution_id",
+     *                 "institution_class_id"
+     *              },
+     *              @OA\Property(property="student_id", type="integer", example="1235"),
+     *              @OA\Property(property="academic_period_id", type="integer", example="32"),
+     *              @OA\Property(property="institution_class_id", type="integer", example="571"),
+     *              @OA\Property(property="institution_id", type="integer", example=6),
+     *              @OA\Property(property="meal_programmes_id", type="integer", example=3),
+     *              @OA\Property(property="date", type="string", example="2022-03-01"),
+     *              @OA\Property(property="meal_benefit_id", type="integer", example=1),
+     *              @OA\Property(property="meal_received_id", type="integer", example=1),
+     *              @OA\Property(property="paid", type="integer", example=1),
+     *              @OA\Property(property="comment", type="string", example="comment"),
+     *          )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *              @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function addInstitutionStudentMealBenefits(InstitutionMealStudentsRequest $request)
     {
         try {
@@ -5843,6 +5944,50 @@ class InstitutionController extends Controller
         }
     }
 
+   /**
+     * @OA\Post(
+     *     path="/api/v4/institutions/meals/distributions",
+     *     summary="Add institution meal distribution",
+     *     description="Add institution meal distribution",
+     *     tags={"Institutions"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Successful",
+     *         @OA\JsonContent(
+     *              required={
+     *                 "meal_programmes_id",
+     *                 "academic_period_id",
+     *                 "date_received",
+     *                 "quantity_received",
+     *                 "delivery_status_id",
+     *              },
+     *              @OA\Property(property="academic_period_id", type="integer", example="32"),
+     *              @OA\Property(property="institution_id", type="integer", example=6),
+     *              @OA\Property(property="meal_programmes_id", type="integer", example=3),
+     *              @OA\Property(property="date_received", type="string", example="2022-03-01"),
+     *              @OA\Property(property="quantity_received", type="integer", example=1),
+     *              @OA\Property(property="delivery_status_id", type="integer", example=1),
+     *              @OA\Property(property="meal_rating_id", type="integer", example=1),
+     *              @OA\Property(property="comment", type="string", example="comment"),
+     *          )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *              @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function addInstitutionMealDistributions(InstitutionMealDistributionRequest $request)
     {
         try {
@@ -5866,6 +6011,79 @@ class InstitutionController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/v4/institutions",
+     *     summary="Add institution",
+     *     description="Add institution",
+     *     tags={"Institutions"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Successful",
+     *         @OA\JsonContent(
+     *              required={
+     *                 "name",
+     *                 "code",
+     *                 "address",
+     *                 "date_opened",
+     *                 "year_opened",
+     *                 "shift_type",
+     *                 "area_id",
+     *                 "area_administrative_id",
+     *                 "institution_locality_id",
+     *                 "institution_type_id",
+     *                 "institution_ownership_id",
+     *                 "institution_status_id",
+     *                 "institution_sector_id",
+     *                 "institution_provider_id",
+     *                 "institution_gender_id",
+     *                 "logo_content"
+     *              },
+     *              @OA\Property(property="name", type="string", example="test institution"),
+     *              @OA\Property(property="alternative_name", type="string", example="alternate name"),
+     *              @OA\Property(property="code", type="string", example="avl"),
+     *              @OA\Property(property="address", type="string", example=""),
+     *              @OA\Property(property="postal_code", type="integer", example=2661),
+     *              @OA\Property(property="date_opened", type="string", example="2022-03-01"),
+     *              @OA\Property(property="year_opened", type="string", example="2022-03-01"),
+     *              @OA\Property(property="shift_type", type="integer", example=1),
+     *              @OA\Property(property="classification", type="integer", example=1),
+     *              @OA\Property(property="area_id", type="integer", example=1),
+     *              @OA\Property(property="area_administrative_id", type="integer", example="comment"),
+     *              @OA\Property(property="institution_locality_id", type="integer", example="comment"),
+     *              @OA\Property(property="institution_type_id", type="integer", example=2),
+     *              @OA\Property(property="institution_ownership_id", type="integer", example=2),
+     *              @OA\Property(property="institution_status_id", type="integer", example=1),
+     *              @OA\Property(property="institution_sector_id", type="integer", example=2),
+     *              @OA\Property(property="institution_provider_id", type="integer", example=3),
+     *              @OA\Property(property="institution_gender_id", type="integer", example=1),
+     *              @OA\Property(property="logo_content", type="string", example="comment"),
+     *              @OA\Property(property="contact_person", type="string", example="contact person"),
+     *              @OA\Property(property="telephone", type="string", example="telephone"),
+     *              @OA\Property(property="fax", type="string", example="fax"),
+     *              @OA\Property(property="email", type="string", example="test@test.com"),
+     *              @OA\Property(property="website", type="string", example="www.example.com"),
+     *              @OA\Property(property="longitude", type="string", example="78.12"),
+     *              @OA\Property(property="latitude", type="string", example="22.12"),
+     *          )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *              @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function addInstitution(InstitutionsAddRequest $request)
     {
         try {
@@ -5907,6 +6125,119 @@ class InstitutionController extends Controller
 
     //pocor-7545 ends
 
+    /**
+     * @OA\Post(
+     *     path="/api/v4/institutions/{institutionId}/classes/{classId}",
+     *     summary="Update institution classes by class id",
+     *     description="Update institution classes by class id",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="classId",
+     *         in="path",
+     *         required=true,
+     *         description="Class Id",
+     *         @OA\Schema(type="integer", example=571)
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Successful",
+     *         @OA\JsonContent(
+     *              required={
+     *                  "name",
+     *                  "institution_shift_id",
+     *                  "academic_period_id",
+     *                  "class_students",
+     *                  "capacity",
+     *                  "classes_secondary_staff"
+     *              },
+     *              @OA\Property(
+     *                  property="name",
+     *                  type="string",
+     *                  example="Primary 1-D"
+     *              ),
+     *              @OA\Property(
+     *                  property="staff_id",
+     *                  type="integer",
+     *                  nullable=true,
+     *                  example=null
+     *              ),
+     *              @OA\Property(
+     *                  property="institution_shift_id",
+     *                  type="integer",
+     *                  example=279
+     *              ),
+     *              @OA\Property(
+     *                  property="institution_unit_id",
+     *                  type="integer",
+     *                  nullable=true,
+     *                  example=null
+     *              ),
+     *              @OA\Property(
+     *                  property="institution_course_id",
+     *                  type="integer",
+     *                  nullable=true,
+     *                  example=null
+     *              ),
+     *              @OA\Property(
+     *                  property="academic_period_id",
+     *                  type="integer",
+     *                  example=33
+     *              ),
+     *              @OA\Property(
+     *                  property="class_students",
+     *                  type="array",
+     *                  @OA\Items(
+     *                      @OA\Property(
+     *                          property="student_id",
+     *                          type="integer",
+     *                          example=1311
+     *                      ),
+     *                      @OA\Property(
+     *                          property="education_grade_id",
+     *                          type="integer",
+     *                          example=207
+     *                      )
+     *                  )
+     *              ),
+     *              @OA\Property(
+     *                  property="capacity",
+     *                  type="integer",
+     *                  example=201
+     *              ),
+     *              @OA\Property(
+     *                  property="classes_secondary_staff",
+     *                  type="array",
+     *                      @OA\Items(
+     *                          type="integer",
+     *                          example=578
+     *                      )
+     *              )
+     *          )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *              @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function updateInstitutionClass($institutionId, $classId, Request $request)
     {
         try {
@@ -5930,6 +6261,104 @@ class InstitutionController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/v4/institutions/{institutionId}/subject/{subjectId}",
+     *     summary="Update institution classes by class id",
+     *     description="Update institution classes by class id",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example=8)
+     *     ),
+     *     @OA\Parameter(
+     *         name="subjectId",
+     *         in="path",
+     *         required=true,
+     *         description="Subject Id",
+     *         @OA\Schema(type="integer", example=5856)
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Successful",
+     *         @OA\JsonContent(
+     *              required={
+     *                  "name",
+     *                  "subject_staff",
+     *                  "academic_period_id"
+     *         },
+     *          @OA\Property(
+     *              property="name",
+     *              type="string",
+     *              example="Social"
+     *          ),
+     *          @OA\Property(
+     *              property="academic_period_id",
+     *              type="integer",
+     *              example=33
+     *          ),
+     *          @OA\Property(
+     *              property="subject_students",
+     *              type="array",
+     *              @OA\Items(
+     *                  @OA\Property(
+     *                      property="student_id",
+     *                      type="integer",
+     *                      example=1311
+     *                  ),
+     *                  @OA\Property(
+     *                      property="institution_class_id",
+     *                      type="integer",
+     *                      example=207
+     *                  )
+     *              )
+     *          ),
+     *          @OA\Property(
+     *              property="subject_staff",
+     *              type="array",
+     *              @OA\Items(
+     *                  type="integer",
+     *                  example=578
+     *              )
+     *          ),
+     *          @OA\Property(
+     *              property="classes",
+     *              type="array",
+     *              @OA\Items(
+     *                  type="integer",
+     *                  example=596
+     *              )
+     *          ),
+     *          @OA\Property(
+     *              property="rooms",
+     *              type="array",
+     *              @OA\Items(
+     *                  type="integer",
+     *                  example=12
+     *              )
+     *          )
+     *        )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *              @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function updateInstitutionSubject($institutionId, $subjectId, Request $request)
     {
         try {
