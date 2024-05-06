@@ -796,7 +796,45 @@ class UserController extends Controller
 
 
     //POCOR-8139 Starts
-
+    /**
+     * @OA\Post(
+     *     path="/api/v4/external-data-sources",
+     *     summary="Add a external data souce",
+     *     description="Add a external data souce",
+     *     tags={"Users"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Payload for adding external data source",
+     *         @OA\JsonContent(
+     *             required={
+     *                 "first_name",
+     *                 "last_name",
+     *                 "date_of_birth",
+     *                 "access_token"
+     *             },
+     *             @OA\Property(property="first_name", type="string", example="first name"),
+     *             @OA\Property(property="last_name", type="string", example="last name"),
+     *             @OA\Property(property="date_of_birth", type="string", example="01-12-2020"),
+     *             @OA\Property(property="access_token", type="string", example="eyJpc3MiOiIxNzExNDIzNjE3LWZkZGU2MjhlNjhhZThkZDIuYXBwIiwic2NvcGUiOiJTdHVkZW50IiwiYXVkIjoiaHR0cHM6XC9cL2lkZW50aXR5Lm9wZW5lbWlzLm9yZ1wvaWRlbnRpdHlcL2FwaVwvb2F1dGhcL3Rva2VuIiwiZXhwIjoxNzExNDI3NTczLCJpYXQiOiIxNzExNDIzOTczIn0"),
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function externalDataSources(ExternalDataSourceRequest $request)
     {
         try {
