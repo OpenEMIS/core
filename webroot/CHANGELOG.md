@@ -1,3 +1,15 @@
+### [3.105.0] - 2023-05-02
+- Implemented: Develop changes to OpenEMIS Core Institution v4 API
+- Implemented: Develop OpenEMIS Core Themes v4 APIs
+- Bug Fixed: Reports > Custom > Final Emis تقرير الفاينل ايمس : Error Message is showing for Final Emis Report
+- Bug Fixed: Create migration to update primary keys to prevent duplicates
+- Bug Fixed: Institutions > Staff > Add: If there is no configuration under Add New Staff, the system should allow user to add the staff
+- Bug Fixed: Report>Survey: Duplicate institutions in the survey report
+- Bug Fixed: Directory > Students > General > Identities: When adding Identity in Directory page, the page gives 404 error
+- Bug Fixed: Reports>Examinations: Unable to filter for examination centres
+- Bug Fixed: Report>Training: Employee Training Card is not able to filter for any candidates
+- Bug Fixed: Institutions > Staff > Edit > Change in FTE: The system shows 404 error when changing the FTE for staff
+
 ### [3.104.0] - 2023-04-26
 - Implemented: Develop individual student and staff completeness feature
 - Implemented: Develop Examinations results feature v4 APIs

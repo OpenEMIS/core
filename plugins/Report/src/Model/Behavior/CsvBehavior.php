@@ -74,8 +74,14 @@ class CsvBehavior extends Behavior
     {
         $process = $settings['process'];
         $query = $settings['query'];
-        $sql = array_key_exists('sql', $settings) ? $settings['sql'] : $query->sql();
-        
+        //$sql = array_key_exists('sql', $settings) ? $settings['sql'] : $query->sql();
+        $sql = isset($settings['sql']) ? $settings['sql'] : $query->sql(); //POCOR-8126
+        // POCOR-8126 -- Debugging: Check the type and value of $sql
+        var_dump($sql);
+        if (!is_string($sql)) {
+            $sql = json_encode($sql);
+        }
+
         $ReportProgress = TableRegistry::get('Report.ReportProgress');
         $ReportProgress->updateAll(
             ['sql' => $sql],
@@ -130,7 +136,8 @@ class CsvBehavior extends Behavior
         $exportCmd .= ' < ' . $sqlFilepath;
         $exportCmd .= '| sed -e \'s/\t/\",\"/g;s/^/\"/g;s/$/\"/g\'';
         $exportCmd .= ' > ' . $csvFilepath;
-
+        echo "Export Command: $exportCmd<br>";
+        
         try {
             $pid = exec($exportCmd);
         } catch(\Exception $ex) {
