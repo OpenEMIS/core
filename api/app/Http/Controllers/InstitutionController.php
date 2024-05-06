@@ -3093,7 +3093,7 @@ class InstitutionController extends Controller
      *     ),
      *     @OA\RequestBody(
      *         required=true,
-     *         description="Successful",
+     *         description="Json Payload",
      *         @OA\JsonContent(
      *              required={
      *                 "academic_period_id",
@@ -3180,7 +3180,7 @@ class InstitutionController extends Controller
      *     ),
      *     @OA\RequestBody(
      *         required=true,
-     *         description="Successful",
+     *         description="Json Payload",
      *         @OA\JsonContent(
      *              required={
      *                 "academic_period_id",
@@ -5735,7 +5735,7 @@ class InstitutionController extends Controller
      *     tags={"Institutions"},
      *     @OA\RequestBody(
      *         required=true,
-     *         description="Successful",
+     *         description="Json Payload",
      *         @OA\JsonContent(
      *              required={
      *                 "academic_period_id",
@@ -5804,19 +5804,35 @@ class InstitutionController extends Controller
      *     summary="Add institution staff payslips",
      *     description="Add institution staff payslips.",
      *     tags={"Institutions"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         description="Successful",
-     *         @OA\JsonContent(
-     *              required={
-     *                 "name",
-     *                 "file_content",
-     *                 "staff_id"
-     *              },
-     *              @OA\Property(property="name", type="string", example="test"),
-     *              @OA\Property(property="description", type="string", example="description"),
-     *              @OA\Property(property="file_content", type="string", example="file.xlsx"),
-     *              @OA\Property(property="staff_id", type="integer", example=1)
+     *      @OA\RequestBody(
+     *          request="FilePayload",
+     *          required=true,
+     *          description="File payload",
+     *          @OA\MediaType(
+     *              mediaType="multipart/form-data",
+     *              @OA\Schema(
+     *                  @OA\Property(
+     *                      property="name",
+     *                      description="Name of the payload",
+     *                      type="string"
+     *                  ),
+     *                  @OA\Property(
+     *                      property="description",
+     *                      description="Description of the payload",
+     *                      type="string"
+     *                  ),
+     *                  @OA\Property(
+     *                      property="staff_id",
+     *                      description="ID of the staff",
+     *                      type="integer"
+     *                  ),
+     *                  @OA\Property(
+     *                      property="file_content",
+     *                      description="File to upload",
+     *                      type="string",
+     *                      format="binary"
+     *                  )
+     *              )
      *          )
      *     ),
      *     @OA\Response(
@@ -5876,7 +5892,7 @@ class InstitutionController extends Controller
      *     tags={"Institutions"},
      *     @OA\RequestBody(
      *         required=true,
-     *         description="Successful",
+     *         description="Json Payload",
      *         @OA\JsonContent(
      *              required={
      *                 "student_id",
@@ -5952,7 +5968,7 @@ class InstitutionController extends Controller
      *     tags={"Institutions"},
      *     @OA\RequestBody(
      *         required=true,
-     *         description="Successful",
+     *         description="Json Payload",
      *         @OA\JsonContent(
      *              required={
      *                 "meal_programmes_id",
@@ -6019,7 +6035,7 @@ class InstitutionController extends Controller
      *     tags={"Institutions"},
      *     @OA\RequestBody(
      *         required=true,
-     *         description="Successful",
+     *         description="Json Payload",
      *         @OA\JsonContent(
      *              required={
      *                 "name",
@@ -6147,7 +6163,7 @@ class InstitutionController extends Controller
      *     ),
      *     @OA\RequestBody(
      *         required=true,
-     *         description="Successful",
+     *         description="Json Payload",
      *         @OA\JsonContent(
      *              required={
      *                  "name",
@@ -6283,7 +6299,7 @@ class InstitutionController extends Controller
      *     ),
      *     @OA\RequestBody(
      *         required=true,
-     *         description="Successful",
+     *         description="Json Payload",
      *         @OA\JsonContent(
      *              required={
      *                  "name",

@@ -1203,7 +1203,50 @@ class RegistrationController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Post(
+     *     path="/api/v4/storecustomfieldfile",
+     *     summary="Add custom field file",
+     *     description="Add custom field file",
+     *     tags={"Miscellaneous"},
+     *      @OA\RequestBody(
+     *          request="FilePayload",
+     *          required=true,
+     *          description="File payload",
+     *          @OA\MediaType(
+     *              mediaType="multipart/form-data",
+     *              @OA\Schema(
+     *                  @OA\Property(
+     *                      property="custom_field[0][custom_field_id]",
+     *                      description="ID of the custom field",
+     *                      type="integer"
+     *                  ),
+     *                  @OA\Property(
+     *                      property="custom_field[0][file]",
+     *                      description="File",
+     *                      type="string",
+     *                      format="binary"
+     *                  ),
+     *              )
+     *          )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function storecustomfieldfile(StoreCustomFileRequest $request)
     {
         try {
