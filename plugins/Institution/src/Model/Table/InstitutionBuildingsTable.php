@@ -74,7 +74,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         return $validator
             ->add('code', [
                 'ruleUnique' => [
-                    'rule' => ['validateUnique', ['scope' => ['start_date', 'institution_id', 'academic_period_id']]],
+                    'rule' => ['validateUnique', ['scope' => ['institution_id', 'academic_period_id']]],
                     'provider' => 'table'
                 ]
             ])
