@@ -455,6 +455,11 @@ Route::group(
 
         //POCOR-8100 start...
         Route::get('training-courses', 'TrainingController@getAllTrainingCourses');
+        Route::get('training-courses/{courseId}', 'TrainingController@getTrainingCourseData');
+        Route::get('training-providers', 'TrainingController@getTrainingProviders');
+        Route::get('training-providers/{providerId}', 'TrainingController@getTrainingProvidersData');
+        Route::get('training-sessions', 'TrainingController@getTrainingSessions');
+        Route::get('training-sessions/{sessionId}', 'TrainingController@getTrainingSessionData');
         //POCOR-8100 end...
     }
 );
