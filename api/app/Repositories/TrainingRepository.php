@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\TrainingCourse;
 use App\Models\TrainingProvider;
 use App\Models\TrainingSession;
+use App\Models\TrainingSessionTraineeResult;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use JWTAuth;
@@ -167,6 +168,81 @@ class TrainingRepository
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
             return $this->sendErrorResponse('Training Session Data Not Found.');
+        }
+    }
+
+
+    public function getTrainingSessionResults($params, $sessionId)
+    {
+        try {
+
+            $list = TrainingSessionTraineeResult::with(
+                        'trainingSession:id,name,code,training_course_id,training_provider_id,start_date,end_date', 
+                        'trainingSession.course:id,code,name', 
+                        'trainingSession.trainingProvider:id,name',
+                        'trainingResultType:id,name',
+                        'user:id,first_name,middle_name,third_name,last_name,openemis_no'
+                    )
+                    ->where('training_session_id', $sessionId);
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $data = $list->paginate($limit)->toArray();
+            } else {
+                $data['data'] = $list->get()->toArray();
+            }
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Training Session Results from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Training Session Results Not Found.');
+        }
+    }
+
+
+    public function getTrainingSessionResultsViaUserId($params, $sessionId, $userId)
+    {
+        try {
+
+            $list = TrainingSessionTraineeResult::with(
+                        'trainingSession:id,name,code,training_course_id,training_provider_id,start_date,end_date', 
+                        'trainingSession.course:id,code,name', 
+                        'trainingSession.trainingProvider:id,name',
+                        'trainingResultType:id,name',
+                        'user:id,first_name,middle_name,third_name,last_name,openemis_no'
+                    )
+                    ->where('training_session_id', $sessionId)
+                    ->where('trainee_id', $userId);
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $data = $list->paginate($limit)->toArray();
+            } else {
+                $data['data'] = $list->get()->toArray();
+            }
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Training Session Results from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Training Session Results Not Found.');
         }
     }
 

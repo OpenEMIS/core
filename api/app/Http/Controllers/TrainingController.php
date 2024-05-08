@@ -146,6 +146,54 @@ class TrainingController extends Controller
         }
     }
 
+
+
+    public function getTrainingSessionResults(Request $request, $sessionId)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->trainingService->getTrainingSessionResults($params, $sessionId);
+            
+            if (empty($data)) {
+                return $this->sendErrorResponse("Training Session Results Not Found.");
+            }
+
+            return $this->sendSuccessResponse("Training Session Results Found.", $data);
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Training Session Results from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            dd($e);
+            return $this->sendErrorResponse('Training Session Results Not Found.');
+        }
+    }
+
+
+
+    public function getTrainingSessionResultsViaUserId(Request $request, $sessionId, $userId)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->trainingService->getTrainingSessionResultsViaUserId($params, $sessionId, $userId);
+            
+            if (empty($data)) {
+                return $this->sendErrorResponse("Training Session Results Not Found.");
+            }
+
+            return $this->sendSuccessResponse("Training Session Results Found.", $data);
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Training Session Results from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            dd($e);
+            return $this->sendErrorResponse('Training Session Results Not Found.');
+        }
+    }
+
     //POCOR-8100 end...
 
 }
