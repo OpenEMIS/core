@@ -41,4 +41,9 @@ class TrainingSession extends Model
     {
         return $this->belongsTo(TrainingCourse::class, 'training_course_id', 'id');
     }
+
+    public function trainingProvider()
+    {
+        return $this->belongsTo(TrainingProvider::class, 'training_provider_id', 'id');
+    }
 }
