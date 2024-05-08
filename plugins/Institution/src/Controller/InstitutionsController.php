@@ -2527,8 +2527,7 @@ public function isActionIgnored(Event $event, $action)
     function isInstitutionIDSkipped(): bool
     {
         $request = $this->request;
-        /*echo "<pre>"; print_r($request);
-        die;*/
+        
         $pass = $request->getParam('pass');
         $action = $request->getParam('action');
         $controller = $request->getParam('controller');
@@ -2541,6 +2540,9 @@ public function isActionIgnored(Event $event, $action)
             return true;
         }
         if ($pass[0] == 'download' && ($action == 'Expenditure' || $action == 'Visits' || $action = 'Attachments') && ($plugin == 'Institution') && ($controller == 'Institutions')) {
+            return true;
+        }
+        if (($pass[0] == 'view' || $pass[0] == 'edit') && $action == 'Institutions' && $plugin == 'Institution' && $controller == 'Institutions') {
             return true;
         }
         if ($furtherAction == 'image' || $furtherAction == 'download') {

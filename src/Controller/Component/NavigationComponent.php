@@ -4103,6 +4103,68 @@ class NavigationComponent extends Component
 
     public function checkPermissions(array &$navigations)
     {
+        // $session = $this->request->session();
+        // $superAdmin = $session->read('Auth.User.super_admin');
+        // if ($superAdmin) {
+        //     return;
+        // }
+        $user_id = $this->getCurrentUserId();
+        $superAdmin = self::isSuperUser($user_id);
+        if ($superAdmin) {
+            return;
+        }
+
+        $roles = [];
+        $restrictedTo = [];
+        $event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', null, $this);
+        if ($event->getResult()) {
+            $roles = $event->getResult('roles');
+            $restrictedTo = $event->getResult('restrictedTo');
+        }
+
+        // Unset the children
+        $linkOnly = [];
+        foreach ($navigations as $key => $value) {
+            $rolesRestrictedTo = $roles;
+            //print_r($roles);die;
+            if (isset($value['link']) && !$value['link']) {
+                $linkOnly[] = $key;
+            } else {
+
+                $params = [];
+                if (isset($value['params'])) {
+                    $params = $value['params'];
+                }
+                $url = $this->getLink($key, $params);
+
+                // Check if the role is only restricted to a certain page
+                foreach ($restrictedTo as $restrictedURL) {
+                    if (count(array_intersect($restrictedURL, $url)) > 0) {
+                        break;
+                    } else {
+                        $rolesRestrictedTo = [];
+                    }
+                }
+                // $ignoredAction will be excluded from permission checking
+                if (array_key_exists('controller', $url) && !in_array($url['plugin'])) {
+                    if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
+                        unset($navigations[$key]);
+                    }
+                }
+            }
+        }
+        
+        // unset empty links in reverse order
+        $linkOnly = array_reverse($linkOnly);
+        foreach ($linkOnly as $link) {
+            if (!array_search($link, $this->array_column($navigations, 'parent'))) {
+                unset($navigations[$link]);
+            }
+        }
+    }
+
+    public function checkPermissionsOld(array &$navigations)
+    {
         $linkOnly = [];
         //$ignoredPlugin = ['Profile']; // Plugin that will be excluded from checking //POCOR-5312
         $roles = [];
