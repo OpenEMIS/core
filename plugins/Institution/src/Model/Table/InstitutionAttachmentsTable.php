@@ -10,6 +10,7 @@ use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
+use Laminas\Diactoros\UploadedFile;
 
 class InstitutionAttachmentsTable extends ControllerActionTable
 {
@@ -178,8 +179,59 @@ class InstitutionAttachmentsTable extends ControllerActionTable
 
     public function editBeforeSave(Event $event, $entity, $requestData, $extra)
     {
-
        //echo "<pre>"; print_r($entity); die;
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        $sentData = $this->request->getData();
+        $alias = $this->getAlias();
+        $sentData = $sentData[$alias];
+
+        $fileContent = 'file_content';
+        $uploadedFile = $sentData[$fileContent];
+        $fileName = 'file_name';
+    
+        if ($uploadedFile instanceof UploadedFile) {
+            //$content = (string)$uploadedFile->getStream();
+            if ($error === UPLOAD_ERR_OK) {
+                // Accessing the file contents
+                $stream = $uploadedFile->getStream();
+                if ($stream) {
+                    $fileContent = stream_get_contents($stream);
+                    $content = $fileContent;
+                    // Now you can work with $fileContent
+                } else {
+                    // Handle the case where the stream couldn't be retrieved
+                    $error = $uploadedFile->getError();
+                }
+            } elseif ($error === UPLOAD_ERR_NO_FILE) {
+                // Handle the case where no file was uploaded
+                $error = $uploadedFile->getError();
+            } else {
+                // Handle other upload errors if needed
+                $error = $uploadedFile->getError();
+            } 
+            $name = $uploadedFile->getClientFilename();
+            //$error = $uploadedFile->getError();
+        }
+
+        if (isset($content) && isset($error) && $error == UPLOAD_ERR_OK) {
+            $data[$fileName] = $name;
+            $data[$fileContent] = $content;
+        } elseif (isset($error) && $error == UPLOAD_ERR_NO_FILE) {
+            $data->offsetUnset($fileContent);
+            if ($data->offsetExists($fileName)) {
+                $data->offsetUnset($fileName);
+            }
+        } elseif (isset($data[$fileContent . '_remove']) && $data[$fileContent . '_remove'] == 1) {
+            $data[$fileName] = null;
+            $data[$fileContent] = null;
+        } elseif (!isset($data[$fileName])) {
+            $var = null;
+            $data[$fileName] = null;
+            $data[$fileContent] = null;
+        }
     }
 
 }
