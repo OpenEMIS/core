@@ -185,91 +185,171 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'name', 'institution_shift_id', 'intervals']);
     }
 
+
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
-        // for updating of the start/end time of the timeslots on render
-        if (array_key_exists('submit', $data) && in_array($data['submit'], ['changeInterval', 'addTimeslot', 'changeShiftId', 'save']) && !empty($data['timeslots'])) {
-            $institutionShiftId = $data['institution_shift_id'];
-            $startTime = $this->Shifts->get($institutionShiftId)->start_time;
 
-            $hasEmpty = false;
-            foreach ($data['timeslots'] as $i => $timeslot) {
-                if (!$hasEmpty) {
-                    if (array_key_exists('interval', $timeslot) && !empty($timeslot['interval'])) {
-                        $timeslotInterval = $timeslot['interval'];
-                        $data['timeslots'][$i]['start_time_add'] = $this->formatTime($startTime);
-                        $modifyString = '+' . $timeslotInterval . ' minutes';
-                        $data['timeslots'][$i]['end_time_add'] = $this->formatTime($startTime->modify($modifyString));    
-                    } else {
-                        $hasEmpty = true;
-                    }
-                }
-            }
-        }
+        $intervalId = $data['id'];
+         if(empty($intervalId)){
+            // for updating of the start/end time of the timeslots on render
+            if (array_key_exists('submit', $data) && in_array($data['submit'], ['changeInterval', 'addTimeslot', 'changeShiftId', 'save']) && !empty($data['timeslots'])) {
+                $institutionShiftId = $data['institution_shift_id'];
+                $startTime = $this->Shifts->get($institutionShiftId)->start_time;
 
-        // for patching the order of the timeslots based on the array index
-        if (array_key_exists('timeslots', $data) && !empty($data['timeslots'])) {
-            foreach ($data['timeslots'] as $i => $timeslot) {
-                $data['timeslots'][$i]['order'] = $i + 1;
-            }
-        }
-
-        // for adding timeslots end time validation as here will have all the informations needed to do the validations
-        if (array_key_exists('submit', $data) && $data['submit'] == 'save') {
-            $options['associated'] = [
-                'Timeslots' => ['validate' => true]
-            ];
-
-            $institutionShiftId = $data['institution_shift_id'];
-            $shiftEntity = $this->Shifts->get($institutionShiftId);
-            $shiftStartTime = $shiftEntity->start_time;
-            $shiftEndTime = $shiftEntity->end_time;
-
-            $timeslotList = [];
-            if (array_key_exists('timeslots', $data) && !empty($data['timeslots'])) {
                 $hasEmpty = false;
-                $totalInterval = 0;
                 foreach ($data['timeslots'] as $i => $timeslot) {
                     if (!$hasEmpty) {
                         if (array_key_exists('interval', $timeslot) && !empty($timeslot['interval'])) {
-                            $totalInterval += $timeslot['interval'];
-                            $timeslotList[$timeslot['order']] = $totalInterval;
+                            $timeslotInterval = $timeslot['interval'];
+                            $data['timeslots'][$i]['start_time_add'] = $this->formatTime($startTime);
+                            $modifyString = '+' . $timeslotInterval . ' minutes';
+                            $data['timeslots'][$i]['end_time_add'] = $this->formatTime($startTime->modify($modifyString));    
                         } else {
                             $hasEmpty = true;
                         }
-                    } 
-
-                    if ($hasEmpty) {
-                        $timeslotList[$timeslot['order']] = null;
                     }
                 }
             }
-    
-            $timeslotValidator = $this->Timeslots->validator();
-            $timeslotValidator
-                ->add('interval', 'checkEndTime', [
-                    'rule' => function($value, $context) use ($shiftStartTime, $shiftEndTime, $timeslotList) {
-                        $order = $context['data']['order'];
-                        $totalInterval = $timeslotList[$order];
-                        if (!is_null($totalInterval)) {
-                            $intervalStartTime = clone $shiftStartTime;
-                            $modifyString = '+' . $totalInterval . ' minutes';
-                            $intervalEndTime = $intervalStartTime->modify($modifyString);
-                            return $intervalEndTime <= $shiftEndTime;
-                        } 
-                        return true;
-                    },
-                    'on' => 'create',
-                    'message' => __('Value entered exceed the end time of the shift selected.')
-                ])
-                ->requirePresence('institution_schedule_interval_id', false);
 
-        } else {
-            // for non-save actions so the timeslot entity can be patched
-            $options['associated'] = [
-                'Timeslots' => ['validate' => false]
-            ];
+            // for patching the order of the timeslots based on the array index
+            if (array_key_exists('timeslots', $data) && !empty($data['timeslots'])) {
+                foreach ($data['timeslots'] as $i => $timeslot) {
+                    $data['timeslots'][$i]['order'] = $i + 1;
+                }
+            }
+
+            // for adding timeslots end time validation as here will have all the informations needed to do the validations
+            if (array_key_exists('submit', $data) && $data['submit'] == 'save') {
+                $options['associated'] = [
+                    'Timeslots' => ['validate' => true]
+                ];
+
+                $institutionShiftId = $data['institution_shift_id'];
+                $shiftEntity = $this->Shifts->get($institutionShiftId);
+                $shiftStartTime = $shiftEntity->start_time;
+                $shiftEndTime = $shiftEntity->end_time;
+
+                $timeslotList = [];
+                if (array_key_exists('timeslots', $data) && !empty($data['timeslots'])) {
+
+                    $hasEmpty = false;
+                    $totalInterval = 0;
+                    foreach ($data['timeslots'] as $i => $timeslot) {
+                        if (!$hasEmpty) {
+                            if (array_key_exists('interval', $timeslot) && !empty($timeslot['interval'])) {
+                                $totalInterval += $timeslot['interval'];
+                                $timeslotList[$timeslot['order']] = $totalInterval;
+                            } else {
+                                $hasEmpty = true;
+                            }
+                        } 
+
+                        if ($hasEmpty) {
+                            $timeslotList[$timeslot['order']] = null;
+                        }
+                    }
+                }
+        
+                $timeslotValidator = $this->Timeslots->validator();
+                $timeslotValidator
+                    ->add('interval', 'checkEndTime', [
+                        'rule' => function($value, $context) use ($shiftStartTime, $shiftEndTime, $timeslotList) {
+                            $order = $context['data']['order'];
+                            $totalInterval = $timeslotList[$order];
+                            if (!is_null($totalInterval)) {
+                                $intervalStartTime = clone $shiftStartTime;
+                                $modifyString = '+' . $totalInterval . ' minutes';
+                                $intervalEndTime = $intervalStartTime->modify($modifyString);
+                                return $intervalEndTime <= $shiftEndTime;
+                            } 
+                            return true;
+                        },
+                        'on' => 'create',
+                        'message' => __('Value entered exceed the end time of the shift selected.')
+                    ])
+                    ->requirePresence('institution_schedule_interval_id', false);
+
+            } else {
+                // for non-save actions so the timeslot entity can be patched
+                $options['associated'] = [
+                    'Timeslots' => ['validate' => false]
+                ];
+            }
+        }else{ //POCOR-8254
+            if (array_key_exists('submit', $data) && in_array($data['submit'], ['changeInterval', 'addTimeslot', 'changeShiftId', 'save']) && !empty($data['timeslots'])) {
+                $institutionShiftId = $data['institution_shift_id'];
+                $startTime = $this->Shifts->get($institutionShiftId)->start_time;
+
+                $hasEmpty = false;
+                foreach ($data['timeslots'] as $i => $timeslot) {
+                    if (!$hasEmpty) {
+                        $data['timeslots'][$i]['institution_schedule_interval_id'] = $intervalId;
+                        if (array_key_exists('interval', $timeslot) && !empty($timeslot['interval'])) {
+                            $timeslotInterval = $timeslot['interval'];
+                            $data['timeslots'][$i]['start_time_add'] = $this->formatTime($startTime);
+                            $modifyString = '+' . $timeslotInterval . ' minutes';
+                            $data['timeslots'][$i]['end_time_add'] = $this->formatTime($startTime->modify($modifyString));    
+                        } else {
+                            $hasEmpty = true;
+                        }
+                    }
+                }
+            }
+            $scheduleId = $this->request['data']['ScheduleIntervals']['id'];
+            $timeslotList = $this->request['data']['ScheduleIntervals']['timeslots'];
+            $institutionSchedule =  TableRegistry::get('institution_schedule_timeslots');
+            $findRecord = $institutionSchedule->find()
+                        ->where(['institution_schedule_interval_id'=>$intervalId])->toArray();
+                       
+            foreach ($findRecord as $value) {
+                foreach ($timeslotList as $val) {
+                    $institutionScheduledata = $institutionSchedule->updateAll(
+                        ['interval' => $val['interval']], // Field
+                        ['id' => $value['id']] // Condition
+                    );
+                }
+            }
+            if (array_key_exists('timeslots', $data) && !empty($data['timeslots'])) {
+                foreach ($data['timeslots'] as $i => $timeslot) {
+                    $data['timeslots'][$i]['order'] = $i + 1;
+                }
+            }
+
+            // for adding timeslots end time validation as here will have all the informations needed to do the validations
+            if (array_key_exists('submit', $data) && $data['submit'] == 'save') {
+                $options['associated'] = [
+                    'Timeslots' => ['validate' => true]
+                    ];
+
+                    $institutionShiftId = $data['institution_shift_id'];
+                    $shiftEntity = $this->Shifts->get($institutionShiftId);
+                    $shiftStartTime = $shiftEntity->start_time;
+                    $shiftEndTime = $shiftEntity->end_time;
+
+                    $timeslotList = [];
+                    if (array_key_exists('timeslots', $data) && !empty($data['timeslots'])) {
+
+                        $hasEmpty = false;
+                        $totalInterval = 0;
+                        foreach ($data['timeslots'] as $i => $timeslot) {
+                            if (!$hasEmpty) {
+                                if (array_key_exists('interval', $timeslot) && !empty($timeslot['interval'])) {
+                                    $totalInterval += $timeslot['interval'];
+                                    $timeslotList[$timeslot['order']] = $totalInterval;
+                                } else {
+                                    $hasEmpty = true;
+                                }
+                            } 
+
+                            if ($hasEmpty) {
+                                $timeslotList[$timeslot['order']] = null;
+                            }
+                        }
+                    }
+              
+            }
         }
+       // echo "<pre>"; print_r($data);die;
     }
 
     // OnGet Events
@@ -281,20 +361,36 @@ class ScheduleIntervalsTable extends ControllerActionTable
     // OnUpdate Events
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
+        $academicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $ScheduleIntervals = TableRegistry::get('Schedule.ScheduleIntervals');
         if ($action == 'add') {
-            $attr['type'] = 'select';
-            $attr['select'] = false;
-            $attr['options'] = $this->AcademicPeriods->getYearList();
-            $attr['default'] = $this->AcademicPeriods->getCurrent();
-            $attr['onChangeReload'] = 'changeAcademicPeriod';
-        } elseif ($action == 'edit') {
+            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+            $attr['options'] = $periodOptions;
+            $attr['onChangeReload'] = true;
+            $attr['default'] = $selectedPeriod;
+        } else if ($action == 'edit') {
+            //POCOR-8254 start
+            $scheduleId = $this->paramsDecode($request->params['pass'][1])['id'];
+            $academicPeriodId= $ScheduleIntervals->find()
+                                    ->where(['id' => $scheduleId])
+                                    ->first()->academic_period_id;
+            $academicPeriodName = $academicPeriod->find()
+                                    ->where(['id' => $academicPeriodId])
+                                    ->first()->name;
+            $entity = $attr['entity'];
             $attr['type'] = 'readonly';
+            $attr['value'] = $entity->academic_period_id;
+            $attr['attr']['value'] = $academicPeriodName;
+            //POCOR-8254 end
         }
         return $attr;
     }
 
     public function onUpdateFieldInstitutionShiftId(Event $event, array $attr, $action, Request $request)
     {
+        $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+        $ShiftOptions = TableRegistry::get('Institution.ShiftOptions');
+        $ScheduleIntervals = TableRegistry::get('Schedule.ScheduleIntervals');
         if ($action == 'add') {
             $requestData = $request->data;
             if (isset($requestData) && isset($requestData[$this->alias()]) && array_key_exists('academic_period_id', $requestData[$this->alias()])) {
@@ -308,7 +404,22 @@ class ScheduleIntervalsTable extends ControllerActionTable
             $attr['onChangeReload'] = 'changeShiftId';
             return $attr;
         } elseif ($action == 'edit') {
+            //POCOR-8254 start
+            $scheduleId = $this->paramsDecode($request->params['pass'][1])['id'];
+            $InstitutionShiftId = $ScheduleIntervals->find()
+                                    ->where(['id' => $scheduleId])
+                                    ->first()->institution_shift_id;
+            $shiftOptionId = $InstitutionShifts->find()
+                                    ->where(['id' => $InstitutionShiftId])
+                                    ->first()->shift_option_id;
+            $ShiftOptionName = $ShiftOptions->find()
+                                    ->where(['id' => $shiftOptionId])
+                                    ->first()->name;
             $attr['type'] = 'readonly';
+            $entity = $attr['entity'];
+            $attr['value'] = $entity->institution_shift_id;
+            $attr['attr']['value'] = $ShiftOptionName;
+            //POCOR-8254 end
         }
         return $attr;
     }
@@ -393,4 +504,48 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
         return $shiftOptions;
     }
+    public function getAcademicPeriodOptions($querystringPeriod)
+    {
+        $periodOptions = $this->AcademicPeriods->getYearList();
+
+        if ($querystringPeriod) {
+            $selectedPeriod = $querystringPeriod;
+        } else {
+            $selectedPeriod = $this->AcademicPeriods->getCurrent();
+        }
+
+        return compact('periodOptions', 'selectedPeriod');
+    }
+
+    //POCOR-8254
+    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    {
+         $entity['timeslots'] = array();
+            
+    }
+
+    //POCOR-8254
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
+    {
+        $timeslotList = $this->request['data']['ScheduleIntervals']['timeslots'];
+        $institutionSchedule = TableRegistry::get('institution_schedule_timeslots');
+        $findRecord = $institutionSchedule->find()
+            ->where(['institution_schedule_interval_id' => $entity->id])
+            ->toArray();
+
+        // Check if the number of records matches the number of timeslots
+        if (count($findRecord) === count($timeslotList)) {
+            foreach ($findRecord as $key => $value) {
+                $val = $timeslotList[$key]; // Get the corresponding timeslot
+                $institutionScheduledata = $institutionSchedule->updateAll(
+                    ['interval' => $val['interval']], // Field
+                    ['id' => $value['id']] // Condition
+                );
+            }
+        } else {
+            return false;
+        }
+
+    }
+
 }

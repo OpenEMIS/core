@@ -463,5 +463,9 @@ Route::group(
         Route::get('training-sessions/{sessionId}/results', 'TrainingController@getTrainingSessionResults');
         Route::get('training-sessions/{sessionId}/results/{userId}', 'TrainingController@getTrainingSessionResultsViaUserId');
         //POCOR-8100 end...
+        
+        //POCOR-8260 start...
+        Route::get('/institutions/classes/reportcards/comment/codes', 'ReportCardController@getReportCardCommentCodes');
+        //POCOR-8260 end...
     }
 );
