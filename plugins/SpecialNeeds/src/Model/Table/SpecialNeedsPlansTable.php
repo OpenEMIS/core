@@ -9,7 +9,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-
+use Laminas\Diactoros\UploadedFile;
 
 class SpecialNeedsPlansTable extends ControllerActionTable
 {
@@ -150,6 +150,58 @@ class SpecialNeedsPlansTable extends ControllerActionTable
 
         }
         // End POCOR-5188
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        $sentData = $this->request->getData();
+        $alias = $this->getAlias();
+        $sentData = $sentData[$alias];
+        
+        $fileContent = 'file_content';
+        $uploadedFile = $sentData[$fileContent];
+        $fileName = 'file_name';
+    
+        if ($uploadedFile instanceof UploadedFile) {
+            //$content = (string)$uploadedFile->getStream();
+            $error = $uploadedFile->getError();
+            if ($error === UPLOAD_ERR_OK) {
+                // Accessing the file contents
+                $stream = $uploadedFile->getStream();
+                if ($stream) {
+                    //$content = stream_get_contents($stream);
+                    $content = (string)$uploadedFile->getStream();
+                    // Now you can work with $fileContent
+                } else {
+                    // Handle the case where the stream couldn't be retrieved
+                    $error = $uploadedFile->getError();
+                }
+            } elseif ($error === UPLOAD_ERR_NO_FILE) {
+                // Handle the case where no file was uploaded
+                $error = $uploadedFile->getError();
+            } else {
+                // Handle other upload errors if needed
+                $error = $uploadedFile->getError();
+            } 
+            $name = $uploadedFile->getClientFilename();
+        }
+
+        if (isset($content) && isset($error) && $error == UPLOAD_ERR_OK) {
+            $data[$fileName] = $name;
+            $data[$fileContent] = $content;
+        } elseif (isset($error) && $error == UPLOAD_ERR_NO_FILE) {
+            $data->offsetUnset($fileContent);
+            if ($data->offsetExists($fileName)) {
+                $data->offsetUnset($fileName);
+            }
+        } elseif (isset($data[$fileContent . '_remove']) && $data[$fileContent . '_remove'] == 1) {
+            $data[$fileName] = null;
+            $data[$fileContent] = null;
+        } elseif (!isset($data[$fileName])) {
+            $var = null;
+            $data[$fileName] = null;
+            $data[$fileContent] = null;
+        }
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
