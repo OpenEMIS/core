@@ -166,7 +166,7 @@ if ($isCli) {
  *
  * If you define fullBaseUrl in your config file you can remove this.
  */
-/*if (!Configure::read('App.fullBaseUrl')) {
+if (!Configure::read('App.fullBaseUrl')) {
     $s = null;
     if (env('HTTPS')) {
         $s = 's';
@@ -178,7 +178,7 @@ if ($isCli) {
         Configure::write('App.fullBaseUrl', 'http' . $s . '://' . $httpHost);
     }
     unset($httpHost, $s);
-}*/
+}
 
 Cache::config(Configure::consume('Cache'));
 Email::configTransport(Configure::consume('EmailTransport'));
