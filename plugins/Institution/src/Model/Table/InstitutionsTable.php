@@ -2265,6 +2265,7 @@ class InstitutionsTable extends ControllerActionTable
                 ]
             ]);
         }
+
         return $query;
     }
 
