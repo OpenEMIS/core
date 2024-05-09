@@ -556,6 +556,10 @@ class StaffController extends AppController
 
     public function beforeFilter(Event $event)
     {
+        $isInstitutionIndex = $this->isInstitutionIDSkipped();
+        if ($isInstitutionIndex) {
+            return;
+        }
         parent::beforeFilter($event);
 
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
@@ -604,7 +608,10 @@ class StaffController extends AppController
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
-
+        $isInstitutionIndex = $this->isInstitutionIDSkipped();
+        if ($isInstitutionIndex) {
+            return;
+        }
         /**
          * if student object is null, it means that student.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
          */
@@ -998,5 +1005,23 @@ class StaffController extends AppController
     public function StaffTrainingApplications()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingApplications']);
+    }
+
+    public
+    function isInstitutionIDSkipped(): bool
+    {
+        $request = $this->request;
+          
+        $pass = $request->getParam('pass');
+        $action = $request->getParam('action');
+        $controller = $request->getParam('controller');
+        $plugin = $request->getParam('plugin');
+        $furtherAction = $pass[0];
+        
+        if ($pass[0] == 'download' && ($action == 'Qualifications' || $action == 'EmploymentStatuses') && ($plugin == 'Staff') && ($controller == 'Staff')) {
+            return true;
+        }
+        
+        return false;
     }
 }
