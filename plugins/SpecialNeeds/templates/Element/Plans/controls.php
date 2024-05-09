@@ -7,8 +7,8 @@
                     'controller' => $this->request->getParam('controller'),
                     'action' => $this->request->getParam('action')
                 ];
-                if (!empty($this->request->pass)) {
-                    $url = array_merge($url, $this->request->pass);
+                if (!empty($this->request->getParam('pass'))) {
+                    $url = array_merge($url, $this->request->getParam('pass'));
                 }
 
                 $dataNamedGroup = [];
