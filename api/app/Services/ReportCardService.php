@@ -52,4 +52,25 @@ class ReportCardService extends Controller
     }
     //pocor-7856 ends
 
+
+
+    //For pocor-8260 start...
+    public function getReportCardCommentCodes($params)
+    {
+        try {
+            $data = $this->reportCardRepository->getReportCardCommentCodes($params);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list.');
+        }
+    }
+    //For pocor-8260 end...
+
 }
