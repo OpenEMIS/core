@@ -165,7 +165,16 @@ class UserTabBehavior extends Behavior
      */
     private function fixActionButtons(Entity $entity, array $buttons): array
     {
-        $appliedAction = $this->getConfig('appliedAction');
+        try {
+            $appliedAction = $this->getConfig('appliedAction');
+            if (!$appliedAction) {
+                $appliedAction = $this->getConfig()['appliedAction'];
+            }
+        } catch (Exception $e) {
+            // Handle the exception
+            //echo "An error occurred: " . $e->getMessage();
+            die('<pre> An error occurred:' . print_r($e->getMessage(), true));
+        }
         
         //$action name and additional params to pass
         $appliedActions = [

@@ -52,7 +52,7 @@ class AppraisalBehavior extends Behavior
             $filename = $entity->file_content;
             return !empty($filename);
         };
-        $model->behaviors()->get('ControllerAction')->config(
+        $model->behaviors()->get('ControllerAction')->getConfig(
             'actions.download.show',
             $showFunc
         );
