@@ -754,7 +754,7 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $configItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $configItemsData = $configItems->find()->where(['type'=>'Columns for Institutions Classes List Page'])->toArray();
-        //echo "<pre>";print_r($configItemsData);die;
+        
         foreach($configItemsData as $configItemsData1){
             if(($configItemsData1['code'] == 'class_name') && ($configItemsData1['value'] == 0)){
                 $this->fields['name']['visible'] = false;
@@ -838,7 +838,6 @@ class InstitutionClassesTable extends ControllerActionTable
                     $this->aliasField('name') => 'ASC'
                 ]);
         }
-        //echo "<pre>";print_r($query->toArray());die;
     }
 
 

@@ -87,7 +87,11 @@ class StaffAppraisalsTable extends ControllerActionTable
             true
         );
 
-        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StaffAppraisals' =>
+                ['id','staff_id', 'institution_id']
+            ]
+        ]);
         $this->addBehavior('Staff.StaffTab');
     }
 
@@ -142,6 +146,7 @@ class StaffAppraisalsTable extends ControllerActionTable
                 $this->controller->set('contentHeader', $staff->name. ' - ' .__('Appraisals'));
             }
         }
+        $this->field('institution_id', ['type' => 'hidden']);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
