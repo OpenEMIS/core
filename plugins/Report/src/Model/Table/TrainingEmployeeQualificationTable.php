@@ -144,12 +144,6 @@ class TrainingEmployeeQualificationTable extends AppTable
                         'position_title' => 'StaffPositionTitles.name',
                     ]
                 ],
-                'Positions.StaffPositionGrades' => [
-                    'fields' => [
-                        'functional_class' => 'StaffPositionGrades.name',
-                        
-                    ]
-                ],
                 
             ])/*->innerJoin(
                 [$workflows->alias() => $workflows->table()],
