@@ -26,7 +26,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
 			'useDefaultName' => true
 		]);
 		$this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['EmploymentStatuses' =>['id']]
+            'appliedAction' => ['EmploymentStatuses' =>['id', 'staff_id']]
         ]);
         $this->addBehavior('Staff.StaffTab');
 	}
@@ -39,7 +39,10 @@ class EmploymentStatusesTable extends ControllerActionTable {
             ->allowEmpty('file_content');
     }
 
-	public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(Event $event, ArrayObject $extra) {
+        if($this->action == 'download'){
+            return;
+        }
         $this->field('status_type_id', ['type' => 'select', 'before' => 'status_date']);
 
 		$visible = ['index' => false, 'view' => true, 'add' => true, 'edit' => true];
@@ -60,9 +63,9 @@ class EmploymentStatusesTable extends ControllerActionTable {
         {
             $header = $session->read('Auth.User.name');
         } else {
-        	$userTable = TableRegistry::get('Security.Users');
-        	$staffId = $this->getStaffID();
-            $header = $userTable->get($staffId)->name ;
+            $userTable = TableRegistry::get('Security.Users');
+            $staffId = $this->getStaffID();
+            $header = $userTable->get($staffId)->name;
         }
 
         $header = $header . ' - ' . __('Statuses');
@@ -71,7 +74,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
         $this->controller->Navigation->substituteCrumb($this->getHeader($alias), __('Statuses'));
             
         // Start POCOR-5188
-		if($this->request->getParam('controller') == 'Staff'){
+        if($this->request->getParam('controller') == 'Staff'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Employment Status','Staff - Career');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -110,6 +113,9 @@ class EmploymentStatusesTable extends ControllerActionTable {
 
 		}
 		// End POCOR-5188
+        $queryString = $this->getQueryString();
+        $data['staff_id'] = $queryString['staff_id'];
+        $this->field('staff_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
 	}
 
 	private function setupTabElements() {

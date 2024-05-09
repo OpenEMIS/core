@@ -13,21 +13,29 @@ class MembershipsTable extends ControllerActionTable {
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->addBehavior('User.UserTab', [
-            'appliedAction' => ['StaffMemberships' =>
-                ['staff_id']
+            'appliedAction' => [
+				'StaffMemberships' => ['id', 'staff_id'], 
+				'Memberships' => ['id', 'staff_id']// for staff
             ]
         ]);
         $this->addBehavior('Staff.StaffTab');
 	}
 
-	// public function validationDefault(Validator $validator): Validator {
-	// 	$validator = parent::validationDefault($validator);
+	public function validationDefault(Validator $validator): Validator {
+		$validator = parent::validationDefault($validator);
+		$validator->setProvider('custom', $this);
+		return $validator
+			->add('issue_date', 'ruleCompareDate', [
+				'rule' => ['compareDate', 'expiry_date', false]
+			]);
+	}
 
-	// 	return $validator
-	// 		->add('issue_date', 'ruleCompareDate', [
-	// 			'rule' => ['compareDate', 'expiry_date', false]
-	// 		]);
-	// }
+	public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $queryString = $this->getQueryString();
+        $data['staff_id'] = $queryString['staff_id'];
+        $this->field('staff_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
+    }
 
 	private function setupTabElements() {
 		$tabElements = $this->getProfessionalTabElements();

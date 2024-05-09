@@ -1555,7 +1555,7 @@ class NavigationComponent extends Component
             'Staff.Staff.Employments.index' => [
                 'title' => 'Professional',
                 'parent' => 'Institutions.Staff.index',
-                'selected' => ['Staff.Employments.index',
+                'selected' => ['Staff.Employments',
                     'Staff.Qualifications',
                     'Staff.Extracurriculars',
                     'Staff.Memberships',
