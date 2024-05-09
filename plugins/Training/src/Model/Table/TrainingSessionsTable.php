@@ -1289,6 +1289,4 @@ class TrainingSessionsTable extends ControllerActionTable
             die;
         }
     }
-
-
 }
