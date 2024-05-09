@@ -11,7 +11,7 @@ class TrainingSessionEvaluatorsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('TrainingSessions', ['className' => 'Training.TrainingSessions']);
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'trainer_id']);
+		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'evaluator_id']);
 	}
 
 	public function validationDefault(Validator $validator)
