@@ -271,7 +271,8 @@ class AdvanceSearchBehavior extends Behavior
                     $request = $request->withData('AdvanceSearch', $advanceSearchData);
                 }
                 $advanceSearchData = $request->getData('AdvanceSearch');
-                $request->getData('AdvanceSearch')[$alias]['isSearch'] = false;
+                $advanceSearchData[$alias]['isSearch'] = false;
+                // $request->getData('AdvanceSearch')[$alias]['isSearch'] = false;
                 $request = $request->withData('AdvanceSearch', $advanceSearchData);
             }
         }
@@ -383,6 +384,11 @@ class AdvanceSearchBehavior extends Behavior
                     ]);
                 }
             }
+        }
+
+        $resetData = $request->getData('reset');
+        if ($resetData !== null && $resetData == 'Reset') {
+            return false;
         }
         return $query;
     }

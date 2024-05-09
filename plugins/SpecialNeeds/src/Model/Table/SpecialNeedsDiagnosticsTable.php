@@ -70,28 +70,14 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
         $fileContent = 'file_content';
         $uploadedFile = $sentData[$fileContent];
         $fileName = 'file_name';
-    
+        $name = '';
         if ($uploadedFile instanceof UploadedFile) {
             //$content = (string)$uploadedFile->getStream();
             $error = $uploadedFile->getError();
             if ($error === UPLOAD_ERR_OK) {
                 // Accessing the file contents
-                $stream = $uploadedFile->getStream();
-                if ($stream) {
-                    //$content = stream_get_contents($stream);
-                    $content = (string)$uploadedFile->getStream();
-                    // Now you can work with $fileContent
-                } else {
-                    // Handle the case where the stream couldn't be retrieved
-                    $error = $uploadedFile->getError();
-                }
-            } elseif ($error === UPLOAD_ERR_NO_FILE) {
-                // Handle the case where no file was uploaded
-                $error = $uploadedFile->getError();
-            } else {
-                // Handle other upload errors if needed
-                $error = $uploadedFile->getError();
-            } 
+                $content = (string)$uploadedFile->getStream();
+            }
             $name = $uploadedFile->getClientFilename();
         }
 
