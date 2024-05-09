@@ -26,7 +26,7 @@ class ThemeRepository
     }
 
 
-    public function getThemeId($id)
+    public function getThemeViaId($id)
     {
         try {
             $list = Theme::where('id', $id)->first();
