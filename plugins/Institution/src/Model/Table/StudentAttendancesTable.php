@@ -204,6 +204,7 @@ class StudentAttendancesTable extends ControllerActionTable
                 ->order([
                     $this->Users->aliasField('first_name')
                 ]);
+                // echo "<pre>";print_r($query);die;
         }
 
         if ($day != -1) {

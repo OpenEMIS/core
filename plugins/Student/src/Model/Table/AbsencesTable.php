@@ -353,6 +353,9 @@ class AbsencesTable extends ControllerActionTable
             if ($this->controller->getName() == 'Directories') {
                 $userData = $this->Session->read();
                 $userId =  $userData['Institution']['StudentUser']['primaryKey']['id'];
+                if(empty($userId)) {
+                    $userId = $queryString['student_id'];
+                }
                 $query
                     ->find('all')
                     ->where([
@@ -448,8 +451,7 @@ class AbsencesTable extends ControllerActionTable
                 }
             }
         }
-        
-        
+        //$InstitutionStudentAbsenceDetails = TableRegistry::getTableLocator('Institution.InstitutionStudentAbsenceDetails');
         $tableLocator = new TableLocator();
         $InstitutionStudentAbsenceDetails = $tableLocator->get('InstitutionStudentAbsenceDetails');
         $query

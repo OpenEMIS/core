@@ -176,7 +176,8 @@ class ProgrammesTable extends ControllerActionTable
 				$studentId = $this->getUserID();
 			}
 		} else {
-				$studentId = $this->getStudentID();
+			$queryString = $this->getQueryString();
+			$studentId = $queryString['student_id'];
 		}
 		
 		// end POCOR-1893
@@ -190,7 +191,7 @@ class ProgrammesTable extends ControllerActionTable
         $query
         		->where([
         			$this->aliasField('student_id') => $studentId,
-        			$this->aliasField('institution_id') => $institutionId
+        			//$this->aliasField('institution_id') => $institutionId
         		]);
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
         

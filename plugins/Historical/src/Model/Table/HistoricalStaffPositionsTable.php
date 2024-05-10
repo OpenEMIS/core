@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -60,7 +61,7 @@ class HistoricalStaffPositionsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->allowEmpty('file_content')
             ->add('end_date', 'ruleCompareDateReverse', [

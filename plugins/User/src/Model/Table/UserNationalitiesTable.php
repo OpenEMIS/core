@@ -89,7 +89,7 @@ class UserNationalitiesTable extends ControllerActionTable {
 
 
     public function beforeAction(Event $event) {
-
+        $this->securityUserId =  $this->getQueryString('security_user_id');
         $this->fields['nationality_id']['type'] = 'select';
 //        $this->fields['identity_type_id']['type'] = 'select';
         $this->setFieldOrder([
@@ -102,32 +102,33 @@ class UserNationalitiesTable extends ControllerActionTable {
         $this->setupFields($entity);
     }
 
-//    public function validationDefault(Validator $validator): Validator {
-//        $validator = parent::validationDefault($validator);
-//        $validator
-//            ->add('nationality_id', 'notBlank', ['rule' => 'notBlank',
-//                'message' => 'User.UserNationalities.nationality_id.notBlank']);
-//            // ->add('preferred', 'ruleValidatePreferredNationality', [
-//            //     'rule' => ['validatePreferredNationality'],
-//            //     'provider' => 'table'
-//            // ]);
-//            // task POCOR-5668 starts
-//            $isFieldsShow = $this->showIdentityTypeAndNumber();
-//            if($isFieldsShow > 0){
-//                $validator
-//                    ->add('identity_type_id', 'notBlank', ['rule' => 'notBlank'])
-//                    ->requirePresence('number')
-//                    ->notEmpty('number')
-//                    ->add('number', [
-//                        'ruleNumber' => [
-//                            'rule' => ['check_validate_number'],
-//                            'message' => __('Please validate before saving.')
-//                        ]
-//                    ]);
-//            }
-//            // task POCOR-5668 ends
-//        return $validator;
-//    }
+   public function validationDefault(Validator $validator): Validator {
+       $validator = parent::validationDefault($validator);
+       $validator->setProvider('custom', $this);
+       $validator
+           ->add('nationality_id', 'notBlank', ['rule' => 'notBlank',
+               'message' => 'User.UserNationalities.nationality_id.notBlank'])
+           ->add('preferred', 'ruleValidatePreferredNationality', [
+               'rule' => ['validatePreferredNationality'],
+               'provider' => 'table'
+           ]);
+           // task POCOR-5668 starts
+        //    $isFieldsShow = $this->showIdentityTypeAndNumber();
+        //    if($isFieldsShow > 0){
+        //        $validator
+        //            ->add('identity_type_id', 'notBlank', ['rule' => 'notBlank'])
+        //            ->requirePresence('number')
+        //            ->notEmpty('number')
+        //            ->add('number', [
+        //                'ruleNumber' => [
+        //                    'rule' => ['check_validate_number'],
+        //                    'message' => __('Please validate before saving.')
+        //                ]
+        //            ]);
+        //    }
+           // task POCOR-5668 ends
+       return $validator;
+   }
 
     public function validationNonMandatory(Validator $validator) {
         $validator = $this->validationDefault($validator);
@@ -466,7 +467,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                                         ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
                                         ->matching('NationalitiesLookUp')
                                         ->where([
-                                            $this->aliasfield('security_user_id') => $user_id
+                                            $this->aliasfield('security_user_id') => $this->securityUserId
                                         ])
                                         ->select([
                                             'id' => $this->NationalitiesLookUp->aliasfield('id')

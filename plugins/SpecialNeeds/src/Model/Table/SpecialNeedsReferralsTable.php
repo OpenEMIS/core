@@ -10,6 +10,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Laminas\Diactoros\UploadedFile;
 
 
 class SpecialNeedsReferralsTable extends ControllerActionTable
@@ -57,22 +58,22 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         return $events;
     }
 
-    // public function validationDefault(Validator $validator): Validator
-    // {
-    //     $validator = parent::validationDefault($validator);
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
 
-    //     return $validator
-    //         ->add('date', [
-    //             'ruleInAcademicPeriod' => [
-    //                 'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-    //             ]
-    //         ])
-    //         ->add('comment', 'length', [
-    //             'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
-    //             'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
-    //          ])
-    //         ->allowEmpty('file_content');
-    // }
+        return $validator
+            // ->add('date', [
+            //     'ruleInAcademicPeriod' => [
+            //         'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+            //     ]
+            // ])
+            ->add('comment', 'length', [
+                'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
+                'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
+             ])
+            ->allowEmpty('file_content');
+    }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
@@ -124,6 +125,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         $encodedQueryString = $this->paramsEncode($queryString);
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $extra['elements']['controls'] = ['name' => 'SpecialNeeds.Referrals/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
+       // echo "<pre>"; print_r($extra);die;
         // Academic Periods Filter - END
     }
 
@@ -395,9 +397,14 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         }else{
             $query
             ->where([
-                'academic_period_id =' .$academicPeriodId,
                 'security_user_id =' .$userId,
             ]);
+            if(!empty($academicPeriodId)){
+                $query
+                ->where([
+                    'academic_period_id =' .$academicPeriodId
+                ]);
+            }
         }
     }
 

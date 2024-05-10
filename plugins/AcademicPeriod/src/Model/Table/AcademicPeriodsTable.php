@@ -15,7 +15,7 @@ use Cake\Network\Exception\NotFoundException;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Log\Log;
-//use Cake\I18n\Date;
+use Cake\I18n\Date;
 use Cake\I18n\FrozenDate;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 use Cake\Datasource\ConnectionManager;

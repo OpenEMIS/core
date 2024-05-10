@@ -684,18 +684,22 @@ class LeaveTable extends ControllerActionTable
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        //echo "<pre>"; print_r($entity);die;
         if (array_key_exists('view', $buttons)) {
             if ($entity->is_historical) {
                 $rowEntityId = $this->getFieldEntity($entity->is_historical, $entity->id, 'id');
                 $buttons = $this->getHistoricalActionButtons($buttons, $rowEntityId);
-
                 if ($this->controller->getName() === 'Directories') {
+                    if(isset($buttons['view']['url'][1])) {
+                        $queryString = $this->paramsDecode($buttons['view']['url'][1]);
+                    }
+                    $queryString['id'] = $rowEntityId;
                      $url = [
                         'plugin' => 'Directory',
                         'controller' => $this->controller->getName(),
                         'action' => 'HistoricalStaffLeave',
                         'view',
-                        $this->paramsEncode(['id' => $rowEntityId])
+                        $this->paramsEncode($queryString)
                     ];
                 } elseif ($this->controller->getName() === 'Profiles') {
                     $url = [

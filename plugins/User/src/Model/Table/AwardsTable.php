@@ -138,6 +138,16 @@ class AwardsTable extends ControllerActionTable
                 $this->controller->set('selectedAction', $this->getAlias());
                 break;
             case 'Directories':
+                //Shikha's Code[START]
+                $tabElements = $this->getProfessionalTabElements();
+                $type = $this->request->getQuery('type');
+                $options['type'] = $type;
+                if($type == 'student') {
+                    $tabElements = $this->controller->getAcademicTabElements($options);
+                }
+                $this->controller->set('tabElements', $tabElements);
+                $this->controller->set('selectedAction',$this->getAlias());
+                //Shikha's Code[END]
             case 'Profiles':
                 $type = $this->request->getQuery('type');
                 $options['type'] = $type;

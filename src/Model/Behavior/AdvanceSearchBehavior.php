@@ -78,7 +78,7 @@ class AdvanceSearchBehavior extends Behavior
                 $label = $labels->getLabel($this->_table->getAlias(), $key, $language);
                 if (!in_array($key, $this->getConfig('exclude'))) {
                     $selected = (isset($advanceSearchModelData['belongsTo']) && isset($advanceSearchModelData['belongsTo'][$key])) ? $advanceSearchModelData['belongsTo'][$key] : '' ;
-
+                                      
                     if ($this->isForeignKey($key)) {
                         $relatedModel = $this->getAssociatedBelongsToModel($key);
                         $list = $relatedModel->getList();
@@ -239,21 +239,41 @@ class AdvanceSearchBehavior extends Behavior
                 }
                 // clear fields value
                 if (array_key_exists('belongsTo', $request->getData()['AdvanceSearch'][$alias])) {
-                    foreach ($request->getData()['AdvanceSearch'][$alias]['belongsTo'] as $key => $value) {
-                        $request->getData()['AdvanceSearch'][$alias]['belongsTo'][$key] = '';
+                    // foreach ($request->getData()['AdvanceSearch'][$alias]['belongsTo'] as $key => $value) {
+                    //    // $request->getData()['AdvanceSearch'][$alias]['belongsTo'][$key] = '';
+                    //    $request = $request->withData($this->getAlias()['AdvanceSearch'], $requestData)
+                    // }
+                    $advanceSearchData = $request->getData('AdvanceSearch');
+                    foreach ($advanceSearchData[$alias]['belongsTo'] as $key => $value) {
+                        $advanceSearchData[$alias]['belongsTo'][$key] = '';
                     }
+                    $request = $request->withData('AdvanceSearch', $advanceSearchData);
                 }
+
                 if (array_key_exists('hasMany', $request->getData()['AdvanceSearch'][$alias])) {
-                    foreach ($request->getData()['AdvanceSearch'][$alias]['hasMany'] as $key => $value) {
-                        $request->getData()['AdvanceSearch'][$alias]['hasMany'][$key] = '';
+                    // foreach ($request->getData()['AdvanceSearch'][$alias]['hasMany'] as $key => $value) {
+                    //     $request->getData()['AdvanceSearch'][$alias]['hasMany'][$key] = '';
+                    // }
+                    $advanceSearchData = $request->getData('AdvanceSearch');
+                    foreach ($advanceSearchData[$alias]['hasMany'] as $key => $value) {
+                        $advanceSearchData[$alias]['hasMany'][$key] = '';
                     }
+                    $request = $request->withData('AdvanceSearch', $advanceSearchData);
                 }
                 if (array_key_exists('tableField', $request->getData()['AdvanceSearch'][$alias])) {
-                    foreach ($request->getData()['AdvanceSearch'][$alias]['tableField'] as $key => $value) {
-                        $request->getData()['AdvanceSearch'][$alias]['tableField'][$key] = '';
+                    // foreach ($request->getData()['AdvanceSearch'][$alias]['tableField'] as $key => $value) {
+                    //     $request->getData()['AdvanceSearch'][$alias]['tableField'][$key] = '';
+                    // }
+                    $advanceSearchData = $request->getData('AdvanceSearch');
+                    foreach ($advanceSearchData[$alias]['tableField'] as $key => $value) {
+                        $advanceSearchData[$alias]['tableField'][$key] = '';
                     }
+                    $request = $request->withData('AdvanceSearch', $advanceSearchData);
                 }
-                $request->getData()['AdvanceSearch'][$alias]['isSearch'] = false;
+                $advanceSearchData = $request->getData('AdvanceSearch');
+                $advanceSearchData[$alias]['isSearch'] = false;
+                // $request->getData('AdvanceSearch')[$alias]['isSearch'] = false;
+                $request = $request->withData('AdvanceSearch', $advanceSearchData);
             }
         }
         return $this->advancedSearchQuery($request, $query);
@@ -266,7 +286,7 @@ class AdvanceSearchBehavior extends Behavior
 
         $model = $this->_table;
         $alias = $model->getAlias();
-        $request = $this->_table->request;
+       // $request = $this->_table->request;
         $advancedSearchBelongsTo = $model->Session->check($alias.'.advanceSearch.belongsTo') ? $model->Session->read($alias.'.advanceSearch.belongsTo') : [];
         $advancedSearchHasMany = $model->Session->check($alias.'.advanceSearch.hasMany') ? $model->Session->read($alias.'.advanceSearch.hasMany') : [];
         $advancedSearchTableField = $model->Session->check($alias.'.advanceSearch.tableField') ? $model->Session->read($alias.'.advanceSearch.tableField') : [];
@@ -364,6 +384,11 @@ class AdvanceSearchBehavior extends Behavior
                     ]);
                 }
             }
+        }
+
+        $resetData = $request->getData('reset');
+        if ($resetData !== null && $resetData == 'Reset') {
+            return false;
         }
         return $query;
     }

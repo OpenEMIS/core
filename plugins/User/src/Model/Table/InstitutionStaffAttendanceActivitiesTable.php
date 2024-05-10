@@ -19,7 +19,7 @@ use Page\Traits\EncodingTrait;
 class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable 
 {
     private $allDayOptions = [];
-    public function initialize(array $config): void
+    public function initialize(array $config):void
     {
         parent::initialize($config);
         $this->belongsTo('Users',       ['className' => 'User.Users', 'foreignKey'=>'security_user_id']);

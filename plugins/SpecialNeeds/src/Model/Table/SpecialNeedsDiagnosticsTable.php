@@ -9,6 +9,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Laminas\Diactoros\UploadedFile;
 
 /**
  * Class is to get new tab data in dignosis in Special needs
@@ -30,14 +31,14 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
         $this->belongsTo('SpecialNeedsDiagnosticsDegree', ['className' => 'SpecialNeeds.SpecialNeedsDiagnosticsDegree']);
 
         $this->addBehavior('SpecialNeeds.SpecialNeeds');
-        /*$this->addBehavior('ControllerAction.FileUpload', [
+        $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'file_name',
             'content' => 'file_content',
             'size' => '10MB',
             'contentEditable' => true,
             'allowable_file_types' => 'all',
             'useDefaultName' => true
-        ]);*/
+        ]);
         $this->addBehavior('Excel', ['pages' => ['index']]);
         $this->addBehavior('Excel', ['pages' => ['index']]);
         $this->addBehavior('User.UserTab', [
@@ -58,6 +59,44 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
                 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
                 'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
                 ]);
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        $sentData = $this->request->getData();
+        $alias = $this->getAlias();
+        $sentData = $sentData[$alias];
+        
+        $fileContent = 'file_content';
+        $uploadedFile = $sentData[$fileContent];
+        $fileName = 'file_name';
+        $name = '';
+        if ($uploadedFile instanceof UploadedFile) {
+            //$content = (string)$uploadedFile->getStream();
+            $error = $uploadedFile->getError();
+            if ($error === UPLOAD_ERR_OK) {
+                // Accessing the file contents
+                $content = (string)$uploadedFile->getStream();
+            }
+            $name = $uploadedFile->getClientFilename();
+        }
+
+        if (isset($content) && isset($error) && $error == UPLOAD_ERR_OK) {
+            $data[$fileName] = $name;
+            $data[$fileContent] = $content;
+        } elseif (isset($error) && $error == UPLOAD_ERR_NO_FILE) {
+            $data->offsetUnset($fileContent);
+            if ($data->offsetExists($fileName)) {
+                $data->offsetUnset($fileName);
+            }
+        } elseif (isset($data[$fileContent . '_remove']) && $data[$fileContent . '_remove'] == 1) {
+            $data[$fileName] = null;
+            $data[$fileContent] = null;
+        } elseif (!isset($data[$fileName])) {
+            $var = null;
+            $data[$fileName] = null;
+            $data[$fileContent] = null;
+        }
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
@@ -82,10 +121,10 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             if($action == 'add'){
-                $degreeId = $request->getData['SpecialNeedsDiagnostics']['special_needs_diagnostics_type_id'];
+                $degreeId = $this->request->getData()['SpecialNeedsDiagnostics']['special_needs_diagnostics_type_id'];
                 $SpecialNeedsDiagnosticsDegree = TableRegistry::get('SpecialNeeds.SpecialNeedsDiagnosticsDegree');
                 $degreeListOptions = $SpecialNeedsDiagnosticsDegree->getDegreeList($degreeId);
-                        
+                    
                 $attr['type'] = 'select';
 
                 $attr['placeholder'] = __('--Select--');

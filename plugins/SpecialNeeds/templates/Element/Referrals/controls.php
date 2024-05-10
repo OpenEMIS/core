@@ -10,9 +10,9 @@
                     '1' => $encodedQueryString,
                 ];
 
-                if (!empty($this->request->getParam('pass'))) {
-                    $url = array_merge($url, $this->request->getParam('pass'));
-                }
+                // if (!empty($this->request->getParam('pass'))) {
+                //     $url = array_merge($url, $this->request->getParam('pass'));
+                // }
 
                 $dataNamedGroup = [];
                 if (!empty($this->request->getQuery())) {

@@ -78,7 +78,8 @@ class HealthsTable extends ControllerActionTable
             }else{
                 $action[1] = $this->paramsEncode([
                     'id' => $entity->id,
-                    'user_id' => $userID
+                    'user_id' => $userID,
+                    'staff_id' =>  $userID
                 ]);
             }
             

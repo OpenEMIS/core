@@ -46,8 +46,13 @@ class StaffBehavioursTable extends ControllerActionTable
     {
         $options['type'] = 'staff';
         $tabElements = $this->getCareerTabElements($options);
+        $controllerName = $this->controller->getName();
+        $selectedAction = 'Behaviours';
+        if($controllerName == 'Directories') {
+            $selectedAction = 'StaffBehaviours';
+        }
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'Behaviours');
+        $this->controller->set('selectedAction', $selectedAction);
 
         // Start POCOR-5188
 		if($this->request->getParam('controller') == 'Staff'){

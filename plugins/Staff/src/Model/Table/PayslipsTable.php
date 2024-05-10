@@ -18,7 +18,11 @@ class PayslipsTable extends ControllerActionTable
         $this->setTable('staff_payslips');
         
         parent::initialize($config);
-
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['Payslips' =>
+                ['id'],
+            ]
+        ]);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StaffPayslips' => ['add']
         ]);
