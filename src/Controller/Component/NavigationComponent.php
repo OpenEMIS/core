@@ -213,6 +213,7 @@ class NavigationComponent extends Component
                 'Counsellings',
                 'StudentFees',
                 'StudentLicenses',
+                'ImportSalaries'
                 
             ];
             if (in_array($controller->getName(), $institutionControllers) || (
@@ -1918,38 +1919,30 @@ class NavigationComponent extends Component
                 'title' => 'Career',
                 'parent' => 'Directories.Staff',
                 'params' => ['plugin' => 'Directory'],    
-                'selected' => ['Directories.StaffEmploymentStatuses.index',
-                    'Directories.StaffPositions.index',
-                    'Directories.HistoricalStaffPositions.index',
-                    'Directories.HistoricalStaffPositions.add',
-                    'Directories.StaffClasses.index',
-                    'Directories.StaffSubjects.index',
-                    'Directories.StaffLeave.index',
-                    'Directories.ArchivedStaffLeave.index',
-                    'Directories.HistoricalStaffLeave.index',
-                    'Directories.HistoricalStaffLeave.add',
-                    'Directories.StaffAttendances.index',
-                    'Directories.StaffBehaviours.index',
-                    'Directories.StaffAppraisals.index',
-                    'Directories.StaffDuties.index',
-                    'Directories.StaffAssociations.index']
+                'selected' => ['Directories.StaffEmploymentStatuses',
+                    'Directories.StaffPositions',
+                    'Directories.HistoricalStaffPositions',
+                    'Directories.StaffClasses',
+                    'Directories.StaffSubjects',
+                    'Directories.StaffLeave',
+                    'Directories.ArchivedStaffLeave',
+                    'Directories.HistoricalStaffLeave',
+                    'Directories.StaffAttendances',
+                    'Directories.StaffBehaviours',
+                    'Directories.StaffAppraisals',
+                    'Directories.StaffDuties',
+                    'Directories.StaffAssociations']
             ],
             'Directories.StaffBankAccounts.index' => [
                 'title' => 'Finance',
                 'parent' => 'Directories.Staff',
                 'params' => ['plugin' => 'Directory',
                     'type' => 'staff'],
-                'selected' => ['Directories.StaffBankAccounts.index',
-                    'Directories.StaffBankAccounts.view',
-                    'Directories.StaffBankAccounts.add',
-                    'Directories.StaffBankAccounts.edit',
-                    'Directories.StaffSalaries.index',
-                    'Directories.StaffSalaries.view',
-                    'Directories.StaffSalaries.add',
-                    'Directories.StaffSalaries.edit',
-                    'Directories.ImportSalaries', 'Directories.StaffPayslips.index',
-                    'Directories.StaffPayslips.view','Directories.StaffPayslips.edit',
-                    'Directories.StaffPayslips.add',]
+                'selected' => ['Directories.StaffBankAccounts',
+                    'Directories.StaffSalaries',
+                    'Directories.ImportSalaries', 
+                    'Directories.StaffPayslips',
+                    'Directories.StaffPayslips',]
             ],
             'Directories.TrainingNeeds.index' => [
                 'title' => 'Training',
@@ -1957,10 +1950,7 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Directory'],
                 'selected' => ['Directories.TrainingNeeds',
                     'Directories.TrainingResults',
-                    'Directories.Courses.index',
-                    'Directories.Courses.add',
-                    'Directories.Courses.edit',
-                    'Directories.Courses.view']
+                    'Directories.Courses']
             ],/*POCOR-6286 - added profiles menu*/
             'Directories.StaffProfiles.index' => [
                 'title' => 'Profiles',
