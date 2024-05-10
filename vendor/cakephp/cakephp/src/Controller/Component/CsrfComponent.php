@@ -80,8 +80,8 @@ class CsrfComponent extends Component
     public function startup(Event $event)
     {
         $controller = $event->getSubject();
-        $request = $controller->request;
-        $response = $controller->response;
+        $request = $controller->getRequest();
+        $response = $controller->getResponse();
         $cookieName = $this->_config['cookieName'];
 
         /* @var \Cake\Network\Request $request */

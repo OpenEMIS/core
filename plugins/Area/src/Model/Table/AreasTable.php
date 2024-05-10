@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
 use Cake\Utility\Hash;
+use Cake\Log\Log;
 use Cake\Http\ServerRequest;
 
 class AreasTable extends ControllerActionTable
@@ -58,6 +59,15 @@ class AreasTable extends ControllerActionTable
         $events['ControllerAction.Model.synchronize'] = 'synchronize';
         return $events;
     }
+
+    public function isAuthorized(Event $event, $scope, $action, $extra)
+    {
+        if ($action == 'index' || $action == 'view') {
+            // check for the user permission to view here
+            $event->stopPropagation();
+            return true;
+        }
+    }//POCOR-5672 ends
 
     public function validationDefault(Validator $validator): Validator
     {
@@ -424,7 +434,7 @@ class AreasTable extends ControllerActionTable
                     $this->aliasField('order')
                 ])
                 ->where([$this->aliasField('id') => $selected])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->formatResults(function ($results) use ($selected) {
                     $results = $results->toArray();
                     foreach ($results as &$result) {
@@ -475,7 +485,7 @@ class AreasTable extends ControllerActionTable
                 'AreaLevels.name',
                 $this->aliasField('order')
             ])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->formatResults(function ($results) use ($authorisedAreaIds, $selected, $isSuperAdmin) {
                 $results = $results->toArray();
                 $this->unsetEmptyArr($results, $authorisedAreaIds, $selected, $isSuperAdmin);

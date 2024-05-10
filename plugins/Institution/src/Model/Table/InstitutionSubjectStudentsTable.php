@@ -15,6 +15,7 @@ use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\Utility\Text;
+use Cake\Log\Log;
 
 class InstitutionSubjectStudentsTable extends AppTable
 {
@@ -695,7 +696,6 @@ class InstitutionSubjectStudentsTable extends AppTable
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
-
         $res = $this->InstitutionSubjects->find()->select(['InstitutionSubjects.id'])->join([
             'institution_subject_students' => [
                 'table' => 'institution_subject_students',

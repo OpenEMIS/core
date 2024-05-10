@@ -124,7 +124,7 @@ class CookieComponent extends Component
         $controller = $this->_registry->getController();
 
         if ($controller !== null) {
-            $this->_response =& $controller->response;
+            $this->_response =& $controller->getResponse();
         }
 
         if ($controller === null) {

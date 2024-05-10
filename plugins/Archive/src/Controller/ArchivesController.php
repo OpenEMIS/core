@@ -75,7 +75,7 @@ class ArchivesController extends AppController
     }
 
     function downloadSql($archiveId){
-
+        ini_set('memory_limit','-1');
         $backupLog = $this->loadModel('Archive.BackupLogs');
         $archiveData = $backupLog->findById($archiveId)->first();
         $fileLink = WWW_ROOT .'export/backup' . DS .$archiveData->name . '.sql';

@@ -103,10 +103,10 @@ class PermissionsTable extends ControllerActionTable
             $event->stopPropagation();
             return $this->controller->redirect($action);
         }
+       
         $module = $this->request->getQuery('module');
         $extra['pagination'] = false;
         $extra['auto_contain'] = false;
-
         $id = $this->request->getParam('pass')[1];
         $attr = [
             'escape' => false,

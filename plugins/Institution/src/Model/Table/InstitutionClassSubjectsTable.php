@@ -10,8 +10,9 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
 use Cake\I18n\Time;
+use App\Model\Table\ControllerActionTable;
 
-class InstitutionClassSubjectsTable extends AppTable
+class InstitutionClassSubjectsTable extends ControllerActionTable
 {
 
     public function initialize(array $config): void
@@ -20,7 +21,17 @@ class InstitutionClassSubjectsTable extends AppTable
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
         $this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects']);
         
+        // $this->addBehavior('Restful.RestfulAccessControl', [
+        //     'ScheduleTimetable' => ['index']
+        // ]);
         $this->addBehavior('Restful.RestfulAccessControl', [
+            'Students' => ['index'],
+            'Staff' => ['index'],
+            'Results' => ['index'],
+            'StudentExaminationResults' => ['index'],
+            'OpenEMIS_Classroom' => ['index', 'view'],
+            'InstitutionStaffAttendances' => ['index', 'view'],
+            'StudentAttendances' => ['index', 'view'],
             'ScheduleTimetable' => ['index']
         ]);
     }
@@ -61,12 +72,11 @@ class InstitutionClassSubjectsTable extends AppTable
         $educationGradeId = $options['education_grade_id'];
         $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
         $ScheduleTimetables = TableRegistry::getTableLocator()->get('Schedule.ScheduleTimetables');
-        $ScheduleCurriculumLessons = TableRegistry::getTableLocator()->get('Schedule.ScheduleCurriculumLessons');
-        $ScheduleNonCurriculumLessons = TableRegistry::getTableLocator()->get('Schedule.ScheduleNonCurriculumLessons');
-        $ScheduleLessonDetails = TableRegistry::getTableLocator()->get('Schedule.ScheduleLessonDetails');
+        // $ScheduleCurriculumLessons = TableRegistry::getTableLocator()->get('Schedule.ScheduleCurriculumLessons');
+        // $ScheduleNonCurriculumLessons = TableRegistry::getTableLocator()->get('Schedule.ScheduleNonCurriculumLessons');
+        // $ScheduleLessonDetails = TableRegistry::getTableLocator()->get('Schedule.ScheduleLessonDetails');
         $InstitutionSubjectStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
         $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
-
         $scheduleTimetablesData = $ScheduleTimetables->find()
                                     ->where([
                                         $ScheduleTimetables->aliasField('institution_class_id') => $institutionClassId,

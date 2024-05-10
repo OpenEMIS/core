@@ -23,6 +23,7 @@ class UsersDirectoryTable extends AppTable
 
     public function findIndex(Query $query, array $options)
     {
+        echo "<pre>";print_r($query->find('all')->toList());die;
         return $query->where([$this->aliasField('super_admin') => 0]);
     }
 

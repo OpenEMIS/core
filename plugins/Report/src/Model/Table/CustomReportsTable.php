@@ -283,7 +283,7 @@ class CustomReportsTable extends AppTable
     {
         $str = $this->get($params['feature'])->name;
         $reportName = str_replace(' ', '_', $str);
-        $this->behaviors()->get('ExcelReport')->config([
+        $this->behaviors()->get('ExcelReport')->setConfig([
             'filename' => $reportName
         ]);
     }

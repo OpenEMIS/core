@@ -179,7 +179,7 @@ class StaffAppraisalsTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->getRequest()->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -213,15 +213,15 @@ class StaffAppraisalsTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('preferred_name')
             ])
             ->contain([
-                $this->Users->alias(),
-                $this->AppraisalTypes->alias(),
-                $this->AppraisalForms->alias(),
-                $this->AppraisalPeriods->alias(),
-                $this->Institutions->alias(),
-                $this->CreatedUser->alias(),
+                $this->Users->getAlias(),
+                $this->AppraisalTypes->getAlias(),
+                $this->AppraisalForms->getAlias(),
+                $this->AppraisalPeriods->getAlias(),
+                $this->Institutions->getAlias(),
+                $this->CreatedUser->getAlias(),
                 'Assignees'
             ])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([
                     $Statuses->aliasField('category <> ') => $doneStatus
                 ]);

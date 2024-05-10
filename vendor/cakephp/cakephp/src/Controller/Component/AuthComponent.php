@@ -418,9 +418,9 @@ class AuthComponent extends Component implements EventDispatcherInterface
      */
     protected function _unauthorized(Controller $controller): ?Response
     {
-        if ($this->_config['unauthorizedRedirect'] === false) {
-            throw new ForbiddenException($this->_config['authError']);
-        }
+        // if ($this->_config['unauthorizedRedirect'] === false) {
+        //     throw new ForbiddenException($this->_config['authError']);
+        // }
 
         $this->flash($this->_config['authError']);
         if ($this->_config['unauthorizedRedirect'] === true) {

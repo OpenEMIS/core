@@ -132,9 +132,21 @@ class UserBehavior extends Behavior
             $this->_table->addBehavior('OpenEmis.Section');
            // $table = new $this->_table;
            // $this->_table->fields = $table->getSchema()->columns();
-            /*$this->_table->fields = $this->_table->getFields();
-            echo "<pre>"; print_r($this->_table->fields);
-            die;*/
+            // $this->_table->fields = $this->_table->getFields();
+
+                // // Access the table schema
+                // $schema = $this->_table->getSchema();
+                
+                // // Get the field information
+                // $fieldInfo = $schema->getColumn('is_student');
+                
+                // // Modify the type to 'hidden'
+                // $fieldInfo['type'] = 'hidden';
+                
+                // // Update the schema
+                // $schema->addColumn('is_student', $fieldInfo);
+                // echo "<pre>"; print_r($fieldInfo);
+                // die;
             $this->_table->fields['is_student']['type'] = 'hidden';
             $this->_table->fields['is_staff']['type'] = 'hidden';
             $this->_table->fields['is_guardian']['type'] = 'hidden';

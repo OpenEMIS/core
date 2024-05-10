@@ -333,6 +333,11 @@ class ProfilesController extends AppController
         }   // POCOR-7905: END
     }
 
+    public function ScholarshipsDirectory($pass = 'index')
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.ScholarshipsDirectory']);
+    }
+
     public function Demographic()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Demographic']);

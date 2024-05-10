@@ -14,7 +14,7 @@ use Cake\Validation\Validator;
 class TranslationsTable extends AppTable {
 
 	// Initialisation
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 	}
 

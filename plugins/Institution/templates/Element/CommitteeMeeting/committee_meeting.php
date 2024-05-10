@@ -55,7 +55,7 @@ $this->Html->script('ControllerAction.../plugins/timepicker/js/bootstrap-timepic
             'aria-expanded' => 'true',
             'onclick' => "$('#reload').val('addTimeslot').click();"
         ];
-        echo $this->Form->input('<i class="fa fa-plus"></i> <span>'.__('Add Meeting').'</span>', $addButtonAttr);
+        echo $this->Form->input(('+ Add Meeting'), $addButtonAttr);
     ?>
 <div class="table-responsive">
     <table class="table">
@@ -190,7 +190,7 @@ elseif ($ControllerAction['action'] == 'edit') : ?>
             'aria-expanded' => 'true',
             'onclick' => "$('#reload').val('addTimeslot').click();"
         ];
-        echo $this->Form->input('<i class="fa fa-plus"></i> <span>'.__('Add Meeting').'</span>', $addButtonAttr);
+        echo $this->Form->input(('+Add Meeting'), $addButtonAttr);
     ?>
 <div class="table-responsive">
     <table class="table">

@@ -11,7 +11,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Routing\Router;
 use App\Controller\AppController;
-use Cake\Network\Response;
+use Cake\Http\Response;
 use Cake\Http\Client;
 use Cake\Http\ServerRequest;
 
@@ -340,10 +340,15 @@ class DirectoriesController extends AppController
         $openemis_no = $requestDataa['openemis_no']; // POCOR-8014-n
         $student_id = $requestDataa['student_id'];
         $institution_id = $requestDataa['institution_id'];
-        if ($openemis_no) { // POCOR-8014-n
+        if(!$institution_id){
+            $institution_id = $this->getInstitutionID();
+        }
+        if ($openemis_no) {
+            // POCOR-8014-n
             $UserData = $UsersTable->find('all', ['conditions' => ['openemis_no' => $openemis_no]])->first();
             $student_id = $UserData->id;
-        } elseif ($student_id) { // POCOR-8014-n
+        }
+        if ($student_id) { // POCOR-8014-n
             $UserData = $UsersTable->find('all', ['conditions' => ['id' => $student_id]])->first();
         }
 
@@ -1178,7 +1183,7 @@ class DirectoriesController extends AppController
         $identity_types_result = $identity_types
             ->find()
             ->select(['id','name'])
-            ->order(['order'])
+            ->order(['`order`'])
             ->toArray();
         foreach($identity_types_result AS $result){
             $result_array[] = array("id" => $result['id'], "name"=> $result['name']);
@@ -2130,8 +2135,8 @@ class DirectoriesController extends AppController
     // POCOR-8012-n
     public function getContactType()
     {
-        $contact_types = TableRegistry::get('FieldOption.ContactTypes');
-        $contact_options = TableRegistry::get('FieldOption.ContactOptions');
+        $contact_types = TableRegistry::get('User.ContactTypes');
+        $contact_options = TableRegistry::get('User.ContactOptions');
         $contact_types_result = $contact_types
             ->find()
             ->innerJoin([$contact_options->getAlias() => $contact_options->getTable()],
@@ -2172,7 +2177,7 @@ class DirectoriesController extends AppController
         $guardian_relations_result = $guardian_relations
             ->find()
             ->where(['visible' => 1])
-            ->order(['order' =>'ASC']) //POCOR-7704
+            ->order(['`order`' =>'ASC']) //POCOR-7704
             ->toArray();
         foreach($guardian_relations_result AS $result){
             $result_array[] = array("id" => $result['id'], "name" => $result['name']);

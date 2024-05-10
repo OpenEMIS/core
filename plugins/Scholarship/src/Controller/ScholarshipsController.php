@@ -26,6 +26,10 @@ class ScholarshipsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.Scholarships']);
     }
 
+    // public function UsersDirectory(){
+    //     echo "asdfas";die;
+    // }
+
     public function Applications()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.Applications']);
@@ -71,6 +75,11 @@ class ScholarshipsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.RecipientCollections']);
     }
 
+    public function ScholarshipRecipients()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.ScholarshipRecipients']);
+    }
+
     // end
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
@@ -90,12 +99,14 @@ class ScholarshipsController extends AppController
                 /*$queryString = $this->request->getQuery('queryString');
                 echo "<pre>"; print_r($queryString);
 die;*/
-                $applicantId = $this->ControllerAction->getQueryString('applicant_id');
-                $header = $this->Users->get($applicantId)->name;
+                if(isset($applicantId)){
+                    $applicantId = $this->ControllerAction->getQueryString('applicant_id');
+                    $header = $this->Users->get($applicantId)->name;
 
-                $this->Navigation->addCrumb('Applications', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Applications', 'index']);
-                $this->Navigation->addCrumb($header);
-                $this->Navigation->addCrumb($model->getHeader($alias));
+                    $this->Navigation->addCrumb('Applications', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Applications', 'index']);
+                    $this->Navigation->addCrumb($header);
+                    $this->Navigation->addCrumb($model->getHeader($alias));
+                }
             }
         }
 

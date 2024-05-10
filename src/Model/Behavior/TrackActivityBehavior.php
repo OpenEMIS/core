@@ -109,7 +109,7 @@ public function beforeSave(Event $event, Entity $entity) {
 							if (is_object($relatedModel)) {
 								$relatedModelSchema = $relatedModel->getSchema();
 
-								if ($relatedModelSchema->column('name')) {
+								if ($relatedModelSchema->getColumn('name')) {
 									try {
 										$obj[$allDataKey.'_value'] = $relatedModel->get($allDataValue)->name;
 									} catch (RecordNotFoundException $ex) {

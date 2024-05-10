@@ -47,7 +47,9 @@ trait SecurityTrait
                     if (property_exists($this, '_table')) {
                         $request = $this->_table->request;
                     } else {
-                        $request = $this->getController()->getRequest();
+                        // echo "<pre>";print_r($this->request);die;
+                        // $request = $this->getController()->getRequest();
+                        $request = $this->request;
                     }
                 } catch (\Exception $exception) {
                     $class = __CLASS__;

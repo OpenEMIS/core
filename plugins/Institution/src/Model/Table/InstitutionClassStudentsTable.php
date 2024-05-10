@@ -645,7 +645,7 @@ class InstitutionClassStudentsTable extends AppTable
         // POCOR-4371 to encode the array of ids as comma separated values in restfulv2component is not support, will throw error
         // $institutionClassIds = $options['institution_class_ids'];
         $institutionClassIds = explode(',', $this->urlsafeB64Decode($options['institution_class_ids']));
-        $institutionSubjects = TableRegistry::get('institution_subjects');
+        $institutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
         $education_subject_id=$institutionSubjects->find()->select(['education_subject_id'])->where(['id'=>$institutionSubjectId,'education_grade_id' =>$educationGradeId,'academic_period_id'=>$academicPeriodId])->first();
         $education_subject_id=$education_subject_id['education_subject_id'];
         return $query

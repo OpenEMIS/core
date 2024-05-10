@@ -34,7 +34,7 @@ class AreapickerBehavior extends Behavior
         $fieldName = $attr['model'] . '.' . $attr['field'];
         $HtmlField = $event->getSubject();
         $data = $HtmlField->request->data;
-        $request = $HtmlField->getRequest();
+        // $request = $HtmlField->getRequest();
         $value = isset($data[$this->_table->getAlias()][$attr['field']]) ? $data[$this->_table->getAlias()][$attr['field']] : $entity->{$attr['field']};
 
         if ($action == 'edit') {
@@ -86,7 +86,7 @@ class AreapickerBehavior extends Behavior
             $areaOptions = $areaOptions->toArray();
             $areaKeys = array_keys($areaOptions);
             $areaKeys[] = null;
-            $session  = $HtmlField->getSession();
+            // $session  = $HtmlField->getSession();
 
             $areaKeys = array_merge($areaKeys, [$entity->{$attr['field']}]);
             // Temporary disabled for further investigation
@@ -189,19 +189,19 @@ class AreapickerBehavior extends Behavior
 
     public function getAreaLevelName($targetModel, $areaId)
     {
-        $targetTable = TableRegistry::getTableLocator()->get($targetModel);
-        $levelAssociation = Inflector::singularize($targetTable->getAlias()).'Levels';
-        $path = $targetTable
-            ->find('path', ['for' => $areaId])
-            ->contain([$levelAssociation])
-            ->select(['level_name' => $levelAssociation.'.name', 'area_name' => $targetTable->aliasField('name')])
-            //->bufferResults(false) // comment cakephp 4
-            ->toArray();
+        // $targetTable = TableRegistry::getTableLocator()->get($targetModel);
+        // $levelAssociation = Inflector::singularize($targetTable->getAlias()).'Levels';
+        // $path = $targetTable
+        //     ->find('path', ['for' => $areaId])
+        //     ->contain([$levelAssociation])
+        //     ->select(['level_name' => $levelAssociation.'.name', 'area_name' => $targetTable->aliasField('name')])
+        //     //->bufferResults(false) // comment cakephp 4
+        //     ->toArray();
 
-        if ($targetModel == 'Area.AreaAdministratives') {
-            // unset world
-            unset($path[0]);
-        }
-        return $path;
+        // if ($targetModel == 'Area.AreaAdministratives') {
+        //     // unset world
+        //     unset($path[0]);
+        // }
+        // return $path;
     }
 }

@@ -24,7 +24,6 @@ class EducationGradesTable extends ControllerActionTable
     public function initialize(array $config): void
     {
         parent::initialize($config);
-
         $this->belongsToMany('Institutions', [
             'className' => 'Institution.Institutions',
             'joinTable' => 'institution_grades',
@@ -63,7 +62,9 @@ class EducationGradesTable extends ControllerActionTable
             $reorderBehavior = $this->behaviors()->get('Reorder');
             $reorderBehavior->setConfig('filter', 'education_programme_id');
         }
-
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'OpenEMIS_Classroom' => ['index']
+        ]);
         $this->setDeleteStrategy('restrict');
     }
 
@@ -1058,8 +1059,8 @@ class EducationGradesTable extends ControllerActionTable
         $educationGradeName = $this->get($educationGradeId)->code;
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $UsersData = TableRegistry::get('User.Users');
-        $studentStatuses = TableRegistry::get('student_statuses');
-        $institutionStudents = TableRegistry::get('institution_students');
+        $studentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
         $EducationGradesData = $EducationGrades->find()
         ->where([
             $EducationGrades->aliasField('code') => $educationGradeName
@@ -1081,26 +1082,28 @@ class EducationGradesTable extends ControllerActionTable
         }
         $studentId = $result->id;
         $studentStatusesValidateRepeater = '';
-        $students =  $institutionStudents->find()->where(
-            [
-                $institutionStudents->aliasField('student_id') => $studentId
-            ])
-            ->all();
-        $validation = 'no';
-        foreach($students AS $studentsData){
-            $educationGradeName1 = $this->get($studentsData->education_grade_id)->code;
-            if($educationGradeName == $educationGradeName1){
-                if($studentsData->student_status_id == 6 || $studentsData->student_status_id == 7){
-                    $studentStatusesValidateRepeater = $studentsData->education_grade_id;
+        if(isset($studentId)){
+            $students =  $institutionStudents->find()->where(
+                [
+                    $institutionStudents->aliasField('student_id') => $studentId
+                ])
+                ->all();
+            $validation = 'no';
+            foreach($students AS $studentsData){
+                $educationGradeName1 = $this->get($studentsData->education_grade_id)->code;
+                if($educationGradeName == $educationGradeName1){
+                    if($studentsData->student_status_id == 6 || $studentsData->student_status_id == 7){
+                        $studentStatusesValidateRepeater = $studentsData->education_grade_id;
+                    }
                 }
             }
+            $students =  $institutionStudents->find()->where(
+                [
+                    $institutionStudents->aliasField('education_grade_id') => $studentStatusesValidateRepeater,
+                    $institutionStudents->aliasField('student_id') => $studentId, //POCOR-7386
+                ])
+                ->first();
         }
-        $students =  $institutionStudents->find()->where(
-            [
-                $institutionStudents->aliasField('education_grade_id') => $studentStatusesValidateRepeater,
-                $institutionStudents->aliasField('student_id') => $studentId, //POCOR-7386
-            ])
-            ->first();
         if(empty($students)){
             $validation = 'no';
         }else{

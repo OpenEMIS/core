@@ -67,6 +67,13 @@ class ReportProgressTable extends AppTable  {
 		return $result->id;
 	}
 
+	// public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    // {
+	// 	$data = json_decode($entity->params, true);
+	// 	$data['format'] = 'xlsx';
+	// 	$entity->params = json_encode($data);
+	// }
+
 	public function generate($id, $fileFormat) {
 
 		// Start POCOR-6309
@@ -93,7 +100,7 @@ class ReportProgressTable extends AppTable  {
 			}
 			
 			$shellCmd = $cmd . ' >> ' . $logs;
-			// print_r($shellCmd); die;
+			// print_r($shellCmd); die('pk');
 			try {
 				$entity = $this->get($id);
 				$pid = exec($shellCmd);

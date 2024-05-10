@@ -55,7 +55,7 @@ class ExaminationStudentSubjectResultsTable extends AppTable
     public function findResults(Query $query, array $options) {
         $academicPeriodId = $options['academic_period_id'];
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->getRequest()->getSession();
 
         $studentId = -1;
         if ($session->check('Student.ExaminationResults.student_id')) {

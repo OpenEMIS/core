@@ -9,6 +9,7 @@ use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
+use Cake\Log\Log;
 
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
@@ -124,6 +125,7 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function findAreaList(Query $query, array $options)
     {
+        Log::write('debug', 'Ehteram Ahmad');
         $selected = !empty($options['selected']) && $options['selected'] != 'null' ? $options['selected'] : null;
 
         if (isset($options['recordOnly']) && $options['recordOnly']) {

@@ -60,6 +60,8 @@ class LeaveTable extends ControllerActionTable
             $this->addBehavior('Workflow.Workflow', ['model' => 'Institution.StaffLeave']);  // POCOR-6505
         /** END: POCOR-6505 => Keep enabled the line */
         $this->fullDayOptions = $this->getSelectOptions('general.yesno');
+        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Staff.StaffTab');
     }
 
     public function implementedEvents(): array
@@ -69,10 +71,10 @@ class LeaveTable extends ControllerActionTable
         return $events;
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('date_to', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'date_from', true]
@@ -84,7 +86,7 @@ class LeaveTable extends ControllerActionTable
                 'rule' => ['inAcademicPeriod', 'academic_period_id',[]]
             ])
             ->allowEmpty('file_content');
-    }*/
+    }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
@@ -151,7 +153,9 @@ class LeaveTable extends ControllerActionTable
         $this->setFieldOrder(['status_id','assignee_id','institution_id', 'staff_leave_type_id', 'date_from', 'date_to', 'time', 'full_day', 'number_of_days', 'comments', 'academic_period_id', 'file_name', 'file_content']);
 
         $options = ['type' => 'staff'];
-        $tabElements = $this->controller->getCareerTabElements($options);
+        //$tabElements = $this->controller->getCareerTabElements($options);
+        $tabElements = $this->getCareerTabElements($options);
+        
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->getAlias());
     }
@@ -185,8 +189,10 @@ class LeaveTable extends ControllerActionTable
             $userId = $session->read('Directory.Directories.id');
         } elseif ($this->controller->getName() === 'Profiles') {
             $userId = $this->Auth->user('id');
+        } elseif ($this->controller->getName() === 'Staff') {
+            $userId = $this->getStaffID();
         }
-
+        
         $extra['auto_contain'] = false;
 
         $select = [

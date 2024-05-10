@@ -8,13 +8,12 @@ use Cake\ORM\Query;
 use App\Model\Table\AppTable;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Behavior;
-use Cake\Network\Session;
+use Cake\Http\Session;
 
 class StudentBehavioursTable extends AppTable {
 
 	public function initialize(array $config): void {
 		parent::initialize($config);
-
 		$this->belongsTo('Students', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('StudentBehaviourCategories', ['className' => 'Student.StudentBehaviourCategories']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
@@ -22,6 +21,10 @@ class StudentBehavioursTable extends AppTable {
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']); //POCOR-7488
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);//POCOR-7488
 		$this->belongsTo('StudentBehaviourClassifications', ['className' => 'Student.StudentBehaviourClassifications']);//POCOR-7557
+		$this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Behaviours' =>['id', 'institution_id']
+            ]
+        ]);
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $settings) {
@@ -83,7 +86,7 @@ class StudentBehavioursTable extends AppTable {
 				'controller' => 'Institutions',
 				'action' => 'StudentBehaviours',
 				'view',
-				$this->paramsEncode(['id' => $entity->id]),
+				$this->paramsEncode(['id' => $entity->id, 'institution_id'=> $entity->institution->id]),
 				'institution_id' => $entity->institution->id,
 			];
 			$buttons['view']['url'] = $url;
@@ -100,7 +103,8 @@ class StudentBehavioursTable extends AppTable {
 
 	private function setupTabElements() {
 		$options['type'] = 'student';
-		$tabElements = $this->controller->getAcademicTabElements($options);
+		//$tabElements = $this->controller->getAcademicTabElements($options);
+		$tabElements = $this->getAcademicTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
 		$alias = 'Behaviours';
 		$this->controller->set('selectedAction', $alias);

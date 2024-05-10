@@ -157,7 +157,7 @@ class DashboardController extends AppController
 
     private function attachAngularModules()
     {
-        $action = $this->getRequest()->getAttributes();
+        $action = $this->getRequest()->getAttribute('params')['action'];
         switch ($action) {
             case 'index':
                 $this->Angular->addModules([

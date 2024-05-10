@@ -26,6 +26,8 @@ use Institution\Controller\AppController;
 use Cake\Core\Configure;
 use Cake\Http\ServerRequest;
 use Cake\Datasource\ConnectionManager;
+use Cake\Log\Log;
+use Cake\ORM\Locator\TableLocator;
 
 //POCOR-5672
 
@@ -172,7 +174,6 @@ class InstitutionsController extends AppController
             die;
         }
         // End
-
         parent::initialize();
 
         $data = $this->loadModel('Calendars');
@@ -838,8 +839,12 @@ class InstitutionsController extends AppController
         // institution_id should always be in query string, if not, die as an error
         $institution_id = $this->getQueryString('institution_id');
         if (!$institution_id) {
-            if ($debugString != "") {
-                die($debugString . 'For Developer: You should put institution_id into query string first');
+            $session = $this->request->getSession();
+            $institution_id = $session->read('Institution.Institutions.id');
+            if(!$institution_id){
+                if ($debugString != "") {
+                    die($debugString . 'For Developer: You should put institution_id into query string first');
+                }
             }
         }
         return $institution_id;
@@ -948,6 +953,11 @@ class InstitutionsController extends AppController
         $myClass = $classes_table->get($classId);
         $myClassName = $myClass->get('name');
         return $myClassName;
+    }
+    public function InstitutionClasses()
+    {
+        Log::write('debug', 'Here it us InstitutionClasses Start');
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionClasses']);
     }
 
     public function InstitutionTransportProviders()
@@ -1930,6 +1940,7 @@ public function ClassReportCards()
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'Classes';
             $viewUrl[0] = 'view';
+            $viewUrl[1] =  $this->ControllerAction->paramsEncode(['id' =>  $classId['id'] , 'institution_id' =>  $institutionId]);
 
             //POCOR-8107
             $configItems = TableRegistry::get('Configuration.ConfigItems');
@@ -1963,7 +1974,6 @@ public function ClassReportCards()
                 'action' => 'setAlert',
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
-
             $this->set('alertUrl', $alertUrl);
             $this->set('viewUrl', $viewUrl);
             $this->set('indexUrl', $indexUrl);
@@ -2003,6 +2013,7 @@ public function ClassReportCards()
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'Subjects';
             $viewUrl[0] = 'view';
+            $viewUrl[1] =  $this->ControllerAction->paramsEncode(['id' =>  $institutionSubjectId , 'institution_id' =>  $institutionId]);
             $indexUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -2033,11 +2044,14 @@ public function ClassReportCards()
             //POCOR-7485 starts for localstorage for angular 11
             $userId = $this->Auth->user('id');
             $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+            $session = $this->request->getSession();
+            $session->write('Institution.Institutions.id', $institutionId);
             $institutionName = $this->Institutions->get($institutionId)->name;
             if (!$this->AccessControl->isAdmin()) {
                 $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
             }
             $this->set('institutionId', $institutionId);
+            $this->set('institution_id', $institutionId);
             $this->set('institutionName', $institutionName);
             $this->set('loginUserId', $userId);
             //POCOR-7485 ends    
@@ -2521,6 +2535,7 @@ public function isActionIgnored(Event $event, $action)
 
     public function beforeFilter(Event $event)
     {
+        Log::write('debug', 'Here it us beforeFilter Start');
         parent::beforeFilter($event);
         $header = __('Institutions');
         $indexUrl = ['plugin' => 'Institution',
@@ -2613,6 +2628,7 @@ public function isActionIgnored(Event $event, $action)
 
         }
         $this->set('contentHeader', $header);
+        Log::write('debug', 'Here it us beforeFilter End');
     }
 
     /**
@@ -2623,7 +2639,6 @@ public function isActionIgnored(Event $event, $action)
     function isInstitutionIDSkipped(): bool
     {
         $request = $this->request;
-        // echo "<pre>"; print_r($request);die;
         $pass = $request->getParam('pass');
         $action = $request->getParam('action');
         $controller = $request->getParam('controller');
@@ -4983,7 +4998,7 @@ public function isActionIgnored(Event $event, $action)
     public
     function getAcademicPeriod()
     {
-        $academic_periods = TableRegistry::getTableLocator()->get('academic_periods');
+        $academic_periods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $academic_periods_result = $academic_periods
             ->find()
             ->select(['id', 'name'])
@@ -5020,7 +5035,7 @@ public function isActionIgnored(Event $event, $action)
                 ->where(['name' => $institution_name])
                 ->first();
             //get instituiton
-            $institution_id = 0;
+            // $institution_id = 0;
             if (!empty($institution)) {
                 $institution_id = $institution->id;
             }
@@ -5064,7 +5079,7 @@ public function isActionIgnored(Event $event, $action)
                 'EducationSystems.id = EducationLevels.education_system_id'
             ])
             ->where([
-                $institution_grades->aliasField('institution_id') => $institution_id,
+                $institution_grades->aliasField('institution_id') => $institutionId,
                 $institution_grades->aliasField('academic_period_id') => $academic_period_id,
                 'EducationSystems.academic_period_id' => $academic_period_id,
                 'OR' => [
@@ -5115,7 +5130,7 @@ public function isActionIgnored(Event $event, $action)
         $grade_id = $requestData['grade_id'];
         $institution_id = $this->getInstitutionID();
 
-        $institution_classes = TableRegistry::getTableLocator()->get('institution_classes');
+        $institution_classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         $institution_classes_result = $institution_classes
             ->find()
             ->select([
@@ -5339,11 +5354,11 @@ public function isActionIgnored(Event $event, $action)
         }
 
         // Filter by active status
-        $ActiveStatusId = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'ACTIVE');
+        $ActiveStatusId = $this->Workflow->getStepsByModelCode($positionTable->getRegistryAlias(), 'ACTIVE');
         $ActStatus = array_values($ActiveStatusId);
         $ActiveStatusId = $ActStatus[0];
         // Filter by Inactive status
-        $InactiveStatus = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'INACTIVE');
+        $InactiveStatus = $this->Workflow->getStepsByModelCode($positionTable->getRegistryAlias(), 'INACTIVE');
         $InactiveStatusId = array_values($InactiveStatus[0]);
         $positionConditions = [];
         $positionConditions[$StaffTable->Positions->aliasField('institution_id')] = $institutionId;
@@ -5354,12 +5369,14 @@ public function isActionIgnored(Event $event, $action)
         }
         END : POCOR-6450 */
         // START : POCOR-6450
-        $SecurityUsers = TableRegistry::getTableLocator()->get('Security.SecurityUsers');
+        $SecurityUsers = TableRegistry::getTableLocator()->get('User.Users');
         $SecurityUsersData = $SecurityUsers->find()
             ->where([$SecurityUsers->aliasField('openemis_no') => $openemisNo])
             ->first();
         $staffUserPriId = $SecurityUsersData->id;
-        $expectedStaffStatuses = $this->getSpecificInstitutionStaff($institutionId, $staffUserPriId);
+        if(!empty($SecurityUsersData)){
+            $expectedStaffStatuses = $this->getSpecificInstitutionStaff($institutionId, $staffUserPriId);
+        }
         if (!empty($expectedStaffStatuses)) {
             $positionConditions[$StaffTable->Positions->aliasField('staff_position_title_id') . ' NOT IN '] = $expectedStaffStatuses;
         }
@@ -5383,7 +5400,7 @@ public function isActionIgnored(Event $event, $action)
          */
         if ($selectedFTE > 0) {
             $InsStaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');//POCOR-5069
-            $StaffPositionGradesTbl = TableRegistry::getTableLocator()->get('staff_position_grades');//POCOR-5069
+            $StaffPositionGradesTbl = TableRegistry::getTableLocator()->get('Institution.StaffPositionGrades');//POCOR-5069
             $staffPositionsOptions = $StaffTable->Positions
                 ->find()
                 ->innerJoinWith('StaffPositionTitles.SecurityRoles')//POCOR-5069 starts
@@ -5443,9 +5460,15 @@ public function isActionIgnored(Event $event, $action)
             $type = __($types[$position->type]);
             $options[] = ['value' => $position->id, 'group' => $type, 'name' => $name, 'disabled' => in_array($position->id, $excludePositions)];
         }
-        $this->response->body(json_encode($options, JSON_UNESCAPED_UNICODE));
-        $this->response->type('json');
+
+        $this->response = $this->response->withStringBody(json_encode($options, JSON_UNESCAPED_UNICODE));
+        $this->response = $this->response->withType('json');
         return $this->response;
+
+
+        // $this->response->body(json_encode($options, JSON_UNESCAPED_UNICODE));
+        // $this->response->type('json');
+        // return $this->response;
     }
 
     /**
@@ -5502,7 +5525,7 @@ public function isActionIgnored(Event $event, $action)
         $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $ConfigItemAgePlus = $ConfigItemTable->find('all', ['conditions' => ['code' => 'admission_age_plus']])->first();
         $ConfigItemAgeMinus = $ConfigItemTable->find('all', ['conditions' => ['code' => 'admission_age_minus']])->first();
-        $EducationGradesTable = TableRegistry::getTableLocator()->get('education_grades');
+        $EducationGradesTable = TableRegistry::getTableLocator()->get('Education.EducationGrades');
         $EducationGrades = $EducationGradesTable->find('all', ['conditions' => ['id' => $educationGradeId]])->first();
         $maxAge = ($EducationGrades->admission_age + $ConfigItemAgePlus->value);
         $minAge = $EducationGrades->admission_age - $ConfigItemAgeMinus->value;
@@ -5571,14 +5594,14 @@ public function isActionIgnored(Event $event, $action)
         $requestData = $this->request->input('json_decode', true);
         $requestData = $requestData['params'];
         $studentId = (array_key_exists('student_id', $requestData)) ? $requestData['student_id'] : '';
-        $studentCustomForms = TableRegistry::getTableLocator()->get('student_custom_forms');
-        $studentCustomFormsFields = TableRegistry::getTableLocator()->get('student_custom_forms_fields');
-        $studentCustomFields = TableRegistry::getTableLocator()->get('student_custom_fields');
-        $studentCustomFieldOptions = TableRegistry::getTableLocator()->get('student_custom_field_options');
-        $studentCustomFieldValues = TableRegistry::getTableLocator()->get('student_custom_field_values');
+        $studentCustomForms = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomForms');
+        $studentCustomFormsFields = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFormsFields');
+        $studentCustomFields = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFields');
+        $studentCustomFieldOptions = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldOptions');
+        $studentCustomFieldValues = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldValues');
 
         //POCOR-7123[START]
-        $custom_modules_table = TableRegistry::getTableLocator()->get('custom_modules');
+        $custom_modules_table = TableRegistry::getTableLocator()->get('CustomField.CustomModules');
         $custom_modules_data = $custom_modules_table
             ->find()
             ->where([$custom_modules_table->aliasField('code') => 'Student'])
@@ -5610,8 +5633,8 @@ public function isActionIgnored(Event $event, $action)
                     'student_custom_form_id' => $studentCustomFormsFields->aliasField('student_custom_form_id'),
                     'student_custom_field_id' => $studentCustomFormsFields->aliasField('student_custom_field_id'),
                     'section' => $studentCustomFormsFields->aliasField('section'),
-                    'name' => $studentCustomFormsFields->aliasField('name'),
-                    'order' => $studentCustomFormsFields->aliasField('order'),
+                    '`name`' => $studentCustomFormsFields->aliasField('name'),
+                    '`order`' => $studentCustomFormsFields->aliasField('order'),
                     'description' => $studentCustomFields->aliasField('description'),
                     'field_type' => $studentCustomFields->aliasField('field_type'),
                     'is_mandatory' => $studentCustomFields->aliasField('is_mandatory'),
@@ -5625,7 +5648,7 @@ public function isActionIgnored(Event $event, $action)
                     $studentCustomFormsFields->aliasField('section') => $sectionValue->section,
                     $studentCustomFields->aliasField('field_type NOT IN') => $remove_field_type
                 ])
-                ->order([$studentCustomFormsFields->aliasField('order') => 'ASC'])
+                ->order([$studentCustomFormsFields->aliasField('`order`') => 'ASC'])
                 ->toArray();
 
             foreach ($customFieldsData AS $customFieldKey => $customFieldValue) {
@@ -5915,7 +5938,7 @@ public function isActionIgnored(Event $event, $action)
             $studentStatusId = (array_key_exists('student_status_id', $requestData)) ? $requestData['student_status_id'] : null;
             $studentAdmissionStatus = (array_key_exists('student_admission_status', $requestData)) ? $requestData['student_admission_status'] : null;//POCOR-7716
             $studentAdmissionStatusValue = (array_key_exists('student_admission_status_value', $requestData)) ? $requestData['student_admission_status_value'] : null;//POCOR-7716
-            $userId = !empty($this->request->session()->read('Auth.User.id')) ? $this->request->session()->read('Auth.User.id') : 1;
+            $userId = !empty($this->request->getSession()->read('Auth.User.id')) ? $this->request->getSession()->read('Auth.User.id') : 1;
             $custom = (array_key_exists('custom', $requestData)) ? $requestData['custom'] : "";
             $photoContent = (array_key_exists('photo_base_64', $requestData)) ? $requestData['photo_base_64'] : null;
             $photoName = (array_key_exists('photo_name', $requestData)) ? $requestData['photo_name'] : null;
@@ -5932,7 +5955,7 @@ public function isActionIgnored(Event $event, $action)
             $contactValue = (array_key_exists('contact_value', $requestData)) ? $requestData['contact_value'] : null;
             //when student transfer in other institution end
             //get academic period data
-            $academicPeriods = TableRegistry::getTableLocator()->get('academic_periods');
+            $academicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             $periods = $academicPeriods->find()
                 ->where([
                     $academicPeriods->aliasField('id') => $academicPeriodId,
@@ -6037,18 +6060,17 @@ public function isActionIgnored(Event $event, $action)
                     $InstitutionStudentTransferResult = $InstitutionStudentTransfers->save($entity1);
                     unset($entity1);
                     unset($InstitutionStudentTransferResult);
-                    die('success');
+                    return null;
                 } catch (Exception $e) {
                     return null;
                 }
             } else {
-                $SecurityUsers = TableRegistry::getTableLocator()->get('security_users');
+                $SecurityUsers = TableRegistry::getTableLocator()->get('User.Users');
                 $CheckStudentExist = $SecurityUsers->find()
                     ->where([
                         $SecurityUsers->aliasField('openemis_no') => $openemisNo
                     ])->first();
-
-                $SecurityUsers = TableRegistry::getTableLocator()->get('security_users');
+                $SecurityUsers = TableRegistry::getTableLocator()->get('User.Users');
                 if (!empty($CheckStudentExist)) {
                     $existStudentId = $CheckStudentExist->id;
                     $entityData = [
@@ -6108,7 +6130,6 @@ public function isActionIgnored(Event $event, $action)
                 } catch (Exception $e) {
                     return null;
                 }
-
                 if ($SecurityUserResult) {
                     $user_record_id = $SecurityUserResult->id;
                     if (!empty($nationalityId) || !empty($nationalityName)) {
@@ -6182,7 +6203,7 @@ public function isActionIgnored(Event $event, $action)
                     }
                     if ($studentAdmissionStatusValue == 0 || strtolower($studentAdmissionStatus) == "enrolled") {//POCOR-7716 (0 is set for enrolled as in table no id will be equal tp zero)
                         if (!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionId)) {
-                            $InstitutionStudents = TableRegistry::get('institution_students');
+                            $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
                             $entityStudentsData = [
                                 'id' => Text::uuid(),
                                 'student_status_id' => $studentStatusId,
@@ -6202,8 +6223,8 @@ public function isActionIgnored(Event $event, $action)
                             $InstitutionStudentsResult = $InstitutionStudents->save($entityStudentsData);
                         }
                     }
-                    $workflows = TableRegistry::get('workflows');
-                    $workflowSteps = TableRegistry::get('workflow_steps');
+                    $workflows = TableRegistry::get('Workflow.Workflows');
+                    $workflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
                     $workflowResults = $workflows->find()
                         ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
                         ->LeftJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()], [
@@ -6221,7 +6242,7 @@ public function isActionIgnored(Event $event, $action)
                     }
                     //POCOR-7716 end
                     if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($workflowResults)) {
-                        $institutionStudentAdmission = TableRegistry::get('Institution.InstitutionStudentAdmission');
+                        $institutionStudentAdmission = TableRegistry::get('Institution.StudentAdmission');
                         $entityAdmissionData = [
                             'start_date' => $startDate,
                             'end_date' => $endDate,
@@ -6243,7 +6264,7 @@ public function isActionIgnored(Event $event, $action)
                     }
 
                     if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId)) {
-                        $institutionClassStudents = TableRegistry::getTableLocator()->get('institution_class_students');
+                        $institutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
                         $entityClassData = [
                             'id' => Text::uuid(),
                             'student_id' => $user_record_id,
@@ -6261,9 +6282,9 @@ public function isActionIgnored(Event $event, $action)
                     }
 
                     if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId)) {
-                        $institutionClassSubjects = TableRegistry::getTableLocator()->get('institution_class_subjects');
-                        $institutionSubjects = TableRegistry::getTableLocator()->get('institution_subjects');
-                        $educationGradesSubjects = TableRegistry::getTableLocator()->get('education_grades_subjects');//POCOR-7197
+                        $institutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
+                        $institutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+                        $educationGradesSubjects = TableRegistry::getTableLocator()->get('Education.EducationGradesSubjects');//POCOR-7197
                         $SubjectsResult = $institutionClassSubjects
                             ->find()
                             ->select([
@@ -6290,9 +6311,9 @@ public function isActionIgnored(Event $event, $action)
                             ->toArray();
 
                         if (!empty($SubjectsResult)) {
-                            $institutionSubjectStudents = TableRegistry::getTableLocator()->get('institution_subject_students');
+                            $institutionSubjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
                             foreach ($SubjectsResult AS $skey => $sval) {
-                                $primaryKey = $institutionSubjectStudents->primaryKey();
+                                $primaryKey = $institutionSubjectStudents->getPrimaryKey();
                                 $hashString = [];
                                 foreach ($primaryKey AS $key) {
                                     if ($key == 'student_id') {
@@ -6340,7 +6361,7 @@ public function isActionIgnored(Event $event, $action)
 
                     if (!empty($custom)) {
                         //if student custom field values already exist in student_custom_field_values table the delete the old values and insert the new ones.
-                        $studentCustomFieldValues = TableRegistry::getTableLocator()->get('student_custom_field_values');
+                        $studentCustomFieldValues = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldValues');
                         $StudentCustomFieldValuesCount = $studentCustomFieldValues
                             ->find()
                             ->where([$studentCustomFieldValues->aliasField('student_id') => $user_record_id])
@@ -6477,9 +6498,9 @@ public function isActionIgnored(Event $event, $action)
                             ];
 
                             //POCOR-7078 start
-                            $studentCustomFieldValues = TableRegistry::get('student_custom_field_values');
-                            $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
-                            $studentCustomFields = TableRegistry::get('student_custom_fields');
+                            $studentCustomFieldValues = TableRegistry::get('StudentCustomField.StudentCustomFieldValues');
+                            $studentCustomFieldOptions = TableRegistry::get('StudentCustomField.StudentCustomFieldOptions');
+                            $studentCustomFields = TableRegistry::get('StudentCustomField.StudentCustomFields');
                             $studentCustomData = $studentCustomFieldValues->find()
                                 ->select([
                                     'id' => $studentCustomFieldValues->aliasField('id'),
@@ -6552,17 +6573,17 @@ public function isActionIgnored(Event $event, $action)
 
                             die('success');
                         } catch (Exception $e) {
-                            return $e;
+                            return null;
                         }
                     } else {
-                        die('success');
+                        return null;
                     }
                 } else {
-                    return false;
+                    return null;
                 }
             }
         }
-        return true;
+        return null;
     }
 
     /**
@@ -7688,7 +7709,7 @@ public function isActionIgnored(Event $event, $action)
             $photoContent = (array_key_exists('photo_base_64', $requestData)) ? $requestData['photo_base_64'] : null;
             $photoName = (array_key_exists('photo_name', $requestData)) ? $requestData['photo_name'] : null;
 
-            $userId = !empty($this->request->session()->read('Auth.User.id')) ? $this->request->session()->read('Auth.User.id') : 1;
+            $userId = !empty($this->request->getSession()->read('Auth.User.id')) ? $this->request->getSession()->read('Auth.User.id') : 1;
             $contactType = (array_key_exists('contact_type', $requestData)) ? $requestData['contact_type'] : null;
             $contactValue = (array_key_exists('contact_value', $requestData)) ? $requestData['contact_value'] : null;
 
@@ -7703,10 +7724,12 @@ public function isActionIgnored(Event $event, $action)
             //get nationality data
             $nationalities = '';
             if (!empty($nationalityName)) {
-                $nationalitiesTbl = TableRegistry::getTableLocator()->get('nationalities');
+                $nationalitiesLocator = new TableLocator();
+                $nationalitiesTbl = $nationalitiesLocator->get('nationalities');
+                // $nationalitiesTbl = TableRegistry::getTableLocator()->get('nationalities');
                 $nationalities = $nationalitiesTbl->find()
                     ->where([
-                        $nationalitiesTbl->aliasField('name') => $nationalityName,
+                        $nationalitiesTbl->aliasField('`name`') => $nationalityName,
                     ])->first();
                 if (empty($nationalities)) {
                     $orderNationalities = $nationalitiesTbl->find()
@@ -7735,13 +7758,13 @@ public function isActionIgnored(Event $event, $action)
                 }
             }
 
-            $SecurityUsers = TableRegistry::getTableLocator()->get('security_users');
+            $SecurityUsers = TableRegistry::getTableLocator()->get('User.Users');
             $CheckGaurdianExist = $SecurityUsers->find()
                 ->where([
                     $SecurityUsers->aliasField('openemis_no') => $openemisNo
                 ])->first();
 
-            $SecurityUsers = TableRegistry::getTableLocator()->get('security_users');
+            $SecurityUsers = TableRegistry::getTableLocator()->get('User.Users');
             if (!empty($CheckGaurdianExist)) {
                 $existGaurdianId = $CheckGaurdianExist->id;
                 $entityData = [
@@ -7805,7 +7828,7 @@ public function isActionIgnored(Event $event, $action)
                 $user_record_id = $SecurityUserResult->id;
                 if (!empty($nationalityId) || !empty($nationalityName)) {
                     if (!empty($nationalities->id)) {
-                        $UserNationalities = TableRegistry::getTableLocator()->get('user_nationalities');
+                        $UserNationalities = TableRegistry::getTableLocator()->get('User.UserNationalities');
                         $checkexistingNationalities = $UserNationalities->find()
                             ->where([
                                 $UserNationalities->aliasField('nationality_id') => $nationalities->id,
@@ -7900,10 +7923,10 @@ public function isActionIgnored(Event $event, $action)
                     }
                 }
             } else {
-                return false;
+                return null;
             }
         }
-        return true;
+        return null;
     }
 
     public
@@ -8354,7 +8377,7 @@ public
     function checkConfigurationForExternalSearch()
     {
         $this->autoRender = false;
-        $configItems = TableRegistry::getTableLocator()->get('config_items');
+        $configItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $configItemsResult = $configItems
             ->find()
             ->select(['id', 'value'])
@@ -9008,7 +9031,7 @@ public
             $configItems->aliasField('code') => "student_admission_status"
         ])->first();
         $studentStatus = !empty($configItemResult->value) ? $configItemResult->value : $configItemResult->default_value;
-        $WorkflowStepsTable = TableRegistry::get('workflow_steps');
+        $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
         if ($studentStatus == 0) {
             $result_array[] = array("id" => 0, "name" => "Enrolled");// setting 0 for enrolled as zero is not any id in workflow step
         } else {

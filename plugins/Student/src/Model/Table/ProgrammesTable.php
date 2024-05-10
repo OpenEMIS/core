@@ -36,6 +36,10 @@ class ProgrammesTable extends ControllerActionTable
             'appliedAction' => ['StudentProgrammes' =>['id','education_programme_id']
             ]
         ]);
+		// $this->addBehavior('Student.StudentTab', [
+        //     'appliedAction' => ['StudentProgrammes' =>['id','education_programme_id']
+        //     ]
+        // ]);
 
 	}
 
@@ -311,7 +315,8 @@ class ProgrammesTable extends ControllerActionTable
 	private function setupTabElements()
 	{
 		$options['type'] = 'student';
-		$tabElements = $this->controller->getAcademicTabElements($options);
+		//$tabElements = $this->controller->getAcademicTabElements($options);
+		$tabElements = $this->getAcademicTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->getAlias());
 	}

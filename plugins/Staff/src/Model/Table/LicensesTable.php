@@ -306,9 +306,9 @@ class LicensesTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->getSession();
-
-        $userId = $this->getUserID();
+        $session = $controller->getRequest()->getSession();
+        $userId = $session->read('Auth.User.id');
+        // $userId = $this->getUserID();
         $institutionId = $this->getInstitutionID();
         $Statuses = $this->Statuses;
         $doneStatus = self::DONE;

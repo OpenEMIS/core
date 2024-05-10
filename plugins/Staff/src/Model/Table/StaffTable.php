@@ -65,6 +65,7 @@ class StaffTable extends AppTable
 
         $this->InstitutionStaff = TableRegistry::get('Institution.Staff');
         $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Staff.StaffTab');
     }
 
     public static function handleAssociations($model)
@@ -100,7 +101,6 @@ class StaffTable extends AppTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        $validator->setProvider('custom', $this);
         $BaseUsers = TableRegistry::get('User.Users');
         return $BaseUsers->setUserValidation($validator, $this);
     }
@@ -137,11 +137,11 @@ class StaffTable extends AppTable
             $query->group([$this->aliasField('id')]);
 
             // $query->innerJoin(
-            //  ['InstitutionStaff' => 'institution_staff'],
-            //  [
-            //      'InstitutionStaff.staff_id = ' . $this->aliasField($this->primaryKey()),
-            //      'InstitutionStaff.institution_id IN ' => $institutionIds
-            //  ]
+            // 	['InstitutionStaff' => 'institution_staff'],
+            // 	[
+            // 		'InstitutionStaff.staff_id = ' . $this->aliasField($this->primaryKey()),
+            // 		'InstitutionStaff.institution_id IN ' => $institutionIds
+            // 	]
             // )
             // ->group([$this->aliasField('id')]);
         }
@@ -265,8 +265,8 @@ class StaffTable extends AppTable
 
     private function setupTabElements($options)
     {
-        $this->controller->set('selectedAction', $this->alias);
-        $this->controller->set('tabElements', $this->controller->getUserTabElements($options));
+        $this->controller->set('selectedAction', $this->getAlias());
+        $this->controller->set('tabElements', $this->controller->getCareerTabElements($options));
     }
 
     // Function use by the mini dashboard (For Staff.Staff)
