@@ -661,6 +661,24 @@ class InstitutionService extends Controller
             $list = [];
             if(count($data['data']) > 0){
                 foreach($data['data'] as $k => $d){
+                    //dd($d);
+                    // For POCOR-8251 start...
+                    $classData = [];
+                    foreach ($d['classes'] as $c => $class) {
+
+                        $classData[$c]['id'] = $class['id'];
+                        $classData[$c]['name'] = $class['name'];
+                        $classData[$c]['subjects'] = [];
+
+                        $subjects = $this->institutionRepository->getStaffSubjects($d['institution_id'], $d['staff_id'], $class['id']);
+
+                        foreach ($subjects as $s => $subject) {
+                            $classData[$c]['subjects'][$s]['id'] = $subject['id'];
+                            $classData[$c]['subjects'][$s]['name'] = $subject['name'];
+                        }
+                    }
+                    // For POCOR-8251 end...
+
                     $list[$k]['id'] = $d['id'];
                     $list[$k]['fte'] = $d['FTE'];
                     $list[$k]['start_date'] = $d['start_date'];
@@ -674,6 +692,11 @@ class InstitutionService extends Controller
                     $list[$k]['staff_status_name'] = $d['staff_status']['staff_status_name']??"";
                     $list[$k]['institution_id'] = $d['institution_id'];
                     $list[$k]['institution_position_id'] = $d['institution_position_id'];
+                    
+                    // For POCOR-8251 start...
+                    $list[$k]['classes'] = $classData;
+                    // For POCOR-8251 end...
+
                     $list[$k]['security_group_user_id'] = $d['security_group_user_id'];
                     $list[$k]['modified_user_id'] = $d['modified_user_id'];
                     $list[$k]['modified'] = $d['modified'];
@@ -710,6 +733,24 @@ class InstitutionService extends Controller
             $list = [];
             if(count($data['data']) > 0){
                 foreach($data['data'] as $k => $d){
+                    
+                    // For POCOR-8251 start...
+                    $classData = [];
+                    foreach ($d['classes'] as $c => $class) {
+
+                        $classData[$c]['id'] = $class['id'];
+                        $classData[$c]['name'] = $class['name'];
+                        $classData[$c]['subjects'] = [];
+
+                        $subjects = $this->institutionRepository->getStaffSubjects($d['institution_id'], $d['staff_id'], $class['id']);
+
+                        foreach ($subjects as $s => $subject) {
+                            $classData[$c]['subjects'][$s]['id'] = $subject['id'];
+                            $classData[$c]['subjects'][$s]['name'] = $subject['name'];
+                        }
+                    }
+                    // For POCOR-8251 end...
+
                     $list[$k]['id'] = $d['id'];
                     $list[$k]['fte'] = $d['FTE'];
                     $list[$k]['start_date'] = $d['start_date'];
@@ -723,6 +764,11 @@ class InstitutionService extends Controller
                     $list[$k]['staff_status_name'] = $d['staff_status']['staff_status_name']??"";
                     $list[$k]['institution_id'] = $d['institution_id'];
                     $list[$k]['institution_position_id'] = $d['institution_position_id'];
+                    
+                    // For POCOR-8251 start...
+                    $list[$k]['classes'] = $classData;
+                    // For POCOR-8251 end...
+
                     $list[$k]['security_group_user_id'] = $d['security_group_user_id'];
                     $list[$k]['modified_user_id'] = $d['modified_user_id'];
                     $list[$k]['modified'] = $d['modified'];
@@ -758,6 +804,25 @@ class InstitutionService extends Controller
             
             $list = [];
             if($data){
+
+                // For POCOR-8251 start...
+                $classData = [];
+                foreach ($data['classes'] as $c => $class) {
+
+                    $classData[$c]['id'] = $class['id'];
+                    $classData[$c]['name'] = $class['name'];
+                    $classData[$c]['subjects'] = [];
+
+                    $subjects = $this->institutionRepository->getStaffSubjects($data['institution_id'], $data['staff_id'], $class['id']);
+
+                    foreach ($subjects as $s => $subject) {
+                        $classData[$c]['subjects'][$s]['id'] = $subject['id'];
+                        $classData[$c]['subjects'][$s]['name'] = $subject['name'];
+                    }
+                }
+                // For POCOR-8251 end...
+
+
                 $list['id'] = $data['id'];
                 $list['fte'] = $data['FTE'];
                 $list['start_date'] = $data['start_date'];
@@ -771,6 +836,11 @@ class InstitutionService extends Controller
                 $list['staff_status_name'] = $data['staffStatus']['staff_status_name']??"";
                 $list['institution_id'] = $data['institution_id'];
                 $list['institution_position_id'] = $data['institution_position_id'];
+
+                // For POCOR-8251 start...
+                $list['classes'] = $classData;
+                // For POCOR-8251 end...
+
                 $list['security_group_user_id'] = $data['security_group_user_id'];
                 $list['modified_user_id'] = $data['modified_user_id'];
                 $list['modified'] = $data['modified'];
@@ -789,7 +859,6 @@ class InstitutionService extends Controller
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Institution Staff Data Not Found');
         }
     }
