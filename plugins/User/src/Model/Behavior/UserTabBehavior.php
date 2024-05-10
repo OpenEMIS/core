@@ -75,15 +75,22 @@ class UserTabBehavior extends Behavior
     {
         $model = $this->_table;
         $params = $model->getQueryString();
+        $controller = $model->controller;
+        $controllerName = $controller->getName();
         $queryString = $model->paramsEncode($params);
         if ($toolbarButtons->offsetExists('back')) {
             $toolbarButtons['back']['url'][0] = 'view';
             $toolbarButtons['back']['url'][1] = $queryString;
+            if($controllerName == 'Directories') {
+                $url = $model->controller->referer();
+                $toolbarButtons['back']['url'] = $url;
+            }
         }
         if (isset($toolbarButtons['list'])) {
             $toolbarButtons['list']['url'][0] = 'index';
-            $toolbarButtons['list']['url'][1] = $queryString;
+            $toolbarButtons['list']['url'][1] = $queryString; 
         }
+
         return $toolbarButtons;
     }
 
@@ -94,6 +101,8 @@ class UserTabBehavior extends Behavior
     private function fixViewBackButton($toolbarButtons)
     {
         $model = $this->_table;
+        $controller = $model->controller;
+        $controllerName = $controller->getName();
         $params = $model->getQueryString();
         $userID = $this->getUserID();
         if ($userID) {
@@ -104,10 +113,38 @@ class UserTabBehavior extends Behavior
             $url = $toolbarButtons['back']['url'];
             $url['0'] = 'index';
             $url['1'] = $queryString;
-            unset($url['?']);
+            $request = $this->_table->request;
+            
+            if($controllerName == 'Directories') {
+                $actions = ['StaffPayslips','StaffBankAccounts','StaffSalaries','TrainingNeeds','TrainingResults','HealthConsultations',
+                'HealthFamilies','HealthHistories', 'HealthImmunizations', 'HealthMedications','HealthTests','HealthBodyMasses',
+                'Employments','StaffQualifications','StaffMemberships','StaffLicenses','StaffAwards','SpecialNeedsDiagnostics',
+                'SpecialNeedsDevices','SpecialNeedsServices','SpecialNeedsAssessments','HealthInsurances','SpecialNeedsPlans',
+                'StudentBankAccounts','Counsellings','StudentFees','StudentLicenses'];
+                $action = $request->getParam('action');
+                if(isset($request->getParam('pass')[1]) && in_array($action, $actions)) {
+                    $decodeQueryString = $request->getParam('pass')[1];
+                    $queryString = $model->paramsDecode($decodeQueryString);
+                    if(isset($queryString['id'])) {
+                        unset($queryString['id']);
+                    }
+                    $url['1'] = $model->paramsEncode($queryString);
+                } else {
+                    unset($url['1']);
+                }
+            } else {
+                unset($url['?']);
+            }
             $toolbarButtons['back']['url'] = $url;
         }
-//        die('<pre>' . print_r($toolbarButtons, true));
+        if ($toolbarButtons->offsetExists('download') && isset($request->getParam('pass')[1])) {
+            $url = $toolbarButtons['download']['url'];
+            $decodeQueryString = $request->getParam('pass')[1];
+            $queryString = $model->paramsDecode($decodeQueryString);
+            $url['1'] = $model->paramsEncode($queryString);
+            $toolbarButtons['download']['url'] = $url;
+        }
+        // die('<pre>' . print_r($toolbarButtons, true));
         return $toolbarButtons;
     }
 
@@ -216,15 +253,31 @@ class UserTabBehavior extends Behavior
                 
                     foreach ($appliedActions[$url_action] as $additionalParam) {
                         $queryString[$additionalParam] = $entity->{$additionalParam};
+                        if($additionalParam == 'staff_id') {
+                            $queryString[$additionalParam] = $userID;
+                        }
                     }
 
                     $url[1] = $model->paramsEncode($queryString);
                     $buttons[$action]['url'] = $url;
-                    
+                } else { // Shikah's code[START]
+                    if (isset($url[2])) {
+                        unset($url[2]);
+                    }
+                    $queryString = $model->getQueryString();
+                    $queryString['id'] = $entity->id;
+                    $queryString['institution_id'] = $institutionID;
+                    foreach ($appliedActions[$url_action] as $additionalParam) {
+                        $queryString[$additionalParam] = $entity->{$additionalParam};
+                    }
+                    $url['1'] = $model->paramsEncode($queryString);
+                    $buttons[$action]['url'] = $url;
                 }
+                // Shikah's code[END]
             }
         }
-//        die('<pre>' . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
+        
+        //die('<pre>' . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
 
         return $buttons;
     }

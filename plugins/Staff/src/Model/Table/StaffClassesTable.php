@@ -211,8 +211,13 @@ class StaffClassesTable extends ControllerActionTable
     {
         $options = ['type' => 'staff'];
         $tabElements = $this->getCareerTabElements($options);
+        $controllerName = $this->controller->getName();
+        $selectedAction = 'Classes';
+        if($controllerName == 'Directories') {
+            $selectedAction = 'StaffClasses';
+        }
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'Classes');
+        $this->controller->set('selectedAction', $selectedAction);
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)

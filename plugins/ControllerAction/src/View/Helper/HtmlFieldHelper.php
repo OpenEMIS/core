@@ -920,7 +920,14 @@ class HtmlFieldHelper extends Helper
             $ids = $this->ControllerAction->getIdKeys($table, $entity, false);
             $params = $request->getAttribute('params');
             $action = $params['action'];
-
+            if($request->getParam('controller') == 'Directories'){
+                if (isset($entity['security_user_id']) && ! empty($entity['security_user_id'])) {
+                    $ids['security_user_id'] = $entity['security_user_id'];
+                }
+                if(isset($params['pass'][1]) && isset($this->ControllerAction->paramsDecode($params['pass'][1])['security_user_id'])) {
+                    $ids['security_user_id'] =  $this->ControllerAction->paramsDecode($params['pass'][1])['security_user_id'];
+                }
+            }
             $action = ['action' => $action, 'download', $this->ControllerAction->paramsEncode($ids)];
             $value = $this->link($entity->file_name, $action);
 
@@ -932,7 +939,7 @@ class HtmlFieldHelper extends Helper
             //POCOR-8074-6 Ends
             //POCOR-7485 Ends
         }
-//        die('<pre>'.print_r($attr,true));
+        //die('<pre>'.print_r($value,true));
         return $value;
     }
 

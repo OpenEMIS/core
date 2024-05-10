@@ -14,6 +14,11 @@ class TrainingNeedsTable extends TrainingNeedsAppTable
         parent::initialize($config);
 
         $this->addBehavior('Workflow.Workflow', ['model' => 'Institution.StaffTrainingNeeds']);
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['TrainingNeeds' =>
+                ['id'],
+            ]
+        ]);
     }
 
     public function afterAction(Event $event, ArrayObject $extra)

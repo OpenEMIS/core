@@ -32,10 +32,15 @@ class BodyMassesTable extends ControllerActionTable
             ]
         ]);
         $this->toggle('search', false);
-
-        $this->addBehavior('Excel',[
-            'excludes' => ['comment, security_user_id'],
-            'pages' => ['index'],
+        // $this->addBehavior('Excel',[
+        //     'excludes' => ['comment, security_user_id'],
+        //     'pages' => ['index'],
+        // ]);
+        $this->addBehavior('ControllerAction.FileUpload', [
+            'size' => '2MB',
+            'contentEditable' => false,
+            'allowable_file_types' => 'all',
+            'useDefaultName' => true
         ]);
         //POCOR-6255 start
         // $this->addBehavior('Page.FileUpload', [

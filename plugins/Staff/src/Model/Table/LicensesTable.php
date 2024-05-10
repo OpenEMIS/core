@@ -291,8 +291,12 @@ class LicensesTable extends ControllerActionTable
     private function setupTabElements()
     {
         $tabElements = $this->getProfessionalTabElements();
+        $action = $this->request->getParam('action');
+        if($action != 'StudentLicenses') {
+            $action = $this->getAlias();
+        }
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->getAlias());
+        $this->controller->set('selectedAction',$action );
     }
 
     private function setupFields(Entity $entity)

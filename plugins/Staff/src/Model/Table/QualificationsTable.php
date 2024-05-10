@@ -177,39 +177,44 @@ class QualificationsTable extends ControllerActionTable
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
+        // if ($field == 'qualification_level') {
+        //     return __('Level');
+        // } elseif ($field == 'graduate_year') {
+        //     return __('Graduate Year');
+        // }elseif ($field == 'qualification_institution') {
+        //     return __('Institution');
+        // }elseif ($field == 'document_no') {
+        //     return __('Document No');
+        // }elseif ($field == 'qualification_title_id') {
+        //     return __('Title');
+        // }elseif ($field == 'industry_id') {
+        //     return __('Industry');
+        // }elseif ($field == 'education_field_of_study_id') {
+        //     return __('Field of Study');
+        // }elseif ($field == 'qualification_specialisations') {
+        //     return __('Qualification Specialisations');
+        // }elseif ($field == 'qualification_country_id') {
+        //     return __('Qualification Country');
+        // }elseif ($field == 'gpa') {
+        //     return __('GPA');
+        // }elseif ($field == 'created_user_id') {
+        //     return __('Created By');
+        // } else if ($field == 'created') {
+        //     return  __('Created On');
+        // }elseif ($field == 'modified_user_id') {
+        //     return __('Last Modified By');
+        // } else if ($field == 'modified') {
+        //     return  __('Last Modified On');
+        // } else if ($field == 'education_subjects') {
+        //     return  __('Education Subject');
+        // } else if ($field == 'file_content') {
+        //     return  __('Attachment');
+        // }else {
+        //     return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        // }
         if ($field == 'qualification_level') {
             return __('Level');
-        } elseif ($field == 'graduate_year') {
-            return __('Graduate Year');
-        }elseif ($field == 'qualification_institution') {
-            return __('Institution');
-        }elseif ($field == 'document_no') {
-            return __('Document No');
-        }elseif ($field == 'qualification_title_id') {
-            return __('Title');
-        }elseif ($field == 'industry_id') {
-            return __('Industry');
-        }elseif ($field == 'education_field_of_study_id') {
-            return __('Field of Study');
-        }elseif ($field == 'qualification_specialisations') {
-            return __('Specialisations');
-        }elseif ($field == 'qualification_country_id') {
-            return __('Qualification Country');
-        }elseif ($field == 'gpa') {
-            return __('GPA');
-        }elseif ($field == 'created_user_id') {
-            return __('Created By');
-        } else if ($field == 'created') {
-            return  __('Created On');
-        }elseif ($field == 'modified_user_id') {
-            return __('Last Modified By');
-        } else if ($field == 'modified') {
-            return  __('Last Modified On');
-        } else if ($field == 'education_subjects') {
-            return  __('Subjects');
-        } else if ($field == 'file_content') {
-            return  __('Attachment');
-        }else {
+        } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
@@ -225,7 +230,7 @@ class QualificationsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         // determine if download button is shown
         $showFunc = function() use ($entity) {
@@ -236,7 +241,11 @@ class QualificationsTable extends ControllerActionTable
             'actions.download.show',
             $showFunc
         );
-
+        $toolbarButtons =  $extra['toolbarButtons'];
+        $filename = $entity->file_content;
+        if( $toolbarButtons->offsetExists('download') && empty($filename)) {
+            $extra['toolbarButtons']['download'] = false;
+        }
         $this->setupFields($entity);
     }
 
@@ -461,8 +470,9 @@ class QualificationsTable extends ControllerActionTable
     private function setupTabElements()
     {
 		$tabElements = $this->getProfessionalTabElements();
+        $action = $this->getAlias();
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->getAlias());
+		$this->controller->set('selectedAction', $action);
 	}
 
     public function afterAction(Event $event, ArrayObject $extra)

@@ -183,8 +183,10 @@ class StaffSubjectsTable extends ControllerActionTable {
     {
         
         if ($this->action == 'index') {
+            $queryString = $this->getQueryString();
+            $encodedQueryString = $this->paramsEncode($queryString);
             
-            $indexElements[] = ['name' => 'Staff.Staff/controls', 'data' => [], 'options' => [], 'order' => 0];
+            $indexElements[] = ['name' => 'Staff.Staff/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 0];
             $extra['elements'] = array_merge($extra['elements'], $indexElements);
         }
        
@@ -213,8 +215,13 @@ class StaffSubjectsTable extends ControllerActionTable {
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra) {
         $options = ['type' => 'staff'];
         $tabElements = $this->getCareerTabElements($options);
+        $controllerName = $this->controller->getName();
+        $selectedAction = 'Subjects';
+        if($controllerName == 'Directories') {
+            $selectedAction = 'StaffSubjects';
+        }
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'Subjects');
+        $this->controller->set('selectedAction', $selectedAction);
 
     }
 

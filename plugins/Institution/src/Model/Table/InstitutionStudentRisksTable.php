@@ -333,7 +333,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
             $institutionId = $afterSaveOrDeleteEntity->institution_id;
         } else {
             // for gender will be using security_user table, doesnt have any institution
-            $institutionId = $this->getInstitutionIdData($criteriaTable, $afterSaveOrDeleteEntity, $academicPeriodId);
+            $institutionId = $this->getInstitutionId($criteriaTable, $afterSaveOrDeleteEntity, $academicPeriodId);
         }
 
         if (!empty($institutionId)) {

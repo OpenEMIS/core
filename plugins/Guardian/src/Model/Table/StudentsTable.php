@@ -7,7 +7,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use Cake\Core\Configure;
@@ -45,12 +45,12 @@ class StudentsTable extends ControllerActionTable
             $tabElements = $this->controller->getGuardianStudentTabElements();
         } elseif ($this->action == 'view') {
             $session = $this->request->getSession();
-            $session->write('Student.Guardians.primaryKey', $this->paramsDecode($this->request->params['pass']['1']));
+            $session->write('Student.Guardians.primaryKey', $this->paramsDecode($this->request->getParam('pass')['1']));
             $tabElements = $this->controller->getUserTabElements(['entity' => $entity, 'id' => $entity->student_id, 'userRole' => 'Students']);
         }
 
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function afterAction(Event $event, $data)
@@ -85,11 +85,12 @@ class StudentsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->getSession();
-        $userId = $session->read('Directory.Directories.id');
+        // $session = $this->request->getSession();
+        // $userId = $session->read('Directory.Directories.id');
+        $userId = $this->getUserId();
         $conditions[$this->aliasField('guardian_id')] = $userId;
         $query->where($conditions, [], true);
-
+     
         $search = $this->getSearchKey();
         if (!empty($search)) {
             // function from AdvancedNameSearchBehavior
@@ -111,12 +112,26 @@ class StudentsTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
+        $session = $this->request->getSession();
         $newButtons = [];
         if (array_key_exists('view', $buttons)) {
+            $security_user_id = $this->getUserId();
+            $pass = $this->paramsDecode($buttons['view']['url'][1]);
+            $pass['security_user_id'] = $this->getUserId();
+            $buttons['view']['url'][1] = $this->paramsEncode($pass);
             $newButtons['view'] = $buttons['view'];
         }
 
         return $newButtons;
+    }
+
+
+    public function getUserId()
+    {
+        $userId = '';
+        $queryString = $this->getQueryString();
+        $session = $this->request->getSession();
+        $userId = (isset($queryString['security_user_id']) && !empty($queryString['security_user_id'])) ? $queryString['security_user_id'] : $session->read('Directory.Directories.id');
+        return $userId;
     }
 }

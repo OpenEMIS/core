@@ -340,6 +340,9 @@ class ContactsTable extends ControllerActionTable
                     return ($contactOptionId == $this->contactOptionsArray['EMG']);
                     // POCOR-8080-1 end
                 },
+            ])
+            ->add('preferred', 'ruleValidatePreferred', [
+                'rule' => ['validateContact'],
             ]);
 
         return $validator;

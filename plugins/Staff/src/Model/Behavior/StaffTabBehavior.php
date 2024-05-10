@@ -67,7 +67,8 @@ class StaffTabBehavior extends Behavior
 
     public function getCareerTabElements($options = [])
     {
-        $model = $this->_table;        
+        $type = (array_key_exists('type', $options))? $options['type']: null;
+        $model = $this->_table;
 //         echo "<pre>"; print_r(strval($model->getQueryString('institution_id'))); die;
         $controller = $model->controller;
         $pluginName = $controller->getPlugin();
@@ -88,17 +89,17 @@ class StaffTabBehavior extends Behavior
             'controller' => $controllerName];
 
         $staffTabElements = [
-            'EmploymentStatuses' => ['text' => __('Statuses')],
-            'Positions' => ['text' => __('Positions')],
-            'Classes' => ['text' => __('Classes')],
-            'Subjects' => ['text' => __('Subjects')],
+            'StaffEmploymentStatuses' => ['text' => __('Statuses')],
+            'StaffPositions' => ['text' => __('Positions')],
+            'StaffClasses' => ['text' => __('Classes')],
+            'StaffSubjects' => ['text' => __('Subjects')],
             'StaffLeave' => ['text' => __('Leave')],
             'StaffAttendances' => ['text' => __('Attendances')],
-            'Behaviours' => ['text' => __('Behaviours')],
+            'StaffBehaviours' => ['text' => __('Behaviours')],
             'StaffAppraisals' => ['text' => __('Appraisals')],
-            'Duties' => ['text' => __('Duties')],
+            'StaffDuties' => ['text' => __('Duties')],
             'StaffAssociations' => ['text' => __('Houses')], //POCOR-7938
-            'StaffCurriculars' => ['text' => __('Curriculars')] //POCOR-6673 staff career tab section
+            //'Curriculars' => ['text' => __('Curriculars')] //POCOR-6673 staff career tab section
         ];
 
         // unset classes and subjects if institution is non-academic
@@ -114,7 +115,7 @@ class StaffTabBehavior extends Behavior
 
         $tabElements = array_merge($tabElements, $staffTabElements);
         foreach ($staffTabElements as $key => $tab) {
-                $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString]);
+                $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString, 'type'=>$type]);
 
         }
         /*echo "<pre>"; print_r($tabElements);
@@ -137,10 +138,10 @@ die;*/
         $staffUrl = ['plugin' => $pluginName, 'controller' => $controllerName];
         $staffTabElements = [
             'Employments' => ['text' => __('Employments')],
-            'Qualifications' => ['text' => __('Qualifications')],
-            'Memberships' => ['text' => __('Memberships')],
-            'Licenses' => ['text' => __('Licenses')],
-            'Awards' => ['text' => __('Awards')],
+            'StaffQualifications' => ['text' => __('Qualifications')],
+            'StaffMemberships' => ['text' => __('Memberships')],
+            'StaffLicenses' => ['text' => __('Licenses')],
+            'StaffAwards' => ['text' => __('Awards')],
         ];
         if($controllerName == 'Students'){
             $staffTabElements = [
@@ -193,7 +194,7 @@ die;*/
             return $controller->TabPermission->checkTabPermission($tabElements);
         }
 
-        if($controllerName == "Directory"){
+        if($controllerName == "Directories"){
             $userID = $this->getUserID();
             if(!is_numeric($userID)){
                 return [];
@@ -202,6 +203,7 @@ die;*/
             $user = $Users->get($userID);
             $isStaff = $user->is_staff;
             $isStudent = $user->is_student;
+            $tabElements = [];
             if ($isStaff) {
                 $staffTabElements = [
                     'Employments' => ['text' => __('Employments')],
@@ -214,7 +216,7 @@ die;*/
                 $staffTabElements = [
                     'Employments' => ['text' => __('Employments')],
                     'Qualifications' => ['text' => __('Qualifications')],
-                    'Licenses' => ['text' => __('Licenses')],
+                    'StudentLicenses' => ['text' => __('Licenses')],
                 ];
             } else {
                 $staffTabElements = [
@@ -223,8 +225,11 @@ die;*/
                     'Licenses' => ['text' => __('Licenses')],
                 ];
             }
+            $tabElements = array_merge($tabElements, $staffTabElements);
             foreach ($staffTabElements as $key => $tab) {
-                if ($key != 'Employments') {
+                if($key == 'StudentLicenses'){
+                    $url = array_merge($staffUrl, ['action' => $key, '0' => 'index']);
+                } else if($key != 'Employments') {
                     $url = array_merge($staffUrl, ['action' => 'Staff' . $key, '0' => 'index']);
 
                 } else {

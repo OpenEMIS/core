@@ -10,7 +10,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 
-//use Cake\Validation\Validator;
+use Cake\Validation\Validator;
 
 class IdentitiesTable extends ControllerActionTable
 {
@@ -287,10 +287,10 @@ class IdentitiesTable extends ControllerActionTable
         $query->where([$this->aliasField('security_user_id') => $userId]);
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
-
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('issue_date', 'ruleCompareDate', [
                 'rule' => ['compareDate', 'expiry_date', false]
@@ -315,7 +315,7 @@ class IdentitiesTable extends ControllerActionTable
             //POCOR-5987 starts
             ->notEmpty('nationality_id');
         //POCOR-5987 ends
-    }*/
+    }
 
     public function editOnInitialize(Event $event, Entity $entity)
     {

@@ -198,13 +198,16 @@ class ImportBehavior extends Behavior
         //back button
         if (!empty($this->getConfig('backUrl'))) {
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->getConfig('backUrl'));
+            unset($toolbarButtons['back']['url'][0]);
         } elseif ($toolbarButtons['back']['url']['plugin'] == 'Directory') { //back button for directory
             $back = [];
+            $back[1] = $queryString[1];
+            
             if ($this->_table->request->getParam('pass')[0] == 'add') {
                 $back['action'] = 'Directories';
             } elseif ($this->_table->request->params['pass'][0] == 'results') {
                 $back['action'] = $this->_table->getAlias();
-                $back[0] = 'add';
+                //$back[0] = 'add';
             };
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $back);
         } elseif ($this->institutionId && $toolbarButtons['back']['url']['plugin'] == 'Institution') {
@@ -221,10 +224,11 @@ class ImportBehavior extends Behavior
                 $back['action'] = str_replace('Institution', '', $back['action']);
             }
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $back);
+            unset($toolbarButtons['back']['url'][0]);
         } else {
             $toolbarButtons['back']['url']['action'] = 'index';
-        }
-        unset($toolbarButtons['back']['url'][0]);
+            unset($toolbarButtons['back']['url'][0]);
+        }       
     }
 
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
