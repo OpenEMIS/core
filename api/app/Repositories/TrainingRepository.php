@@ -20,8 +20,26 @@ class TrainingRepository
         try {
             $limit = config('constantvalues.defaultPaginateLimit');
             $data = [];
-            $list = TrainingCourse::select('training_courses.*', 'training_field_of_studies.name as field_of_study')
-                    ->join('training_field_of_studies', 'training_field_of_studies.id', '=', 'training_courses.training_field_of_study_id');
+            $list = TrainingCourse::select(
+                        'training_courses.*', 
+                        'training_field_of_studies.name as training_field_of_study_name',
+                        'training_course_types.name as training_course_type_name',
+                        'training_course_categories.name as training_course_category_name',
+                        'training_mode_deliveries.name as training_mode_of_delivery_name',
+                        'training_requirements.name as training_requirement_name',
+                        'training_levels.name as training_level_name',
+                        'security_users.first_name as first_name',
+                        'security_users.middle_name as middle_name',
+                        'security_users.third_name as third_name',
+                        'security_users.last_name as last_name',
+                    )
+                    ->leftjoin('training_field_of_studies', 'training_field_of_studies.id', '=', 'training_courses.training_field_of_study_id')
+                    ->leftjoin('training_course_types', 'training_course_types.id', '=', 'training_courses.training_course_type_id')
+                    ->leftjoin('training_course_categories', 'training_course_categories.id', '=', 'training_courses.training_course_category_id')
+                    ->leftjoin('training_mode_deliveries', 'training_mode_deliveries.id', '=', 'training_courses.training_mode_of_delivery_id')
+                    ->leftjoin('training_requirements', 'training_requirements.id', '=', 'training_courses.training_requirement_id')
+                    ->leftjoin('training_levels', 'training_levels.id', '=', 'training_courses.training_level_id')
+                    ->leftjoin('security_users', 'security_users.id', '=', 'training_courses.assignee_id');
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -35,7 +53,7 @@ class TrainingRepository
             } else {
                 $data['data'] = $list->get()->toArray();
             }
-
+            
             return $data;
 
         } catch (\Exception $e) {
@@ -51,8 +69,26 @@ class TrainingRepository
     public function getTrainingCourseData($courseId)
     {
         try {
-            $data = TrainingCourse::select('training_courses.*', 'training_field_of_studies.name as field_of_study')
-                    ->join('training_field_of_studies', 'training_field_of_studies.id', '=', 'training_courses.training_field_of_study_id')
+            $data = TrainingCourse::select(
+                        'training_courses.*', 
+                        'training_field_of_studies.name as training_field_of_study_name',
+                        'training_course_types.name as training_course_type_name',
+                        'training_course_categories.name as training_course_category_name',
+                        'training_mode_deliveries.name as training_mode_of_delivery_name',
+                        'training_requirements.name as training_requirement_name',
+                        'training_levels.name as training_level_name',
+                        'security_users.first_name as first_name',
+                        'security_users.middle_name as middle_name',
+                        'security_users.third_name as third_name',
+                        'security_users.last_name as last_name',
+                    )
+                    ->leftjoin('training_field_of_studies', 'training_field_of_studies.id', '=', 'training_courses.training_field_of_study_id')
+                    ->leftjoin('training_course_types', 'training_course_types.id', '=', 'training_courses.training_course_type_id')
+                    ->leftjoin('training_course_categories', 'training_course_categories.id', '=', 'training_courses.training_course_category_id')
+                    ->leftjoin('training_mode_deliveries', 'training_mode_deliveries.id', '=', 'training_courses.training_mode_of_delivery_id')
+                    ->leftjoin('training_requirements', 'training_requirements.id', '=', 'training_courses.training_requirement_id')
+                    ->leftjoin('training_levels', 'training_levels.id', '=', 'training_courses.training_level_id')
+                    ->leftjoin('security_users', 'security_users.id', '=', 'training_courses.assignee_id')
                     ->where('training_courses.id', $courseId)
                     ->first();
 
@@ -119,9 +155,11 @@ class TrainingRepository
     public function getTrainingSessions($params)
     {
         try {
-            $limit = config('constantvalues.defaultPaginateLimit');
             $data = [];
             $list = TrainingSession::select('training_sessions.*', 'training_courses.name as training_course_name', 'training_providers.name as training_provider_name')
+                    ->with('trainingSessionTrainee:id,first_name,middle_name,third_name,last_name,openemis_no', 
+                        'trainingSessionEvaluator:id,first_name,middle_name,third_name,last_name,openemis_no'
+                    )
                     ->join('training_courses', 'training_sessions.training_course_id', '=', 'training_courses.id')
                     ->join('training_providers', 'training_sessions.training_provider_id', '=', 'training_providers.id');
 
@@ -137,7 +175,7 @@ class TrainingRepository
             } else {
                 $data['data'] = $list->get()->toArray();
             }
-
+            
             return $data;
 
         } catch (\Exception $e) {
@@ -145,7 +183,6 @@ class TrainingRepository
                 'Failed to fetch Training Sessions List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            
             return $this->sendErrorResponse('Training Sessions List Not Found.');
         }
     }
@@ -156,10 +193,14 @@ class TrainingRepository
     {
         try {
             $data = TrainingSession::select('training_sessions.*', 'training_courses.name as training_course_name', 'training_providers.name as training_provider_name')
+                    ->with('trainingSessionTrainee:id,first_name,middle_name,third_name,last_name,openemis_no', 
+                        'trainingSessionEvaluator:id,first_name,middle_name,third_name,last_name,openemis_no'
+                    )
                     ->join('training_courses', 'training_sessions.training_course_id', '=', 'training_courses.id')
                     ->join('training_providers', 'training_sessions.training_provider_id', '=', 'training_providers.id')
                     ->where('training_sessions.id', $sessionId)
-                    ->first();
+                    ->first()
+                    ->toArray();
 
             return $data;
         } catch (\Exception $e) {
