@@ -31,6 +31,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
     const STAFF = 'Staff';
     const OTHERS = 'Others';
+
     const SELECT_ALL_TARGET_POPULATIONS = '-1';
 
     public function initialize(array $config)
@@ -320,7 +321,7 @@ class TrainingSessionsTable extends ControllerActionTable
         $process = function ($model, $entity) use ($data) {
         $errors = $entity->errors();
 
-            if (empty($errors)) {
+            if (empty($errors) && !empty($entity['trainers'])) {
                 // always manual delete all trainers and re-insert
                 $trainerRecords = $this->Trainers
                     ->find()
@@ -330,25 +331,20 @@ class TrainingSessionsTable extends ControllerActionTable
                 foreach ($trainerRecords as $key => $obj) {
                     $this->Trainers->delete($obj);
                 }
+                if (empty($errors) && !empty($entity['evaluators'])) { //POCOR-8256
+                    // always manual delete all Evaluators and re-insert
+                    $evaluatorsRecords = $this->Evaluators
+                        ->find()
+                        ->where([$this->Evaluators->aliasField('training_session_id') => $entity->id])
+                        ->all();
+                    foreach ($evaluatorsRecords as $key => $obj) {
+                        $this->Evaluators->delete($obj);
+                    }
 
-                return $model->save($entity);
-            } else {
-                return false;
-            }
-
-            if (empty($errors)) {
-                // always manual delete all Evaluators and re-insert
-                $evaluatorsRecords = $this->Evaluators
-                    ->find()
-                    ->where([$this->Evaluators->aliasField('training_session_id') => $entity->id])
-                    ->all();
-
-                foreach ($evaluatorsRecords as $key => $obj) {
-                    $this->Evaluators->delete($obj);
                 }
 
-                return $model->save($entity);
-            } else {
+                 $model->save($entity);
+            }else {
                 return false;
             }
         };
@@ -501,6 +497,7 @@ class TrainingSessionsTable extends ControllerActionTable
     public function onGetCustomTrainersElement(Event $event, $action, $entity, $attr, $options = [])
     {
         $tableHeaders = [$this->getMessage($this->aliasField('trainer_type')), $this->getMessage($this->aliasField('trainer'))];
+
         $tableCells = [];
         $alias = $this->alias();
         $fieldKey = 'trainers';
@@ -777,6 +774,7 @@ class TrainingSessionsTable extends ControllerActionTable
         $events['ControllerAction.Model.ajaxTrainerAutocomplete'] = 'ajaxTrainerAutocomplete';
         $events['ControllerAction.Model.ajaxTraineeAutocomplete'] = 'ajaxTraineeAutocomplete';
         $events['ControllerAction.Model.addEdit.onMassAddTrainees'] = ['callable' => 'addEditOnMassAddTrainees'];
+        $events['ControllerAction.Model.ajaxEvaluatorAutocomplete'] = 'ajaxEvaluatorAutocomplete';//POCOR-8256
         return $events;
     }
 
@@ -1139,8 +1137,10 @@ class TrainingSessionsTable extends ControllerActionTable
         }
     }
 
+    //POCOR-8256
     public function onGetCustomEvaluatorsElement(Event $event, $action, $entity, $attr, $options = [])
     {
+
         $tableHeaders = [$this->getMessage($this->aliasField('evaluator_types')), $this->getMessage($this->aliasField('evaluator'))];
         $tableCells = [];
         $alias = $this->alias();
@@ -1155,7 +1155,7 @@ class TrainingSessionsTable extends ControllerActionTable
                     $cell = $obj->user->name_with_id;
 
                     $rowData = [];
-                    $rowData[] = $evaluatorTypeOptions[$this->getEvaluatorType($obj)];
+                    $rowData[] = $evaluatorTypeOptions[$this->getEvaluatorTypes($obj)];
                     $rowData[] = $cell;
 
                     $tableCells[] = $rowData;
@@ -1174,16 +1174,17 @@ class TrainingSessionsTable extends ControllerActionTable
                 }
 
                 $associated = $entity->extractOriginal([$fieldKey]);
+                
                 if (!empty($associated[$fieldKey])) {
                     foreach ($associated[$fieldKey] as $key => $obj) {
-                        $evaluatorType = $this->getEvaluatorType($obj);
+                        $evaluatorType = $this->getEvaluatorTypes($obj);
                         $evaluatorId = $obj->evaluator_id;
                         $name = $obj->name;
                         $evaluatorName = $obj->user->name_with_id;
 
                         $this->request->data[$alias][$fieldKey][$key] = [
                             'id' => $obj->id,
-                            'type' => $evaluatorType,
+                            'types' => $evaluatorType,
                             'evaluator_id' => $evaluatorId,
                             'name' => $name,
                             'evaluator_name' => $evaluatorName
@@ -1197,7 +1198,7 @@ class TrainingSessionsTable extends ControllerActionTable
                 $associated = $this->request->data("$alias.$fieldKey");
 
                 foreach ($associated as $key => $obj) {
-                    $evaluatorType = $obj['type'];
+                    $evaluatorType = $obj['types'];
                     $evaluatorId = $obj['evaluator_id'];
                     $evaluatorName = $obj['evaluator_name'];
                     $name = $obj['name'];
@@ -1206,7 +1207,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
                     $cell = $evaluatorName;
                     $cell .= $Form->hidden("$alias.$fieldKey.$key.name", ['value' => $name]);
-                    $cell .= $Form->hidden("$alias.$fieldKey.$key.type", ['value' => $evaluatorType]);
+                    $cell .= $Form->hidden("$alias.$fieldKey.$key.types", ['value' => $evaluatorType]);
                     $cell .= $Form->hidden("$alias.$fieldKey.$key.evaluator_id", ['value' => $evaluatorId]);
                     $cell .= $Form->hidden("$alias.$fieldKey.$key.evaluator_name", ['value' => $evaluatorName]);
 
@@ -1225,7 +1226,8 @@ class TrainingSessionsTable extends ControllerActionTable
         return $event->subject()->renderElement('Training.Sessions/' . $fieldKey, ['attr' => $attr]);
     }
 
-    public function getEvaluatorType($obj)
+    //POCOR-8256
+    public function getEvaluatorTypes($obj)
     {
         $evaluatorType = '';
         $entity = $obj;
@@ -1235,15 +1237,16 @@ class TrainingSessionsTable extends ControllerActionTable
         } else {
             $evaluatorType = self::OTHERS;
         }
-
+        
         return $evaluatorType;
     }
 
+    //POCOR-8256
     public function addEditOnAddEvaluator(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $alias = $this->alias();
         $fieldKey = 'evaluators';
-
+       // echo "<pre>"; print_r($data);die;
         if (empty($data[$this->alias()][$fieldKey])) {
             $data[$this->alias()][$fieldKey] = [];
         }
@@ -1251,13 +1254,13 @@ class TrainingSessionsTable extends ControllerActionTable
         if ($data->offsetExists($alias)) {
             if (array_key_exists('evaluator_id', $data[$alias]) && !empty($data[$alias]['evaluator_id'])) {
                 $id = $data[$alias]['evaluator_id'];
-                $evaluatorType = $data[$alias]['type'];
+                $evaluatorType = $data[$alias]['types'];
 
                 try {
                     $obj = $this->Evaluators->Users->get($id);
 
                     $data[$alias][$fieldKey][] = [
-                        'type' => $evaluatorType,
+                        'types' => $evaluatorType,
                         'evaluator_id' => $obj->id,
                         'name' => $obj->name,
                         'evaluator_name' => $obj->name_with_id
@@ -1276,6 +1279,7 @@ class TrainingSessionsTable extends ControllerActionTable
         ];
     }
 
+    //POCOR-8256
     public function ajaxEvaluatorAutocomplete()
     {
         $this->controller->autoRender = false;
@@ -1284,7 +1288,7 @@ class TrainingSessionsTable extends ControllerActionTable
         if ($this->request->is(['ajax'])) {
             $term = $this->request->query['term'];
             $extra = $this->request->query['extra'];
-            $data = $this->Evaluators->Users->autocomplete($term, ['finder' => [$extra['type']], 'OR' => ['Identities.number LIKE' => $term.'%']]);
+            $data = $this->Evaluators->Users->autocomplete($term, ['finder' => [$extra['types']], 'OR' => ['Identities.number LIKE' => $term.'%']]);
             echo json_encode($data);
             die;
         }

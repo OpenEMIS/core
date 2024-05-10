@@ -4,6 +4,7 @@ namespace Training\Model\Table;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
+ //POCOR-8256
 class TrainingSessionEvaluatorsTable extends AppTable {
 	const INTERNAL = 'INTERNAL';
 	const EXTERNAL = 'EXTERNAL';
@@ -21,8 +22,8 @@ class TrainingSessionEvaluatorsTable extends AppTable {
 		return $validator
 			->requirePresence('name')
 			->allowEmpty('name', function ($context) {
-				if (array_key_exists('type', $context['data'])) {
-					$type = $context['data']['type'];
+				if (array_key_exists('types', $context['data'])) {
+					$type = $context['data']['types'];
 					if ($type == self::INTERNAL) {
 						return true;
 					} else {
