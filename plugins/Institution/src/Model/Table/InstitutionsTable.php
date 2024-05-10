@@ -789,7 +789,6 @@ class InstitutionsTable extends ControllerActionTable
         if ($this->AccessControl->check([$this->controller->getName(), 'dashboard'])) {
             // Redirect to overview page based on School Landing
             if (!$redirectToOverview) {
-
                 $name = $event->getSubject()->HtmlField->link($entity->name, [
                     'plugin' => $this->controller->getPlugin(),
                     'controller' => $this->controller->getName(),
@@ -798,7 +797,7 @@ class InstitutionsTable extends ControllerActionTable
                         'institution_id' => $entity->id])
                 ]);
             } else {
-                $name = $event->subject()->HtmlField->link($entity->name, [
+                $name = $event->getSubject()->HtmlField->link($entity->name, [
                     'plugin' => $this->controller->getPlugin(),
                     'controller' => $this->controller->getName(),
                     'action' => 'Institutions',
@@ -808,7 +807,6 @@ class InstitutionsTable extends ControllerActionTable
                 ]);
             }
         }
-
         return $name;
     }
 
@@ -891,8 +889,6 @@ class InstitutionsTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-//         echo "<pre>"; print_r($this->request);
-// die;
         if ($entity->isNew()) {
             $entity->shift_type = 0;
         }
@@ -947,14 +943,17 @@ class InstitutionsTable extends ControllerActionTable
 
         $this->field('shift_section', ['type' => 'section', 'title' => __('Shifts'), 'visible' => ['view' => true]]);
         $this->field('shift_type', ['visible' => ['view' => false]]);
-        //comment cakephp 4
-        /*$this->field('shift_details', [
-            'type' => 'element',
-            'element' => 'Institution.Shifts/details',
-            'visible' => ['view' => true],
-            'data' => $this->getViewShiftDetail($this->Session->read('Institution.Institutions.id'), $this->InstitutionShifts->AcademicPeriods->getCurrent())
-        ]);*/
-
+        
+        $institutionId = $this->getInstitutionID();
+        if($institutionId){
+            $this->field('shift_details', [
+                'type' => 'element',
+                'element' => 'Institution.Shifts/details',
+                'visible' => ['view' => true],
+                'data' => $this->getViewShiftDetail($institutionId, $this->InstitutionShifts->AcademicPeriods->getCurrent())
+            ]);
+        }
+        
         $this->field('location_section', ['type' => 'section', 'title' => __('Location')]);
 
         $language = I18n::getLocale();
@@ -1109,7 +1108,6 @@ class InstitutionsTable extends ControllerActionTable
             $SurveyFormIds = [];
             $multipleFormIds = [];
             if (!empty($SurveyStatusesFiltersObj)) {
-
                 // $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
                 $SurveyFormsFilters = TableRegistry::getTableLocator()->get('Survey.SurveyForms');
                 foreach ($SurveyStatusesFiltersObj as $statusID => $value) {
@@ -1170,14 +1168,9 @@ class InstitutionsTable extends ControllerActionTable
 
                     }
                 }
-
-
             }
-
         }
-
         //End POCOR-7029
-
         $SecurityGroup = TableRegistry::getTableLocator()->get('Security.SystemGroups');
         $SecurityGroupAreas = TableRegistry::getTableLocator()->get('Security.SecurityGroupAreas');
 
@@ -1263,7 +1256,7 @@ class InstitutionsTable extends ControllerActionTable
                     'checkbox_value_text' => 'institutionCustomFieldOptions.name',
                 ])
                 ->leftJoin(
-                    [$InstitutionCustomFields->alias() => $InstitutionCustomFields->table()],
+                    [$InstitutionCustomFields->getAlias() => $InstitutionCustomFields->getTable()],
                     [
                         $InstitutionCustomFields->aliasField('id =') . $InstitutionCustomFieldValues->aliasField('institution_custom_field_id')
                     ]
@@ -1272,7 +1265,7 @@ class InstitutionsTable extends ControllerActionTable
                     ['institutionCustomFieldOptions.institution_custom_field_id = ' . $InstitutionCustomFieldValues->aliasField('institution_custom_field_id')])
                 ->where([$InstitutionCustomFieldValues->aliasField('institution_id') => $entity->id])
                 ->group([$InstitutionCustomFields->aliasField('id')])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
             $custom_field = array();
             $count = 0;
@@ -1583,7 +1576,7 @@ class InstitutionsTable extends ControllerActionTable
         $extra['auto_contain'] = false;
         $query->contain($extra['query']['contain']);
         $query->select($extra['query']['select']);
-
+    
         // Start:POCOR-6849
         $sortList = ['Areas.name', 'name', 'code', 'Types.name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
@@ -1591,7 +1584,7 @@ class InstitutionsTable extends ControllerActionTable
         }
         $extra['options']['sortWhitelist'] = $sortList;
         // End:POCOR-6849
-
+    
         // POCOR-3983 if no sort, active status will be followed by inactive status
         if (!isset($this->request->getQuery['sort'])) {
             $query->order([
@@ -1601,14 +1594,14 @@ class InstitutionsTable extends ControllerActionTable
         }
         // end POCOR-3983
     }
-
+    
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->dashboardQuery = clone $query;
         $search = $this->getSearchKey();
-        //if (empty($search) && !$this->isAdvancedSearchEnabled()) {
+        if (empty($search) && !$this->isAdvancedSearchEnabled()) {
             // redirect to school dashboard if it is only one record and no add access
-
+    
             //POCOR-6866[START]
             $securityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
             $securityFunctionsData = $securityFunctions
@@ -1624,23 +1617,24 @@ class InstitutionsTable extends ControllerActionTable
                 ])
                 ->first();
             $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['view'][0];
-
-            $securityRoleFunctions =  TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
-
-            $securityRoleFunctionsData = $securityRoleFunctions
-            ->find()
-            ->select([
-                'SecurityRoleFunctions._add'
-            ])
-            ->where([
-                'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
-               // 'SecurityRoleFunctions.security_role_id' => $permission_id,
-            ])
-            ->first();
+            if(!empty($permission_id)){
+                $securityRoleFunctions =  TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        
+                $securityRoleFunctionsData = $securityRoleFunctions
+                ->find()
+                ->select([
+                    'SecurityRoleFunctions._add'
+                ])
+                ->where([
+                    'SecurityRoleFunctions.security_function_id' => $securityFunctionsData->id,
+                    'SecurityRoleFunctions.security_role_id' => $permission_id,
+                ])
+                ->first();
+            }
             //POCOR-7191::Start
             $session = $this->Session;
             $superAdmin = $session->read('Auth.User.super_admin');
-            if ($superAdmin == 1) {
+            if ($superAdmin == 1 && empty($permission_id)) {
                 $addAccess = $this->AccessControl->check(['Institutions', 'add']);
             } else {
                 $addAccess = $securityRoleFunctionsData->_add;
@@ -1665,8 +1659,8 @@ class InstitutionsTable extends ControllerActionTable
                     'add'];
                 return $this->controller->redirect($action);
             }
-        //}
-
+        }
+        
         // to display message after redirect
         $sessionKey = 'HideButton.warning';
         if ($this->Session->check($sessionKey)) {
@@ -1692,7 +1686,7 @@ class InstitutionsTable extends ControllerActionTable
      **
      ******************************************************************************************************************/
     public function viewBeforeAction(Event $event, ArrayObject $extra)
-    {
+    { 
         $this->setFieldOrder([
             'information_section',
             'logo_content',

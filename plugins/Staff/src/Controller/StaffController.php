@@ -326,6 +326,10 @@ class StaffController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.UserInsurances']);
     }
     //POCOR-6138 - Add export Button
+    public function StaffAppraisals()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAppraisals']);
+    }
 
     //POCOR-6138 - Add export Button
     /**
@@ -556,6 +560,10 @@ class StaffController extends AppController
 
     public function beforeFilter(Event $event)
     {
+        $isInstitutionIndex = $this->isInstitutionIDSkipped();
+        if ($isInstitutionIndex) {
+            return;
+        }
         parent::beforeFilter($event);
 
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
@@ -604,7 +612,10 @@ class StaffController extends AppController
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
-
+        $isInstitutionIndex = $this->isInstitutionIDSkipped();
+        if ($isInstitutionIndex) {
+            return;
+        }
         /**
          * if student object is null, it means that student.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
          */
@@ -636,13 +647,16 @@ class StaffController extends AppController
             $this->getStatusPermission($model);
             $pass = $this->request->getParam('pass');
             $subaction = isset($pass[0]) ? $pass[0] : null;
+            
+            if($model->alias = 'StaffAppraisals'){
+                return true;
+            }
             if ($subaction != 'index') {
                 if ($model->hasField('security_user_id')) {
                     $model->fields['security_user_id']['type'] = 'hidden';
                     $model->fields['security_user_id']['value'] = $userId;
-
-                    if (count($this->request->getParam('pass')) > 1) {
-                        $modelId = $this->request->getParam('pass')[1]; // id of the sub model
+                    if (count($this->request->getQueryParams()) > 1) {
+                        $modelId = $this->request->pass[1]; // id of the sub model
 
                         $ids = $this->ControllerAction->paramsDecode($modelId);
                         $idKey = $this->ControllerAction->getIdKeys($model, $ids);
@@ -668,7 +682,7 @@ class StaffController extends AppController
                         $ids = $this->ControllerAction->paramsDecode($modelId);
                         $idKey = $this->ControllerAction->getIdKeys($model, $ids);
                         $idKey[$model->aliasField('staff_id')] = $userId;
-
+                 
                         $exists = $model->exists($idKey);
 
                         /**
@@ -1016,5 +1030,45 @@ class StaffController extends AppController
     public function StaffTrainingApplications()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingApplications']);
+    }
+
+    public
+    function isInstitutionIDSkipped(): bool
+    {
+        $request = $this->request;
+          
+        $pass = $request->getParam('pass');
+        $action = $request->getParam('action');
+        $controller = $request->getParam('controller');
+        $plugin = $request->getParam('plugin');
+        $furtherAction = $pass[0];
+        
+        if ($pass[0] == 'download' && ($action == 'Qualifications' || $action == 'EmploymentStatuses' || $action == 'Payslips') && ($plugin == 'Staff') && ($controller == 'Staff')) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    public function changeUserHeader($model, $modelAlias, $userType)
+    {
+        $session = $this->request->getSession();
+        // add the student name to the header
+        $id = 0;
+        if ($session->check('Staff.Staff.id')) {
+            $id = $session->read('Staff.Staff.id');
+        }
+        if (!empty($id)) {
+            $Users = TableRegistry::getTableLocator()->get('Security.Users');
+            $entity = $Users->get($id);
+            $name = $entity->name;
+            $crumb = Inflector::humanize(Inflector::underscore($modelAlias));
+            $header = $name . ' - ' . __($crumb);
+            $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
+            $this->Navigation->addCrumb('Staff', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff']);
+            $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $userType, 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
+            $this->Navigation->addCrumb($crumb);
+            $this->set('contentHeader', $header);
+        }
     }
 }

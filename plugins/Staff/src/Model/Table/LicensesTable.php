@@ -73,6 +73,13 @@ class LicensesTable extends ControllerActionTable
             ]);
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $queryString = $this->getQueryString();
+        $data['staff_id'] = $queryString['staff_id'];
+		$this->field('security_user_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
+    }
+
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->field('comments', ['visible' => false]);

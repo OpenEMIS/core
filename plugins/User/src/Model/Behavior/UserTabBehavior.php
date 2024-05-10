@@ -165,7 +165,17 @@ class UserTabBehavior extends Behavior
      */
     private function fixActionButtons(Entity $entity, array $buttons): array
     {
-        $appliedAction = $this->getConfig('appliedAction');
+        try {
+            $appliedAction = $this->getConfig('appliedAction');
+            if (!$appliedAction) {
+                $appliedAction = $this->getConfig()['appliedAction'];
+            }
+        } catch (Exception $e) {
+            // Handle the exception
+            //echo "An error occurred: " . $e->getMessage();
+            die('<pre> An error occurred:' . print_r($e->getMessage(), true));
+        }
+        
         //$action name and additional params to pass
         $appliedActions = [
             'Demographic' => [],
@@ -186,6 +196,7 @@ class UserTabBehavior extends Behavior
         $model = $this->_table;
         $userID = $this->getUserID();
         $actions = ['view', 'edit'];
+        
         foreach ($actions as $action) {
             if (isset($buttons[$action])) {
                 $url = $buttons[$action]['url'];
@@ -202,11 +213,14 @@ class UserTabBehavior extends Behavior
                         $queryString['user_id'] = $userID;
                         $queryString['security_user_id'] = $userID;
                     }
+                
                     foreach ($appliedActions[$url_action] as $additionalParam) {
                         $queryString[$additionalParam] = $entity->{$additionalParam};
                     }
+
                     $url[1] = $model->paramsEncode($queryString);
                     $buttons[$action]['url'] = $url;
+                    
                 }
             }
         }

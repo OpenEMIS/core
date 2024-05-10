@@ -477,7 +477,7 @@ class InstitutionStatusTable extends ControllerActionTable
 
         $plugin = $this->controller->getPlugin();
         $name = $this->controller->getName();
-        $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->alias(), 'image'];
+        $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->getAlias(), 'image'];
         $imageDefault = 'fa kd-institutions';
         $this->field('logo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
 

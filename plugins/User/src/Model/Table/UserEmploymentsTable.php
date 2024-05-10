@@ -16,7 +16,7 @@ class UserEmploymentsTable extends ControllerActionTable {
 		$this->belongsTo('Industries', ['className' => 'FieldOption.Industries', 'foreignKey' => 'industry_id']);//POCOR-7376
         $this->addBehavior('User.UserTab', [
             'appliedAction' => ['Employments' =>
-                ['industry_id', 'staff_id']
+                ['id','industry_id', 'security_user_id']
             ]
         ]);
         $this->addBehavior('Staff.StaffTab');
@@ -115,6 +115,9 @@ class UserEmploymentsTable extends ControllerActionTable {
         }
 
 		// End POCOR-5188
+		$queryString = $this->getQueryString();
+        $data['staff_id'] = $queryString['staff_id'];
+		$this->field('security_user_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
 	}
 
 	private function setupTabElements() {
