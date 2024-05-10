@@ -223,7 +223,7 @@ class QualificationsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         // determine if download button is shown
         $showFunc = function() use ($entity) {
@@ -234,7 +234,11 @@ class QualificationsTable extends ControllerActionTable
             'actions.download.show',
             $showFunc
         );
-
+        $toolbarButtons =  $extra['toolbarButtons'];
+        $filename = $entity->file_content;
+        if( $toolbarButtons->offsetExists('download') && empty($filename)) {
+            $extra['toolbarButtons']['download'] = false;
+        }
         $this->setupFields($entity);
     }
 

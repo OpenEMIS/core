@@ -137,7 +137,14 @@ class UserTabBehavior extends Behavior
             }
             $toolbarButtons['back']['url'] = $url;
         }
-//        die('<pre>' . print_r($toolbarButtons, true));
+        if ($toolbarButtons->offsetExists('download') && isset($request->getParam('pass')[1])) {
+            $url = $toolbarButtons['download']['url'];
+            $decodeQueryString = $request->getParam('pass')[1];
+            $queryString = $model->paramsDecode($decodeQueryString);
+            $url['1'] = $model->paramsEncode($queryString);
+            $toolbarButtons['download']['url'] = $url;
+        }
+        // die('<pre>' . print_r($toolbarButtons, true));
         return $toolbarButtons;
     }
 

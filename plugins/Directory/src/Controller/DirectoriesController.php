@@ -345,6 +345,10 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']);
     }
+    public function ImportStaffQualifications()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.ImportStaffQualifications']);
+    }
     public function Addguardian()
     {
         //POCOR-7231 :: Start

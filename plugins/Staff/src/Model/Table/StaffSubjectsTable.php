@@ -187,8 +187,10 @@ class StaffSubjectsTable extends ControllerActionTable {
     {
         
         if ($this->action == 'index') {
+            $queryString = $this->getQueryString();
+            $encodedQueryString = $this->paramsEncode($queryString);
             
-            $indexElements[] = ['name' => 'Staff.Staff/controls', 'data' => [], 'options' => [], 'order' => 0];
+            $indexElements[] = ['name' => 'Staff.Staff/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 0];
             $extra['elements'] = array_merge($extra['elements'], $indexElements);
         }
        
