@@ -40,7 +40,18 @@ class PayslipsTable extends ControllerActionTable
             // ]);
         }
 
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Payslips'=>['id']]
+        ]);
+
     } 
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $queryString = $this->getQueryString();
+        $data['staff_id'] = $queryString['staff_id'];
+        $this->field('staff_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
+    }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -128,8 +139,8 @@ class PayslipsTable extends ControllerActionTable
                 $entity->getErrors($response);    
                 return false;
             }else{
-                $apiSecuritiesScopes = TableRegistry::get('AcademicPeriod.ApiSecuritiesScopes');
-                $apiSecurities = TableRegistry::get('AcademicPeriod.ApiSecurities');
+                $apiSecuritiesScopes = TableRegistry::get('ApiSecuritiesScopes');
+                $apiSecurities = TableRegistry::get('ApiSecurities');
                 $apiSecuritiesData = $apiSecurities->find('all')
                     ->select([
                         'ApiSecurities.id','ApiSecurities.name','ApiSecurities.add'
@@ -149,7 +160,7 @@ class PayslipsTable extends ControllerActionTable
                     ->first();
                 if($apiSecuritiesScopesData->add == 0){
                     $response["message"][] ="Api is disabled";
-                    $entity->errors($response);
+                    $entity->getErrors($response);
                     return false;
                 }else{
                     if (!empty($entity->openemis_id)) {
@@ -163,7 +174,7 @@ class PayslipsTable extends ControllerActionTable
                             $entity->staff_id = $user_data['id'];
                         }else{
                             $response["openemis_id"][] ="Record not found";
-                            $entity->errors($response);
+                            $entity->getErrors($response);
                             return false;
                         } 
                     }
@@ -181,7 +192,7 @@ class PayslipsTable extends ControllerActionTable
                         }else{
                             if($openemis_payload_exist == 0){
                                 $response["user_identity_number"][] ="Record not found";
-                                $entity->errors($response);
+                                $entity->getErrors($response);
                                 return false;
                             }
                         } 
@@ -189,11 +200,11 @@ class PayslipsTable extends ControllerActionTable
                         if(($openemis_payload_exist == 0 && !is_int(strpos($_SERVER['REQUEST_URI'], $path_uri)) )){
                             if(empty($entity->user_identity_number)){
                                 $response["user_identity_number"][] ="Field Can not be empty";
-                                $entity->errors($response);
+                                $entity->getErrors($response);
                                 return false;
                             }else if(empty($entity->user_identity_type_id)){
                                 $response["user_identity_type_id"][] ="Field Can not be empty";
-                                $entity->errors($response);
+                                $entity->getErrors($response);
                                 return false;
                             }
                         }
