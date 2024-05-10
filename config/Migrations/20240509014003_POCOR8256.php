@@ -39,6 +39,7 @@ class POCOR8256 extends AbstractMigration
                       `created` datetime DEFAULT NULL,
                         PRIMARY KEY (`id`)
                       )ENGINE=InnoDB DEFAULT CHARSET=utf8');
+
     }
 
     public function down() {
@@ -46,5 +47,6 @@ class POCOR8256 extends AbstractMigration
         $this->execute('RENAME TABLE `z_8256_locale_contents` TO `locale_contents`');
         $this->execute('DROP TABLE IF EXISTS `training_sessions`');
         $this->execute('RENAME TABLE `z_8256_training_sessions` TO `training_sessions`');
+        $this->execute('DROP TABLE IF EXISTS `training_session_evaluators`');
     }
 }

@@ -1,4 +1,5 @@
 <?php
+	// POCOR-8256 add type fields
 	$tableClass = 'table-in-view';
 	$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
 	$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
@@ -20,18 +21,16 @@
 		]);
 		$alias = $ControllerAction['table']->alias();
 
-		// POCOR-3556 add type fields
-		echo $this->Form->input("$alias.type", [
+		
+		echo $this->Form->input("$alias.types", [
 			'label' => __('Type'),
 			'type' => 'select',
 			'options' => $evaluatorTypeOptions,
- 			'onchange' => "$('#reload').val('type').click();"
+ 			'onchange' => "$('#reload').val('types').click();"
 		]);
 
 		$requestData = $this->request->data[$alias];
-		$evaluatorType = (array_key_exists('type', $requestData)) ? $requestData['type']: 'Staff';
-		// End POCOR-3556
-
+		$evaluatorType = (array_key_exists('types', $requestData)) ? $requestData['types']: 'Staff';
 		echo $this->Form->input("$alias.evaluator_search", [
 			'label' => __('Add Evaluator'),
 			'type' => 'text',
@@ -42,7 +41,7 @@
 			'autocomplete-class' => 'error-message',
 			'autocomplete-target' => 'evaluator_id',
 			'autocomplete-submit' => "$('#reload').val('addEvaluator').click();",
-			'autocomplete-before-search' => 'Autocomplete.extra["type"] = "' . $evaluatorType . '"'
+			'autocomplete-before-search' => 'Autocomplete.extra["types"] = "' . $evaluatorType . '"'
 		]);
 		echo $this->Form->hidden("$alias.evaluator_id", ['autocomplete-value' => 'evaluator_id']);
 	?>
