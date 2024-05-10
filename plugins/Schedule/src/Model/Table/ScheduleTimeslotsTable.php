@@ -43,4 +43,5 @@ class ScheduleTimeslotsTable extends ControllerActionTable
             ->requirePresence('interval', 'create');
         return $validator;
     }
+
 }

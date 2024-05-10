@@ -68,18 +68,49 @@ class EnrollmentOutliersTable extends AppTable  {
 				    AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_students.student_status_id = 1, institution_students.student_status_id IN (1, 7, 6, 8))
 				    GROUP BY institutions.id)";
 		$subquery = $this->ConfigItems
-                    ->find()
-                    ->select([
-                        'min_age' => 'MAX(CASE WHEN code = "report_outlier_min_age" THEN value ELSE 0 END)',
-                        'max_age' => 'MAX(CASE WHEN code = "report_outlier_max_age" THEN value ELSE 0 END)',
-                        'min_enrolment' => 'MAX(CASE WHEN code = "report_outlier_min_student" THEN value ELSE 0 END)',
-                        'max_enrolment' => 'MAX(CASE WHEN code = "report_outlier_max_student" THEN value ELSE 0 END)'
-                    ])
-                    ->where([
-                        'code IN' => ['report_outlier_min_age', 'report_outlier_max_age', 'report_outlier_min_student', 'report_outlier_max_student']
-                    ]);  
-		
-   		$query->select(['academic_period_id' => 'main_query.academic_period_name',
+		->find()
+		->select(function (Query $query) {
+			$minAgeExpr = $query->newExpr()
+				->addCase(
+					[$query->newExpr()->eq('code', 'report_outlier_min_age')],
+					['value'],
+					['integer'],
+					'integer'
+				);
+			$maxAgeExpr = $query->newExpr()
+				->addCase(
+					[$query->newExpr()->eq('code', 'report_outlier_max_age')],
+					['value'],
+					['integer'],
+					'integer'
+				);
+			$minEnrolmentExpr = $query->newExpr()
+				->addCase(
+					[$query->newExpr()->eq('code', 'report_outlier_min_student')],
+					['value'],
+					['integer'],
+					'integer'
+				);
+			$maxEnrolmentExpr = $query->newExpr()
+				->addCase(
+					[$query->newExpr()->eq('code', 'report_outlier_max_student')],
+					['value'],
+					['integer'],
+					'integer'
+				);
+	
+			return [
+				'min_age' => $query->func()->max($minAgeExpr),
+				'max_age' => $query->func()->max($maxAgeExpr),
+				'min_enrolment' => $query->func()->max($minEnrolmentExpr),
+				'max_enrolment' => $query->func()->max($maxEnrolmentExpr),
+			];
+		})
+		->where([
+			'code IN' => ['report_outlier_min_age', 'report_outlier_max_age', 'report_outlier_min_student', 'report_outlier_max_student']
+		]);
+		//POCOR-8247
+   		$query->select(['academic_period_name' => 'main_query.academic_period_name',
    			'institution_code' => 'main_query.institution_code',
    			'institution_name' => 'main_query.institution_name',
    			'count_students' => 'main_query.count_students'

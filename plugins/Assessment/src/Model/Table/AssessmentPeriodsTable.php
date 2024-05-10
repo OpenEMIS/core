@@ -900,5 +900,15 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
         return $attr;
     }
-    //POCOR-7550 end
+
+    //POCOR-8266
+    public function onUpdateFieldWeight(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'edit') {
+            $attr['type'] = 'readonly';
+
+            return $attr;
+        }
+    }
+    
 }

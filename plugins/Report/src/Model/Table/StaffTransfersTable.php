@@ -40,7 +40,7 @@ class StaffTransfersTable extends AppTable {
         $requestData = json_decode($settings['process']['params']);
         $institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
-        $where['OR'] = [];
+        $where = []; //POCOR-8247
         if ($institution_id != 0) {
             $where['OR'][] = ['NewInstitutions.id' => $institution_id];
             $where['OR'][] = ['PreviousInstitutions.id' => $institution_id];       
@@ -60,8 +60,10 @@ class StaffTransfersTable extends AppTable {
                 'next_position_title' => 'StaffPositionTitles.name',
                 'authorized_date' => $this->aliasField('created')
             ])
-            ->contain(['Users.IdentityTypes','NewPositions.StaffPositionTitles','NewInstitutions','PreviousInstitutions','CreatedUser'])
-            ->where([$where]);
+            ->contain(['Users.IdentityTypes','NewPositions.StaffPositionTitles','NewInstitutions','PreviousInstitutions','CreatedUser']);
+            if (!empty($where)) { //POCOR-8247
+                $query->where($where);
+            }
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)

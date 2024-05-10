@@ -39,4 +39,10 @@ class InstitutionStaff extends Model
     {
         return $this->belongsTo(SecurityUsers::class, 'staff_id', 'id');
     }
+
+
+    public function classes()
+    {
+        return $this->hasMany(InstitutionClasses::class, 'staff_id', 'staff_id');
+    }
 }
