@@ -99,6 +99,13 @@ class QualificationsTable extends ControllerActionTable
             ->allowEmpty('file_content');
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $queryString = $this->getQueryString();
+        $data['staff_id'] = $queryString['staff_id'];
+        $this->field('staff_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
+    }
+
     public function indexBeforeAction(Event $event)
     {
         $this->field('file_name', ['visible' => false]);
@@ -183,9 +190,9 @@ class QualificationsTable extends ControllerActionTable
         }elseif ($field == 'industry_id') {
             return __('Industry');
         }elseif ($field == 'education_field_of_study_id') {
-            return __('Education field of Study');
+            return __('Field of Study');
         }elseif ($field == 'qualification_specialisations') {
-            return __('Qualification Specialisations');
+            return __('Specialisations');
         }elseif ($field == 'qualification_country_id') {
             return __('Qualification Country');
         }elseif ($field == 'gpa') {
@@ -199,7 +206,7 @@ class QualificationsTable extends ControllerActionTable
         } else if ($field == 'modified') {
             return  __('Last Modified On');
         } else if ($field == 'education_subjects') {
-            return  __('Education Subject');
+            return  __('Subjects');
         } else if ($field == 'file_content') {
             return  __('Attachment');
         }else {
@@ -498,7 +505,7 @@ class QualificationsTable extends ControllerActionTable
             'type' => 'binary',
             'visible' => $visible
         ]);
-
+        
         $this->setFieldOrder([
             'qualification_title_id', 'qualification_level', 'education_field_of_study_id', 'qualification_specialisations', 'education_subjects', 'qualification_country_id', 'qualification_institution', 'document_no', 'graduate_year', 'gpa', 'file_content'
         ]);

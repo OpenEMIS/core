@@ -103,22 +103,22 @@ class InstitutionClassesTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         $validator
             ->allowEmpty('staff_id')
-            ->requirePresence('name');
-            // ->add('name', 'ruleUniqueNamePerAcademicPeriod', [
-            //     'rule' => 'uniqueNamePerAcademicPeriod',
-            //     'provider' => 'table',
-            // ])
-            // ->add('staff_id', 'ruleCheckHomeRoomTeachers', [
-            //     'rule' => ['checkHomeRoomTeachers', 'classes_secondary_staff'],
-            //     'provider' => 'table',
-            // ]);
-            // ->add('capacity', 'ruleCheckMaxStudentsPerClass', [
-            //     'rule' => ['checkMaxStudentsPerClass'],
-            //     'provider' => 'table',
-            // ]);
+            ->requirePresence('name')
+            ->add('name', 'ruleUniqueNamePerAcademicPeriod', [
+                'rule' => 'uniqueNamePerAcademicPeriod',
+                'provider' => 'table',
+            ])
+            ->add('staff_id', 'ruleCheckHomeRoomTeachers', [
+                'rule' => ['checkHomeRoomTeachers', 'classes_secondary_staff'],
+                'provider' => 'table',
+            ])
+            ->add('capacity', 'ruleCheckMaxStudentsPerClass', [
+                'rule' => ['checkMaxStudentsPerClass'],
+                'provider' => 'table',
+            ]);
 
         return $validator;
     }
@@ -158,6 +158,7 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
+        
         if ($field == 'classes_secondary_staff') {
             return $this->getMessage($this->aliasField($field));
         } else if ($field == 'academic_period_id') {
@@ -209,7 +210,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $encodedQueryString = $this->paramsEncode($queryString);
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
         $query = $this->request->getQuery();
-
+        ;
         if(!empty($this->request->getData['InstitutionClasses']['institution_shift_id'])){
             $extra['institution_shift_id'] = $this->request->getData['InstitutionClasses']['institution_shift_id'];
         }
@@ -783,7 +784,7 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $configItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $configItemsData = $configItems->find()->where(['type'=>'Columns for Institutions Classes List Page'])->toArray();
-        //echo "<pre>";print_r($configItemsData);die;
+        
         foreach($configItemsData as $configItemsData1){
             if(($configItemsData1['code'] == 'class_name') && ($configItemsData1['value'] == 0)){
                 $this->fields['name']['visible'] = false;
@@ -867,7 +868,6 @@ class InstitutionClassesTable extends ControllerActionTable
                     $this->aliasField('name') => 'ASC'
                 ]);
         }
-        //echo "<pre>";print_r($query->toArray());die;
     }
 
 
@@ -1844,11 +1844,11 @@ class InstitutionClassesTable extends ControllerActionTable
         } else {
             $options = [0 => $this->getMessage($this->aliasField('noTeacherAssigned'))];
         }
-
+       
         if (empty($staffIds)) {
             $staffIds = [0];
         }
-
+        
         if (!empty($academicPeriodId)) {
             $academicPeriodObj = $this->AcademicPeriods->get($academicPeriodId);
             $startDate = $this->AcademicPeriods->getDate($academicPeriodObj->start_date);
@@ -1900,12 +1900,13 @@ class InstitutionClassesTable extends ControllerActionTable
                             $query->formatResults(function ($results) {
                                 $returnArr = [];
                                 foreach ($results as $result) {
-                                    if ($result->has('Users')) {
-                                        $returnArr[$result->Users->id] = $result->Users->name_with_id;
+                                    if ($result->has('user')) {
+                                        $returnArr[$result->user->id] = $result->user->name_with_id;
                                     }
                                 }
                                 return $returnArr;
                             });
+                                           
             $options = $options + $query->toArray();
         }
         return $options;

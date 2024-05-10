@@ -5,7 +5,7 @@ use App\Model\Traits\MessagesTrait;
 use Cake\Event\Event;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
-use Cake\Http\Session;
+use Cake\Network\Session;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
@@ -2753,8 +2753,8 @@ class ValidationBehavior extends Behavior
     public static function checkPositionGrades($field, array $globalData)
     {
         $model = $globalData['providers']['table'];
-        $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
-        $StaffPositionGrades = TableRegistry::get('Institution.StaffPositionGrades');
+        $InstitutionPositions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
+        $StaffPositionGrades = TableRegistry::getTableLocator()->get('Institution.StaffPositionGrades');
 
         $institutionPositionGrades = $InstitutionPositions->find()
                             //->distinct('staff_position_grade_id') //POCOR-7839
@@ -2770,24 +2770,19 @@ class ValidationBehavior extends Behavior
                 return true;
             } else {
                 $arr = array_diff($institutionPositionGrades, $postPositionGrades);
-                if(empty($arr)){
-                    $results = $StaffPositionGrades->find()
+                $results = $StaffPositionGrades->find()
                     ->where([$StaffPositionGrades->aliasField('id IN ') => $arr])
                     ->extract('name')
                     ->toArray();
 
-                    $errorMsg = $model->getMessage('FieldOption.StaffPositionTitles.position_grades.ruleCheckPositionGrades', ['sprintf' => [implode(", ", $results)]]);
+                $errorMsg = $model->getMessage('FieldOption.StaffPositionTitles.position_grades.ruleCheckPositionGrades', ['sprintf' => [implode(", ", $results)]]);
 
-                    return $errorMsg;
-                }else{
-                    return true;
-                }
+                return $errorMsg;
             }
         }
 
         return true;
     }
-
 
     public static function checkRequestedAmount($field, array $globalData)
     {
@@ -2985,7 +2980,7 @@ class ValidationBehavior extends Behavior
     public static function check_validate_number($field, array $globalData)
     {   
         //$field is for external variable
-        $nationalityTable = TableRegistry::getTableLocator()->get('FieldOption.Nationalities')
+        $nationalityTable = TableRegistry::getTableLocator()->get('Nationalities')
                             ->find()
                             ->where([
                                 'Nationalities.id' => $globalData['data']['nationality_id']
@@ -2994,8 +2989,8 @@ class ValidationBehavior extends Behavior
         if($nationalityTable->external_validation == 1){
             if($globalData['data']['id'] != '' && $globalData['data']['identity_type_id'] != '' && $globalData['data']['number'] != ''){
                 //edit nationality case
-                $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
-                $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+                $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types');
+                $UserIdentities = TableRegistry::getTableLocator()->get('UserIdentities');
                 $identityTypeData = $UserIdentities
                                         ->find()
                                         ->select([
@@ -3320,7 +3315,7 @@ class ValidationBehavior extends Behavior
     {
         $model = $globalData['providers']['table'];
         $data = $globalData['data'];
-        $userIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+        $userIdentities = TableRegistry::getTableLocator()->get('user_identities');
         $IdentitiesEntity = $userIdentities->find()
             ->where([
                 $userIdentities->aliasField('number') => $data['identity_number'],
@@ -3373,7 +3368,7 @@ class ValidationBehavior extends Behavior
     {
         $data = $globalData['data'];
         $shift = $data['shift_id'];
-        $shiftOptions = TableRegistry::getTableLocator()->get('Institution.ShiftOptions');
+        $shiftOptions = TableRegistry::getTableLocator()->get('shift_options');
         $query = $shiftOptions->find()
                 ->where([
                     'id' => $globalData['data']['id']

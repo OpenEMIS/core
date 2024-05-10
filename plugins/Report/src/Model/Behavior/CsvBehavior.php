@@ -27,7 +27,7 @@ class CsvBehavior extends Behavior
         }
         
         $folder = WWW_ROOT . $this->getConfig('folder');
-
+        
         if (!file_exists($folder)) {
             umask(0);
             mkdir($folder, 0777);
@@ -46,7 +46,7 @@ class CsvBehavior extends Behavior
             'query' => $this->_table->find()
         ];
         $_settings = new ArrayObject(array_merge($_settings, $settings));
-
+        
         $model->dispatchEvent('ExcelTemplates.Model.onCsvBeforeGenerate', [$_settings], $this);
 
         // Start: csv filepath
@@ -62,7 +62,7 @@ class CsvBehavior extends Behavior
         $sqlFilepath = $_settings['path'] . $sqlFilename;-
         $_settings['file_path_sql'] = $sqlFilepath;
         // End: sql filepath
-
+        
         $this->saveSql($_settings);
         $this->createSqlFile($_settings);
         $this->exportToCsv($_settings);
@@ -76,12 +76,29 @@ class CsvBehavior extends Behavior
         $process = $settings['process'];
         $query = $settings['query'];
         $sql = array_key_exists('sql', $settings) ? $settings['sql'] : $query->sql();
+
+        // Check if $sql is null or empty
+        if ($sql === null || empty($sql)) {
+            return;
+        }
+
+        // Escape SQL query
+        $sql = $this->escapeSql($sql);
        
         $ReportProgress = TableRegistry::get('Report.ReportProgress');
         $ReportProgress->updateAll(
-            ['sql_column' => $sql],
+            ['`sql`' => $sql],
             ['id' => $process->id]
         );
+        
+    }
+
+    private function escapeSql($sql)
+    {
+        // Escape SQL query
+        // This is a simplified example, you might need to improve this based on your requirements
+        //return "'" . addslashes($sql) . "'";
+        return str_replace("'", "''", $sql);
     }
 
     // private function saveSql($settings)
@@ -118,14 +135,15 @@ class CsvBehavior extends Behavior
     {
         $process = $settings['process'];
         $sqlFilepath = $settings['file_path_sql'];
+        
         $processId = $process->id;
-
+        
         $this->deleteSqlFile($settings);
 
         $ReportProgress = TableRegistry::get('Report.ReportProgress');
 
         $sqlFile = new File($sqlFilepath, true, 0777);
-        $sqlStatement = $ReportProgress->get($processId)->sql_column;
+        $sqlStatement = $ReportProgress->get($processId)->sql;
         $sqlFile->write($sqlStatement);
     }
 
@@ -144,8 +162,10 @@ class CsvBehavior extends Behavior
         $host = array_key_exists('host', $connectionConfig) ? $connectionConfig['host'] : null;
         $port = array_key_exists('port', $connectionConfig) ? $connectionConfig['port'] : null;
         $database = $connectionConfig['database'];
+        
         $mysqlPath = trim(shell_exec('which mysql'));
         $exportCmd = $mysqlPath;
+        //$exportCmd = DS . 'bin'. DS . 'mysql';
         $exportCmd .= ' --user=' . $username;
         $exportCmd .= ' --password=' . $password;
         if (!is_null($host) && strtolower($host) != 'localhost') {

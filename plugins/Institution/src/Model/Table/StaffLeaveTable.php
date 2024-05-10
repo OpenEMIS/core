@@ -79,38 +79,39 @@ class StaffLeaveTable extends ControllerActionTable
         $this->fullDayOptions = $this->getSelectOptions('general.yesno');
     }
 
-    // public function validationDefault(Validator $validator): Validator
-    // {
-    //     $validator = parent::validationDefault($validator);
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
+        
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $allowOutAcademicYear = $ConfigItems->value('allow_out_academic_year');
 
-    //     $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-    //     $allowOutAcademicYear = $ConfigItems->value('allow_out_academic_year');
+        if ($allowOutAcademicYear == 1) {
+            $validator
+                ->add('date_to', 'ruleDateToInRange', [
+                    'rule' => ['DateToInRange'],
+                    'message' => __('Date to is greater than number of year range')
+                ]);
+        } else {
+            $validator
+                ->add('date_to', 'ruleInAcademicPeriod', [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+                ]);
+        }
 
-    //     if ($allowOutAcademicYear == 1) {
-    //         $validator
-    //             ->add('date_to', 'ruleDateToInRange', [
-    //                 'rule' => ['DateToInRange'],
-    //                 'message' => __('Date to is greater than number of year range')
-    //             ]);
-    //     } else {
-    //         $validator
-    //             ->add('date_to', 'ruleInAcademicPeriod', [
-    //                 'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-    //             ]);
-    //     }
-
-    //     return $validator
-    //         ->add('date_to', 'ruleCompareDateReverse', [
-    //             'rule' => ['compareDateReverse', 'date_from', true]
-    //         ])
-    //         ->add('date_from', 'ruleInAcademicPeriod', [
-    //             'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-    //         ])
-    //         ->add('date_from', 'leavePeriodOverlap', [
-    //             'rule' => ['noOverlappingStaffAttendance']
-    //         ])
-    //         ->allowEmpty('file_content');
-    // }
+        return $validator
+            ->add('date_to', 'ruleCompareDateReverse', [
+                'rule' => ['compareDateReverse', 'date_from', true]
+            ])
+            ->add('date_from', 'ruleInAcademicPeriod', [
+                'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+            ])
+            ->add('date_from', 'leavePeriodOverlap', [
+                'rule' => ['noOverlappingStaffAttendance']
+            ])
+            ->allowEmpty('file_content');
+    }
 
     public function implementedEvents(): array
     {

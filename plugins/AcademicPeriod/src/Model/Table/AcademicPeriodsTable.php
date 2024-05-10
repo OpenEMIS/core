@@ -15,7 +15,8 @@ use Cake\Network\Exception\NotFoundException;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Log\Log;
-use Cake\I18n\Date;
+//use Cake\I18n\Date;
+use Cake\I18n\FrozenDate;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 use Cake\Datasource\ConnectionManager;
 
@@ -1000,16 +1001,26 @@ class AcademicPeriodsTable extends ControllerActionTable
 
         $weekIndex = 1;
         $weeks = [];
-        do {
-            $endDate = $startDate->copy();
-            if ($endDate->greaterThan($period->end_date)) {
-                $endDate = $period->end_date;
-            }
-            $weeks[$weekIndex++] = [$startDate];
-            $startDate = $endDate->copy();
-            $startDate->addDay();
-        } while ($endDate->lessThan($period->end_date));
 
+        $endDate = clone $startDate;
+        
+        while ($endDate <= $period->end_date) {
+            $weeks[$weekIndex++] = [$startDate];
+            $startDate = clone $endDate;
+            $startDate = $startDate->addDay();
+            $endDate = clone $startDate;
+        }
+        
+        // do {
+        //     $endDate = $startDate->copy();
+        //     if ($endDate->gt($period->end_date)) {
+        //         $endDate = $period->end_date;
+        //     }
+        //     $weeks[$weekIndex++] = [$startDate];
+        //     $startDate = $endDate->copy();
+        //     $startDate->addDay();
+        // } while ($endDate->lt($period->end_date));
+        
         return $weeks;
     }
 
