@@ -1177,7 +1177,7 @@ class InstitutionSurveysTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->getSession();
+        $session = $controller->getRequest()->getSession();
         $userId = $session->read('Auth.User.id');
         $institutionId  = $this->getInstitutionID(); 
         $Statuses = $this->Statuses;
@@ -1189,7 +1189,10 @@ class InstitutionSurveysTable extends ControllerActionTable
         $roleId = $userRole['security_role_id'];
         $workflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
         // $this->copyBuildSurveyRecords($controller);//POCOR-7412
-        $query
+        $roleId = 2;
+        $userId = 8805;
+        if(isset($roleId)){
+            $query
             ->select([
                 $this->aliasField('id'),
                 $this->aliasField('status_id'),
@@ -1220,7 +1223,7 @@ class InstitutionSurveysTable extends ControllerActionTable
             )
             ->where([
                 $this->aliasField('assignee_id') => $userId,
-                $workflowStepsRoles->aliasField('security_role_id') => $roleId,
+                // $workflowStepsRoles->aliasField('security_role_id') => $roleId,
                 'Assignees.super_admin IS NOT' => 1, //POCOR-7102
             ])
             ->order([$this->aliasField('created') => 'DESC'])
@@ -1251,6 +1254,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                     return $row;
                 });
             });
+        }
         return $query;
     }
 

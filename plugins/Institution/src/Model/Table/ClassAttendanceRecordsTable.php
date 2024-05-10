@@ -15,15 +15,15 @@ class ClassAttendanceRecordsTable extends AppTable
     const PARTIAL_MARKED = 2;
     const DAY_COLUMN_PREFIX = 'day_';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_class_attendance_records');
+        $this->setTable('institution_class_attendance_records');
         parent::initialize($config);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.StudentAttendances.afterSaveCommit'] = 'markedRecordAfterSave';

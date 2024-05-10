@@ -69,7 +69,7 @@ class SecurityFunctionsTable extends AppTable
                         unset($result[$key]);
                     } else {
                         $value->name = __($value->name);
-                        $value->description = __($value->description);
+                        $value->description = __((string)$value->description);
                     }
                 }
                 return $result;

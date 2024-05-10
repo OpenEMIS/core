@@ -12,7 +12,7 @@
 <?php
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('panelBody');
-$session = $this->request->session();
+$session = $this->request->getSession();
 $institutionId = $session->read('Institution.Institutions.id');
 
 

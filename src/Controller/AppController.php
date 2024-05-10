@@ -70,7 +70,6 @@ class AppController extends Controller
      */
     public function initialize(): void
     {
-
         if (!file_exists(CONFIG . 'datasource.php')) {
             $url = Router::url(['plugin' => 'Installer', 'controller' => 'Installer', 'action' => 'index'], true);
             header('Location: ' . $url);
@@ -141,7 +140,7 @@ class AppController extends Controller
                     'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'logout']
                 ]
             ],
-            'productName' => $this->productName,
+            'productName' => $this->getTheme()['application_name'],
             'productLogo' => $this->getTheme()['logo'],
             'footerText' => $this->getTheme()['copyright_notice_in_footer'],
             'theme' => $theme,
@@ -256,9 +255,10 @@ class AppController extends Controller
             $colour = $themes['colour'];
             $secondaryColour = $this->darkenColour($colour);
             $customPath = ROOT . DS . 'plugins' . DS . 'OpenEmis' . DS . 'webroot' . DS . 'css' . DS . 'themes' . DS . 'custom' . DS;
-            $basePath = Router::url(['controller' => 'false', 'action' => 'index', 'plugin' => false]) === '/' ? '/' : Router::url(['controller' => 'false', 'action' => 'index', 'plugin' => false]) . '/';
+            $basePath = Router::url(['controller' => '', 'action' => 'index', 'plugin' => false]) === '/' ? '/' : Router::url(['controller' => 'false', 'action' => 'index', 'plugin' => false]) . '/';
 
             $loginBackground = $basePath . Configure::read('App.imageBaseUrl') . $themes['login_page_image'];
+            // echo "<pre>";print_r($loginBackground);die;
             $file = new File($customPath . 'layout.core.template.css');
             $template = $file->read();
             $file->close();

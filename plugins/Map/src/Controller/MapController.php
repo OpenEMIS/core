@@ -48,7 +48,8 @@ class MapController extends AppController
 
 	private function attachAngularModules()
 	{
-		$action = $this->request->action;
+		// echo "<pre>";print_r($this->request->getAttribute('params')['action']);die;
+		$action = $this->request->getAttribute('params')['action'];
 		switch ($action) {
 			case 'index':
 				$this->Angular->addModules([

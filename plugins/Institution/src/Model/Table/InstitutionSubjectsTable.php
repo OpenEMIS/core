@@ -541,15 +541,19 @@ class InstitutionSubjectsTable extends ControllerActionTable
     public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
     {
         $institutionClassId = $entity['class_subjects'][0]['institution_class_id'];
-        $institution_subject_id = $this->SubjectStudents->find()->select(['institution_subject_id'])->where(['education_grade_id' => $entity->education_grade_id, 'academic_period_id' => $entity->academic_period_id, 'education_subject_id' => $entity->education_subject_id, 'institution_class_id' => $institutionClassId, 'institution_subject_id NOT IN ' => $entity->id])->first();
-        $institution_subject_id = $institution_subject_id['institution_subject_id'];
+        $InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
+        
+        //Commented for V4
+        // $institution_subject_id = $InstitutionClassSubjects->find()->select(['institution_subject_id'])->where(['education_grade_id' => $entity->education_grade_id, 'academic_period_id' => $entity->academic_period_id, 'education_subject_id' => $entity->education_subject_id, 'institution_class_id' => $institutionClassId, 'institution_subject_id NOT IN ' => $entity->id])->first();
+        // $institution_subject_id = $institution_subject_id['institution_subject_id'];
+        $institution_subject_id = $entity['class_subjects'][0]['institution_subject_id'];
         $id = $entity->id;
 
         $countMale = $this->SubjectStudents->getMaleCountBySubject($id);
         $countFemale = $this->SubjectStudents->getFemaleCountBySubject($id);
         $this->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
 
-        //echo $institution_subject_id; exit;
+        
         $countMale = $this->SubjectStudents->getMaleCountBySubject($institution_subject_id);
         $countFemale = $this->SubjectStudents->getFemaleCountBySubject($institution_subject_id);
         $this->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $institution_subject_id]);
@@ -959,22 +963,22 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 $educationGradeId = $entity->education_grade_id;
                 $educationSubjectId = $entity->education_subject_id;
                 $institutionSubjectId = $entity->id;
-                $institutionClassIds = $options['originalClass'];
-
-                $existingStudents = $this->SubjectStudents
+                // $institutionClassIds = $options['originalClass'];
+                $institutionClassIds = $entity['class_subjects'][0]['institution_class_id'];   //Version4
+                $SubjectStudents  =  TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
+                $existingStudents = $SubjectStudents
                     ->find('all')
                     ->select([
                         'id', 'student_id', 'institution_class_id', 'education_grade_id', 'academic_period_id', 'institution_id',
                         'student_status_id', 'institution_subject_id', 'education_subject_id'
                     ])
                     ->where([
-                        $this->SubjectStudents->aliasField('institution_class_id') . ' IN ' => $institutionClassIds,
-                        //$this->SubjectStudents->aliasField('education_grade_id') => $educationGradeId,//POCOR-7139 no need require of this conidition
-                        $this->SubjectStudents->aliasField('education_subject_id') => $educationSubjectId,
-                        $this->SubjectStudents->aliasField('institution_subject_id') => $institutionSubjectId
+                        // $SubjectStudents->aliasField('institution_class_id') . ' IN ' => $institutionClassIds,
+                        //$SubjectStudents->aliasField('education_grade_id') => $educationGradeId,//POCOR-7139 no need require of this conidition
+                        $SubjectStudents->aliasField('education_subject_id') => $educationSubjectId,
+                        $SubjectStudents->aliasField('institution_subject_id') => $institutionSubjectId
                     ])
                     ->toArray();
-
                 foreach ($existingStudents as $key => $subjectStudentEntity) {
                     if (!array_key_exists($subjectStudentEntity->student_id, $newStudents)) { // if current student does not exists in the new list of students
                         $this->SubjectStudents->delete($subjectStudentEntity);
@@ -982,7 +986,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         unset($newStudents[$subjectStudentEntity->student_id]);
                     }
                 }
-
                 foreach ($newStudents as $key => $student) {
                     $subjectStudentEntity = $this->SubjectStudents->newEntity($student);
                     $this->SubjectStudents->save($subjectStudentEntity);

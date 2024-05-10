@@ -1850,7 +1850,7 @@ class DirectoriesTable extends ControllerActionTable
                     'MainIdentityTypes_id' => $mainIdentityTypes->aliasField('id'),
                     'MainIdentityTypes_name' => $mainIdentityTypes->aliasField('name'),
                     'MainNationalities_id' => $mainNationalities->aliasField('id'),
-                    'MainNationalities_name' => $mainNationalities->aliasField('name'),
+                    // 'MainNationalities_name' => $mainNationalities->aliasField('name'),
                 ])
                 ->LeftJoin(['Identities' => 'user_identities'], [
                     'Identities.security_user_id' => $security_users->aliasField('id'),
@@ -1894,7 +1894,7 @@ class DirectoriesTable extends ControllerActionTable
                     'MainIdentityTypes_id' => $mainIdentityTypes->aliasField('id'),
                     'MainIdentityTypes_name' => $mainIdentityTypes->aliasField('name'),
                     'MainNationalities_id' => $mainNationalities->aliasField('id'),
-                    'MainNationalities_name' => $mainNationalities->aliasField('name'),
+                    // 'MainNationalities_name' => $mainNationalities->aliasField('name'),
                 ])
                 ->InnerJoin([$userIdentities->getAlias() => $userIdentities->getTable()], [
                     $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id'),
@@ -1938,7 +1938,7 @@ class DirectoriesTable extends ControllerActionTable
                         'MainIdentityTypes_id' => $mainIdentityTypes->aliasField('id'),
                         'MainIdentityTypes_name' => $mainIdentityTypes->aliasField('name'),
                         'MainNationalities_id' => $mainNationalities->aliasField('id'),
-                        'MainNationalities_name' => $mainNationalities->aliasField('name'),
+                        // 'MainNationalities_name' => $mainNationalities->aliasField('name'),
                     ])
                     ->InnerJoin([$userIdentities->getAlias() => $userIdentities->getTable()], [
                         $userIdentities->aliasField('security_user_id =') . $security_users->aliasField('id'),
@@ -2127,7 +2127,7 @@ class DirectoriesTable extends ControllerActionTable
                     'MainIdentityTypes_id' => $mainIdentityTypes->aliasField('id'),
                     'MainIdentityTypes_name' => $mainIdentityTypes->aliasField('name'),
                     'MainNationalities_id' => $mainNationalities->aliasField('id'),
-                    'MainNationalities_name' => $mainNationalities->aliasField('name'),
+                    // 'MainNationalities_name' => $mainNationalities->aliasField('name'),
                     'area_name' => $areaAdministratives->aliasField('name'),
                     'area_code' => $areaAdministratives->aliasField('code'),
                     'birth_area_name' => 'birthAreaAdministratives.name',
@@ -2221,7 +2221,7 @@ class DirectoriesTable extends ControllerActionTable
                     'MainIdentityTypes_id' => $mainIdentityTypes->aliasField('id'),
                     'MainIdentityTypes_name' => $mainIdentityTypes->aliasField('name'),
                     'MainNationalities_id' => $mainNationalities->aliasField('id'),
-                    'MainNationalities_name' => $mainNationalities->aliasField('name'),
+                    // 'MainNationalities_name' => $mainNationalities->aliasField('name'),
                     'area_name' => $areaAdministratives->aliasField('name'),
                     'area_code' => $areaAdministratives->aliasField('code'),
                     'birth_area_name' => 'birthAreaAdministratives.name',
@@ -2291,7 +2291,7 @@ class DirectoriesTable extends ControllerActionTable
                         'MainIdentityTypes_id' => $mainIdentityTypes->aliasField('id'),
                         'MainIdentityTypes_name' => $mainIdentityTypes->aliasField('name'),
                         'MainNationalities_id' => $mainNationalities->aliasField('id'),
-                        'MainNationalities_name' => $mainNationalities->aliasField('name'),
+                        // 'MainNationalities_name' => $mainNationalities->aliasField('name'),
                         'area_name' => $areaAdministratives->aliasField('name'),
                         'area_code' => $areaAdministratives->aliasField('code'),
                         'birth_area_name' => 'birthAreaAdministratives.name',

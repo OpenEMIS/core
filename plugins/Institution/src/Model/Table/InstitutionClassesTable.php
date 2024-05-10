@@ -28,6 +28,7 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
+        Log::write('debug', 'Here it us beforeFilter initialize Start');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -96,6 +97,7 @@ class InstitutionClassesTable extends ControllerActionTable
             'appliedAction' => ['Classes' =>['id']
             ]
         ]);
+        Log::write('debug', 'Here it us beforeFilter initialize End');
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -174,8 +176,35 @@ class InstitutionClassesTable extends ControllerActionTable
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
 
+    /**
+     * common function to get institution id
+     * @return string|null
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public
+    function getInstitutionID($debugString = "")
+    {
+        // POCOR-8115;
+        // institution_id should always be in query string, if not, die as an error
+        $institution_id = $this->getQueryString('institution_id');
+        if (!$institution_id) {
+            $institution_id = $this->getQueryString('id');
+            if(!$institution_id){
+                $session = $this->request->getSession();
+                $institution_id = $session->read('Institution.Institutions.id');
+                if(!$institution_id){
+                    if ($debugString != "") {
+                        die($debugString . 'For Developer: You should put institution_id into query string first');
+                    }
+                }
+            }
+        }
+        return $institution_id;
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        Log::write('debug', 'Here it us beforeFilter beforeAction Start');
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
@@ -185,7 +214,7 @@ class InstitutionClassesTable extends ControllerActionTable
             $extra['institution_shift_id'] = $this->request->getData['InstitutionClasses']['institution_shift_id'];
         }
 
-        $institutionId = $this->getInstitutionID();
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         $extra['institution_id'] = $institutionId;
         $academicPeriodOptions = $this->getAcademicPeriodOptions($institutionId);
         $selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
@@ -314,6 +343,7 @@ class InstitutionClassesTable extends ControllerActionTable
 			$extra['toolbarButtons']['help'] = $helpBtn;
 		}
 		// End POCOR-5188
+        Log::write('debug', 'Here it us beforeFilter InstitutionClasses beforeAction End');
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -2289,10 +2319,10 @@ class InstitutionClassesTable extends ControllerActionTable
             'name' => $EducationGrades->aliasField('name')
         ])
         ->innerJoin(
-            [$institutionClassGrades->alias() => $institutionClassGrades->table()],
+            [$institutionClassGrades->getAlias() => $institutionClassGrades->getTable()],
             [$this->aliasField('id = ') . $institutionClassGrades->aliasField('institution_class_id')]
         )->innerJoin(
-            [$EducationGrades->alias() => $EducationGrades->table()],
+            [$EducationGrades->getAlias() => $EducationGrades->getTable()],
             [$EducationGrades->aliasField('id = ') . $institutionClassGrades->aliasField('education_grade_id')]
         )
         ->where([

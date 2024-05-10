@@ -10,6 +10,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
+use Laminas\Diactoros\UploadedFile;
 class InsurancesTable extends ControllerActionTable
 {
     public function initialize(array $config): void
@@ -38,6 +39,14 @@ class InsurancesTable extends ControllerActionTable
             'fieldMap' => ['file_name' => 'file_content'],
             'size' => '2MB'
         ]); *///POCOR-6255 end
+        $this->addBehavior('ControllerAction.FileUpload', [
+            // 'name' => 'file_name',
+            // 'content' => 'file_content',
+            'size' => '2MB',
+            'contentEditable' => true,
+            'allowable_file_types' => 'all',
+            'useDefaultName' => true
+        ]);
     }
     //POCOR-6255 start
     public function implementedEvents(): array
@@ -181,6 +190,8 @@ class InsurancesTable extends ControllerActionTable
         // POCOR-6131
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $userID = $this->getUserID();
+        $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
     }
 
 

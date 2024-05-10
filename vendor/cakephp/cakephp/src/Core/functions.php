@@ -64,7 +64,7 @@ if (!function_exists('h')) {
             $defaultCharset = mb_internal_encoding() ?: 'UTF-8';
         }
 
-        return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, $charset ?: $defaultCharset, $double);
+        return htmlspecialchars((string)$text, ENT_QUOTES | ENT_SUBSTITUTE, $charset ?: $defaultCharset, $double);
     }
 
 }

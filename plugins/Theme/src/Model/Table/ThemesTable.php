@@ -10,8 +10,10 @@ use Cake\Cache\Cache;
 use Cake\ORM\TableRegistry;
 use Cake\I18n\Time;
 use Cake\ORM\Query;
+use App\Model\Table\ControllerActionTable;
+use Laminas\Diactoros\UploadedFile;
 
-class ThemesTable extends AppTable
+class ThemesTable extends ControllerActionTable
 {
     const APPNAME = 1;
     const LOGINBGIMAGE = 2;
@@ -23,69 +25,167 @@ class ThemesTable extends AppTable
     public function initialize(array $config): void
     {
         parent::initialize($config);
-        $this->addBehavior('Page.FileUpload', [
-            'fieldMap' => ['value' => 'content', 'default_value' => 'default_content'],
-            'type' => 'image',
-            'compression' => 100,
+        // $this->addBehavior('Page.FileUpload', [
+        //     'fieldMap' => ['value' => 'content', 'default_value' => 'default_content'],
+        //     'type' => 'image',
+        //     'compression' => 100,
+        //     'size' => '2MB',
+        //     'allowable_file_types' => ['jpeg', 'jpg', 'gif', 'png']
+        // ]);
+
+        $this->addBehavior('ControllerAction.FileUpload', [
+            // 'name' => 'file_name',
+            // 'content' => 'file_content',
             'size' => '2MB',
-            'allowable_file_types' => ['jpeg', 'jpg', 'gif', 'png']
+            'contentEditable' => true,
+            'allowable_file_types' => 'all',
+            'useDefaultName' => true
         ]);
     }
 
-    public function validationDefault(Validator $validator): Validator
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $themes = $this;
-        return $validator
-            ->add('value', 'ruleNotHexadecimal', [
-                'rule' => function ($value, $context) use ($themes) {
-                    if ($context['data']['id'] == $themes::COLOUR) {
-                        return !$value || (ctype_xdigit($value) && strlen($value) == 6);
-                    } else {
-                        return true;
-                    }
-                },
-                'message' => __('Please enter a valid 6 digit hexadecimal code')
-            ])
-            ->allowEmpty('value')
-            ->allowEmpty('content')
-            ->allowEmpty('default_content')
-            ->allowEmpty('default_value');
+        $this->field('content', ['visible' => false]);
+        $this->field('default_content', ['visible' => false]);
+
+        // $this->setFieldOrder(['from_academic_period', 'to_academic_period', 'features', 'created_user_id', 'created']);
     }
 
-    public function findIndex(Query $query, array $options)
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        return $query->where([$this->aliasField('name').' <> ' => 'Copyright Notice In Footer']);
+        $this->field('content', ['visible' => false]);  
+        $this->field('default_content', ['visible' => false]);
+
+        // $this->setFieldOrder(['name','db_type_id','host','host_port','db_name','username','conn_status_id','status_checked','modified_user_id','modified','created_user_id','created']);
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
-        switch ($data['id']) {
-            case self::LOGO:
-            case self::LOGINBGIMAGE:
-                $this->behaviors()->get('FileUpload')->config([
-                    'allowable_file_types' => [
-                        'value' => ['jpeg', 'jpg', 'gif', 'png'],
-                        'default_value' => ['jpeg', 'jpg', 'gif', 'png']
-                    ]
-                ]);
-                break;
-            case self::FAVICON:
-                $this->behaviors()->get('FileUpload')->config([
-                    'allowable_file_types' => [
-                        'value' => ['ico'],
-                        'default_value' => ['ico']
-                    ]
-                ]);
-                break;
-            case self::COLOUR:
-                $data['value'] = strtoupper($data['value']);
-                break;
+        $encodedString = explode(".", $this->request->getAttribute('params')['pass'][1]);
+        $encodedStringFirstValue = $encodedString[0];
+        $id = base64_decode($encodedStringFirstValue);
+        $jsondecodeValue = json_decode($id);
+        $dbId = $jsondecodeValue->id;
+        if($dbId == 2){
+            $this->field('default_content', [
+                'type' => 'readonly',
+            ]);
+            $this->field('name', [
+                'type' => 'readonly'
+            ]);
+            $this->field('value', [
+                'visible' => 'false'
+            ]);
+            $this->field('default_value', [
+                'visible' => 'false'
+            ]);
+        }else if($dbId == 5){
+            $this->field('name', [
+                'type' => 'readonly'
+            ]);
+            $this->field('default_value', [
+                'type' => 'readonly',
+            ]);
+            $this->field('default_content', [
+                'visible' => 'false'
+            ]);
+            $this->field('content', [
+                'visible' => 'false'
+            ]);
+        }else{
+            $this->field('name', [
+                'type' => 'readonly'
+            ]);
+            $this->field('default_value', [
+                'type' => 'readonly'
+            ]);
+            $this->field('content', [
+                'visible' => 'false'
+            ]);
+            $this->field('default_content', [
+                'visible' => 'false'
+            ]);
         }
-        if ($data->offsetExists('default_content')) {
-            $data->offsetUnset('default_content');
+    }
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if($entity->id == 2){
+            $filePath = $entity->content->getStream()->getMetadata('uri');
+
+            if (file_exists($filePath)) {
+                // Read the file contents
+                $fileContent = file_get_contents($filePath);
+                
+                // Now $fileContent contains the content of the uploaded file
+                $entity->content =  $fileContent;
+            } else {
+                echo "File does not exist or could not be accessed.";
+            }
         }
-        if ($data->offsetExists('default_value')) {
-            $data->offsetUnset('default_value');
+    }
+
+    // public function validationDefault(Validator $validator): Validator
+    // {
+    //     $themes = $this;
+    //     return $validator
+    //         ->add('value', 'ruleNotHexadecimal', [
+    //             'rule' => function ($value, $context) use ($themes) {
+    //                 if ($context['data']['id'] == $themes::COLOUR) {
+    //                     return !$value || (ctype_xdigit($value) && strlen($value) == 6);
+    //                 } else {
+    //                     return true;
+    //                 }
+    //             },
+    //             'message' => __('Please enter a valid 6 digit hexadecimal code')
+    //         ])
+    //         ->allowEmpty('value')
+    //         ->allowEmpty('content')
+    //         ->allowEmpty('default_content')
+    //         ->allowEmpty('default_value');
+    // }
+
+    // public function findIndex(Query $query, array $options)
+    // {
+    //     return $query->where([$this->aliasField('name').' <> ' => 'Copyright Notice In Footer']);
+    // }
+
+    // public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    // {
+    //     switch ($data['id']) {
+    //         case self::LOGO:
+    //         case self::LOGINBGIMAGE:
+    //             $this->behaviors()->get('FileUpload')->config([
+    //                 'allowable_file_types' => [
+    //                     'value' => ['jpeg', 'jpg', 'gif', 'png'],
+    //                     'default_value' => ['jpeg', 'jpg', 'gif', 'png']
+    //                 ]
+    //             ]);
+    //             break;
+    //         case self::FAVICON:
+    //             $this->behaviors()->get('FileUpload')->config([
+    //                 'allowable_file_types' => [
+    //                     'value' => ['ico'],
+    //                     'default_value' => ['ico']
+    //                 ]
+    //             ]);
+    //             break;
+    //         case self::COLOUR:
+    //             $data['value'] = strtoupper($data['value']);
+    //             break;
+    //     }
+    //     if ($data->offsetExists('default_content')) {
+    //         $data->offsetUnset('default_content');
+    //     }
+    //     if ($data->offsetExists('default_value')) {
+    //         $data->offsetUnset('default_value');
+    //     }
+    // }
+
+    public function onGetDefaultValue(Event $event, Entity $entity)
+    {
+        if($entity->name == 'Colour'){
+            $entity->default_value = '<div style="float: left; width: 150px; height: 20px; margin: 5px; border: 1px solid rgba(0, 0, 0, .2); background-color: #'.$entity->default_value.';"></div>';
+            return $entity->default_value;
         }
     }
 

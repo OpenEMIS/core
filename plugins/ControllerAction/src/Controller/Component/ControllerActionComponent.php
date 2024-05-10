@@ -1176,7 +1176,6 @@ class ControllerActionComponent extends Component
         // End Event
 
         $entity = $model->newEmptyEntity();
-
         if ($request->is(['get'])) {
             // Event: addOnInitialize
             $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.onInitialize');
@@ -1198,7 +1197,6 @@ class ControllerActionComponent extends Component
 //            $this->log(__LINE__ . ': Event -> ControllerAction.Model.add.onInitialize', 'debug');
 //            $this->log(print_r($requestData, true), 'debug');
 //            $this->log(print_r($params, true), 'debug');
-
             if ($submit == 'save') {
                 // Event: addEditBeforePatch
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.beforePatch');
@@ -1241,7 +1239,7 @@ class ControllerActionComponent extends Component
                     $process = $event->getResult();
                 }
                 // End Event
-
+                // echo "<pre>";print_r($process($model, $entity));die;
                 if ($process($model, $entity)) {
                     $this->Alert->success('general.add.success');
                     // Event: addAfterSave

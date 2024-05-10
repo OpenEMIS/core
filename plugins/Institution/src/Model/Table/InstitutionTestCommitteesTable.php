@@ -391,7 +391,8 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
     // POCOR-6171 start
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        // $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->Session->read('Institution.Institutions.primaryKey.institution_id');
         $requestQuery = $this->request->getQuery();
 
         $academicPeriod = !empty($requestQuery['period']) ? $requestQuery['period'] : $this->AcademicPeriods->getCurrent();

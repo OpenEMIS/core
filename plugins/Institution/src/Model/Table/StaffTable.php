@@ -3664,7 +3664,6 @@ public function getIdentityTypeData($value_selection)
         $dayDate = self::getFromArray($options, 'day_date');
         $superAdmin = $options['user']['super_admin'];
         $user_id = $options['user']['id'];
-
         $conditionQuery = [
             $this->aliasField('institution_id') => $institutionId,
 //            $this->aliasField('staff_status_id') => 1,
@@ -3677,11 +3676,15 @@ public function getIdentityTypeData($value_selection)
                 return $query;
             }
         }
-
         //if $dayId != -1 then $weekStartDate = $weekEndDate
         list($weekStartDate, $weekEndDate) =
             $this->resetWeekStartEndForOneDaySearch($dayId, $dayDate, $weekStartDate, $weekEndDate);
-
+        if(empty($dayId)){
+            $weekStartDate = self::getFromArray($options, 'week_start_day');
+            $weekEndDate = self::getFromArray($options, 'week_end_day');
+        }
+        // echo "<pre>";print_r($weekStartDate);die;
+            
         $attendanceByStaffIdRecords = $this->getAttendanceByStaffIdRecordsArray(
             $institutionId,
             $academicPeriodId,
@@ -3762,6 +3765,10 @@ public function getIdentityTypeData($value_selection)
             $weekStartDate = $dayDate;
             $weekEndDate = $dayDate;
         }
+        if(empty($dayId)){
+            $weekStartDate = $weekStartDate;
+            $weekEndDate = $weekEndDate;
+        }
         return array($weekStartDate, $weekEndDate);
     }
 
@@ -3778,7 +3785,7 @@ public function getIdentityTypeData($value_selection)
         if (!$archive) {
             $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
             $positions = TableRegistry::get('Institution.InstitutionPositions');
-            $staff = TableRegistry::get('institution_staff');
+            $staff = TableRegistry::get('Institution.InstitutionStaff');
             $allStaffAttendancesQuery = $InstitutionStaffAttendances
                 ->find('all')
                 ->where([
@@ -3790,9 +3797,9 @@ public function getIdentityTypeData($value_selection)
 
             if ($shiftId != -1) {
                 $allStaffAttendancesQuery = $allStaffAttendancesQuery
-                    ->leftJoin([$staff->alias() => $staff->table()],
+                    ->leftJoin([$staff->getAlias() => $staff->getTable()],
                         [$staff->aliasField('staff_id = ') . $InstitutionStaffAttendances->aliasField('staff_id')])
-                    ->leftJoin([$positions->alias() => $positions->table()],
+                    ->leftJoin([$positions->getAlias() => $positions->getTable()],
                         [$positions->aliasField('id = ') . $staff->aliasField('institution_position_id')])
                     ->where([
                         $positions->aliasField('shift_id') => $shiftId,
@@ -3813,7 +3820,7 @@ public function getIdentityTypeData($value_selection)
         }
 
         $allStaffAttendances = $allStaffAttendancesQuery
-            ->hydrate(false)
+            ->enableHydration(false)
             ->toArray();
 
         $attendanceByStaffIdRecords = Hash::combine($allStaffAttendances, '{n}.id', '{n}', '{n}.staff_id');
@@ -3841,7 +3848,7 @@ public function getIdentityTypeData($value_selection)
                     $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
                     $whereForLeaveTable
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
         }
         if ($archive) {
@@ -3957,10 +3964,10 @@ public function getIdentityTypeData($value_selection)
      */
     private function getQueryWithShiftId(Query $query, $shiftId)
     {
-        $positions = TableRegistry::get('institution_positions');
+        $positions = TableRegistry::get('Institution.InstitutionPositions');
         if ($shiftId != -1) {
             $query = $query
-                ->leftJoin([$positions->alias() => $positions->table()],
+                ->leftJoin([$positions->getAlias() => $positions->getTable()],
                     [$positions->aliasField('id = ') . $this->aliasField('institution_position_id')])
                 ->where(
                     [
@@ -4083,7 +4090,6 @@ public function getIdentityTypeData($value_selection)
 
     public function findAllStaffAttendancesArchived(Query $query, array $options)
     {
-
         $institutionId = self::getFromArray($options, 'institution_id');
         $academicPeriodId = self::getFromArray($options, 'academic_period_id');
         $ownAttendanceView = self::getFromArray($options, 'own_attendance_view');
@@ -4101,7 +4107,7 @@ public function getIdentityTypeData($value_selection)
             $this->aliasField('institution_id') => $institutionId,
 //            $this->aliasField('staff_status_id') => 1,
         ];
-
+        
         if ($superAdmin == 0) {
             $conditionQuery = $this->setConditionQueryForUser($ownAttendanceView, $otherAttendanceView, $user_id, $conditionQuery);
             if ($conditionQuery == null) {
@@ -4109,7 +4115,7 @@ public function getIdentityTypeData($value_selection)
                 return $query;
             }
         }
-
+        
         //if $dayId != -1 then $weekStartDate = $weekEndDate
         list($weekStartDate, $weekEndDate) =
             $this->resetWeekStartEndForOneDaySearch($dayId, $dayDate, $weekStartDate, $weekEndDate);

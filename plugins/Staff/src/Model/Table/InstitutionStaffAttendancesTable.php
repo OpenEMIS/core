@@ -48,9 +48,9 @@ class InstitutionStaffAttendancesTable extends ControllerActionTable {
                             'rule' => ['compareDateReverse', 'time_in', false],
                             'message' => __('Time Out Is Earlier than Time In'),
                             'on' => function ($context) {
-                        if (!(!empty($context['data']['time_out']) && empty($context['data']['time_in']))) {
-                            return true;
-                        }
+                        // if (!(!empty($context['data']['time_out']) && empty($context['data']['time_in']))) {
+                        //     return true;
+                        // }
                     }
         ]);
     }

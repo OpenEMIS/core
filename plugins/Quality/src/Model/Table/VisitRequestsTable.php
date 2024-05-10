@@ -189,7 +189,7 @@ class VisitRequestsTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->getSession();
+        $session = $controller->getRequest()->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -260,7 +260,12 @@ class VisitRequestsTable extends ControllerActionTable
         // POCOR-6166
         $category = $this->request->getQuery('category');
         // POCOR-6166
-		$institutionId = $this->Session->read('Institution.Institutions.id');
+		// $institutionId = $this->Session->read('Institution.Institutions.id');
+        $requestData = base64_decode($this->request->getAttribute('params')['pass'][1]);
+        $endPosition = strpos($requestData, '}');
+        $jsonString = substr($requestData, 0, $endPosition + 1);
+        $data = json_decode($jsonString, true);
+        $institutionId = $data['institution_id'];
         $assignees = TableRegistry::get('User.Users');
 		$query
 		->select(['assignee' => $assignees->find()->func()->concat([

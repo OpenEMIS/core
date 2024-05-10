@@ -86,13 +86,13 @@ class StudentAttendanceMarkTypesTable extends AppTable
             $attendancePerDay = $this
                 ->find()
                 ->leftJoin(
-                [$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()],
+                [$StudentMarkTypeStatuses->getAlias() => $StudentMarkTypeStatuses->getTable()],
                 [
                  $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id = ') . $this->aliasField('id')
                 ]
                 )
                 ->leftJoin(
-                [$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()],
+                [$StudentMarkTypeStatusGrades->getAlias() => $StudentMarkTypeStatusGrades->getTable()],
                 [
                  $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id = ') . $StudentMarkTypeStatuses->aliasField('id')
                 ]
@@ -185,19 +185,19 @@ class StudentAttendanceMarkTypesTable extends AppTable
                         $StudentAttendanceTypes->aliasField('code')
                     ])
                     ->leftJoin(
-                        [$StudentAttendanceTypes->alias() => $StudentAttendanceTypes->table()],
+                        [$StudentAttendanceTypes->getAlias() => $StudentAttendanceTypes->getTable()],
                         [
                          $StudentAttendanceTypes->aliasField('id = ') . $this->aliasField('student_attendance_type_id')
                         ]
                     )
                     ->leftJoin(
-                        [$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()],
+                        [$StudentMarkTypeStatuses->getAlias() => $StudentMarkTypeStatuses->getTable()],
                         [
                          $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id = ') . $this->aliasField('id')
                         ]
                     )
                     ->leftJoin(
-                        [$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()],
+                        [$StudentMarkTypeStatusGrades->getAlias() => $StudentMarkTypeStatusGrades->getTable()],
                         [
                          $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id = ') . $StudentMarkTypeStatuses->aliasField('id')
                         ]
@@ -231,13 +231,13 @@ class StudentAttendanceMarkTypesTable extends AppTable
                 $periodsData = $StudentAttendancePerDayPeriods
                                 ->find('all')
                                 ->leftJoin(
-                                    [$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()],
+                                    [$StudentMarkTypeStatuses->getAlias() => $StudentMarkTypeStatuses->getTable()],
                                     [
                                      $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id = ') . $StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id')
                                     ]
                                 )
                                 ->leftJoin(
-                                    [$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()],
+                                    [$StudentMarkTypeStatusGrades->getAlias() => $StudentMarkTypeStatusGrades->getTable()],
                                     [
                                      $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id = ') . $StudentMarkTypeStatuses->aliasField('id')
                                     ]

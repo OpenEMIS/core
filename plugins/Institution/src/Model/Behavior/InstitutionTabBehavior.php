@@ -6,6 +6,8 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
+use Cake\Core\Configure;
+use Cake\ORM\TableRegistry;
 
 class InstitutionTabBehavior extends Behavior
 {
@@ -270,7 +272,6 @@ class InstitutionTabBehavior extends Behavior
 //        $queryString['id'] = $userID;
         $queryStringWithID = $model->paramsEncode($queryStringWithID);
         $queryStingWithoutID = $model->paramsEncode($queryStingWithoutID);
-
         foreach ($tabElements as $key => $value) {
             if ($key == $userRule . 'User') {
                 $tabElements[$key]['url']['plugin'] = 'Institution';
@@ -297,8 +298,9 @@ class InstitutionTabBehavior extends Behavior
                     '1' => $queryStingWithoutID];
             }
         }
+        
         $tabElements = $maincontroller->TabPermission->checkTabPermission($tabElements);
-//        die('<pre>' . print_r($tabElements, true));
+        //die('<pre>' . print_r($tabElements, true));
 
         $maincontroller->set('tabElements', $tabElements);
         $action = $model->getAlias();
@@ -310,7 +312,7 @@ class InstitutionTabBehavior extends Behavior
         }
         $maincontroller->set('selectedAction', $action);
 //
-//        return $tabElements;
+        return $tabElements;
     }
 
     public function getStaffID()
@@ -325,5 +327,82 @@ class InstitutionTabBehavior extends Behavior
         $model = $this->_table;
         $studentID = $model->getQueryString('student_id');
         return $studentID;
+    }
+
+    public function getAcademicTabElements($options = [])
+    {
+        //$id = (array_key_exists('id', $options)) ? $options['id'] : 0;
+        $model = $this->_table;
+        // POCOR-8074-QueryStringProfile start
+        $maincontroller = $model->controller;
+        $controllerName = $maincontroller->getName();
+        $labels_tbl = TableRegistry::get('labels');   //POCOR-8056
+        $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();//POCOR-8056
+        if(empty($curricular_label_Data->name)){
+            $curricular_label_Data->name = "Institution Curriculars";
+        }
+       
+        $studentID = $this->getStudentID();
+        $institutionID = $this->getInstitutionID();
+        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
+        $tabElements = [];
+        $studentTabElements = [
+            'Programmes' => ['text' => __('Programmes')],
+            'Classes' => ['text' => __('Classes')],
+            'Subjects' => ['text' => __('Subjects')],
+            'Absences' => ['text' => __('Absences')],
+            'Behaviours' => ['text' => __('Behaviours')],
+            'Outcomes' => ['text' => __('Outcomes')],
+            'Competencies' => ['text' => __('Competencies')],
+            //POCOR-7474-HINDOL TYPO FIX
+            'Assessments' => ['text' => __('Assessments')], //POCOR-5786
+            'ExaminationResults' => ['text' => __('Examinations')],
+            'ReportCards' => ['text' => __('Report Cards')],
+            'Awards' => ['text' => __('Awards')],
+            //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7648
+            'Textbooks' => ['text' => __('Textbooks')],
+            'Risks' => ['text' => __('Risks')],
+            'Associations' => ['text' => __('Houses')], //POCOR-7938
+            'Curriculars' => ['text' => __($curricular_label_Data->name)] //POCOR-6673
+        ];
+
+        $tabElements = array_merge($tabElements, $studentTabElements);
+        $params = ['id' => $studentID,
+            'student_id' => $studentID,
+            'user_id' => $studentID,
+            'institution_id' => $institutionID,
+            'type' => $type];
+        $queryString = $model->paramsEncode($params);
+        // Programme & Textbooks will use institution controller, other will be still using student controller
+        $institutionControllerAction = [
+            'Programmes',
+            'Textbooks',
+            'Associations',
+            'Curriculars',
+            'Risks'];
+        foreach ($studentTabElements as $key => $tab) {
+            if (in_array($key, $institutionControllerAction)) {
+                $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', '0' => 'index',
+                '1' => $queryString];
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'type' => $type]);
+            } else {
+                $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
+                $urlParams = ['action' => $key, '0' => 'index','1' => $queryString];
+                $tabElements[$key]['url'] = array_merge($studentUrl, $urlParams);
+            }
+        }
+
+        if (Configure::read('schoolMode')) {
+            if (isset($tabElements['ExaminationResults'])) {
+                unset($tabElements['ExaminationResults']);
+            }
+            if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+                if (isset($tabElements['Risks'])) {
+                    unset($tabElements['Risks']);
+                }
+            }
+        }
+        
+        return $tabElements;
     }
 }

@@ -64,6 +64,11 @@ class AlertComponent extends Component {
 		$this->{$alertType}(__($message), $options);
 	}
 
+	public function success($message)
+	{
+		return $message;
+	}
+
 	public function clear()
 	{
 		$session = $this->getController()->getRequest()->getSession();

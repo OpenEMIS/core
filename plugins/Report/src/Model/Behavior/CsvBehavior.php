@@ -84,6 +84,36 @@ class CsvBehavior extends Behavior
         );
     }
 
+    // private function saveSql($settings)
+    // {
+    //     $process = $settings['process'];
+    //     $query = $settings['query'];
+    //     $sql = array_key_exists('sql', $settings) ? $settings['sql'] : $query->sql();
+
+    //     // Check if $sql is null or empty
+    //     if ($sql === null || empty($sql)) {
+    //         return;
+    //     }
+
+    //     // Escape SQL query
+    //     $sql = $this->escapeSql($sql);
+       
+    //     $ReportProgress = TableRegistry::get('Report.ReportProgress');
+    //     $ReportProgress->updateAll(
+    //         ['`sql`' => $sql],
+    //         ['id' => $process->id]
+    //     );
+        
+    // }
+
+    private function escapeSql($sql)
+    {
+        // Escape SQL query
+        // This is a simplified example, you might need to improve this based on your requirements
+        //return "'" . addslashes($sql) . "'";
+        return str_replace("'", "''", $sql);
+    }
+
     private function createSqlFile($settings)
     {
         $process = $settings['process'];
@@ -114,8 +144,8 @@ class CsvBehavior extends Behavior
         $host = array_key_exists('host', $connectionConfig) ? $connectionConfig['host'] : null;
         $port = array_key_exists('port', $connectionConfig) ? $connectionConfig['port'] : null;
         $database = $connectionConfig['database'];
-
-        $exportCmd = DS . 'bin'. DS . 'mysql';
+        $mysqlPath = trim(shell_exec('which mysql'));
+        $exportCmd = $mysqlPath;
         $exportCmd .= ' --user=' . $username;
         $exportCmd .= ' --password=' . $password;
         if (!is_null($host) && strtolower($host) != 'localhost') {

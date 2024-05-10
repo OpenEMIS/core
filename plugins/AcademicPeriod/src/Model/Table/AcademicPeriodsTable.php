@@ -1000,7 +1000,6 @@ class AcademicPeriodsTable extends ControllerActionTable
 
         $weekIndex = 1;
         $weeks = [];
-
         do {
             $endDate = $startDate->copy();
             if ($endDate->greaterThan($period->end_date)) {
@@ -1690,9 +1689,62 @@ class AcademicPeriodsTable extends ControllerActionTable
             $schooldays[] = 1 + ($firstDayOfWeek + 6 + $i) % 7;
         }
 
-        $firstDayOfWeek = $week[0]->copy();
+        $firstDayOfWeek = $week[0];
         $today = null;
+        $i = 0;
 
+        // foreach ($week as $firstDayOfWeek) {
+        //     if (in_array($firstDayOfWeek->dayOfWeek, $schooldays)) {
+        //         if ($schoolClosedRequired == false) {
+        //             $schoolClosed = false;
+        //         } else {
+        //             $schoolClosed = $this->isSchoolClosed($firstDayOfWeek, $institutionId);
+        //             //POCOR-7787 start
+        //             if ($schoolClosed) {
+        //                 $connection = ConnectionManager::get('default');
+        //                 $sql = "SELECT institution_shift_periods.period_id  
+        //                         FROM calendar_event_dates
+        //                         INNER JOIN calendar_events ON calendar_events.id = calendar_event_dates.calendar_event_id 
+        //                         INNER JOIN institution_shifts ON calendar_events.academic_period_id = institution_shifts.academic_period_id 
+        //                                 AND calendar_events.institution_id = institution_shifts.institution_id 
+        //                                 AND calendar_events.institution_shift_id = institution_shifts.shift_option_id 
+        //                         INNER JOIN calendar_types ON calendar_types.id = calendar_events.calendar_type_id
+        //                         INNER JOIN institution_shift_periods ON institution_shift_periods.institution_shift_period_id = institution_shifts.id 
+        //                         WHERE calendar_event_dates.date = '" . $firstDayOfWeek->format('Y-m-d') . "' 
+        //                         AND calendar_types.is_attendance_required = 0";
+        
+        //                 $result = $connection->execute($sql)->fetchAll('assoc');
+        //                 $closedPeriods = [];
+        //                 foreach ($result as $data) {
+        //                     $closedPeriods[] = $data['period_id'];
+        //                 }
+        //             }
+        //             //POCOR-7787 end
+        //         }
+        //         $suffix = $schoolClosed ? __('School Closed') : '';
+        
+        //         $data = [
+        //             'id' => $firstDayOfWeek->dayOfWeek,
+        //             'day' => __($firstDayOfWeek->format('l')),
+        //             'name' => __($firstDayOfWeek->format('l')) . ' (' . $this->formatDate($firstDayOfWeek) . ') ' . $suffix,
+        //             'date' => $firstDayOfWeek->format('Y-m-d'),
+        //             'current_week_number_selected' => $current_week_number_selected, //POCOR-6723
+        //             'day_number' => $firstDayOfWeek->isToday() //POCOR-6723
+        //         ];
+        
+        //         if ($schoolClosed) {
+        //             $data['closed'] = true;
+        //             $data['periods'] = $closedPeriods; //POCOR-7787
+        //         }
+        
+        //         $dayOptions[] = $data;
+        
+        //         if (is_null($today) || $firstDayOfWeek->isToday()) {
+        //             end($dayOptions);
+        //             $today = key($dayOptions);
+        //         }
+        //     }
+        // }
         do {
             if (in_array($firstDayOfWeek->dayOfWeek, $schooldays)) {
                 if ($schoolClosedRequired == false) {
@@ -1741,9 +1793,13 @@ class AcademicPeriodsTable extends ControllerActionTable
                     end($dayOptions);
                     $today = key($dayOptions);
                 }
+                if ($i == 7) {
+                    break; // Exit the loop when $i reaches 7
+                }
+                $i++;
             }
             $firstDayOfWeek->addDay();
-        } while ($firstDayOfWeek->lte($week[1]));
+        } while ($firstDayOfWeek<= $week[1]);
 
         if (!is_null($today)) {
             $dayOptions[$today]['selected'] = true;
@@ -1844,7 +1900,9 @@ class AcademicPeriodsTable extends ControllerActionTable
         do {
             if (in_array($firstDay->dayOfWeek, $schooldays)) {
                 {
-                    $schoolClosed = $this->isSchoolClosed($firstDay, $institutionId);
+                    // echo "<pre>";print_r($this->isSchoolClosed($firstDay, $institutionId));die;
+                    // $schoolClosed = $this->isSchoolClosed($firstDay, $institutionId);
+                    $schoolClosed = false;
                 }
                 $suffix = $schoolClosed ? __('School Closed') : '';
 
@@ -1857,7 +1915,6 @@ class AcademicPeriodsTable extends ControllerActionTable
                 ];
 
                 $dayOptions[] = $data;
-
                 if (is_null($today) || $firstDay->isToday()) {
                     end($dayOptions);
                     $today = key($dayOptions);
@@ -1871,13 +1928,13 @@ class AcademicPeriodsTable extends ControllerActionTable
             $dayOptions[$today]['day_number'] = __($firstDay->format('N')); //POCOR-6723
         }
 
-        $query
+        return $query
             ->select(['id'])
             ->limit(1)
             ->formatResults(function (ResultSetInterface $results) use ($dayOptions) {
                 return $dayOptions;
             });
-
+        
     }
 
     public function getNextAcademicPeriodId($id)

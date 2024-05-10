@@ -27,7 +27,7 @@ class AreaAdministrativesTable extends ControllerActionTable
         $this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
         $this->hasMany('UsersAddressAreas', ['className' => 'Directory.Directories', 'foreignKey' => 'address_area_id']);
         $this->hasMany('UsersBirthplaceAreas', ['className' => 'Directory.Directories', 'foreignKey' => 'birthplace_area_id']);
-        $this->addBehavior('Tree');
+        // $this->addBehavior('Tree');
         if ($this->behaviors()->has('Reorder')) {
             $reorderBehavior = $this->behaviors()->get('Reorder');
             $reorderBehavior->setConfig('filter', 'parent_id');
@@ -125,7 +125,7 @@ class AreaAdministrativesTable extends ControllerActionTable
     public function findAreaList(Query $query, array $options)
     {
         $selected = !empty($options['selected']) && $options['selected'] != 'null' ? $options['selected'] : null;
-
+        $selected = 1;
         if (isset($options['recordOnly']) && $options['recordOnly']) {
             return $query
                 ->contain(['AreaAdministrativeLevels'])
@@ -137,7 +137,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                     $this->aliasField('order')
                 ])
                 ->where([$this->aliasField('id') => $selected])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->formatResults(function ($results) use ($selected) {
                     $results = $results->toArray();
                     foreach ($results as &$result) {
@@ -152,7 +152,6 @@ class AreaAdministrativesTable extends ControllerActionTable
                     return $results;
                 });
         }
-
         $authorisedAreaIds = [];
         $worldId = $this
                 ->find()
@@ -173,7 +172,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                     $this->aliasField('is_main_country') => true,
                     $this->aliasField('parent_id') => $worldId->id
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             foreach ($authorisedAreaIds as $area) {
@@ -190,7 +189,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                     $this->aliasField('is_main_country') => false,
                     $this->aliasField('parent_id') => $worldId->id
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
             $removeAreas = array_column($removeAreas, 'id');
 
@@ -204,7 +203,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                 ->where([
                     $this->aliasField('parent_id') => $worldId->id
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
         }
 
@@ -223,7 +222,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                 'AreaAdministrativeLevels.name',
                 $this->aliasField('order')
             ])
-            ->hydrate(false)
+            ->enableHydration(false)
             // Remove world record
             ->where($conditions)
             ->formatResults(function ($results) use ($authorisedAreaIds, $selected) {

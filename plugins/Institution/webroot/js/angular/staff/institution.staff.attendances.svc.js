@@ -121,7 +121,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             }
         };
         return AcademicPeriods
-            .find('DaysForPeriodWeek', {
+            .find('daysForPeriodWeekArchive', {
                 academic_period_id: academicPeriodId,
                 week_id: weekId,
                 institution_id: institutionId,
@@ -186,14 +186,14 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         }
 
         columnDefs.push({
-            headerName: translateText.translated.openemis_no,
+            headerName: 'OpenEMIS ID',
             field: "_matchingData.Users.openemis_no",
             pinned: direction,
             menuTabs: []
         });
 
         columnDefs.push({
-            headerName: translateText.translated.Name,
+            headerName: 'Name',
             field: "_matchingData.Users.name",
             filter: "text",
             filterParams: filterParams,
@@ -202,7 +202,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         });
 
         columnDefs.push({
-            headerName: translateText.translated.TimeIn + " - " + translateText.translated.TimeOut,
+            headerName: 'Time In' + " - " + 'Time Out',
             field: "attendance." + selectedDayDate,
             menuTabs: [],
             suppressSorting: true,
@@ -214,7 +214,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         });
 
         columnDefs.push({
-            headerName: translateText.translated.Leave,
+            headerName: 'Leave',
             field: "attendance." + selectedDayDate,
             menuTabs: [],
             suppressSorting: true,
@@ -226,7 +226,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         });
 
         columnDefs.push({
-            headerName: translateText.translated.Comments,
+            headerName: 'Comments',
             field: "attendance." + selectedDayDate + ".comment",
             menuTabs: [],
             suppressSorting: true,

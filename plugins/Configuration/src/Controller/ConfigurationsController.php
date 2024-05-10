@@ -59,9 +59,15 @@ class ConfigurationsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigAdministrativeBoundaries']);
     }
+    public function Theme()
+    {
+        echo "dfads";die;
+        return $this->redirect(['plugin' => 'Theme', 'controller' => 'Themes', 'action' => 'index', 'querystring' => $this->encode($this->request->getQuery())]);
+    }
+
     public function Themes()
     {
-        return $this->redirect(['plugin' => 'Theme', 'controller' => 'Themes', 'action' => 'index', 'querystring' => $this->encode($this->request->getQuery())]);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Theme.Themes']);
     }
     public function StaffTransfers()
     {
@@ -173,4 +179,19 @@ class ConfigurationsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigExternalDataSourceExam']);
     }
       //POCOR-7531 end
+
+    public function getConfigItemValue()
+    {
+        $requestData = $this->request->input('json_decode', true);
+        $requestDataParams = $requestData['params'];
+        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItemsData = $ConfigItemsTable->findByCode($requestDataParams)->first();
+
+        if ($ConfigItemsData) {
+            $configItemValue = !empty($ConfigItemsData->value) ? $ConfigItemsData->value : $ConfigItemsData->default_value;
+            echo json_encode($configItemValue, JSON_PARTIAL_OUTPUT_ON_ERROR); die;
+        } else {
+            throw new NotFoundException('Configuration item not found');
+        }
+    }
 }

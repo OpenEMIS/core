@@ -25,6 +25,7 @@ use Institution\Model\Behavior\LatLongBehavior as LatLongOptions;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Table;
 use App\Model\Table\AppTable;
+use Laminas\Diactoros\UploadedFile;
 
 class InstitutionsTable extends ControllerActionTable
 {
@@ -260,16 +261,14 @@ class InstitutionsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        $validator->setProvider('custom', $this);
         $validator = $this->LatLongValidation(); //POCOR-6625 incomment <vikas.rathore@mail.valocoders.com>
-
         $validator
             ->setProvider('custom', $this)
-//            ->add('date_opened', [
-//                'ruleCompare' => [
-//                    'rule' => ['comparison', 'notequal', '0000-00-00'],
-//                ]
-//            ])
+            ->add('date_opened', [
+                'ruleCompare' => [
+                    'rule' => ['comparison', 'notequal', '0000-00-00'],
+                ]
+            ])
             ->allowEmpty('date_closed')
             ->add('date_opened', 'ruleLessThanToday', [
                 'rule' => ['lessThanToday', true]
@@ -892,8 +891,8 @@ class InstitutionsTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        echo "<pre>"; print_r($this->request);
-die;
+//         echo "<pre>"; print_r($this->request);
+// die;
         if ($entity->isNew()) {
             $entity->shift_type = 0;
         }
@@ -2224,6 +2223,7 @@ die;
                 $this->aliasField('institution_status_id') => $activeInstitutionStatus->id
             ]);
         // [POCOR-6379] - Anand Malvi
+        echo "<pre>";print_r($query);die;
         return $query;
     }
 

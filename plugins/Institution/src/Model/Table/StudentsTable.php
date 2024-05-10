@@ -769,7 +769,7 @@ class StudentsTable extends ControllerActionTable
         $this->triggerAutomatedStudentWithdrawalShell();
         $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID();
-        $assignedStudentToInstitution = $this->find()->where(['institution_id' => $institutionId])->count();
+        $assignedStudentToInstitution = $this->find()->where(['institution_id' => 6])->count();
         $session->write('is_any_student', $assignedStudentToInstitution);
 
         // Start POCOR-5188
@@ -2572,20 +2572,20 @@ class StudentsTable extends ControllerActionTable
                     ])->group([$InstitutionStudentAbsenceDetails->aliasField('student_id'), $InstitutionStudentAbsenceDetails->aliasField('absence_type_id')])
                     ->toArray();
             } else {
-                $StudentAttendancesData = $InstitutionStudentAbsenceDetails->find('all')
-                    ->select([
-                        'student_id' => 'institution_student_absence_details.student_id',
-                        'class_id' => 'institution_student_absence_details.institution_class_id',
-                        'present' => '(IF(institution_student_absence_details.absence_type_id IS NULL OR institution_student_absence_details.absence_type_id = 3,1,0))',
-                        'absent' => '(IF(institution_student_absence_details.absence_type_id IN (1,2),1,0))',
-                        'late' => '(IF(institution_student_absence_details.absence_type_id = 3, 1,0))',
+                // $StudentAttendancesData = $InstitutionStudentAbsenceDetails->find('all')
+                //     ->select([
+                //         'student_id' => 'institution_student_absence_details.student_id',
+                //         'class_id' => 'institution_student_absence_details.institution_class_id',
+                //         'present' => '(IF(institution_student_absence_details.absence_type_id IS NULL OR institution_student_absence_details.absence_type_id = 3,1,0))',
+                //         'absent' => '(IF(institution_student_absence_details.absence_type_id IN (1,2),1,0))',
+                //         'late' => '(IF(institution_student_absence_details.absence_type_id = 3, 1,0))',
 
-                    ])->innerJoin(["(SELECT value from config_items WHERE code = 'calculate_daily_attendance') attendance_config"])
-                    ->where([
-                        'institution_student_absence_details.date' => date('Y-m-d'),
-                        // 'institution_student_absence_details.period' => $record->period,
-                        'institution_student_absence_details.student_id' => $record->student_id,
-                    ])->group([$InstitutionStudentAbsenceDetails->aliasField('student_id')])->toArray();
+                //     ])->innerJoin(["(SELECT value from config_items WHERE code = 'calculate_daily_attendance') attendance_config"])
+                //     ->where([
+                //         'institution_student_absence_details.date' => date('Y-m-d'),
+                //         // 'institution_student_absence_details.period' => $record->period,
+                //         'institution_student_absence_details.student_id' => $record->student_id,
+                //     ])->group([$InstitutionStudentAbsenceDetails->aliasField('student_id')])->toArray();
 
             }
             //POCOR-7050 end

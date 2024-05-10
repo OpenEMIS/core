@@ -607,9 +607,9 @@ class TrainingNeedsAppTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->getSession();
-
+        $session = $controller->getRequest()->getSession();
         $userId = $session->read('Auth.User.id');
+        // $userId = $this->getUserID();
         $Statuses = $this->Statuses;
         $doneStatus = self::DONE;
         $typeOptions = $this->getTypes();
@@ -641,8 +641,8 @@ class TrainingNeedsAppTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->TrainingCourses->alias(), $this->CreatedUser->alias(), $this->TrainingNeedCategories->alias(), $this->Staff->alias(),'Assignees'])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->contain([$this->TrainingCourses->getAlias(), $this->CreatedUser->getAlias(), $this->TrainingNeedCategories->getAlias(), $this->Staff->getAlias(),'Assignees'])
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
             ->where([$this->aliasField('assignee_id') => $userId,

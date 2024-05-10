@@ -97,7 +97,6 @@ class SecuritiesController extends AppController
     private function attachAngularModules()
     {
         $action = $this->request->getParam('action');
-
         switch ($action) {
             case 'Permissions':
                 if (isset($this->request->getParam('pass')[0])) {

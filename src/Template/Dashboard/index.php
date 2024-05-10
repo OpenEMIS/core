@@ -1,25 +1,50 @@
-<app-root></app-root>
+<?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
+<?= $this->Html->script('angular/dashboard/dashboard.ctrl', ['block' => true]); ?>
+<?= $this->Html->script('angular/dashboard/dashboard.svc', ['block' => true]); ?>
+
 <?php
-	/*echo $this->Html->script('angular11/main/main.655812e91d2fbe4ecb7e');
-	echo $this->Html->script('angular11/main/polyfills.0947d4c9434ec41ea5bf');
-	echo $this->Html->script('angular11/main/runtime.7b63b9fd40098a2e8207');
-	echo $this->Html->script('angular11/main/scripts.d46a215e198ba486ca2a');
-	echo $this->Html->css('angular11/dashboard/newStyles');*/
-	echo $this->Html->script(BUILD_MAIN);
-	echo $this->Html->script(BUILD_POLYFILLS);
-	echo $this->Html->script(BUILD_RUNTIME);
-	echo $this->Html->script(BUILD_SCRIPTS);
-	echo $this->Html->css(BUILD_STYLE);
+$this->extend('OpenEmis./Layout/Container');
+$this->assign('contentHeader', (!empty($contentHeader) ? $contentHeader : $this->Label->get("$model._content_header")));
+
+$this->start('contentBody');
+$panelHeader = $this->fetch('panelHeader');
 ?>
-<!--for POCOR-8127 starts-->
-<script>
-// Assume you're outputting the session values into a JavaScript object
-var sessionData = {
-    username: "<?php echo $_SESSION['auth_username']; ?>",
-    password: "<?php echo $_SESSION['auth_password']; ?>"
-};
-// Now you can use sessionData to set session storage values in JavaScript
-sessionStorage.setItem('username', sessionData.username);
-sessionStorage.setItem('password', sessionData.password);
-</script>
-<!--for POCOR-8127 ends-->
+
+<?= $this->element('OpenEmis.alert') ?>
+
+<div class="panel">
+	<div class="panel-body" style="position: relative;">
+		<?= $this->element('nav_tabs') ?>
+		<?= $this->element('OpenEmis.alert') ?><!--POCOR-7520 add alret element-->
+		<bg-splitter orientation="horizontal" class="content-splitter" collapse="{{DashboardController.collapse}}" elements="getSplitterElements" float-btn="false">
+		<bg-pane class="main-content">
+			<?= $this->element('Dashboard/profile'); ?>
+			<?= $this->element('Dashboard/notices'); ?>
+			<hr>
+			<?= $this->element('Dashboard/workbench'); ?>
+		</bg-pane>
+
+		<!-- With Buttons -->
+		<bg-pane class="split-content splitter-slide-out split-with-btn" min-size-p="20" max-size-p="80" size-p="70">
+			<div class="split-content-header" ng-cloak>
+				<h3>{{DashboardController.workbenchTitle}}</h3>
+				<div class="split-content-btn">
+					<button href="#" class="btn btn-outline" ng-click="DashboardController.removeSplitContentResponsive()">
+						<i class="fa fa-close fa-lg"></i>
+					</button>
+				</div>
+			</div>
+			<div class="split-content-area">
+				<div class="html-box">
+					<div id="dashboard-workbench-table" class="table-wrapper">
+						<div ng-if="DashboardController.gridOptions['workbench']" kd-ag-grid="DashboardController.gridOptions['workbench']" class="ag-height-fixed"></div>
+					</div>
+				</div>
+			</div>
+		</bg-pane>
+	</bg-splitter>
+	</div>
+</div>
+
+<?php $this->end() ?>
+

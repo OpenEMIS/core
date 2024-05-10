@@ -84,6 +84,7 @@ class Application extends BaseApplication
 
         // Main Modules
         $this->addPlugin('Area', ['routes' => true, 'autoload' => true]);
+        $this->addPlugin('Manual', ['routes' => true, 'autoload' => true]);
         $this->addPlugin('Alert', ['routes' => true, 'autoload' => true]);
         $this->addPlugin('AcademicPeriod', ['routes' => true, 'autoload' => true]);
         $this->addPlugin('Directory', ['routes' => true, 'autoload' => true]);

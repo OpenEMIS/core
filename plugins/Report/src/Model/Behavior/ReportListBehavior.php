@@ -265,7 +265,7 @@ class ReportListBehavior extends Behavior {
 	{
 		$requestData = json_decode($extra['process']['params']);
 		$locale = $requestData->locale;
-		I18n::locale($locale);
+		I18n::getLocale($locale);
 	}
 
 	public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
