@@ -75,6 +75,7 @@ use App\Models\SecurityGroupUsers;
 use App\Models\SecurityRoleFunctions;
 use App\Models\ReportCardSubject;
 use App\Models\Assessments;
+use App\Models\ReportCardCommentCode;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -623,6 +624,38 @@ class ReportCardRepository extends Controller
         }
     }
     //pocor-7856 ends
+
+
+    //For pocor-8260 start...
+    public function getReportCardCommentCodes($params)
+    {
+        try {
+            //$limit = config('constantvalues.defaultPaginateLimit');
+
+            
+
+            $list = ReportCardCommentCode::where('visible', 1)->orderBy('order');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+
+                $list = $list->paginate($limit);
+            } else {
+                $list = $list->get();
+            }
+
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list.');
+        }
+    }
+    //For pocor-8260 end...
 
 }
 
