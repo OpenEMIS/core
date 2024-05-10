@@ -14,6 +14,8 @@ class TrainingSession extends Model
 
     protected $appends = ['code_name'];
 
+    protected $hidden = ['pivot'];
+
 
     public function getCodeNameAttribute()
     {
@@ -45,5 +47,17 @@ class TrainingSession extends Model
     public function trainingProvider()
     {
         return $this->belongsTo(TrainingProvider::class, 'training_provider_id', 'id');
+    }
+
+
+    public function trainingSessionTrainee()
+    {
+        return $this->belongsToMany(SecurityUsers::class, 'training_sessions_trainees', 'training_session_id', 'trainee_id');
+    }
+
+
+    public function trainingSessionEvaluator()
+    {
+        return $this->belongsToMany(SecurityUsers::class, 'training_session_evaluators', 'training_session_id', 'training_evaluators_id');
     }
 }
