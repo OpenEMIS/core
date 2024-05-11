@@ -170,6 +170,8 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
 
     // column definitions
     function getColumnDefs(selectedDayDate) {
+        console.log("selectedDayDate");
+        console.log(selectedDayDate);
         var columnDefs = [];
         var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
