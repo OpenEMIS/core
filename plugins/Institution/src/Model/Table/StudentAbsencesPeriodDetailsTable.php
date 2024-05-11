@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
 use Cake\I18n\Time;
 use Cake\Filesystem\Folder;
 use Cake\Mailer\Email;
+use Cake\Mailer\Mailer;
 use Cake\ORM\Locator\TableLocator;
 
 use Cake\Log\Log;
@@ -376,13 +377,13 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                                         if(($alertRuleData1->threshold) == $absenceCount){ //POCOR-7398 just changed <= to == also removed -1 after threshold
                                             $absenceCount = $absenceCount+1;
                                             if(!empty($userData->email)){
-                                                $email = new Email('openemis');
+                                                $email = new Mailer('openemis');
                                                 $emailSubject = 'OpenEMIS Attendance Alert for '.$insCode." - ".$insName;
                                                 $emailMessage = $alertRuleMessage; //POCOR-7266
                                                 $email
-                                                    ->to($userData->email)
-                                                    ->subject($emailSubject)
-                                                    ->send($emailMessage);
+                                                    ->setTo($userData->email)
+                                                    ->setSubject($emailSubject)
+                                                    ->deliver($emailMessage);
                                             }
                                         }
                                     }
