@@ -67,7 +67,6 @@ class AttendanceRepository extends Controller
                 'Failed to fetch Academic Periods List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            dd($e);
             return $this->sendErrorResponse('Academic Periods List Not Found');
         }
     }
