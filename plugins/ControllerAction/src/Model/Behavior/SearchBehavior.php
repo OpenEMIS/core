@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
+use Cake\ORM\TableRegistry;
 
 class SearchBehavior extends Behavior {
 	protected $_defaultConfig = [
@@ -46,7 +47,26 @@ class SearchBehavior extends Behavior {
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$model = $this->_table;
 		$search = $extra['config']['search'];
+		//echo "<pre>"; print_r($model['registryAlias']);die;
+		for ($i = 0; $i <= strlen($search); $i++) {
 
+	        // Construct the modified search string by inserting the special character "ʻ" at the current position
+	        $modifiedSearchString = substr($search, 0, $i) . 'ʻ' . substr($search, $i);
+	        // Perform a query using the modified search string
+	        $table = TableRegistry::get('Institution.Institutions');
+	        $result = $table->find()
+				    	->andWhere([
+				        'OR' => [
+				            'Institutions.name LIKE' => "%$modifiedSearchString%",
+				            'Institutions.code LIKE' => "%$modifiedSearchString%"
+				        ]
+				    ])->toArray();
+    
+		    if (!empty($result)) {
+		           $newSearch = $modifiedSearchString;
+		            break;
+		    }
+	}
 		$schema = $model->schema();
 		$columns = $schema->columns();
 		$excludeFields = ['id', 'password'];
@@ -58,8 +78,10 @@ class SearchBehavior extends Behavior {
 					if (in_array($col, $excludeFields)) continue;
 					if (in_array($attr['type'], ['string', 'text'])) {
 						$OR[$model->aliasField($col).' LIKE'] = '%' . $search . '%';
+						$OR[$model->aliasField('name').' LIKE'] = '%' . $newSearch . '%';
 					}
 				}
+				
 			}
 
 			if (array_key_exists('OR', $extra)) {
