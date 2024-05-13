@@ -120,7 +120,7 @@ class UserTabBehavior extends Behavior
                 'HealthFamilies','HealthHistories', 'HealthImmunizations', 'HealthMedications','HealthTests','HealthBodyMasses',
                 'Employments','StaffQualifications','StaffMemberships','StaffLicenses','StaffAwards','SpecialNeedsDiagnostics',
                 'SpecialNeedsDevices','SpecialNeedsServices','SpecialNeedsAssessments','HealthInsurances','SpecialNeedsPlans',
-                'StudentBankAccounts','Counsellings','StudentFees','StudentLicenses'];
+                'StudentBankAccounts','Counsellings','StudentFees','StudentLicenses','GuardianStudents'];
                 $action = $request->getParam('action');
                 if(isset($request->getParam('pass')[1]) && in_array($action, $actions)) {
                     $decodeQueryString = $request->getParam('pass')[1];
@@ -142,6 +142,9 @@ class UserTabBehavior extends Behavior
             $decodeQueryString = $request->getParam('pass')[1];
             $queryString = $model->paramsDecode($decodeQueryString);
             $url['1'] = $model->paramsEncode($queryString);
+            if(isset($url['?'])) {
+                unset($url['?']);
+            }
             $toolbarButtons['download']['url'] = $url;
         }
         // die('<pre>' . print_r($toolbarButtons, true));

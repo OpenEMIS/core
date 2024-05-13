@@ -40,6 +40,9 @@ class EmploymentStatusesTable extends ControllerActionTable {
     }
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
+        if($this->action == 'download'){
+            return;
+        }
         $this->field('status_type_id', ['type' => 'select', 'before' => 'status_date']);
 
 		$visible = ['index' => false, 'view' => true, 'add' => true, 'edit' => true];

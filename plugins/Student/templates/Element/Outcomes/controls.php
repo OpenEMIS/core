@@ -15,8 +15,8 @@
                         'plugin' => $this->request->getParam('plugin'),
                         'controller' => $this->request->getParam('controller'),
                         'action' => $this->request->getParam('action'),
-                        '3' => 'index',
-                        '4' => $encodedQueryString,
+                        '0' => 'index',
+                        'queryString' => $encodedQueryString,
                         'comment' => 1
                     ]);
                 }else{
@@ -24,8 +24,8 @@
                         'plugin' => $this->request->getParam('plugin'),
                         'controller' => $this->request->getParam('controller'),
                         'action' => $this->request->getParam('action'),
-                        '3' => 'index',
-                        '4' => $encodedQueryString,
+                        '0' => 'index',
+                        'queryString' => $encodedQueryString,
                     ]);
                 }
                 
@@ -88,15 +88,15 @@
                         'plugin' => $this->request->getParam('plugin'),
                         'controller' => $this->request->getParam('controller'),
                         'action' => $this->request->getParam('action'),
-                        '3' => 'index',
-                        '4' => $encodedQueryString,
+                        '0' => 'index',
+                        'queryString' => $encodedQueryString,
                     ]); ?>"><?php echo __('Results') ?></a></span>
 <span role="presentation" class="<?php echo (!empty($comment) && $comment == 1)?'tab-active':''; ?>"><a href="<?php echo $this->Url->build([
                         'plugin' => $this->request->getParam('plugin'),
                         'controller' => $this->request->getParam('controller'),
                         'action' => $this->request->getParam('action'),
+                        '0' => 'index',
+                        'queryString' => trim($encodedQueryString),
                         'comment' => 1,
-                        '3' => 'index',
-                        '4' => $encodedQueryString,
                     ]); ?>"><?php echo __('Comments'); ?></a></span>
 </div>
