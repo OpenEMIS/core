@@ -109,7 +109,8 @@ class DirectoriesTable extends ControllerActionTable
 //        $this->hasMany('InstitutionStudents', ['className' => 'institution_students', 'foreignKey' => 'student_id', 'dependent' => true]);
         $this->hasMany('InstitutionStudentsReportCardsCommentsStaff', ['className' => 'Institution.InstitutionStudentsReportCardsComments', 'foreignKey' => 'staff_id', 'dependent' => true]);
         $this->hasMany('InstitutionStudentsReportCardsCommentsStudent', ['className' => 'Institution.InstitutionStudentsReportCardsComments', 'foreignKey' => 'student_id', 'dependent' => true]);
-       // not found $this->hasMany('InstitutionStudentsTmp', ['className' => 'institution_students_tmp', 'foreignKey' => 'student_id', 'dependent' => true]);
+       // not found 
+        $this->hasMany('InstitutionStudentsTmp', ['className' => 'institution_students_tmp', 'foreignKey' => 'student_id', 'dependent' => true]);
         $this->hasMany('InstitutionSubjectStaff', ['className' => 'Staff.StaffSubjects', 'foreignKey' => 'staff_id', 'dependent' => true]);
         $this->hasMany('InstitutionSubjectStudents', ['className' => 'Student.StudentSubjects', 'foreignKey' => 'student_id', 'dependent' => true]);
         $this->hasMany('InstitutionTripPassengers', ['className' => 'Student.StudentTransport', 'foreignKey' => 'student_id', 'dependent' => true]);
@@ -151,7 +152,7 @@ class DirectoriesTable extends ControllerActionTable
         $this->hasMany('StaffTrainings', ['className' => 'Staff.StaffTrainings', 'foreignKey' => 'staff_id', 'dependent' => true]);
         $this->hasMany('StudentCustomFieldValues', ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true]);
         $this->hasMany('StudentCustomTableCells', ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true]);
-       // You have not defined the `request` association on 
+       // Undefined property `request` association on 
         $this->hasMany('StudentExtracurriculars', ['className' => 'Student.Extracurriculars', 'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('StudentFees', ['className' => 'Institution.StudentFeesAbstract', 'foreignKey' => 'student_id', 'dependent' => true]);
         $this->hasMany('StudentGuardiansGuardian', ['className' => 'Student.StudentGuardians', 'foreignKey' => 'guardian_id', 'dependent' => true]);
@@ -635,6 +636,8 @@ class DirectoriesTable extends ControllerActionTable
                 $this->addCustomUserBehavior($userType);
             }
 
+        } elseif ( $this->action == 'index' && $this->Session->check('Directory')) {
+            $this->Session->delete('Directory');
         }
 
         // Start POCOR-5188

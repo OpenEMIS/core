@@ -134,8 +134,9 @@ class StudentOutcomeCommentsTable extends ControllerActionTable
             $conditions[$this->aliasField('education_subject_id')] = $selectedSubject;
         }
         // end
-       
-        $extra['elements']['controls'] = ['name' => 'Student.Outcomes/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $extra['elements']['controls'] = ['name' => 'Student.Outcomes/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
         $extra['auto_contain_fields'] = [
             'OutcomePeriods' => ['code'],
             'EducationSubjects' => ['code'],
@@ -224,6 +225,10 @@ class StudentOutcomeCommentsTable extends ControllerActionTable
         if(empty($student_id) && isset($this->request->getParam('pass')[1])) {
             $pass = $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1]);
             $student_id = isset($pass['student_id']) ? $pass['student_id']: '';
+        }
+        
+        if(empty($student_id) && isset($this->getQueryString()['student_id'])) {
+            $student_id = $this->getQueryString()['student_id'];
         }
         return $student_id;
     }
