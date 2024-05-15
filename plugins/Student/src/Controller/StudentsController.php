@@ -358,16 +358,17 @@ class StudentsController extends AppController
     public function Competencies()
     {
         $session = $this->request->getSession();
-
-        if ($session->check('Student.Students.id')) {
-            $studentId = $session->read('Student.Students.id');
+        $studentID = $this->getStudentID();
+        //if ($session->check('Student.Students.id')) {
+        if ($studentID !='') {
+            //$studentId = $session->read('Student.Students.id');
+            $studentId = $studentID;
             $session->write('Student.Competencies.student_id', $studentId);
-
             // tabs
-            $options = ['type' => 'student'];
-            $tabElements = $this->getAcademicTabElements($options);
-            $this->set('tabElements', $tabElements);
-            $this->set('selectedAction', 'Competencies');
+            // $options = ['type' => 'student'];
+            // $tabElements = $this->getAcademicTabElements($options);
+            // $this->set('tabElements', $tabElements);
+            // $this->set('selectedAction', 'Competencies');
             // End
 
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCompetencies']);
@@ -498,16 +499,18 @@ class StudentsController extends AppController
     public function ExaminationResults()
     {
         $session = $this->request->getSession();
-
-        if ($session->check('Student.Students.id')) {
-            $studentId = $session->read('Student.Students.id');
+        $studentID = $this->getStudentID();
+        //if ($session->check('Student.Students.id')) {
+        if ($studentID) {
+            //$studentId = $session->read('Student.Students.id');
+            $studentId = $studentID;
             $session->write('Student.ExaminationResults.student_id', $studentId);
 
             // tabs
-            $options = ['type' => 'student'];
-            $tabElements = $this->getAcademicTabElements($options);
-            $this->set('tabElements', $tabElements);
-            $this->set('selectedAction', 'ExaminationResults');
+            // $options = ['type' => 'student'];
+            // $tabElements = $this->getAcademicTabElements($options);
+            // $this->set('tabElements', $tabElements);
+            // $this->set('selectedAction', 'ExaminationResults');
             // End
 
 
@@ -543,7 +546,7 @@ class StudentsController extends AppController
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $action = $this->request->getAttribute('params')['action'];
         $institutionID = $this->getInstitutionID();
-
+        
         $activeInstitution = $this->Institutions->get($institutionID);
         $institutionName = $activeInstitution->name;
 
@@ -571,10 +574,16 @@ class StudentsController extends AppController
             if (isset($this->request->getParam('pass')[0]) && ($action == 'view' || $action == 'edit')) {
                 $id = $this->request->getParam('pass')[0];
             } else if ($checkStudentId) {
-                //$id = $session->read('Student.Students.id');
-                $id = $this->getStudentID();
+                try {
+                    $id = $this->paramsDecode($this->request->getQuery['queryString'])['security_user_id'];
+                } catch (\Exception $exception) {
+                    $id = null;
+                }
+                if (!$id) {
+                    //$id = $session->read('Student.Students.id');
+                    $id = $checkStudentId;
+                }
             }
-
             if ($this->StudentUser->exists([$this->StudentUser->getPrimaryKey() => $id])) {
                 $entity = $this->StudentUser->get($id);
                 $name = $entity->name;
@@ -587,7 +596,6 @@ class StudentsController extends AppController
         }
 
         $this->set('contentHeader', $header);
-
     }
 
     /**
@@ -800,7 +808,6 @@ class StudentsController extends AppController
     public
     function getStatusPermission($model)
     {
-
         $institutionId = $this->getInstitutionID();
         $Institutions = TableRegistry::get('Institution.Institutions');
         $isActive = $Institutions->isActive($institutionId);
@@ -831,18 +838,27 @@ class StudentsController extends AppController
     function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
     {
         $session = $this->request->getSession();
-       // $userId = $this->getStudentID();
-        $queryString = $this->getQueryString();
-        $userId = $queryString['student_id'];
+        // POCOR-8014-n
+        try {
+            $userId = $this->paramsDecode($this->request->getQuery['queryString'])['security_user_id'];
+        } catch (\Exception $exception) {
+            $userId = null;
+        }
+        if (!$userId) {
+            //$userId = $session->read('Student.Students.id');
+            $queryString = $this->getQueryString();
+            $userId = $queryString['student_id'];
+        }
         if ($model->getAlias() != 'Students') {
-            if ($model->hasField('security_user_id')) {
-                $query->where([$model->aliasField('security_user_id') => $userId]);
-            } else if ($model->hasField('student_id')) {
-                $userId = $queryString['student_id'];
-                $query->where([$model->aliasField('student_id') => $userId]);
-            } else if (($model->getAlias() == "StudentCompetencies")
-                && ($model->hasField('staff_id'))) { //POCOR-7966
-                $query->where([$model->aliasField('staff_id') => $userId]);
+            if ($session->check('Student.Students.id')) {
+                if ($model->hasField('security_user_id')) {
+                    $query->where([$model->aliasField('security_user_id') => $userId]);
+                } else if ($model->hasField('student_id')) {
+                    $query->where([$model->aliasField('student_id') => $userId]);
+                } else if (($model->getAlias() == "StudentCompetencies") && ($model->hasField('staff_id'))) { //POCOR-7966
+                } else if ($model->hasField('staff_id')) {
+                    $query->where([$model->aliasField('staff_id') => $userId]);
+                }
             }
         }
     }
@@ -1056,10 +1072,10 @@ class StudentsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']);
     }
 
-    public
-    function StudentBehaviours()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentBehaviours']);
-    }
+    // public
+    // function StudentBehaviours()
+    // {
+    //     $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentBehaviours']);
+    // }
 
 }

@@ -37,7 +37,7 @@ class ContactExcelBehavior extends Behavior
     {
         $this->getConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
         if (!array_key_exists('filename', $config)) {
-            $this->getConfig('filename', $this->_table->getAlias());
+            $this->setConfig('filename', $this->_table->getAlias());
         }
         $folder = WWW_ROOT . $this->getConfig('folder');
 
@@ -81,7 +81,8 @@ class ContactExcelBehavior extends Behavior
         $id = 0;
         $break = false;
         $action = $this->_table->action;
-        $pass = $this->_table->request->pass;
+        $pass = $this->_table->request->getParam('pass');
+       
         if (in_array($action, $pass)) {
             unset($pass[array_search($action, $pass)]);
             $pass = array_values($pass);
@@ -113,7 +114,7 @@ class ContactExcelBehavior extends Behavior
 
         $writer = new XLSXWriter();
         $excel = $this;
-
+        
         $generate = function ($settings) {
             $this->generate($settings);
         };
@@ -152,7 +153,6 @@ class ContactExcelBehavior extends Behavior
 
         // Event to get the sheets. If no sheet is specified, it will be by default one sheet
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeStart'), 'onExcelBeforeStart', [$settings, $sheets], true);
-
         if (count($sheets->getArrayCopy())==0) {
             $sheets[] = [
                 'name' => $this->_table->getAlias(),
@@ -196,12 +196,12 @@ class ContactExcelBehavior extends Behavior
             }
             $sheetNameArr[] = $sheetName;
             $baseSheetName = $sheetName;
-
+            
             // if the primary key of the record is given, only generate that record
             if (array_key_exists('id', $settings)) {
                 $id = $settings['id'];
                 if ($id != 0) {
-                    $primaryKey = $table->primaryKey();
+                    $primaryKey = $table->getPrimaryKey();
                     $query->where([$table->aliasField($primaryKey) => $id]);
                 }
             }
@@ -237,7 +237,7 @@ class ContactExcelBehavior extends Behavior
             } elseif ($count == 1) {
                 $this->getConfig('orientation', 'portrait');
             }
-
+            
             $this->dispatchEvent($table, $this->eventKey('onExcelStartSheet'), 'onExcelStartSheet', [$settings, $count], true);
             $this->onEvent($table, $this->eventKey('onExcelBeforeWrite'), 'onExcelBeforeWrite');
             if ($this->getConfig('orientation') == 'landscape') {
@@ -378,6 +378,7 @@ class ContactExcelBehavior extends Behavior
                 }
                 $rowCount++;
             }
+            
             $writer->writeSheetRow($sheetName, ['']);
             $writer->writeSheetRow($sheetName, $footer);
             $this->dispatchEvent($table, $this->eventKey('onExcelEndSheet'), 'onExcelEndSheet', [$settings, $rowCount], true);
@@ -431,8 +432,8 @@ class ContactExcelBehavior extends Behavior
                 $column = $key[1];
                 // Redispatch get label
                 $event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $column, $language], true);
-                if (strlen($event->result)) {
-                    $field['label'] = $event->result;
+                if (strlen($event->getResult())) {
+                    $field['label'] = $event->getResult();
                 }
             }
             $newFields[] = $field;
@@ -579,7 +580,6 @@ class ContactExcelBehavior extends Behavior
     private function download($path)
     {
         $filename = basename($path);
-
         header("Pragma: public", true);
         header("Expires: 0"); // set expiration time
         header("Cache-Control: must-revalidate, post-check=0, pre-check=0");

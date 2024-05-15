@@ -36,6 +36,10 @@ class ProgrammesTable extends ControllerActionTable
             'appliedAction' => ['StudentProgrammes' =>['id','education_programme_id']
             ]
         ]);
+		// $this->addBehavior('Student.StudentTab', [
+        //     'appliedAction' => ['StudentProgrammes' =>['id','education_programme_id']
+        //     ]
+        // ]);
 
 	}
 
@@ -159,7 +163,7 @@ class ProgrammesTable extends ControllerActionTable
 	{	
 		$session = $this->request->getSession();
 		
-		if ($this->controller->getName() == 'Profiles') { 
+		if ($this->controller->getName() == 'Profiles') {
 			if ($session->read('Auth.User.is_guardian') == 1) {
 				$sId = $session->read('Student.ExaminationResults.student_id');
 			}else {
@@ -175,6 +179,10 @@ class ProgrammesTable extends ControllerActionTable
 		} else {
 			$queryString = $this->getQueryString();
 			$studentId = $queryString['student_id'];
+			if($this->controller->getName() == 'GuardianNavs') {
+				$encodeStudentId = $this->request->getQueryParams()['studentId'];
+				$studentId = $this->paramsDecode($encodeStudentId);
+			}
 		}
 		
 		// end POCOR-1893
@@ -313,7 +321,10 @@ class ProgrammesTable extends ControllerActionTable
 	private function setupTabElements()
 	{
 		$options['type'] = 'student';
-		$tabElements = $this->controller->getAcademicTabElements($options);
+		$tabElements = $this->getAcademicTabElements($options);
+		if($this->controller->getName() == 'GuardianNavs' || $this->controller->getName() == 'Directories') {
+			$tabElements = $this->controller->getAcademicTabElements($options);
+		}
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->getAlias());
 	}

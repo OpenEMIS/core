@@ -172,7 +172,11 @@ class TextbooksTable extends ControllerActionTable {
     private function setupTabElements()
     {
         $options['type'] = 'student';
-        $tabElements = $this->controller->getAcademicTabElements($options);
+        //$tabElements = $this->controller->getAcademicTabElements($options);
+        $tabElements = $this->getAcademicTabElements($options);
+        if($this->controller->getName() == 'GuardianNavs'|| $this->controller->getName() == 'Directories') {
+			$tabElements = $this->controller->getAcademicTabElements($options);
+		}
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->getAlias());
     }

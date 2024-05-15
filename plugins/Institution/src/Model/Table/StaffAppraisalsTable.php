@@ -86,10 +86,18 @@ class StaffAppraisalsTable extends ControllerActionTable
             'actions.download.show',
             true
         );
+
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StaffAppraisals' =>
+                ['id','staff_id', 'institution_id']
+            ]
+        ]);
+        $this->addBehavior('Staff.StaffTab');
     }
 
     public function validationDefault(Validator $validator): Validator
     {
+        $validator->setProvider('custom', $this);
         return $validator
             ->allowEmpty('file_content')
             ->add('appraisal_period_from', [
@@ -122,6 +130,10 @@ class StaffAppraisalsTable extends ControllerActionTable
             if (!is_null($this->request->getQuery('user_id'))) {
                 $userId = $this->request->getQuery('user_id');
             } else {
+                // $userId = $this->getStaffId();
+                // echo "<pre>"; print_r('$userId');
+                // echo "<pre>"; print_r($userId);
+                // die;
                 $session = $this->request->getSession();
                 if ($session->check('Staff.Staff.id')) {
                     $userId = $session->read('Staff.Staff.id');
@@ -134,6 +146,7 @@ class StaffAppraisalsTable extends ControllerActionTable
                 $this->controller->set('contentHeader', $staff->name. ' - ' .__('Appraisals'));
             }
         }
+        $this->field('institution_id', ['type' => 'hidden']);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -179,7 +192,7 @@ class StaffAppraisalsTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->request->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -213,15 +226,15 @@ class StaffAppraisalsTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('preferred_name')
             ])
             ->contain([
-                $this->Users->alias(),
-                $this->AppraisalTypes->alias(),
-                $this->AppraisalForms->alias(),
-                $this->AppraisalPeriods->alias(),
-                $this->Institutions->alias(),
-                $this->CreatedUser->alias(),
+                $this->Users->getAlias(),
+                $this->AppraisalTypes->getAlias(),
+                $this->AppraisalForms->getAlias(),
+                $this->AppraisalPeriods->getAlias(),
+                $this->Institutions->getAlias(),
+                $this->CreatedUser->getAlias(),
                 'Assignees'
             ])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([
                     $Statuses->aliasField('category <> ') => $doneStatus
                 ]);
@@ -279,10 +292,10 @@ class StaffAppraisalsTable extends ControllerActionTable
                 $this->aliasField('id') => $institutionStaffAppraisalsId,
                 $AppraisalFormsCriteriasScores->aliasField('final_score') => 1
             ])
-            ->innerJoin([$AppraisalFormsCriteriasScores->alias() => $AppraisalFormsCriteriasScores->table()], [
+            ->innerJoin([$AppraisalFormsCriteriasScores->getAlias() => $AppraisalFormsCriteriasScores->getTable()], [
                 $AppraisalFormsCriteriasScores->aliasField('appraisal_form_id = ') . $this->aliasField('appraisal_form_id'),
             ])
-            ->innerJoin([$AppraisalScoreAnswers->alias() => $AppraisalScoreAnswers->table()], [
+            ->innerJoin([$AppraisalScoreAnswers->getAlias() => $AppraisalScoreAnswers->getTable()], [
                 $AppraisalScoreAnswers->aliasField('appraisal_form_id = ') . $AppraisalFormsCriteriasScores->aliasField('appraisal_form_id'),
                 $AppraisalScoreAnswers->aliasField('appraisal_criteria_id = ') . $AppraisalFormsCriteriasScores->aliasField('appraisal_criteria_id'),
                 $AppraisalScoreAnswers->aliasField('institution_staff_appraisal_id = ') . $institutionStaffAppraisalsId
@@ -307,7 +320,8 @@ class StaffAppraisalsTable extends ControllerActionTable
             $options['user_id'] = $userId;
         }
 
-        $tabElements = $this->controller->getCareerTabElements($options);
+        //$tabElements = $this->controller->getCareerTabElements($options);
+        $tabElements = $this->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'StaffAppraisals');
     }
@@ -341,10 +355,11 @@ class StaffAppraisalsTable extends ControllerActionTable
                             ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $request->getSession();
-            if ($session->check('Institution.Institutions.id')) {
-                $institutionId = $session->read('Institution.Institutions.id');
-            }
+            // $session = $request->getSession();
+            // if ($session->check('Institution.Institutions.id')) {
+            //     $institutionId = $session->read('Institution.Institutions.id');
+            // }
+            $institutionId = $this->getInstitutionID();
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {

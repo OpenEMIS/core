@@ -2527,8 +2527,7 @@ public function isActionIgnored(Event $event, $action)
     function isInstitutionIDSkipped(): bool
     {
         $request = $this->request;
-        /*echo "<pre>"; print_r($request);
-        die;*/
+        
         $pass = $request->getParam('pass');
         $action = $request->getParam('action');
         $controller = $request->getParam('controller');
@@ -2541,6 +2540,9 @@ public function isActionIgnored(Event $event, $action)
             return true;
         }
         if ($pass[0] == 'download' && ($action == 'Expenditure' || $action == 'Visits' || $action = 'Attachments') && ($plugin == 'Institution') && ($controller == 'Institutions')) {
+            return true;
+        }
+        if (($pass[0] == 'view' || $pass[0] == 'edit') && $action == 'Institutions' && $plugin == 'Institution' && $controller == 'Institutions') {
             return true;
         }
         if ($furtherAction == 'image' || $furtherAction == 'download') {
@@ -2672,7 +2674,8 @@ public function isActionIgnored(Event $event, $action)
             $action = $params['pass'][0];
         }
         $isDownload = $action == 'downloadFile' ? true : false;
-        $alias = $model->getAlias();
+
+        $alias = $model->alias;
         $humanTitle = __(Inflector::humanize(Inflector::underscore($alias)));
         $crumbOptions = [];
         $queryString = $this->getQueryString();
@@ -2695,15 +2698,18 @@ public function isActionIgnored(Event $event, $action)
             'StudentAssociations' => __('Houses'), //POCOR-7938
             'StudentCurriculars' => __('Curriculars') //POCOR-6673 in student tab breadcrumb
         ];
+        
         if (array_key_exists($alias, $studentModels)) {
             $studentID = $this->getStudentID(__FUNCTION__ . __LINE__);
             $Students = TableRegistry::getTableLocator()->get('Security.Users');
+            
             if ($Students->exists([$Students->getPrimaryKey() => $studentID])) {
                 $activeStudent = $Students->get($studentID);
                 $studentName = $activeStudent->name;
                 $header = __($studentName);
                 $this->set('contentHeader', $header);
                 $this->set('studentName', $header);
+
                 $this->Navigation->addCrumb('Students',
                     [
                         'plugin' => $this->getPlugin(),
@@ -2726,7 +2732,6 @@ public function isActionIgnored(Event $event, $action)
                 die('No Such Student');
                 return;
             }
-
             // Breadcrumb
         }
 
@@ -2759,14 +2764,15 @@ public function isActionIgnored(Event $event, $action)
                     '1' => $encodedQueryString]);
             $this->set('contentHeader', $tranlatedInstitutionName);
         }
+        
         $modelsWithChangedName = ['CommitteeAttachments',
             'InstitutionMaps',
             'InstitutionAssociations'];
-        if (!in_array($alias, $modelsWithChangedName)) {
+        if (!in_array($alias, $modelsWithChangedName)) { 
             $this->Navigation->addCrumb($humanTitle, $crumbOptions);
             $header = $tranlatedInstitutionName;
         }
-
+        
 
         $persona = null;
         $requestQuery = $this->request->getQuery();
@@ -2798,7 +2804,8 @@ public function isActionIgnored(Event $event, $action)
             }
         }
         $subHeader = $model->getHeader($alias);
-
+        
+            
         if (is_object($persona) && get_class($persona) == 'User\Model\Entity\User') {
             $header = $persona->name . ' - ' . $humanTitle;
             $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
@@ -2831,7 +2838,7 @@ public function isActionIgnored(Event $event, $action)
             $subHeader = __('Houses');
         } // END POCOR-7466
         $header .= ' - ' . $subHeader;
-
+        
         $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
         $event = $model->getEventManager()->dispatch($event);
         $params = [];
@@ -2900,21 +2907,20 @@ public function isActionIgnored(Event $event, $action)
                     //                        return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
                 }
             }
-
+            
             $this->set('contentHeader', $header);
         } else {
             if ($alias == 'ImportInstitutions') {
                 $this->Navigation->addCrumb($model->getHeader($alias));
                 $header = __('Institutions') . ' - ' . $model->getHeader($alias);
                 $this->set('contentHeader', $header);
-            } /*elseif
-            ($this->request->getParam('action') == 'Institutions') { // cakephp4
+            } elseif($this->request->getParam('action') == 'Institutions') { // cakephp4
                 $this->Alert->warning('general.notExists');
-                die('Entity of ' . $alias . ' has no Institution action');
+                //die('Entity of ' . $alias . ' has no Institution action');
                 $event->stopPropagation();
                 return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
 
-            }*/
+            }
         }
     }
 
@@ -4535,55 +4541,54 @@ public function isActionIgnored(Event $event, $action)
         }
     }
 
-    public
-    function getAcademicTabElements($options = [])
-    {
-        $id = (array_key_exists('id', $options)) ? $options['id'] : 0;
-        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
+    // public
+    // function getAcademicTabElements($options = [])
+    // {
+    //     $id = (array_key_exists('id', $options)) ? $options['id'] : 0;
+    //     $type = (array_key_exists('type', $options)) ? $options['type'] : null;
 
-        $tabElements = [];
-        $studentTabElements = [
-            'Programmes' => ['text' => __('Programmes')],
-            'Classes' => ['text' => __('Classes')],
-            'Subjects' => ['text' => __('Subjects')],
-            'Absences' => ['text' => __('Absences')],
-            'Behaviours' => ['text' => __('Behaviours')],
-            'Outcomes' => ['text' => __('Outcomes')],
-            'Competencies' => ['text' => __('Competencies')],
-            // POCOR-7339-HINDOL typo
-            //'Assesments' => ['text' => __('Assessments')],
-            'Assessments' => ['text' => __('Assessments')],
-            'ExaminationResults' => ['text' => __('Examinations')],
-            'ReportCards' => ['text' => __('Report Cards')],
-            'Awards' => ['text' => __('Awards')],
-            //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7513
-            'Textbooks' => ['text' => __('Textbooks')],
-            'Risks' => ['text' => __('Risks')],
-            'Associations' => ['text' => __('Houses')], // POCOR-7938
-            'Curriculars' => ['text' => __('Curriculars')] //POCOR-6673 for student tab section
-        ];
+    //     $tabElements = [];
+    //     $studentTabElements = [
+    //         'Programmes' => ['text' => __('Programmes')],
+    //         'Classes' => ['text' => __('Classes')],
+    //         'Subjects' => ['text' => __('Subjects')],
+    //         'Absences' => ['text' => __('Absences')],
+    //         'Behaviours' => ['text' => __('Behaviours')],
+    //         'Outcomes' => ['text' => __('Outcomes')],
+    //         'Competencies' => ['text' => __('Competencies')],
+    //         // POCOR-7339-HINDOL typo
+    //         //'Assesments' => ['text' => __('Assessments')],
+    //         'Assessments' => ['text' => __('Assessments')],
+    //         'ExaminationResults' => ['text' => __('Examinations')],
+    //         'ReportCards' => ['text' => __('Report Cards')],
+    //         'Awards' => ['text' => __('Awards')],
+    //         //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7513
+    //         'Textbooks' => ['text' => __('Textbooks')],
+    //         'Risks' => ['text' => __('Risks')],
+    //         'Associations' => ['text' => __('Houses')], // POCOR-7938
+    //         'Curriculars' => ['text' => __('Curriculars')] //POCOR-6673 for student tab section
+    //     ];
 
-        $tabElements = array_merge($tabElements, $studentTabElements);
-        $queryString = $this->request->getQuery('queryString');
-        if (empty($queryString)) {
-            $queryString = $this->request->getParam('pass')[1];
-        }
+    //     $tabElements = array_merge($tabElements, $studentTabElements);
+    //     $queryString = $this->request->getQuery('queryString');
+    //     if (empty($queryString)) {
+    //         $queryString = $this->request->getParam('pass')[1];
+    //     }
 
-        // Programme will use institution controller, other will be still using student controller
-        foreach ($studentTabElements as $key => $tab) {
-            if (in_array($key, ['Programmes', 'Textbooks', 'Risks', 'Associations', 'Curriculars', 'Classes'])) {
-                $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', '0' => 'index',
-                    '1' => $queryString];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'type' => $type]);
-            } else {
-                $studentUrl = ['plugin' => 'Student', 'controller' => 'Students', '0' => 'index',
-                    '1' => $queryString];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key]);
-            }
-        }
-        //echo "<pre>"; print_r($tabElements); die;
-        return $this->TabPermission->checkTabPermission($tabElements);
-    }
+    //     // Programme will use institution controller, other will be still using student controller
+    //     foreach ($studentTabElements as $key => $tab) {
+    //         if (in_array($key, ['Programmes', 'Textbooks', 'Risks', 'Associations', 'Curriculars'/*, 'Classes'*/])) {
+    //             $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', '0' => 'index',
+    //                 '1' => $queryString];
+    //             $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'type' => $type]);
+    //         } else {
+    //             $studentUrl = ['plugin' => 'Student', 'controller' => 'Students', '0' => 'index',
+    //                 '1' => $queryString];
+    //             $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key]);
+    //         }
+    //     }
+    //     return $this->TabPermission->checkTabPermission($tabElements);
+    // }
 
     public
     function getCareerTabElements($options = [])

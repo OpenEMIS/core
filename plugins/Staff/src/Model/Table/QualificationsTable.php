@@ -99,6 +99,13 @@ class QualificationsTable extends ControllerActionTable
             ->allowEmpty('file_content');
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $queryString = $this->getQueryString();
+        $data['staff_id'] = $queryString['staff_id'];
+        $this->field('staff_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
+    }
+
     public function indexBeforeAction(Event $event)
     {
         $this->field('file_name', ['visible' => false]);
@@ -207,7 +214,37 @@ class QualificationsTable extends ControllerActionTable
         // }
         if ($field == 'qualification_level') {
             return __('Level');
-        } else {
+        } elseif ($field == 'graduate_year') {
+            return __('Graduate Year');
+        }elseif ($field == 'qualification_institution') {
+            return __('Institution');
+        }elseif ($field == 'document_no') {
+            return __('Document No');
+        }elseif ($field == 'qualification_title_id') {
+            return __('Title');
+        }elseif ($field == 'industry_id') {
+            return __('Industry');
+        }elseif ($field == 'education_field_of_study_id') {
+            return __('Field of Study');
+        }elseif ($field == 'qualification_specialisations') {
+            return __('Specialisations');
+        }elseif ($field == 'qualification_country_id') {
+            return __('Qualification Country');
+        }elseif ($field == 'gpa') {
+            return __('GPA');
+        }elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } else if ($field == 'created') {
+            return  __('Created On');
+        }elseif ($field == 'modified_user_id') {
+            return __('Last Modified By');
+        } else if ($field == 'modified') {
+            return  __('Last Modified On');
+        } else if ($field == 'education_subjects') {
+            return  __('Subjects');
+        } else if ($field == 'file_content') {
+            return  __('Attachment');
+        }else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
@@ -508,7 +545,7 @@ class QualificationsTable extends ControllerActionTable
             'type' => 'binary',
             'visible' => $visible
         ]);
-
+        
         $this->setFieldOrder([
             'qualification_title_id', 'qualification_level', 'education_field_of_study_id', 'qualification_specialisations', 'education_subjects', 'qualification_country_id', 'qualification_institution', 'document_no', 'graduate_year', 'gpa', 'file_content'
         ]);

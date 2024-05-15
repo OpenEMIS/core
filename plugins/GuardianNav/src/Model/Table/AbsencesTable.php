@@ -8,6 +8,7 @@ use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
 use Cake\ORM\Query; 
 use Cake\ORM\TableRegistry;
+use Cake\ORM\Locator\TableLocator;
 use App\Model\Table\ControllerActionTable;
 
 class AbsencesTable extends ControllerActionTable
@@ -203,12 +204,12 @@ class AbsencesTable extends ControllerActionTable
 
             $this->advancedSelectOptions($dateToOptions, $selectedDateTo);
             $this->controller->set(compact('dateToOptions', 'selectedDateTo'));
-
+            $encodedQueryString = $this->request->getParam('pass')[1];
             
             $query
                 ->find('all')
                 ->where($conditions);
-                $extra['elements']['controls'] = ['name' => 'GuardianNav.Absences/controls', 'data' => [], 'options' => [], 'order' => 1];
+                $extra['elements']['controls'] = ['name' => 'GuardianNav.Absences/controls', 'data' => ['encodedQueryString'=>$encodedQueryString], 'options' => [], 'order' => 1];
         }
     }
     
@@ -261,7 +262,7 @@ class AbsencesTable extends ControllerActionTable
         $options['type'] = 'student';
         $tabElements = $this->controller->getAcademicTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function indexAfterAction(Event $event, $data)
@@ -272,7 +273,7 @@ class AbsencesTable extends ControllerActionTable
     public function beforeFind( Event $event, Query $query )
     {
 		$userData = $this->Session->read();
-        $session = $this->request->session();//POCOR-6267
+        $session = $this->request->getSession();//POCOR-6267
         if ($userData['Auth']['User']['is_guardian'] == 1) { 
             /*POCOR-6267 starts*/
             if ($this->request->controller == 'GuardianNavs') {
@@ -280,7 +281,7 @@ class AbsencesTable extends ControllerActionTable
             }/*POCOR-6267 ends*/ else {
                 $sId = $userData['Student']['ExaminationResults']['student_id']; 
                 if (!empty($sId)) {
-                    $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+                    $studentId = $sId;
                 } else {
                     $studentId = $session->read('Student.Students.id');
                 }
@@ -301,17 +302,18 @@ class AbsencesTable extends ControllerActionTable
             }
         }
 		
-        $InstitutionStudentAbsenceDetails = TableRegistry::get('Institution.InstitutionStudentAbsenceDetails');
+        $tableLocator = new TableLocator();
+        $InstitutionStudentAbsenceDetails = $tableLocator->get('InstitutionStudentAbsenceDetails');
         $query
             ->find('all')
-            ->autoFields(true)
+            ->enableAutoFields(true)
             ->select([
                 'comment' => $InstitutionStudentAbsenceDetails->aliasField('comment'),
                 'periods' => $InstitutionStudentAbsenceDetails->aliasField('period'),
                 'subjects' => $InstitutionStudentAbsenceDetails->aliasField('subject_id')
             ])
             ->leftJoin(
-            [$InstitutionStudentAbsenceDetails->alias() => $InstitutionStudentAbsenceDetails->table()],
+            [$InstitutionStudentAbsenceDetails->getAlias() => $InstitutionStudentAbsenceDetails->getTable()],
             [
                 $InstitutionStudentAbsenceDetails->aliasField('student_id = ') . $this->aliasField('student_id'),
                 $InstitutionStudentAbsenceDetails->aliasField('date = ') . $this->aliasField('date'),

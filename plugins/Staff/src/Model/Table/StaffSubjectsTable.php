@@ -33,12 +33,8 @@ class StaffSubjectsTable extends ControllerActionTable {
          */
         $this->toggle('edit', false);
         $this->toggle('remove', false);
-        $this->addBehavior('Staff.StaffTab', [
-            'appliedAction' => ['Subjects' =>['id']
-            ]
-        ]);
         $this->addBehavior('Institution.InstitutionTab');
-        
+        $this->addBehavior('Staff.StaffTab');
     }
 
     public function implementedEvents(): array
@@ -207,9 +203,9 @@ class StaffSubjectsTable extends ControllerActionTable {
                 'controller' => 'Institutions',
                 'action' => 'Subjects',
                 0 => 'view',
-                1 => $encodedQueryString,
-                $this->paramsEncode(['id' => $entity->institution_subject->id]),
-                //'institution_id' => $institutionId,
+                //1 => $encodedQueryString,//here we got staff_id, user_id and institution_id
+                $this->paramsEncode(['id' => $entity->institution_subject->id, 'institution_id' => $institutionId]),
+                
             ];
             $buttons['view']['url'] = $url;
         }

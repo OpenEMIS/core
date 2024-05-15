@@ -97,12 +97,13 @@ class HealthBehavior extends Behavior
             'HealthBodyMasses' => ['text' => __('Body Mass')],
             'HealthInsurances' => ['text' => __('Insurances')]
         ];
-        $params = ['user_id' => $userId];
+        $params = ['user_id' => $userId, 'student_id' => $userId];
         if ($institutionId != null) {
             $params['institution_id'] = $institutionId;
         }
         $params['staff_id'] =  $userId;
         $model = $this->_table;
+        
 
         $queryString = $model->paramsEncode($params);
 

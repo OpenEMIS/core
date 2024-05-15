@@ -4,10 +4,11 @@
 			$baseUrl = $this->Url->build([
 					'plugin' => $this->request->getParam('plugin'),
 				    'controller' => $this->request->getParam('controller'),
-				    'action' => $this->request->getParam('action')
-				    'action' => 'StudentAbsences',
+				    'action' => $this->request->getParam('action'),
+					'0' => 'index',
+                    'queryString' => $encodedQueryString,
+				    
 				]);
-
 			if (!empty($academicPeriodList)) {
 				echo $this->Form->input('academic_period_', array(
 					'class' => 'form-control',

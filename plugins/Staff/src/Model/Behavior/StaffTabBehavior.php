@@ -157,9 +157,11 @@ die;*/
         }
 
         if($controllerName == "Profiles"){
+            $tabElements = [];
             $session = $model->request->getSession();
             $isStudent = $session->read('Auth.User.is_student');
             $isStaff = $session->read('Auth.User.is_staff');
+            
             if ($isStaff) {
                 $staffTabElements = [
                     'Employments' => ['text' => __('Employments')],
@@ -178,9 +180,10 @@ die;*/
                 $staffTabElements = [
                     'Employments' => ['text' => __('Employments')],
                     'Qualifications' => ['text' => __('Qualifications')],
-                    'Licenses' => ['text' => __('Licenses')],
+                    //'Licenses' => ['text' => __('Licenses')],
                 ];
             }
+            $tabElements = array_merge($tabElements, $staffTabElements);
             foreach ($staffTabElements as $key => $tab) {
                 if ($key != 'Employments') {
                     $url = array_merge($staffUrl, ['action' => 'Staff' . $key, '0' => 'index']);

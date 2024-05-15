@@ -417,43 +417,43 @@ class ReportListBehavior extends Behavior {
 	}
 
 	public function download($id) {
-    $this->_table->controller->autoRender = false;
+		$this->_table->controller->autoRender = false;
 
-    $entity = $this->ReportProgress->get($id);
-    $path = $entity->file_path;
+		$entity = $this->ReportProgress->get($id);
+		$path = $entity->file_path;
 
-    if (!empty($path) && file_exists($path)) {
-        $pathInfo = pathinfo($path);
-        $ext = $pathInfo['extension'];
-        $filename = $entity->name . ' - ' . date('Ymd') . 'T' . date('His') . '.' . $ext;
+		if (!empty($path) && file_exists($path)) {
+			$pathInfo = pathinfo($path);
+			$ext = $pathInfo['extension'];
+			$filename = $entity->name . ' - ' . date('Ymd') . 'T' . date('His') . '.' . $ext;
 
-        // Set correct Content-Type header based on file extension
-        $contentType = mime_content_type($path);
-        header('Content-Type: ' . $contentType);
+			// Set correct Content-Type header based on file extension
+			$contentType = mime_content_type($path);
+			header('Content-Type: ' . $contentType);
 
-        // Set other necessary headers
-        header('Content-Description: File Transfer');
-        header("Content-Disposition: attachment; filename=\"" . basename($filename) . "\";");
-        header('Content-Transfer-Encoding: binary');
-        header('Expires: 0');
-        header('Cache-Control: must-revalidate');
-        header('Pragma: public');
-        header('Content-Length: ' . filesize($path));
+			// Set other necessary headers
+			header('Content-Description: File Transfer');
+			header("Content-Disposition: attachment; filename=\"" . basename($filename) . "\";");
+			header('Content-Transfer-Encoding: binary');
+			header('Expires: 0');
+			header('Cache-Control: must-revalidate');
+			header('Pragma: public');
+			header('Content-Length: ' . filesize($path));
 
-        // Output the file
-        readfile($path);
+			// Output the file
+			readfile($path);
 
-        // No need to call ob_clean() and flush() in this context
-        exit;
-    } else {
-        $this->ReportProgress->delete($entity);
-        $controller = $this->_table->controller->getName();
-        $table = $this->_table->getAlias();
-        $this->_table->Alert->error('general.noFile', ['reset'=>true]);
-        $url = ['controller' => $controller, 'action' => $table, 'index'];
-        return $this->_table->controller->redirect($url);
-    }
-}
+			// No need to call ob_clean() and flush() in this context
+			exit;
+		} else {
+			$this->ReportProgress->delete($entity);
+			$controller = $this->_table->controller->getName();
+			$table = $this->_table->getAlias();
+			$this->_table->Alert->error('general.noFile', ['reset'=>true]);
+			$url = ['controller' => $controller, 'action' => $table, 'index'];
+			return $this->_table->controller->redirect($url);
+		}
+	}
 
 
 	private function getFile($phpResourceFile) {

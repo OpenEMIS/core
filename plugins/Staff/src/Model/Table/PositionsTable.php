@@ -367,7 +367,7 @@ class PositionsTable extends ControllerActionTable {
                     'controller' => 'Institutions',
                     'action' => 'Staff',
                     'view',
-                    $this->paramsEncode(['id' => $entity->id]),
+                    $this->paramsEncode(['id' => $entity->id, 'institution_id' => $institutionId]),
                     //'institution_id' => $institutionId,
                     $encodedQueryString
                 ];

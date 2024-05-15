@@ -3,6 +3,7 @@ namespace OpenEmis\View\Helper;
 
 use Cake\View\Helper;
 use Cake\Http\ServerRequest;
+use Cake\Log\Log;
 
 class NavigationHelper extends Helper
 {
@@ -31,7 +32,7 @@ class NavigationHelper extends Helper
         $controller = $this->_View->getRequest()->getParam('controller');
         $action = $this->_View->getRequest()->getParam('action');
         $pass = [];
-
+        
         // Build all the parent nodes
         foreach ($navigations as $navigation) {
             if (isset($navigation['parent'])) {
@@ -60,7 +61,7 @@ class NavigationHelper extends Helper
         if (empty($path)) {
             $this->getPath($controllerActionLink, $navigations, $path);
         }
-
+        
         // Print each of the navigation
         foreach ($navigations as $key => $value) {
             // Root Node
@@ -208,7 +209,13 @@ class NavigationHelper extends Helper
                     unset($id['plugin']);
                 }
                 $aOptions['id'] = implode('-', $id);
-                $html .= $this->Html->link($name, $url, $aOptions);
+                if(!isset($url['action'])){//POCOR-7485 add for test
+                    Log::debug(print_r($url, true));
+                    $url['action'] = 'index';
+                }
+                //$html .= $this->Html->link($name, $url, $aOptions);
+                $link = $this->Html->link($name, $url, $aOptions);//POCOR-7485 add for test
+                $html .= $link;//POCOR-7485 add for test
             }
         }
         $html .= $this->closeUlTag($closeUl, true);

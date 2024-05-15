@@ -21,6 +21,10 @@ class AwardsTable extends ControllerActionTable
             ]
         ]);
         $this->addBehavior('Staff.StaffTab');
+        // $this->addBehavior('Institution.InstitutionTab', [
+        //     'appliedAction' => ['Awards' =>['id']
+        //     ]
+        // ]);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -30,6 +34,13 @@ class AwardsTable extends ControllerActionTable
         return $validator;
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $queryString = $this->getQueryString();
+        $data['staff_id'] = $queryString['staff_id'];
+		$this->field('security_user_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
+    }
+    
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $userId = $this->getUserID();
@@ -96,23 +107,75 @@ class AwardsTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    //Function Uncommented for ask POCOR-6267
-
-    public function afterAction(Event $event, ArrayObject $extra)
-    {
-        $this->setupTabElements();
-    }
+    // private function setupTabElements()
+    // {
+    //     $tabElements = $this->getProfessionalTabElements();
+    //     $this->controller->set('tabElements', $tabElements);
+    //     $this->controller->set('selectedAction', $this->getAlias());
+    // }
 
     private function setupTabElements()
     {
-        $tabElements = $this->getProfessionalTabElements();
-        $type = $this->request->getQuery('type');
-        $options['type'] = $type;
-        if($type == 'student') {
-            $tabElements = $this->controller->getAcademicTabElements($options);
+        switch ($this->controller->getName()) {
+            case 'Students':
+                //$tabElements = $this->controller->getAcademicTabElements();
+                $tabElements = $this->getAcademicTabElements();
+                $this->controller->set('tabElements', $tabElements);
+                $this->controller->set('selectedAction', $this->getAlias());
+                break;
+            /*POCOR-6267 starts*/
+            case 'GuardianNavs':
+                //$tabElements = $this->controller->getAcademicTabElements();
+                $tabElements = $this->getAcademicTabElements();
+                if($this->controller->getName() == 'GuardianNavs') {
+                    $tabElements = $this->controller->getAcademicTabElements($options);
+                }
+                $this->controller->set('tabElements', $tabElements);
+                $this->controller->set('selectedAction', $this->getAlias());
+                break;
+            /*POCOR-6267 ends*/
+            case 'Staff':
+                //$tabElements = $this->controller->getProfessionalTabElements();
+                $tabElements = $this->getProfessionalTabElements();
+                $this->controller->set('tabElements', $tabElements);
+                $this->controller->set('selectedAction', $this->getAlias());
+                break;
+            case 'Directories':
+                $type = $this->request->getQuery('type');
+                $options['type'] = $type;
+                $tabElements = $this->controller->getAcademicTabElements($options);
+                $this->controller->set('tabElements', $tabElements);
+                $this->controller->set('selectedAction',$this->getAlias());
+                break;
+            case 'Profiles':
+                $type = $this->request->getQuery('type');
+                $options['type'] = $type;
+                $session = $this->request->getSession();
+                $isStaff = $session->read('Auth.User.is_staff');
+                if ($isStaff) {
+                    //$tabElements = $this->controller->getProfessionalTabElements($options);
+                    $tabElements = $this->getProfessionalTabElements($options);
+                } else if ($this->action == 'index') {
+                    //$tabElements = $this->controller->getAcademicTabElements($options);
+                    $tabElements = $this->getAcademicTabElements($options);
+                } elseif ($type == 'student') {
+                    //$tabElements = $this->controller->getAcademicTabElements($options);
+                    $tabElements = $this->getAcademicTabElements($options);
+                } else {
+                    //$tabElements = $this->controller->getProfessionalTabElements($options);
+                    $tabElements = $this->getProfessionalTabElements($options);
+                }
+
+                $this->controller->set('tabElements', $tabElements);
+                $this->controller->set('selectedAction', $this->getAlias());
+                break;
         }
-        $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction',$this->getAlias());
+    }
+
+    //Function Uncommented for ask POCOR-6267
+    public function afterAction(Event $event, ArrayObject $extra)
+    {
+        $this->setupTabElements();
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
