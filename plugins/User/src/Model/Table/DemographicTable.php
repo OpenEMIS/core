@@ -164,10 +164,15 @@ class DemographicTable extends ControllerActionTable
         return $IndigenousOptions;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-
-        return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        if ($field == 'demographic_types_id') {
+            return __('Wealth Quintile');
+        } elseif ($field == 'indigenous') {
+            return __('Indigenous People');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
     /*POCOR-6395 starts*/
