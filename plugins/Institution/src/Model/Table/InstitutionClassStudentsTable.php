@@ -142,7 +142,7 @@ class InstitutionClassStudentsTable extends AppTable
         $institutionId = $settings['institution_id'];
         $institutionCode = $this->Institutions->get($institutionId)->code;
         $className = $this->InstitutionClasses->get($classId)->name;
-        $settings['file'] = str_replace($this->alias(), str_replace(' ', '_', $institutionCode).'-'.str_replace(' ', '_', $className).'_Results', $settings['file']);
+        $settings['file'] = str_replace($this->getAlias(), str_replace(' ', '_', $institutionCode).'-'.str_replace(' ', '_', $className).'_Results', $settings['file']);
     }
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
@@ -477,7 +477,7 @@ class InstitutionClassStudentsTable extends AppTable
                 ->find('staffSubjects', ['class_id' => $classId, 'staff_id' => $staffId])
                 ->select(['assessment_item_id' => $AssessmentItemsTable->aliasField('id'), 'subject_id' => $AssessmentItemsTable->aliasField('education_subject_id')])
                 ->where([$AssessmentItemsTable->aliasField('assessment_id') => $assessmentId])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
                 $this->allowedSubjects = $allowedSubjects;
                 $this->lastQueriedClass = $classId;
@@ -741,7 +741,7 @@ class InstitutionClassStudentsTable extends AppTable
                 $StudentAbsenceReasons->aliasField('national_code')
             ])
             ->innerJoin(
-                [$Students->alias() => $Students->table()],
+                [$Students->getAlias() => $Students->getTable()],
                 [
                     $Students->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $Students->aliasField('student_id = ') . $this->aliasField('student_id'),
@@ -752,7 +752,7 @@ class InstitutionClassStudentsTable extends AppTable
                 ]
             )
             ->leftJoin(
-                [$StudentAbsences->alias() => $StudentAbsences->table()],
+                [$StudentAbsences->getAlias() => $StudentAbsences->getTable()],
                 [
                     $StudentAbsences->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $StudentAbsences->aliasField('student_id = ') . $this->aliasField('student_id'),
@@ -761,13 +761,13 @@ class InstitutionClassStudentsTable extends AppTable
                 ]
             )
             ->leftJoin(
-                [$AbsenceTypes->alias() => $AbsenceTypes->table()],
+                [$AbsenceTypes->getAlias() => $AbsenceTypes->getTable()],
                 [
                     $AbsenceTypes->aliasField('id = ') . $StudentAbsences->aliasField('absence_type_id')
                 ]
             )
             ->leftJoin(
-                [$StudentAbsenceReasons->alias() => $StudentAbsenceReasons->table()],
+                [$StudentAbsenceReasons->getAlias() => $StudentAbsenceReasons->getTable()],
                 [
                     $StudentAbsenceReasons->aliasField('id = ') . $StudentAbsences->aliasField('student_absence_reason_id')
                 ]
@@ -810,16 +810,14 @@ class InstitutionClassStudentsTable extends AppTable
         $educationSubjectId = $options['education_subject_id'];
         $institutionSubjectId = $options['institution_subject_id'];
         $type = $options['type'];
-
         $StudentReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
         $SubjectStudents = $this->SubjectStudents;
         $StudentStatuses = $this->StudentStatuses;
         $Users = $this->Users;
 
-        $AssessmentItem = TableRegistry::get('Assessment.AssessmentItem');
+        $AssessmentItem = TableRegistry::get('Assessment.AssessmentItems');
         $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
         $ReportCards = TableRegistry::get('ReportCard.ReportCards');
-
         $query
             ->select([
                 $this->aliasField('student_id'),
@@ -835,7 +833,7 @@ class InstitutionClassStudentsTable extends AppTable
             ->matching('Users')
             ->contain('StudentStatuses')
             ->leftJoin(
-                [$StudentReportCards->alias() => $StudentReportCards->table()],
+                [$StudentReportCards->getAlias() => $StudentReportCards->getTable()],
                 [
                     $StudentReportCards->aliasField('student_id = ') . $this->aliasField('student_id'),
                     $StudentReportCards->aliasField('institution_id = ') . $this->aliasField('institution_id'),
@@ -863,9 +861,9 @@ class InstitutionClassStudentsTable extends AppTable
             $query
                 ->select(['comments' => $StudentReportCards->aliasfield('principal_comments')])
                 ->formatResults(function (ResultSetInterface $results) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId, $educationGradeId, $classId) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data 
-
+                    
                     return $results->map(function ($row) use ($academicPeriodId, $institutionId, $SubjectStudents, $AssessmentItemResults, $educationSubjectId, $ReportCards, $reportCardId, $educationGradeId, $classId) {//add $educationGradeId in params POCOR-6501 // POCOR-6750: added $classId to filter correct data 
-
+                        
                         $studentId = $row->student_id;
                         if (!empty($row['InstitutionStudentsReportCards']['report_card_id'])) {
                             $reportCardId = $row['InstitutionStudentsReportCards']['report_card_id'];
@@ -898,9 +896,8 @@ class InstitutionClassStudentsTable extends AppTable
                             ->where([
                                 $ReportCardSubjects->aliasField('report_card_id') => $reportCardId
                             ])
-                            ->hydrate(false)
+                            ->enableHydration(false)
                             ->all();
-
                         // Check if the student belongs to any subject
                         $subjectStudentsEntities = $SubjectStudents->find()
                             ->select([
@@ -915,11 +912,10 @@ class InstitutionClassStudentsTable extends AppTable
                             ->group([
                                 'education_subject_id'
                             ])
-                            ->hydrate(false)
+                            ->enableHydration(false)
                             ->all();
-
                         //POCOR-6501 starts
-                        $Assessments = TableRegistry::get('assessments');
+                        $Assessments = TableRegistry::get('Assessment.Assessments');
                         $assessmentResults = $Assessments
                                             ->find()
                                             ->where([
@@ -937,7 +933,6 @@ class InstitutionClassStudentsTable extends AppTable
 
                             $total_mark = 0;
                             $subjectTaken = 0;
-                            
                             foreach($subjectStudentsEntities->toArray() as $studentEntity) {
                                 // Getting all the subject marks based on report card start/end date
                                 $AssessmentItemResultsQuery = $AssessmentItemResults->find();
@@ -987,7 +982,7 @@ class InstitutionClassStudentsTable extends AppTable
                                 }
                             }
                         }
-
+                        // echo "<pre>";print_r($studentSubArray);die;
                         $row->subjectTaken = NULL;
                         $row->total_mark = NULL;
                         $row->average_mark = NULL;
@@ -1043,7 +1038,7 @@ class InstitutionClassStudentsTable extends AppTable
                             ->where([
                                 $ReportCardSubjects->aliasField('report_card_id') => $reportCardId
                             ])
-                            ->hydrate(false)
+                            ->enableHydration(false)
                             ->all();
 
                         // Check if the student belongs to any subject
@@ -1060,11 +1055,11 @@ class InstitutionClassStudentsTable extends AppTable
                             ->group([
                                 'education_subject_id'
                             ])
-                            ->hydrate(false)
+                            ->enableHydration(false)
                             ->all();
 
                         //POCOR-6501 starts
-                        $Assessments = TableRegistry::get('assessments');
+                        $Assessments = TableRegistry::get('Assessment.Assessments');
                         $assessmentResults = $Assessments
                                             ->find()
                                             ->where([
@@ -1161,7 +1156,7 @@ class InstitutionClassStudentsTable extends AppTable
                     $Staff->aliasField('last_name')
                 ])
                 ->matching('SubjectStudents')
-                ->leftJoin([$ReportCardsComments->alias() => $ReportCardsComments->table()], [
+                ->leftJoin([$ReportCardsComments->getAlias() => $ReportCardsComments->getTable()], [
                     $ReportCardsComments->aliasField('report_card_id = ') . $StudentReportCards->aliasField('report_card_id'),
                     $ReportCardsComments->aliasField('student_id = ') . $StudentReportCards->aliasField('student_id'),
                     $ReportCardsComments->aliasField('institution_id = ') . $StudentReportCards->aliasField('institution_id'),
@@ -1169,7 +1164,7 @@ class InstitutionClassStudentsTable extends AppTable
                     $ReportCardsComments->aliasField('education_grade_id = ') . $StudentReportCards->aliasField('education_grade_id'),
                     $ReportCardsComments->aliasField('education_subject_id') => $educationSubjectId
                 ])
-                ->leftJoin([$Staff->alias() => $Staff->table()], [
+                ->leftJoin([$Staff->getAlias() => $Staff->getTable()], [
                     $Staff->aliasField('id = ') . $ReportCardsComments->aliasField('staff_id')
                 ])
                 ->where([$SubjectStudents->aliasField('institution_subject_id') => $institutionSubjectId])
@@ -1215,7 +1210,7 @@ class InstitutionClassStudentsTable extends AppTable
                             ->group([
                                 'institution_subject_id'
                             ])
-                            ->hydrate(false)
+                            ->enableHydration(false)
                             ->all();
 
                         // If subjectStudentsEntities is not empty mean the student have a subject
@@ -1223,7 +1218,7 @@ class InstitutionClassStudentsTable extends AppTable
 
                             $studentEntity = $subjectStudentsEntities->first();
                             //POCOR-6501 starts
-                            $Assessments = TableRegistry::get('assessments');
+                            $Assessments = TableRegistry::get('Assessment.Assessments');
                             $assessmentResults = $Assessments
                                                 ->find()
                                                 ->where([

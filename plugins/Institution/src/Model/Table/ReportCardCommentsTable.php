@@ -32,7 +32,7 @@ class ReportCardCommentsTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
         $this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['ReportCardComments' =>['id']
+            'appliedAction' => ['Comments' =>['institution_class_id', 'report_card_id', 'institution_id']
             ]
         ]);
     }

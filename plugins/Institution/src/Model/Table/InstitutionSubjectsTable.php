@@ -482,7 +482,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
         $InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
-        $ReportCardSubjects = TableRegistry::getTableLocator()->get('ReportCards.ReportCardSubjects');
+        $ReportCardSubjects = TableRegistry::getTableLocator()->get('ReportCard.ReportCardSubjects');
 
         return $query
             ->find('list', [

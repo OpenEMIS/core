@@ -2569,8 +2569,8 @@ class DirectoriesTable extends ControllerActionTable
     //POCOR-8012-n
     private static function getContactData($user_id = null){
         $UserContacts = TableRegistry::get('User.Contacts');
-        $contactTypes = TableRegistry::get('FieldOption.ContactTypes');
-        $contactOptions = TableRegistry::get('FieldOption.ContactOptions');
+        $contactTypes = TableRegistry::get('User.ContactTypes');
+        $contactOptions = TableRegistry::get('User.ContactOptions');
         $userContactsData = $UserContacts
             ->find()
             ->select([

@@ -281,6 +281,7 @@ class InstitutionSubjectStaffTable extends AppTable
         {
             $query->where([$this->aliasField('institution_id') => $institutionId]);
         }
+        return $query;
     }
 
     public function findBySecurityAccess(Query $query, array $options)

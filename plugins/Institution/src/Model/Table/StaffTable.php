@@ -26,6 +26,7 @@ use DatePeriod;
 use DateTime;
 use Cake\Http\ServerRequest;
 use Cake\Utility\Text;
+use Cake\ORM\Locator\TableLocator;
 
 class StaffTable extends ControllerActionTable
 {
@@ -1565,7 +1566,7 @@ public function getIdentityTypeData($value_selection)
             ->where([
                 $InstitutionStaffTbl->aliasField('security_group_user_id') => $securityGroupUserId
             ])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->toArray();
         $countSecurityGroupUserId = [];
         $countIsHomeroom = [];
@@ -1587,7 +1588,7 @@ public function getIdentityTypeData($value_selection)
                         $SecurityGroupUserTbl->aliasField('security_user_id') => $staffEntity->staff_id,
                         $SecurityGroupUserTbl->aliasField('security_role_id') => $homeroomSecurityRoleId
                     ];
-                    $SecurityGroupUserData = $SecurityGroupUserTbl->find()->where($conditions)->hydrate(false)->first();
+                    $SecurityGroupUserData = $SecurityGroupUserTbl->find()->where($conditions)->enableHydration(false)->first();
                     if (!is_null($SecurityGroupUserData)) {
                         $groupUserEntity = $SecurityGroupUsersTable->get($SecurityGroupUserData['id']);
                         $SecurityGroupUsersTable->delete($groupUserEntity);
@@ -1612,7 +1613,7 @@ public function getIdentityTypeData($value_selection)
                     $SecurityGroupUserTbl->aliasField('security_user_id') => $staffEntity->staff_id,
                     $SecurityGroupUserTbl->aliasField('security_role_id') => $homeroomSecurityRoleId
                 ];
-                $SecurityGroupUserData = $SecurityGroupUserTbl->find()->where($homeroom_conditions)->hydrate(false)->first();
+                $SecurityGroupUserData = $SecurityGroupUserTbl->find()->where($homeroom_conditions)->enableHydration(false)->first();
                 if (!is_null($SecurityGroupUserData)) {
                     $homegroupUserEntity = $SecurityGroupUsersTable->get($SecurityGroupUserData['id']);
                     $SecurityGroupUsersTable->delete($homegroupUserEntity);
@@ -2448,7 +2449,7 @@ public function getIdentityTypeData($value_selection)
                         ])
                         ->where($queryCondition)
                         ->group(['gender_name'])
-                        //->hydrate(false)
+                        //->enableHydration(false)
                         ->toArray();
 
                     if (!empty($staffByYear)) {
@@ -2849,7 +2850,7 @@ public function getIdentityTypeData($value_selection)
             ->select([$SecurityFunctions->aliasField('id')])
             ->where([
                 $SecurityFunctions->aliasField('name') => $permission
-            ])->hydrate(false)->first();
+            ])->enableHydration(false)->first();
         if (!empty($functionsData)) {
             $funId = $functionsData['id'];
         }
@@ -2866,7 +2867,7 @@ public function getIdentityTypeData($value_selection)
                         $SecurityRoleFunctionsTbl->aliasField('security_function_id') => $funId,
                         $SecurityRoleFunctionsTbl->aliasField('security_role_id IN') => $userRoleId,
                         $SecurityRoleFunctionsTbl->aliasField('_view') => 1,
-                    ])->hydrate(false)->first();
+                    ])->enableHydration(false)->first();
 
                 if (!empty($SecurityRoleFunctions) && $SecurityRoleFunctions['_view'] == 1) {
                     $data = array('result' => 1);
@@ -2894,7 +2895,7 @@ public function getIdentityTypeData($value_selection)
             ->select([$SecurityFunctions->aliasField('id')])
             ->where([
                 $SecurityFunctions->aliasField('name') => $permission
-            ])->hydrate(false)->first();
+            ])->enableHydration(false)->first();
         if (!empty($functionsData)) {
             $funId = $functionsData['id'];
         }
@@ -2911,7 +2912,7 @@ public function getIdentityTypeData($value_selection)
                         $SecurityRoleFunctionsTbl->aliasField('security_function_id') => $funId,
                         $SecurityRoleFunctionsTbl->aliasField('security_role_id IN') => $userRoleId,
                         $SecurityRoleFunctionsTbl->aliasField('_edit') => 1,
-                    ])->hydrate(false)->first();
+                    ])->enableHydration(false)->first();
                 if (!empty($SecurityRoleFunctions) && $SecurityRoleFunctions['_edit'] == 1) {
                     $data = array('result' => 1);
                     echo json_encode($data, true);
@@ -2937,20 +2938,20 @@ public function getIdentityTypeData($value_selection)
 
         //$SecurityGroupInsTbl = TableRegistry::get('security_group_institutions');
         //$SecurityGroupsTbl = TableRegistry::get('security_groups');
-        $SecurityGroupUsersTbl = TableRegistry::get('security_group_users');
+        $SecurityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
         $SecurityRolesTbl = TableRegistry::get('Security.SecurityRoles');
         $SecurityUsersTbl = TableRegistry::get('User.Users');
         $InstitutionsTbl = TableRegistry::get('Institution.Institutions');
 
         $SecurityGroupIns = $SecurityRolesTbl->find()
             ->select([$SecurityUsersTbl->aliasField('openemis_no'), $InstitutionsTbl->aliasField('code')])
-            ->innerJoin([$SecurityGroupUsersTbl->alias() => $SecurityGroupUsersTbl->table()], [
+            ->innerJoin([$SecurityGroupUsersTbl->getAlias() => $SecurityGroupUsersTbl->getTable()], [
                 $SecurityGroupUsersTbl->aliasField('security_role_id = ') . $SecurityRolesTbl->aliasField('id')
             ])
-            ->innerJoin([$InstitutionsTbl->alias() => $InstitutionsTbl->table()], [
+            ->innerJoin([$InstitutionsTbl->getAlias() => $InstitutionsTbl->getTable()], [
                 $SecurityGroupUsersTbl->aliasField('security_group_id = ') . $InstitutionsTbl->aliasField('security_group_id')
             ])
-            ->innerJoin([$SecurityUsersTbl->alias() => $SecurityUsersTbl->table()], [
+            ->innerJoin([$SecurityUsersTbl->getAlias() => $SecurityUsersTbl->getTable()], [
                 $SecurityGroupUsersTbl->aliasField('security_user_id = ') . $SecurityUsersTbl->aliasField('id')
             ])
             ->where([
@@ -2981,7 +2982,7 @@ public function getIdentityTypeData($value_selection)
             ->where([
                 $SecurityFunctionsTbl->aliasField('name IN') => $permissionModule,
                 $SecurityFunctionsTbl->aliasField('category IN') => $categories,
-            ])->hydrate(false)->toArray();
+            ])->enableHydration(false)->toArray();
 
         $funArr = [];
         if (!empty($SecurityFunctions)) {
@@ -2995,7 +2996,7 @@ public function getIdentityTypeData($value_selection)
             ->where([
                 $SecurityRoleFunctionsTbl->aliasField('security_function_id IN') => $funArr,
                 $SecurityRoleFunctionsTbl->aliasField('security_role_id') => $roleId,
-            ])->hydrate(false)->toArray();
+            ])->enableHydration(false)->toArray();
         $viewCount = $editCount = 0;
         if (!empty($SecurityRoleFunctions)) {
             foreach ($SecurityRoleFunctions as $rkey => $rvalue) {
@@ -3028,14 +3029,16 @@ public function getIdentityTypeData($value_selection)
 
         $homeroomRoleId = $SecurityRoles->getHomeroomRoleId();
 
-        $SecurityGroupInsTbl = TableRegistry::get('security_group_institutions');
-        $SecurityGroupsTbl = TableRegistry::get('security_groups');
-        $SecurityGroupUsersTbl = TableRegistry::get('security_group_users');
+        $SecurityGroupInsTbl = TableRegistry::get('Security.SecurityGroupInstitutions');
+        // $SecurityGroupsTbl = TableRegistry::get('Security.SecurityGroups');
+        $SecurityGroupsLocator = new TableLocator();
+        $SecurityGroupsTbl = $SecurityGroupsLocator ->get('security_groups');
+        $SecurityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
         $SecurityGroupIns = $SecurityGroupInsTbl->find()
-            ->innerJoin([$SecurityGroupsTbl->alias() => $SecurityGroupsTbl->table()], [
+            ->innerJoin([$SecurityGroupsTbl->getAlias() => $SecurityGroupsTbl->getTable()], [
                 $SecurityGroupsTbl->aliasField('id = ') . $SecurityGroupInsTbl->aliasField('security_group_id') //POCOR-6791
             ])
-            ->innerJoin([$SecurityGroupUsersTbl->alias() => $SecurityGroupUsersTbl->table()], [
+            ->innerJoin([$SecurityGroupUsersTbl->getAlias() => $SecurityGroupUsersTbl->getTable()], [
                 $SecurityGroupUsersTbl->aliasField('security_group_id = ') . $SecurityGroupInsTbl->aliasField('security_group_id') //POCOR-6783
             ])
             ->where([
@@ -3055,7 +3058,7 @@ public function getIdentityTypeData($value_selection)
                     ->select([ // to find records for homeroom teacher
                         'staff_id' => $institutionClassesTbl->aliasField('staff_id')
                     ])
-                    ->innerJoin([$SecurityGroupUsers->alias() => $SecurityGroupUsers->table()], [
+                    ->innerJoin([$SecurityGroupUsers->getAlias() => $SecurityGroupUsers->getTable()], [
                         $SecurityGroupUsers->aliasField('security_user_id = ') . $institutionClassesTbl->aliasField('staff_id'),
                         $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
                     ])
@@ -3075,12 +3078,12 @@ public function getIdentityTypeData($value_selection)
                         ->select([
                             $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
                         ])
-                        ->innerJoin([$SecurityGroupUsers->alias() => $SecurityGroupUsers->table()], [
+                        ->innerJoin([$SecurityGroupUsers->getAlias() => $SecurityGroupUsers->getTable()], [
                             $SecurityGroupUsers->aliasField('security_user_id = ') . $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id'),
                             $SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
                             $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
                         ])
-                        ->innerJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
+                        ->innerJoin([$InstitutionClasses->getAlias() => $InstitutionClasses->getTable()], [
                             $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') . ' = ' . $institutionClassesTbl->aliasField('staff_id'),
                             $InstitutionClassesSecondaryStaff->aliasField('institution_class_id') . ' = ' . $institutionClassesTbl->aliasField('id')
                         ])
@@ -3118,15 +3121,16 @@ public function getIdentityTypeData($value_selection)
 
         $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
         $teacherRoleId = $SecurityRoles->getTeacherRoleId();
-
-        $SecurityGroupInsTbl = TableRegistry::get('security_group_institutions');
-        $SecurityGroupsTbl = TableRegistry::get('security_groups');
-        $SecurityGroupUsersTbl = TableRegistry::get('security_group_users');
+        $SecurityGroupInsTbl = TableRegistry::get('Security.SecurityGroupInstitutions');
+        // $SecurityGroupsTbl = TableRegistry::get('security_groups');
+        $SecurityGroupsLocator = new TableLocator();
+        $SecurityGroupsTbl = $SecurityGroupsLocator ->get('security_groups');
+        $SecurityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
         $SecurityGroupIns = $SecurityGroupInsTbl->find()
-            ->innerJoin([$SecurityGroupsTbl->alias() => $SecurityGroupsTbl->table()], [
+            ->innerJoin([$SecurityGroupsTbl->getAlias() => $SecurityGroupsTbl->getTable()], [
                 $SecurityGroupsTbl->aliasField('id = ') . $SecurityGroupInsTbl->aliasField('security_group_id') //POCOR-6791
             ])
-            ->innerJoin([$SecurityGroupUsersTbl->alias() => $SecurityGroupUsersTbl->table()], [
+            ->innerJoin([$SecurityGroupUsersTbl->getAlias() => $SecurityGroupUsersTbl->getTable()], [
                 $SecurityGroupUsersTbl->aliasField('security_group_id = ') . $SecurityGroupInsTbl->aliasField('security_group_id') //POCOR-6783
             ])
             ->where([
@@ -3154,11 +3158,11 @@ public function getIdentityTypeData($value_selection)
                     ->select([
                         $InstitutionSubjectStaff->aliasField('staff_id')
                     ])
-                    ->innerJoin([$institutionSubjectsTbl->alias() => $institutionSubjectsTbl->table()], [
+                    ->innerJoin([$institutionSubjectsTbl->getAlias() => $institutionSubjectsTbl->getTable()], [
                         $InstitutionSubjectStaff->aliasField('institution_subject_id') . ' = ' . $institutionSubjectsTbl->aliasField('id'),
                         $InstitutionSubjectStaff->aliasField('institution_id') . ' = ' . $institutionSubjectsTbl->aliasField('institution_id')
                     ])
-                    ->innerJoin([$institutionClassSubjectsTbl->alias() => $institutionClassSubjectsTbl->table()], [
+                    ->innerJoin([$institutionClassSubjectsTbl->getAlias() => $institutionClassSubjectsTbl->getTable()], [
                         $institutionClassSubjectsTbl->aliasField('institution_subject_id') . ' = ' . $InstitutionSubjectStaff->aliasField('institution_subject_id')
                     ])
                     ->where([
@@ -3178,6 +3182,9 @@ public function getIdentityTypeData($value_selection)
                 echo json_encode($data, true);
                 die;
             }
+            $data = ['result' => 1, 'viewCount' => 0, 'editCount' => 0];
+            echo json_encode($data, true);
+            die;
         } else {
             $data = ['result' => 0, 'viewCount' => 0, 'editCount' => 0];
             echo json_encode($data, true);
@@ -3203,7 +3210,7 @@ public function getIdentityTypeData($value_selection)
                 ->where([
                     $SecurityFunctionsTbl->aliasField('name IN') => $permissionModule,
                     $SecurityFunctionsTbl->aliasField('category IN') => $categories,
-                ])->hydrate(false)->toArray();
+                ])->enableHydration(false)->toArray();
             $funArr = [];
             if (!empty($SecurityFunctions)) {
                 foreach ($SecurityFunctions as $funkey => $funval) {
@@ -3235,7 +3242,7 @@ public function getIdentityTypeData($value_selection)
                 ->where([
                     $SecurityGroupTbl->aliasField('id') => $institutionId,
                     $SecurityGroupUserTbl->aliasField('security_user_id') => $staffId,
-                ])->hydrate(false)->toArray();
+                ])->enableHydration(false)->toArray();
             $RoleArr = [];
             if (!empty($SecurityGroup)) {
                 foreach ($SecurityGroup as $SecurityGroup_k => $SecurityGroup_v) {
@@ -3249,7 +3256,7 @@ public function getIdentityTypeData($value_selection)
                         $SecurityRoleFunctionsTbl->aliasField('security_function_id IN') => $funArr,
                         $SecurityRoleFunctionsTbl->aliasField('security_role_id IN') => $RoleArr,
                         $SecurityRoleFunctionsTbl->aliasField('_view') => 1,
-                    ])->hydrate(false)->toArray();
+                    ])->enableHydration(false)->toArray();
             }
             if (!empty($SecurityRoleFunctions)) {
                 foreach ($SecurityRoleFunctions as $rkey => $rvalue) {
@@ -3296,14 +3303,14 @@ public function getIdentityTypeData($value_selection)
         return $query
             ->select([$this->aliasField('staff_id')])
             ->leftJoin(
-                [$InstitutionPosition->alias() => $InstitutionPosition->table()],
+                [$InstitutionPosition->getAlias() => $InstitutionPosition->getTable()],
                 [
                     $InstitutionPosition->aliasField('id = ') . $this->aliasField('institution_position_id'),
                     $InstitutionPosition->aliasField('institution_id = ') . $this->aliasField('institution_id')
                 ]
             )
             ->leftJoin(
-                [$StaffPositionTitles->alias() => $StaffPositionTitles->table()],
+                [$StaffPositionTitles->getAlias() => $StaffPositionTitles->getTable()],
                 [
                     $InstitutionPosition->aliasField('staff_position_title_id = ') . $StaffPositionTitles->aliasField('id'),
                 ]
@@ -3328,7 +3335,8 @@ public function getIdentityTypeData($value_selection)
     {
         $institutionId = $options['institution_id'];
         $classId = $options['institution_class_id'];
-        $staffId = $options['staff_id'];
+        // $staffId = $options['staff_id'];
+        $staffId = $_SESSION['Auth']['User']['id']; // Added for Version4
 
         $Institution = TableRegistry::get('Institution.Institutions');
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
@@ -3343,10 +3351,10 @@ public function getIdentityTypeData($value_selection)
             ->select([ // to find records for homeroom teacher
                 'staff_id' => $this->aliasField('staff_id')
             ])
-            ->innerJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()], [
+            ->innerJoin([$InstitutionClasses->getAlias() => $InstitutionClasses->getTable()], [
                 $InstitutionClasses->aliasField('staff_id = ') . $this->aliasField('staff_id')
             ])
-            ->innerJoin([$SecurityGroupUsers->alias() => $SecurityGroupUsers->table()], [
+            ->innerJoin([$SecurityGroupUsers->getAlias() => $SecurityGroupUsers->getTable()], [
                 $SecurityGroupUsers->aliasField('security_user_id = ') . $this->aliasField('staff_id'),
                 //$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
                 $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
@@ -3362,7 +3370,7 @@ public function getIdentityTypeData($value_selection)
                     ->select([
                         $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
                     ])
-                    ->innerJoin([$SecurityGroupUsers->alias() => $SecurityGroupUsers->table()], [
+                    ->innerJoin([$SecurityGroupUsers->getAlias() => $SecurityGroupUsers->getTable()], [
                         $SecurityGroupUsers->aliasField('security_user_id = ') . $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id'),
                         $SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
                         $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
@@ -3480,7 +3488,7 @@ public function getIdentityTypeData($value_selection)
                 $this->aliasField('end_date') . ' IS NOT NULL',
                 $conditions[$thresholdArray['condition']]
             ])
-            ->hydrate(false);
+            ->enableHydration(false);
 
         return $licenseData->toArray();
     }
@@ -3552,7 +3560,7 @@ public function getIdentityTypeData($value_selection)
                     ]
                 ]
             ])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->toArray();
 
         $query = $query
@@ -3862,7 +3870,7 @@ public function getIdentityTypeData($value_selection)
                     $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
                     $whereForLeaveTable
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
         }
         $leaveByStaffIdRecords = Hash::combine($allStaffLeaves, '{n}.id', '{n}', '{n}.staff_id');

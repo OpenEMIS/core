@@ -109,7 +109,7 @@ class StaffController extends AppController
 
     private function attachAngularModules()
     {
-        $action = $this->request->action;
+        $action = $this->request->getAttribute('params')['action'];
         switch ($action) {
             case 'StaffAttendances':
                 $this->Angular->addModules([

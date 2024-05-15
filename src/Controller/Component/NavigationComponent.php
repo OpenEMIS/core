@@ -977,7 +977,7 @@ class NavigationComponent extends Component
 
             'Institutions.ReportCards' => [
                 'title' => 'Report Cards',
-                'parent' => 'Institutions.Institutions',
+                'parent' => 'Institutions.Institutions.index',
                 'link' => false,
             ],
 

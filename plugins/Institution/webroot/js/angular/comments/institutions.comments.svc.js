@@ -255,8 +255,8 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 institution_class_id: classId,
                 staff_id: currentUserId
             });
-
-        promises.push(KdSessionSvc.read('Auth.User.super_admin'));
+        // promises.push(KdSessionSvc.read('Auth.User.super_admin')); //Need to check why its not getting value from Session Controller
+        promises.push(localStorage.getItem("login_user_id"));
         promises.push(principalPermission.ajax({
             defer: true
         }));
@@ -380,22 +380,32 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
 
     function getCommentCodeOptions() {
         return ReportCardCommentCodesTable
-            .select(['id', 'name'])
-            .where({
-                visible: 1
-            })
-            .order(['order'])
+            .select()
+            .find('commentCodeOptionsData')
             .ajax({
                 defer: true
             });
     };
 
+    // function getCommentCodeOptions() {
+    //     return ReportCardCommentCodesTable
+    //         .select(['id', 'name'])
+    //         .where({
+    //             visible: 1
+    //         })
+    //         .order(['order'])
+    //         .ajax({
+    //             defer: true
+    //         });
+    // };
+
     function getCurrentUser() {
         var deferred = $q.defer();
-
         KdSessionSvc.read('Auth.User.id')
             .then(function(response) {
-                var staffId = response;
+                // var staffId = response; // need to check why its not getting value from SessionController
+
+                var staffId = localStorage.getItem("login_user_id");
                 return StaffUserTable
                     .get(staffId)
                     .ajax({

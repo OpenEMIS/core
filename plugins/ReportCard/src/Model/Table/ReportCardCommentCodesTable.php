@@ -5,6 +5,7 @@ use App\Model\Table\ControllerActionTable;
 use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 
 class ReportCardCommentCodesTable extends ControllerActionTable
 {
@@ -27,6 +28,13 @@ class ReportCardCommentCodesTable extends ControllerActionTable
             ->find('visible')
             ->find('order')
             ->toArray();
+    }
+
+    public function findCommentCodeOptionsData(Query $query, array $options)
+    {
+       return $query->select(['id', 'name'])
+       ->find('visible')
+       ->find('order');
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
