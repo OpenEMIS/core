@@ -60,7 +60,7 @@ $this->start('panelBody');
     <!-- create if condition for unit and course visibility  for POCOR-8107 -- --->
 <?php if ($viewUrl['unit_field'] == 1){ ?>
     <div class="input select error">
-        <label><?= __('Unit') ?></label>
+        <label><?= __('Internal Verification') ?></label>
         <div class="input-select-wrapper">
             <select name="InstitutionClasses[institution_unit_id]" id="institutionclasses-institution-unit-id"
                 ng-options="option.id as option.name for option in InstitutionClassStudentsController.unitOptions"
@@ -77,7 +77,7 @@ $this->start('panelBody');
 <?php } ?>
 <?php if ($viewUrl['course_field'] == 1){ ?>
     <div class="input select error">
-        <label><?= __('Course') ?></label>
+        <label><?= __('External Verification') ?></label>
         <div class="input-select-wrapper">
             <select name="InstitutionClasses[institution_course_id]" id="institutionclasses-institution-course-id"
                 ng-options="option.id as option.name for option in InstitutionClassStudentsController.courseOptions"
