@@ -2180,7 +2180,7 @@ class NavigationComponent extends Component
                 'title' => 'Cases',
                 'parent' => 'Profiles.Personal',
                 'params' => ['plugin' => 'Profile'],
-
+                'selected' => ['Profiles.Cases']
             ],
             //POCOR-7439 end
             'Profiles.SpecialNeedsReferrals.index' => [
