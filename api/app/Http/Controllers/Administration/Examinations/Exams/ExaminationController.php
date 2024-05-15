@@ -336,16 +336,17 @@ class ExaminationController extends Controller
      *     )
      * )
      */
-    public function examinationCenterExaminationSubjects($examinationId, $centerId)
+    public function examinationCenterExaminationSubjects(Request $request, $examinationId, $centerId)
     {
         try {
+            $params = $request->all();
             $validateExamination = ParameterValidator::validateExamination($examinationId);
             $validateExaminationCentre = ParameterValidator::validateExaminationCentre($centerId);
 
             if (!$validateExamination || !$validateExaminationCentre) {
                 return $this->sendErrorResponse('Unsuccessful-Invalid parameters');
             }
-            $examinationCenterExaminationSubjects =  $this->examinationService->examinationCenterExaminationSubjects($examinationId, $centerId);
+            $examinationCenterExaminationSubjects =  $this->examinationService->examinationCenterExaminationSubjects($params, $examinationId, $centerId);
 
             if (!$examinationCenterExaminationSubjects) {
                 return $this->sendErrorResponse('Unsuccessful');
