@@ -95,14 +95,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
         //$Classes = $this->Classes;
         //$this->Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         //$this->ClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
-        $this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['Subjects' =>['id']
-            ]
-        ]);
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function implementedEvents(): array
-    {
+    { 
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
 

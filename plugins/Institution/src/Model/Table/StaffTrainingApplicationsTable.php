@@ -473,7 +473,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         if ($entity->has('session') && $entity->session->has('course')) {
             if (!empty($entity->session->course['file_name'])) {
                 $courseId = $entity->session->course->id;
-                $link = $event->subject()->HtmlField->link($entity->session->course['file_name'], [
+                $link = $event->getSubject()->HtmlField->link($entity->session->course['file_name'], [
                     'plugin' => 'Institution',
                     'controller' => 'Institutions',
                     'action' => 'CourseCatalogue',

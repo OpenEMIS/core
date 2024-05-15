@@ -38,7 +38,7 @@ class InstitutionBehavior extends Behavior
 	public function findByAccess(Query $query, array $options)
 	{
 		$apiSecuritiesScopes = TableRegistry::get('ApiSecuritiesScopes');
-        $apiSecurities = TableRegistry::get('ApiSecurities');
+		$apiSecurities = TableRegistry::get('ApiSecurities');
         $apiSecuritiesData = $apiSecurities->find('all')
         ->select([
             'ApiSecurities.id','ApiSecurities.name','ApiSecurities.execute'
@@ -54,16 +54,18 @@ class InstitutionBehavior extends Behavior
         ])
         ->first();
 
-	$userId = (!empty($options['userId']))?$options['userId']:$options['user']['id'];
+		$userId = (!empty($options['userId']))?$options['userId']:$options['user']['id'];
 		
-	if ((isset($options["super_admin"]) && $options["super_admin"] && $apiSecuritiesScopesData->view == 1 && $apiSecuritiesScopesData->index == 1)
-        ||
-       (isset($options['user']["super_admin"]) && $options['user']["super_admin"] && $apiSecuritiesScopesData->view == 1 && $apiSecuritiesScopesData->index == 1)
-       ) {
-       		$Types = TableRegistry::get('Institution.Types');
+		if ((isset($options["super_admin"]) && $options["super_admin"] && $apiSecuritiesScopesData->view == 1 && $apiSecuritiesScopesData->index == 1)
+			||
+		(isset($options['user']["super_admin"]) && $options['user']["super_admin"] && $apiSecuritiesScopesData->view == 1 && $apiSecuritiesScopesData->index == 1)
+		) {
+			$Types = TableRegistry::get('Institution.Types');
        		$Areas = TableRegistry::get('Area.Areas');
        		$Institutions = TableRegistry::get('Institution.Institutions');
-       		if (isset($options['_controller']->request->query['_order'])) {
+			   
+					   
+       		if (isset($options['_controller']->request->getQuery['_order'])) {
             	return $query;
        		}
        		else{
@@ -88,7 +90,8 @@ class InstitutionBehavior extends Behavior
         }
 
 		$institutionTableClone1 = clone $this->_table;
-		$institutionTableClone1->getAlias('InstitutionSecurityArea');
+		$institutionTableClone1->setAlias('InstitutionSecurityArea');
+		
 		// find from security areas
 		$institutionsSecurityArea = $institutionTableClone1->find()
 			->innerJoin(['Areas' => 'areas'], [
@@ -108,7 +111,7 @@ class InstitutionBehavior extends Behavior
 			->select(['id' => $institutionTableClone1->aliasField('id')]);
 
 		$institutionTableClone2 = clone $this->_table;
-		$institutionTableClone2->getAlias('InstitutionSecurity');
+		$institutionTableClone2->setAlias('InstitutionSecurity');
 
 		// find from security group institutions
 		$institutionSecurity = $institutionTableClone2->find()

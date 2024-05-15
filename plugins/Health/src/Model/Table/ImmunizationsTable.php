@@ -45,6 +45,8 @@ class ImmunizationsTable extends ControllerActionTable
         $this->field('health_immunization_type_id', ['attr'=>['label'=>'Vaccination Type'], 'type' => 'select', 'before' => 'comment']);
         $this->field('dosage',['visible' => false]);
         $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $userID = $this->getUserID();
+        $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
     }
 
     public function indexAfterAction(Event $event, $data)

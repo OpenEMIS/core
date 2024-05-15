@@ -35,6 +35,9 @@ class SalariesTable extends ControllerActionTable
                 
             ]
         ]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Salaries'=>['id']]
+        ]);
     }
 
     public function implementedEvents(): array
@@ -115,11 +118,11 @@ class SalariesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->Session;
-        if ($session->check('Staff.Staff.id')) {
-            $this->staffId = $session->read('Staff.Staff.id');
-        }
-
+        //$session = $this->Session;
+        //if ($session->check('Staff.Staff.id')) {
+        //    $this->staffId = $session->read('Staff.Staff.id');
+        //}
+        $this->staffId = $this->getStaffID();
         $this->fields['gross_salary']['attr'] = array('data-compute-variable' => 'true', 'data-compute-operand' => 'plus', 'maxlength' => 9);
         $this->fields['net_salary']['attr'] = array('data-compute-target' => 'true', 'readonly' => true);
 
@@ -161,6 +164,9 @@ class SalariesTable extends ControllerActionTable
             }
 
         }
+        $queryString = $this->getQueryString();
+        $data['staff_id'] = $queryString['staff_id'];
+        $this->field('staff_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
@@ -247,7 +253,8 @@ class SalariesTable extends ControllerActionTable
 
     public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $paramsPass = $this->paramsDecode($this->request->getParam('pass')[1]);
+        //$paramsPass = $this->paramsDecode($this->ControllerAction->getParam('Pass')[1]);cakephp 3
+        $paramsPass = $this->paramsDecode($this->request->getParam('pass.1'));
         $SalaryTransactions = TableRegistry::get('Staff.StaffSalaryTransactions');
         $findData = $SalaryTransactions->find()
                     ->select([
@@ -264,17 +271,17 @@ class SalariesTable extends ControllerActionTable
             }
             if (!empty($addition[0]) && empty($deduction[1])) {
                 $query->contain([
-                            'SalaryAdditions'
+                    'SalaryAdditions'
                 ]);
             } elseif (empty($addition[0]) && !empty($deduction[1])) {
                 $query->contain([
-                            'SalaryDeductions'
+                    'SalaryDeductions'
                 ]);
             } else {
-                   $query->contain([
-                        'SalaryAdditions',
-                        'SalaryDeductions'
-                    ]);    
+                $query->contain([
+                    'SalaryAdditions',
+                    'SalaryDeductions'
+                ]);    
             }
         }
     }
@@ -340,7 +347,7 @@ class SalariesTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('gross_salary', 'ruleMoney', [
                 'rule' => ['money']

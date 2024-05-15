@@ -31,8 +31,9 @@ class AppraisalPeriodsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('name', [
                 'ruleUnique' => [
@@ -66,7 +67,7 @@ class AppraisalPeriodsTable extends ControllerActionTable
                     'message' => __('Date Disabled should not be earlier than Date Enabled')
                 ]
             ]);
-    }*/
+    }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -124,7 +125,7 @@ class AppraisalPeriodsTable extends ControllerActionTable
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
-            $this->AppraisalTypes->alias()
+            $this->AppraisalTypes->getAlias()
         ];
     }
 

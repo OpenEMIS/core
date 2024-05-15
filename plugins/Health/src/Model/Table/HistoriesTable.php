@@ -160,6 +160,8 @@ class HistoriesTable extends ControllerActionTable
         $this->field('current');
         $this->field('health_condition_id', ['type' => 'select', 'after' => 'comment']);
         $this->field('file_content', ['after' => 'health_condition_id','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $userID = $this->getUserID();
+        $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
     }
 
     public function validationDefault(Validator $validator): Validator

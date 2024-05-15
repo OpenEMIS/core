@@ -426,9 +426,12 @@ class StudentUserTable extends ControllerActionTable
         if (!is_null($entity)) {
             $StudentTable = TableRegistry::get('Institution.Students');
             $userId = $this->Auth->user('id');
-            $studentId = $this->getStudentID();
-            $institutionID = $this->getInstitutionID();
+            // $studentId = $this->getStudentID();
+            // $institutionID = $this->getInstitutionID();
 
+            $studentEntity = $StudentTable->get($extra['institutionStudentId']);
+            $studentId = $studentEntity->student_id;
+            $institutionID = $studentEntity->institution_id;
             $isStudentEnrolled = $StudentTable->checkEnrolledInInstitution($studentId, $institutionID);
             $isAllowedByClass = $this->checkClassPermission($studentId, $userId); // POCOR-3010
             if (isset($extra['toolbarButtons']['edit']['url'])) {

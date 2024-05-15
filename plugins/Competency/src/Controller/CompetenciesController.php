@@ -125,9 +125,9 @@ class CompetenciesController extends AppController
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
         $header = __('Competency');
-        $header .= ' - ' . $model->getHeader($model->alias);
+        $header .= ' - ' . $model->getHeader($model->getAlias());
         $this->Navigation->addCrumb('Competencies', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $model->getAlias()]);
-        $this->Navigation->addCrumb($model->getHeader($model->alias));
+        $this->Navigation->addCrumb($model->getHeader($model->getAlias()));
 
         $this->set('contentHeader', $header);
     }

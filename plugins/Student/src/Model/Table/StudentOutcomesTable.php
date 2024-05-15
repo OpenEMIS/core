@@ -45,7 +45,11 @@ class StudentOutcomesTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
         $this->toggle('search', false);
-        $this->addBehavior('User.UserTab');
+        //$this->addBehavior('User.UserTab');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Outcomes' =>['id', 'institution_id']
+            ]
+        ]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -319,7 +323,11 @@ class StudentOutcomesTable extends ControllerActionTable
     private function setupTabElements()
     {
         $options['type'] = 'student';
-        $tabElements = $this->controller->getAcademicTabElements($options);
+        //$tabElements = $this->controller->getAcademicTabElements($options);
+        $tabElements = $this->getAcademicTabElements($options);
+        if($this->controller->getName() == 'GuardianNavs'|| $this->controller->getName() == 'Directories') {
+			$tabElements = $this->controller->getAcademicTabElements($options);
+		}
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Outcomes');
     }

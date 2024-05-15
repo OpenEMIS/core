@@ -37,19 +37,21 @@ class StudentSubjectsTable extends ControllerActionTable
             'appliedAction' => ['StudentSubjects' =>['id']
             ]
         ]);
+        // $this->addBehavior('Student.StudentTab', [
+        //     'appliedAction' => ['StudentSubjects' =>['id']
+        //     ]
+        // ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $contentHeader = $this->controller->viewVars['contentHeader'];
-        if(!empty($contentHeader)) {
-            list($studentName, $module) = explode(' - ', $contentHeader);
-            $module = __('Subjects');
-            $contentHeader = $studentName . ' - ' . $module;
-            $this->controller->set('contentHeader', $contentHeader);
-            $this->controller->Navigation->substituteCrumb(__('Student Subjects'), $module);
-        }
-        
+        //$contentHeader = $this->controller->viewVars['contentHeader'];
+        $contentHeader = $this->controller->viewBuilder()->getVars()['contentHeader'];
+        list($studentName, $module) = explode(' - ', $contentHeader);
+        $module = __('Subjects');
+        $contentHeader = $studentName . ' - ' . $module;
+        $this->controller->set('contentHeader', $contentHeader);
+        $this->controller->Navigation->substituteCrumb(__('Student Subjects'), $module);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -154,7 +156,7 @@ class StudentSubjectsTable extends ControllerActionTable
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
         $queryString = $this->getQueryString();
-
+        
         $studentId = $queryString['student_id'];
         $encodedQueryString = $this->paramsEncode($queryString);
         // Institution and Grade filter
@@ -219,7 +221,7 @@ class StudentSubjectsTable extends ControllerActionTable
         $session = $this->request->getSession();//POCOR-6267
         if ($userData['Auth']['User']['is_guardian'] == 1) {
             $sId = $userData['Student']['ExaminationResults']['student_id'];//POCOR-6267
-            $studentId = $this->ControllerAction->paramsDecode($sId)['id'];//POCOR-6267
+            $studentId = $sId;//POCOR-6267
         } else {
             $studentId = $userData['Auth']['User']['id'];
         }
@@ -337,8 +339,10 @@ class StudentSubjectsTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $options = ['type' => 'student'];
-        $tabElements = $this->controller->getAcademicTabElements($options);
-
+        $tabElements = $this->getAcademicTabElements($options);
+        if($this->controller->getName() == 'GuardianNavs' || $this->controller->getName() == 'Directories') {
+			$tabElements = $this->controller->getAcademicTabElements($options);
+		}
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Subjects');
     }

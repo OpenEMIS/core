@@ -1328,6 +1328,21 @@ class NavigationComponent extends Component
         $studentID = $this->getStudentID($debugString);
         $institutionID = $this->getInstitutionIDForStudent($debugString);
         $institutionStudentId = $this->controller->getQueryString('institution_student_id');
+        if(empty($institutionStudentId)){
+            $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+            $institutionStudentId = $InstitutionStudentsTable->find()
+                ->where([
+                    $InstitutionStudentsTable->aliasField('student_id') => $studentID,
+                    $InstitutionStudentsTable->aliasField('institution_id') => $institutionID,
+                ])
+                ->order([$InstitutionStudentsTable->aliasField('created') => 'DESC'])
+                ->extract('id')
+                ->first();
+            if(empty($institutionStudentId)){
+                $institutionStudentId = null;
+            }
+
+        }
 
         $queryString = $this->controller->paramsEncode([
             'id' => $studentID,
@@ -1460,7 +1475,7 @@ class NavigationComponent extends Component
                 'title' => 'Visits',
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Students.StudentVisitRequests',
-                    'Students.StudentVisits']
+                    'Students.StudentVisits.index']
             ],
             'Student.Students.Meals.index' => [
                 'title' => 'Meals',
@@ -1606,7 +1621,8 @@ class NavigationComponent extends Component
                     'Staff.Behaviours',
                     'Institutions.Staff',
                     'Institutions.StaffPositionProfiles.add',
-                    'Institutions.StaffAppraisals',
+                    //'Institutions.StaffAppraisals', POCOR-7485 not use becuase now StaffAppraisals's controller change
+                    'Staff.StaffAppraisals',
                     'Institutions.ImportStaffLeave',
                     'Staff.Duties',
                     'Staff.StaffAssociations',
@@ -1615,7 +1631,7 @@ class NavigationComponent extends Component
             'Staff.Staff.Employments.index' => [
                 'title' => 'Professional',
                 'parent' => 'Institutions.Staff.index',
-                'selected' => ['Staff.Employments.index',
+                'selected' => ['Staff.Employments',
                     'Staff.Qualifications',
                     'Staff.Extracurriculars',
                     'Staff.Memberships',
@@ -2142,7 +2158,8 @@ class NavigationComponent extends Component
                     'Profiles.Comments',
                     'Profiles.Attachments',
                     'Profiles.UserActivities',
-                    'Profiles.Contacts'] // POCOR-6683
+                    'Profiles.Contacts',
+                    'Profiles.History'] // POCOR-6683
             ],
             'Profiles.Healths.index' => [
                 'title' => 'Health',
@@ -2381,7 +2398,8 @@ class NavigationComponent extends Component
             if (isset($n['params'])) {
                 $n['params']['studentId'] = $this->controller->paramsEncode($studentId);
             }
-        }
+            
+        }//dd($navigation);
         return $navigation;
     }
 
@@ -2640,7 +2658,9 @@ class NavigationComponent extends Component
                 'Labels.index' => [
                     'title' => 'Labels',
                     'parent' => 'SystemSetup',
-                    'selected' => ['Labels.Labels']
+                    'selected' => ['Labels.index',
+                        'Labels.view',
+                        'Labels.edit']
                 ],
 
                 'Configurations.index' => [
@@ -2797,12 +2817,17 @@ class NavigationComponent extends Component
                         'Locales.index' => [
                             'title' => 'Languages',
                             'parent' => 'SystemSetup.Localization',
-                            'selected' => ['Locales.Locales']
+                            'selected' => ['Locales.index',
+                                'Locales.view',
+                                'Locales.edit',
+                                'Locales.add']
                         ],
                         'LocaleContents.index' => [
                             'title' => 'Translations',
                             'parent' => 'SystemSetup.Localization',
-                            'selected' => ['LocaleContents.LocaleContents']
+                            'selected' => ['LocaleContents.index',
+                                'LocaleContents.view',
+                                'LocaleContents.edit']
                         ],
 
                         'API' => [
@@ -2813,7 +2838,10 @@ class NavigationComponent extends Component
                         'Credentials.index' => [
                             'title' => 'Credentials',
                             'parent' => 'API',
-                            'selected' => ['Credentials.Credentials']
+                            'selected' => ['Credentials.view',
+                                'Credentials.add',
+                                'Credentials.edit',
+                                'Credentials.delete']
                         ],
                     ];
             } elseif (!empty($SecurityCustomFunctions)) {
@@ -2868,12 +2896,17 @@ class NavigationComponent extends Component
                         'Locales.index' => [
                             'title' => 'Languages',
                             'parent' => 'SystemSetup.Localization',
-                            'selected' => ['Locales.Locales']
+                            'selected' => ['Locales.index',
+                                'Locales.view',
+                                'Locales.edit',
+                                'Locales.add']
                         ],
                         'LocaleContents.index' => [
                             'title' => 'Translations',
                             'parent' => 'SystemSetup.Localization',
-                            'selected' => ['LocaleContents.LocaleContents']
+                            'selected' => ['LocaleContents.index',
+                                'LocaleContents.view',
+                                'LocaleContents.edit']
                         ],
                     ];
             } elseif (!empty($SecurityApiFunctions)) {
@@ -2893,7 +2926,10 @@ class NavigationComponent extends Component
                     'Credentials.index' => [
                         'title' => 'Credentials',
                         'parent' => 'API',
-                        'selected' => ['Credentials.Credentials']
+                        'selected' => ['Credentials.view',
+                            'Credentials.add',
+                            'Credentials.edit',
+                            'Credentials.delete']
                     ],
                 ];
             }
@@ -2945,12 +2981,17 @@ class NavigationComponent extends Component
                     'Locales.index' => [
                         'title' => 'Languages',
                         'parent' => 'SystemSetup.Localization',
-                        'selected' => ['Locales.Locales']
+                        'selected' => ['Locales.index',
+                            'Locales.view',
+                            'Locales.edit',
+                            'Locales.add']
                     ],
                     'LocaleContents.index' => [
                         'title' => 'Translations',
                         'parent' => 'SystemSetup.Localization',
-                        'selected' => ['LocaleContents.LocaleContents']
+                        'selected' => ['LocaleContents.index',
+                            'LocaleContents.view',
+                            'LocaleContents.edit']
                     ],
 
                     'API' => [
@@ -2968,7 +3009,10 @@ class NavigationComponent extends Component
                     'Credentials.index' => [
                         'title' => 'Credentials',
                         'parent' => 'API',
-                        'selected' => ['Credentials.Credentials']
+                        'selected' => ['Credentials.view',
+                            'Credentials.add',
+                            'Credentials.edit',
+                            'Credentials.delete']
                     ],
                 ];
         }
@@ -4196,6 +4240,68 @@ class NavigationComponent extends Component
     }
 
     public function checkPermissions(array &$navigations)
+    {
+        // $session = $this->request->session();
+        // $superAdmin = $session->read('Auth.User.super_admin');
+        // if ($superAdmin) {
+        //     return;
+        // }
+        $user_id = $this->getCurrentUserId();
+        $superAdmin = self::isSuperUser($user_id);
+        if ($superAdmin) {
+            return;
+        }
+
+        $roles = [];
+        $restrictedTo = [];
+        $event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', null, $this);
+        if ($event->getResult()) {
+            $roles = $event->getResult('roles');
+            $restrictedTo = $event->getResult('restrictedTo');
+        }
+
+        // Unset the children
+        $linkOnly = [];
+        foreach ($navigations as $key => $value) {
+            $rolesRestrictedTo = $roles;
+            //print_r($roles);die;
+            if (isset($value['link']) && !$value['link']) {
+                $linkOnly[] = $key;
+            } else {
+
+                $params = [];
+                if (isset($value['params'])) {
+                    $params = $value['params'];
+                }
+                $url = $this->getLink($key, $params);
+
+                // Check if the role is only restricted to a certain page
+                foreach ($restrictedTo as $restrictedURL) {
+                    if (count(array_intersect($restrictedURL, $url)) > 0) {
+                        break;
+                    } else {
+                        $rolesRestrictedTo = [];
+                    }
+                }
+                // $ignoredAction will be excluded from permission checking
+                if (array_key_exists('controller', $url) && !in_array($url['plugin'])) {
+                    if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
+                        unset($navigations[$key]);
+                    }
+                }
+            }
+        }
+        
+        // unset empty links in reverse order
+        $linkOnly = array_reverse($linkOnly);
+        foreach ($linkOnly as $link) {
+            if (!array_search($link, $this->array_column($navigations, 'parent'))) {
+                unset($navigations[$link]);
+            }
+        }
+    }
+
+    public function checkPermissionsOld(array &$navigations)
     {
         $linkOnly = [];
         //$ignoredPlugin = ['Profile']; // Plugin that will be excluded from checking //POCOR-5312

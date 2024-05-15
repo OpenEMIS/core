@@ -47,6 +47,14 @@ class BodyMassesTable extends ControllerActionTable
         //     'fieldMap' => ['file_name' => 'file_content'],
         //     'size' => '2MB'
         // ]);//POCOR-6255 end
+        $this->addBehavior('ControllerAction.FileUpload', [
+            // 'name' => 'file_name',
+            // 'content' => 'file_content',
+            'size' => '2MB',
+            'contentEditable' => true,
+            'allowable_file_types' => 'all',
+            'useDefaultName' => true
+        ]);
     }
     //POCOR-6255 start
     public function implementedEvents(): array
@@ -269,6 +277,8 @@ class BodyMassesTable extends ControllerActionTable
         $this->field('body_mass_index', ['visible' => false]);
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $userID = $this->getUserID();
+        $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
     }
 
     protected function tooltipMessage($message)

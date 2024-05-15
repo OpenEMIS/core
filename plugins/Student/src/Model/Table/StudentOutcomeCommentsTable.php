@@ -40,17 +40,21 @@ class StudentOutcomeCommentsTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
         $this->toggle('search', false);
+        $this->addBehavior('User.UserTab');
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $studentId = $queryString['student_id'];
         $session = $this->request->getSession();
         if ($this->controller->getName() == 'Directories') {
             $this->studentId =  $this->getStudentID();
         } else if ($this->controller->getName() == 'Profiles') {
             $this->studentId = $session->read('Auth.User.id');
         } else {
-            $this->studentId = $session->read('Student.Students.id');
+            //$this->studentId = $session->read('Student.Students.id');
+            $this->studentId = $studentId;            
         }
 
         $this->field('outcome_period_id', ['type' => 'integer']);
