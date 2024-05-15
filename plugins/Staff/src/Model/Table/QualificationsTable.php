@@ -102,8 +102,13 @@ class QualificationsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
-        $data['staff_id'] = $queryString['staff_id'];
-        $this->field('staff_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
+        if(isset($queryString['staff_id']) && !empty($queryString['staff_id'])){
+			$staffId = $queryString['staff_id'];
+		}else{
+			$staffId = $queryString['user_id'];
+		}
+        
+        $this->field('staff_id', ['type' => 'hidden', 'value' => $staffId]);
     }
 
     public function indexBeforeAction(Event $event)
