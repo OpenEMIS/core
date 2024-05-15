@@ -374,18 +374,18 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                                         }
 
                                         //POCOR-7266::End
-                                        if(($alertRuleData1->threshold) == $absenceCount){ //POCOR-7398 just changed <= to == also removed -1 after threshold
-                                            $absenceCount = $absenceCount+1;
-                                            if(!empty($userData->email)){
-                                                $email = new Mailer('openemis');
-                                                $emailSubject = 'OpenEMIS Attendance Alert for '.$insCode." - ".$insName;
-                                                $emailMessage = $alertRuleMessage; //POCOR-7266
-                                                $email
-                                                    ->setTo($userData->email)
-                                                    ->setSubject($emailSubject)
-                                                    ->deliver($emailMessage);
-                                            }
-                                        }
+                                        // if(($alertRuleData1->threshold) == $absenceCount){ //POCOR-7398 just changed <= to == also removed -1 after threshold
+                                        //     $absenceCount = $absenceCount+1;
+                                        //     if(!empty($userData->email)){
+                                        //         $email = new Mailer('openemis');
+                                        //         $emailSubject = 'OpenEMIS Attendance Alert for '.$insCode." - ".$insName;
+                                        //         $emailMessage = $alertRuleMessage; //POCOR-7266
+                                        //         $email
+                                        //             ->setTo($userData->email)
+                                        //             ->setSubject($emailSubject)
+                                        //             ->deliver($emailMessage);
+                                        //     }
+                                        // }
                                     }
                                 }
                             }

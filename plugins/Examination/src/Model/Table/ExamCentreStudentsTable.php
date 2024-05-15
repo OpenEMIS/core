@@ -484,7 +484,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
             ])
             ->matching('Users')
             ->innerJoin(
-                [$SubjectStudents->alias() => $SubjectStudents->table()],
+                [$SubjectStudents->getAlias() => $SubjectStudents->getTable()],
                 [
                     $SubjectStudents->aliasField('examination_id = ') . $this->aliasField('examination_id'),
                     $SubjectStudents->aliasField('examination_centre_id = ') . $this->aliasField('examination_centre_id'),
@@ -493,7 +493,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
                 ]
             )
             ->leftJoin(
-                [$ItemResults->alias() => $ItemResults->table()],
+                [$ItemResults->getAlias() => $ItemResults->getTable()],
                 [
                     $ItemResults->aliasField('examination_id = ') . $this->aliasField('examination_id'),
                     $ItemResults->aliasField('examination_centre_id = ') . $this->aliasField('examination_centre_id'),

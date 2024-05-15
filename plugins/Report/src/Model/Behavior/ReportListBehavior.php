@@ -363,6 +363,7 @@ class ReportListBehavior extends Behavior {
 		$AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 		$EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
 		if (array_key_exists('institution_id', $data['InstitutionStatistics'])) {
+			// $institutionId  = $this->_table->getQueryString('institution_id'); working
 			$institutionId = $data['InstitutionStatistics']['institution_id'];
 	        $institutionData = $Institutions->get($institutionId);
 	        $academicPeriodData = $AcademicPeriod->get($data['InstitutionStatistics']['academic_period_id']);

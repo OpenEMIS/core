@@ -11,7 +11,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Routing\Router;
 use App\Controller\AppController;
-use Cake\Network\Response;
+use Cake\Http\Response;
 use Cake\Http\Client;
 use Cake\Http\ServerRequest;
 
@@ -356,9 +356,29 @@ class DirectoriesController extends AppController
         $requestDataa = json_decode($requestDataa, true);
         $UsersTable = TableRegistry::get('User.Users');
         $InstitutionTable = TableRegistry::get('Institution.Institutions');
-        $UserData = $UsersTable->find('all',['conditions'=>['id'=>$requestDataa['student_id']]])->first();
-        $InstitutionData = $InstitutionTable->find('all',['conditions'=>['id'=>$requestDataa['institution_id']]])->first();
+        $openemis_no = $requestDataa['openemis_no']; // POCOR-8014-n
+        $student_id = $requestDataa['student_id'];
+        $institution_id = $requestDataa['institution_id'];
+        if(!$institution_id){
+            $institution_id = $this->getInstitutionID();
+        }
+        if ($openemis_no) {
+            // POCOR-8014-n
+            $UserData = $UsersTable->find('all', ['conditions' => ['openemis_no' => $openemis_no]])->first();
+            $student_id = $UserData->id;
+        }
+        if ($student_id) { // POCOR-8014-n
+            $UserData = $UsersTable->find('all', ['conditions' => ['id' => $student_id]])->first();
+        }
+
+        $InstitutionData = $InstitutionTable->find('all', ['conditions' => ['id' => $institution_id]])->first();
         $queryStng = $this->paramsEncode(['id' => $UserData->id]);
+        $student_name = $UserData->name;
+        unset($this->Navigation->breadcrumbs[1]);
+        $this->Navigation->addCrumb($student_name, ['plugin' => 'Directory',
+            'controller' => 'Directories', 'action' => 'Directories', 'view',
+            $this->ControllerAction->paramsEncode(['id' => $student_id])]);
+        $this->Navigation->addCrumb(__('Add Guardians'), []);
         $this->set('InstitutionData', $InstitutionData);
         $this->set('UserData', $UserData);
         $this->set('queryStng', $queryStng);//POCOR-7231 :: END
@@ -1189,7 +1209,7 @@ class DirectoriesController extends AppController
         $identity_types_result = $identity_types
             ->find()
             ->select(['id','name'])
-            ->order(['order'])
+            ->order(['`order`'])
             ->toArray();
         foreach($identity_types_result AS $result){
             $result_array[] = array("id" => $result['id'], "name"=> $result['name']);
@@ -2127,7 +2147,7 @@ class DirectoriesController extends AppController
 
     public function getContactType()
     {
-        $contact_types = TableRegistry::get('FieldOption.ContactTypes');
+        $contact_types = TableRegistry::get('User.ContactTypes');
         $contact_types_result = $contact_types
             ->find()
             ->select(['id','name'])
@@ -2160,7 +2180,7 @@ class DirectoriesController extends AppController
         $guardian_relations_result = $guardian_relations
             ->find()
             ->where(['visible' => 1])
-            ->order(['order' =>'ASC']) //POCOR-7704
+            ->order(['`order`' =>'ASC']) //POCOR-7704
             ->toArray();
         foreach($guardian_relations_result AS $result){
             $result_array[] = array("id" => $result['id'], "name" => $result['name']);

@@ -14,6 +14,7 @@ class StaffUserTable extends ControllerActionTable
 {
     public function initialize(array $config): void
     {
+        ini_set('memory_limit', '-1');
         $this->setTable('security_users');
         $this->setEntityClass('User.User');
         parent::initialize($config);
