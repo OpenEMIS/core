@@ -34,14 +34,21 @@ class PayslipsTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
 
+        // if ($this->behaviors()->has('ControllerAction')) {
+        //     $reorderBehavior = $this->behaviors()->get('ControllerAction');
+        //     $reorderBehavior->setConfig('actions', ['download' => ['show' => true]]);
+        //     // $this->behaviors()->get('ControllerAction')->config([
+        //     //     'actions' => [
+        //     //         'download' => ['show' => true] // to show download on toolbar
+        //     //     ]
+        //     // ]);
+        // }
         if ($this->behaviors()->has('ControllerAction')) {
-            $reorderBehavior = $this->behaviors()->get('ControllerAction');
-            $reorderBehavior->setConfig('actions', ['download' => ['show' => true]]);
-            // $this->behaviors()->get('ControllerAction')->config([
-            //     'actions' => [
-            //         'download' => ['show' => true] // to show download on toolbar
-            //     ]
-            // ]);
+            $this->behaviors()->get('ControllerAction')->setConfig([
+                'actions' => [
+                    'download' => ['show' => true] // to show download on toolbar
+                ]
+            ]);
         }
 
         $this->addBehavior('Institution.InstitutionTab', [
@@ -248,7 +255,7 @@ class PayslipsTable extends ControllerActionTable
             $downloadUrl = [
                 'plugin' => 'Staff',
                 'controller' => 'Staff',
-                'action' => $this->getAlias(),
+                'action' => $this->alias,
                 'staffId' => $this->paramsEncode(['id' => $entity->staff_id]),
                 '0' => 'download',
                 '1' => $this->paramsEncode(['id' => $entity->id])
@@ -322,7 +329,4 @@ class PayslipsTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-
-
-   
 }

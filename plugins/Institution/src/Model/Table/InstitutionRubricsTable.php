@@ -224,7 +224,7 @@ class InstitutionRubricsTable extends AppTable
 
         $plugin = $this->controller->getPlugin();
         $controller = $this->controller->getName();
-        $action = $this->getAlias();
+        $action = $this->alias;
         $queryString = $this->request->getQuery('queryString');
         if(empty($queryString)){
             $queryString = $this->request->getParam('pass')[1];
@@ -316,7 +316,7 @@ class InstitutionRubricsTable extends AppTable
                 $this->Alert->success('InstitutionRubricAnswers.reject.success');
             } else {
                 $this->Alert->success('InstitutionRubricAnswers.reject.failed');
-                $this->log($entity->errors(), 'debug');
+                $this->log($entity->getErrors(), 'debug');
             }
 
             $event->stopPropagation();
