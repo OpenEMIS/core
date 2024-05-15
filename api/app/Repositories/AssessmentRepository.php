@@ -60,13 +60,16 @@ class AssessmentRepository extends Controller
                 $col = $params['order'];
                 $assessmentItem = $assessmentItem->orderBy($col, $orderBy);
             }
-            $limit = config('constants.defaultPaginateLimit');
+            
 
+            //For POCOR-8215/8216 start...
             if(isset($params['limit'])){
                 $limit = $params['limit'];
+                $list = $assessmentItem->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $assessmentItem->get()->toArray();
             }
-
-            $list = $assessmentItem->paginate($limit)->toArray();
+            //For POCOR-8215/8216 end...
             
             return $list;
 
@@ -91,13 +94,18 @@ class AssessmentRepository extends Controller
                 $col = $params['order'];
                 $assessmentPeriod = $assessmentPeriod->orderBy($col, $orderBy);
             }
-            $limit = config('constants.defaultPaginateLimit');
+            
 
+            
+
+            //For POCOR-8215/8216 start...
             if(isset($params['limit'])){
                 $limit = $params['limit'];
+                $list = $assessmentPeriod->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $assessmentPeriod->get()->toArray();
             }
-
-            $list = $assessmentPeriod->paginate($limit)->toArray();
+            //For POCOR-8215/8216 end...
             
             return $list;
 

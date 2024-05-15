@@ -59,20 +59,22 @@ class AssessmentController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
-     *                 @OA\Property(property="data", type="array",
-     *                     @OA\Items(
+     *                 @OA\Property(property="data", type="object",
+     *                      @OA\Property(property="data", type="array",
+     *                          @OA\Items(
      *                         type="object",
-     *                         @OA\Property(property="id", type="string", example="02bd59fe-1e6b-40e2-bc8b-462e28ee2753"),
-     *                         @OA\Property(property="weight", type="string", example="1.00"),
-     *                         @OA\Property(property="classification", type="string", example=""),
-     *                         @OA\Property(property="assessment_id", type="integer", example=24),
-     *                         @OA\Property(property="education_subject_id", type="integer", example=17),
-     *                         @OA\Property(property="modified_user_id", type="integer", nullable=true, example=null),
-     *                         @OA\Property(property="modified", type="string", format="date-time", nullable=true, example=null),
-     *                         @OA\Property(property="created_user_id", type="integer", example=2),
-     *                         @OA\Property(property="created", type="string", format="date-time", example="2018-05-30 07:29:11"),
-     *                         @OA\Property(property="education_subject_name", type="string", example="SUD-Spanish Upper Division")
-     *                     )
+     *                              @OA\Property(property="id", type="string", example="02bd59fe-1e6b-40e2-bc8b-462e28ee2753"),
+     *                              @OA\Property(property="weight", type="string", example="1.00"),
+     *                              @OA\Property(property="classification", type="string", example=""),
+     *                              @OA\Property(property="assessment_id", type="integer", example=24),
+     *                              @OA\Property(property="education_subject_id", type="integer", example=17),
+     *                              @OA\Property(property="modified_user_id", type="integer", nullable=true, example=null),
+     *                              @OA\Property(property="modified", type="string", format="date-time", nullable=true, example=null),
+     *                              @OA\Property(property="created_user_id", type="integer", example=2),
+     *                              @OA\Property(property="created", type="string", format="date-time", example="2018-05-30 07:29:11"),
+     *                              @OA\Property(property="education_subject_name", type="string", example="SUD-Spanish Upper Division")
+     *                          )
+     *                      )
      *                 )
      *         )
      *     ),

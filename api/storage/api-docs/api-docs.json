@@ -952,56 +952,61 @@
                                             "example": "Successful."
                                         },
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "string",
-                                                        "example": "02bd59fe-1e6b-40e2-bc8b-462e28ee2753"
-                                                    },
-                                                    "weight": {
-                                                        "type": "string",
-                                                        "example": "1.00"
-                                                    },
-                                                    "classification": {
-                                                        "type": "string",
-                                                        "example": ""
-                                                    },
-                                                    "assessment_id": {
-                                                        "type": "integer",
-                                                        "example": 24
-                                                    },
-                                                    "education_subject_id": {
-                                                        "type": "integer",
-                                                        "example": 17
-                                                    },
-                                                    "modified_user_id": {
-                                                        "type": "integer",
-                                                        "example": null,
-                                                        "nullable": true
-                                                    },
-                                                    "modified": {
-                                                        "type": "string",
-                                                        "format": "date-time",
-                                                        "example": null,
-                                                        "nullable": true
-                                                    },
-                                                    "created_user_id": {
-                                                        "type": "integer",
-                                                        "example": 2
-                                                    },
-                                                    "created": {
-                                                        "type": "string",
-                                                        "format": "date-time",
-                                                        "example": "2018-05-30 07:29:11"
-                                                    },
-                                                    "education_subject_name": {
-                                                        "type": "string",
-                                                        "example": "SUD-Spanish Upper Division"
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string",
+                                                                "example": "02bd59fe-1e6b-40e2-bc8b-462e28ee2753"
+                                                            },
+                                                            "weight": {
+                                                                "type": "string",
+                                                                "example": "1.00"
+                                                            },
+                                                            "classification": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "assessment_id": {
+                                                                "type": "integer",
+                                                                "example": 24
+                                                            },
+                                                            "education_subject_id": {
+                                                                "type": "integer",
+                                                                "example": 17
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2018-05-30 07:29:11"
+                                                            },
+                                                            "education_subject_name": {
+                                                                "type": "string",
+                                                                "example": "SUD-Spanish Upper Division"
+                                                            }
+                                                        },
+                                                        "type": "object"
                                                     }
-                                                },
-                                                "type": "object"
-                                            }
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
