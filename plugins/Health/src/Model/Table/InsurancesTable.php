@@ -34,14 +34,14 @@ class InsurancesTable extends ControllerActionTable
         //     'excludes' => ['comment, security_user_id'],
         //     'pages' => ['index'],
         // ]);
-        $this->addBehavior('ControllerAction.FileUpload', [
-            'name' => 'file_name',
-            'content' => 'file_content',
-            'size' => '10MB',
-            'contentEditable' => true,
-            'allowable_file_types' => 'all',
-            'useDefaultName' => true
-        ]);
+        // $this->addBehavior('ControllerAction.FileUpload', [
+        //     'name' => 'file_name',
+        //     'content' => 'file_content',
+        //     'size' => '10MB',
+        //     'contentEditable' => true,
+        //     'allowable_file_types' => 'all',
+        //     'useDefaultName' => true
+        // ]);
         //POCOR-6255 start
         /* $this->addBehavior('Page.FileUpload', [
             'fieldMap' => ['file_name' => 'file_content'],
