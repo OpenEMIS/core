@@ -920,6 +920,16 @@
                 "operationId": "a2626e42141a8f05f8358319013468ac",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -1030,6 +1040,16 @@
                 "operationId": "87ee23ada9a16b2ba2e05886a348ca83",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -1062,89 +1082,94 @@
                                             "example": "Successful."
                                         },
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer",
-                                                        "example": 2
-                                                    },
-                                                    "code": {
-                                                        "type": "string",
-                                                        "example": "FYAK2"
-                                                    },
-                                                    "name": {
-                                                        "type": "string",
-                                                        "example": "Final Year Assessment K2"
-                                                    },
-                                                    "start_date": {
-                                                        "type": "string",
-                                                        "format": "date",
-                                                        "example": "2016-01-01"
-                                                    },
-                                                    "end_date": {
-                                                        "type": "string",
-                                                        "format": "date",
-                                                        "example": "2016-12-31"
-                                                    },
-                                                    "date_enabled": {
-                                                        "type": "string",
-                                                        "format": "date",
-                                                        "example": "2016-01-01"
-                                                    },
-                                                    "date_disabled": {
-                                                        "type": "string",
-                                                        "format": "date",
-                                                        "example": "2016-12-31"
-                                                    },
-                                                    "weight": {
-                                                        "type": "string",
-                                                        "example": "100.00"
-                                                    },
-                                                    "academic_term": {
-                                                        "type": "string",
-                                                        "example": null,
-                                                        "nullable": true
-                                                    },
-                                                    "assessment_id": {
-                                                        "type": "integer",
-                                                        "example": 16
-                                                    },
-                                                    "education_grade_id": {
-                                                        "type": "integer",
-                                                        "example": 171
-                                                    },
-                                                    "education_grade_code": {
-                                                        "type": "string",
-                                                        "example": "K2"
-                                                    },
-                                                    "education_grade_name": {
-                                                        "type": "string",
-                                                        "example": "K2"
-                                                    },
-                                                    "modified_user_id": {
-                                                        "type": "integer",
-                                                        "example": null,
-                                                        "nullable": true
-                                                    },
-                                                    "modified": {
-                                                        "type": "string",
-                                                        "format": "date-time",
-                                                        "example": null,
-                                                        "nullable": true
-                                                    },
-                                                    "created_user_id": {
-                                                        "type": "integer",
-                                                        "example": 2
-                                                    },
-                                                    "created": {
-                                                        "type": "string",
-                                                        "format": "date-time",
-                                                        "example": "2016-06-24 02:42:45"
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "code": {
+                                                                "type": "string",
+                                                                "example": "FYAK2"
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Final Year Assessment K2"
+                                                            },
+                                                            "start_date": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2016-01-01"
+                                                            },
+                                                            "end_date": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2016-12-31"
+                                                            },
+                                                            "date_enabled": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2016-01-01"
+                                                            },
+                                                            "date_disabled": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2016-12-31"
+                                                            },
+                                                            "weight": {
+                                                                "type": "string",
+                                                                "example": "100.00"
+                                                            },
+                                                            "academic_term": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "assessment_id": {
+                                                                "type": "integer",
+                                                                "example": 16
+                                                            },
+                                                            "education_grade_id": {
+                                                                "type": "integer",
+                                                                "example": 171
+                                                            },
+                                                            "education_grade_code": {
+                                                                "type": "string",
+                                                                "example": "K2"
+                                                            },
+                                                            "education_grade_name": {
+                                                                "type": "string",
+                                                                "example": "K2"
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2016-06-24 02:42:45"
+                                                            }
+                                                        },
+                                                        "type": "object"
                                                     }
-                                                },
-                                                "type": "object"
-                                            }
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -1168,6 +1193,16 @@
                 "operationId": "3aeb64523d7f40013a96c20cfd5a383c",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -1200,116 +1235,121 @@
                                             "example": "Successful."
                                         },
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer",
-                                                        "example": 2
-                                                    },
-                                                    "code": {
-                                                        "type": "string",
-                                                        "example": 1
-                                                    },
-                                                    "name": {
-                                                        "type": "string",
-                                                        "example": "Marks Grading Scale"
-                                                    },
-                                                    "pass_mark": {
-                                                        "type": "string",
-                                                        "example": "50.00"
-                                                    },
-                                                    "max": {
-                                                        "type": "string",
-                                                        "example": 100
-                                                    },
-                                                    "result_type": {
-                                                        "type": "string",
-                                                        "example": "MARKS"
-                                                    },
-                                                    "assessment_grading_options": {
-                                                        "type": "array",
-                                                        "items": {
-                                                            "properties": {
-                                                                "id": {
-                                                                    "type": "integer",
-                                                                    "example": "2"
-                                                                },
-                                                                "code": {
-                                                                    "type": "string",
-                                                                    "example": "A"
-                                                                },
-                                                                "name": {
-                                                                    "type": "string",
-                                                                    "example": "Excellent"
-                                                                },
-                                                                "description": {
-                                                                    "type": "string",
-                                                                    "example": ""
-                                                                },
-                                                                "min": {
-                                                                    "type": "string",
-                                                                    "example": "80.00"
-                                                                },
-                                                                "max": {
-                                                                    "type": "string",
-                                                                    "example": "100.00"
-                                                                },
-                                                                "point": {
-                                                                    "type": "string",
-                                                                    "example": "5.00"
-                                                                },
-                                                                "order": {
-                                                                    "type": "integer",
-                                                                    "example": "1"
-                                                                },
-                                                                "visible": {
-                                                                    "type": "integer",
-                                                                    "example": "1"
-                                                                },
-                                                                "assessment_grading_type_id": {
-                                                                    "type": "integer",
-                                                                    "example": "2"
-                                                                },
-                                                                "modified_user_id": {
-                                                                    "type": "integer",
-                                                                    "example": "2"
-                                                                },
-                                                                "modified": {
-                                                                    "type": "string",
-                                                                    "example": "2023-07-28 17:40:09"
-                                                                },
-                                                                "created_user_id": {
-                                                                    "type": "integer",
-                                                                    "example": "2"
-                                                                },
-                                                                "created": {
-                                                                    "type": "string",
-                                                                    "example": "2023-07-28 17:40:09"
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "code": {
+                                                                "type": "string",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Marks Grading Scale"
+                                                            },
+                                                            "pass_mark": {
+                                                                "type": "string",
+                                                                "example": "50.00"
+                                                            },
+                                                            "max": {
+                                                                "type": "string",
+                                                                "example": 100
+                                                            },
+                                                            "result_type": {
+                                                                "type": "string",
+                                                                "example": "MARKS"
+                                                            },
+                                                            "assessment_grading_options": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "integer",
+                                                                            "example": "2"
+                                                                        },
+                                                                        "code": {
+                                                                            "type": "string",
+                                                                            "example": "A"
+                                                                        },
+                                                                        "name": {
+                                                                            "type": "string",
+                                                                            "example": "Excellent"
+                                                                        },
+                                                                        "description": {
+                                                                            "type": "string",
+                                                                            "example": ""
+                                                                        },
+                                                                        "min": {
+                                                                            "type": "string",
+                                                                            "example": "80.00"
+                                                                        },
+                                                                        "max": {
+                                                                            "type": "string",
+                                                                            "example": "100.00"
+                                                                        },
+                                                                        "point": {
+                                                                            "type": "string",
+                                                                            "example": "5.00"
+                                                                        },
+                                                                        "order": {
+                                                                            "type": "integer",
+                                                                            "example": "1"
+                                                                        },
+                                                                        "visible": {
+                                                                            "type": "integer",
+                                                                            "example": "1"
+                                                                        },
+                                                                        "assessment_grading_type_id": {
+                                                                            "type": "integer",
+                                                                            "example": "2"
+                                                                        },
+                                                                        "modified_user_id": {
+                                                                            "type": "integer",
+                                                                            "example": "2"
+                                                                        },
+                                                                        "modified": {
+                                                                            "type": "string",
+                                                                            "example": "2023-07-28 17:40:09"
+                                                                        },
+                                                                        "created_user_id": {
+                                                                            "type": "integer",
+                                                                            "example": "2"
+                                                                        },
+                                                                        "created": {
+                                                                            "type": "string",
+                                                                            "example": "2023-07-28 17:40:09"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
                                                                 }
                                                             },
-                                                            "type": "object"
-                                                        }
-                                                    },
-                                                    "modified_user_id": {
-                                                        "type": "integer",
-                                                        "example": "2"
-                                                    },
-                                                    "modified": {
-                                                        "type": "string",
-                                                        "example": "2023-07-28 17:40:09"
-                                                    },
-                                                    "created_user_id": {
-                                                        "type": "integer",
-                                                        "example": "2"
-                                                    },
-                                                    "created": {
-                                                        "type": "string",
-                                                        "example": "2023-07-28 17:40:09"
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": "2"
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "example": "2023-07-28 17:40:09"
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": "2"
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "example": "2023-07-28 17:40:09"
+                                                            }
+                                                        },
+                                                        "type": "object"
                                                     }
-                                                },
-                                                "type": "object"
-                                            }
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -1333,6 +1373,16 @@
                 "operationId": "b3c742000fa36e0bc794a0b73ebe2bb0",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -1365,58 +1415,63 @@
                                             "example": "Successful."
                                         },
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer",
-                                                        "example": 2
-                                                    },
-                                                    "code": {
-                                                        "type": "string",
-                                                        "example": "A"
-                                                    },
-                                                    "name": {
-                                                        "type": "string",
-                                                        "example": "Excellent"
-                                                    },
-                                                    "min": {
-                                                        "type": "string",
-                                                        "example": "80.00"
-                                                    },
-                                                    "max": {
-                                                        "type": "string",
-                                                        "example": "100.00"
-                                                    },
-                                                    "order": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "visible": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "modified_user_id": {
-                                                        "type": "integer",
-                                                        "example": 2
-                                                    },
-                                                    "modified": {
-                                                        "type": "string",
-                                                        "format": "date-time",
-                                                        "example": "2023-07-28 17:40:09"
-                                                    },
-                                                    "created_user_id": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "created": {
-                                                        "type": "string",
-                                                        "format": "date-time",
-                                                        "example": "2015-07-10 19:24:17"
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "code": {
+                                                                "type": "string",
+                                                                "example": "A"
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Excellent"
+                                                            },
+                                                            "min": {
+                                                                "type": "string",
+                                                                "example": "80.00"
+                                                            },
+                                                            "max": {
+                                                                "type": "string",
+                                                                "example": "100.00"
+                                                            },
+                                                            "order": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "visible": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2023-07-28 17:40:09"
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2015-07-10 19:24:17"
+                                                            }
+                                                        },
+                                                        "type": "object"
                                                     }
-                                                },
-                                                "type": "object"
-                                            }
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -1450,6 +1505,16 @@
                         }
                     },
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -1482,20 +1547,25 @@
                                             "example": "Successful."
                                         },
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "string",
-                                                        "example": "First Half"
-                                                    },
-                                                    "name": {
-                                                        "type": "string",
-                                                        "example": "First Half"
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string",
+                                                                "example": "First Half"
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "First Half"
+                                                            }
+                                                        },
+                                                        "type": "object"
                                                     }
-                                                },
-                                                "type": "object"
-                                            }
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -1526,26 +1596,6 @@
                         "schema": {
                             "type": "integer",
                             "example": 31
-                        }
-                    },
-                    {
-                        "name": "page",
-                        "in": "query",
-                        "description": "Page number",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": 1
-                        }
-                    },
-                    {
-                        "name": "limit",
-                        "in": "query",
-                        "description": "Number of items per page",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": 10
                         }
                     }
                 ],
@@ -1687,6 +1737,36 @@
                             "type": "integer",
                             "example": 11
                         }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
                     }
                 ],
                 "responses": {
@@ -1701,58 +1781,63 @@
                                             "example": "Successful."
                                         },
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "string",
-                                                        "example": "a12126ea-f0b8-4237-91ad-8719862ce1e2"
-                                                    },
-                                                    "weight": {
-                                                        "type": "string",
-                                                        "example": "0.00"
-                                                    },
-                                                    "classification": {
-                                                        "type": "string",
-                                                        "example": ""
-                                                    },
-                                                    "InstitutionSubjects": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
                                                         "properties": {
-                                                            "education_subject_id": {
-                                                                "type": "integer",
-                                                                "example": 60
-                                                            },
                                                             "id": {
-                                                                "type": "integer",
-                                                                "example": 50
-                                                            },
-                                                            "name": {
                                                                 "type": "string",
-                                                                "example": "Social Studies"
+                                                                "example": "a12126ea-f0b8-4237-91ad-8719862ce1e2"
+                                                            },
+                                                            "weight": {
+                                                                "type": "string",
+                                                                "example": "0.00"
+                                                            },
+                                                            "classification": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "InstitutionSubjects": {
+                                                                "properties": {
+                                                                    "education_subject_id": {
+                                                                        "type": "integer",
+                                                                        "example": 60
+                                                                    },
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 50
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "example": "Social Studies"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "education_subject": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 60
+                                                                    },
+                                                                    "code_name": {
+                                                                        "type": "string",
+                                                                        "example": "SSMC - Social Studies"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "is_editable": {
+                                                                "type": "integer",
+                                                                "example": 1
                                                             }
                                                         },
                                                         "type": "object"
-                                                    },
-                                                    "education_subject": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "integer",
-                                                                "example": 60
-                                                            },
-                                                            "code_name": {
-                                                                "type": "string",
-                                                                "example": "SSMC - Social Studies"
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    },
-                                                    "is_editable": {
-                                                        "type": "integer",
-                                                        "example": 1
                                                     }
-                                                },
-                                                "type": "object"
-                                            }
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
