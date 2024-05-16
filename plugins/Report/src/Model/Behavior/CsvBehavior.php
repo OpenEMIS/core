@@ -123,13 +123,13 @@ class CsvBehavior extends Behavior
         
     // }
 
-    private function escapeSql($sql)
-    {
-        // Escape SQL query
-        // This is a simplified example, you might need to improve this based on your requirements
-        //return "'" . addslashes($sql) . "'";
-        return str_replace("'", "''", $sql);
-    }
+    // private function escapeSql($sql)
+    // {
+    //     // Escape SQL query
+    //     // This is a simplified example, you might need to improve this based on your requirements
+    //     //return "'" . addslashes($sql) . "'";
+    //     return str_replace("'", "''", $sql);
+    // }
 
     private function createSqlFile($settings)
     {
