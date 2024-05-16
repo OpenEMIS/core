@@ -163,7 +163,7 @@ class TrainingSessionsTable extends ControllerActionTable
                 ],
                 'Evaluators' => [
                     'Users',
-                    'sort' => ['Users.is_staff' => 'DESC', 'Users.first_name' => 'ASC', 'Users.last_name' => 'ASC', 'Evaluators.name' => 'ASC'] // staff-type followed by others-type
+                    'sort' => ['Users.is_staff' => 'DESC', 'Users.first_name' => 'ASC', 'Users.last_name' => 'ASC'] // staff-type followed by others-type
                 ],
             ]);
     }
