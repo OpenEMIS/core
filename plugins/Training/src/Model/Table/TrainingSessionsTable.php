@@ -150,7 +150,6 @@ class TrainingSessionsTable extends ControllerActionTable
             'code', 'name', 'start_date', 'end_date', 'training_course_id', 'training_provider_id'
         ]);
     }
-
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
