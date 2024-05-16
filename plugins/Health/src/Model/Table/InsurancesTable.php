@@ -47,14 +47,14 @@ class InsurancesTable extends ControllerActionTable
             'fieldMap' => ['file_name' => 'file_content'],
             'size' => '2MB'
         ]); *///POCOR-6255 end
-        $this->addBehavior('ControllerAction.FileUpload', [
-            // 'name' => 'file_name',
-            // 'content' => 'file_content',
-            'size' => '2MB',
-            'contentEditable' => true,
-            'allowable_file_types' => 'all',
-            'useDefaultName' => true
-        ]);
+        // $this->addBehavior('ControllerAction.FileUpload', [
+        //     // 'name' => 'file_name',
+        //     // 'content' => 'file_content',
+        //     'size' => '2MB',
+        //     'contentEditable' => true,
+        //     'allowable_file_types' => 'all',
+        //     'useDefaultName' => true
+        // ]);
     }
     //POCOR-6255 start
     public function implementedEvents(): array

@@ -268,9 +268,9 @@ class GuardianNavsController extends AppController
         //$session = $this->request->getSession();
         //$studentId = $session->read('Student.Students.id');
         $action = $this->request->getParam('action');
-        if($action == 'StudentProgrammes') {
-            $queryParams = $this->request->getQueryParams();
-            $studentId = $queryParams['studentId'];
+        if($action == 'StudentProgrammes' && isset($this->request->getQueryParams()['studentId'])) {
+            $studentId = $this->request->getQueryParams()['studentId'];
+            $studentId = $this->ControllerAction->paramsDecode($studentId);
             if(!empty($studentId)) {
                 $StudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
                 $Student = $StudentsTable
@@ -280,11 +280,11 @@ class GuardianNavsController extends AppController
                 if (!empty($Student)) {
                     $institutionId = $Student->institution_id;
                 }
-                $params = ['id' => $studentId,
+                $params = [
                     'student_id' => $studentId,
                     'user_id' => $studentId,
                     'institution_id' => $institutionId,
-                    'type' => $type];
+                    'type' => $type];     
                 $queryString = $this->ControllerAction->paramsEncode($params);
             }
         } else {

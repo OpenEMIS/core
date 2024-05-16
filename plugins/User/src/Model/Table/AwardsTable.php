@@ -125,8 +125,8 @@ class AwardsTable extends ControllerActionTable
                 break;
             /*POCOR-6267 starts*/
             case 'GuardianNavs':
-                //$tabElements = $this->controller->getAcademicTabElements();
-                $tabElements = $this->getAcademicTabElements();
+                $tabElements = $this->controller->getAcademicTabElements();
+                //$tabElements = $this->getAcademicTabElements();
                 if($this->controller->getName() == 'GuardianNavs') {
                     $tabElements = $this->controller->getAcademicTabElements($options);
                 }
