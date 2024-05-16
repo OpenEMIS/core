@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
+use Cake\ORM\TableRegistry;
 
 class SearchBehavior extends Behavior {
 	protected $_defaultConfig = [
@@ -46,13 +47,47 @@ class SearchBehavior extends Behavior {
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$model = $this->_table;
 		$search = $extra['config']['search'];
+		//POCOR-8176 start
+		if($model->registryAlias() == 'Institution.Institutions'){
+			if (!preg_match('/[^A-Za-z0-9\s]+/', $search)) {
+				for ($i = 0; $i <= strlen($search); $i++) {
+			        // Construct the modified search string by inserting the special character "ʻ" at the current position
+			        $modifiedSearchString = substr($search, 0, $i) . 'ʻ' . substr($search, $i);
+			        // Perform a query using the modified search string
+			        $institutionTable = TableRegistry::get('Institution.Institutions');
+			        $result = $institutionTable->find()
+						    	->andWhere([
+						        'OR' => [
+						            'Institutions.name LIKE' => "%$modifiedSearchString%",
+						            'Institutions.code LIKE' => "%$modifiedSearchString%"
+						        ]
+						    ])->toArray();
+		    
+				    if (!empty($result)) {
+				           $newSearch = $modifiedSearchString;
+				            break;
+				    }
+				}
+			}
+		} //POCOR-8176 end
 
 		$schema = $model->schema();
 		$columns = $schema->columns();
 		$excludeFields = ['id', 'password'];
 		if ($extra['auto_search']) {
 			$OR = [];
-			if (!empty($search)) {
+			//POCOR-8176 start. add if else condition
+			if (!empty($search) && $model->registryAlias() == 'Institution.Institutions' && !empty($result)) {
+				foreach ($columns as $col) {
+					$attr = $schema->column($col);
+					if (in_array($col, $excludeFields)) continue;
+					if (in_array($attr['type'], ['string', 'text'])) {
+						$OR[$model->aliasField($col).' LIKE'] = '%' . $search . '%';
+						$OR[$model->aliasField('name').' LIKE'] = '%' . $newSearch . '%';
+					}
+				} 
+				
+			}elseif(!empty($search)) {
 				foreach ($columns as $col) {
 					$attr = $schema->column($col);
 					if (in_array($col, $excludeFields)) continue;
@@ -60,7 +95,7 @@ class SearchBehavior extends Behavior {
 						$OR[$model->aliasField($col).' LIKE'] = '%' . $search . '%';
 					}
 				}
-			}
+			} //POCOR-8176 end
 
 			if (array_key_exists('OR', $extra)) {
 				$OR = array_merge($OR, $extra['OR']);
