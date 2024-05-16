@@ -322,18 +322,18 @@ class UserBehavior extends Behavior
     public function getViewUserIdentities($security_users_id)
     {
         $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
-        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
-        $UserNationalities = TableRegistry::getTableLocator()->get('User.UserNationalities');
-        $Nationalities = TableRegistry::getTableLocator()->get('FieldOption.Nationalities');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes')->setAlias('identity_types');
+        $UserNationalities = TableRegistry::getTableLocator()->get('User.UserNationalities')->setAlias('user_nationalities');
+        $Nationalities = TableRegistry::getTableLocator()->get('FieldOption.Nationalities')->setAlias('nationalities');
 
         $data = $UserIdentities->find()
                 ->select([
                     $UserIdentities->aliasField('id'),
                     $UserIdentities->aliasField('identity_type_id'),
-                    // $IdentityTypes->aliasField('name'),
+                    $IdentityTypes->aliasField('name'),
                     $UserIdentities->aliasField('number'),
                     $UserIdentities->aliasField('nationality_id'),
-                    // $Nationalities->aliasField('name'),
+                    $Nationalities->aliasField('name'),
                     $UserNationalities->aliasField('preferred')
                 ])
                 ->leftJoin(
