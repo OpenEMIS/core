@@ -179,7 +179,7 @@ class ProgrammesTable extends ControllerActionTable
 		} else {
 			$queryString = $this->getQueryString();
 			$studentId = $queryString['student_id'];
-			if($this->controller->getName() == 'GuardianNavs') {
+			if($this->controller->getName() == 'GuardianNavs' && isset($this->request->getQueryParams()['studentId'])) {
 				$encodeStudentId = $this->request->getQueryParams()['studentId'];
 				$studentId = $this->paramsDecode($encodeStudentId);
 			}

@@ -2366,6 +2366,12 @@ class NavigationComponent extends Component
         } else {
             $queryString = $session->read('queryString');
         }
+        
+        $request = $this->getController()->getRequest();
+        if(empty($studentId) && $request->getParam('pass')[0] == 'view' && isset($request->getParam('pass')[1])) {
+            $studentId = $this->controller->paramsDecode($request->getParam('pass')[1])['id'];
+        }
+
         $navigation = [
             'GuardianNavs.StudentUser.view' => [
                 'title' => 'General',

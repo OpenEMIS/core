@@ -61,7 +61,7 @@ class StudentSubjectsTable extends ControllerActionTable
         $this->field('academic_period_id', ['type' => 'integer', 'order' => 0]);
         $this->field('institution_id', ['type' => 'integer', 'after' => 'academic_period_id']);
         $this->field('total_mark', ['after' => 'institution_subject_id']);
-        $queryString = $this->getQueryString();;
+        $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['controls'] = ['name' => 'Student.Subjects/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
         
