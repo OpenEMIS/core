@@ -1110,16 +1110,16 @@ class ApplicationsTable extends ControllerActionTable
                     $this->Assignees->aliasField('preferred_name')
                 ])
                 ->contain([
-                    $this->Scholarships->alias(),
-                    $this->Applicants->alias(),
-                    $this->Statuses->alias(),
-                    $this->Assignees->alias()
+                    $this->Scholarships->getAlias(),
+                    $this->Applicants->getAlias(),
+                    $this->Statuses->getAlias(),
+                    $this->Assignees->getAlias()
                 ])
                 ->where([
                     $this->Statuses->aliasField('category') => $workflowCategory,
                     $sqlConditions[$conditionKey]
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
         }
         return $record;

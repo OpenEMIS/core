@@ -805,9 +805,25 @@ class ProfilesController extends AppController
         if ($model->hasField('staff_id')) {
             $model->fields['staff_id']['type'] = 'hidden';
             $model->fields['staff_id']['value'] = $userId;
-            $idKey[$model->aliasField('staff_id')] = $userId;
-            $exists = $model->exists($idKey);
+//            die('<pre>' . print_r($this->request->getParam('pass'), true));
+            //$idKey[$model->aliasField('staff_id')] = $userId;
+            //$exists = $model->exists($idKey);
+            if (count($this->request->getParam('pass')) > 2) {
+                $modelId = $this->request->getParam('pass')[1]; // id of the sub model
 
+                $ids = $this->ControllerAction->paramsDecode($modelId);
+                $idKey = $this->ControllerAction->getIdKeys($model, $ids);
+                $idKey[$model->aliasField('staff_id')] = $userId;
+                $exists = $model->exists($idKey);
+
+                /**
+                 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+                 */
+                if (!$exists) {
+                    $this->Alert->warning('general.notExists');
+                    return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
+                }
+            }
             /**
              * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
              */
@@ -1180,7 +1196,7 @@ class ProfilesController extends AppController
                 'InstitutionStaff.staff_id' => $userId,
                 'InstitutionStaff.staff_status_id' => self::APPROVED
             ])
-            ->EnableHydration(false)
+            ->enableHydration(false)
             ->first();
 
         $institutionId = $InstitutionStaff['institution_id'];
@@ -1194,9 +1210,9 @@ class ProfilesController extends AppController
                 'name' => $Institutions->aliasField('name'),
             ])
             ->where([
-                $institutionId !== null ? $Institutions->aliasField('id IS NULL') : $Institutions->aliasField('id IS NULL')
+                $Institutions->aliasField('id') => $institutionId,
             ])
-            ->EnableHydration(false)
+            ->enableHydration(false)
             ->toArray();
 
         $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')

@@ -155,9 +155,13 @@ class LeaveTable extends ControllerActionTable
         $options = ['type' => 'staff'];
         //$tabElements = $this->controller->getCareerTabElements($options);
         $tabElements = $this->getCareerTabElements($options);
-        
+        $controllerName = $this->controller->getName();
+        $selectedAction = $this->getAlias();
+        if($controllerName == 'Profiles') {
+            $selectedAction = 'Staff'.$this->getAlias();
+        }
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->getAlias());
+        $this->controller->set('selectedAction', $selectedAction);
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -606,8 +610,8 @@ class LeaveTable extends ControllerActionTable
     public function onUpdateFieldStartTime(Event $event, array $attr,  $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            if (isset($request->data[$this->getAlias()]['full_day'])) {
-                if ($request->data[$this->getAlias()]['full_day']) {
+            if (isset($request->getData()[$this->getAlias()]['full_day'])) {
+                if ($request->getData()[$this->getAlias()]['full_day']) {
                     $attr['type'] = 'hidden';
                 }
             } else {
