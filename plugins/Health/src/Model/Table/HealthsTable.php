@@ -76,11 +76,20 @@ class HealthsTable extends ControllerActionTable
                     'institution_id' => $institutionID
                 ]);
             }else{
-                $action[1] = $this->paramsEncode([
-                    'id' => $entity->id,
-                    'user_id' => $userID,
-                    'staff_id' =>  $userID
-                ]);
+                if($this->request->getParam('plugin') == 'Profile' && $this->request->getParam('controller') == 'Profiles' && $this->request->getParam('action') == 'Healths'){
+                    $action[1] = $this->paramsEncode([
+                        'id' => $entity->id,
+                        'user_id' => $userID,
+                        'staff_id' =>  $userID
+                    ]);
+                }else{
+                    $action[1] = $this->paramsEncode([
+                        'id' => $entity->id,
+                        'user_id' => $userID,
+                        'staff_id' =>  $userID,
+                        'institution_id' => $institutionID
+                    ]);
+                }
             }
             
             $event->stopPropagation();

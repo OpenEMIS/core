@@ -71,7 +71,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
 
         $header = $header . ' - ' . __('Statuses');
         $this->controller->set('contentHeader', $header);
-        $alias = $this->getAlias();
+        $alias = $this->alias;
         $this->controller->Navigation->substituteCrumb($this->getHeader($alias), __('Statuses'));
             
         // Start POCOR-5188
