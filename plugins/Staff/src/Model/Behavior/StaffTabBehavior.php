@@ -149,6 +149,7 @@ die;*/
                 'Licenses' => ['text' => __('Licenses')], //POCOR-7528
             ];
         }
+        
         $tabElements = array_merge($tabElements, $staffTabElements);
 
         foreach ($tabElements as $key => $tab) {
@@ -156,11 +157,12 @@ die;*/
         }
 
         if($controllerName == "Profiles"){
+            $tabElements = [];
             $session = $model->request->getSession();
             $isStudent = $session->read('Auth.User.is_student');
             $isStaff = $session->read('Auth.User.is_staff');
             if ($isStaff) {
-                $staffTabElements = [
+                $professionalTabElements = [
                     'Employments' => ['text' => __('Employments')],
                     'Qualifications' => ['text' => __('Qualifications')],
                     'Memberships' => ['text' => __('Memberships')],
@@ -168,24 +170,24 @@ die;*/
                     'Awards' => ['text' => __('Awards')],
                 ];
             } else if ($isStudent) {
-                $staffTabElements = [
+                $professionalTabElements = [
                     'Employments' => ['text' => __('Employments')],
                     'Qualifications' => ['text' => __('Qualifications')],
-                    'Licenses' => ['text' => __('Licenses')],
                 ];
             } else {
-                $staffTabElements = [
+                $professionalTabElements = [
                     'Employments' => ['text' => __('Employments')],
                     'Qualifications' => ['text' => __('Qualifications')],
-                    'Licenses' => ['text' => __('Licenses')],
                 ];
             }
-            foreach ($staffTabElements as $key => $tab) {
+            $tabElements = array_merge($tabElements, $professionalTabElements);
+            foreach ($professionalTabElements as $key => $tab) {
                 if ($key != 'Employments') {
-                    $url = array_merge($staffUrl, ['action' => 'Staff' . $key, '0' => 'index']);
-
+                    $url = array_merge($staffUrl, ['action' => 'Staff' . $key, 'index']);
+     
                 } else {
-                    $url = array_merge($staffUrl, ['action' => $key, '0' => 'index']);
+                    $url = array_merge($staffUrl, ['action' => $key, 'index']);
+     
                 }
                 $url['1'] = $encodedQueryString;
                 $tabElements[$key]['url'] = $url;

@@ -90,6 +90,9 @@ class UserNationalitiesTable extends ControllerActionTable {
 
     public function beforeAction(Event $event) {
         $this->securityUserId =  $this->getQueryString('security_user_id');
+        if($this->securityUserId == ''){
+            $this->securityUserId = $this->getQueryString('user_id');
+        }
         $this->fields['nationality_id']['type'] = 'select';
 //        $this->fields['identity_type_id']['type'] = 'select';
         $this->setFieldOrder([

@@ -119,34 +119,34 @@ class InstitutionStatusTable extends ControllerActionTable
 
     }
 
-    public function validationDefault(Validator $validator): Validator
-    {
-        $validator = parent::validationDefault($validator);
+    // public function validationDefault(Validator $validator): Validator
+    // {
+    //     $validator = parent::validationDefault($validator);
 
-        $validator
-        ->add('date_opened', [
-            'ruleCompare' => [
-                'rule' => ['comparison', 'notequal', '0000-00-00'],
-            ]
-        ])
-        ->allowEmpty('date_closed')
-        ->add('date_opened', 'ruleLessThanToday', [
-            'rule' => ['lessThanToday', true]
-        ])
-        ->add('date_closed', 'ruleCompareDateReverse', [
-            'rule' => ['compareDateReverse', 'date_opened', true]
-        ])
-        ->allowEmpty('area_id')
-        ->allowEmpty('institution_locality_id')
-        ->allowEmpty('area_administrative_id')
-        ->allowEmpty('institution_type_id')
-        ->allowEmpty('institution_ownership_id')
-        ->allowEmpty('institution_sector_id')
-        ->allowEmpty('institution_provider_id')
-        ->allowEmpty('institution_gender_id');
+    //     $validator
+    //     ->add('date_opened', [
+    //         'ruleCompare' => [
+    //             'rule' => ['comparison', 'notequal', '0000-00-00'],
+    //         ]
+    //     ])
+    //     ->allowEmpty('date_closed')
+    //     ->add('date_opened', 'ruleLessThanToday', [
+    //         'rule' => ['lessThanToday', true]
+    //     ])
+    //     ->add('date_closed', 'ruleCompareDateReverse', [
+    //         'rule' => ['compareDateReverse', 'date_opened', true]
+    //     ])
+    //     ->allowEmpty('area_id')
+    //     ->allowEmpty('institution_locality_id')
+    //     ->allowEmpty('area_administrative_id')
+    //     ->allowEmpty('institution_type_id')
+    //     ->allowEmpty('institution_ownership_id')
+    //     ->allowEmpty('institution_sector_id')
+    //     ->allowEmpty('institution_provider_id')
+    //     ->allowEmpty('institution_gender_id');
 
-        return $validator;
-    }
+    //     return $validator;
+    // }
 
     public function implementedEvents(): array
     {

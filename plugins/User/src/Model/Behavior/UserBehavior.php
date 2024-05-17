@@ -12,6 +12,8 @@ use User\Model\Entity\User;
 use Cake\I18n\I18n;
 use Cake\Http\Session;
 use Cake\Routing\Router;
+use Cake\ORM\Locator\TableLocator;
+
 
 class UserBehavior extends Behavior
 {
@@ -257,8 +259,10 @@ class UserBehavior extends Behavior
                     $model = $this->_table;
                     if($this->_table->controller->getRequest()->getAttribute('params')['pass'][0] == 'view'){
                         $security_users_id = $model->paramsDecode($this->_table->controller->getRequest()->getAttribute('params')['pass'][1]);
+                        if(count($security_users_id) >= 1){
+                            $security_users_id = $security_users_id['user_id'];
+                        }
                     }
-                    // echo "<pre>";print_r($security_users_id);die;
                     if($security_users_id > 0){
                         $this->_table->field('details', [
                             'type' => 'element',
@@ -286,6 +290,9 @@ class UserBehavior extends Behavior
                     $model = $this->_table;
                     if($this->_table->controller->getRequest()->getAttribute('params')['pass'][0] == 'view'){
                         $security_users_id = $model->paramsDecode($this->_table->controller->getRequest()->getAttribute('params')['pass'][1]);
+                        if(count($security_users_id) >= 1){
+                            $security_users_id = $security_users_id['user_id'];
+                        }
                     }
                     if($security_users_id > 0){
                         $this->_table->field('details', [
@@ -315,18 +322,18 @@ class UserBehavior extends Behavior
     public function getViewUserIdentities($security_users_id)
     {
         $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
-        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
-        $UserNationalities = TableRegistry::getTableLocator()->get('User.UserNationalities');
-        $Nationalities = TableRegistry::getTableLocator()->get('User.Nationalities');
-       
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes')->setAlias('identity_types');
+        $UserNationalities = TableRegistry::getTableLocator()->get('User.UserNationalities')->setAlias('user_nationalities');
+        $Nationalities = TableRegistry::getTableLocator()->get('FieldOption.Nationalities')->setAlias('nationalities');
+
         $data = $UserIdentities->find()
                 ->select([
                     $UserIdentities->aliasField('id'),
                     $UserIdentities->aliasField('identity_type_id'),
-                    // $IdentityTypes->aliasField('name'),
+                    $IdentityTypes->aliasField('name'),
                     $UserIdentities->aliasField('number'),
                     $UserIdentities->aliasField('nationality_id'),
-                    // $Nationalities->aliasField('name'),
+                    $Nationalities->aliasField('name'),
                     $UserNationalities->aliasField('preferred')
                 ])
                 ->leftJoin(

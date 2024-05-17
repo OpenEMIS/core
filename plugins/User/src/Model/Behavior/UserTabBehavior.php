@@ -141,6 +141,19 @@ class UserTabBehavior extends Behavior
             $url = $toolbarButtons['download']['url'];
             $decodeQueryString = $request->getParam('pass')[1];
             $queryString = $model->paramsDecode($decodeQueryString);
+            if($controllerName == 'Profiles'){
+                $actions = ['StaffQualifications'];
+                $action = $request->getParam('action');
+                if(isset($request->getParam('pass')[1]) && in_array($action, $actions)) {
+                    $decodeQueryString = $request->getParam('pass')[1];
+                    $queryString = $model->paramsDecode($decodeQueryString);
+                    foreach ($queryString as $key => $value) {
+                        if ($key !== 'id') {
+                            unset($queryString[$key]);
+                        }
+                    }
+                }
+            }
             $url['1'] = $model->paramsEncode($queryString);
             $toolbarButtons['download']['url'] = $url;
         }

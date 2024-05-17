@@ -12,7 +12,8 @@ use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\Collection\Collection;
 use Cake\I18n\Time;
-use Cake\I18n\Date;
+// use Cake\I18n\Date;
+use Cake\I18n\FrozenDate;
 use Cake\Log\Log;
 use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\ControllerActionTable;
@@ -762,7 +763,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
             if ($action == 'add') {
                 $attr['default'] = $selectedLevel;
             }
-
             return $attr;
         }else{
             $institutionid = $this->getInstitutionID();
@@ -770,12 +770,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $getClassId = $institutionClass->find()->where(['institution_id' => $institutionid, 'academic_period_id' => $academicPeriodId])->first()->id;
             $className = $getClassId;
             list($levelOptions, $selectedLevel) = array_values($this->getEducationGradeOptions($className));
-
             $attr['options'] = $levelOptions;
             if ($action == 'add') {
                 $attr['default'] = $selectedLevel;
             }
-
+            
             return $attr;
         }
     }
@@ -829,7 +828,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                             ->where([
                                 'OR' => [
                                     ['end_date IS NULL'],
-                                    ['end_date' . ' >= ' => Date::now()]
+                                    ['end_date' . ' >= ' => FrozenDate::now()]
                                 ]
                             ]);
                     },
@@ -869,7 +868,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     $extra[$this->aliasField('notice')] = $this->aliasField('allSubjectsAlreadyAdded');
                     return true;
                 } else {
-                    $model->log($error, 'debug');
+                    // $model->log($error, 'debug');
+                    $model->log(print_r($error, true), 'debug');
                     if (is_array($error)) { //this error is to validate "name" field, not for each subject name so not needed.
                         //$model->Alert->error('general.add.failed');
                     } else {
@@ -884,7 +884,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         $extra[$this->aliasField('notice')] = $error;
                         $model->Alert->error($error);
                     }
-                    $model->request->data = $data;
+                    // $model->request->data = $data;
+                    $model->request = $model->request->withParsedBody($data);
                     return false;
                 }
             }
@@ -1220,7 +1221,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ->where([
                 $Staff->aliasField('institution_position_id'),
                 'OR' => [ //check teacher end date
-                    [$Staff->aliasField('end_date') . ' > ' => new Date()],
+                    [$Staff->aliasField('end_date') . ' > ' => new FrozenDate()],
                     [$Staff->aliasField('end_date') . ' IS NULL']
                 ]
             ])
@@ -1337,8 +1338,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
                  * check individual entity for any error
                  */
                 foreach ($subjects as $subject) {
-                    if ($subject->errors()) {
-                        $error = $subject->errors();
+                    if ($subject->getErrors()) {
+                        $error = $subject->getErrors();
                         $data['MultiSubjects'][$subject->key]['errors'] = $error;
                     }
                 }
@@ -1540,7 +1541,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                             ->where([
                                 'OR' => [
                                     ['end_date IS NULL'],
-                                    ['end_date' . ' >= ' => Date::now()]
+                                    ['end_date' . ' >= ' => FrozenDate::now()]
                                 ]
                             ]);
                     },
@@ -1592,7 +1593,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ->where([
                 $Staff->aliasField('institution_position_id'),
                 'OR' => [ //check teacher end date
-                    [$Staff->aliasField('end_date') . ' > ' => new Date()],
+                    [$Staff->aliasField('end_date') . ' > ' => new FrozenDate()],
                     [$Staff->aliasField('end_date') . ' IS NULL']
                 ]
             ]);
@@ -1955,7 +1956,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         if ($entity->has('teachers')) {
             $resultArray = [];
-            $todayDate = new Date();
+            $todayDate = new FrozenDate();
 
             foreach ($entity->teachers as $key => $value) {
                 $staffEndDate = $value->_joinData->end_date;
@@ -2102,7 +2103,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function getPastTeachers($entity)
     {
-        $todayDate = new Date();
+        $todayDate = new FrozenDate();
         $data = [];
         if ($entity->has('teachers')) {
             foreach ($entity->teachers as $key => $value) {
