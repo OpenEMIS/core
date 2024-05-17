@@ -77,7 +77,6 @@ class StaffTabBehavior extends Behavior
 //        if(!$staffID){
 //            $staffID = $this->getUserID();
 //        }
-
         $queryString = $model->getQueryString();
 
         // echo "<pre>"; print_r($queryString); die;
@@ -114,11 +113,17 @@ class StaffTabBehavior extends Behavior
 
         $tabElements = array_merge($tabElements, $staffTabElements);
         foreach ($staffTabElements as $key => $tab) {
-                $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString]);
-
+                $changeKeyArray = ['StaffLeave', 'StaffAttendances','StaffAppraisals','StaffAssociations','StaffCurriculars'];
+                if($controllerName == "Profiles"){
+                    if(in_array($key, $changeKeyArray)){
+                        $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString]);
+                    }else{
+                        $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff'.$key, 'index', $encodedQueryString]);
+                    }
+                }else{
+                    $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString]);
+                }
         }
-        /*echo "<pre>"; print_r($tabElements);
-die;*/
         return $tabElements;
     }
 
