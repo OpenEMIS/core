@@ -52,10 +52,10 @@ class ThemeService extends Controller
     }
 
 
-    public function getThemeId($id)
+    public function getThemeViaId($id)
     {
         try {
-            $data = $this->themeRepository->getThemeId($id);
+            $data = $this->themeRepository->getThemeViaId($id);
             $resp = [];
             if(!empty($data)){
                 $resp['id'] = $data['id'];

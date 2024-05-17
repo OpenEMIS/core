@@ -126,10 +126,10 @@ class ThemeController extends Controller
      *     )
      * )
      */
-    public function getThemeId($id)
+    public function getThemeViaId($id)
     {
         try {
-            $data = $this->themeService->getThemeId($id);
+            $data = $this->themeService->getThemeViaId($id);
             
             if (empty($data)) {
                 return $this->sendErrorResponse("Theme Data Not Found.");

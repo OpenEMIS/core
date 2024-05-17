@@ -60,13 +60,16 @@ class AssessmentRepository extends Controller
                 $col = $params['order'];
                 $assessmentItem = $assessmentItem->orderBy($col, $orderBy);
             }
-            $limit = config('constants.defaultPaginateLimit');
+            
 
+            //For POCOR-8215/8216 start...
             if(isset($params['limit'])){
                 $limit = $params['limit'];
+                $list = $assessmentItem->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $assessmentItem->get()->toArray();
             }
-
-            $list = $assessmentItem->paginate($limit)->toArray();
+            //For POCOR-8215/8216 end...
             
             return $list;
 
@@ -91,13 +94,18 @@ class AssessmentRepository extends Controller
                 $col = $params['order'];
                 $assessmentPeriod = $assessmentPeriod->orderBy($col, $orderBy);
             }
-            $limit = config('constants.defaultPaginateLimit');
+            
 
+            
+
+            //For POCOR-8215/8216 start...
             if(isset($params['limit'])){
                 $limit = $params['limit'];
+                $list = $assessmentPeriod->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $assessmentPeriod->get()->toArray();
             }
-
-            $list = $assessmentPeriod->paginate($limit)->toArray();
+            //For POCOR-8215/8216 end...
             
             return $list;
 
@@ -122,13 +130,15 @@ class AssessmentRepository extends Controller
                 $col = $params['order'];
                 $assessmentGradingTypes = $assessmentGradingTypes->orderBy($col, $orderBy);
             }
-            $limit = config('constants.defaultPaginateLimit');
 
+            //For POCOR-8215/8216 start...
             if(isset($params['limit'])){
                 $limit = $params['limit'];
+                $list = $assessmentGradingTypes->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $assessmentGradingTypes->get()->toArray();
             }
-
-            $list = $assessmentGradingTypes->paginate($limit)->toArray();
+            //For POCOR-8215/8216 end...
             
             return $list;
 
@@ -149,12 +159,22 @@ class AssessmentRepository extends Controller
             $params = $request->all();
 
             $assessmentGradingOptions = new AssessmentGradingOptions();
-            $limit = config('constants.defaultPaginateLimit');
+
+            //For POCOR-8215/8216 start...
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $assessmentGradingOptions = $assessmentGradingOptions->orderBy($col, $orderBy);
+            }
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
+                $list = $assessmentGradingOptions->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $assessmentGradingOptions->get()->toArray();
             }
-            $list = $assessmentGradingOptions->paginate($limit);
+            //For POCOR-8215/8216 end...
             
             return $list;
             
@@ -173,22 +193,26 @@ class AssessmentRepository extends Controller
     public function getAssessmentUniquePeriodList($request, $assessmentId)
     {
         try {
-            
-            $list = AssessmentPeriod::where('assessment_id', $assessmentId)
+            $params = $request->all();
+            $assessmentPeriods = AssessmentPeriod::where('assessment_id', $assessmentId)
                     ->groupby('academic_term');
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $list = $list->orderBy($col, $orderBy);
+                $assessmentPeriods = $assessmentPeriods->orderBy($col, $orderBy);
             }
-            $limit = config('constants.defaultPaginateLimit');
+            
 
+            //For POCOR-8215/8216 start...
             if(isset($params['limit'])){
                 $limit = $params['limit'];
+                $list = $assessmentPeriods->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $assessmentPeriods->get()->toArray();
             }
+            //For POCOR-8215/8216 end...
 
-            $list = $list->paginate($limit)->toArray();
             return $list;
         } catch (\Exception $e) {
             Log::error(
@@ -230,14 +254,8 @@ class AssessmentRepository extends Controller
             $academic_period_id = $params['academic_period_id']??0;
             $class_id = $params['class_id']??0;
 
-
-            $limit = config('constants.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
-
-            $lists = AssessmentItem::where('assessment_id', $assessmentId)
+            $list = [];
+            $assessmentItem = AssessmentItem::where('assessment_id', $assessmentId)
                     ->join('education_subjects', 'education_subjects.id', '=', 'assessment_items.education_subject_id')
                     ->join('assessments', 'assessments.id', '=', 'assessment_items.assessment_id')
                     ->join('institution_subjects', 'institution_subjects.education_subject_id', '=', 'education_subjects.id')
@@ -255,19 +273,27 @@ class AssessmentRepository extends Controller
                     )
                     ->orderBy('education_subjects.order')
                     ->orderBy('education_subjects.code')
-                    ->orderBy('education_subjects.name')
-                    ->paginate($limit)
-                    ->toArray();
-                    
+                    ->orderBy('education_subjects.name');
 
-            return $lists;
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $assessmentItem->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $assessmentItem->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+                    
+            
+            return $list;
             
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch assessment item list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-             
+            dd($e);
             return $this->sendErrorResponse('Assessment item list not found');
         }
     }

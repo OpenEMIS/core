@@ -51,16 +51,16 @@ class AttendanceRepository extends Controller
         try {
             $params = $request->all();
 
-            $limit = config('constantvalues.defaultPaginateLimit');
-                
+            //For POCOR-8216/8215 start...
+            //$limit = config('constantvalues.defaultPaginateLimit');   
             if(isset($params['limit'])){
                 $limit = $params['limit'];
+                $list = $this->findSchoolAcademicPeriod($params, $limit);
+            } else {
+                $list['data'] = $this->findSchoolAcademicPeriod($params);
             }
-
-            $list = $this->findSchoolAcademicPeriod($params, $limit);
-            $resp['list'] = $list;
-
-            return $resp;
+            //For POCOR-8216/8215 end...
+            return $list;
             
         } catch (\Exception $e) {
             Log::error(
@@ -132,7 +132,7 @@ class AttendanceRepository extends Controller
     }
 
 
-    public function findSchoolAcademicPeriod($params, $limit)
+    public function findSchoolAcademicPeriod($params, $limit=0)
     {
         try {
             $list = AcademicPeriod::where('editable', 1)
@@ -140,7 +140,13 @@ class AttendanceRepository extends Controller
                         ->where('visible', '=', 1)
                         ->orderBy('order', 'ASC');
 
-            $list = $list->paginate($limit);
+            //For POCOR-8216/8215 start...
+            if($limit > 0){
+                $list = $list->paginate($limit);
+            } else {
+                $list = $list->get();
+            }
+            //For POCOR-8216/8215 end...
 
             return $list;
         } catch (\Exception $e) {
