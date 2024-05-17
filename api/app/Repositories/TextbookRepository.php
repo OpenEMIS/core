@@ -18,12 +18,18 @@ use JWTAuth;
 class TextbookRepository extends Controller
 {
 
-    public function getTextbookConditions(){
-        
+    public function getTextbookConditions($params)
+    {
         try {
-            $data = TextbookConditions::get();
+            $data = [];
+
+            if (isset($params['limit'])) {
+                $data = TextbookConditions::paginate($params['limit']);
+            } else {
+                $data = TextbookConditions::get();
+            }
+
             return $data;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -34,12 +40,11 @@ class TextbookRepository extends Controller
         }
     }
 
-    public function getTextbookByID($id){
-        
+    public function getTextbookByID($id)
+    {
         try {
             $data = Textbooks::where('id', $id)->first();
             return $data;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -50,12 +55,18 @@ class TextbookRepository extends Controller
         }
     }
 
-    public function getTextbookStatuses(){
-        
+    public function getTextbookStatuses($params)
+    {
         try {
-            $data = TextbookStatuses::get();
+            $data = [];
+
+            if (isset($params['limit'])) {
+                $data = TextbookStatuses::paginate($params['limit']);
+            } else {
+                $data = TextbookStatuses::get();
+            }
+
             return $data;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -66,12 +77,17 @@ class TextbookRepository extends Controller
         }
     }
 
-    public function getTextbookDimensions(){
-        
+    public function getTextbookDimensions($params)
+    {
         try {
-            $data = TextbookDimensions::get();
+            $data = [];
+            if (isset($params['limit'])) {
+                $data = TextbookDimensions::paginate($params['limit']);
+            } else {
+                $data = TextbookDimensions::get();
+            }
+
             return $data;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
