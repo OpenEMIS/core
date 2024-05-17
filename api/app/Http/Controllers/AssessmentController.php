@@ -40,6 +40,13 @@ class AssessmentController extends Controller
      *     description="Returns a list of assessment items",
      *     tags={"Assessment"},
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -59,20 +66,22 @@ class AssessmentController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
-     *                 @OA\Property(property="data", type="array",
-     *                     @OA\Items(
+     *                 @OA\Property(property="data", type="object",
+     *                      @OA\Property(property="data", type="array",
+     *                          @OA\Items(
      *                         type="object",
-     *                         @OA\Property(property="id", type="string", example="02bd59fe-1e6b-40e2-bc8b-462e28ee2753"),
-     *                         @OA\Property(property="weight", type="string", example="1.00"),
-     *                         @OA\Property(property="classification", type="string", example=""),
-     *                         @OA\Property(property="assessment_id", type="integer", example=24),
-     *                         @OA\Property(property="education_subject_id", type="integer", example=17),
-     *                         @OA\Property(property="modified_user_id", type="integer", nullable=true, example=null),
-     *                         @OA\Property(property="modified", type="string", format="date-time", nullable=true, example=null),
-     *                         @OA\Property(property="created_user_id", type="integer", example=2),
-     *                         @OA\Property(property="created", type="string", format="date-time", example="2018-05-30 07:29:11"),
-     *                         @OA\Property(property="education_subject_name", type="string", example="SUD-Spanish Upper Division")
-     *                     )
+     *                              @OA\Property(property="id", type="string", example="02bd59fe-1e6b-40e2-bc8b-462e28ee2753"),
+     *                              @OA\Property(property="weight", type="string", example="1.00"),
+     *                              @OA\Property(property="classification", type="string", example=""),
+     *                              @OA\Property(property="assessment_id", type="integer", example=24),
+     *                              @OA\Property(property="education_subject_id", type="integer", example=17),
+     *                              @OA\Property(property="modified_user_id", type="integer", nullable=true, example=null),
+     *                              @OA\Property(property="modified", type="string", format="date-time", nullable=true, example=null),
+     *                              @OA\Property(property="created_user_id", type="integer", example=2),
+     *                              @OA\Property(property="created", type="string", format="date-time", example="2018-05-30 07:29:11"),
+     *                              @OA\Property(property="education_subject_name", type="string", example="SUD-Spanish Upper Division")
+     *                          )
+     *                      )
      *                 )
      *         )
      *     ),
@@ -107,6 +116,13 @@ class AssessmentController extends Controller
      *     description="Returns a list of assessment periods",
      *     tags={"Assessment"},
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -126,27 +142,29 @@ class AssessmentController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
-     *                 @OA\Property(property="data", type="array",
-     *                     @OA\Items(
-     *                         type="object",
-     *                         @OA\Property(property="id", type="integer", example=2),
-     *                         @OA\Property(property="code", type="string", example="FYAK2"),
-     *                         @OA\Property(property="name", type="string", example="Final Year Assessment K2"),
-     *                         @OA\Property(property="start_date", type="string", format="date", example="2016-01-01"),
-     *                         @OA\Property(property="end_date", type="string", format="date", example="2016-12-31"),
-     *                         @OA\Property(property="date_enabled", type="string", format="date", example="2016-01-01"),
-     *                         @OA\Property(property="date_disabled", type="string", format="date", example="2016-12-31"),
-     *                         @OA\Property(property="weight", type="string", example="100.00"),
-     *                         @OA\Property(property="academic_term", type="string", nullable=true, example=null),
-     *                         @OA\Property(property="assessment_id", type="integer", example=16),
-     *                         @OA\Property(property="education_grade_id", type="integer", example=171),
-     *                         @OA\Property(property="education_grade_code", type="string", example="K2"),
-     *                         @OA\Property(property="education_grade_name", type="string", example="K2"),
-     *                         @OA\Property(property="modified_user_id", type="integer", nullable=true, example=null),
-     *                         @OA\Property(property="modified", type="string", format="date-time", nullable=true, example=null),
-     *                         @OA\Property(property="created_user_id", type="integer", example=2),
-     *                         @OA\Property(property="created", type="string", format="date-time", example="2016-06-24 02:42:45")
-     *                     )
+     *                 @OA\Property(property="data", type="object",
+     *                      @OA\Property(property="data", type="array",
+     *                          @OA\Items(
+     *                              type="object",
+     *                              @OA\Property(property="id", type="integer", example=2),
+     *                              @OA\Property(property="code", type="string", example="FYAK2"),
+     *                              @OA\Property(property="name", type="string", example="Final Year Assessment K2"),
+     *                              @OA\Property(property="start_date", type="string", format="date", example="2016-01-01"),
+     *                              @OA\Property(property="end_date", type="string", format="date", example="2016-12-31"),
+     *                              @OA\Property(property="date_enabled", type="string", format="date", example="2016-01-01"),
+     *                              @OA\Property(property="date_disabled", type="string", format="date", example="2016-12-31"),
+     *                              @OA\Property(property="weight", type="string", example="100.00"),
+     *                              @OA\Property(property="academic_term", type="string", nullable=true, example=null),
+     *                              @OA\Property(property="assessment_id", type="integer", example=16),
+     *                              @OA\Property(property="education_grade_id", type="integer", example=171),
+     *                              @OA\Property(property="education_grade_code", type="string", example="K2"),
+     *                              @OA\Property(property="education_grade_name", type="string", example="K2"),
+     *                              @OA\Property(property="modified_user_id", type="integer", nullable=true, example=null),
+     *                              @OA\Property(property="modified", type="string", format="date-time", nullable=true, example=null),
+     *                              @OA\Property(property="created_user_id", type="integer", example=2),
+     *                              @OA\Property(property="created", type="string", format="date-time", example="2016-06-24 02:42:45")
+     *                          )
+     *                      )
      *                 )
      *         )
      *     ),
@@ -182,6 +200,13 @@ class AssessmentController extends Controller
      *     description="Returns a list of grading types associated with assessment items",
      *     tags={"Assessment"},
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -201,7 +226,8 @@ class AssessmentController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
-     *             @OA\Property(property="data", type="array",
+     *             @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="data", type="array",
      *                     @OA\Items(
      *                         type="object",
      *                         @OA\Property(property="id", type="integer", example=2),
@@ -234,6 +260,7 @@ class AssessmentController extends Controller
      *                         @OA\Property(property="created_user_id", type="integer", example="2"),
      *                         @OA\Property(property="created", type="string", example="2023-07-28 17:40:09")
      *                     )
+     *                  )
      *             )
      *         )
      *     ),
@@ -268,6 +295,13 @@ class AssessmentController extends Controller
      *     description="Returns a list of grading options for assessments",
      *     tags={"Assessment"},
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -287,21 +321,23 @@ class AssessmentController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
-     *             @OA\Property(property="data", type="array",
-     *                 @OA\Items(
-     *                     type="object",
-     *                     @OA\Property(property="id", type="integer", example=2),
-     *                     @OA\Property(property="code", type="string", example="A"),
-     *                     @OA\Property(property="name", type="string", example="Excellent"),
-     *                     @OA\Property(property="min", type="string", example="80.00"),
-     *                     @OA\Property(property="max", type="string", example="100.00"),
-     *                     @OA\Property(property="order", type="integer", example=1),
-     *                     @OA\Property(property="visible", type="integer", example=1),
-     *                     @OA\Property(property="modified_user_id", type="integer", example=2),
-     *                     @OA\Property(property="modified", type="string", format="date-time", example="2023-07-28 17:40:09"),
-     *                     @OA\Property(property="created_user_id", type="integer", example=1),
-     *                     @OA\Property(property="created", type="string", format="date-time", example="2015-07-10 19:24:17")
-     *                 )
+     *             @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                      type="object",
+     *                          @OA\Property(property="id", type="integer", example=2),
+     *                          @OA\Property(property="code", type="string", example="A"),
+     *                          @OA\Property(property="name", type="string", example="Excellent"),
+     *                          @OA\Property(property="min", type="string", example="80.00"),
+     *                          @OA\Property(property="max", type="string", example="100.00"),
+     *                          @OA\Property(property="order", type="integer", example=1),
+     *                          @OA\Property(property="visible", type="integer", example=1),
+     *                          @OA\Property(property="modified_user_id", type="integer", example=2),
+     *                          @OA\Property(property="modified", type="string", format="date-time", example="2023-07-28 17:40:09"),
+     *                          @OA\Property(property="created_user_id", type="integer", example=1),
+     *                          @OA\Property(property="created", type="string", format="date-time", example="2015-07-10 19:24:17")
+     *                      )
+     *                  )
      *             )
      *         )
      *     ),
@@ -344,6 +380,13 @@ class AssessmentController extends Controller
      *         @OA\Schema(type="integer", example=31)
      *     ),
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -363,12 +406,14 @@ class AssessmentController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
-     *             @OA\Property(property="data", type="array",
-     *                 @OA\Items(
-     *                     type="object",
-     *                     @OA\Property(property="id", type="string", example="First Half"),
-     *                     @OA\Property(property="name", type="string", example="First Half")
-     *                 )
+     *             @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                          @OA\Property(property="id", type="string", example="First Half"),
+     *                          @OA\Property(property="name", type="string", example="First Half")
+     *                      )
+     *                  )
      *             )
      *         )
      *     ),
@@ -409,20 +454,6 @@ class AssessmentController extends Controller
      *         required=true,
      *         description="ID of the assessment",
      *         @OA\Schema(type="integer", example=31)
-     *     ),
-     *     @OA\Parameter(
-     *         name="page",
-     *         in="query",
-     *         required=false,
-     *         description="Page number",
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
-     *     @OA\Parameter(
-     *         name="limit",
-     *         in="query",
-     *         required=false,
-     *         description="Number of items per page",
-     *         @OA\Schema(type="integer", example=10)
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -509,27 +540,50 @@ class AssessmentController extends Controller
      *         description="ID of the class",
      *         @OA\Schema(type="integer", example=11)
      *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Successful.",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
-     *             @OA\Property(property="data", type="array",
-     *                 @OA\Items(type="object",
-     *                      @OA\Property(property="id", type="string", example="a12126ea-f0b8-4237-91ad-8719862ce1e2"),
-     *                      @OA\Property(property="weight", type="string", example="0.00"),
-     *                      @OA\Property(property="classification", type="string", example=""),
-     *                      @OA\Property(property="InstitutionSubjects", type="object",
-     *                          @OA\Property(property="education_subject_id", type="integer", example=60),
-     *                          @OA\Property(property="id", type="integer", example=50),
-     *                          @OA\Property(property="name", type="string", example="Social Studies")
-     *                      ),
-     *                      @OA\Property(property="education_subject", type="object",
-     *                          @OA\Property(property="id", type="integer", example=60),
-     *                          @OA\Property(property="code_name", type="string", example="SSMC - Social Studies")
-     *                      ),
-     *                      @OA\Property(property="is_editable", type="integer", example=1)
+     *             @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="data", type="array",
+     *                      @OA\Items(type="object",
+     *                              @OA\Property(property="id", type="string", example="a12126ea-f0b8-4237-91ad-8719862ce1e2"),
+     *                              @OA\Property(property="weight", type="string", example="0.00"),
+     *                              @OA\Property(property="classification", type="string", example=""),
+     *                              @OA\Property(property="InstitutionSubjects", type="object",
+     *                                  @OA\Property(property="education_subject_id", type="integer", example=60),
+     *                                  @OA\Property(property="id", type="integer", example=50),
+     *                                  @OA\Property(property="name", type="string", example="Social Studies")
+     *                              ),
+     *                              @OA\Property(property="education_subject", type="object",
+     *                                  @OA\Property(property="id", type="integer", example=60),
+     *                                  @OA\Property(property="code_name", type="string", example="SSMC - Social Studies")
+     *                              ),
+     *                              @OA\Property(property="is_editable", type="integer", example=1)
+     *                      )
      *                  )
      *              )
      *         )
