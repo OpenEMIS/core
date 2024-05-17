@@ -472,9 +472,9 @@ class ControllerActionComponent extends Component
     {
         $controller = $this->controller;
         $url = ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName()];
-
+        
         if ($this->triggerFrom == 'Model') {
-            $url['action'] = $this->model->getAlias();
+            $url['action'] = $this->model->alias;
             $url[0] = $action;
         } else {
             $url['action'] = $action;
@@ -597,7 +597,7 @@ class ControllerActionComponent extends Component
             $actionUrl['action'] = $action;
 
             if ($this->triggerFrom == 'Model') {
-                $actionUrl['action'] = $this->model->getAlias();
+                $actionUrl['action'] = $this->model->alias;
                 $actionUrl[0] = $action;
             }
 
@@ -630,7 +630,7 @@ class ControllerActionComponent extends Component
         $backUrl = $defaultUrl;
         $backUrl['action'] = $backAction;
         if ($this->triggerFrom == 'Model') {
-            $backUrl['action'] = $this->model->getAlias();
+            $backUrl['action'] = $this->model->alias;
             $backUrl[] = $backAction;
         }
         if ($backAction != 'index') {
@@ -707,7 +707,7 @@ class ControllerActionComponent extends Component
                     if (in_array($this->currentAction, $this->defaultActions)) {
                         $result = call_user_func_array([$this, $this->currentAction], $this->paramsPass);
                     } else {
-                        return $this->controller->redirect(['action' => $this->model->getAlias()]);
+                        return $this->controller->redirect(['action' => $this->model->alias]);
                     }
                 }
             }
@@ -729,7 +729,7 @@ class ControllerActionComponent extends Component
     {
         $controller = $this->controller;
         if (!is_null($this->model) && !empty($this->model->fields)) {
-            $action = $this->triggerFrom == 'Model' ? $this->model->getAlias() : $this->currentAction;
+            $action = $this->triggerFrom == 'Model' ? $this->model->alias : $this->currentAction;
 
             $this->initButtons();
 
@@ -1176,6 +1176,7 @@ class ControllerActionComponent extends Component
         // End Event
 
         $entity = $model->newEmptyEntity();
+
         if ($request->is(['get'])) {
             // Event: addOnInitialize
             $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.onInitialize');
@@ -1197,6 +1198,7 @@ class ControllerActionComponent extends Component
 //            $this->log(__LINE__ . ': Event -> ControllerAction.Model.add.onInitialize', 'debug');
 //            $this->log(print_r($requestData, true), 'debug');
 //            $this->log(print_r($params, true), 'debug');
+
             if ($submit == 'save') {
                 // Event: addEditBeforePatch
                 $this->debug(__METHOD__, ': Event -> ControllerAction.Model.addEdit.beforePatch');
@@ -1239,7 +1241,7 @@ class ControllerActionComponent extends Component
                     $process = $event->getResult();
                 }
                 // End Event
-                // echo "<pre>";print_r($process($model, $entity));die;
+
                 if ($process($model, $entity)) {
                     $this->Alert->success('general.add.success');
                     // Event: addAfterSave

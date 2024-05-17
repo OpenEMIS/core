@@ -16,7 +16,7 @@ class NavigationHelper extends Helper
 
     public function printNavigation($navigations)
     {
-        // $serverRequest = $this->request;
+        //$serverRequest = $this->request;
         $parentStack = [];
         $html = '';
         $index = 1;

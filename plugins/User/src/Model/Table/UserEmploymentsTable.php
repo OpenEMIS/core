@@ -116,8 +116,12 @@ class UserEmploymentsTable extends ControllerActionTable {
 
 		// End POCOR-5188
 		$queryString = $this->getQueryString();
-        $data['staff_id'] = $queryString['staff_id'];
-		$this->field('security_user_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
+		if(isset($queryString['staff_id']) && !empty($queryString['staff_id'])){
+			$securityUserId = $queryString['staff_id'];
+		}else{
+			$securityUserId = $queryString['user_id'];
+		}
+		$this->field('security_user_id', ['type' => 'hidden', 'value' => $securityUserId]);
 	}
 
 	private function setupTabElements() {

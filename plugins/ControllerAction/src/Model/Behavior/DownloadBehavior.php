@@ -89,7 +89,7 @@ class DownloadBehavior extends Behavior
             $ids =[];
             $params = $model->paramsDecode($model->paramsPass(0));
             $ids['id'] = $params['id'];
-        }       
+        } 
         if ($model->exists($ids)) {
             $data = $model->get($ids);
             $fileName = $data->{$this->getConfig('name')};
