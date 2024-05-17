@@ -457,6 +457,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
 
     // save
     function saveAbsences(data, context) {
+        console.log(data,"data 1");
         var studentAbsenceData = {
             student_id: data.student_id,
             institution_id: data.institution_id,
@@ -645,6 +646,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
             menuTabs: [],
             cellRenderer: function(params) {
                 if (angular.isDefined(params.value)) {
+                    console.log(params,"params");
                     var context = params.context;
                     var absenceTypeList = context.absenceTypes;
                     var isMarked = context.isMarked;
@@ -781,6 +783,7 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
                 // reset not related data, store old params for reset purpose
                 switch (absenceTypeObj.code) {
                     case attendanceType.PRESENT.code:
+                    console.log(absenceTypeObj.code,"absenceTypeObj.code");
                         oldParams.student_absence_reason_id = data.institution_student_absences.student_absence_reason_id;
                         oldParams.comment = data.institution_student_absences.comment;
 
@@ -996,7 +999,8 @@ function InstitutionStudentAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSv
         if (angular.isDefined(data.institution_student_absences)) {
             var html = '';
             if (isMarked) {
-                console.log('noScheduledClicked',noScheduledClicked)
+                console.log('noScheduledClicked',noScheduledClicked);
+                console.log(data,"data");
                 var id = (data.absence_type_id === null) ? 0 : data.institution_student_absences.absence_type_id;
                 if(noScheduledClicked)
                     var absenceTypeObj = {
