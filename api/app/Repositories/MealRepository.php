@@ -33,13 +33,21 @@ class MealRepository extends Controller
             $list = MealProgrammes::select('meal_institution_programmes.id', 'meal_programmes.id as meal_programme_id', 'meal_programmes.name')
                 ->join('meal_institution_programmes', 'meal_institution_programmes.meal_programme_id', '=', 'meal_programmes.id')
                 ->where('meal_institution_programmes.institution_id', $institutionId)
-                ->where('meal_programmes.academic_period_id', $academic_period_id)
-                ->get()
-                ->toArray();
-            $total = count($list);
+                ->where('meal_programmes.academic_period_id', $academic_period_id);
 
-            $resp['data'] = $list;
-            $resp['total'] = $total;
+            if (isset($params['limit'])) {
+                $list = $list->paginate($params['limit']);
+            } else {
+                $list = $list->get();
+            }
+
+            $list = $list->toArray();
+
+            if (isset($params['limit'])) {
+                $resp = $list;
+            } else {
+                $resp['data'] = $list;
+            }
 
             return $resp;
         } catch (\Exception $e) {
@@ -58,12 +66,13 @@ class MealRepository extends Controller
         try {
             $params = $request->all();
 
-            $mealBenefits = MealBenefits::get();
-            
-            $total = count($mealBenefits);
-            
-            $resp['data'] = $mealBenefits;
-            $resp['total'] = $total;
+            if (isset($params['limit'])) {
+                $mealBenefits = MealBenefits::paginate($params['limit']);
+                $resp = $mealBenefits;
+            } else {
+                $mealBenefits = MealBenefits::get();
+                $resp['data'] = $mealBenefits;
+            }
 
             return $resp;
         } catch (\Exception $e) {
@@ -232,15 +241,17 @@ class MealRepository extends Controller
     public function getMealDistributions($options, $institutionId)
     {
         try {
-            $list = MealReceived::get()->toArray();
-            $total = 0;
+
             $resp = [];
 
-            if(count($list) > 0){
-                $total = count($list);
+            if (isset($options['limit'])) {
+                $list = MealReceived::paginate($options['limit'])->toArray();
+                $resp = $list;
+            } else {
+                $list = MealReceived::get()->toArray();
                 $resp['data'] = $list;
-                $resp['total'] = $total;
             }
+
             return $resp;
         } catch (\Exception $e) {
             Log::error(
@@ -275,17 +286,17 @@ class MealRepository extends Controller
     public function getMealTargets($options)
     {
         try {
-            $list = MealTargetType::get()->toArray();
-            $total = 0;
             $resp = [];
 
-            if(count($list) > 0){
-                $total = count($list);
+            if (isset($options['limit'])) {
+                $list = MealTargetType::paginate($options['limit'])->toArray();
+                $resp = $list;
+            } else {
+                $list = MealTargetType::get()->toArray();
                 $resp['data'] = $list;
-                $resp['total'] = $total;
             }
+
             return $resp;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Meal Targets List from DB',
@@ -300,17 +311,17 @@ class MealRepository extends Controller
     public function getMealImplementers($options)
     {
         try {
-            $list = MealImplementer::get()->toArray();
-            $total = 0;
             $resp = [];
 
-            if(count($list) > 0){
-                $total = count($list);
+            if (isset($options['limit'])) {
+                $list = MealImplementer::paginate($options['limit'])->toArray();
+                $resp = $list;
+            } else {
+                $list = MealImplementer::get()->toArray();
                 $resp['data'] = $list;
-                $resp['total'] = $total;
             }
+
             return $resp;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Meal Implementers List from DB',
@@ -326,17 +337,17 @@ class MealRepository extends Controller
     public function getMealNutritions($options)
     {
         try {
-            $list = MealNutrition::get()->toArray();
-            $total = 0;
             $resp = [];
 
-            if(count($list) > 0){
-                $total = count($list);
+            if (isset($options['limit'])) {
+                $list = MealNutrition::paginate($options['limit'])->toArray();
+                $resp = $list;
+            } else {
+                $list = MealNutrition::get()->toArray();
                 $resp['data'] = $list;
-                $resp['total'] = $total;
             }
+
             return $resp;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Meal Nutritions List from DB',
@@ -351,17 +362,17 @@ class MealRepository extends Controller
     public function getMealRatings($options)
     {
         try {
-            $list = MealRating::get()->toArray();
-            $total = 0;
             $resp = [];
 
-            if(count($list) > 0){
-                $total = count($list);
+            if (isset($options['limit'])) {
+                $list = MealRating::paginate($options['limit'])->toArray();
+                $resp = $list;
+            } else {
+                $list = MealRating::get()->toArray();
                 $resp['data'] = $list;
-                $resp['total'] = $total;
             }
+
             return $resp;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Meal Ratings List from DB',
@@ -376,17 +387,17 @@ class MealRepository extends Controller
     public function getMealStatusTypes($options)
     {
         try {
-            $list = MealStatusType::get()->toArray();
-            $total = 0;
             $resp = [];
 
-            if(count($list) > 0){
-                $total = count($list);
+            if (isset($options['limit'])) {
+                $list = MealStatusType::paginate($options['limit'])->toArray();
+                $resp = $list;
+            } else {
+                $list = MealStatusType::get()->toArray();
                 $resp['data'] = $list;
-                $resp['total'] = $total;
             }
+
             return $resp;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Meal Status Types List from DB',
@@ -401,17 +412,17 @@ class MealRepository extends Controller
     public function getMealFoodTypes($options)
     {
         try {
-            $list = FoodType::get()->toArray();
-            $total = 0;
             $resp = [];
 
-            if(count($list) > 0){
-                $total = count($list);
+            if (isset($options['limit'])) {
+                $list = FoodType::paginate($options['limit'])->toArray();
+                $resp = $list;
+            } else {
+                $list = FoodType::get()->toArray();
                 $resp['data'] = $list;
-                $resp['total'] = $total;
             }
+
             return $resp;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Meal Food Types List from DB',
