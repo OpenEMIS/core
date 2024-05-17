@@ -324,11 +324,11 @@ class AssessmentRepository extends Controller
             
             $params = $request->all();
 
-            $limit = config('constants.defaultPaginateLimit');
+            /*$limit = config('constants.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
-            }
+            }*/
 
             $institution_id = $params['institution_id']??0;
             $institution_class_id = $params['institution_class_id']??0;
@@ -353,7 +353,7 @@ class AssessmentRepository extends Controller
                 'academic_period_id' => $academic_period_id,
             ];
             
-            $list = InstitutionSubjectStudents::select(
+            $institutionSubjectStudents = InstitutionSubjectStudents::select(
                     'total_mark',
                     'academic_period_id',
                     'education_grade_id',
@@ -381,9 +381,25 @@ class AssessmentRepository extends Controller
                 ->where($where);
 
             if($archive == 0 || $archive == false){
-                $list = $list->whereNotIn('student_statuses.code', ['TRANSFERRED', 'WITHDRAWN', 'REPEATED']);
+                $institutionSubjectStudents = $institutionSubjectStudents->whereNotIn('student_statuses.code', ['TRANSFERRED', 'WITHDRAWN', 'REPEATED']);
             }
-            $list = $list->paginate($limit)->toArray();
+            //$list = $list->paginate($limit)->toArray();
+
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $institutionSubjectStudents = $institutionSubjectStudents->orderBy($col, $orderBy);
+            }
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $institutionSubjectStudents->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $institutionSubjectStudents->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
 
             return $list;
         } catch (\Exception $e) {

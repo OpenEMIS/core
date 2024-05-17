@@ -1919,6 +1919,36 @@
                             "type": "integer",
                             "example": 189
                         }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "academic_period_id"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
                     }
                 ],
                 "responses": {
@@ -1933,83 +1963,88 @@
                                             "example": "Successful."
                                         },
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "total_mark": {
-                                                        "type": "string",
-                                                        "example": "42.00"
-                                                    },
-                                                    "academic_period_id": {
-                                                        "type": "integer",
-                                                        "example": 32
-                                                    },
-                                                    "education_grade_id": {
-                                                        "type": "integer",
-                                                        "example": 189
-                                                    },
-                                                    "education_subject_id": {
-                                                        "type": "integer",
-                                                        "example": 69
-                                                    },
-                                                    "student_status_id": {
-                                                        "type": "integer",
-                                                        "example": 7
-                                                    },
-                                                    "assessment_id": {
-                                                        "type": "integer",
-                                                        "example": 32
-                                                    },
-                                                    "assessment_period_id": {
-                                                        "type": "integer",
-                                                        "example": 33
-                                                    },
-                                                    "student_status_name": {
-                                                        "type": "string",
-                                                        "example": "Promoted"
-                                                    },
-                                                    "the_student_status": {
-                                                        "type": "string",
-                                                        "example": "Promoted"
-                                                    },
-                                                    "student_status_code": {
-                                                        "type": "string",
-                                                        "example": "PROMOTED"
-                                                    },
-                                                    "student_id": {
-                                                        "type": "integer",
-                                                        "example": 27
-                                                    },
-                                                    "first_name": {
-                                                        "type": "string",
-                                                        "example": "Todd"
-                                                    },
-                                                    "middle_name": {
-                                                        "type": "string",
-                                                        "example": null,
-                                                        "nullable": true
-                                                    },
-                                                    "third_name": {
-                                                        "type": "string",
-                                                        "example": null,
-                                                        "nullable": true
-                                                    },
-                                                    "last_name": {
-                                                        "type": "string",
-                                                        "example": "Renner"
-                                                    },
-                                                    "preferred_name": {
-                                                        "type": "string",
-                                                        "example": null,
-                                                        "nullable": true
-                                                    },
-                                                    "the_student_code": {
-                                                        "type": "string",
-                                                        "example": 1522271989
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "total_mark": {
+                                                                "type": "string",
+                                                                "example": "42.00"
+                                                            },
+                                                            "academic_period_id": {
+                                                                "type": "integer",
+                                                                "example": 32
+                                                            },
+                                                            "education_grade_id": {
+                                                                "type": "integer",
+                                                                "example": 189
+                                                            },
+                                                            "education_subject_id": {
+                                                                "type": "integer",
+                                                                "example": 69
+                                                            },
+                                                            "student_status_id": {
+                                                                "type": "integer",
+                                                                "example": 7
+                                                            },
+                                                            "assessment_id": {
+                                                                "type": "integer",
+                                                                "example": 32
+                                                            },
+                                                            "assessment_period_id": {
+                                                                "type": "integer",
+                                                                "example": 33
+                                                            },
+                                                            "student_status_name": {
+                                                                "type": "string",
+                                                                "example": "Promoted"
+                                                            },
+                                                            "the_student_status": {
+                                                                "type": "string",
+                                                                "example": "Promoted"
+                                                            },
+                                                            "student_status_code": {
+                                                                "type": "string",
+                                                                "example": "PROMOTED"
+                                                            },
+                                                            "student_id": {
+                                                                "type": "integer",
+                                                                "example": 27
+                                                            },
+                                                            "first_name": {
+                                                                "type": "string",
+                                                                "example": "Todd"
+                                                            },
+                                                            "middle_name": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "third_name": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "last_name": {
+                                                                "type": "string",
+                                                                "example": "Renner"
+                                                            },
+                                                            "preferred_name": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "the_student_code": {
+                                                                "type": "string",
+                                                                "example": 1522271989
+                                                            }
+                                                        },
+                                                        "type": "object"
                                                     }
-                                                },
-                                                "type": "object"
-                                            }
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -4113,6 +4148,16 @@
                 "operationId": "7cce2e44ec237b7532f06bbfed065e3b",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -4317,6 +4362,16 @@
                 "operationId": "142a41c4079d3b44c80a72dd71cee4f6",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -4350,7 +4405,7 @@
                                         },
                                         "data": {
                                             "properties": {
-                                                "list": {
+                                                "data": {
                                                     "type": "array",
                                                     "items": {
                                                         "properties": {
@@ -4395,10 +4450,6 @@
                                                         },
                                                         "type": "object"
                                                     }
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": 1
                                                 }
                                             },
                                             "type": "object"
