@@ -151,7 +151,7 @@ class AwardsTable extends ControllerActionTable
             case 'Profiles':
                 $type = $this->request->getQuery('type');
                 $options['type'] = $type;
-                $session = $this->request->session();
+                $session = $this->request->getSession();
                 $isStaff = $session->read('Auth.User.is_staff');
                 if ($isStaff) {
                     //$tabElements = $this->controller->getProfessionalTabElements($options);

@@ -9,7 +9,8 @@ $this->assign('contentHeader', (!empty($contentHeader) ? $contentHeader : $this-
 
 $this->start('contentBody');
 $panelHeader = $this->fetch('panelHeader');
-$paramsQuery = $this->getQueryString(); //POCOR-8080
+//$paramsQuery = $this->getQueryString(); //POCOR-8080 //this hindol's code not working in Personal > Staff > Acadamic > Attandance 
+$paramsQuery = $this->ControllerAction->getQueryString(); //using old code in cakephp 3
 $staffId = $paramsQuery['staff_id'];
 ?>
 <?= $this->element('OpenEmis.alert') ?>
