@@ -72,7 +72,6 @@ class AttachmentsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['type' => 'binary', 'visible' => true]);
         $this->field('security_roles', [
@@ -335,7 +334,7 @@ class AttachmentsTable extends ControllerActionTable
             $this->fields['staff_attachment_type_id']['options'] = $staffAttachmentTypeOptions;
             $this->fields['staff_attachment_type_id']['required'] = true;
             $this->field('staff_attachment_type_id', ['required' => true, 'attr' => ['label' => __('Type')]]);
-            $this->field('student_attachment_type_id', ['visible' => false]);
+            $this->field('student_attachment_type_id', ['visible' => true]);
             $this->setFieldOrder([
                 'name', 'staff_attachment_type_id', 'description', 'date_on_file', 'file_content'
             ]);
@@ -351,11 +350,11 @@ class AttachmentsTable extends ControllerActionTable
             $this->setFieldOrder([
                 'name', 'student_attachment_type_id', 'description', 'date_on_file', 'file_content'
             ]);
-            $this->field('staff_attachment_type_id', ['visible' => false]);
+            $this->field('staff_attachment_type_id', ['visible' => true]);
         }
         $this->field('security_roles', ['attr' => ['label' => __('Shared')]]);
         $this->setFieldOrder([
-            'file_content', 'security_roles', 'name', 'description' ,'created_user_id', 'created', 'date_on_file'
+            'name', 'staff_attachment_type_id', 'description', 'date_on_file' , 'file_content', 'security_roles', 'created_user_id', 'created'
         ]);
     }
 
