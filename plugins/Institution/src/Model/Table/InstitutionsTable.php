@@ -1609,6 +1609,9 @@ class InstitutionsTable extends ControllerActionTable
                 $action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Institutions', 'add'];
                 return $this->controller->redirect($action);
             }
+        }elseif(empty(!$search) && empty($this->isAdvancedSearchEnabled())){
+            $query->find('SearchInstitution', ['search' => $search]);
+            
         }
 
         // to display message after redirect
@@ -2263,7 +2266,6 @@ class InstitutionsTable extends ControllerActionTable
             ]);
         }
 
-        //echo $query; die;
         return $query;
     }
 

@@ -153,10 +153,23 @@ class SingleGradeBehavior extends Behavior
             }
         }
         //POCOR-7803::End
+
+        $LabelTable = TableRegistry::get('Labels');
+        $unitname = $LabelTable->find()->where(['module_name' =>'Institutions -> Classes' , 'field_name' =>'Unit'])->first();
+        if($unitname != null){
+           $unit =  $unitname->name;
+        }
+    
+        $CourseName = $LabelTable->find()->where(['module_name' =>'Institutions -> Classes' , 'field_name' =>'Course'])->first();
+        if($CourseName != null){
+           $Courses =  $CourseName->name;
+        }
         $model->field('single_grade_field', [
             'type'      => 'element',
             'unitEnable'      => $unitEnable, //POCOR-7803
             'courseEnable'      => $courseEnable, //POCOR-7803
+            'unitLabel'      => $unit, //POCOR-8271
+            'courseLabel'      => $Courses, //POCOR-8271
             'element'   => 'Institution.Classes/single_grade',
             'data'      => [    'numberOfClasses'   => $numberOfClasses,
                                 // 'staffOptions'      => $model->getStaffOptions($institutionId, 'add', $selectedAcademicPeriodId,0, $institutionShiftId,$homeTeacher),

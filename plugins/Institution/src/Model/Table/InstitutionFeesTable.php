@@ -173,13 +173,15 @@ class InstitutionFeesTable extends ControllerActionTable
         $feeTypes = [];
         $amount = 0.00;
         foreach ($entity->institution_fee_types as $key=>$obj) {
-            $feeTypes[$obj->fee_type->order] = [
-                'id' => $obj->id,
-                'type' => $obj->fee_type->name,
-                'fee_type_id' => $obj->fee_type_id,
-                'amount' => number_format($obj->amount, 2)
-            ];
-            $amount = (float)$amount + (float)$obj->amount;
+            if ($obj->amount > 0) { //POCOR-8177
+                $feeTypes[$obj->fee_type->order] = [
+                    'id' => $obj->id,
+                    'type' => $obj->fee_type->name,
+                    'fee_type_id' => $obj->fee_type_id,
+                    'amount' => number_format($obj->amount, 2)
+                ];
+                $amount = (float)$amount + (float)$obj->amount;
+            }
         }
         ksort($feeTypes);
         $this->fields['fee_types']['data'] = $feeTypes;

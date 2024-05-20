@@ -22,11 +22,13 @@
 				<thead>
 					<tr>
 						<th><?= $this->Label->get('InstitutionClasses.class'); ?></th>
-						<?php if($attr['unitEnable'] == 1){ ?>
-						<th><?= $this->Label->get('InstitutionClasses.unit'); ?></th>
+						<?php if($attr['unitEnable'] == 1){ //POCOR-8271
+							?>
+						<th><?= $attr['unitLabel']; ?></th>
 						<?php } ?>
 						<?php if($attr['courseEnable'] == 1){ ?>
-						<th><?= $this->Label->get('InstitutionClasses.course'); ?> </th>
+						<th><?= $attr['courseLabel']; ?> </th>
+						<?php //$this->Label->get('InstitutionClasses.course');?>
 						<?php } ?>
 						<th><?= $this->Label->get('InstitutionClasses.staff_id'); ?></th>
 						<th><?= $this->Label->get('InstitutionClasses.secondary_staff_id'); ?> </th>
