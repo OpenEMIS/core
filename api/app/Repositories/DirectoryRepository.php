@@ -292,7 +292,7 @@ class DirectoryRepository extends Controller
             $user_id = $params['user_id'] ?? null;
             $nationality_id = $params['nationality_id'] ?? null;
 
-            $checkUser = UserIdentities::where('identity_type_id', $identityTypeId)->where('number', 'LIKE', '%'.$identityNumber.'%');
+            $checkUser = UserIdentities::with('user:id,first_name,middle_name,third_name,last_name,openemis_no,preferred_name')->where('identity_type_id', $identityTypeId)->where('number', 'LIKE', '%'.$identityNumber.'%');
 
             if($user_id){
                 $checkUser = $checkUser->where('security_user_id', $user_id);
@@ -302,7 +302,7 @@ class DirectoryRepository extends Controller
                 $checkUser = $checkUser->where('nationality_id', $nationality_id);
             }
 
-            $checkUser = $checkUser->first();
+            $checkUser = $checkUser->get();
             
             if($checkUser){
                 $checkUser = $checkUser->toArray();

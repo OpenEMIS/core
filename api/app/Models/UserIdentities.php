@@ -11,4 +11,9 @@ class UserIdentities extends Model
 
     public $timestamps = false;
     protected $table = "user_identities";
+
+    public function user()
+    {
+        return $this->belongsTo(SecurityUsers::class, 'security_user_id', 'id');
+    }
 }

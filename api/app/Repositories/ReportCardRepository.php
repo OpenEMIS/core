@@ -657,5 +657,41 @@ class ReportCardRepository extends Controller
     }
     //For pocor-8260 end...
 
+    //For pocor-8270 start...
+    public function getSecurityRoleData($params, $roleId)
+    {
+        try {
+            $data = SecurityRoles::where('id', $roleId)->first();
+
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch data.');
+        }
+    }
+
+
+    public function getReportCardData($params, $reportCardId)
+    {
+        try {
+            $data = ReportCard::where('id', $reportCardId)->first();
+
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to fetch data.');
+        }
+    }
+    //For pocor-8270 end...
+
 }
 

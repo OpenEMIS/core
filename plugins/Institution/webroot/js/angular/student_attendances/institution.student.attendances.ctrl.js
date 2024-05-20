@@ -466,7 +466,6 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
 
 
     vm.updateDayList = function (dayListOptions) {
-
         vm.dayListOptions = dayListOptions;
         // console.log(vm.dayListOptions);
         var hasSelected = false;
@@ -595,6 +594,7 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
     vm.setGridData = function () {
         if (angular.isDefined(vm.gridOptions.api)) {
             // vm.gridOptions.api.setRowData(vm.classStudentList);
+            // console.log(vm.classStudentList,"classStudentList 1");
             vm.setRowDatas(vm.classStudentList);
             vm.countStudentData();
         }
@@ -621,8 +621,10 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             noScheduledClicked = false;
         var columnDefs = [];
         if (vm.selectedDay != -1) {
+            // console.log("No selected day");
             columnDefs = InstitutionStudentAttendancesSvc.getSingleDayColumnDefs(vm.selectedAttendancePeriod, noScheduledClicked, vm.selectedSubject);
         } else {
+            // console.log("Selected day");
             columnDefs = InstitutionStudentAttendancesSvc.getAllDayColumnDefs(vm.dayListOptions, vm.attendancePeriodOptions);
         }
 
@@ -805,8 +807,8 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             .then(setClassStudent)
             .then(function () {
                 vm.initGrid();
-                vm.setColumnDef();
-                vm.setGridData();
+                vm.setGridData(); //POCOR-8269
+                vm.setColumnDef(); //POCOR-8269
                 removeLoader();
             }).catch(handleError);
 
@@ -835,8 +837,8 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             .then(setClassStudent)
             .then(function () {
                 vm.initGrid();
-                vm.setColumnDef();
-                vm.setGridData();
+                vm.setGridData(); //POCOR-8269
+                vm.setColumnDef(); //POCOR-8269
                 removeLoader();
             }).catch(handleError);
     }
@@ -869,8 +871,8 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             .then(setClassStudent)
             .then(function () {
                 vm.initGrid();
-                vm.setColumnDef();
-                vm.setGridData();
+                vm.setGridData(); //POCOR-8269
+                vm.setColumnDef(); //POCOR-8269
                 removeLoader();
             }).catch(handleError);;
 
@@ -897,8 +899,8 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             .then(setClassStudent)
             .then(function () {
                 vm.initGrid();
-                vm.setColumnDef();
-                vm.setGridData();
+                vm.setGridData(); // POCOR-8269
+                vm.setColumnDef(); //POCOR-8269
                 removeLoader();
             }).catch(handleError);
     }
@@ -924,8 +926,8 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             .then(setClassStudent)
             .then(function () {
                 vm.initGrid();
-                vm.setColumnDef();
-                vm.setGridData();
+                vm.setGridData(); //POCOR-8269
+                vm.setColumnDef(); //POCOR-8269
                 removeLoader();
             }).catch(handleError);
     }
@@ -945,8 +947,8 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             .then(setClassStudent)
             .then(function () {
                 vm.initGrid();
-                vm.setColumnDef();
-                vm.setGridData();
+                vm.setGridData(); //POCOR-8269
+                vm.setColumnDef(); //POCOR-8269
                 removeLoader();
             }).catch(handleError);
     }
@@ -961,8 +963,8 @@ function InstitutionStudentAttendancesController($scope, $q, $window, $http, Uti
             .then(setClassStudent)
             .then(function () {
                 vm.initGrid();
-                vm.setColumnDef();
-                vm.setGridData();
+                vm.setGridData(); //POCOR-8269
+                vm.setColumnDef(); //POCOR-8269
                 removeLoader();
             }).catch(handleError);
         // vm.gridOptions.context.period = vm.selectedAttendancePeriod;
