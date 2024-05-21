@@ -357,9 +357,10 @@ class AssessmentRepository extends Controller
                 })
                 ->join('student_statuses', 'student_statuses.id', '=', 'institution_subject_students.student_status_id')
                 ->join('security_users', 'security_users.id', '=', 'institution_subject_students.student_id')
-                ->leftjoin('assessment_item_results', function($j){
+                ->leftjoin('assessment_item_results', function($j) use($education_subject_id){
                     $j->on('assessment_item_results.student_id', '=', 'institution_subject_students.student_id')
-                        ->on('assessment_item_results.assessment_period_id', '=', 'assessment_periods.id');
+                        ->on('assessment_item_results.assessment_period_id', '=', 'assessment_periods.id')
+                        ->where('assessment_item_results.education_subject_id', $education_subject_id);
                 })
                 ->where($where);
 
@@ -367,6 +368,8 @@ class AssessmentRepository extends Controller
                 $list = $list->whereNotIn('student_statuses.code', ['TRANSFERRED', 'WITHDRAWN', 'REPEATED']);
             }
             $list = $list->paginate($limit)->toArray();
+            
+
 
             $array = '{"class_id":"'.$institution_class_id.'","assessment_id":"'.$assessment_id.'","institution_id":'.$institution_id.',"academic_period_id":'.$academic_period_id.'}';
             $encodedArray = base64_encode($array);
@@ -401,6 +404,10 @@ class AssessmentRepository extends Controller
             }
             return $education_subject_id;
         } catch (\Exception $e) {
+            Log::error(
+                'Failed in getEducationSubjectId.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
             return 0;
         }
     }
