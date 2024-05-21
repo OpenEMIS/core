@@ -104,7 +104,8 @@ class StudentRisksTable extends ControllerActionTable
             $buttons['view']['url']['plugin'] = 'Institution';
             $buttons['view']['url']['controller'] = 'Institutions';
             $buttons['view']['url']['action'] = 'StudentRisks';
-            $buttons['view']['url']['0'] = $encodedQueryString;
+            $buttons['view']['url']['0'] = 'view';
+            $buttons['view']['url']['1'] = $encodedQueryString;
         }
 
         return $buttons;

@@ -1476,7 +1476,7 @@ class InstitutionClassesTable extends ControllerActionTable
                     'controller' => 'Institutions',
                     'action' => 'StaffUser',
                     'view',
-                    $this->paramsEncode(['id' => $entity->staff->id])
+                    $this->paramsEncode(['id' => $entity->staff->id, 'institution_id'=> $entity->institution_id, 'staff_id' => $entity->staff->id])
                 ]);
             } else {
                 return $this->getMessage($this->aliasField('noTeacherAssigned'));
@@ -1502,7 +1502,7 @@ class InstitutionClassesTable extends ControllerActionTable
                             'controller' => 'Institutions',
                             'action' => 'StaffUser',
                             'view',
-                            $this->paramsEncode(['id' => $classStaffEntity->secondary_staff->id])
+                            $this->paramsEncode(['id' => $classStaffEntity->secondary_staff->id, 'institution_id' => $entity->institution_id, 'staff_id' => $classStaffEntity->secondary_staff->id])
                         ]);
 
                         $staffList[] = $staffLink;

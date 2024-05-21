@@ -1904,7 +1904,8 @@ public function ClassReportCards()
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'Classes',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+                'index',
+                $this->ControllerAction->paramsEncode(['id' => $institutionId, 'institution_id'=>$institutionId])
             ];
 
             $alertUrl = [
@@ -1938,7 +1939,7 @@ public function ClassReportCards()
                 if (!$AccessControl->check(['Institutions', 'AllSubjects', $action], $roles)) {
                     if ($AccessControl->check(['Institutions', 'Subjects', $action], $roles)) {
                         $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
-                        $subjectRecord = $InstitutionSubjects->get($institutionSubjectId, ['contain' => ['Teachers']])->toArray();
+                        $subjectRecord = $InstitutionSubjects->get($institutionSubjectId['id'], ['contain' => ['Teachers']])->toArray();
                         if (in_array($userId, array_column($subjectRecord['teachers']), 'id')) {
                             $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
                             return $this->redirect($url);
@@ -1952,12 +1953,13 @@ public function ClassReportCards()
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'Subjects';
             $viewUrl[0] = 'view';
-            $viewUrl[1] =  $this->ControllerAction->paramsEncode(['id' =>  $institutionSubjectId , 'institution_id' =>  $institutionId]);
+            $viewUrl[1] =  $this->ControllerAction->paramsEncode(['id' =>  $institutionSubjectId['id'] , 'institution_id' =>  $institutionId]);
             $indexUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'Subjects',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+                'index',
+                 $this->ControllerAction->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId])
             ];
             $alertUrl = [
                 'plugin' => 'Configuration',

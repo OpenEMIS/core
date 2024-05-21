@@ -133,7 +133,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
         $requestQuery = $this->request->getQuery();
         if (isset($requestQuery) && array_key_exists('period', $requestQuery)) {
-            $selectedPeriodId = $requestQuery('period');
+            $selectedPeriodId = $requestQuery['period'];
         } else {
             $selectedPeriodId = $this->AcademicPeriods->getCurrent();
         }
@@ -141,7 +141,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $shiftOptions = $this->getShiftOptions($selectedPeriodId, true);
 
         if (isset($requestQuery) && array_key_exists('shift', $requestQuery)) {
-            $selectedShiftId = $requestQuery('shift');
+            $selectedShiftId = $requestQuery['shift'];
         } else {
             $selectedShiftId = -1;
         }

@@ -300,6 +300,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ->toArray();
 
         if (!$this->Auth->user('super_admin')) {
+            $Classes = $this->Classes;
             $classOptions = $Subjects
                 ->find('list', ['keyField' => 'class_id', 'valueField' => 'class_name'])
                 ->innerJoinWith('Classes')
@@ -310,7 +311,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     $Classes->aliasField('institution_id') => $institutionId
                 ])
                 ->group(['class_id'])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
         }
 
@@ -1968,7 +1969,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                                 'controller' => 'Institutions',
                                 'action' => 'StaffUser',
                                 'view',
-                                $this->paramsEncode(['id' => $value->id])
+                                $this->paramsEncode(['id' => $value->id,  'institution_id'=> $entity->institution_id, 'staff_id' => $value->id])
                             ]);
                             break;
 
