@@ -17,10 +17,10 @@ class TextbookService extends Controller
     }
 
     
-    public function getTextbookConditions(){
+    public function getTextbookConditions($params){
     
         try {
-            $data = $this->textbookRepository->getTextbookConditions();
+            $data = $this->textbookRepository->getTextbookConditions($params);
             return $data;
             
         } catch (\Exception $e) {
@@ -70,10 +70,10 @@ class TextbookService extends Controller
         }
     }
 
-    public function getTextbookStatuses(){
+    public function getTextbookStatuses($params){
     
         try {
-            $data = $this->textbookRepository->getTextbookStatuses();
+            $data = $this->textbookRepository->getTextbookStatuses($params);
             return $data;
             
         } catch (\Exception $e) {
@@ -86,10 +86,10 @@ class TextbookService extends Controller
         }
     }
 
-    public function getTextbookDimensions(){
+    public function getTextbookDimensions($params){
     
         try {
-            $data = $this->textbookRepository->getTextbookDimensions();
+            $data = $this->textbookRepository->getTextbookDimensions($params);
             return $data;
             
         } catch (\Exception $e) {

@@ -62,10 +62,11 @@ class RegistrationController extends Controller
      *      )
      * )
      */
-    public function academicPeriodsList()
+    public function academicPeriodsList(Request $request)
     {
         try {
-            $data = $this->registrationService->academicPeriodsList();
+            $params = $request->all();
+            $data = $this->registrationService->academicPeriodsList($params);
             
             return $this->sendSuccessResponse("Academic Period List Found", $data);
             
@@ -255,10 +256,11 @@ class RegistrationController extends Controller
      *     )
      * )
      */
-    public function administrativeAreasList()
+    public function administrativeAreasList(Request $request)
     {
         try {
-            $data = $this->registrationService->administrativeAreasList();
+            $params = $request->all();
+            $data = $this->registrationService->administrativeAreasList($params);
             
             return $this->sendSuccessResponse("Areas List Found", $data);
             
@@ -585,10 +587,11 @@ class RegistrationController extends Controller
      *      )
      * )
      */
-    public function nationalityList()
+    public function nationalityList(Request $request)
     {
         try {
-            $data = $this->registrationService->nationalityList();
+            $params = $request->all();
+            $data = $this->registrationService->nationalityList($params);
 
             return $this->sendSuccessResponse("Nationality list found.", $data);
             
@@ -811,10 +814,11 @@ class RegistrationController extends Controller
      *      )
      * )
      */
-    public function identityTypeList()
+    public function identityTypeList(Request $request)
     {
         try {
-            $data = $this->registrationService->identityTypeList();
+            $params = $request->all();
+            $data = $this->registrationService->identityTypeList($params);
 
             return $this->sendSuccessResponse("Identity type list found.", $data);
             
@@ -893,9 +897,8 @@ class RegistrationController extends Controller
     {
         try {
             $data = $this->registrationService->getInstitutionGradesList($request, $gradeId);
-            
+
             return $this->sendSuccessResponse("Institutions List Found", $data);
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',

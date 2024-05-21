@@ -24,21 +24,7 @@ class ThemeService extends Controller
             $resp = [];
 
             if(!empty($data)){
-                foreach($data as $k => $d){
-                    $resp[$k]['id'] = $d['id'];
-                    $resp[$k]['name'] = $d['name'];
-                    $resp[$k]['value'] = $d['value'];
-                    $resp[$k]['content'] = $d['content'];
-                    $resp[$k]['default_value'] = $d['default_value'];
-                    $resp[$k]['default_content'] = "";
-                    if(isset($d['default_value'])){
-                        $resp[$k]['default_content'] = json_encode($d['default_content'], true);
-                    }
-                    $resp[$k]['modified_user_id'] = $d['modified_user_id'];
-                    $resp[$k]['modified'] = $d['modified'];
-                    $resp[$k]['created_user_id'] = $d['created_user_id'];
-                    $resp[$k]['created'] = $d['created'];
-                }
+               $resp = $data;
             }
 
             return $resp;

@@ -19,9 +19,9 @@ class SystemConfigurationService extends Controller
         $this->configRepository = $configRepository;
     }
 
-    public function getAllConfigurationItems()
+    public function getAllConfigurationItems($params)
     {
-        $data = $this->configRepository->getAllConfigurationItems();
+        $data = $this->configRepository->getAllConfigurationItems($params);
 
         return $data;
 
