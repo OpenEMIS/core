@@ -152,12 +152,22 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
+        $LabelTable = TableRegistry::get('Labels');
         if ($field == 'classes_secondary_staff') {
             return $this->getMessage($this->aliasField($field));
         }else if ($field == 'institution_unit_id') {
-            return  __('Unit');
+            $unitname = $LabelTable->find()->where(['module_name' =>'Institutions -> Classes' , 'field_name' =>'Unit'])->first();
+            if($unitname != null){
+               $unit =  $unitname->name;
+            }
+            return  __($unit);
         } else if ($field == 'institution_course_id') {
-            return  __('Course');
+            $CourseName = $LabelTable->find()->where(['module_name' =>'Institutions -> Classes' , 'field_name' =>'Course'])->first();
+            if($CourseName != null){
+               $Courses =  $CourseName->name;
+            }
+            return  __($Courses);
+            
         }
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }

@@ -1,3 +1,17 @@
+### [3.107.0] - 2024-05-20
+- Implemented: Develop changes to OpenEMIS Core Training feature
+- Implemented: Develop a migration script to remove edit account permission
+- Implemented: Remove OpenEMIS Core swagger v2 API YAML file
+- Bug Fixed: Institutions > Staff: User can delete position that is still active
+- Bug Fixed: Institutions>Search: when searching for schools that have " ʻ " OR " ' ", the search returned schools with the " ʻ " and " ' "even if search string contained " ' "
+- Bug Fixed: Institutions>Finance>Institution Fees: Fees that show 0 should not show
+- Bug Fixed: Institutions > Finances > Student Fees: The page is not showing the fees configured in Institution Fees page
+- Bug Fixed: Sign in with Microsoft login
+- Bug Fixed: Registration: Identity number api is not able to filter properly
+- Bug Fixed: Institutions>Attendance>Students: When i marked unexcused absent for a class, the system gives an error
+- Bug Fixed: API: Report card Angular pages
+- Bug Fixed: Institutions > Classes > Unit / Course : Labels are not reflected
+
 ### [3.106.0] - 2024-05-10
 - Implemented: Develop OpenEMIS Core Training v4 APIs
 - Implemented: Develop changes to OpenEMIS Core Staff v4 API
