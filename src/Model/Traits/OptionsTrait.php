@@ -51,7 +51,8 @@ trait OptionsTrait
                 'target_population_selection' => [1 => __('Select Target Populations'), '-1' => __('Select All Target Populations')]
             ],
             'TrainingSessions' => [
-                'trainer_types' => ['Staff' => __('Staff'), 'Others' => __('Others')]
+                'trainer_types' => ['Staff' => __('Staff'), 'Others' => __('Others')],
+                'evaluator_types' => ['Staff' => __('Staff'), 'Others' => __('Others')]
             ],
             'StaffPositionTitles' => [
                 'position_grade_selection' => [1 => __('Select Position Grades'), '-1' => __('Select All Position Grades')]
@@ -218,7 +219,8 @@ trait OptionsTrait
                         ]
                     ],
                 //POCOR-7462 end
-            ]
+            ],
+            
         ];
 
         $index = explode('.', $code);
