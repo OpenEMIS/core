@@ -424,7 +424,7 @@ class InstitutionTabBehavior extends Behavior
                 }
             }
         }
-        
+        $tabElements = $maincontroller->TabPermission->checkTabPermission($tabElements);
         return $tabElements;
     }
 }
