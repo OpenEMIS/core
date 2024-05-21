@@ -4592,6 +4592,16 @@
                             "type": "string",
                             "example": "A45546"
                         }
+                    },
+                    {
+                        "name": "nationality_id",
+                        "in": "query",
+                        "description": "Nationality Id",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": 5
+                        }
                     }
                 ],
                 "responses": {
@@ -5205,6 +5215,16 @@
                             "type": "integer",
                             "example": 10
                         }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
                     }
                 ],
                 "responses": {
@@ -5220,7 +5240,7 @@
                                         },
                                         "data": {
                                             "properties": {
-                                                "list": {
+                                                "data": {
                                                     "type": "array",
                                                     "items": {
                                                         "properties": {
@@ -5275,10 +5295,6 @@
                                                         },
                                                         "type": "object"
                                                     }
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": 4
                                                 }
                                             },
                                             "type": "object"
