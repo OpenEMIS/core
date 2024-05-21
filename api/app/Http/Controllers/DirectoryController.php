@@ -185,6 +185,13 @@ class DirectoryController extends Controller
      *     description="Returns a list of contact types",
      *     tags={"Directory"},
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -322,6 +329,13 @@ class DirectoryController extends Controller
      *     description="Returns a list of field options",
      *     tags={"Directory"},
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -342,7 +356,7 @@ class DirectoryController extends Controller
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="list", type="array",
+     *                 @OA\Property(property="data", type="array",
      *                     @OA\Items(
      *                         type="object",
      *                         @OA\Property(property="id", type="integer", example=1),
@@ -355,8 +369,7 @@ class DirectoryController extends Controller
      *                         @OA\Property(property="created_by", type="integer", example=1),
      *                         @OA\Property(property="created", type="string", format="date-time", example="2023-05-09 12:00:00")
      *                     )
-     *                 ),
-     *                 @OA\Property(property="total", type="integer", example=1)
+     *                 )
      *             )
      *         )
      *     ),
