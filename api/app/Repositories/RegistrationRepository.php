@@ -39,7 +39,7 @@ class RegistrationRepository extends Controller
 {
 
 
-    public function academicPeriodsList()
+    public function academicPeriodsList($params)
     {
         try {
             $academicPeriods = AcademicPeriod::select('id', 'name', 'start_year')->where('current', 1)->orderBy('id','DESC')->get()->toArray();
@@ -90,9 +90,11 @@ class RegistrationRepository extends Controller
                 $lists = $lists->where('academic_periods.current', 1);
             }
 
-                    
-            $educationGrades = $lists->get();
-            
+            if ($request['limit']) {
+                $educationGrades = $lists->paginate($request['limit']);
+            } else {
+                $educationGrades = $lists->get();
+            }
             return $educationGrades;
         } catch (\Exception $e) {
             Log::error(
@@ -135,13 +137,18 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function administrativeAreasList()
+    public function administrativeAreasList($params)
     {
         try {
-            /*$areaAdministratives = AreaAdministratives::select('id', 'name', 'parent_id')->with('areaAdministrativesChild:id,name,parent_id')->get();*/
 
-            $areaAdministratives = Areas::select('id', 'name', 'parent_id')->orderBy('name', 'ASC')->get()->toArray();
-            
+            $areaAdministratives = Areas::select('id', 'name', 'parent_id')->orderBy('name', 'ASC');
+
+            if (isset($params['limit'])) {
+                $areaAdministratives = $areaAdministratives->paginate($params['limit'])->toArray();
+            } else {
+                $areaAdministratives = $areaAdministratives->get()->toArray();
+            }
+
             return $areaAdministratives;
         } catch (\Exception $e) {
             Log::error(
@@ -352,13 +359,19 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function nationalityList()
+    public function nationalityList($params)
     {
         try {
-            $nationalities = Nationalities::orderBy('order', 'ASC')->get();
+            $nationalities = Nationalities::orderBy('order', 'ASC');
+            if (isset($params['limit'])) {
+                $nationalities = $nationalities->paginate($params['limit']);
+            } else {
+                $nationalities = $nationalities->get();
+            }
             
             return $nationalities;
         } catch (\Exception $e) {
+
             Log::error(
                 'Failed to find nationality list.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -1243,11 +1256,17 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function identityTypeList()
+    public function identityTypeList($params)
     {
         try {
-            $identityTypes = IdentityTypes::select('id', 'name')->orderBy('order', 'ASC')->get();
-            
+            $identityTypes = IdentityTypes::select('id', 'name')->orderBy('order', 'ASC');
+
+            if (isset($params['limit'])) {
+                $identityTypes = $identityTypes->paginate($params['limit']);
+            } else {
+                $identityTypes = $identityTypes->get();
+            }
+
             return $identityTypes;
         } catch (\Exception $e) {
             Log::error(
@@ -1267,10 +1286,6 @@ class RegistrationRepository extends Controller
             $institutions = new Institutions();
 
             $institutions = $institutions->select('institutions.*')->where('institutions.institution_status_id', '!=', 2);
-            /*$institutions = $institutions->whereHas('educationGrades',
-                    function ($query) use ($gradeId) {
-                        $query->where('education_grade_id', $gradeId);
-                    })->select('id', 'name', 'code');*/
 
             $institutions = $institutions->join('institution_grades', 'institution_grades.institution_id', '=', 'institutions.id')->where('institution_grades.education_grade_id', $gradeId);
 
@@ -1284,8 +1299,14 @@ class RegistrationRepository extends Controller
                 $institutions = $institutions->where('area_id', $request['area_id']);
             }
 
-            $lists = $institutions->orderBy('institutions.name', 'ASC')->get();
-            
+            $lists = $institutions->orderBy('institutions.name', 'ASC');
+
+            if (isset($request['limit'])) {
+                $lists = $lists->paginate($request['limit']);
+            } else {
+                $lists = $lists->get();
+            }
+
             return $lists;
         } catch (\Exception $e) {
 
@@ -1530,4 +1551,3 @@ class RegistrationRepository extends Controller
     }
 
 }
-

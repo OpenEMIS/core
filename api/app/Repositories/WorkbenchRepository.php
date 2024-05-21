@@ -52,13 +52,13 @@ class WorkbenchRepository extends Controller
         try {
             $params = $request->all();
 
-            $limit = config('constantvalues.defaultPaginateLimit');
-
             if(isset($params['limit'])){
                 $limit = $params['limit'];
+                $list = Notice::paginate($limit)->toArray();
+            } else{
+                $list['data'] = Notice::get()->toArray();
             }
 
-            $list = Notice::paginate($limit)->toArray();
             return $list;
         } catch (\Exception $e) {
             Log::error(
@@ -73,7 +73,7 @@ class WorkbenchRepository extends Controller
     public function getInstitutionStaffLeave($request)
     {
         try {
-            $param = $request->all();
+            $params = $request->all();
             $assigneeId = JWTAuth::user()->id;
 
             $limit = config('constantvalues.defaultPaginateLimit');
@@ -96,12 +96,18 @@ class WorkbenchRepository extends Controller
                             ->where('category', '!=', 3); //For done status
                         }        
                     )
-                    ->where('assignee_id', $assigneeId)
-                    ->paginate($limit)
-                    ->toArray();
+                    ->where('assignee_id', $assigneeId);
+            
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
 
-            return $list;
-
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -117,12 +123,6 @@ class WorkbenchRepository extends Controller
     {
         try {
             $params = $request->all();
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
-
 
             $userId = JWTAuth::user()->id;
             $roles = SecurityGroupUsers::where('security_user_id', $userId)->pluck('security_role_id');
@@ -148,12 +148,18 @@ class WorkbenchRepository extends Controller
                             );
                         }        
                     )
-                    ->where('assignee_id', $userId)
-                    ->paginate($limit)
-                    ->toArray();
+                    ->where('assignee_id', $userId);
 
-            return $list;
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
 
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -170,11 +176,6 @@ class WorkbenchRepository extends Controller
     {
         try {
             $params = $request->all();
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $userId = JWTAuth::user()->id;
 
@@ -191,13 +192,18 @@ class WorkbenchRepository extends Controller
                             ->where('category', '!=', 3);
                         }        
                     )
-                    ->where('assignee_id', $userId)
-                    ->paginate($limit)
-                    ->toArray();
+                    ->where('assignee_id', $userId);
 
-            
-            return $list;
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
 
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -214,11 +220,6 @@ class WorkbenchRepository extends Controller
     {
         try {
             $params = $request->all();
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $userId = JWTAuth::user()->id;
 
@@ -235,13 +236,19 @@ class WorkbenchRepository extends Controller
                             ->where('category', '!=', 3);
                         }        
                     )
-                    ->where('assignee_id', $userId)
-                    ->paginate($limit)
-                    ->toArray();
+                    ->where('assignee_id', $userId);
 
             
-            return $list;
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
 
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -258,11 +265,6 @@ class WorkbenchRepository extends Controller
     {
         try {
             $params = $request->all();
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $userId = JWTAuth::user()->id;
 
@@ -294,11 +296,18 @@ class WorkbenchRepository extends Controller
                             );
                         }        
                     )
-                    ->where('assignee_id', $userId)
-                    ->paginate($limit)
-                    ->toArray();
+                    ->where('assignee_id', $userId);
 
-            return $list;
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -314,11 +323,6 @@ class WorkbenchRepository extends Controller
     {
         try {
             $params = $request->all();
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $userId = JWTAuth::user()->id;
 
@@ -350,11 +354,18 @@ class WorkbenchRepository extends Controller
                             );
                         }        
                     )
-                    ->where('assignee_id', $userId)
-                    ->paginate($limit)
-                    ->toArray();
+                    ->where('assignee_id', $userId);
 
-            return $list;
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -371,11 +382,6 @@ class WorkbenchRepository extends Controller
     {
         try {
             $params = $request->all();
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $userId = JWTAuth::user()->id;
             
@@ -392,12 +398,18 @@ class WorkbenchRepository extends Controller
                             ->where('category', '!=', 3);
                         }        
                     )
-                    ->where('assignee_id', $userId)
-                    ->paginate($limit)
-                    ->toArray();
-            
-            return $list;
+                    ->where('assignee_id', $userId);
 
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -413,11 +425,6 @@ class WorkbenchRepository extends Controller
     {
         try {
             $params = $request->all();
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $userId = JWTAuth::user()->id;
             
@@ -434,11 +441,18 @@ class WorkbenchRepository extends Controller
                             ->where('category', '!=', 3);
                         }        
                     )
-                    ->where('assignee_id', $userId)
-                    ->paginate($limit)
-                    ->toArray();
+                    ->where('assignee_id', $userId);
             
-            return $list;
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -454,11 +468,6 @@ class WorkbenchRepository extends Controller
     {
         try {
             $params = $request->all();
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $userId = JWTAuth::user()->id;
 
@@ -478,14 +487,18 @@ class WorkbenchRepository extends Controller
                             ->where('category', '!=', 3);
                         }        
                     )
-                    ->where('assignee_id', $userId)
-                    ->paginate($limit)
-                    ->toArray();
+                    ->where('assignee_id', $userId);
 
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
 
-            
-            return $list;
-
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -501,14 +514,8 @@ class WorkbenchRepository extends Controller
     {
         try {
             $params = $request->all();
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $userId = JWTAuth::user()->id;
-
 
             $list = InstitutionStaffRelease::with(
                         'newInstitution:id,name,code',
@@ -530,11 +537,18 @@ class WorkbenchRepository extends Controller
                             );
                         }        
                     )
-                    ->where('assignee_id', $userId)
-                    ->paginate($limit)
-                    ->toArray();
+                    ->where('assignee_id', $userId);
 
-            return $list;
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
+            return $resp;
 
         } catch (\Exception $e) {
             Log::error(
@@ -552,14 +566,8 @@ class WorkbenchRepository extends Controller
     {
         try {
             $params = $request->all();
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $userId = JWTAuth::user()->id;
-
 
             $list = InstitutionStaffTransfers::with(
                         'newInstitution:id,name,code',
@@ -581,11 +589,18 @@ class WorkbenchRepository extends Controller
                             );
                         }        
                     )
-                    ->where('assignee_id', $userId)
-                    ->paginate($limit)
-                    ->toArray();
+                    ->where('assignee_id', $userId);
 
-            return $list;
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -602,14 +617,8 @@ class WorkbenchRepository extends Controller
     {
         try {
             $params = $request->all();
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $userId = JWTAuth::user()->id;
-
 
             $list = InstitutionStaffTransfers::with(
                         'newInstitution:id,name,code',
@@ -631,11 +640,18 @@ class WorkbenchRepository extends Controller
                             );
                         }        
                     )
-                    ->where('assignee_id', $userId)
-                    ->paginate($limit)
-                    ->toArray();
+                    ->where('assignee_id', $userId);
 
-            return $list;
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -651,11 +667,6 @@ class WorkbenchRepository extends Controller
     {
         try {
             $params = $request->all();
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $userId = JWTAuth::user()->id;
 
@@ -672,12 +683,18 @@ class WorkbenchRepository extends Controller
                             ->where('category', '!=', 3);
                         }        
                     )
-                    ->where('assignee_id', $userId)
-                    ->paginate($limit)
-                    ->toArray();
+                    ->where('assignee_id', $userId);
 
-            return $list;
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
 
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -693,11 +710,6 @@ class WorkbenchRepository extends Controller
     {
         try {
             $params = $request->all();
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $userId = JWTAuth::user()->id;
 
@@ -715,11 +727,18 @@ class WorkbenchRepository extends Controller
                             ->where('category', '!=', 3);
                         }        
                     )
-                    ->where('assignee_id', $userId)
-                    ->paginate($limit)
-                    ->toArray();
+                    ->where('assignee_id', $userId);
 
-            return $list;
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -735,11 +754,6 @@ class WorkbenchRepository extends Controller
     {
         try {
             $params = $request->all();
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $userId = JWTAuth::user()->id;
 
@@ -756,11 +770,18 @@ class WorkbenchRepository extends Controller
                             ->where('category', '!=', 3);
                         }        
                     )
-                    ->where('assignee_id', $userId)
-                    ->paginate($limit)
-                    ->toArray();
+                    ->where('assignee_id', $userId);
 
-            return $list;
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -777,11 +798,6 @@ class WorkbenchRepository extends Controller
     {
         try {
             $params = $request->all();
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $userId = JWTAuth::user()->id;
 
@@ -796,12 +812,18 @@ class WorkbenchRepository extends Controller
                             ->where('category', '!=', 3);
                         }        
                     )
-                    ->where('assignee_id', $userId)
-                    ->paginate($limit)
-                    ->toArray();
+                    ->where('assignee_id', $userId);
 
-            return $list;
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
 
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -817,11 +839,6 @@ class WorkbenchRepository extends Controller
     {
         try {
             $params = $request->all();
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $userId = JWTAuth::user()->id;
 
@@ -836,11 +853,18 @@ class WorkbenchRepository extends Controller
                             ->where('category', '!=', 3);
                         }        
                     )
-                    ->where('assignee_id', $userId)
-                    ->paginate($limit)
-                    ->toArray();
+                    ->where('assignee_id', $userId);
 
-            return $list;
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -856,11 +880,6 @@ class WorkbenchRepository extends Controller
     {
         try {
             $params = $request->all();
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $userId = JWTAuth::user()->id;
 
@@ -876,11 +895,18 @@ class WorkbenchRepository extends Controller
                             ->where('category', '!=', 3);
                         }        
                     )
-                    ->where('assignee_id', $userId)
-                    ->paginate($limit)
-                    ->toArray();
+                    ->where('assignee_id', $userId);
 
-            return $list;
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -896,11 +922,6 @@ class WorkbenchRepository extends Controller
     {
         try {
             $params = $request->all();
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $userId = JWTAuth::user()->id;
 
@@ -918,11 +939,18 @@ class WorkbenchRepository extends Controller
                             ->where('category', '!=', 3);
                         }        
                     )
-                    ->where('assignee_id', $userId)
-                    ->paginate($limit)
-                    ->toArray();
+                    ->where('assignee_id', $userId);
 
-            return $list;
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -939,11 +967,6 @@ class WorkbenchRepository extends Controller
     {
         try {
             $params = $request->all();
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $userId = JWTAuth::user()->id;
 
@@ -962,11 +985,18 @@ class WorkbenchRepository extends Controller
                             ->where('category', '!=', 3);
                         }        
                     )
-                    ->where('assignee_id', $userId)
-                    ->paginate($limit)
-                    ->toArray();
+                    ->where('assignee_id', $userId);
 
-            return $list;
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -983,11 +1013,6 @@ class WorkbenchRepository extends Controller
     {
         try {
             $params = $request->all();
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $userId = JWTAuth::user()->id;
 
@@ -1005,11 +1030,18 @@ class WorkbenchRepository extends Controller
                             ->where('category', '!=', 3);
                         }        
                     )
-                    ->where('assignee_id', $userId)
-                    ->paginate($limit)
-                    ->toArray();
+                    ->where('assignee_id', $userId);
 
-            return $list;
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -1025,11 +1057,6 @@ class WorkbenchRepository extends Controller
     {
         try {
             $params = $request->all();
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $userId = JWTAuth::user()->id;
 
@@ -1045,11 +1072,18 @@ class WorkbenchRepository extends Controller
                             ->where('category', '!=', 3);
                         }        
                     )
-                    ->where('assignee_id', $userId)
-                    ->paginate($limit)
-                    ->toArray();
+                    ->where('assignee_id', $userId);
 
-            return $list;
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -1066,11 +1100,6 @@ class WorkbenchRepository extends Controller
     {
         try {
             $params = $request->all();
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $userId = JWTAuth::user()->id;
 
@@ -1087,12 +1116,18 @@ class WorkbenchRepository extends Controller
                             ->where('category', '!=', 3);
                         }        
                     )
-                    ->where('assignee_id', $userId)
-                    ->paginate($limit)
-                    ->toArray();
+                    ->where('assignee_id', $userId);
 
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
 
-            return $list;
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -1233,4 +1268,3 @@ class WorkbenchRepository extends Controller
     }
 
 }
-

@@ -68,10 +68,11 @@ class TextbookController extends Controller
      *      )
      * )
      */
-    public function getTextbookConditions(){
+    public function getTextbookConditions(Request $request){
     
             try {
-                $data = $this->textbookService->getTextbookConditions();
+                $params = $request->all();
+                $data = $this->textbookService->getTextbookConditions($params);
                 return $this->sendSuccessResponse("Textbook Conditions Found", $data);
                 
             } catch (\Exception $e) {
@@ -210,8 +211,8 @@ class TextbookController extends Controller
             }
             
             //For POCOR-7772 End
-
-            $data = $this->textbookService->getTextbookStatuses();
+            $params = $request->all();
+            $data = $this->textbookService->getTextbookStatuses($params);
             return $this->sendSuccessResponse("Textbook Statuses Found", $data);
             
         } catch (\Exception $e) {
@@ -275,10 +276,11 @@ class TextbookController extends Controller
      *      )
      * )
      */
-    public function getTextbookDimensions(){
+    public function getTextbookDimensions(Request $request){
     
         try {
-            $data = $this->textbookService->getTextbookDimensions();
+            $params = $request->all();
+            $data = $this->textbookService->getTextbookDimensions($params);
             return $this->sendSuccessResponse("Textbook Dimensions Found", $data);
             
         } catch (\Exception $e) {

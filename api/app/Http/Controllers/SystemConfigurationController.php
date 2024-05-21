@@ -83,7 +83,8 @@ class SystemConfigurationController extends Controller
     public function allConfigurationItems(Request $request)
     {
         try {
-            $data = $this->configService->getAllConfigurationItems($request);
+            $params = $request->all();
+            $data = $this->configService->getAllConfigurationItems($params);
 
             if ($data->isEmpty()) {
                 return $this->sendErrorResponse("System Configuration List Not Found.");

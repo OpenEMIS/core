@@ -54,9 +54,17 @@ class ScheduleRepository extends Controller
         return InstitutionScheduleTimetables::with('academicPeriod', 'scheduleTerm', 'scheduleInterval', 'institutionClass')->where('id', $id)->first();
     }
 
-    public function getLessonsByTimeTableId($id)
+    public function getLessonsByTimeTableId($id, $params)
     {
-        return InstitutionScheduleLessons::with('scheduleLessonDetails','timeslots.instituteInterval.shift')->where('institution_schedule_timetable_id', $id)->get();
+        $lessons =  InstitutionScheduleLessons::with('scheduleLessonDetails','timeslots.instituteInterval.shift')->where('institution_schedule_timetable_id', $id);
+
+        if (isset($params['limit'])) {
+            $lessons = $lessons->paginate($params['limit']);
+        } else {
+            $lessons = $lessons->get();
+        }
+
+        return $lessons;
     }
 
 
@@ -88,9 +96,17 @@ class ScheduleRepository extends Controller
         return $lessonType;
     }
 
-    public function getTimeSlotsByIntervalId($intervalId)
+    public function getTimeSlotsByIntervalId($intervalId, $params)
     {
-        return InstitutionScheduleTimeslots::with('instituteInterval.shift')->where('institution_schedule_interval_id', $intervalId)->get();
+        $slots =  InstitutionScheduleTimeslots::with('instituteInterval.shift')->where('institution_schedule_interval_id', $intervalId);
+        
+        if (isset($params['limit'])) {
+            $slots = $slots->paginate($params['limit']);
+        } else {
+            $slots = $slots->get();
+        }
+
+        return $slots;
     }
 
     public function addLesson($data)
