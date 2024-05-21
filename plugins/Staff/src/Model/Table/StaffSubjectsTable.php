@@ -56,7 +56,7 @@ class StaffSubjectsTable extends ControllerActionTable {
         $this->field('education_subject', []);
         $this->field('male_students', []);
         $this->field('female_students', []);
-
+        $this->field('staff_id', ['visible' => false]);
         $this->setFieldOrder([
             'academic_period',
             'institution_id',

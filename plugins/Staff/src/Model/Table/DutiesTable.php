@@ -57,7 +57,7 @@ class DutiesTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->setFieldOrder(['academic_period_id','institution_id', 'staff_duties_id',  'comment']);
-
+        $this->field('staff_id', ['type' => 'hidden']);
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Personal','Duties','Staff - Career');       
 		if(!empty($is_manual_exist)){
