@@ -266,14 +266,14 @@ class StaffSubjectsTable extends ControllerActionTable {
 
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
         if (
-            array_key_exists($this->alias(), $this->request->data)
-             && array_key_exists('academic_period_id', $this->request->data[$this->alias()])
-             && !empty($this->request->data[$this->alias()]['academic_period_id']))
+            array_key_exists($this->getAlias(), $this->request->getData())
+             && array_key_exists('academic_period_id', $this->request->getData()[$this->getAlias()])
+             && !empty($this->request->getData()[$this->getAlias()]['academic_period_id']))
         {
             $classOptions = $InstitutionClasses->find('list')
                 ->where([
-                    $InstitutionClasses->aliasField('institution_id') => $this->request->data[$this->alias()]['institution_id'],
-                    $InstitutionClasses->aliasField('academic_period_id') => $this->request->data[$this->alias()]['academic_period_id']
+                    $InstitutionClasses->aliasField('institution_id') => $this->request->getData()[$this->getAlias()]['institution_id'],
+                    $InstitutionClasses->aliasField('academic_period_id') => $this->request->getData()[$this->getAlias()]['academic_period_id']
                 ])
                 ->toArray()
                 ;
@@ -319,7 +319,7 @@ class StaffSubjectsTable extends ControllerActionTable {
 
             $subjectOptions = $this->InstitutionSubjects->find()
                 ->matching('Classes', function ($q) {
-                    return $q->where(['Classes.id' => $this->request->data[$this->alias()]['institution_class_id']]);
+                    return $q->where(['Classes.id' => $this->request->getData()[$this->getAlias()]['institution_class_id']]);
                 })
                 ->contain([
                     'Teachers' => function ($q) {
@@ -327,8 +327,8 @@ class StaffSubjectsTable extends ControllerActionTable {
                     }
                 ])
                 ->where([
-                    $this->InstitutionSubjects->aliasField('institution_id') => $this->request->data[$this->alias()]['institution_id'],
-                    $this->InstitutionSubjects->aliasField('academic_period_id') => $this->request->data[$this->alias()]['academic_period_id']
+                    $this->InstitutionSubjects->aliasField('institution_id') => $this->request->getData()[$this->getAlias()]['institution_id'],
+                    $this->InstitutionSubjects->aliasField('academic_period_id') => $this->request->getData()[$this->getAlias()]['academic_period_id']
                 ])
                 ->order([
                         $this->InstitutionSubjects->aliasField('name')
@@ -455,8 +455,8 @@ class StaffSubjectsTable extends ControllerActionTable {
 
     public function addOnChangeAcademicPeriodId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
         $dataArray = $data->getArrayCopy();
-        if (array_key_exists($this->alias(), $dataArray) && array_key_exists('institution_class_id', $dataArray[$this->alias()]) ) {
-            unset($dataArray[$this->alias()]['institution_class_id']);
+        if (array_key_exists($this->getAlias(), $dataArray) && array_key_exists('institution_class_id', $dataArray[$this->getAlias()]) ) {
+            unset($dataArray[$this->getAlias()]['institution_class_id']);
         }
 
         $data->exchangeArray($dataArray);

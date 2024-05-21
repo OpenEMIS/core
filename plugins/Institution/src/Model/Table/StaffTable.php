@@ -2723,7 +2723,7 @@ public function getIdentityTypeData($value_selection)
                 ->select([
                     $AcademicPeriods->aliasField('start_date'), $AcademicPeriods->aliasField('end_date')
                 ])
-                ->where([$AcademicPeriods->aliasField($AcademicPeriods->primaryKey()) => $academicPeriodId])
+                ->where([$AcademicPeriods->aliasField($AcademicPeriods->getPrimaryKey()) => $academicPeriodId])
                 ->first();
             if (!empty($academicPeriodData)) {
                 $start_date = $academicPeriodData->start_date;

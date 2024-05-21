@@ -370,7 +370,7 @@ class StudentRisksTable extends ControllerActionTable
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
-        return $event->subject()->renderElement('Risk.Risks/' . $fieldKey, ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Risk.Risks/' . $fieldKey, ['attr' => $attr]);
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
