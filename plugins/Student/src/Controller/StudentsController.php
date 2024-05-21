@@ -535,12 +535,12 @@ class StudentsController extends AppController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
-        /*$isInstitutionIDSkipped = $this->isStudentIDSkipped();
+        $isInstitutionIDSkipped = $this->isStudentIDSkipped();
         if ($isInstitutionIDSkipped) {
             $header = __('Students');
             $this->set('contentHeader', $header);
             return;
-        }*/
+        }
 
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $action = $this->request->getAttribute('params')['action'];
@@ -601,7 +601,7 @@ class StudentsController extends AppController
      * @return bool
      */
 
-    /*public
+    public
     function isStudentIDSkipped(): bool
     {
         $request = $this->request;
@@ -611,12 +611,12 @@ class StudentsController extends AppController
         $plugin = $request->getParam('plugin');
         $furtherAction = $pass[0];
 
-        if (($furtherAction == 'index' || $furtherAction == 'add' || $furtherAction == 'import')
-            && ($action == 'Students')
-            && ($plugin == 'Student')
-            && ($controller == 'Students')) {
-            return true;
-        }
+        // if (($furtherAction == 'index' || $furtherAction == 'add' || $furtherAction == 'import')
+        //     && ($action == 'Students')
+        //     && ($plugin == 'Student')
+        //     && ($controller == 'Students')) {
+        //     return true;
+        // }
         if ($pass[0] == 'download' && ($action == 'Qualifications') && ($plugin == 'Student') && ($controller == 'Students')) {
             return true;
         }
@@ -625,7 +625,7 @@ class StudentsController extends AppController
         }
 //        $this->log(print_r($request,true), debug);
         return false;
-    }*/
+    }
 
     // public function getUserTabElements($options = []) {
     //  $plugin = $this->plugin;
@@ -734,10 +734,10 @@ class StudentsController extends AppController
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
 
-        /*$isInstitutionIndex = $this->isStudentIDSkipped();
+        $isInstitutionIndex = $this->isStudentIDSkipped();
         if ($isInstitutionIndex) {
             return;
-        }*/
+        }
         /**
          * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
          */

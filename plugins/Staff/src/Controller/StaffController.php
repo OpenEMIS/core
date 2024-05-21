@@ -1043,7 +1043,7 @@ class StaffController extends AppController
         $plugin = $request->getParam('plugin');
         $furtherAction = $pass[0];
         
-        if ($pass[0] == 'download' && ($action == 'Qualifications' || $action == 'EmploymentStatuses' || $action == 'Payslips') && ($plugin == 'Staff') && ($controller == 'Staff')) {
+        if ($pass[0] == 'download' && ($action == 'Qualifications' || $action == 'EmploymentStatuses' || $action == 'Payslips' || 'Healths') && ($plugin == 'Staff') && ($controller == 'Staff')) {
             return true;
         }
         

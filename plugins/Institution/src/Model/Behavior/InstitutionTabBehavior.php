@@ -195,7 +195,13 @@ class InstitutionTabBehavior extends Behavior
                         $queryString['id'] = $entity->id;
                         $queryString['institution_id'] = $institutionID;
                         foreach ($appliedActions[$url_action] as $additionalParam) {
-                            $queryString[$additionalParam] = $entity->{$additionalParam};
+                            if($url_action == 'Classes' && $additionalParam == 'institution_class_id'){
+                                $queryString['id'] = $entity->{$additionalParam};
+                            }else if($url_action == 'Subjects' && $additionalParam == 'institution_subject_id'){
+                                $queryString['id'] = $entity->{$additionalParam};
+                            }else{
+                                $queryString[$additionalParam] = $entity->{$additionalParam};
+                            }
                         }
                         $url['1'] = $model->paramsEncode($queryString);
                     }
@@ -363,7 +369,7 @@ class InstitutionTabBehavior extends Behavior
         if(empty($curricular_label_Data->name)){
             $curricular_label_Data->name = "Institution Curriculars";
         }
-       
+
         $studentID = $this->getStudentID();
         $institutionID = $this->getInstitutionID();
         $type = (array_key_exists('type', $options)) ? $options['type'] : null;
