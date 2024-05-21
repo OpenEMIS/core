@@ -661,33 +661,56 @@ class AssessmentController extends Controller
      *         description="ID of the education grade",
      *         @OA\Schema(type="integer", example=189)
      *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="academic_period_id")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Successful.",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
-     *             @OA\Property(property="data", type="array",
-     *                 @OA\Items(
+     *             @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="data", type="array",
+     *                      @OA\Items(
      *                     type="object",
-     *                     @OA\Property(property="total_mark", type="string", example="42.00"),
-     *                     @OA\Property(property="academic_period_id", type="integer", example=32),
-     *                     @OA\Property(property="education_grade_id", type="integer", example=189),
-     *                     @OA\Property(property="education_subject_id", type="integer", example=69),
-     *                     @OA\Property(property="student_status_id", type="integer", example=7),
-     *                     @OA\Property(property="assessment_id", type="integer", example=32),
-     *                     @OA\Property(property="assessment_period_id", type="integer", example=33),
-     *                     @OA\Property(property="student_status_name", type="string", example="Promoted"),
-     *                     @OA\Property(property="the_student_status", type="string", example="Promoted"),
-     *                     @OA\Property(property="student_status_code", type="string", example="PROMOTED"),
-     *                     @OA\Property(property="student_id", type="integer", example=27),
-     *                     @OA\Property(property="first_name", type="string", example="Todd"),
-     *                     @OA\Property(property="middle_name", type="string", nullable=true, example=null),
-     *                     @OA\Property(property="third_name", type="string", nullable=true, example=null),
-     *                     @OA\Property(property="last_name", type="string", example="Renner"),
-     *                     @OA\Property(property="preferred_name", type="string", nullable=true, example=null),
-     *                     @OA\Property(property="the_student_code", type="string", example=1522271989)
-     *                 )
+     *                          @OA\Property(property="total_mark", type="string", example="42.00"),
+     *                          @OA\Property(property="academic_period_id", type="integer", example=32),
+     *                          @OA\Property(property="education_grade_id", type="integer", example=189),
+     *                          @OA\Property(property="education_subject_id", type="integer", example=69),
+     *                          @OA\Property(property="student_status_id", type="integer", example=7),
+     *                          @OA\Property(property="assessment_id", type="integer", example=32),
+     *                          @OA\Property(property="assessment_period_id", type="integer", example=33),
+     *                          @OA\Property(property="student_status_name", type="string", example="Promoted"),
+     *                          @OA\Property(property="the_student_status", type="string", example="Promoted"),
+     *                          @OA\Property(property="student_status_code", type="string", example="PROMOTED"),
+     *                          @OA\Property(property="student_id", type="integer", example=27),
+     *                          @OA\Property(property="first_name", type="string", example="Todd"),
+     *                          @OA\Property(property="middle_name", type="string", nullable=true, example=null),
+     *                          @OA\Property(property="third_name", type="string", nullable=true, example=null),
+     *                          @OA\Property(property="last_name", type="string", example="Renner"),
+     *                          @OA\Property(property="preferred_name", type="string", nullable=true, example=null),
+     *                          @OA\Property(property="the_student_code", type="string", example=1522271989)
+     *                      )
+     *                  )
      *             )
      *         )
      *     ),

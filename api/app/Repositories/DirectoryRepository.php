@@ -197,19 +197,32 @@ class DirectoryRepository extends Controller
     public function getContactTypes($params)
     {
         try {
-            $contactTypes = ContactType::select('id', 'name')->get();
+            $contactTypes = ContactType::select('id', 'name');
 
-            $list = [];
-            foreach ($contactTypes as $key => $contactType) {
-                $list[$key]['id'] = $contactType['id'];
-                $list[$key]['name'] = $contactType['name'];
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $contactTypes = $contactTypes->orderBy($col, $orderBy);
             }
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $contactTypes->paginate($limit)->toArray();
+            } else {
+                $list = $contactTypes->get()->toArray();
+
+            }
+            //For POCOR-8215/8216 end...
             return $list;
+            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Contact Type List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
+            
             return $this->sendErrorResponse('Contact Type List Not Found');
         }
     }
@@ -243,14 +256,24 @@ class DirectoryRepository extends Controller
     public function getFieldOptions($params)
     {
         try {
-            $list = FieldOption::get()->toArray();
+            $fieldOptions = new FieldOption();
 
-            $total = count($list);
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $fieldOptions = $fieldOptions->orderBy($col, $orderBy);
+            }
 
-            $resp['list'] = $list;
-            $resp['total'] = $total;
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $fieldOptions->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $fieldOptions->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
             
-            return $resp;
+            return $list;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Field Options List from DB',
