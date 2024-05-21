@@ -8,13 +8,19 @@ use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use JWTAuth;
 
-class ThemeRepository
+class ThemeRepository extends Controller
 {
 
     public function getAllThemes($params)
     {
         try {
             $list = Theme::get()->toArray();
+
+            if (isset($params['limit'])) {
+                $list = Theme::paginate($params['limit']);
+            } else {
+                $list = Theme::get();
+            }
             return $list;
         } catch (\Exception $e) {
             Log::error(

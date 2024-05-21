@@ -264,10 +264,11 @@ class ScheduleController extends Controller
      *      )
      * )
      */
-    public function getLessonsByTimeTableId($id)
+    public function getLessonsByTimeTableId($id, Request $request)
     {
         try {
-            $data = $this->scheduleService->getLessonsByTimeTableId($id);
+            $params = $request->all();
+            $data = $this->scheduleService->getLessonsByTimeTableId($id, $params);
             return $this->sendSuccessResponse("Time table lessons list", $data);
 
         } catch (\Exception $e) {
@@ -463,10 +464,11 @@ class ScheduleController extends Controller
      *      )
      * )
      */
-    public function getTimeSlotsByIntervalId($intervalId)
+    public function getTimeSlotsByIntervalId($intervalId, Request $request)
     {
         try {
-            $timeSlots = $this->scheduleService->getTimeSlotsByIntervalId($intervalId);
+            $params = $request->all();
+            $timeSlots = $this->scheduleService->getTimeSlotsByIntervalId($intervalId, $params);
             return $this->sendSuccessResponse("Time slots list", $timeSlots);
         } catch (\Exception $e) {
             Log::error(

@@ -17,10 +17,10 @@ class RegistrationService extends Controller
         $this->registrationRepository = $registrationRepository;
     }
 
-    public function academicPeriodsList()
+    public function academicPeriodsList($params)
     {
         try {
-            $data = $this->registrationRepository->academicPeriodsList();
+            $data = $this->registrationRepository->academicPeriodsList($params);
 
             $resp = [];
             if(count($data) > 0){
@@ -51,17 +51,28 @@ class RegistrationService extends Controller
     public function educationGradesList($request)
     {
         try {
-            $data = $this->registrationRepository->educationGradesList($request)->map(
-                function ($item, $key) {
+            $data = $this->registrationRepository->educationGradesList($request);
+
+            if ($request['limit']) {
+                $data->getCollection()->transform(function ($item, $key) {
                     return [
                         "id" => $item->educaiton_grade_id,
                         "name" => $item->educaiton_grade_name
                     ];
-                }
-            );
-            
+                });
+            } else {
+                $data = $data->map(
+                    function ($item, $key) {
+                        return [
+                            "id" => $item->educaiton_grade_id,
+                            "name" => $item->educaiton_grade_name
+                        ];
+                    }
+                );
+            }
+
             return $data;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -84,9 +95,9 @@ class RegistrationService extends Controller
                     ];
                 }
             );
-            
+
             return $data;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -98,13 +109,13 @@ class RegistrationService extends Controller
     }
 
 
-    public function administrativeAreasList()
+    public function administrativeAreasList($params)
     {
         try {
-            $data = $this->registrationRepository->administrativeAreasList();
-            
+            $data = $this->registrationRepository->administrativeAreasList($params);
+
             return $data;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -222,7 +233,7 @@ class RegistrationService extends Controller
                             "value" => (!empty($item["nationality"]["name"]))?$item["nationality"]["name"]:'',
                         ],
                         "institution" => [
-                            "key" => (!empty($item["institutionStudent"]["institution"]["id"]))?$item["institutionStudent"]["institution"]["id"]:'',
+                                "key" => (!empty($item["institutionStudent"]["institution"]["id"]))?$item["institutionStudent"]["institution"]["id"]:'',
                             "value" => (!empty($item["institutionStudent"]["institution"]["name"]))?$item["institutionStudent"]["institution"]["name"]:'',
                         ],
                     ];
@@ -241,12 +252,13 @@ class RegistrationService extends Controller
     }
 
 
-    public function nationalityList()
+    public function nationalityList($params)
     {
         try {
-            $data = $this->registrationRepository->nationalityList()->map(
-                function ($item, $key) {
-                    
+            $data = $this->registrationRepository->nationalityList($params);
+
+            if (isset($params['limit'])) {
+                $data->getCollection()->transform(function ($item, $key) {
                     return [
                         "id" => $item->id,
                         "name" => $item->name,
@@ -258,8 +270,24 @@ class RegistrationService extends Controller
                         "created_user_id" => $item->created_user_id,
                         "created" => $item->created,
                     ];
-                }
-            );
+                });
+            } else {
+                $data = $data->map(
+                    function ($item, $key) {
+                        return [
+                            "id" => $item->id,
+                            "name" => $item->name,
+                            "is_refugee" => $item->is_refugee,
+                            "national_code" => $item->national_code,
+                            "international_code" => $item->international_code,
+                            "modified_user_id" => $item->modified_user_id,
+                            "modified" => $item->modified,
+                            "created_user_id" => $item->created_user_id,
+                            "created" => $item->created,
+                        ];
+                    }
+                );
+            }
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -332,17 +360,28 @@ class RegistrationService extends Controller
     }
 
 
-    public function identityTypeList()
+    public function identityTypeList($params)
     {
         try {
-            $data = $this->registrationRepository->identityTypeList()->map(
-                function ($item, $key) {
+            $data = $this->registrationRepository->identityTypeList($params);
+
+            if (isset($params['limit'])) {
+                $data->getCollection()->transform(function ($item, $key) {
                     return [
                         "id" => $item->id,
                         "name" => $item->name,
                     ];
-                }
-            );
+                });
+            } else {
+                $data = $data->map(
+                    function ($item, $key) {
+                        return [
+                            "id" => $item->id,
+                            "name" => $item->name,
+                        ];
+                    }
+                );
+            }
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -358,18 +397,27 @@ class RegistrationService extends Controller
     public function getInstitutionGradesList($request, $gradeId)
     {
         try {
-            $data = $this->registrationRepository->getInstitutionGradesList($request, $gradeId)->map(
-                function ($item, $key) {
+            $data = $this->registrationRepository->getInstitutionGradesList($request, $gradeId);
+
+            if ($request['limit']) {
+                $data->getCollection()->transform(function ($item, $key) {
                     return [
                         "id" => $item->id,
-                        //"name" => $item->code.' - '.$item->name,
                         "name" => $item->name.' ('.$item->code.')',
                     ];
-                }
-            );
-            
+                });
+            } else {
+                $data = $data->map(
+                    function ($item, $key) {
+                        return [
+                            "id" => $item->id,
+                            "name" => $item->name.' ('.$item->code.')',
+                        ];
+                    }
+                );
+            }
+
             return $data;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
