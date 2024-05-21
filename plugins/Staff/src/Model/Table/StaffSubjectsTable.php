@@ -33,7 +33,10 @@ class StaffSubjectsTable extends ControllerActionTable {
          */
         $this->toggle('edit', false);
         $this->toggle('remove', false);
-        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Subjects' =>['institution_subject_id','institution_id']
+            ]
+        ]);
         $this->addBehavior('Staff.StaffTab');
     }
 

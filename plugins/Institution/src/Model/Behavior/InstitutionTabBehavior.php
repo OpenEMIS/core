@@ -194,6 +194,9 @@ class InstitutionTabBehavior extends Behavior
                         $queryString = $model->getQueryString();
                         $queryString['id'] = $entity->id;
                         $queryString['institution_id'] = $institutionID;
+//                         echo "<pre>"; print_r($url_action);
+//                         echo "<pre>"; print_r($appliedActions[$url_action]);
+// die;
                         foreach ($appliedActions[$url_action] as $additionalParam) {
                             if($url_action == 'Classes' && $additionalParam == 'institution_class_id'){
                                 $queryString['id'] = $entity->{$additionalParam};

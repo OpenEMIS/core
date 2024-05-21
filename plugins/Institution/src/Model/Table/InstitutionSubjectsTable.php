@@ -95,7 +95,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
         //$Classes = $this->Classes;
         //$this->Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         //$this->ClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
-        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Subjects' =>['institution_subject_id','institution_id']
+            ]
+        ]);
     }
 
     public function implementedEvents(): array
