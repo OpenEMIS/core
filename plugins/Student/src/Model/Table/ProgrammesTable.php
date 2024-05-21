@@ -193,6 +193,12 @@ class ProgrammesTable extends ControllerActionTable
         			$this->aliasField('student_id') => $studentId,
         			//$this->aliasField('institution_id') => $institutionId
         		]);
+		if(!empty($institutionId)) {
+			$query
+			->where([
+				$this->aliasField('institution_id') => $institutionId
+			]);
+		}
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
         
 	}

@@ -230,7 +230,10 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
             $specialNeedName = $obj->special_needs_type->name;
             $specialNeedDifficulties = $obj->special_need_difficulty->name;
 
-            $referenceDetails[$obj->id] = __($specialNeedName) . ' (' . __($specialNeedDifficulties) . ')';
+            $referenceDetails[$obj->id] =  __($specialNeedDifficulties);
+            if(!empty($specialNeedName)) {
+                $referenceDetails[$obj->id] = __($specialNeedName) . ' (' . __($specialNeedDifficulties) . ')';
+            }       
         }
 
         // tooltip only receieved string to be display
