@@ -2229,7 +2229,7 @@ class InstitutionClassesTable extends ControllerActionTable
     public function getRolePermissionAccessForMyClasses($userId, $institutionId)
     {
         $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
-        $QueryResult = TableRegistry::getTableLocator()->get('SecurityRoleFunctions')->find()
+        $QueryResult = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
                 ->leftJoin(['SecurityFunctions' => 'security_functions'], [
                     [
                         'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
@@ -2256,7 +2256,7 @@ class InstitutionClassesTable extends ControllerActionTable
     public function getRolePermissionAccessForMySubjects($userId, $institutionId)
     {
         $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
-        $QueryResult = TableRegistry::getTableLocator()->get('SecurityRoleFunctions')->find()
+        $QueryResult = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
                 ->leftJoin(['SecurityFunctions' => 'security_functions'], [
                     [
                         'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
@@ -2283,7 +2283,7 @@ class InstitutionClassesTable extends ControllerActionTable
     public function getRolePermissionAccessForAllClasses($userId, $institutionId)
     {
         $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
-        $QueryResult = TableRegistry::getTableLocator()->get('SecurityRoleFunctions')->find()
+        $QueryResult = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
                 ->leftJoin(['SecurityFunctions' => 'security_functions'], [
                     [
                         'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
