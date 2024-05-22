@@ -479,6 +479,13 @@ class DirectoryController extends Controller
      *         description="Identity number",
      *         @OA\Schema(type="string", example="A45546")
      *     ),
+     *     @OA\Parameter(
+     *         name="nationality_id",
+     *         in="query",
+     *         required=true,
+     *         description="Nationality Id",
+     *         @OA\Schema(type="string", example=5)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Successful.",
@@ -783,6 +790,13 @@ class DirectoryController extends Controller
      *         description="Number of items per page",
      *         @OA\Schema(type="integer", example=10)
      *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Successful.",
@@ -790,7 +804,7 @@ class DirectoryController extends Controller
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="list", type="array",
+     *                 @OA\Property(property="data", type="array",
      *                     @OA\Items(
      *                         type="object",
      *                         @OA\Property(property="id", type="integer", example=3),
@@ -806,8 +820,7 @@ class DirectoryController extends Controller
      *                         @OA\Property(property="created_user_id", type="integer", example=1),
      *                         @OA\Property(property="created", type="string", example="2014-06-04 16:54:58")
      *                     )
-     *                 ),
-     *                 @OA\Property(property="total", type="integer", example=4)
+     *                 )
      *             )
      *         )
      *     ),
@@ -866,6 +879,13 @@ class DirectoryController extends Controller
      *         required=false,
      *         description="Number of items per page",
      *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
      *     ),
      *     @OA\Response(
      *         response=200,
