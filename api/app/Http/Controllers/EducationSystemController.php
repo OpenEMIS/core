@@ -1345,6 +1345,27 @@ class EducationSystemController extends Controller
      *         description="ID of the grade",
      *         @OA\Schema(type="integer", example="76")
      *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="string", example="id")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Successful operation",
@@ -1366,10 +1387,11 @@ class EducationSystemController extends Controller
      *     )
      * )
      */
-    public function reportCardLists($systemId, $levelId, $cycleId, $programmeId, $gradeId)
+    public function reportCardLists(Request $request,$systemId, $levelId, $cycleId, $programmeId, $gradeId)
     {
         try {
-            $data = $this->educationSystemService->reportCardLists($systemId, $levelId, $cycleId, $programmeId, $gradeId);
+            $params = $request->all();
+            $data = $this->educationSystemService->reportCardLists($params, $systemId, $levelId, $cycleId, $programmeId, $gradeId);
             
             return $this->sendSuccessResponse("Report Cards List Found", $data);
             
@@ -1454,7 +1476,6 @@ class EducationSystemController extends Controller
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="current_page", type="integer", example=1),
      *                 @OA\Property(property="data", type="array",
      *                     @OA\Items(
      *                         type="object",

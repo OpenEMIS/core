@@ -1545,10 +1545,95 @@ class StaffTable extends ControllerActionTable
 
         $staff_id = !empty($entity->staff_id) ? $entity->staff_id : NULL;
         $institution_id = !empty($entity->institution_id) ? $entity->institution_id : 0;
-        $affected = $this->removeIndividualChildRecords($staff_id, $institution_id);
+        //POCOR-8143
+        if ($this->checkStaffRecords($entity)) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        } else {
+            $affected = $this->removeIndividualChildRecords($staff_id, $institution_id);
+        }
+
 
 //        $this->log("deleted $affected children", 'debug');
     }
+
+    /**
+     * @param Entity $entity
+     * POCOR-8143 -- check if association exits before deleting child records.
+     */
+    public function checkStaffRecords($entity)
+    {
+        $result = false;
+        $checkAllRecords = [];
+        $institutionId = $entity->institution_id ?? 0;
+        $staffId = $entity->staff_id ?? 0;
+        if ($institutionId && $staffId) {
+            $InstitutionStaffTransfers = TableRegistry::get('Institution.InstitutionStaffTransfers');
+            $doneStatus = $InstitutionStaffTransfers::DONE;
+
+            $transferOutRecordsCount = $InstitutionStaffTransfers->find()
+                ->matching('Statuses', function ($q) use ($doneStatus) {
+                    return $q->where(['category <> ' => $doneStatus]);
+                })
+                ->where([
+                    $InstitutionStaffTransfers->aliasField('staff_id') => $entity->staff_id,
+                    $InstitutionStaffTransfers->aliasField('previous_institution_id') => $entity->institution_id
+                ])
+                ->count();
+                $checkAllRecords['associatedRecords'][] = ['model' => 'StaffTransferOut', 'count' => $transferOutRecordsCount];
+
+            $InstitutionStaffReleases = TableRegistry::get('Institution.InstitutionStaffReleases');
+            $releaseDoneStatus = $InstitutionStaffReleases::DONE;
+
+            $releaseOutRecordsCount = $InstitutionStaffReleases->find()
+                ->matching('Statuses', function ($q) use ($releaseDoneStatus) {
+                    return $q->where(['category <>' => $releaseDoneStatus]);
+                })
+                ->where([
+                    $InstitutionStaffReleases->aliasField('staff_id') => $entity->staff_id,
+                    $InstitutionStaffReleases->aliasField('previous_institution_id') => $entity->institution_id
+                ])
+                ->count();
+                $checkAllRecords['associatedRecords'][] = ['model' => 'StaffRelease', 'count' => $releaseOutRecordsCount];
+
+            $associationArray = [
+                'Institution.StaffPositionProfiles' => 'StaffChangeInAssignment',
+                'Institution.StaffLeave' => 'StaffLeave',
+                'Institution.InstitutionClasses' => 'InstitutionClasses',
+                'Institution.InstitutionSubjectStaff' => 'InstitutionSubjects'
+            ];
+
+            if (!Configure::read('schoolMode')) {
+                $coreAssociationArray = [
+                    'Institution.InstitutionRubrics' => 'InstitutionRubrics',
+                    'Quality.InstitutionQualityVisits' => 'InstitutionVisits'
+                ];
+                $associationArray = array_merge($associationArray, $coreAssociationArray);
+            }
+
+            foreach ($associationArray as $tableName => $model) {
+                $Table = TableRegistry::get($tableName);
+                $recordsCount = $Table->find()
+                    ->where([
+                        $Table->aliasField('staff_id') => $entity->staff_id,
+                        $Table->aliasField('institution_id') => $entity->institution_id
+                    ])
+                    ->count();
+                    $checkAllRecords['associatedRecords'][] = ['model' => $model, 'count' => $recordsCount];
+            }
+            if (!empty($checkAllRecords)) {
+                foreach ($checkAllRecords['associatedRecords'] as $record) {
+                    echo $record['count'];
+                    if ($record['count'] > 0) {
+                        $result = true;
+                    }
+                }
+            }
+        }
+        return $result;
+    }
+
 
     /**
      * @param $staff_id
