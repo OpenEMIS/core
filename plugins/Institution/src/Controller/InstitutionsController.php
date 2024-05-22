@@ -1842,8 +1842,10 @@ public function ClassReportCards()
 
     public function Classes($subaction = 'index', $classId = null)
     {
-        if ($subaction == 'edit') {
+        if ($subaction == 'edit' || $subaction == 'view') {
             $session = $this->request->getSession();
+            $queryString = $this->getQueryString();
+            $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
             $roles = [];
             $classId = $this->ControllerAction->paramsDecode($classId);
             $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
@@ -1866,12 +1868,22 @@ public function ClassReportCards()
                             ->where([$ClassTable->aliasField('id') => $classId['id']])
                             ->all();
 
-                        if ($classResults->isEmpty()) {
-                            $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'Classes'];
-                            return $this->redirect($url);
-                        }
+                            if ($classResults->isEmpty()) {
+                                $this->Alert->error('security.noAccess');
+                                $url = ['plugin' => $this->getPlugin(),
+                                    'controller' => $this->getName(),
+                                    'action' => 'dashboard',
+                                    //'0' => 'index',
+                                    '1' => $encodedQueryString ];
+                                return $this->redirect($url);
+                            }
                     } else {
-                        $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'Classes'];
+                        $this->Alert->error('security.noAccess');
+                        $url = ['plugin' => $this->getPlugin(),
+                            'controller' => $this->getName(),
+                            'action' => 'Classes',
+                            '0' => 'index',
+                            '1' => $encodedQueryString ];
                         return $this->redirect($url);
                     }
                 }
