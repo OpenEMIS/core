@@ -76,22 +76,23 @@ class UserRepository extends Controller
         try {
             $params = $request->all();
 
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
-            
             $users = SecurityUsers::with('identityType', 'nationalities', 'identities');
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
                 $users = $users->orderBy($col, $orderBy);
             }
-            $list = $users->paginate($limit)->toArray();
-            
-            return $list;
-            
+
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $users->paginate($limit)->toArray();
+            } else{
+                $users = $users->get()->toArray();
+                $resp['data'] = $users;
+            }
+
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -512,11 +513,10 @@ class UserRepository extends Controller
     public function getUsersGender($request)
     {
         try {
-            
+
             $usersGender = Gender::get();
-            
+
             return $usersGender;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Users Gender list from DB',
@@ -1935,4 +1935,3 @@ class UserRepository extends Controller
     }
     //POCOR-8139 Ends
 }
-

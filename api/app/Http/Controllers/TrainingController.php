@@ -327,7 +327,90 @@ class TrainingController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *     path="/api/v4/training-sessions",
+     *     tags={"Training"},
+     *     summary="Get list of training sessions",
+     *     description="Returns details of training sessions",
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *              @OA\Property(property="message", type="string", example="Successful."),
+     *              @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="code", type="string", example="NST2018"),
+     *                     @OA\Property(property="name", type="string", example="National Standard Training for Teachers 2018"),
+     *                     @OA\Property(property="start_date", type="string", format="date", example="2018-04-01"),
+     *                     @OA\Property(property="end_date", type="string", format="date", example="2018-04-30"),
+     *                     @OA\Property(property="comment", type="string", example=""),
+     *                     @OA\Property(property="training_course_id", type="integer", example=1),
+     *                     @OA\Property(property="training_provider_id", type="integer", example=1),
+     *                     @OA\Property(property="assignee_id", type="integer", example=8805),
+     *                     @OA\Property(property="status_id", type="integer", example=15),
+     *                     @OA\Property(property="area_id", type="integer", example=1),
+     *                     @OA\Property(property="trainers", type="array",
+     *                         @OA\Items(
+     *                             type="object",
+     *                             @OA\Property(property="id", type="integer", example=505),
+     *                             @OA\Property(property="first_name", type="string", example="Stephanie"),
+     *                             @OA\Property(property="middle_name", type="string", nullable=true, example=null),
+     *                             @OA\Property(property="third_name", type="string", nullable=true, example=null),
+     *                             @OA\Property(property="last_name", type="string", example="Andrews"),
+     *                             @OA\Property(property="openemis_no", type="string", example="1522277180"),
+     *                             @OA\Property(property="full_name", type="string", example="Stephanie  Andrews"),
+     *                             @OA\Property(property="name_with_id", type="string", example="1522277180 - Stephanie  Andrews")
+     *                         )
+     *                     ),
+     *                     @OA\Property(property="evaluators", type="array",
+     *                         @OA\Items(
+     *                             type="object",
+     *                             @OA\Property(property="id", type="integer", example=8815),
+     *                             @OA\Property(property="first_name", type="string", example="Amanda"),
+     *                             @OA\Property(property="middle_name", type="string", nullable=true, example=null),
+     *                             @OA\Property(property="third_name", type="string", nullable=true, example=null),
+     *                             @OA\Property(property="last_name", type="string", example="Wells"),
+     *                             @OA\Property(property="openemis_no", type="string", example="1522284820"),
+     *                             @OA\Property(property="full_name", type="string", example="Amanda  Wells"),
+     *                             @OA\Property(property="name_with_id", type="string", example="1522284820 - Amanda  Wells")
+     *                         )
+     *                     ),
+     *                     @OA\Property(property="modified_user_id", type="integer", example=2),
+     *                     @OA\Property(property="modified", type="string", example="2018-04-03 17:44:07"),
+     *                     @OA\Property(property="created_user_id", type="integer", example=2),
+     *                     @OA\Property(property="created", type="string", example="2018-04-03 17:39:16")
+     *                  )
+     *              )
+     *             )
+     *         )
+     *     )
+     * )
+     */
     public function getTrainingSessions(Request $request)
     {
         try {
@@ -350,7 +433,72 @@ class TrainingController extends Controller
     }
 
 
-
+    /**
+     * @OA\Get(
+     *     path="/api/v4/training-sessions/{sessionId}",
+     *     tags={"Training"},
+     *     summary="Get detail of training session",
+     *     description="Returns detail of training session",
+     *     @OA\Parameter(
+     *         name="sessionId",
+     *         in="path",
+     *         required=true,
+     *         description="Id of training session",
+     *         @OA\Schema(type="integer", example="2")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *              @OA\Property(property="message", type="string", example="Successful."),
+     *              @OA\Property(property="data", type="object",
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="code", type="string", example="NST2018"),
+     *                     @OA\Property(property="name", type="string", example="National Standard Training for Teachers 2018"),
+     *                     @OA\Property(property="start_date", type="string", format="date", example="2018-04-01"),
+     *                     @OA\Property(property="end_date", type="string", format="date", example="2018-04-30"),
+     *                     @OA\Property(property="comment", type="string", example=""),
+     *                     @OA\Property(property="training_course_id", type="integer", example=1),
+     *                     @OA\Property(property="training_provider_id", type="integer", example=1),
+     *                     @OA\Property(property="assignee_id", type="integer", example=8805),
+     *                     @OA\Property(property="status_id", type="integer", example=15),
+     *                     @OA\Property(property="area_id", type="integer", example=1),
+     *                     @OA\Property(property="trainers", type="array",
+     *                         @OA\Items(
+     *                             type="object",
+     *                             @OA\Property(property="id", type="integer", example=505),
+     *                             @OA\Property(property="first_name", type="string", example="Stephanie"),
+     *                             @OA\Property(property="middle_name", type="string", nullable=true, example=null),
+     *                             @OA\Property(property="third_name", type="string", nullable=true, example=null),
+     *                             @OA\Property(property="last_name", type="string", example="Andrews"),
+     *                             @OA\Property(property="openemis_no", type="string", example="1522277180"),
+     *                             @OA\Property(property="full_name", type="string", example="Stephanie  Andrews"),
+     *                             @OA\Property(property="name_with_id", type="string", example="1522277180 - Stephanie  Andrews")
+     *                         )
+     *                     ),
+     *                     @OA\Property(property="evaluators", type="array",
+     *                         @OA\Items(
+     *                             type="object",
+     *                             @OA\Property(property="id", type="integer", example=8815),
+     *                             @OA\Property(property="first_name", type="string", example="Amanda"),
+     *                             @OA\Property(property="middle_name", type="string", nullable=true, example=null),
+     *                             @OA\Property(property="third_name", type="string", nullable=true, example=null),
+     *                             @OA\Property(property="last_name", type="string", example="Wells"),
+     *                             @OA\Property(property="openemis_no", type="string", example="1522284820"),
+     *                             @OA\Property(property="full_name", type="string", example="Amanda  Wells"),
+     *                             @OA\Property(property="name_with_id", type="string", example="1522284820 - Amanda  Wells")
+     *                         )
+     *                     ),
+     *                     @OA\Property(property="modified_user_id", type="integer", example=2),
+     *                     @OA\Property(property="modified", type="string", example="2018-04-03 17:44:07"),
+     *                     @OA\Property(property="created_user_id", type="integer", example=2),
+     *                     @OA\Property(property="created", type="string", example="2018-04-03 17:39:16")
+     *                  )
+     *         )
+     *     )
+     * )
+     */
     public function getTrainingSessionData($sessionId)
     {
         try {
@@ -373,7 +521,103 @@ class TrainingController extends Controller
     }
 
 
-
+    /**
+     * @OA\Get(
+     *     path="/api/v4/training-sessions/{sessionId}/results",
+     *     summary="Get training session results",
+     *     tags={"Training"},
+     *     description="Retrieves training session results data.",
+     *     @OA\Parameter(
+     *         name="sessionId",
+     *         in="path",
+     *         required=true,
+     *         description="Id of training session",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful response containing training result data",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="id", type="string", example="00346c45-fcbe-4f05-b27b-a0b4d49744cd"),
+     *                         @OA\Property(property="result", type="string", example="Not Passed"),
+     *                         @OA\Property(property="attendance_days", type="string", example=""),
+     *                         @OA\Property(property="certificate_number", type="string", example=""),
+     *                         @OA\Property(property="practical", type="string", example=""),
+     *                         @OA\Property(property="training_result_type_id", type="integer", example=650),
+     *                         @OA\Property(property="trainee_id", type="integer", example=577),
+     *                         @OA\Property(property="training_session_id", type="integer", example=1),
+     *                         @OA\Property(property="modified_user_id", type="integer", example=2),
+     *                         @OA\Property(property="modified", type="string", example="2018-04-05 19:04:42"),
+     *                         @OA\Property(property="created_user_id", type="integer", example=2),
+     *                         @OA\Property(property="created", type="string", example="2018-04-03 17:48:49"),
+     *                         @OA\Property(property="training_session", type="object",
+     *                             @OA\Property(property="id", type="integer", example=1),
+     *                             @OA\Property(property="name", type="string", example="National Standard Training for Teachers 2018"),
+     *                             @OA\Property(property="code", type="string", example="NST2018"),
+     *                             @OA\Property(property="training_course_id", type="integer", example=1),
+     *                             @OA\Property(property="training_provider_id", type="integer", example=1),
+     *                             @OA\Property(property="start_date", type="string", format="date", example="2018-04-01"),
+     *                             @OA\Property(property="end_date", type="string", format="date", example="2018-04-30"),
+     *                             @OA\Property(property="code_name", type="string", example="NST2018 - National Standard Training for Teachers 2018"),
+     *                             @OA\Property(property="course", type="object",
+     *                                 @OA\Property(property="id", type="integer", example=1),
+     *                                 @OA\Property(property="code", type="string", example="NST"),
+     *                                 @OA\Property(property="name", type="string", example="National Standard Training for Teachers"),
+     *                                 @OA\Property(property="code_name", type="string", example="NST - National Standard Training for Teachers")
+     *                             ),
+     *                             @OA\Property(property="training_provider", type="object",
+     *                                 @OA\Property(property="id", type="integer", example=1),
+     *                                 @OA\Property(property="name", type="string", example="Ministry of Education")
+     *                             )
+     *                         ),
+     *                         @OA\Property(property="training_result_type", type="object",
+     *                             @OA\Property(property="id", type="integer", example=650),
+     *                             @OA\Property(property="name", type="string", example="Exam")
+     *                         ),
+     *                         @OA\Property(property="user", type="object",
+     *                             @OA\Property(property="id", type="integer", example=577),
+     *                             @OA\Property(property="first_name", type="string", example="Phyllis"),
+     *                             @OA\Property(property="middle_name", type="string", nullable=true, example=null),
+     *                             @OA\Property(property="third_name", type="string", nullable=true, example=null),
+     *                             @OA\Property(property="last_name", type="string", example="Fowler"),
+     *                             @OA\Property(property="openemis_no", type="string", example="1522277252"),
+     *                             @OA\Property(property="full_name", type="string", example="Phyllis  Fowler"),
+     *                             @OA\Property(property="name_with_id", type="string", example="1522277252 - Phyllis  Fowler")
+     *                         )
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
     public function getTrainingSessionResults(Request $request, $sessionId)
     {
         try {
@@ -391,13 +635,94 @@ class TrainingController extends Controller
                 'Failed to fetch Training Session Results from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            dd($e);
             return $this->sendErrorResponse('Training Session Results Not Found.');
         }
     }
 
 
-
+    /**
+     * @OA\Get(
+     *     path="/api/v4/training-sessions/{sessionId}/results/{userId}",
+     *     summary="Get training result for a specific trainee in a specific session",
+     *     tags={"Training"},
+     *     description="Retrieves training result data for a specific trainee in a specific training session.",
+     *     @OA\Parameter(
+     *         name="sessionId",
+     *         in="path",
+     *         description="ID of the training session",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="userId",
+     *         in="path",
+     *         description="ID of the trainee",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=8815)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful response containing training result data",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="id", type="string", example="4c5bc882-5918-4d71-b5c0-3f56872aefc9"),
+     *                         @OA\Property(property="result", type="string", example="Passed"),
+     *                         @OA\Property(property="attendance_days", type="string", example=""),
+     *                         @OA\Property(property="certificate_number", type="string", example=""),
+     *                         @OA\Property(property="practical", type="string", example=""),
+     *                         @OA\Property(property="training_result_type_id", type="integer", example=650),
+     *                         @OA\Property(property="trainee_id", type="integer", example=8815),
+     *                         @OA\Property(property="training_session_id", type="integer", example=1),
+     *                         @OA\Property(property="modified_user_id", type="integer", example=2),
+     *                         @OA\Property(property="modified", type="string", example="2018-04-05 19:04:42"),
+     *                         @OA\Property(property="created_user_id", type="integer", example=2),
+     *                         @OA\Property(property="created", type="string", example="2018-04-05 19:04:16"),
+     *                         @OA\Property(property="training_session", type="object",
+     *                             @OA\Property(property="id", type="integer", example=1),
+     *                             @OA\Property(property="name", type="string", example="National Standard Training for Teachers 2018"),
+     *                             @OA\Property(property="code", type="string", example="NST2018"),
+     *                             @OA\Property(property="training_course_id", type="integer", example=1),
+     *                             @OA\Property(property="training_provider_id", type="integer", example=1),
+     *                             @OA\Property(property="start_date", type="string", format="date", example="2018-04-01"),
+     *                             @OA\Property(property="end_date", type="string", format="date", example="2018-04-30"),
+     *                             @OA\Property(property="code_name", type="string", example="NST2018 - National Standard Training for Teachers 2018"),
+     *                             @OA\Property(property="course", type="object",
+     *                                 @OA\Property(property="id", type="integer", example=1),
+     *                                 @OA\Property(property="code", type="string", example="NST"),
+     *                                 @OA\Property(property="name", type="string", example="National Standard Training for Teachers"),
+     *                                 @OA\Property(property="code_name", type="string", example="NST - National Standard Training for Teachers")
+     *                             ),
+     *                             @OA\Property(property="training_provider", type="object",
+     *                                 @OA\Property(property="id", type="integer", example=1),
+     *                                 @OA\Property(property="name", type="string", example="Ministry of Education")
+     *                             )
+     *                         ),
+     *                         @OA\Property(property="training_result_type", type="object",
+     *                             @OA\Property(property="id", type="integer", example=650),
+     *                             @OA\Property(property="name", type="string", example="Exam")
+     *                         ),
+     *                         @OA\Property(property="user", type="object",
+     *                             @OA\Property(property="id", type="integer", example=8815),
+     *                             @OA\Property(property="first_name", type="string", example="Amanda"),
+     *                             @OA\Property(property="middle_name", type="string", nullable=true, example=null),
+     *                             @OA\Property(property="third_name", type="string", nullable=true, example=null),
+     *                             @OA\Property(property="last_name", type="string", example="Wells"),
+     *                             @OA\Property(property="openemis_no", type="string", example="1522952436"),
+     *                             @OA\Property(property="full_name", type="string", example="Amanda  Wells"),
+     *                             @OA\Property(property="name_with_id", type="string", example="1522952436 - Amanda  Wells")
+     *                         )
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
     public function getTrainingSessionResultsViaUserId(Request $request, $sessionId, $userId)
     {
         try {
