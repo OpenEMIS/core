@@ -139,6 +139,9 @@ class StaffAppraisalsTable extends ControllerActionTable
                     $userId = $session->read('Staff.Staff.id');
                 }
             }
+            if(empty($userId) && isset($this->request->getParam('pass')[1])) {
+                $userId =  $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1])['staff_id'];
+            }
 
             if (!is_null($userId)) {
                 $staff = $this->Users->get($userId);
