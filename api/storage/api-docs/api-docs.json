@@ -5349,6 +5349,16 @@
                             "type": "integer",
                             "example": 10
                         }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
                     }
                 ],
                 "responses": {
@@ -8479,6 +8489,36 @@
                             "type": "integer",
                             "example": "76"
                         }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "id"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
                     }
                 ],
                 "responses": {
@@ -8623,10 +8663,6 @@
                                         },
                                         "data": {
                                             "properties": {
-                                                "current_page": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
                                                 "data": {
                                                     "type": "array",
                                                     "items": {
@@ -26345,6 +26381,594 @@
                     },
                     "404": {
                         "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/training-courses": {
+            "get": {
+                "tags": [
+                    "Training"
+                ],
+                "summary": "Get list of training courses",
+                "description": "Returns list of training courses",
+                "operationId": "f1a0944774169a76e7270d604386cb88",
+                "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "code": {
+                                                                "type": "string",
+                                                                "example": "NST"
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "National Standard Training for Teachers"
+                                                            },
+                                                            "description": {
+                                                                "type": "string",
+                                                                "example": "Minimum training requirements for licensed teacher."
+                                                            },
+                                                            "objective": {
+                                                                "type": "string",
+                                                                "example": "To ensure teachers meet the minimum training requirements for trained teacher status to receiving and renewing license."
+                                                            },
+                                                            "credit_hours": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "duration": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "number_of_months": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            },
+                                                            "special_education_needs": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            },
+                                                            "file_name": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "file_content": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "training_field_of_study_id": {
+                                                                "type": "integer",
+                                                                "example": 682
+                                                            },
+                                                            "training_field_of_study_name": {
+                                                                "type": "string",
+                                                                "example": "General"
+                                                            },
+                                                            "training_course_type_id": {
+                                                                "type": "integer",
+                                                                "example": 676
+                                                            },
+                                                            "training_course_type_name": {
+                                                                "type": "string",
+                                                                "example": "National Examination"
+                                                            },
+                                                            "training_course_category_id": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            },
+                                                            "training_course_category_name": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "training_mode_of_delivery_id": {
+                                                                "type": "integer",
+                                                                "example": 582
+                                                            },
+                                                            "training_mode_of_delivery_name": {
+                                                                "type": "string",
+                                                                "example": "Seated Exam"
+                                                            },
+                                                            "training_requirement_id": {
+                                                                "type": "integer",
+                                                                "example": 682
+                                                            },
+                                                            "training_requirement_name": {
+                                                                "type": "string",
+                                                                "example": "Compulsary"
+                                                            },
+                                                            "training_level_id": {
+                                                                "type": "integer",
+                                                                "example": 681
+                                                            },
+                                                            "training_level_name": {
+                                                                "type": "string",
+                                                                "example": "General"
+                                                            },
+                                                            "assignee_id": {
+                                                                "type": "integer",
+                                                                "example": 8805
+                                                            },
+                                                            "assignee_name": {
+                                                                "type": "string",
+                                                                "example": "John Doe"
+                                                            },
+                                                            "status_id": {
+                                                                "type": "integer",
+                                                                "example": 9
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2018-04-03 17:37:56"
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2018-04-03 17:29:04"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v4/training-courses/{courseId}": {
+            "get": {
+                "tags": [
+                    "Training"
+                ],
+                "summary": "Get details of training course by id",
+                "description": "Returns details of training course by id",
+                "operationId": "27cfa6b3dfe1c1ff4c74b4212e5b2a74",
+                "parameters": [
+                    {
+                        "name": "courseId",
+                        "in": "path",
+                        "description": "Id of training course",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "code": {
+                                                    "type": "string",
+                                                    "example": "NST"
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "National Standard Training for Teachers"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "Minimum training requirements for licensed teacher."
+                                                },
+                                                "objective": {
+                                                    "type": "string",
+                                                    "example": "To ensure teachers meet the minimum training requirements for trained teacher status to receiving and renewing license."
+                                                },
+                                                "credit_hours": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "duration": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "number_of_months": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                },
+                                                "special_education_needs": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                },
+                                                "file_name": {
+                                                    "type": "string",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "file_content": {
+                                                    "type": "string",
+                                                    "example": ""
+                                                },
+                                                "training_field_of_study_id": {
+                                                    "type": "integer",
+                                                    "example": 682
+                                                },
+                                                "training_field_of_study_name": {
+                                                    "type": "string",
+                                                    "example": "General"
+                                                },
+                                                "training_course_type_id": {
+                                                    "type": "integer",
+                                                    "example": 676
+                                                },
+                                                "training_course_type_name": {
+                                                    "type": "string",
+                                                    "example": "National Examination"
+                                                },
+                                                "training_course_category_id": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                },
+                                                "training_course_category_name": {
+                                                    "type": "string",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "training_mode_of_delivery_id": {
+                                                    "type": "integer",
+                                                    "example": 582
+                                                },
+                                                "training_mode_of_delivery_name": {
+                                                    "type": "string",
+                                                    "example": "Seated Exam"
+                                                },
+                                                "training_requirement_id": {
+                                                    "type": "integer",
+                                                    "example": 682
+                                                },
+                                                "training_requirement_name": {
+                                                    "type": "string",
+                                                    "example": "Compulsary"
+                                                },
+                                                "training_level_id": {
+                                                    "type": "integer",
+                                                    "example": 681
+                                                },
+                                                "training_level_name": {
+                                                    "type": "string",
+                                                    "example": "General"
+                                                },
+                                                "assignee_id": {
+                                                    "type": "integer",
+                                                    "example": 8805
+                                                },
+                                                "assignee_name": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
+                                                },
+                                                "status_id": {
+                                                    "type": "integer",
+                                                    "example": 9
+                                                },
+                                                "modified_user_id": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "modified": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2018-04-03 17:37:56"
+                                                },
+                                                "created_user_id": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "created": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2018-04-03 17:29:04"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v4/training-providers": {
+            "get": {
+                "tags": [
+                    "Training"
+                ],
+                "summary": "Get list of training providers",
+                "description": "Returns list of training providers",
+                "operationId": "f3c9fb644c1932559020e46921bf02f9",
+                "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Ministry of Education"
+                                                            },
+                                                            "order": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "visible": {
+                                                                "type": "boolean",
+                                                                "example": true
+                                                            },
+                                                            "editable": {
+                                                                "type": "boolean",
+                                                                "example": true
+                                                            },
+                                                            "default": {
+                                                                "type": "boolean",
+                                                                "example": false
+                                                            },
+                                                            "international_code": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "national_code": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2018-04-03 17:26:26"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v4/training-providers/{providerId}": {
+            "get": {
+                "tags": [
+                    "Training"
+                ],
+                "summary": "Get details of training provider by id",
+                "description": "Returns details of training provider by id",
+                "operationId": "bf9a08ad97fb0ce592b75aa14c649fe5",
+                "parameters": [
+                    {
+                        "name": "providerId",
+                        "in": "path",
+                        "description": "session provider id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Ministry of Education"
+                                                },
+                                                "order": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "visible": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "editable": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "default": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "international_code": {
+                                                    "type": "string",
+                                                    "example": ""
+                                                },
+                                                "national_code": {
+                                                    "type": "string",
+                                                    "example": ""
+                                                },
+                                                "modified_user_id": {
+                                                    "type": "integer",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "modified": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "created_user_id": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "created": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2018-04-03 17:26:26"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
