@@ -25,6 +25,10 @@ class EditBehavior extends Behavior
     public function edit(Event $mainEvent, ArrayObject $extra)
     {
         $model = $this->_table;
+        //POCOR-7485 use this for adminsitration > System Setup > Acadmic Period edit starts
+        if($model->getAlias() == 'AcademicPeriods'){
+            $model->setEntityClass(\Cake\ORM\Entity::class);
+        }// end
         $request = $model->request;
         $extra['config']['form'] = true;
         $extra['patchEntity'] = true;
@@ -112,7 +116,9 @@ class EditBehavior extends Behavior
                     }
 
                     $patchOptionsArray = $patchOptions->getArrayCopy();
-                    $requestCopyData = $requestData->getArrayCopy();
+                    //$requestCopyData = $requestData->getArrayCopy();
+                    $requestArrayCopyData = $request->withParsedBody($requestData->getArrayCopy());//POCOR-7485
+                    $requestCopyData = $requestArrayCopyData->getData();//POCOR-7485
                     if ($extra['patchEntity']) {
                         $entity = $model->patchEntity($entity, $requestCopyData, $patchOptionsArray);
                         $event = $model->dispatchEvent('ControllerAction.Model.edit.afterPatch', $params, $this);
