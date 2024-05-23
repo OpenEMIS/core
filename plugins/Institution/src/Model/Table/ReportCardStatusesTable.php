@@ -755,8 +755,8 @@ class ReportCardStatusesTable extends ControllerActionTable
             }
         } else { //POCOR-7163 :: End here and condition same for other users
             if (!is_null($reportCardId) && !is_null($classId) && !empty($securityRoleIds)) { //POCOR-7148 check empty condition for securityRoleIds
-                $existingReportCard = $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId]);
-                $existingClass = $this->InstitutionClasses->exists([$this->InstitutionClasses->primaryKey() => $classId]);
+                $existingReportCard = $this->ReportCards->exists([$this->ReportCards->getPrimaryKey() => $reportCardId]);
+                $existingClass = $this->InstitutionClasses->exists([$this->InstitutionClasses->getPrimaryKey() => $classId]);
                 // only show toolbar buttons if request for report card and class is valid
                 if ($existingReportCard && $existingClass) {
                     $generatedCount = 0;
@@ -2087,7 +2087,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $security_role_ids = $this->getUserSecurityRoles();
         $ExcludedSecurityRoleCount = -1;
         if (!empty($security_role_ids)) {
-            $ExcludedSecurityRoleTable = TableRegistry::get('report_card_excluded_security_roles');
+            $ExcludedSecurityRoleTable = TableRegistry::get('ReportCard.ReportCardExcludedSecurityRoles');
             $ExcludedSecurityRoleCount = $ExcludedSecurityRoleTable->find('all')
                 ->where([
                     'security_role_id IN' => $security_role_ids,

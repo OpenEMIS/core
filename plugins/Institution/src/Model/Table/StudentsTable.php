@@ -3231,7 +3231,7 @@ class StudentsTable extends ControllerActionTable
         $guardians = TableRegistry::getTableLocator()->get('User.Users');
         $student_guardians = TableRegistry::getTableLocator()->get('Student.StudentGuardians');
         $guardian_relations = TableRegistry::getTableLocator()->get('Student.GuardianRelations');
-        $guardian_contacts = TableRegistry::getTableLocator()->get('User.UserContacts');
+        $guardian_contacts = TableRegistry::getTableLocator()->get('UserContacts');
         $guardians->getAlias('guardians');
         $student_guardians->getAlias('student_guardians');
         $guardian_relations->getAlias('guardian_relations');
@@ -3264,7 +3264,7 @@ class StudentsTable extends ControllerActionTable
 
     private function addStudentContactFields(Query $query)
     {
-        $student_contacts = TableRegistry::getTableLocator()->get('User.UserContacts');
+        $student_contacts = TableRegistry::getTableLocator()->get('UserContacts');
         $contact_types = TableRegistry::getTableLocator()->get('User.ContactTypes');
         $contact_options = TableRegistry::getTableLocator()->get('User.ContactOptions');
         $student_contacts->getAlias('student_contacts');

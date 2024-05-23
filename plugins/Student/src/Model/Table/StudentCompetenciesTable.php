@@ -67,7 +67,12 @@ class StudentCompetenciesTable extends ControllerActionTable
         $this->toggle('search', false);
         $this->toggle('edit', false); //POCOR-7602
 
-        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Institution.InstitutionTab',
+             [
+                'appliedAction' => ['Competencies' =>['id', 'institution_id', 'institution_class_id','competency_template_id'
+                ,'education_grade_id','competency_periods_id','academic_period_id','competency_item_id']
+                ]
+            ]);
         // $this->addBehavior('Student.StudentTab', [
         //     'appliedAction' => ['Competencies' =>['id', 'institution_id']
         //     ]
@@ -106,7 +111,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $encodedQueryString = $this->paramsEncode($queryString);
 
         //End:POCOR-6781
-        $extra['elements']['controls'] = ['name' => 'Institution.Competencies/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
+        $extra['elements']['controls'] = ['name' => 'Student.Competencies/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
 
         $this->field('competency_template');
         $this->field('competency_periods');//POCOR-6781
@@ -348,7 +353,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $query
             ->contain(['AcademicPeriods'])
             ->where([
-                $this->aliasField('id') => $this->getQueryString('class_id'),
+                $this->aliasField('id') => $this->getQueryString('institution_class_id'),
                 $this->aliasField('institution_id') => $this->getQueryString('institution_id'),
                 $this->aliasField('academic_period_id') => $this->getQueryString('academic_period_id')
             ]);
@@ -518,7 +523,8 @@ class StudentCompetenciesTable extends ControllerActionTable
         if ($this->controller->getName() == 'Profiles') {
             $studentId = $session->read('Auth.User.id');
         } else {
-            $studentId = $session->read('Student.Students.id');
+            //$studentId = $session->read('Student.Students.id');
+            $studentId = $this->getQueryString('student_id');
         }
         // set Competency Period filter
         $attr['period_options'] = $this->getCompetencyPeriodOptions();
@@ -636,7 +642,7 @@ class StudentCompetenciesTable extends ControllerActionTable
 
     private function setupFields(Entity $entity)
     {
-        $this->classId = $this->getQueryString('class_id');
+        $this->classId = $this->getQueryString('institution_class_id');
         $this->institutionId = $this->getQueryString('institution_id');
         $this->academicPeriodId = $this->getQueryString('academic_period_id');
         $this->competencyTemplateId = $this->getQueryString('competency_template_id');
@@ -659,13 +665,13 @@ class StudentCompetenciesTable extends ControllerActionTable
         $this->setFieldOrder(['name', 'academic_period_id', 'competency_template', 'competency_periods','institution_id','student']); //POCOR-6718
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    public function onUpdateActionButtons_old(Event $event, Entity $entity, array $buttons) {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $queryString = $this->getQueryString();
         $entity->institution_id = $queryString['institution_id'];
         $encodedQueryString = $this->paramsEncode($queryString);
         $params = [
-            'class_id' => $entity->institution_class_id,
+            'institution_class_id' => $entity->institution_class_id,
             'institution_id' => $entity->institution_id,
             'academic_period_id' => $entity->academic_period_id,
             'competency_template_id' => $entity->competency_template_id,
@@ -722,7 +728,7 @@ class StudentCompetenciesTable extends ControllerActionTable
     {
         $CompetencyPeriods = TableRegistry::get('Competency.CompetencyPeriods');
         if ($this->action == 'view') {
-            $competencyPeriodsId = $this->getQueryString('competency_period_id');
+            $competencyPeriodsId = $this->getQueryString('competency_periods_id');
             $competencyEntity = $CompetencyPeriods->find()
             ->where([
                 $CompetencyPeriods->aliasField('id') => $competencyPeriodsId

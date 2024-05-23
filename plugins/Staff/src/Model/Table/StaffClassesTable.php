@@ -82,7 +82,7 @@ class StaffClassesTable extends ControllerActionTable
         $this->fields['capacity']['visible'] = false;
 
         $this->field('total_students', []);
-
+        $this->field('staff_id', ['visible' => false]);
         $this->setFieldOrder([
             'academic_period_id',
             'institution_id',

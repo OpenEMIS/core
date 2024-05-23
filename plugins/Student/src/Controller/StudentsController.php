@@ -535,12 +535,12 @@ class StudentsController extends AppController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
-        /*$isInstitutionIDSkipped = $this->isStudentIDSkipped();
+        $isInstitutionIDSkipped = $this->isStudentIDSkipped();
         if ($isInstitutionIDSkipped) {
             $header = __('Students');
             $this->set('contentHeader', $header);
             return;
-        }*/
+        }
 
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $action = $this->request->getAttribute('params')['action'];
@@ -585,9 +585,10 @@ class StudentsController extends AppController
             }
             if ($this->StudentUser->exists([$this->StudentUser->getPrimaryKey() => $id])) {
                 $entity = $this->StudentUser->get($id);
+                $queryString = $this->getQueryString();
                 $name = $entity->name;
                 $header = $action == 'Assessments' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
-                $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $id, 'institution_id' => $institutionID, 'student_id' => $entity->id])]);
+                $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $id, 'institution_id' => $institutionID, 'student_id' => $entity->id,'institution_student_id' => $queryString['institution_student_id']])]);
             } else {
                 $indexPage = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index'];
                 return $this->redirect($indexPage);
@@ -601,7 +602,7 @@ class StudentsController extends AppController
      * @return bool
      */
 
-    /*public
+    public
     function isStudentIDSkipped(): bool
     {
         $request = $this->request;
@@ -611,12 +612,12 @@ class StudentsController extends AppController
         $plugin = $request->getParam('plugin');
         $furtherAction = $pass[0];
 
-        if (($furtherAction == 'index' || $furtherAction == 'add' || $furtherAction == 'import')
-            && ($action == 'Students')
-            && ($plugin == 'Student')
-            && ($controller == 'Students')) {
-            return true;
-        }
+        // if (($furtherAction == 'index' || $furtherAction == 'add' || $furtherAction == 'import')
+        //     && ($action == 'Students')
+        //     && ($plugin == 'Student')
+        //     && ($controller == 'Students')) {
+        //     return true;
+        // }
         if ($pass[0] == 'download' && ($action == 'Qualifications') && ($plugin == 'Student') && ($controller == 'Students')) {
             return true;
         }
@@ -625,7 +626,7 @@ class StudentsController extends AppController
         }
 //        $this->log(print_r($request,true), debug);
         return false;
-    }*/
+    }
 
     // public function getUserTabElements($options = []) {
     //  $plugin = $this->plugin;
@@ -734,10 +735,10 @@ class StudentsController extends AppController
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
 
-        /*$isInstitutionIndex = $this->isStudentIDSkipped();
+        $isInstitutionIndex = $this->isStudentIDSkipped();
         if ($isInstitutionIndex) {
             return;
-        }*/
+        }
         /**
          * if student object is null, it means that students.security_user_id or users.id is not present in the session; hence, no sub model action pages can be shown
          */
@@ -791,42 +792,43 @@ class StudentsController extends AppController
                     }
 
                 }
-
-                // POCOR-3983 to disable add/edit/remove action on the model when institution status is inactive
-                $this->getStatusPermission($model);
-
-                $header = $name;
-                if ($alias == 'ImportStudents') {
-                    $this->Navigation->addCrumb($model->getHeader($alias));
-                    $header = __('Students') . ' - ' . $model->getHeader($alias);
-                    $this->set('contentHeader', $header);
-                }
-                $primaryKey = $model->getPrimaryKey();
-
-                //POCOR-5890 starts
-                if ($model->getHeader($alias) == 'HealthImmunizations') {
-                    $alias = __('Vaccinations');
-                }
-                //POCOR-5890 ends
-                $this->Navigation->addCrumb($model->getHeader($alias));
-                $header = $header . ' - ' . $model->getHeader($alias);
-
-                // $params = $this->request->params;
-                $this->set('contentHeader', $header);
-
-                if ($model->hasField('security_user_id')) {
-                    $model->fields['security_user_id']['type'] = 'hidden';
-                    $model->fields['security_user_id']['value'] = $studentID;
-                }
-                if ($model->hasField('student_id')) {
-                    $model->fields['student_id']['type'] = 'hidden';
-                    $model->fields['student_id']['value'] = $studentID;
-                }
-                if ($model->hasField('staff_id')) {
-                    $model->fields['staff_id']['type'] = 'hidden';
-                    $model->fields['staff_id']['value'] = $studentID;
-                }
             }
+
+            // POCOR-3983 to disable add/edit/remove action on the model when institution status is inactive
+            $this->getStatusPermission($model);
+
+            $header = $name;
+            if ($alias == 'ImportStudents') {
+                $this->Navigation->addCrumb($model->getHeader($alias));
+                $header = __('Students') . ' - ' . $model->getHeader($alias);
+                $this->set('contentHeader', $header);
+            }
+            $primaryKey = $model->getPrimaryKey();
+
+            //POCOR-5890 starts
+            if ($model->getHeader($alias) == 'HealthImmunizations') {
+                $alias = __('Vaccinations');
+            }
+            //POCOR-5890 ends
+            $this->Navigation->addCrumb($model->getHeader($alias));
+            $header = $header . ' - ' . $model->getHeader($alias);
+
+            // $params = $this->request->params;
+            $this->set('contentHeader', $header);
+
+            if ($model->hasField('security_user_id')) {
+                $model->fields['security_user_id']['type'] = 'hidden';
+                $model->fields['security_user_id']['value'] = $studentID;
+            }
+            if ($model->hasField('student_id')) {
+                $model->fields['student_id']['type'] = 'hidden';
+                $model->fields['student_id']['value'] = $studentID;
+            }
+            if ($model->hasField('staff_id')) {
+                $model->fields['staff_id']['type'] = 'hidden';
+                $model->fields['staff_id']['value'] = $studentID;
+            }
+            //}
 
         }
     }

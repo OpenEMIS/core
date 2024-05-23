@@ -575,7 +575,7 @@ class StaffController extends AppController
         $this->Institutions = TableRegistry::get('Institution.Institutions');
         $activeInstitution = $this->Institutions->get($institutionId);
         $institutionName = $activeInstitution->name;
-        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
+        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId ,'institution_id' => $institutionId]);
         $this->Navigation->addCrumb($institutionName,
             ['plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -586,7 +586,9 @@ class StaffController extends AppController
             ['plugin' => 'Institution',
                 'institutionId' => $institutionId,
                 'controller' => 'Institutions',
-                'action' => 'Staff', $encodedInstitutionId]);
+                'action' => 'Staff',
+                'index',
+                $encodedInstitutionId]);
         $action = $this->request->getAttribute('params')['action'];
         $header = __('Staff');
 
@@ -604,7 +606,9 @@ class StaffController extends AppController
                 $entity = $this->Staff->get($id);
                 $name = $entity->name;
                 $header = $name . ' - ' . __('Overview');
-                $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffUser', 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
+                //$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffUser', 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
+                $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffUser', 'view',
+                 $this->ControllerAction->paramsEncode(['id' => $id,'institution_id' => $institutionId,'staff_id' => $id])]);
             }
         }
         $this->set('contentHeader', $header);
@@ -1043,7 +1047,7 @@ class StaffController extends AppController
         $plugin = $request->getParam('plugin');
         $furtherAction = $pass[0];
         
-        if ($pass[0] == 'download' && ($action == 'Qualifications' || $action == 'EmploymentStatuses' || $action == 'Payslips') && ($plugin == 'Staff') && ($controller == 'Staff')) {
+        if ($pass[0] == 'download' && ($action == 'Qualifications' || $action == 'EmploymentStatuses' || $action == 'Payslips' || 'Healths') && ($plugin == 'Staff') && ($controller == 'Staff')) {
             return true;
         }
         

@@ -118,6 +118,8 @@ class GuardiansTable extends ControllerActionTable
                 $studentId = $requestDataa['student_id'];
             } elseif ($this->controller->getName() == 'Guardians' || $this->controller->getName() == 'GuardianNavs') {
                 $studentId = $this->Session->read('Auth.User.id');
+            } elseif($this->controller->getName() == 'Students' && isset( $this->request->getParam('pass')[1])) {
+                $studentId = $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1])['student_id'];
             } else {
                 //$studentId = $this->Session->read('Student.Students.id');
                 $studentId = $this->ControllerAction->paramsDecode($this->request->getQuery('queryString'))['security_user_id'];
