@@ -110,23 +110,23 @@ class AttendanceController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v4/institutions/{academic_period_id}/staff/attendances",
+     *     path="/api/v4/institutions/{institution_id}/staff/attendances",
      *     summary="Get staff attendances for a specific institution",
      *     description="Returns staff attendances for the specified institution and parameters",
      *     tags={"Attendance"},
      *     @OA\Parameter(
-     *         name="academic_period_id",
-     *         in="path",
-     *         required=true,
-     *         description="ID of the academic period",
-     *         @OA\Schema(type="integer", example="33")
-     *     ),
-     *     @OA\Parameter(
      *         name="institution_id",
-     *         in="query",
+     *         in="path",
      *         required=true,
      *         description="ID of the institution",
      *         @OA\Schema(type="integer", example="6")
+     *     ),
+     *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=true,
+     *         description="ID of the academic period",
+     *         @OA\Schema(type="integer", example="33")
      *     ),
      *     @OA\Parameter(
      *         name="week_id",
@@ -219,7 +219,7 @@ class AttendanceController extends Controller
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="list", type="array",
+     *                 @OA\Property(property="data", type="array",
      *                     @OA\Items(
      *                         type="object",
      *                         @OA\Property(property="id", type="integer", example="395"),
