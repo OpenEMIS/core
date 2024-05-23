@@ -25,7 +25,7 @@ class EducationSystemsTable extends ControllerActionTable
     //POCOR-5696 start
     public function setupFields(Entity $entity)
     {
-    	if($this->request->action == 'CopySystems'){
+        if($this->request->getParam('action') == 'CopySystems'){
     		$this->field('start_year', ['type' => 'select', 'entity' => $entity,'attr' => ['label' => __('From Academic Period')]]);
     		$this->field('education_system_id', ['type' => 'select', 'entity' => $entity,'attr' => ['label' => __('From Education System')]]);
     		$this->field('academic_period_id', ['type' => 'select', 'entity' => $entity,'attr' => ['label' => __('To Academic Period')]]);
@@ -40,7 +40,8 @@ class EducationSystemsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
     	$validator = parent::validationDefault($validator);
-    	if($this->request->action == 'CopySystems'){
+        $validator->setProvider('custom', $this);
+    	if($this->request->getParam('action') == 'CopySystems'){
 	        $validator
 	        		->requirePresence('start_year')
 	        		->requirePresence('education_system_id')
@@ -76,12 +77,13 @@ class EducationSystemsTable extends ControllerActionTable
 
     //added academic filter on systme listing
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-        $serverRequest = $this->request;
-        if($this->request->action != 'CopySystems'){
+    { 
+        //$serverRequest = $this->request;
+        if($this->request->getParam('action') != 'CopySystems'){
         	$academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-	        $selectedAcademicPeriod = !is_null($serverRequest->getQuery('academic_period_id')) ? $serverRequest->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
-	        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
+	        //$selectedAcademicPeriod = !is_null($serverRequest->getQuery('academic_period_id')) ? $serverRequest->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
+	        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
+            $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
 	        $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 	        $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
 	        $query->where($where);
@@ -143,6 +145,13 @@ class EducationSystemsTable extends ControllerActionTable
     }
     //POCOR-5696 ends
 
+    public function addBeforeAction(Event $event, ArrayObject $extra)
+    {
+        if($this->request->getParam('action') == 'CopySystems'){
+            $extra['toolbarButtons']['back']['url']['action'] = 'Systems';
+        }
+    }
+
     //updating type of academic period
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -175,9 +184,9 @@ class EducationSystemsTable extends ControllerActionTable
     //POCOR-5696 start
     public function onUpdateFieldStartYear(Event $event, array $attr, $action, ServerRequest $request)
     {
-    	if($this->request->action == 'CopySystems'){
+    	if($this->request->getParam('action') == 'CopySystems'){
             if ($action == 'add') {
-            	list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+            	list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('period')));
 
                 $attr['options'] = $periodOptions;
                 $attr['default'] = $selectedPeriod;
@@ -189,32 +198,32 @@ class EducationSystemsTable extends ControllerActionTable
 
     public function addEditOnChangeEducationSystemId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-
-    	$request = $this->request;
-        unset($request->query['education_system_id']);
+        $request = $this->request;
+        unset($request->getQuery['education_system_id']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('education_system_id', $request->data[$this->alias()])) {
-                    $request->query['education_system_id'] = $request->data[$this->alias()]['education_system_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('education_system_id', $request->getData[$this->getAlias()])) {
+                    //$request->getQuery['education_system_id'] = $request->getData($this->getAlias())['education_system_id'];
+                    $request = $this->request->withQueryParams(['education_system_id' => $request->getData($this->getAlias())['education_system_id']]);
                 }
             }
         }
+
     }
 
     public function onUpdateFieldEducationSystemId(Event $event, array $attr, $action, ServerRequest $request)
     {
-
-    	if($this->request->action == 'CopySystems'){
+    	if($this->request->getParam('action') == 'CopySystems'){
             if ($action == 'add') {
             	$selectedPeriod = '';
-            	if( !empty($this->request->data['EducationSystems']['start_year']) ){
-					$selectedPeriod =$this->request->data['EducationSystems']['start_year'];
+            	if( !empty($this->request->getData()['EducationSystems']['start_year']) ){
+					$selectedPeriod =$this->request->getData()['EducationSystems']['start_year'];
             	}else{
             		$selectedPeriod = $this->AcademicPeriods->getCurrent();
             	}
-            	$AcademicPeriods = TableRegistry::get('academic_periods');
-            	$educationSytems = TableRegistry::get('education_systems');
+            	$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            	$educationSytems = TableRegistry::get('Education.EducationSystems');
                 $educationSytemsList = $educationSytems
 							    ->find()
 							    ->select([	$educationSytems->aliasField('id'),
@@ -232,7 +241,7 @@ class EducationSystemsTable extends ControllerActionTable
 							        );
 							    })
 							    ->leftJoin(
-                                    [$AcademicPeriods->alias() => $AcademicPeriods->table()], [
+                                    [$AcademicPeriods->getAlias() => $AcademicPeriods->getTable()], [
                                         $AcademicPeriods->aliasField('id = ') . $educationSytems->aliasField('academic_period_id')
                                     ]
                                 )
@@ -248,8 +257,7 @@ class EducationSystemsTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-
-    	$session = $this->request->getSession();
+        $session = $this->request->getSession();
     	if ($entity->isNew()) {
             $academic_period_id = $entity->academic_period_id;
             $this->updateAll(
@@ -262,7 +270,7 @@ class EducationSystemsTable extends ControllerActionTable
         $education_levels = TableRegistry::get('Education.EducationLevels');
     	$educationLevelsData = $education_levels
 							    ->find()
-							    ->where([$education_levels->aliasField('education_system_id') => $entity->id])
+							    ->where([$education_levels->aliasField('education_system_id') => $entity->education_system_id])
 							    ->All()
 		                        ->toArray();
 
