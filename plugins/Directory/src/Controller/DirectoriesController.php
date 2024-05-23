@@ -1074,6 +1074,9 @@ class DirectoriesController extends AppController
         $type = (array_key_exists('type', $options))? $options['type']: null;
         $tabElements = [];
         $queryString = $this->ControllerAction->getQueryString();
+        if(empty($queryString)){
+            $queryString = $this->getQueryString();
+        }
         $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
         $studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
         $studentTabElements = [
@@ -1154,6 +1157,9 @@ class DirectoriesController extends AppController
         $type = (array_key_exists('type', $options))? $options['type']: null;
         $tabElements = [];
         $queryString = $this->ControllerAction->getQueryString();
+        if(empty($queryString)){
+            $queryString = $this->getQueryString();
+        }
         $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
         $staffUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
         $staffTabElements = [
