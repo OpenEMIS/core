@@ -2462,11 +2462,7 @@ public function isActionIgnored(Event $event, $action)
             'action' => 'Institutions',
             'index'];
         $this->Navigation->addCrumb($header, $indexUrl);
-        $isInstitutionIDSkipped = $this->isInstitutionIDSkipped();
-        if ($isInstitutionIDSkipped) {
-            $this->set('contentHeader', $header);
-            return;
-        }
+
         $request = $this->request;
         $session = $request->getSession();
         $pass = $request->getParam('pass');
@@ -2474,6 +2470,47 @@ public function isActionIgnored(Event $event, $action)
         $controller = $request->getParam('controller');
         $plugin = $request->getParam('plugin');
         $query = $request->getQuery();
+        
+        if (($pass[0] == 'view' || $pass[0] == 'edit')
+            && ($action == 'Institutions')
+            && ($plugin == 'Institution')
+            && ($controller == 'Institutions')) {
+            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+            try {
+                $this->checkInstitutionAccess($institutionId, $event);
+                if ($event->isStopped()) {
+                    return false;
+                }
+            } catch (SecurityException $ex) {
+                die($ex->getMessage());
+                return;
+            }
+            if (empty($institutionId)) {
+                return;
+            }
+            $institutionName = "";
+            if ($this->Institutions->exists([$this->Institutions->getPrimaryKey() => $institutionId])) {
+                $activeInstitution = $this->Institutions->get($institutionId);
+                $institutionName = $activeInstitution->name;
+    
+                $crumb = [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'dashboard',
+                    0 => $this->ControllerAction->paramsEncode(['institution_id' => $institutionId])
+                ];
+    
+                $this->Navigation->addCrumb($institutionName, $crumb);
+                $this->set('institutionName', $institutionName);
+            }
+        }
+
+        $isInstitutionIDSkipped = $this->isInstitutionIDSkipped();
+        if ($isInstitutionIDSkipped) {
+            $this->set('contentHeader', $header);
+            return;
+        }
+        
         $header = __('Institutions');
         $this->deleteGuardianFromSession($action, $pass, $session);
 //        die('<pre>'.print_r($request->getAttributes()));
