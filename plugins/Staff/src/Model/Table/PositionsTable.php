@@ -188,7 +188,7 @@ class PositionsTable extends ControllerActionTable {
         $this->fields['staff_position_grade_id']['visible'] = false;//PCOOR-7238
         $this->fields['is_homeroom']['visible'] = false; //POCOR-5070
         $this->field('shift', ['after' => 'institution_position_id']);
-
+        $this->field('staff_id', ['visible' => false]);
         $this->setFieldOrder([
             'institution_id',
             'institution_position_id',

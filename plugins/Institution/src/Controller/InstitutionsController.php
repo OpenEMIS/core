@@ -1748,12 +1748,13 @@ public function ClassReportCards()
     {
         if ($subaction == 'edit') {
             $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
-            $indexUrl = [
-                'plugin' => 'Institution',
+            $queryString = $this->getQueryString();
+            $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
+            $indexUrl = [   'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'StudentCompetencies',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
-            ];
+                '0' => 'index',
+                '1' => $encodedQueryString];
             $this->Navigation->addCrumb('Student Competencies', $indexUrl);
 
             if (!$this->AccessControl->isAdmin() && $institutionId) {
@@ -1798,12 +1799,13 @@ public function ClassReportCards()
         if ($subaction == 'edit') {
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
             $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
-            $indexUrl = [
-                'plugin' => 'Institution',
+            $queryString = $this->getQueryString();
+            $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
+            $indexUrl = [   'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'StudentOutcomes',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
-            ];
+                '0' => 'index',
+                '1' => $encodedQueryString];
             $this->Navigation->addCrumb($crumbTitle, $indexUrl);
             if (!$this->AccessControl->isAdmin() && $institutionId) {
                 $userId = $this->Auth->user('id');
@@ -1842,8 +1844,10 @@ public function ClassReportCards()
 
     public function Classes($subaction = 'index', $classId = null)
     {
-        if ($subaction == 'edit') {
+        if ($subaction == 'edit' || $subaction == 'view') {
             $session = $this->request->getSession();
+            $queryString = $this->getQueryString();
+            $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
             $roles = [];
             $classId = $this->ControllerAction->paramsDecode($classId);
             $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
@@ -1866,12 +1870,22 @@ public function ClassReportCards()
                             ->where([$ClassTable->aliasField('id') => $classId['id']])
                             ->all();
 
-                        if ($classResults->isEmpty()) {
-                            $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'Classes'];
-                            return $this->redirect($url);
-                        }
+                            if ($classResults->isEmpty()) {
+                                $this->Alert->error('security.noAccess');
+                                $url = ['plugin' => $this->getPlugin(),
+                                    'controller' => $this->getName(),
+                                    'action' => 'dashboard',
+                                    //'0' => 'index',
+                                    '1' => $encodedQueryString ];
+                                return $this->redirect($url);
+                            }
                     } else {
-                        $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'Classes'];
+                        $this->Alert->error('security.noAccess');
+                        $url = ['plugin' => $this->getPlugin(),
+                            'controller' => $this->getName(),
+                            'action' => 'Classes',
+                            '0' => 'index',
+                            '1' => $encodedQueryString ];
                         return $this->redirect($url);
                     }
                 }
@@ -1904,7 +1918,8 @@ public function ClassReportCards()
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'Classes',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+                'index',
+                $this->ControllerAction->paramsEncode(['id' => $institutionId, 'institution_id'=>$institutionId])
             ];
 
             $alertUrl = [
@@ -1938,7 +1953,7 @@ public function ClassReportCards()
                 if (!$AccessControl->check(['Institutions', 'AllSubjects', $action], $roles)) {
                     if ($AccessControl->check(['Institutions', 'Subjects', $action], $roles)) {
                         $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
-                        $subjectRecord = $InstitutionSubjects->get($institutionSubjectId, ['contain' => ['Teachers']])->toArray();
+                        $subjectRecord = $InstitutionSubjects->get($institutionSubjectId['id'], ['contain' => ['Teachers']])->toArray();
                         if (in_array($userId, array_column($subjectRecord['teachers']), 'id')) {
                             $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
                             return $this->redirect($url);
@@ -1952,12 +1967,13 @@ public function ClassReportCards()
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'Subjects';
             $viewUrl[0] = 'view';
-            $viewUrl[1] =  $this->ControllerAction->paramsEncode(['id' =>  $institutionSubjectId , 'institution_id' =>  $institutionId]);
+            $viewUrl[1] =  $this->ControllerAction->paramsEncode(['id' =>  $institutionSubjectId['id'] , 'institution_id' =>  $institutionId]);
             $indexUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'Subjects',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+                'index',
+                 $this->ControllerAction->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId])
             ];
             $alertUrl = [
                 'plugin' => 'Configuration',
@@ -2726,6 +2742,31 @@ public function isActionIgnored(Event $event, $action)
         $isInstitutionIndex = $this->isInstitutionIDSkipped();
 
         if ($isInstitutionIndex) {
+            $request = $this->request;
+            $pass = $request->getParam('pass');
+            $action = $request->getParam('action');
+            $controller = $request->getParam('controller');
+            $plugin = $request->getParam('plugin');
+            if (($pass[0] == 'view' || $pass[0] == 'edit')
+                && ($action == 'Institutions')
+                && ($plugin == 'Institution')
+                && ($controller == 'Institutions')) {
+                    $alias = $model->alias;
+                    $humanTitle = __(Inflector::humanize(Inflector::underscore($alias)));
+                    $crumbOptions = [];
+                    if ($action) {
+                        $crumbOptions = ['plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'Institutions',
+                        'index'];
+                    }
+                    $modelsWithChangedName = ['CommitteeAttachments',
+                        'InstitutionMaps',
+                        'InstitutionAssociations'];
+                    if (!in_array($alias, $modelsWithChangedName)) { 
+                        $this->Navigation->addCrumb($humanTitle, $crumbOptions);
+                    }
+                }
             return;
         }
 
@@ -2757,7 +2798,7 @@ public function isActionIgnored(Event $event, $action)
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => $alias,
-                '0' => $action,
+                '0' => 'index',//$action,
                 '1' => $encodedQueryString];
         }
 
@@ -2766,11 +2807,13 @@ public function isActionIgnored(Event $event, $action)
         $studentModels = [
             'StudentProgrammes' => __('Programmes'),
             'StudentRisks' => __('Risks'),
-            'StudentTextbooks' => __('Textbox'),
+            'StudentTextbooks' => __('Textbooks'),
             'StudentAssociations' => __('Houses'), //POCOR-7938
             'StudentCurriculars' => __('Curriculars') //POCOR-6673 in student tab breadcrumb
         ];
-        
+        $modelsWithChangedName = ['CommitteeAttachments',
+        'InstitutionMaps',
+        'InstitutionAssociations'];
         if (array_key_exists($alias, $studentModels)) {
             $studentID = $this->getStudentID(__FUNCTION__ . __LINE__);
             $Students = TableRegistry::getTableLocator()->get('Security.Users');
@@ -2807,7 +2850,7 @@ public function isActionIgnored(Event $event, $action)
             // Breadcrumb
         }
 
-        if ($alias == 'CommitteeAttachments') {
+        else if ($alias == 'CommitteeAttachments') {
             $this->Navigation->addCrumb('Committees',
                 ['plugin' => 'Institution',
                     'controller' => 'Institutions',
@@ -2817,7 +2860,7 @@ public function isActionIgnored(Event $event, $action)
             $this->Navigation->addCrumb('Attachments');
             $this->set('contentHeader', $tranlatedInstitutionName);
         }
-        if ($alias == 'InstitutionMaps') {
+        else if ($alias == 'InstitutionMaps') {
             $this->Navigation->addCrumb('InstitutionMaps',
                 ['plugin' => 'Institution',
                     'controller' => 'Institutions',
@@ -2827,7 +2870,7 @@ public function isActionIgnored(Event $event, $action)
             $this->set('contentHeader', $tranlatedInstitutionName);
         } //End: POCOR-7048
         // Start POCOR-7466
-        if ($alias == 'InstitutionAssociations') {
+        else if ($alias == 'InstitutionAssociations') {
             $this->Navigation->addCrumb('Houses',
                 ['plugin' => 'Institution',
                     'controller' => 'Institutions',
@@ -2837,10 +2880,7 @@ public function isActionIgnored(Event $event, $action)
             $this->set('contentHeader', $tranlatedInstitutionName);
         }
         
-        $modelsWithChangedName = ['CommitteeAttachments',
-            'InstitutionMaps',
-            'InstitutionAssociations'];
-        if (!in_array($alias, $modelsWithChangedName)) { 
+        else if (!in_array($alias, $modelsWithChangedName)) { 
             $this->Navigation->addCrumb($humanTitle, $crumbOptions);
             $header = $tranlatedInstitutionName;
         }

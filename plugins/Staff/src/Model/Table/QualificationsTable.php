@@ -272,7 +272,7 @@ class QualificationsTable extends ControllerActionTable
             $filename = $entity->file_content;
             return !empty($filename);
         };
-        $this->behaviors()->get('ControllerAction')->getConfig(
+        $this->behaviors()->get('ControllerAction')->setConfig(
             'actions.download.show',
             $showFunc
         );
