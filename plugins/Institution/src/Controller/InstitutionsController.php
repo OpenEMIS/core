@@ -2605,6 +2605,9 @@ public function isActionIgnored(Event $event, $action)
             && ($controller == 'Institutions')) {
             return true;
         }
+        if($action == 'staffCustomFields'){
+            return true;
+        }
         if ($pass[0] == 'download' && ($action == 'Expenditure' || $action == 'Visits' || $action = 'Attachments') && ($plugin == 'Institution') && ($controller == 'Institutions')) {
             return true;
         }
@@ -5396,6 +5399,9 @@ public
         $requestData = $this->request->input('json_decode', true);
         $requestData = $requestData['params'];
         $studentId = (array_key_exists('student_id', $requestData)) ? $requestData['student_id'] : '';
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+        $session = $this->request->getSession();
+        $session->write('Institution.Institutions.id', $institutionId);
         $studentCustomForms = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomForms');
         $studentCustomFormsFields = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFormsFields');
         $studentCustomFields = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFields');
@@ -5553,7 +5559,7 @@ public
         $requestData = $this->request->input('json_decode', true);
         $requestData = $requestData['params'];
         $staffId = (array_key_exists('staff_id', $requestData)) ? $requestData['staff_id'] : '';
-        $staffCustomForms = TableRegistry::getTableLocator()->get('staff_custom_forms');
+        $staffCustomForms = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomForms');
         $staffCustomFormsFields = TableRegistry::getTableLocator()->get('staff_custom_forms_fields');
         $staffCustomFields = TableRegistry::getTableLocator()->get('staff_custom_fields');
         $staffCustomFieldOptions = TableRegistry::getTableLocator()->get('staff_custom_field_options');
