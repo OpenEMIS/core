@@ -280,7 +280,7 @@ class AssessmentItemResultsTable extends AppTable
                 $this->aliasField('assessment_id'),//POCOR-6479 
             ])
             ->contain(['AssessmentGradingOptions'])
-            ->innerJoin([$SubjectStudents->alias() => $SubjectStudents->table()], [
+            ->innerJoin([$SubjectStudents->getAlias() => $SubjectStudents->getTable()], [
                 $SubjectStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                 $SubjectStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                 $SubjectStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),

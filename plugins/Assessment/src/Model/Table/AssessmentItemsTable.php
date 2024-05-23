@@ -157,15 +157,15 @@ class AssessmentItemsTable extends AppTable
             $staffId = $options['staff_id'];
             $query
                 //->contain('EducationSubjects.InstitutionSubjects')
-                ->innerJoin([$ClassSubjects->alias() => $ClassSubjects->table()], [
+                ->innerJoin([$ClassSubjects->getAlias() => $ClassSubjects->getTable()], [
                     $ClassSubjects->aliasField('institution_class_id') => $classId
                 ])
-                ->leftJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
+                ->leftJoin([$InstitutionSubjects->getAlias() => $InstitutionSubjects->getTable()], [
                     $InstitutionSubjects->aliasField('id = ') . $ClassSubjects->aliasField('institution_subject_id'),
                     $InstitutionSubjects->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id'),
                 ])
                 ->leftJoin(
-                    [$staffSubject->alias() => $staffSubject->table()],
+                    [$staffSubject->getAlias() => $staffSubject->getTable()],
                     [
                         $staffSubject->aliasField('institution_subject_id = ') . $ClassSubjects->aliasField('institution_subject_id'),
                     ])
