@@ -61,7 +61,7 @@ class StudentSubjectsTable extends ControllerActionTable
         $this->field('academic_period_id', ['type' => 'integer', 'order' => 0]);
         $this->field('institution_id', ['type' => 'integer', 'after' => 'academic_period_id']);
         $this->field('total_mark', ['after' => 'institution_subject_id']);
-        $queryString = $this->getQueryString();;
+        $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['controls'] = ['name' => 'Student.Subjects/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
         
@@ -156,7 +156,7 @@ class StudentSubjectsTable extends ControllerActionTable
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
         $queryString = $this->getQueryString();
-
+        
         $studentId = $queryString['student_id'];
         $encodedQueryString = $this->paramsEncode($queryString);
         // Institution and Grade filter
@@ -221,7 +221,7 @@ class StudentSubjectsTable extends ControllerActionTable
         $session = $this->request->getSession();//POCOR-6267
         if ($userData['Auth']['User']['is_guardian'] == 1) {
             $sId = $userData['Student']['ExaminationResults']['student_id'];//POCOR-6267
-            $studentId = $this->ControllerAction->paramsDecode($sId)['id'];//POCOR-6267
+            $studentId = $sId;//POCOR-6267
         } else {
             $studentId = $userData['Auth']['User']['id'];
         }
@@ -339,9 +339,10 @@ class StudentSubjectsTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $options = ['type' => 'student'];
-        //$tabElements = $this->controller->getAcademicTabElements($options);
         $tabElements = $this->getAcademicTabElements($options);
-
+        if($this->controller->getName() == 'GuardianNavs' || $this->controller->getName() == 'Directories') {
+			$tabElements = $this->controller->getAcademicTabElements($options);
+		}
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Subjects');
     }

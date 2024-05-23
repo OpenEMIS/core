@@ -464,13 +464,16 @@ class UserNationalitiesTable extends ControllerActionTable {
     public function onUpdateFieldNationalityId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $user_id = $this->getUserID();
+        if(empty($user_id)) {
+            $user_id = $this->securityUserId;
+        }
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
                 $currentNationalities = $this
                                         ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
                                         ->matching('NationalitiesLookUp')
                                         ->where([
-                                            $this->aliasfield('security_user_id') => $this->securityUserId
+                                            $this->aliasfield('security_user_id') => $user_id
                                         ])
                                         ->select([
                                             'id' => $this->NationalitiesLookUp->aliasfield('id')

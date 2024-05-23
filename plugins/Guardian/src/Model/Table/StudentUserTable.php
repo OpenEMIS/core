@@ -36,7 +36,7 @@ class StudentUserTable extends UserTable {
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         // MUST set user_type to request query before call parent's beforeAction
-        $this->request->query['user_type'] = UserTable::STUDENT;
+        $this->request->getQuery['user_type'] = UserTable::STUDENT;
         parent::beforeAction($event, $extra);
         //parent::hideOtherInformationSection($this->controller->getName(), $this->action);
     }

@@ -267,6 +267,29 @@ class GuardianNavsController extends AppController
         $studentUrl = ['plugin' => 'GuardianNav', 'controller' => 'GuardianNavs'];
         //$session = $this->request->getSession();
         //$studentId = $session->read('Student.Students.id');
+        $action = $this->request->getParam('action');
+        if($action == 'StudentProgrammes' && isset($this->request->getQueryParams()['studentId'])) {
+            $studentId = $this->request->getQueryParams()['studentId'];
+            $studentId = $this->ControllerAction->paramsDecode($studentId);
+            if(!empty($studentId)) {
+                $StudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
+                $Student = $StudentsTable
+                    ->find('all')
+                    ->where([$StudentsTable->aliasField('student_id') => $studentId])
+                    ->first();
+                if (!empty($Student)) {
+                    $institutionId = $Student->institution_id;
+                }
+                $params = [
+                    'student_id' => $studentId,
+                    'user_id' => $studentId,
+                    'institution_id' => $institutionId,
+                    'type' => $type];     
+                $queryString = $this->ControllerAction->paramsEncode($params);
+            }
+        } else {
+            $queryString = $this->request->getQuery('queryString');
+        }
         $studentTabElements = [
             'Programmes' => ['text' => __('Programmes')],
             'Classes' => ['text' => __('Classes')],
@@ -290,9 +313,9 @@ class GuardianNavsController extends AppController
 
         foreach ($studentTabElements as $key => $tab) {
             if(!empty($period) && $key == 'Absences') {
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'academic_period' => $period]);
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key,  'queryString' => $queryString,'academic_period' => $period]);
             } else {
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'queryString' => $queryString, 'type' => $type]);
             }
         }
 

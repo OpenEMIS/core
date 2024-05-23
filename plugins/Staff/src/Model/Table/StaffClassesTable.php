@@ -213,9 +213,9 @@ class StaffClassesTable extends ControllerActionTable
         $tabElements = $this->getCareerTabElements($options);
         $controllerName = $this->controller->getName();
         $selectedAction = 'Classes';
-        if($controllerName == 'Directories') {
-            $selectedAction = 'StaffClasses';
-        }
+        // if($controllerName == 'Directories') {
+        //     $selectedAction = 'StaffClasses';
+        // }
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $selectedAction);
     }

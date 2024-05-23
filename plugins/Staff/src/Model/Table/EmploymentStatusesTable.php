@@ -63,10 +63,9 @@ class EmploymentStatusesTable extends ControllerActionTable {
         {
             $header = $session->read('Auth.User.name');
         } else {
-        	$userTable = TableRegistry::get('Security.Users');
-        	$staffId = $this->getStaffID();
-            $header = $userTable->get($staffId)->name ;
-           // echo $header; die();
+            $userTable = TableRegistry::get('Security.Users');
+            $staffId = $this->getStaffID();
+            $header = $userTable->get($staffId)->name;
         }
 
         $header = $header . ' - ' . __('Statuses');
