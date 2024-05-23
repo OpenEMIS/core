@@ -195,7 +195,6 @@ class AcademicPeriodsTable extends ControllerActionTable
         $validator->setProvider('custom', $this);
         $additionalParameters = ['editable = 1 AND visible > 0'];
         //POCOR-5917 starts
-        $validator->setProvider('custom', $this);
         return $validator
             ->add('end_date', [
                 'ruleCompareDateReverse' => [
@@ -224,16 +223,12 @@ class AcademicPeriodsTable extends ControllerActionTable
             $entity->visible = 1;
             // Adding condition on updateAll(), only change the one which is not the current academic period.
             $where = [];
-
             if (!$entity->isNew()) {
                 $where['id <> '] = $entity->id; // same with $where = [0 => 'id <> ' . $entity->id];
-                $this->updateAll(['current' => 0], $where);
             }
-
-            
+            $this->updateAll(['current' => 0], $where);
         }
     }
-
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
@@ -318,16 +313,11 @@ class AcademicPeriodsTable extends ControllerActionTable
                 $Webhooks->triggerShell('academic_period_update', [], $updateBody);
             }*/
         }
-
         // webhook academic period update ends
-
-
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
-
-
         //POCOR-5917 starts
         if (isset($entity->old_end_date) && !empty($entity->old_end_date) && isset($entity->old_end_year) && !empty($entity->old_end_year)) { //when edit academic period
             $academic_end_date = (new Date($entity->old_end_date))->format('Y-m-d');
@@ -400,13 +390,12 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
-
         $this->addAfterSave($event, $entity, $requestData);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-//        $this->log('before', 'debug');
+        // $this->log('before', 'debug');
         $this->field('academic_period_level_id');
         $this->fields['start_year']['visible'] = false;
         $this->fields['end_year']['visible'] = false;
@@ -606,7 +595,7 @@ class AcademicPeriodsTable extends ControllerActionTable
                         ->find()
                         ->order([$this->Levels->aliasField('level ASC')])
                         ->first();
-                    $current = $request->query('current');
+                    $current = $request->getQuery('current');
 
                     if (!is_null($current) && $current == 1) {
                         $where = [$this->aliasField('academic_period_level_id') => $level->id];
@@ -720,7 +709,6 @@ class AcademicPeriodsTable extends ControllerActionTable
             $this->aliasField('current !=') => 1,
             $this->aliasField('id IN') => $academicPeriod
         ];
-
 
         $data = $this
             ->find('list')

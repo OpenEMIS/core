@@ -18,8 +18,12 @@ class AddBehavior extends Behavior {
         return $events;
     }
     public function add(Event $mainEvent, ArrayObject $extra) {
-        $model = $this->table();
-        $request = $this->table()->request;
+        $model = $this->_table;
+        //POCOR-7485 use this for adminsitration > System Setup > Acadmic Period add starts
+        if($model->getAlias() == 'AcademicPeriods'){
+            $model->setEntityClass(\Cake\ORM\Entity::class);
+        }// end
+        $request = $this->_table->request;
         $extra['config']['form'] = true;
         $extra['patchEntity'] = true;
         $extra['redirect'] = $model->url('index', 'QUERY');
@@ -70,12 +74,12 @@ class AddBehavior extends Behavior {
                     return $event->getResult();
                 }
                 $patchOptionsArray = $patchOptions->getArrayCopy();
-                //$request->data = $requestData->getArrayCopy();
-                $requestArrayCopyData = $requestData->getArrayCopy();
+                // $request->data = $requestData->getArrayCopy();//cakephp 3
+                // $requestArrayCopyData = $requestData->getArrayCopy();
+                $requestCopyData = $request->withParsedBody($requestData->getArrayCopy());//POCOR-7485
+                $requestArrayCopyData = $requestCopyData->getData();//POCOR-7485
                 if ($extra['patchEntity']) {
-                   // $entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
                     $entity = $model->patchEntity($entity, $requestArrayCopyData, $patchOptionsArray);
-
                     $event = $model->dispatchEvent('ControllerAction.Model.add.afterPatch', $params, $this);
                     if ($event->isStopped()) {
                         $mainEvent->stopPropagation();
@@ -127,7 +131,9 @@ class AddBehavior extends Behavior {
                 }
                 $patchOptionsArray = $patchOptions->getArrayCopy();
                 // $request->data = $requestData->getArrayCopy();
-                $requestArrayCopyData = $requestData->getArrayCopy();
+                // $requestArrayCopyData = $requestData->getArrayCopy();
+                $requestCopyData = $request->withParsedBody($requestData->getArrayCopy());//POCOR-7485
+                $requestArrayCopyData = $requestCopyData->getData();//POCOR-7485
                 $entity = $model->patchEntity($entity, $requestArrayCopyData, $patchOptionsArray);
             }
         }
