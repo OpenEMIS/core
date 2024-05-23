@@ -214,7 +214,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         //POCOR-5917 starts
         if (!$entity->isNew()) { //when edit academic period
             $acedmicPeriodData = $this->find()->where([$this->aliasField('id') => $entity->id])->first();
-            $entity->old_end_date = (new Date($acedmicPeriodData->end_date))->format('Y-m-d');
+            $entity->old_end_date = (new FrozenDate($acedmicPeriodData->end_date))->format('Y-m-d');
             $entity->old_end_year = $acedmicPeriodData->end_year;
         }
         //POCOR-5917 ends
@@ -320,7 +320,7 @@ class AcademicPeriodsTable extends ControllerActionTable
     {
         //POCOR-5917 starts
         if (isset($entity->old_end_date) && !empty($entity->old_end_date) && isset($entity->old_end_year) && !empty($entity->old_end_year)) { //when edit academic period
-            $academic_end_date = (new Date($entity->old_end_date))->format('Y-m-d');
+            $academic_end_date = (new FrozenDate($entity->old_end_date))->format('Y-m-d');
             $academic_end_year = $entity->old_end_year;
             $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
 
@@ -334,7 +334,7 @@ class AcademicPeriodsTable extends ControllerActionTable
             if (!empty($institutionStudentsData)) {
 
                 foreach ($institutionStudentsData as $key => $val) {
-                    $institution_students_end_date = (new Date($entity->end_date))->format('Y-m-d');
+                    $institution_students_end_date = (new FrozenDate($entity->end_date))->format('Y-m-d');
                     $institution_students_end_year = $entity->end_year;
                     $institutionStudentsEntity = $this->patchEntity($val, ['end_date' => $institution_students_end_date, 'end_year' => $institution_students_end_year], ['validate' => false]);
 
