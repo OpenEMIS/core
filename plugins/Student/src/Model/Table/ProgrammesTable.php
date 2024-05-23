@@ -321,15 +321,10 @@ class ProgrammesTable extends ControllerActionTable
 	private function setupTabElements()
 	{
 		$options['type'] = 'student';
-<<<<<<< HEAD
-		//$tabElements = $this->controller->getAcademicTabElements($options);
-		$tabElements = $this->getAcademicTabElements($options);
-=======
 		$tabElements = $this->getAcademicTabElements($options);
 		if($this->controller->getName() == 'GuardianNavs' || $this->controller->getName() == 'Directories') {
 			$tabElements = $this->controller->getAcademicTabElements($options);
 		}
->>>>>>> origin/POCOR-7485-SS2
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->getAlias());
 	}

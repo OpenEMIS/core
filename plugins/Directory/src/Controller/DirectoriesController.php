@@ -1012,6 +1012,9 @@ class DirectoriesController extends AppController
         $id = (array_key_exists('id', $options))? $options['id']: 0;
         $type = (array_key_exists('type', $options))? $options['type']: null;
         $queryString = $this->ControllerAction->getQueryString();
+        if(empty($queryString)){
+            $queryString = $this->getQueryString();
+        }
         $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
         $tabElements = [];
         $studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
@@ -1047,6 +1050,9 @@ class DirectoriesController extends AppController
         $plugin = $this->getPlugin();
         $name = $this->getName();
         $queryString = $this->ControllerAction->getQueryString();
+        if(empty($queryString)){
+            $queryString = $this->getQueryString();
+        }
         $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
         
         $tabElements = [];
@@ -1182,6 +1188,9 @@ class DirectoriesController extends AppController
         $tabElements = [];
         $studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
         $queryString = $this->ControllerAction->getQueryString();
+        if(empty($queryString)){
+            $queryString = $this->getQueryString();
+        }
         $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
         $studentTabElements = [
             'TrainingNeeds' => ['text' => __('Training Needs')],
@@ -1190,7 +1199,6 @@ class DirectoriesController extends AppController
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
-
         foreach ($studentTabElements as $key => $tab) {
             $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index', $encodedQueryString]);
         }
@@ -2166,7 +2174,7 @@ class DirectoriesController extends AppController
 
     public function getContactType()
     {
-        $contact_types = TableRegistry::get('FieldOption.ContactTypes');
+        $contact_types = TableRegistry::get('User.ContactTypes');
         $contact_types_result = $contact_types
             ->find()
             ->select(['id','name'])
