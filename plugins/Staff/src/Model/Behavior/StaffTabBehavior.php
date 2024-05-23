@@ -114,7 +114,7 @@ class StaffTabBehavior extends Behavior
         $tabElements = array_merge($tabElements, $staffTabElements);
         foreach ($staffTabElements as $key => $tab) {
                 $changeKeyArray = ['StaffLeave', 'StaffAttendances','StaffAppraisals','StaffAssociations','StaffCurriculars'];
-                if($controllerName == "Profiles"){
+                if($controllerName == "Profiles" || $controllerName == "Directories"){
                     if(in_array($key, $changeKeyArray)){
                         $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString]);
                     }else{
@@ -166,6 +166,7 @@ class StaffTabBehavior extends Behavior
             $session = $model->request->getSession();
             $isStudent = $session->read('Auth.User.is_student');
             $isStaff = $session->read('Auth.User.is_staff');
+            
             if ($isStaff) {
                 $professionalTabElements = [
                     'Employments' => ['text' => __('Employments')],
@@ -227,9 +228,10 @@ class StaffTabBehavior extends Behavior
                 $staffTabElements = [
                     'Employments' => ['text' => __('Employments')],
                     'Qualifications' => ['text' => __('Qualifications')],
-                    'Licenses' => ['text' => __('Licenses')],
+                    //'Licenses' => ['text' => __('Licenses')],
                 ];
             }
+            $tabElements = array_merge($tabElements, $staffTabElements);
             foreach ($staffTabElements as $key => $tab) {
                 if ($key != 'Employments') {
                     $url = array_merge($staffUrl, ['action' => 'Staff' . $key, '0' => 'index']);

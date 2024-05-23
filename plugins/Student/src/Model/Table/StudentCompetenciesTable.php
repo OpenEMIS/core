@@ -705,6 +705,9 @@ class StudentCompetenciesTable extends ControllerActionTable
         $options['type'] = 'student';
         //$tabElements = $this->controller->getAcademicTabElements($options);
         $tabElements = $this->getAcademicTabElements($options);
+        if($this->controller->getName() == 'GuardianNavs') {
+			$tabElements = $this->controller->getAcademicTabElements($options);
+		}
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Competencies');
     }

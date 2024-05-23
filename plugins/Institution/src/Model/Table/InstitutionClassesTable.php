@@ -214,8 +214,8 @@ class InstitutionClassesTable extends ControllerActionTable
         if(!empty($this->request->getData['InstitutionClasses']['institution_shift_id'])){
             $extra['institution_shift_id'] = $this->request->getData['InstitutionClasses']['institution_shift_id'];
         }
-
-        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+        
+        $institutionId = $this->getInstitutionID();
         $extra['institution_id'] = $institutionId;
         $academicPeriodOptions = $this->getAcademicPeriodOptions($institutionId);
         $selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();

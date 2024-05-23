@@ -1,5 +1,5 @@
 angular.module('utils.svc', [])
-.service('UtilsSvc', ['$location',function($location) {
+.service('UtilsSvc', ['$location',function(_$location) {
 	return {
 		requestQuery: function(key) {
             return parseInt($location.search()[key]);

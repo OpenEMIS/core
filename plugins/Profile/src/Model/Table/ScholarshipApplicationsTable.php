@@ -133,7 +133,6 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         }
 
 
-
         // POCOR-7905: start
         $applicantId = $this->getUserID();
         $queryString = $this->paramsEncode(['applicant_id' => $applicantId]); // v4 Encode

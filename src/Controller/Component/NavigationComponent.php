@@ -213,7 +213,9 @@ class NavigationComponent extends Component
                 'Counsellings',
                 'StudentFees',
                 'StudentLicenses',
-                'ImportSalaries'
+                'ImportSalaries',
+                'GuardianStudents',
+                'GuardianStudentUser'
                 
             ];
             if (in_array($controller->getName(), $institutionControllers) || (
@@ -253,7 +255,8 @@ class NavigationComponent extends Component
                 if (!empty($encodedParam)) {
                     //POCOR-6202 start
                     if ($action == 'GuardianStudents') {
-                        $userInfo = TableRegistry::getTableLocator()->get('Guardian.Students')->get($securityUserId);
+                        $securityUserId = $this->controller->paramsDecode($encodedParam)['security_user_id'];
+                        $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);
                     } else if ($action == 'StudentGuardians') {
                         $requestData = $this->request->getAttribute('params')['pass'][1];
                         $securityUserId = $this->controller->paramsDecode($requestData);
@@ -261,7 +264,7 @@ class NavigationComponent extends Component
                         $securityUserId = $userInfo->guardian_id;
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);//POCOR-6453 ends
                     } else if ($action == 'Identities') {//POCOR-6453 starts
-                        $securityUserId = $this->controller->paramsDecode($this->request->getQuery('queryString'));
+                        $securityUserId = $this->controller->paramsDecode($this->request->getQuery('queryString'))['security_user_id'];
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);//POCOR-6453 ends
                     } /*POCOR-6286 : added condition to get selected student id */
                     elseif ($action == 'StudentProfiles') {
@@ -277,11 +280,14 @@ class NavigationComponent extends Component
                     // Start POCOR-7384
                     elseif ($this->request->getParam('plugin') == 'Directory' && $this->request->getParam('controller') == 'Directories' && $this->request->getAttribute('params')['pass'][0] == 'download' && $action == 'Attachments') {
                         $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][2])['security_user_id'];
+                        if(empty($userId) && $action == 'Attachments') {
+                            $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][1])['security_user_id'];
+                        }
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
                     } // End POCOR-7384
                     elseif ($this->request->getParam('controller') == 'Directories' && in_array($action, $directoryActions)) {
                         
-                        if($action == 'Directories' || $action == 'Accounts') {
+                        if($action == 'Directories' || $action == 'Accounts' ||  $action == 'GuardianStudentUser') {
                             $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
                         } else {
                             $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][1])['staff_id'];
@@ -295,7 +301,7 @@ class NavigationComponent extends Component
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
                     }
                     else {
-                        $securityUserId = $this->controller->paramsDecode($this->request->getQuery('queryString'));
+                        $securityUserId = $this->controller->paramsDecode($this->request->getQuery('queryString'))['security_user_id'];
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);
                     }
                     //POCOR-6202 end
@@ -323,21 +329,26 @@ class NavigationComponent extends Component
                 }
 
 
-                $userType = '';
+                
+                $session = $request->getSession();
+                $isStudent =  $isStaff =  $isGuardian = false;
+                
                 if (!empty($userInfo)) {
                     if ($userInfo->is_student) {
-                        $userType = 1;
-                    } elseif ($userInfo->is_staff) {
-                        $userType = 2;
-                    } elseif ($userInfo->is_guardian) {
-                        $userType = 3;
+                        $isStudent = true;
                     }
-                }
-                $session = $request->getSession();
-                $isStudent = $session->read('Directory.Directories.is_student');
-                $isStaff = $session->read('Directory.Directories.is_staff');
-                $isGuardian = $session->read('Directory.Directories.is_guardian');
-
+                    if ($userInfo->is_staff) {
+                        $isStaff = true;
+                    }
+                    if ($userInfo->is_guardian || $action == 'GuardianStudentUser') {
+                        $isGuardian = true;
+                    }
+                } else {
+                    $isStudent = $session->read('Directory.Directories.is_student');
+                    $isStaff = $session->read('Directory.Directories.is_staff');
+                    $isGuardian = $session->read('Directory.Directories.is_guardian');
+                }     
+                
                 // POCOR-6372 (start) initially here userType was checking but it did not work for directory navigation so changed with roles
                 if ($isStaff) {
                     $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
@@ -353,14 +364,14 @@ class NavigationComponent extends Component
                     $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryGuardianNavigation());
                     $session->write('Directory.Directories.reload', true);
                 }
-
+                
                 if ($isStudent && $isStaff && $isGuardian) {
                     $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
                     $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
                     $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryGuardianNavigation());
                     $session->write('Directory.Directories.reload', true);
                 }
-
+                
                 if ($isStudent && $isStaff && !$isGuardian) {
                     $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
                     $navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
@@ -1924,7 +1935,8 @@ class NavigationComponent extends Component
         $queryStringWithID = $this->controller->paramsEncode([
             'institution_id' => $institutionID,
             'staff_id' => $id,
-            'user_id' => $id]);
+            'user_id' => $id,
+            'security_user_id' => $id]);
         $navigation = [
             'Directories.Staff' => [
                 'title' => 'Staff',
@@ -2354,6 +2366,12 @@ class NavigationComponent extends Component
         } else {
             $queryString = $session->read('queryString');
         }
+        
+        $request = $this->getController()->getRequest();
+        if(empty($studentId) && $request->getParam('pass')[0] == 'view' && isset($request->getParam('pass')[1])) {
+            $studentId = $this->controller->paramsDecode($request->getParam('pass')[1])['id'];
+        }
+
         $navigation = [
             'GuardianNavs.StudentUser.view' => [
                 'title' => 'General',
@@ -2386,7 +2404,8 @@ class NavigationComponent extends Component
             if (isset($n['params'])) {
                 $n['params']['studentId'] = $this->controller->paramsEncode($studentId);
             }
-        }
+            
+        }//dd($navigation);
         return $navigation;
     }
 

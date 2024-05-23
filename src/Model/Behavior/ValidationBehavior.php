@@ -619,16 +619,14 @@ class ValidationBehavior extends Behavior
         if ($field == "0") {
             $tableObj =  get_object_vars($globalData['providers']['table']);
             if (!empty($tableObj)) {
-                //$className = $tableObj['controller']->modelClass;//cakephp 3
-                $tableController = $tableObj['controller'];//POCOR-7485
-                $modelClass = $tableController->loadModel();//POCOR-7485
-                //$newEntity = TableRegistry::getTableLocator()->get($className);//cakephp 3
-                $recordWithField = $modelClass->find()
+                $className = $tableObj['controller']->modelClass;
+                $newEntity = TableRegistry::getTableLocator()->get($className);
+                $recordWithField = $newEntity->find()
                                             ->select([$fieldName])
                                             ->where([$fieldName => 1]);
 
                 if (!$globalData['newRecord']) { //for edit, need to ensure that there is other record which is set as default, or else this one must be set as default.
-                    $recordWithField ->andWhere([$modelClass->aliasField('id').' IS NOT ' => $globalData['data']['id']]);
+                    $recordWithField ->andWhere([$newEntity->aliasField('id').' IS NOT ' => $globalData['data']['id']]);
                 }
 
                 if (!empty($additionalParameters)) {
