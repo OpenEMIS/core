@@ -156,7 +156,6 @@ class StudentSubjectsTable extends ControllerActionTable
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
         $queryString = $this->getQueryString();
-        
         $studentId = $queryString['student_id'];
         $encodedQueryString = $this->paramsEncode($queryString);
         // Institution and Grade filter
