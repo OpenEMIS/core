@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use Cake\I18n\Time;
+use Cake\I18n\FrozenTime;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -28,7 +29,7 @@ class SystemProcessesTable extends ControllerActionTable {
 			'process_id' => $pid,
 			'callable_event' => $callableEvent,
 			'status' => self::NEW_PROCESS,
-			'start_date' => Time::now(),
+			'start_date' => FrozenTime::now(),
 			'model' => $model,
 			'params' => $params
 		];

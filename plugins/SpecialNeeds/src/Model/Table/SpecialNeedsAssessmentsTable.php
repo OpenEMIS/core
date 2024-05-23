@@ -16,7 +16,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     const COMMENT_MAX_LENGTH = 350;
     public function initialize(array $config): void
     {
-        $this->SetTable('user_special_needs_assessments');
+        $this->setTable('user_special_needs_assessments');
         parent::initialize($config);
 
         $this->belongsTo('SpecialNeedsTypes', ['className' => 'SpecialNeeds.SpecialNeedsTypes', 'foreignKey' => 'special_need_type_id', 'conditions' => array('SpecialNeedsTypes.type' => 2, )]);
