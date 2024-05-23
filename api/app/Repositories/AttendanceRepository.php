@@ -408,6 +408,7 @@ class AttendanceRepository extends Controller
         try {
             $params = $request->all();
             $resp = [];
+            $data = [];
 
             $institutionId = $params['institution_id'];
             $academicPeriodId = $params['academic_period_id'];
@@ -505,15 +506,36 @@ class AttendanceRepository extends Controller
             });
 
 
-            $data = $query->orderBy('security_users.first_name')
+            /*$data = $query->orderBy('security_users.first_name')
                         ->groupBy('institution_staff.staff_id')
                         ->get()
-                        ->toArray();
+                        ->toArray();*/
+
+            $query = $query->orderBy('security_users.first_name')
+                        ->groupBy('institution_staff.staff_id');
+            
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = 'institution_staff.'.$params['order'];
+                $query = $query->orderBy($col, $orderBy);
+            }
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $data = $query->paginate($limit)->toArray();
+            } else {
+                $data['data'] = $query->get()->toArray();
+
+            }
+            //For POCOR-8215/8216 end...
+
 
             $total = count($data);
             $resp = [];
             
-            foreach ($data as $k => $d) {
+            foreach ($data['data'] as $k => $d) {
                 $resp[$k]['id'] = $d['id'];
                 $resp[$k]['FTE'] = $d['FTE'];
                 $resp[$k]['start_date'] = $d['start_date'];
@@ -637,17 +659,18 @@ class AttendanceRepository extends Controller
                 $resp[$k]['attendance'] = $staffTimeRecords;
             }
 
-            $list['list'] = $resp;
+            $data['data'] = $resp;
 
-            $list['total'] = $total;
+            //$list['total'] = $total;
 
-            return $list;
+            return $data;
             
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Staff Attendances List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
+            dd($e);
             return $this->sendErrorResponse('Staff Attendances List Not Found');
         }
     }
