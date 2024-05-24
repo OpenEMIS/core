@@ -326,6 +326,13 @@ class AttendanceController extends Controller
      *         @OA\Schema(type="integer", example=6)
      *     ),
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -768,6 +775,13 @@ class AttendanceController extends Controller
      *         @OA\Schema(type="integer", example=591)
      *     ),
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="name")
+     *     ),
+     *     @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -794,8 +808,7 @@ class AttendanceController extends Controller
      *                         @OA\Property(property="id", type="integer", example=4270),
      *                         @OA\Property(property="name", type="string", example="Spanish")
      *                     )
-     *                 ),
-     *                 @OA\Property(property="total", type="integer", example=1)
+     *                 )
      *             )
      *         )
      *     ),
@@ -936,6 +949,13 @@ class AttendanceController extends Controller
  *         @OA\Schema(type="integer", example=591)
  *     ),
  *     @OA\Parameter(
+ *         name="order",
+ *         in="query",
+ *         required=false,
+ *         description="Order",
+ *         @OA\Schema(type="integer", example="student_id")
+ *     ),
+ *     @OA\Parameter(
  *         name="page",
  *         in="query",
  *         required=false,
@@ -956,7 +976,7 @@ class AttendanceController extends Controller
  *             type="object",
  *             @OA\Property(property="message", type="string", example="Successful."),
  *             @OA\Property(property="data", type="object",
- *                 @OA\Property(property="list", type="array",
+ *                 @OA\Property(property="data", type="array",
  *                     @OA\Items(
  *                         type="object",
  *                         @OA\Property(property="academic_period_id", type="integer", example="33"),
@@ -1000,8 +1020,7 @@ class AttendanceController extends Controller
  *                         ),
  *                         @OA\Property(property="is_NoClassScheduled", type="integer", example=0)
  *                     )
- *                 ),
- *                 @OA\Property(property="total", type="integer", example=1)
+ *                 )
  *             )
  *         )
  *     ),
@@ -1057,6 +1076,41 @@ class AttendanceController extends Controller
      *         @OA\Schema(type="integer", example="591")
      *     ),
      *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=true,
+     *         description="ID of the academic period",
+     *         @OA\Schema(type="integer", example="33")
+     *     ),
+     *     @OA\Parameter(
+     *         name="attendance_period_id",
+     *         in="query",
+     *         required=true,
+     *         description="ID of the attendance period",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="day_id",
+     *         in="query",
+     *         required=true,
+     *         description="Day Id",
+     *         @OA\Schema(type="integer", example="2024-04-16")
+     *     ),
+     *     @OA\Parameter(
+     *         name="subject_id",
+     *         in="query",
+     *         required=true,
+     *         description="Subject Id",
+     *         @OA\Schema(type="integer", example="0")
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -1077,7 +1131,7 @@ class AttendanceController extends Controller
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="list", type="array",
+     *                 @OA\Property(property="data", type="array",
      *                     @OA\Items(
      *                         type="object",
      *                         @OA\Property(property="institution_id", type="integer", example="6"),
@@ -1089,8 +1143,7 @@ class AttendanceController extends Controller
      *                         @OA\Property(property="subject_id", type="integer", example="0"),
      *                         @OA\Property(property="no_scheduled_class", type="integer", example="0"),
      *                     )
-     *                 ),
-     *                 @OA\Property(property="total", type="integer", example="1")
+     *                 )
      *             )
      *         )
      *     ),
