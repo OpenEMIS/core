@@ -830,19 +830,24 @@ class InstitutionsController extends AppController
     public
     function getInstitutionID($debugString = "")
     {
-        // POCOR-8115;
-        // institution_id should always be in query string, if not, die as an error
-        $institution_id = $this->getQueryString('institution_id');
-        if (!$institution_id) {
-            $session = $this->request->getSession();
-            $institution_id = $session->read('Institution.Institutions.id');
-            if(!$institution_id){
-                if ($debugString != "") {
-                    die($debugString . 'For Developer: You should put institution_id into query string first');
+        $action = $this->request->getAttribute('params')['action'];
+        if($action == 'studentCustomFields' || $action == 'staffCustomFields'){
+            return true;
+        }else{
+            // POCOR-8115;
+            // institution_id should always be in query string, if not, die as an error
+            $institution_id = $this->getQueryString('institution_id');
+            if (!$institution_id) {
+                $session = $this->request->getSession();
+                $institution_id = $session->read('Institution.Institutions.id');
+                if(!$institution_id){
+                    if ($debugString != "") {
+                        die($debugString . 'For Developer: You should put institution_id into query string first');
+                    }
                 }
             }
+            return $institution_id;
         }
-        return $institution_id;
     }
 
     public function AssessmentItemResultsArchived($pass = '')
@@ -2486,7 +2491,6 @@ public function isActionIgnored(Event $event, $action)
         $controller = $request->getParam('controller');
         $plugin = $request->getParam('plugin');
         $query = $request->getQuery();
-        
         if (($pass[0] == 'view' || $pass[0] == 'edit')
             && ($action == 'Institutions')
             && ($plugin == 'Institution')
@@ -2520,7 +2524,6 @@ public function isActionIgnored(Event $event, $action)
                 $this->set('institutionName', $institutionName);
             }
         }
-
         $isInstitutionIDSkipped = $this->isInstitutionIDSkipped();
         if ($isInstitutionIDSkipped) {
             $this->set('contentHeader', $header);
@@ -2529,7 +2532,6 @@ public function isActionIgnored(Event $event, $action)
         
         $header = __('Institutions');
         $this->deleteGuardianFromSession($action, $pass, $session);
-//        die('<pre>'.print_r($request->getAttributes()));
         $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         try {
             $this->checkInstitutionAccess($institutionId, $event);
@@ -2619,9 +2621,6 @@ public function isActionIgnored(Event $event, $action)
             && ($action == 'Institutions')
             && ($plugin == 'Institution')
             && ($controller == 'Institutions')) {
-            return true;
-        }
-        if($action == 'staffCustomFields'){
             return true;
         }
         if ($pass[0] == 'download' && ($action == 'Expenditure' || $action == 'Visits' || $action = 'Attachments') && ($plugin == 'Institution') && ($controller == 'Institutions')) {
@@ -7807,7 +7806,7 @@ public
             //get nationality data
             $nationalities = '';
             if (!empty($nationalityName)) {
-                $nationalitiesTbl = TableRegistry::getTableLocator()->get('nationalities');
+                $nationalitiesTbl = TableRegistry::getTableLocator()->get('FieldOption.Nationalities');
                 $nationalities = $nationalitiesTbl->find()
                     ->where([
                         $nationalitiesTbl->aliasField('name') => $nationalityName,
@@ -7854,6 +7853,7 @@ public
                 ->where([
                     $SecurityUsers->aliasField('openemis_no') => $openemisNo
                 ])->first();
+            echo "<pre>";print_r($CheckUserExist);die;
             $SecurityUsers = TableRegistry::getTableLocator()->get('User.Users');
             if (!empty($CheckUserExist)) {
                 $existUserId = $CheckUserExist->id;
@@ -7924,14 +7924,14 @@ public
                 if (!empty($nationalityId) || !empty($nationalityName)) {
                     if (!empty($nationalities->id)) {
                         if (!empty($nationalities->id)) {
-                            $UserNationalities = TableRegistry::getTableLocator()->get('user_nationalities');
+                            $UserNationalities = TableRegistry::getTableLocator()->get('User.UserNationalities');
                             $checkexistingNationalities = $UserNationalities->find()
                                 ->where([
                                     $UserNationalities->aliasField('nationality_id') => $nationalities->id,
                                     $UserNationalities->aliasField('security_user_id') => $user_record_id,
                                 ])->first();
                             if (empty($checkexistingNationalities)) {
-                                $primaryKey = $UserNationalities->primaryKey();
+                                $primaryKey = $UserNationalities->getPrimaryKey();
                                 $hashString = [];
                                 foreach ($primaryKey as $key) {
                                     if ($key == 'nationality_id') {
@@ -8078,7 +8078,7 @@ public
                     return $e;
                 }
             } else {
-                return false;
+                return null;
             }
             return $data;
         }
