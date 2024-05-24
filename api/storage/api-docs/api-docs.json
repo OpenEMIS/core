@@ -2671,6 +2671,16 @@
                         }
                     },
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -3352,6 +3362,16 @@
                         }
                     },
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "name"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -3400,10 +3420,6 @@
                                                         },
                                                         "type": "object"
                                                     }
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": 1
                                                 }
                                             },
                                             "type": "object"
@@ -3568,6 +3584,16 @@
                         }
                     },
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "student_id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -3601,7 +3627,7 @@
                                         },
                                         "data": {
                                             "properties": {
-                                                "list": {
+                                                "data": {
                                                     "type": "array",
                                                     "items": {
                                                         "properties": {
@@ -3763,10 +3789,6 @@
                                                         },
                                                         "type": "object"
                                                     }
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": 1
                                                 }
                                             },
                                             "type": "object"
@@ -3823,6 +3845,56 @@
                         }
                     },
                     {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "ID of the academic period",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "33"
+                        }
+                    },
+                    {
+                        "name": "attendance_period_id",
+                        "in": "query",
+                        "description": "ID of the attendance period",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "day_id",
+                        "in": "query",
+                        "description": "Day Id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "2024-04-16"
+                        }
+                    },
+                    {
+                        "name": "subject_id",
+                        "in": "query",
+                        "description": "Subject Id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "0"
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -3856,7 +3928,7 @@
                                         },
                                         "data": {
                                             "properties": {
-                                                "list": {
+                                                "data": {
                                                     "type": "array",
                                                     "items": {
                                                         "properties": {
@@ -3896,10 +3968,6 @@
                                                         },
                                                         "type": "object"
                                                     }
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": "1"
                                                 }
                                             },
                                             "type": "object"
@@ -18284,136 +18352,141 @@
                                             "example": "Successful."
                                         },
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "student_id": {
-                                                        "type": "integer",
-                                                        "example": 196
-                                                    },
-                                                    "first_name": {
-                                                        "type": "string",
-                                                        "example": "Dixie"
-                                                    },
-                                                    "middle_name": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "third_name": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "last_name": {
-                                                        "type": "string",
-                                                        "example": "Campbell"
-                                                    },
-                                                    "openemis_no": {
-                                                        "type": "string",
-                                                        "example": "1522272158"
-                                                    },
-                                                    "date_of_birth": {
-                                                        "type": "string",
-                                                        "example": "2011-01-01"
-                                                    },
-                                                    "date_of_death": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "identity_number": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "external_reference": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "gender_id": {
-                                                        "type": "integer",
-                                                        "example": 2
-                                                    },
-                                                    "gender_name": {
-                                                        "type": "string",
-                                                        "example": "Female"
-                                                    },
-                                                    "start_date": {
-                                                        "type": "string",
-                                                        "example": "2019-01-01"
-                                                    },
-                                                    "start_year": {
-                                                        "type": "integer",
-                                                        "example": 2019
-                                                    },
-                                                    "end_date": {
-                                                        "type": "string",
-                                                        "example": "2019-12-31"
-                                                    },
-                                                    "end_year": {
-                                                        "type": "integer",
-                                                        "example": 2019
-                                                    },
-                                                    "institution_id": {
-                                                        "type": "integer",
-                                                        "example": 22
-                                                    },
-                                                    "institution_code": {
-                                                        "type": "string",
-                                                        "example": "P1009"
-                                                    },
-                                                    "institution_name": {
-                                                        "type": "string",
-                                                        "example": "Kinda Primary School"
-                                                    },
-                                                    "student_status_id": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "student_status_name": {
-                                                        "type": "string",
-                                                        "example": "Enrolled"
-                                                    },
-                                                    "student_status_code": {
-                                                        "type": "string",
-                                                        "example": "CURRENT"
-                                                    },
-                                                    "education_grade_id": {
-                                                        "type": "integer",
-                                                        "example": 121
-                                                    },
-                                                    "education_grade_name": {
-                                                        "type": "string",
-                                                        "example": "Primary 1"
-                                                    },
-                                                    "academic_period_id": {
-                                                        "type": "integer",
-                                                        "example": 28
-                                                    },
-                                                    "academic_period_name": {
-                                                        "type": "string",
-                                                        "example": "2019"
-                                                    },
-                                                    "previous_institution_student_id": {
-                                                        "type": "string",
-                                                        "example": "6546009d-815f-42e6-8db5-76050a4f95d9"
-                                                    },
-                                                    "modified_user_id": {
-                                                        "type": "integer",
-                                                        "example": null
-                                                    },
-                                                    "modified": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "created_user_id": {
-                                                        "type": "integer",
-                                                        "example": 2
-                                                    },
-                                                    "created": {
-                                                        "type": "string",
-                                                        "example": "2019-11-20 19:51:58"
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "student_id": {
+                                                                "type": "integer",
+                                                                "example": 196
+                                                            },
+                                                            "first_name": {
+                                                                "type": "string",
+                                                                "example": "Dixie"
+                                                            },
+                                                            "middle_name": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "third_name": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "last_name": {
+                                                                "type": "string",
+                                                                "example": "Campbell"
+                                                            },
+                                                            "openemis_no": {
+                                                                "type": "string",
+                                                                "example": "1522272158"
+                                                            },
+                                                            "date_of_birth": {
+                                                                "type": "string",
+                                                                "example": "2011-01-01"
+                                                            },
+                                                            "date_of_death": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "identity_number": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "external_reference": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "gender_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "gender_name": {
+                                                                "type": "string",
+                                                                "example": "Female"
+                                                            },
+                                                            "start_date": {
+                                                                "type": "string",
+                                                                "example": "2019-01-01"
+                                                            },
+                                                            "start_year": {
+                                                                "type": "integer",
+                                                                "example": 2019
+                                                            },
+                                                            "end_date": {
+                                                                "type": "string",
+                                                                "example": "2019-12-31"
+                                                            },
+                                                            "end_year": {
+                                                                "type": "integer",
+                                                                "example": 2019
+                                                            },
+                                                            "institution_id": {
+                                                                "type": "integer",
+                                                                "example": 22
+                                                            },
+                                                            "institution_code": {
+                                                                "type": "string",
+                                                                "example": "P1009"
+                                                            },
+                                                            "institution_name": {
+                                                                "type": "string",
+                                                                "example": "Kinda Primary School"
+                                                            },
+                                                            "student_status_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "student_status_name": {
+                                                                "type": "string",
+                                                                "example": "Enrolled"
+                                                            },
+                                                            "student_status_code": {
+                                                                "type": "string",
+                                                                "example": "CURRENT"
+                                                            },
+                                                            "education_grade_id": {
+                                                                "type": "integer",
+                                                                "example": 121
+                                                            },
+                                                            "education_grade_name": {
+                                                                "type": "string",
+                                                                "example": "Primary 1"
+                                                            },
+                                                            "academic_period_id": {
+                                                                "type": "integer",
+                                                                "example": 28
+                                                            },
+                                                            "academic_period_name": {
+                                                                "type": "string",
+                                                                "example": "2019"
+                                                            },
+                                                            "previous_institution_student_id": {
+                                                                "type": "string",
+                                                                "example": "6546009d-815f-42e6-8db5-76050a4f95d9"
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": null
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "example": "2019-11-20 19:51:58"
+                                                            }
+                                                        },
+                                                        "type": "object"
                                                     }
-                                                },
-                                                "type": "object"
-                                            }
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -23763,136 +23836,141 @@
                                             "example": "Successful."
                                         },
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "student_id": {
-                                                        "type": "integer",
-                                                        "example": 196
-                                                    },
-                                                    "first_name": {
-                                                        "type": "string",
-                                                        "example": "Dixie"
-                                                    },
-                                                    "middle_name": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "third_name": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "last_name": {
-                                                        "type": "string",
-                                                        "example": "Campbell"
-                                                    },
-                                                    "openemis_no": {
-                                                        "type": "string",
-                                                        "example": "1522272158"
-                                                    },
-                                                    "date_of_birth": {
-                                                        "type": "string",
-                                                        "example": "2011-01-01"
-                                                    },
-                                                    "date_of_death": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "identity_number": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "external_reference": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "gender_id": {
-                                                        "type": "integer",
-                                                        "example": 2
-                                                    },
-                                                    "gender_name": {
-                                                        "type": "string",
-                                                        "example": "Female"
-                                                    },
-                                                    "start_date": {
-                                                        "type": "string",
-                                                        "example": "2019-01-01"
-                                                    },
-                                                    "start_year": {
-                                                        "type": "integer",
-                                                        "example": 2019
-                                                    },
-                                                    "end_date": {
-                                                        "type": "string",
-                                                        "example": "2019-12-31"
-                                                    },
-                                                    "end_year": {
-                                                        "type": "integer",
-                                                        "example": 2019
-                                                    },
-                                                    "institution_id": {
-                                                        "type": "integer",
-                                                        "example": 22
-                                                    },
-                                                    "institution_code": {
-                                                        "type": "string",
-                                                        "example": "P1009"
-                                                    },
-                                                    "institution_name": {
-                                                        "type": "string",
-                                                        "example": "Kinda Primary School"
-                                                    },
-                                                    "student_status_id": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "student_status_name": {
-                                                        "type": "string",
-                                                        "example": "Enrolled"
-                                                    },
-                                                    "student_status_code": {
-                                                        "type": "string",
-                                                        "example": "CURRENT"
-                                                    },
-                                                    "education_grade_id": {
-                                                        "type": "integer",
-                                                        "example": 121
-                                                    },
-                                                    "education_grade_name": {
-                                                        "type": "string",
-                                                        "example": "Primary 1"
-                                                    },
-                                                    "academic_period_id": {
-                                                        "type": "integer",
-                                                        "example": 28
-                                                    },
-                                                    "academic_period_name": {
-                                                        "type": "string",
-                                                        "example": "2019"
-                                                    },
-                                                    "previous_institution_student_id": {
-                                                        "type": "string",
-                                                        "example": "6546009d-815f-42e6-8db5-76050a4f95d9"
-                                                    },
-                                                    "modified_user_id": {
-                                                        "type": "integer",
-                                                        "example": null
-                                                    },
-                                                    "modified": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "created_user_id": {
-                                                        "type": "integer",
-                                                        "example": 2
-                                                    },
-                                                    "created": {
-                                                        "type": "string",
-                                                        "example": "2019-11-20 19:51:58"
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "student_id": {
+                                                                "type": "integer",
+                                                                "example": 196
+                                                            },
+                                                            "first_name": {
+                                                                "type": "string",
+                                                                "example": "Dixie"
+                                                            },
+                                                            "middle_name": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "third_name": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "last_name": {
+                                                                "type": "string",
+                                                                "example": "Campbell"
+                                                            },
+                                                            "openemis_no": {
+                                                                "type": "string",
+                                                                "example": "1522272158"
+                                                            },
+                                                            "date_of_birth": {
+                                                                "type": "string",
+                                                                "example": "2011-01-01"
+                                                            },
+                                                            "date_of_death": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "identity_number": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "external_reference": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "gender_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "gender_name": {
+                                                                "type": "string",
+                                                                "example": "Female"
+                                                            },
+                                                            "start_date": {
+                                                                "type": "string",
+                                                                "example": "2019-01-01"
+                                                            },
+                                                            "start_year": {
+                                                                "type": "integer",
+                                                                "example": 2019
+                                                            },
+                                                            "end_date": {
+                                                                "type": "string",
+                                                                "example": "2019-12-31"
+                                                            },
+                                                            "end_year": {
+                                                                "type": "integer",
+                                                                "example": 2019
+                                                            },
+                                                            "institution_id": {
+                                                                "type": "integer",
+                                                                "example": 22
+                                                            },
+                                                            "institution_code": {
+                                                                "type": "string",
+                                                                "example": "P1009"
+                                                            },
+                                                            "institution_name": {
+                                                                "type": "string",
+                                                                "example": "Kinda Primary School"
+                                                            },
+                                                            "student_status_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "student_status_name": {
+                                                                "type": "string",
+                                                                "example": "Enrolled"
+                                                            },
+                                                            "student_status_code": {
+                                                                "type": "string",
+                                                                "example": "CURRENT"
+                                                            },
+                                                            "education_grade_id": {
+                                                                "type": "integer",
+                                                                "example": 121
+                                                            },
+                                                            "education_grade_name": {
+                                                                "type": "string",
+                                                                "example": "Primary 1"
+                                                            },
+                                                            "academic_period_id": {
+                                                                "type": "integer",
+                                                                "example": 28
+                                                            },
+                                                            "academic_period_name": {
+                                                                "type": "string",
+                                                                "example": "2019"
+                                                            },
+                                                            "previous_institution_student_id": {
+                                                                "type": "string",
+                                                                "example": "6546009d-815f-42e6-8db5-76050a4f95d9"
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": null
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "example": "2019-11-20 19:51:58"
+                                                            }
+                                                        },
+                                                        "type": "object"
                                                     }
-                                                },
-                                                "type": "object"
-                                            }
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -26960,6 +27038,908 @@
                                                     "type": "string",
                                                     "format": "date-time",
                                                     "example": "2018-04-03 17:26:26"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v4/training-sessions": {
+            "get": {
+                "tags": [
+                    "Training"
+                ],
+                "summary": "Get list of training sessions",
+                "description": "Returns details of training sessions",
+                "operationId": "e7ee640a015bcc4b789f3edc03843f40",
+                "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "code": {
+                                                                "type": "string",
+                                                                "example": "NST2018"
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "National Standard Training for Teachers 2018"
+                                                            },
+                                                            "start_date": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2018-04-01"
+                                                            },
+                                                            "end_date": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "2018-04-30"
+                                                            },
+                                                            "comment": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "training_course_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "training_provider_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "assignee_id": {
+                                                                "type": "integer",
+                                                                "example": 8805
+                                                            },
+                                                            "status_id": {
+                                                                "type": "integer",
+                                                                "example": 15
+                                                            },
+                                                            "area_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "trainers": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "integer",
+                                                                            "example": 505
+                                                                        },
+                                                                        "first_name": {
+                                                                            "type": "string",
+                                                                            "example": "Stephanie"
+                                                                        },
+                                                                        "middle_name": {
+                                                                            "type": "string",
+                                                                            "example": null,
+                                                                            "nullable": true
+                                                                        },
+                                                                        "third_name": {
+                                                                            "type": "string",
+                                                                            "example": null,
+                                                                            "nullable": true
+                                                                        },
+                                                                        "last_name": {
+                                                                            "type": "string",
+                                                                            "example": "Andrews"
+                                                                        },
+                                                                        "openemis_no": {
+                                                                            "type": "string",
+                                                                            "example": "1522277180"
+                                                                        },
+                                                                        "full_name": {
+                                                                            "type": "string",
+                                                                            "example": "Stephanie  Andrews"
+                                                                        },
+                                                                        "name_with_id": {
+                                                                            "type": "string",
+                                                                            "example": "1522277180 - Stephanie  Andrews"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
+                                                            "evaluators": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "integer",
+                                                                            "example": 8815
+                                                                        },
+                                                                        "first_name": {
+                                                                            "type": "string",
+                                                                            "example": "Amanda"
+                                                                        },
+                                                                        "middle_name": {
+                                                                            "type": "string",
+                                                                            "example": null,
+                                                                            "nullable": true
+                                                                        },
+                                                                        "third_name": {
+                                                                            "type": "string",
+                                                                            "example": null,
+                                                                            "nullable": true
+                                                                        },
+                                                                        "last_name": {
+                                                                            "type": "string",
+                                                                            "example": "Wells"
+                                                                        },
+                                                                        "openemis_no": {
+                                                                            "type": "string",
+                                                                            "example": "1522284820"
+                                                                        },
+                                                                        "full_name": {
+                                                                            "type": "string",
+                                                                            "example": "Amanda  Wells"
+                                                                        },
+                                                                        "name_with_id": {
+                                                                            "type": "string",
+                                                                            "example": "1522284820 - Amanda  Wells"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "example": "2018-04-03 17:44:07"
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "example": "2018-04-03 17:39:16"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v4/training-sessions/{sessionId}": {
+            "get": {
+                "tags": [
+                    "Training"
+                ],
+                "summary": "Get detail of training session",
+                "description": "Returns detail of training session",
+                "operationId": "2f548cf3c345439eb3943a6b96d437ec",
+                "parameters": [
+                    {
+                        "name": "sessionId",
+                        "in": "path",
+                        "description": "Id of training session",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "2"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "code": {
+                                                    "type": "string",
+                                                    "example": "NST2018"
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "National Standard Training for Teachers 2018"
+                                                },
+                                                "start_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2018-04-01"
+                                                },
+                                                "end_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2018-04-30"
+                                                },
+                                                "comment": {
+                                                    "type": "string",
+                                                    "example": ""
+                                                },
+                                                "training_course_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "training_provider_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "assignee_id": {
+                                                    "type": "integer",
+                                                    "example": 8805
+                                                },
+                                                "status_id": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "area_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "trainers": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 505
+                                                            },
+                                                            "first_name": {
+                                                                "type": "string",
+                                                                "example": "Stephanie"
+                                                            },
+                                                            "middle_name": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "third_name": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "last_name": {
+                                                                "type": "string",
+                                                                "example": "Andrews"
+                                                            },
+                                                            "openemis_no": {
+                                                                "type": "string",
+                                                                "example": "1522277180"
+                                                            },
+                                                            "full_name": {
+                                                                "type": "string",
+                                                                "example": "Stephanie  Andrews"
+                                                            },
+                                                            "name_with_id": {
+                                                                "type": "string",
+                                                                "example": "1522277180 - Stephanie  Andrews"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "evaluators": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 8815
+                                                            },
+                                                            "first_name": {
+                                                                "type": "string",
+                                                                "example": "Amanda"
+                                                            },
+                                                            "middle_name": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "third_name": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "last_name": {
+                                                                "type": "string",
+                                                                "example": "Wells"
+                                                            },
+                                                            "openemis_no": {
+                                                                "type": "string",
+                                                                "example": "1522284820"
+                                                            },
+                                                            "full_name": {
+                                                                "type": "string",
+                                                                "example": "Amanda  Wells"
+                                                            },
+                                                            "name_with_id": {
+                                                                "type": "string",
+                                                                "example": "1522284820 - Amanda  Wells"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "modified_user_id": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "modified": {
+                                                    "type": "string",
+                                                    "example": "2018-04-03 17:44:07"
+                                                },
+                                                "created_user_id": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "created": {
+                                                    "type": "string",
+                                                    "example": "2018-04-03 17:39:16"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v4/training-sessions/{sessionId}/results": {
+            "get": {
+                "tags": [
+                    "Training"
+                ],
+                "summary": "Get training session results",
+                "description": "Retrieves training session results data.",
+                "operationId": "a79217fd2d8caaabbc30ffd2c3b300aa",
+                "parameters": [
+                    {
+                        "name": "sessionId",
+                        "in": "path",
+                        "description": "Id of training session",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response containing training result data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string",
+                                                                "example": "00346c45-fcbe-4f05-b27b-a0b4d49744cd"
+                                                            },
+                                                            "result": {
+                                                                "type": "string",
+                                                                "example": "Not Passed"
+                                                            },
+                                                            "attendance_days": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "certificate_number": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "practical": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "training_result_type_id": {
+                                                                "type": "integer",
+                                                                "example": 650
+                                                            },
+                                                            "trainee_id": {
+                                                                "type": "integer",
+                                                                "example": 577
+                                                            },
+                                                            "training_session_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "example": "2018-04-05 19:04:42"
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "example": "2018-04-03 17:48:49"
+                                                            },
+                                                            "training_session": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 1
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "example": "National Standard Training for Teachers 2018"
+                                                                    },
+                                                                    "code": {
+                                                                        "type": "string",
+                                                                        "example": "NST2018"
+                                                                    },
+                                                                    "training_course_id": {
+                                                                        "type": "integer",
+                                                                        "example": 1
+                                                                    },
+                                                                    "training_provider_id": {
+                                                                        "type": "integer",
+                                                                        "example": 1
+                                                                    },
+                                                                    "start_date": {
+                                                                        "type": "string",
+                                                                        "format": "date",
+                                                                        "example": "2018-04-01"
+                                                                    },
+                                                                    "end_date": {
+                                                                        "type": "string",
+                                                                        "format": "date",
+                                                                        "example": "2018-04-30"
+                                                                    },
+                                                                    "code_name": {
+                                                                        "type": "string",
+                                                                        "example": "NST2018 - National Standard Training for Teachers 2018"
+                                                                    },
+                                                                    "course": {
+                                                                        "properties": {
+                                                                            "id": {
+                                                                                "type": "integer",
+                                                                                "example": 1
+                                                                            },
+                                                                            "code": {
+                                                                                "type": "string",
+                                                                                "example": "NST"
+                                                                            },
+                                                                            "name": {
+                                                                                "type": "string",
+                                                                                "example": "National Standard Training for Teachers"
+                                                                            },
+                                                                            "code_name": {
+                                                                                "type": "string",
+                                                                                "example": "NST - National Standard Training for Teachers"
+                                                                            }
+                                                                        },
+                                                                        "type": "object"
+                                                                    },
+                                                                    "training_provider": {
+                                                                        "properties": {
+                                                                            "id": {
+                                                                                "type": "integer",
+                                                                                "example": 1
+                                                                            },
+                                                                            "name": {
+                                                                                "type": "string",
+                                                                                "example": "Ministry of Education"
+                                                                            }
+                                                                        },
+                                                                        "type": "object"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "training_result_type": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 650
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "example": "Exam"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "user": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 577
+                                                                    },
+                                                                    "first_name": {
+                                                                        "type": "string",
+                                                                        "example": "Phyllis"
+                                                                    },
+                                                                    "middle_name": {
+                                                                        "type": "string",
+                                                                        "example": null,
+                                                                        "nullable": true
+                                                                    },
+                                                                    "third_name": {
+                                                                        "type": "string",
+                                                                        "example": null,
+                                                                        "nullable": true
+                                                                    },
+                                                                    "last_name": {
+                                                                        "type": "string",
+                                                                        "example": "Fowler"
+                                                                    },
+                                                                    "openemis_no": {
+                                                                        "type": "string",
+                                                                        "example": "1522277252"
+                                                                    },
+                                                                    "full_name": {
+                                                                        "type": "string",
+                                                                        "example": "Phyllis  Fowler"
+                                                                    },
+                                                                    "name_with_id": {
+                                                                        "type": "string",
+                                                                        "example": "1522277252 - Phyllis  Fowler"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v4/training-sessions/{sessionId}/results/{userId}": {
+            "get": {
+                "tags": [
+                    "Training"
+                ],
+                "summary": "Get training result for a specific trainee in a specific session",
+                "description": "Retrieves training result data for a specific trainee in a specific training session.",
+                "operationId": "a204a532168f93a0b79f78057a5f6ea6",
+                "parameters": [
+                    {
+                        "name": "sessionId",
+                        "in": "path",
+                        "description": "ID of the training session",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "ID of the trainee",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 8815
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response containing training result data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string",
+                                                                "example": "4c5bc882-5918-4d71-b5c0-3f56872aefc9"
+                                                            },
+                                                            "result": {
+                                                                "type": "string",
+                                                                "example": "Passed"
+                                                            },
+                                                            "attendance_days": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "certificate_number": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "practical": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "training_result_type_id": {
+                                                                "type": "integer",
+                                                                "example": 650
+                                                            },
+                                                            "trainee_id": {
+                                                                "type": "integer",
+                                                                "example": 8815
+                                                            },
+                                                            "training_session_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "example": "2018-04-05 19:04:42"
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "example": "2018-04-05 19:04:16"
+                                                            },
+                                                            "training_session": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 1
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "example": "National Standard Training for Teachers 2018"
+                                                                    },
+                                                                    "code": {
+                                                                        "type": "string",
+                                                                        "example": "NST2018"
+                                                                    },
+                                                                    "training_course_id": {
+                                                                        "type": "integer",
+                                                                        "example": 1
+                                                                    },
+                                                                    "training_provider_id": {
+                                                                        "type": "integer",
+                                                                        "example": 1
+                                                                    },
+                                                                    "start_date": {
+                                                                        "type": "string",
+                                                                        "format": "date",
+                                                                        "example": "2018-04-01"
+                                                                    },
+                                                                    "end_date": {
+                                                                        "type": "string",
+                                                                        "format": "date",
+                                                                        "example": "2018-04-30"
+                                                                    },
+                                                                    "code_name": {
+                                                                        "type": "string",
+                                                                        "example": "NST2018 - National Standard Training for Teachers 2018"
+                                                                    },
+                                                                    "course": {
+                                                                        "properties": {
+                                                                            "id": {
+                                                                                "type": "integer",
+                                                                                "example": 1
+                                                                            },
+                                                                            "code": {
+                                                                                "type": "string",
+                                                                                "example": "NST"
+                                                                            },
+                                                                            "name": {
+                                                                                "type": "string",
+                                                                                "example": "National Standard Training for Teachers"
+                                                                            },
+                                                                            "code_name": {
+                                                                                "type": "string",
+                                                                                "example": "NST - National Standard Training for Teachers"
+                                                                            }
+                                                                        },
+                                                                        "type": "object"
+                                                                    },
+                                                                    "training_provider": {
+                                                                        "properties": {
+                                                                            "id": {
+                                                                                "type": "integer",
+                                                                                "example": 1
+                                                                            },
+                                                                            "name": {
+                                                                                "type": "string",
+                                                                                "example": "Ministry of Education"
+                                                                            }
+                                                                        },
+                                                                        "type": "object"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "training_result_type": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 650
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "example": "Exam"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "user": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 8815
+                                                                    },
+                                                                    "first_name": {
+                                                                        "type": "string",
+                                                                        "example": "Amanda"
+                                                                    },
+                                                                    "middle_name": {
+                                                                        "type": "string",
+                                                                        "example": null,
+                                                                        "nullable": true
+                                                                    },
+                                                                    "third_name": {
+                                                                        "type": "string",
+                                                                        "example": null,
+                                                                        "nullable": true
+                                                                    },
+                                                                    "last_name": {
+                                                                        "type": "string",
+                                                                        "example": "Wells"
+                                                                    },
+                                                                    "openemis_no": {
+                                                                        "type": "string",
+                                                                        "example": "1522952436"
+                                                                    },
+                                                                    "full_name": {
+                                                                        "type": "string",
+                                                                        "example": "Amanda  Wells"
+                                                                    },
+                                                                    "name_with_id": {
+                                                                        "type": "string",
+                                                                        "example": "1522952436 - Amanda  Wells"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
                                                 }
                                             },
                                             "type": "object"

@@ -1165,13 +1165,13 @@ class AttendanceRepository extends Controller
     }
 
 
-    public function allSubjectsByClassPerAcademicPeriod($options, $institutionId, $gradeId, $classId)
+    public function allSubjectsByClassPerAcademicPeriod($params, $institutionId, $gradeId, $classId)
     {
         try {
             $institutionId = $institutionId;       
             $institutionClassId = $classId;
             $educationGradeId = $gradeId;
-            $academicPeriodId = $options['academic_period_id'];
+            $academicPeriodId = $params['academic_period_id'];
             $staff = JWTAuth::user();
             
 
@@ -1197,20 +1197,27 @@ class AttendanceRepository extends Controller
                 }
             }
 
-            $list = $list->select('institution_subjects.id', 'institution_subjects.name')->get()->toArray();
+            $list = $list->select('institution_subjects.id', 'institution_subjects.name');
 
-            $total = count($list);
 
-            $resp['data'] = $list;
-            $resp['total'] = $total;
+            //For POCOR-8215/8216 start...
 
-            return $resp;
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $data = $list->paginate($limit)->toArray();
+            } else {
+                $data['data'] = $list->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
+            return $data;
             
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Subjects List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
+            
             return $this->sendErrorResponse('Subjects List Not Found');
         }
     }
@@ -1418,6 +1425,7 @@ class AttendanceRepository extends Controller
             $day = $options['day_id'];
             $subjectId = $options['subject_id'];
             $list = [];
+            $data = [];
 
             $studentStatus = StudentStatuses::pluck('id', 'code')->toArray();
             $studentStatusArray = [
@@ -1493,7 +1501,7 @@ class AttendanceRepository extends Controller
                     });
                 };
 
-                $query = $query->groupby('institution_subject_students.student_id')->orderBy('security_users.id')->get()->toArray();
+                $query = $query->groupby('institution_subject_students.student_id')->orderBy('security_users.id');
 
             } else {
                 $query = InstitutionClassStudents::select(
@@ -1545,12 +1553,22 @@ class AttendanceRepository extends Controller
                 }
 
 
-                $query = $query->groupby('institution_students.student_id')->orderBy('security_users.first_name')->get()->toArray();
+                $query = $query->groupby('institution_students.student_id')->orderBy('security_users.first_name');
                 
             }
 
 
-            foreach($query as $k => $q){
+            //For POCOR-8215/8216 start...
+            if(isset($options['limit'])){
+                $limit = $options['limit'];
+                $resp = $query->paginate($limit)->toArray();
+            } else {
+                $resp['data'] = $query->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
+
+            foreach($resp['data'] as $k => $q){
                 $list[$k]['academic_period_id'] = $q['academic_period_id'];
                 $list[$k]['institution_class_id'] = $q['institution_class_id'];
                 $list[$k]['institution_id'] = $q['institution_id'];
@@ -1853,12 +1871,9 @@ class AttendanceRepository extends Controller
                 }
             }
 
-            $total = count($list);
-            $resp['list'] = $list;
-            $resp['total'] = $total;
+            $resp['data'] = $list;
             
             return $resp;
-           
             
         } catch (\Exception $e) {
             Log::error(
@@ -1892,22 +1907,31 @@ class AttendanceRepository extends Controller
 
             $data = $this->markedRecordAfterSave($array);
 
-            $list = StudentAttendanceMarkedRecords::where('institution_id', $institutionId)
+            $attendanceMarked = StudentAttendanceMarkedRecords::where('institution_id', $institutionId)
                     ->where('academic_period_id', $academicPeriodId)
                     ->where('institution_class_id', $institutionClassId)
                     ->where('education_grade_id', $educationGradeId)
                     ->where('date', $day)
                     ->where('period', $period)
-                    ->where('subject_id', $subjectId)
-                    ->get()
-                    ->toArray();
+                    ->where('subject_id', $subjectId);
 
-            $total = count($list);
 
-            $resp['list'] = $list;
-            $resp['total'] = $total;
+            //For POCOR-8215/8216 start...
+            if(isset($options['order'])){
+                $orderBy = $options['order_by']??"ASC";
+                $col = $options['order'];
+                $attendanceMarked = $attendanceMarked->orderBy($col, $orderBy);
+            }
 
-            return $resp;
+            if(isset($options['limit'])){
+                $limit = $options['limit'];
+                $list = $attendanceMarked->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $attendanceMarked->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
+            return $list;
 
         } catch (\Exception $e) {
             Log::error(
