@@ -154,9 +154,9 @@ class OutcomePeriodsTable extends ControllerActionTable
         unset($request->query['period']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
-                    $request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
+            if (array_key_exists($this->getAlias(), $request->data)) {
+                if (array_key_exists('academic_period_id', $request->data[$this->getAlias()])) {
+                    $request->query['period'] = $request->data[$this->getAlias()]['academic_period_id'];
                 }
             }
         }

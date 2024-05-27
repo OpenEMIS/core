@@ -481,7 +481,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	public function getPrincipalRoleId()
     {
         $principalData = $this->find()
-            ->select([$this->primaryKey()])
+            ->select([$this->getPrimaryKey()])
             ->where([$this->aliasField('name') => 'Principal'])
             ->first();
 
@@ -491,7 +491,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	public function getDeputyPrincipalRoleId()
     {
         $deputyPrincipalData = $this->find()
-            ->select([$this->primaryKey()])
+            ->select([$this->getPrimaryKey()])
             ->where([$this->aliasField('name') => 'Vice Principal'])
             ->first();
 

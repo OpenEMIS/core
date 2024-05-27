@@ -280,7 +280,7 @@ class HtmlFieldHelper extends Helper
             }
 
             if (!isset($attr['translate']) || (isset($attr['translate']) && $attr['translate'])) {
-                $value = __($value);
+                $value = __((string)$value);
             }
         } elseif ($action == 'edit') {
             if (array_key_exists('empty', $attr)) {

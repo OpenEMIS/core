@@ -406,7 +406,6 @@ class ReportCardsTable extends AppTable
                 // end POCOR-4156 body masses data
                 $entity->generated_date = date('m-d-Y');
             }
-
             return $entity;
         }
     }
@@ -528,7 +527,7 @@ class ReportCardsTable extends AppTable
                     $Awards->aliasField('issue_date >= ') => $extra['report_card_start_date'],
                     $Awards->aliasField('issue_date <= ') => $extra['report_card_end_date']
                 ])
-                ->autoFields(true)
+                ->enableAutoFields(true)
                 ->toArray();
             return $entity;
         }
@@ -556,7 +555,7 @@ class ReportCardsTable extends AppTable
                     $InstitutionStudents->aliasField('institution_id') => $params['institution_id'],
                     $InstitutionStudents->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
                 ])
-                ->autoFields(true)
+                ->enableAutoFields(true)
                 ->first();
             return $entity;
         }
@@ -581,7 +580,7 @@ class ReportCardsTable extends AppTable
                 ->contain([
                     'EducationSubjects', 'InstitutionSubjects'
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
             if (empty($AssessmentItemData)) {
                 $entity = [];
@@ -617,14 +616,14 @@ class ReportCardsTable extends AppTable
                         ])//POCOR-5054 Ends
                     ])
                     ->leftJoinWith('CommentCodes')
-                    ->leftJoin([$SecurityUsers->alias() => $SecurityUsers->table()], [
+                    ->leftJoin([$SecurityUsers->getAlias() => $SecurityUsers->getTable()], [
                         $SecurityUsers->aliasField('id') . ' = ' . $StudentsReportCardsComments->aliasField('created_user_id')
                     ])//POCOR-5227
                     //POCOR-5054 Starts
-                    ->leftJoin(['ModifiedSecurityUsers' => $ModifiedSecurityUsers->table()], [
+                    ->leftJoin(['ModifiedSecurityUsers' => $ModifiedSecurityUsers->getTable()], [
                         'ModifiedSecurityUsers.id' . ' = ' . $StudentsReportCardsComments->aliasField('modified_user_id')
                     ])//POCOR-5054 Ends
-                    ->innerJoin([$ReportCardSubjects->alias() => $ReportCardSubjects->table()], [
+                    ->innerJoin([$ReportCardSubjects->getAlias() => $ReportCardSubjects->getTable()], [
                         $ReportCardSubjects->aliasField('report_card_id = ') . $StudentsReportCardsComments->aliasField('report_card_id'),
                         $ReportCardSubjects->aliasField('education_grade_id = ') . $StudentsReportCardsComments->aliasField('education_grade_id'),
                         $ReportCardSubjects->aliasField('education_subject_id = ') . $StudentsReportCardsComments->aliasField('education_subject_id'),
@@ -637,8 +636,8 @@ class ReportCardsTable extends AppTable
                         $StudentsReportCardsComments->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
                         $StudentsReportCardsComments->aliasField('education_subject_id') => $value['education_subject_id']
                     ])
-                    ->autoFields(true)
-                    ->hydrate(false)
+                    ->enableAutoFields(true)
+                    ->enableHydration(false)
                     ->first();
                 //POCOR-5054 Starts
                 if (!empty($reprotCardComment['modified_security_user_openemis_no'])) {
@@ -778,7 +777,7 @@ class ReportCardsTable extends AppTable
                     $SubjectStudents->aliasField('academic_period_id') => $params['academic_period_id'],
                     $SubjectStudents->aliasField('education_grade_id') => $extra['report_card_education_grade_id']
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
             return $entity;
         }
@@ -799,7 +798,7 @@ class ReportCardsTable extends AppTable
                 ->contain([
                     'EducationSubjects', 'InstitutionSubjects'
                 ])//POCOR-5814 requirement subject name from institution_subjects table.
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
             //POCOR-6810 Starts
             $entity = [];
@@ -856,7 +855,7 @@ class ReportCardsTable extends AppTable
             $studentAbsenceResults = $InstitutionStudentAbsences
                 ->find()
                 ->innerJoin(
-                    [$this->alias() => $this->table()],
+                    [$this->getAlias() => $this->getTable()],
                     [
                         $this->aliasField('institution_class_id') => $params['institution_class_id'],
                         $this->aliasField('institution_id = ') . $InstitutionStudentAbsences->aliasField('institution_id'),
@@ -868,7 +867,7 @@ class ReportCardsTable extends AppTable
                     $InstitutionStudentAbsences->aliasField('student_id') => $params['student_id'],
                     $InstitutionStudentAbsences->aliasField('academic_period_id') => $params['academic_period_id'] //POCOR-7128
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->all();
             //POCOR-7050 end
 
@@ -940,7 +939,7 @@ class ReportCardsTable extends AppTable
             $studentAbsenceResults = $InstitutionStudentAbsenceDetails
                 ->find()
                 ->innerJoin(
-                    [$this->alias() => $this->table()],
+                    [$this->getAlias() => $this->getTable()],
                     [
                         $this->aliasField('institution_class_id') => $params['institution_class_id'],
                         $this->aliasField('institution_id = ') . $InstitutionStudentAbsenceDetails->aliasField('institution_id'),
@@ -955,7 +954,7 @@ class ReportCardsTable extends AppTable
                     $InstitutionStudentAbsenceDetails->aliasField('institution_class_id') => $params['institution_class_id'] //POCOR-7128
                 ])
                 ->group([$InstitutionStudentAbsenceDetails->aliasField('date')])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->all();
             //POCOR-7050 end
             /**POCOR-6685 ends*/
@@ -989,7 +988,7 @@ class ReportCardsTable extends AppTable
                                 $InstitutionStudentAbsenceDetails->aliasField('absence_type_id !=') => 3,
                                 $InstitutionStudentAbsenceDetails->aliasField('period') => $p_val
                             ])
-                            ->hydrate(false)
+                            ->enableHydration(false)
                             ->toArray();
                         if (!empty($studentPresentResults)) {
                             $totalCount[] = $studentPresentResults;
@@ -1335,7 +1334,7 @@ class ReportCardsTable extends AppTable
                     $CompetencyItems->aliasField('competency_template_id IN ') => $extra['competency_templates_ids'],
                     'Periods.id IN' => $extra['competency_periods_ids']
                 ])
-                ->autoFields(true)
+                ->enableAutoFields(true)
                 ->toArray();
             return $entity;
         }
@@ -1355,7 +1354,7 @@ class ReportCardsTable extends AppTable
                     $CompetencyCriterias->aliasField('competency_template_id IN ') => $extra['competency_templates_ids'],
                     'Periods.id IN' => $extra['competency_periods_ids']
                 ])
-                ->autoFields(true)
+                ->enableAutoFields(true)
                 ->toArray();
             return $entity;
         }
@@ -1448,7 +1447,7 @@ class ReportCardsTable extends AppTable
                     'InstitutionCompetencyResults.institution_id = ' . $params['institution_id'],
                     $CompetencyCriterias->aliasField('academic_period_id') => $params['academic_period_id']
                 ])
-                ->autoFields(true)
+                ->enableAutoFields(true)
                 ->toArray();
             return $entity;
         }
@@ -1524,7 +1523,7 @@ class ReportCardsTable extends AppTable
                     'class_id' => $params['institution_class_id']
                 ])
                 //POCOR-5056 starts
-                ->innerJoin([$StudentSubjects->alias() => $StudentSubjects->table()], [
+                ->innerJoin([$StudentSubjects->getAlias() => $StudentSubjects->getTable()], [
                     $StudentSubjects->aliasField('education_subject_id = ') . $AssessmentItems->aliasField('education_subject_id')
                 ])
                 ->where([
@@ -1555,7 +1554,7 @@ class ReportCardsTable extends AppTable
                     'education_subject_id' => $StudentSubjects->aliasField('education_subject_id'),
                     'institution_subject_id' => $StudentSubjects->aliasField('institution_subject_id'),
                 ])
-                ->innerJoin([$StudentSubjects->alias() => $StudentSubjects->table()], [
+                ->innerJoin([$StudentSubjects->getAlias() => $StudentSubjects->getTable()], [
                     $StudentSubjects->aliasField('education_subject_id = ') . $AssessmentItems->aliasField('education_subject_id')
                 ])
                 ->where([
@@ -1577,7 +1576,7 @@ class ReportCardsTable extends AppTable
                 ->contain([
                     'EducationSubjects', 'InstitutionSubjects'
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
             //End: POCOR-6769
             //POCOR-6327 starts
@@ -1599,7 +1598,7 @@ class ReportCardsTable extends AppTable
                         'preferred_name' => 'SecurityUsers.preferred_name',
                         'gender_id' => 'SecurityUsers.gender_id', // POCOR[7033]
                     ])
-                    ->innerJoin([$Staff->alias() => $Staff->table()],
+                    ->innerJoin([$Staff->getAlias() => $Staff->getTable()],
                         [$Staff->aliasField('staff_id = ') . $StudentSubjectStaff->aliasField('staff_id')])
                     ->innerJoin(['SecurityUsers' => 'security_users'], [
                         'SecurityUsers.id = ' . $StudentSubjectStaff->aliasField('staff_id')
@@ -1691,7 +1690,7 @@ class ReportCardsTable extends AppTable
                 ->group([
                     $AssessmentItemResults->aliasField('education_subject_id')
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             // To get the student subject based on the template selected subject
@@ -1711,7 +1710,7 @@ class ReportCardsTable extends AppTable
                     ->contain([
                         'InstitutionSubjects'
                     ])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->all();
 
                 if (!$studentSubjectsEntity->isEmpty()) {
@@ -1790,7 +1789,7 @@ class ReportCardsTable extends AppTable
 
             $entity = $AssessmentItemResults->find()
                 ->innerJoin(
-                    [$this->alias() => $this->table()],
+                    [$this->getAlias() => $this->getTable()],
                     [
                         $this->aliasField('institution_id = ') . $AssessmentItemResults->aliasField('institution_id'),
                         $this->aliasField('academic_period_id = ') . $AssessmentItemResults->aliasField('academic_period_id'),
@@ -1854,7 +1853,7 @@ class ReportCardsTable extends AppTable
 
                 $entity = $AssessmentItemResults->find()
                     ->innerJoin(
-                        [$this->alias() => $this->table()],
+                        [$this->getAlias() => $this->getTable()],
                         [
                             $this->aliasField('institution_id = ') . $AssessmentItemResults->aliasField('institution_id'),
                             $this->aliasField('academic_period_id = ') . $AssessmentItemResults->aliasField('academic_period_id'),
@@ -1972,7 +1971,7 @@ class ReportCardsTable extends AppTable
                     return $q->where(['SubjectStudents.student_id' => $studentId]);
                 })
                 //POCOR-5056 ends
-                ->leftJoin([$OutcomePeriods->alias() => $OutcomePeriods->table()], [
+                ->leftJoin([$OutcomePeriods->getAlias() => $OutcomePeriods->getTable()], [
                     $OutcomePeriods->aliasField('id IN ') => $extra['outcome_periods_ids']
                 ])
                 ->where([
@@ -1990,7 +1989,7 @@ class ReportCardsTable extends AppTable
                         return $row;
                     });
                 })
-                ->autoFields(true);
+                ->enableAutoFields(true);
 
             return $entity->toArray();
         }
@@ -2015,7 +2014,7 @@ class ReportCardsTable extends AppTable
                         return $row;
                     });
                 })
-                ->autoFields(true);
+                ->enableAutoFields(true);
 
             return $entity->toArray();
 
@@ -2119,7 +2118,7 @@ class ReportCardsTable extends AppTable
                         return $row;
                     });
                 })
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $averageResult = [];
@@ -2168,7 +2167,7 @@ class ReportCardsTable extends AppTable
                 ->where([$AssessmentPeriods->aliasField('assessment_id') => $extra['assessment_id']])
                 ->group([('academic_term_value')])
                 ->order([$AssessmentPeriods->aliasField('start_date')])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $entity[] = [
@@ -2244,7 +2243,7 @@ class ReportCardsTable extends AppTable
                         return $row;
                     });
                 })
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $tempResult = [];
@@ -2299,7 +2298,7 @@ class ReportCardsTable extends AppTable
                     $InstitutionSubjectStudents->aliasField('institution_id') => $institutionId,
                 ])
                 ->contain('InstitutionSubjects')
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->all();
 
             if (!$institutionSubjectStudentsEntities->isEmpty()) {
@@ -2340,7 +2339,7 @@ class ReportCardsTable extends AppTable
                 ->innerJoin(['InstitutionClasses' => 'institution_classes'], [
                     'InstitutionClasses.id = ' . $InstitutionClassStudents->aliasField('next_institution_class_id')
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->first();
             $result['name'] = $institutionClassStudentsEntities['InstitutionClasses']['name'];
             return $result;
