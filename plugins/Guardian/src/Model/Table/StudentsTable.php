@@ -46,7 +46,8 @@ class StudentsTable extends ControllerActionTable
         } elseif ($this->action == 'view') {
             $session = $this->request->getSession();
             $session->write('Student.Guardians.primaryKey', $this->paramsDecode($this->request->getParam('pass')['1']));
-            $tabElements = $this->controller->getUserTabElements(['entity' => $entity, 'id' => $entity->student_id, 'userRole' => 'Students']);
+            $options = ['entity' => $entity, 'id' => $entity->student_id, 'userRole' => 'Students'];
+            $tabElements = $this->controller->getUserTabElements($options);
         }
 
         $this->controller->set('tabElements', $tabElements);
@@ -104,20 +105,33 @@ class StudentsTable extends ControllerActionTable
         $this->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupTabElements($entity);
+        $toolbarButtons = $extra['toolbarButtons'];
+        if($toolbarButtons->offsetExists('back')) {
+            $url = $toolbarButtons['back']['url'];
+            if(isset($this->request->getParam('pass')[1]) ) {
+                $decodeQueryString = $this->request->getParam('pass')[1];
+                $queryString = $this->paramsDecode($decodeQueryString);
+                $url['1'] = $this->paramsEncode($queryString);
+                $url = $this->setQueryString($url,['id'=>$queryString['security_user_id'], 'security_user_id'=>$queryString['security_user_id']]);
+            }
+            $toolbarButtons['back']['url'] = $url;
+        }
+        $extra['toolbarButtons'] = $toolbarButtons;
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        $session = $this->request->getSession();
         $newButtons = [];
         if (array_key_exists('view', $buttons)) {
             $security_user_id = $this->getUserId();
             $pass = $this->paramsDecode($buttons['view']['url'][1]);
             $pass['security_user_id'] = $this->getUserId();
+            $pass['student_id'] = $entity->student_id;
+            $pass['userRole'] = 'Students';
             $buttons['view']['url'][1] = $this->paramsEncode($pass);
             $newButtons['view'] = $buttons['view'];
         }

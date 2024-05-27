@@ -214,8 +214,8 @@ class InstitutionClassesTable extends ControllerActionTable
         if(!empty($this->request->getData['InstitutionClasses']['institution_shift_id'])){
             $extra['institution_shift_id'] = $this->request->getData['InstitutionClasses']['institution_shift_id'];
         }
-
-        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+        
+        $institutionId = $this->getInstitutionID();
         $extra['institution_id'] = $institutionId;
         $academicPeriodOptions = $this->getAcademicPeriodOptions($institutionId);
         $selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
@@ -1476,7 +1476,7 @@ class InstitutionClassesTable extends ControllerActionTable
                     'controller' => 'Institutions',
                     'action' => 'StaffUser',
                     'view',
-                    $this->paramsEncode(['id' => $entity->staff->id])
+                    $this->paramsEncode(['id' => $entity->staff->id, 'institution_id'=> $entity->institution_id, 'staff_id' => $entity->staff->id])
                 ]);
             } else {
                 return $this->getMessage($this->aliasField('noTeacherAssigned'));
@@ -1502,7 +1502,7 @@ class InstitutionClassesTable extends ControllerActionTable
                             'controller' => 'Institutions',
                             'action' => 'StaffUser',
                             'view',
-                            $this->paramsEncode(['id' => $classStaffEntity->secondary_staff->id])
+                            $this->paramsEncode(['id' => $classStaffEntity->secondary_staff->id, 'institution_id' => $entity->institution_id, 'staff_id' => $classStaffEntity->secondary_staff->id])
                         ]);
 
                         $staffList[] = $staffLink;
@@ -2229,7 +2229,7 @@ class InstitutionClassesTable extends ControllerActionTable
     public function getRolePermissionAccessForMyClasses($userId, $institutionId)
     {
         $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
-        $QueryResult = TableRegistry::getTableLocator()->get('SecurityRoleFunctions')->find()
+        $QueryResult = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
                 ->leftJoin(['SecurityFunctions' => 'security_functions'], [
                     [
                         'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
@@ -2256,7 +2256,7 @@ class InstitutionClassesTable extends ControllerActionTable
     public function getRolePermissionAccessForMySubjects($userId, $institutionId)
     {
         $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
-        $QueryResult = TableRegistry::getTableLocator()->get('SecurityRoleFunctions')->find()
+        $QueryResult = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
                 ->leftJoin(['SecurityFunctions' => 'security_functions'], [
                     [
                         'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
@@ -2283,7 +2283,7 @@ class InstitutionClassesTable extends ControllerActionTable
     public function getRolePermissionAccessForAllClasses($userId, $institutionId)
     {
         $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
-        $QueryResult = TableRegistry::getTableLocator()->get('SecurityRoleFunctions')->find()
+        $QueryResult = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
                 ->leftJoin(['SecurityFunctions' => 'security_functions'], [
                     [
                         'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',

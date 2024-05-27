@@ -32,6 +32,9 @@ class SalariesTable extends ControllerActionTable
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['Salaries'=>['id']]
         ]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Salaries'=>['id']]
+        ]);
     }
 
     public function implementedEvents(): array

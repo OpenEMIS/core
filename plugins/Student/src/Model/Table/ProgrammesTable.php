@@ -162,7 +162,8 @@ class ProgrammesTable extends ControllerActionTable
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{	
 		$session = $this->request->getSession();
-		if ($this->controller->getName() == 'Profiles') { 
+		
+		if ($this->controller->getName() == 'Profiles') {
 			if ($session->read('Auth.User.is_guardian') == 1) {
 				$sId = $session->read('Student.ExaminationResults.student_id');
 			}else {
@@ -178,6 +179,10 @@ class ProgrammesTable extends ControllerActionTable
 		} else {
 			$queryString = $this->getQueryString();
 			$studentId = $queryString['student_id'];
+			if($this->controller->getName() == 'GuardianNavs' && isset($this->request->getQueryParams()['studentId'])) {
+				$encodeStudentId = $this->request->getQueryParams()['studentId'];
+				$studentId = $this->paramsDecode($encodeStudentId);
+			}
 		}
 		
 		// end POCOR-1893
@@ -193,6 +198,12 @@ class ProgrammesTable extends ControllerActionTable
         			$this->aliasField('student_id') => $studentId,
         			//$this->aliasField('institution_id') => $institutionId
         		]);
+		if(!empty($institutionId)) {
+			$query
+			->where([
+				$this->aliasField('institution_id') => $institutionId
+			]);
+		}
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
         
 	}
@@ -316,8 +327,10 @@ class ProgrammesTable extends ControllerActionTable
 	private function setupTabElements()
 	{
 		$options['type'] = 'student';
-		//$tabElements = $this->controller->getAcademicTabElements($options);
 		$tabElements = $this->getAcademicTabElements($options);
+		if($this->controller->getName() == 'GuardianNavs' || $this->controller->getName() == 'Directories') {
+			$tabElements = $this->controller->getAcademicTabElements($options);
+		}
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->getAlias());
 	}

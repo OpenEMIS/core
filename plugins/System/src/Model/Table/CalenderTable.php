@@ -29,6 +29,7 @@ class CalenderTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('view', true);
         $this->toggle('remove', false);
+    }
 
     public function implementedEvents(): array
     {

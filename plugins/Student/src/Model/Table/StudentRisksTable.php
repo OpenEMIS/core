@@ -104,7 +104,8 @@ class StudentRisksTable extends ControllerActionTable
             $buttons['view']['url']['plugin'] = 'Institution';
             $buttons['view']['url']['controller'] = 'Institutions';
             $buttons['view']['url']['action'] = 'StudentRisks';
-            $buttons['view']['url']['0'] = $encodedQueryString;
+            $buttons['view']['url']['0'] = 'view';
+            $buttons['view']['url']['1'] = $encodedQueryString;
         }
 
         return $buttons;
@@ -231,6 +232,9 @@ class StudentRisksTable extends ControllerActionTable
         $options['type'] = 'student';
         //$tabElements = $this->controller->getAcademicTabElements($options);
         $tabElements = $this->getAcademicTabElements($options);
+        if($this->controller->getName() == 'GuardianNavs' || $this->controller->getName() == 'Directories') {
+			$tabElements = $this->controller->getAcademicTabElements($options);
+		}
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Risks');
     }
@@ -369,7 +373,7 @@ class StudentRisksTable extends ControllerActionTable
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
-        return $event->subject()->renderElement('Risk.Risks/' . $fieldKey, ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Risk.Risks/' . $fieldKey, ['attr' => $attr]);
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)

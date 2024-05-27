@@ -324,7 +324,7 @@ class InstitutionShiftsTable extends ControllerActionTable
             $ControllerActionHelper = $event->getSubject();
             $htmlHelper = $event->getSubject()->Html;
             $url = ['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'Shifts', 'view'];
-            $url[] = $ControllerActionHelper->paramsEncode(['id' => $entity->id]);
+            $url[] = $ControllerActionHelper->paramsEncode(['id' => $entity->id, 'institution_id' => $entity->institution_id]);
             return $htmlHelper->link(__($entity->shift_option->name), $url);
         }
     }
@@ -336,7 +336,7 @@ class InstitutionShiftsTable extends ControllerActionTable
             'plugin' => $this->controller->getPlugin(),
             'controller' => $this->controller->getName(),
             'action' => 'dashboard',
-            $ControllerActionHelper->paramsEncode(['id' => $entity->institution_id])
+            $ControllerActionHelper->paramsEncode(['id' => $entity->institution_id, 'institution_id' => $entity->institution_id])
         ]);
     }
 
@@ -361,7 +361,7 @@ class InstitutionShiftsTable extends ControllerActionTable
             'plugin' => $this->controller->getPlugin(),
             'controller' => $this->controller->getName(),
             'action' => 'dashboard',
-            $ControllerActionHelper->paramsEncode(['id' => $entity->location_institution_id])
+            $ControllerActionHelper->paramsEncode(['id' => $entity->location_institution_id, 'institution_id' => $entity->location_institution_id])
         ]);
     }
 

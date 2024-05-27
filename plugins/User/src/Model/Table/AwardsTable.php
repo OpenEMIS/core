@@ -15,16 +15,16 @@ class AwardsTable extends ControllerActionTable
         $this->setTable('user_awards');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
-        $this->addBehavior('User.UserTab', [
-            'appliedAction' => ['Awards' =>
-                ['id']
-            ]
-        ]);
-        $this->addBehavior('Staff.StaffTab');
-        // $this->addBehavior('Institution.InstitutionTab', [
-        //     'appliedAction' => ['Awards' =>['id']
+        // $this->addBehavior('User.UserTab', [
+        //     'appliedAction' => ['Awards' =>
+        //         ['id']
         //     ]
         // ]);
+        $this->addBehavior('Staff.StaffTab');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Awards' =>['id']
+            ]
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -39,6 +39,9 @@ class AwardsTable extends ControllerActionTable
         $queryString = $this->getQueryString();
         $data['staff_id'] = $queryString['staff_id'];
 		$this->field('security_user_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
+        if($this->request->getParam('controller') == 'Students'){
+            $this->field('security_user_id', ['type' => 'hidden', 'value' => $queryString['student_id']]);
+        }
     }
     
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -125,8 +128,11 @@ class AwardsTable extends ControllerActionTable
                 break;
             /*POCOR-6267 starts*/
             case 'GuardianNavs':
-                //$tabElements = $this->controller->getAcademicTabElements();
-                $tabElements = $this->getAcademicTabElements();
+                $tabElements = $this->controller->getAcademicTabElements();
+                //$tabElements = $this->getAcademicTabElements();
+                if($this->controller->getName() == 'GuardianNavs') {
+                    $tabElements = $this->controller->getAcademicTabElements($options);
+                }
                 $this->controller->set('tabElements', $tabElements);
                 $this->controller->set('selectedAction', $this->getAlias());
                 break;
@@ -147,6 +153,7 @@ class AwardsTable extends ControllerActionTable
                 }
                 $this->controller->set('tabElements', $tabElements);
                 $this->controller->set('selectedAction',$this->getAlias());
+                break;
                 //Shikha's Code[END]
             case 'Profiles':
                 $type = $this->request->getQuery('type');

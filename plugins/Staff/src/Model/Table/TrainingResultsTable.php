@@ -91,10 +91,10 @@ class TrainingResultsTable extends AppTable {
 			if (!empty($sessionOptions)) {
 				$selectedSession = $this->queryString('training_session', $sessionOptions);
 				$this->advancedSelectOptions($sessionOptions, $selectedSession);
-
+				$encodedQueryString = $this->request->getParam('pass')[1];
 				//Add controls filter to index page
 				$toolbarElements = [
-					['name' => 'Staff.Training/controls', 'data' => [], 'options' => []]
+					['name' => 'Staff.Training/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => []]
 				];
 
 				$this->controller->set('toolbarElements', $toolbarElements);

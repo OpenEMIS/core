@@ -69,8 +69,15 @@ class UndoStudentStatusTable extends AppTable
     public function beforeAction(Event $event)
     {
         $params = $this->ControllerAction->getQueryString();
+        
+        if(!empty($params)) {
+            $this->institutionId = $params['institution_id'];
+        } else {
+            $encodedQueryParams = $this->request->getParam('pass')[1];
+            $this->institutionId = $this->paramsDecode($encodedQueryParams)['institution_id'];
+        }
         $institutionClassTable = TableRegistry::get('Institution.InstitutionClasses');
-        $this->institutionId = $params['institution_id'];
+        
         $this->institutionClasses = $institutionClassTable->find('list')
             ->where([$institutionClassTable->aliasField('institution_id') => $this->institutionId])
             ->toArray();
@@ -248,6 +255,10 @@ class UndoStudentStatusTable extends AppTable
             $attr['attr']['value'] = $periodName;
         } else if ($action == 'add' || $action == 'edit') {
             $institutionId = $this->getInstitutionID();
+            if(empty($institutionId)) {
+                $encodedQueryParams = $this->request->getParam('pass')[1];
+                $institutionId = $this->paramsDecode($encodedQueryParams)['institution_id'];
+            }
             $Grades = $this->Grades;
             $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
             $selectedPeriod = null;
@@ -298,6 +309,10 @@ class UndoStudentStatusTable extends AppTable
         } else if ($action == 'add' || $action == 'edit') {
 
             $institutionId = $this->getInstitutionID();
+            if(empty($institutionId)) {
+                $encodedQueryParams = $this->request->getParam('pass')[1];
+                $institutionId = $this->paramsDecode($encodedQueryParams)['institution_id'];
+            }
             $selectedPeriod = $this->request->getData('UndoStudentStatus')['academic_period_id'];
             $gradeOptions = [];
             if (!empty($selectedPeriod)) {
@@ -439,6 +454,10 @@ class UndoStudentStatusTable extends AppTable
 
             //if($entity != null){
             $institutionId = $this->getInstitutionID();
+            if(empty($institutionId)) {
+                $encodedQueryParams = $this->request->getParam('pass')[1];
+                $institutionId = $this->paramsDecode($encodedQueryParams)['institution_id'];
+            }
             $selectedPeriod = $theData['academic_period_id'];
             $selectedGrade = $theData['education_grade_id'];
             if (empty($selectedPeriod)) {
@@ -499,6 +518,10 @@ class UndoStudentStatusTable extends AppTable
         }
         if ($action == 'reconfirm') {
             $institutionId = $this->getInstitutionID();
+            if(empty($institutionId)) {
+                $encodedQueryParams = $this->request->getParam('pass')[1];
+                $institutionId = $this->paramsDecode($encodedQueryParams)['institution_id'];
+            }
             /*$selectedPeriod = $theData['academic_period_id'];
             $selectedGrade = $theData['education_grade_id'];
             $selectedStatus = $theData['student_status_id'];
@@ -543,6 +566,10 @@ class UndoStudentStatusTable extends AppTable
         } else if ($action == 'add' || $action == 'edit') {
 
             $institutionId = $this->getInstitutionID();
+            if(empty($institutionId)) {
+                $encodedQueryParams = $this->request->getParam('pass')[1];
+                $institutionId = $this->paramsDecode($encodedQueryParams)['institution_id'];
+            }
 
             // $selectedClass = $request->getQuery('class');
             $selectedPeriod = $theData['academic_period_id'];
@@ -812,8 +839,11 @@ class UndoStudentStatusTable extends AppTable
         $request = $this->request;
 
         $params = $this->ControllerAction->getQueryString();
-        $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
-
+        if(!empty($params)) {
+            $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
+        } else {
+            $encodedQueryParams = $this->request->getParam('pass')[1];
+        }
         if ($action == 'reconfirm') {
             $toolbarButtons['back'] = $buttons['back'];
             $toolbarButtons['back']['type'] = 'button';
@@ -839,7 +869,11 @@ class UndoStudentStatusTable extends AppTable
     function reconfirm()
     {
         $params = $this->ControllerAction->getQueryString();
-        $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
+        if(!empty($params)) {
+            $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
+        } else {
+            $encodedQueryParams = $this->request->getParam('pass')[1];
+        }
         $model = $this;
         $alias = $this->getAlias();
        // $entity = null;

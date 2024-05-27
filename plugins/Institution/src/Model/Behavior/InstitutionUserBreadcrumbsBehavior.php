@@ -35,15 +35,22 @@ class InstitutionUserBreadcrumbsBehavior extends Behavior {
 		$crumbTitle = Inflector::humanize(Inflector::underscore($this->_table->getAlias()));
 		$splitTitle = explode(' ', $crumbTitle);
 		$newCrumbTitle = Inflector::pluralize($splitTitle[0]);
+		//staffs
+		if($this->_table->getAlias() == 'StaffUser' && $request->getParam('action') == 'StaffUser') {
+			$newCrumbTitle = $splitTitle[0];//staff
+		}
         $model = $this->_table;
+		$queryString = $model->getQueryString();
 		$institutionId = $request->getParam('institutionId') ?
             $model->paramsDecode($request->getParam('institutionId'))['id'] :
             $request->getSession()->read('Institution.Institutions.id');
+		$institutionId = !empty($institutionId) ? $institutionId : $queryString['institution_id'];
 		$Navigation->substituteCrumb($crumbTitle, __($newCrumbTitle), [
 		    'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => $newCrumbTitle,
-            'institutionId' => $model->paramsEncode(['id' => $institutionId])]);
+			'index',
+            $model->paramsEncode(['id' => $institutionId,'institution_id' => $institutionId])]);
 		if ($this->_table->getAlias() == $splitTitle[0].'User') {
 			$Navigation->addCrumb($persona->name);
 		} else {
@@ -51,8 +58,8 @@ class InstitutionUserBreadcrumbsBehavior extends Behavior {
                 'controller' => 'Institutions',
                 'action' => $splitTitle[0].'User',
                 'view',
-                $model->paramsEncode(['id' => $persona->id]),
-                'institutionId' => $model->paramsEncode(['id' => $institutionId])];
+				$model->paramsEncode(['id' => $persona->id,'institution_id' => $institutionId,'institution_student_id' => $queryString['institution_student_id'],
+				'student_id' => $persona->id])];
 			$Navigation->addCrumb($persona->name, $url);
 			$Navigation->addCrumb($crumbTitle);
 		}

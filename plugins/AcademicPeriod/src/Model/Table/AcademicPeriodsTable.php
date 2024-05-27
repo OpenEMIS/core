@@ -227,9 +227,8 @@ class AcademicPeriodsTable extends ControllerActionTable
 
             if (!$entity->isNew()) {
                 $where['id <> '] = $entity->id; // same with $where = [0 => 'id <> ' . $entity->id];
-                $this->updateAll(['current' => 0], $where);
             }
-
+            $this->updateAll(['current' => 0], $where);
             
         }
     }
@@ -606,7 +605,7 @@ class AcademicPeriodsTable extends ControllerActionTable
                         ->find()
                         ->order([$this->Levels->aliasField('level ASC')])
                         ->first();
-                    $current = $request->query('current');
+                    $current = $request->getQuery('current');
 
                     if (!is_null($current) && $current == 1) {
                         $where = [$this->aliasField('academic_period_level_id') => $level->id];

@@ -411,6 +411,9 @@ class AbsencesTable extends ControllerActionTable
         $options['type'] = 'student';
         //$tabElements = $this->controller->getAcademicTabElements($options);
         $tabElements = $this->getAcademicTabElements($options);
+        if($this->controller->getName() == 'Directories') {
+			$tabElements = $this->controller->getAcademicTabElements($options);
+		}
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Absences');
     }
@@ -450,8 +453,8 @@ class AbsencesTable extends ControllerActionTable
                     $where[$this->aliasField('student_id')] = $studentId;
                 }
             }
-        }
-        //$InstitutionStudentAbsenceDetails = TableRegistry::getTableLocator('Institution.InstitutionStudentAbsenceDetails');
+        } 
+        
         $tableLocator = new TableLocator();
         $InstitutionStudentAbsenceDetails = $tableLocator->get('InstitutionStudentAbsenceDetails');
         $query
