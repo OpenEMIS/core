@@ -8817,6 +8817,16 @@
                 "operationId": "86a7f297b0f91e6443f630671cb0b676",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "limit",
                         "in": "query",
                         "description": "Number of items to return per page",
@@ -9320,26 +9330,6 @@
                             "type": "integer",
                             "example": 6
                         }
-                    },
-                    {
-                        "name": "limit",
-                        "in": "query",
-                        "description": "Number of items to return per page",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": 10
-                        }
-                    },
-                    {
-                        "name": "page",
-                        "in": "query",
-                        "description": "Page number",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": 1
-                        }
                     }
                 ],
                 "responses": {
@@ -9641,6 +9631,16 @@
                 "operationId": "77ce8e632f7dfc90c00e6edd67c52c2d",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "limit",
                         "in": "query",
                         "description": "Number of items to return per page",
@@ -9762,6 +9762,16 @@
                         "schema": {
                             "type": "integer",
                             "example": 6
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
                         }
                     },
                     {

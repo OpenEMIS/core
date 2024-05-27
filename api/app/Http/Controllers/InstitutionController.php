@@ -43,6 +43,13 @@ class InstitutionController extends Controller
      *     description="Returns a list of institutions based on the provided parameters",
      *     tags={"Institutions"},
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
@@ -161,20 +168,6 @@ class InstitutionController extends Controller
      *         description="Institution Id.",
      *         @OA\Schema(type="integer", example=6)
      *     ),
-     *     @OA\Parameter(
-     *         name="limit",
-     *         in="query",
-     *         required=false,
-     *         description="Number of items to return per page",
-     *         @OA\Schema(type="integer", example=10)
-     *     ),
-     *     @OA\Parameter(
-     *         name="page",
-     *         in="query",
-     *         required=false,
-     *         description="Page number",
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Successful.",
@@ -270,6 +263,13 @@ class InstitutionController extends Controller
      *     description="Returns a list of grades available in institutions.",
      *     tags={"Institutions"},
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
@@ -348,6 +348,13 @@ class InstitutionController extends Controller
      *         required=true,
      *         description="ID of the institution",
      *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
      *     ),
      *     @OA\Parameter(
      *         name="page",

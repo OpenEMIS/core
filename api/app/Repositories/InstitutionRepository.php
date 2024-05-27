@@ -121,11 +121,11 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
-            $limit = config('constantvalues.defaultPaginateLimit');
+            /*$limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
-            }
+            }*/
             
             //$institutions = new Institutions();
             $institutions = Institutions::with('institutionLocalities', 'institutionOwnerships', 'institutionProviders', 'institutionSectors', 'institutionTypes', 'institutionStatus', 'institutionGender');
@@ -143,13 +143,24 @@ class InstitutionRepository extends Controller
                 $institutions = $institutions->orderBy($col, $orderBy);
             }
 
-            $list = $institutions->paginate($limit)->toArray();
+            //$list = $institutions->paginate($limit)->toArray();
+
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $institutions->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $institutions->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
             
             $resp = [];
             foreach($list['data'] as $d){
                 if(isset($d['logo_content'])){
                     $d['logo_content'] = base64_encode($d['logo_content']);
-                    //$d['logo_content'] = NULL;
+                    
                 }
                 $resp[] = $d;
             }
@@ -225,11 +236,11 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
-            $limit = config('constantvalues.defaultPaginateLimit');
+            /*$limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
-            }
+            }*/
             
             $grades = EducationGrades::join('institution_grades', 'institution_grades.education_grade_id', '=', 'education_grades.id')->select('education_grades.*');
 
@@ -245,8 +256,17 @@ class InstitutionRepository extends Controller
                 $col = $params['order'];
                 $grades = $grades->orderBy($col, $orderBy);
             }
-            //$list = $grades->get();
-            $list = $grades->paginate($limit);
+            
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $grades->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $grades->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
+            
             return $list;
         } catch (\Exception $e) {
             Log::error(
@@ -278,11 +298,11 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
-            $limit = config('constantvalues.defaultPaginateLimit');
+            /*$limit = config('constantvalues.defaultPaginateLimit');
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
-            }
+            }*/
 
             $institutionGrade = InstitutionGrades::where('institution_id', $institutionId)->with('educationGrades');
 
@@ -299,7 +319,16 @@ class InstitutionRepository extends Controller
             }
 
             //$list = $institutionGrade->get();
-            $list = $institutionGrade->paginate($limit);
+            //$list = $institutionGrade->paginate($limit);
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $institutionGrade->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $institutionGrade->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
 
             return $list;
             
