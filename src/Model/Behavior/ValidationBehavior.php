@@ -619,7 +619,8 @@ class ValidationBehavior extends Behavior
         if ($field == "0") {
             $tableObj =  get_object_vars($globalData['providers']['table']);
             if (!empty($tableObj)) {
-                $className = $tableObj['controller']->modelClass;
+                // $className = $tableObj['controller']->modelClass;
+                $className = $globalData['providers']['custom']->getRegistryAlias();
                 $newEntity = TableRegistry::getTableLocator()->get($className);
                 $recordWithField = $newEntity->find()
                                             ->select([$fieldName])

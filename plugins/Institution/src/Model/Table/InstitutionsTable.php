@@ -258,97 +258,97 @@ class InstitutionsTable extends ControllerActionTable
 
     }
 
-    public function validationDefault(Validator $validator): Validator
-    {
-        $validator = parent::validationDefault($validator);
-        $validator = $this->LatLongValidation(); //POCOR-6625 incomment <vikas.rathore@mail.valocoders.com>
-        $validator
-            ->setProvider('custom', $this)
-            ->add('date_opened', [
-                'ruleCompare' => [
-                    'rule' => ['comparison', 'notequal', '0000-00-00'],
-                ]
-            ])
-            ->allowEmpty('date_closed')
-            ->add('date_opened', 'ruleLessThanToday', [
-                'rule' => ['lessThanToday', true]
-            ])
-            ->add('date_closed', 'ruleCompareDateReverse', [
-                'rule' => ['compareDateReverse', 'date_opened', true]
-            ])
-            ->add('date_closed', 'ruleCheckPendingWorkbench', [
-                'rule' => 'checkPendingWorkbench',
-                'last' => true
-            ])
-            ->add('classification', [
-                'validClassification' => [
-                    'rule' => ['range', 1, 2],
-                ]
-            ])
-            // ->add('address', 'ruleMaximum255', [
-            //      'rule' => ['maxLength', 255],
-            //      'message' => 'Maximum allowable character is 255',
-            //      'last' => true
-            //  ])
+    // public function validationDefault(Validator $validator): Validator
+    // {
+    //     $validator = parent::validationDefault($validator);
+    //     $validator = $this->LatLongValidation(); //POCOR-6625 incomment <vikas.rathore@mail.valocoders.com>
+    //     $validator
+    //         ->setProvider('custom', $this)
+    //         ->add('date_opened', [
+    //             'ruleCompare' => [
+    //                 'rule' => ['comparison', 'notequal', '0000-00-00'],
+    //             ]
+    //         ])
+    //         ->allowEmpty('date_closed')
+    //         ->add('date_opened', 'ruleLessThanToday', [
+    //             'rule' => ['lessThanToday', true]
+    //         ])
+    //         ->add('date_closed', 'ruleCompareDateReverse', [
+    //             'rule' => ['compareDateReverse', 'date_opened', true]
+    //         ])
+    //         ->add('date_closed', 'ruleCheckPendingWorkbench', [
+    //             'rule' => 'checkPendingWorkbench',
+    //             'last' => true
+    //         ])
+    //         ->add('classification', [
+    //             'validClassification' => [
+    //                 'rule' => ['range', 1, 2],
+    //             ]
+    //         ])
+    //         // ->add('address', 'ruleMaximum255', [
+    //         //      'rule' => ['maxLength', 255],
+    //         //      'message' => 'Maximum allowable character is 255',
+    //         //      'last' => true
+    //         //  ])
 
-            ->add('code', 'ruleCustomCode', [
-                'rule' => ['validateCustomPattern', 'institution_code'],
-                'provider' => 'table',
-                'last' => true
-            ])
-            ->allowEmpty('postal_code')
-            ->add('postal_code', 'ruleCustomPostalCode', [
-                'rule' => ['validateCustomPattern', 'postal_code'],
-                'provider' => 'table',
-                'last' => true
-            ])
-            ->add('code', 'ruleUnique', [
-                'rule' => 'validateUnique',
-                'provider' => 'table',
-                // 'message' => 'Code has to be unique'
-            ])
-            ->allowEmpty('email')
-            ->add('email', [
-                'ruleValidEmail' => [
-                    'rule' => 'email'
-                ]
-            ])
-            ->allowEmpty('telephone')
-            ->add('telephone', 'ruleCustomTelephone', [
-                'rule' => ['validateCustomPattern', 'institution_telephone'],
-                'provider' => 'table',
-                'last' => true
-            ])
-            ->allowEmpty('fax')
-            ->add('fax', 'ruleCustomFax', [
-                'rule' => ['validateCustomPattern', 'institution_fax'],
-                'provider' => 'table',
-                'last' => true
-            ])
-            // ->add('area_id', 'ruleAuthorisedArea', [
-            //     'rule' => ['checkAuthorisedArea']
-            // ])
-            // ->add('area_id', 'ruleConfiguredArea', [
-            //     'rule' => ['checkConfiguredArea']
-            // ])
-            // ->allowEmpty('area_administrative_id')
-            // ->add('area_administrative_id', 'ruleConfiguredAreaAdministrative', [
-            //     'rule' => ['checkConfiguredArea']
-            // ])
-            ->add('institution_provider_id', 'ruleLinkedSector', [
-                'rule' => 'checkLinkedSector',
-                'provider' => 'table'
-            ])
-            // POCOR-7935:start
-            ->add('logo_content', 'hople',
-                ['rule' => ['imageSize',
-                    ['width' => ['<=', self::logoMaxWidth], 'height' => ['<=', self::logoMaxHeight]]],
-                    'message' => 'The image dimensions should not exceed ' . self::logoMaxWidth . 'x' . self::logoMaxHeight . ' pixels.'
-                ])
-            // POCOR-7935:end
-            ->allowEmpty('logo_content');
-        return $validator;
-    }
+    //         ->add('code', 'ruleCustomCode', [
+    //             'rule' => ['validateCustomPattern', 'institution_code'],
+    //             'provider' => 'table',
+    //             'last' => true
+    //         ])
+    //         ->allowEmpty('postal_code')
+    //         ->add('postal_code', 'ruleCustomPostalCode', [
+    //             'rule' => ['validateCustomPattern', 'postal_code'],
+    //             'provider' => 'table',
+    //             'last' => true
+    //         ])
+    //         ->add('code', 'ruleUnique', [
+    //             'rule' => 'validateUnique',
+    //             'provider' => 'table',
+    //             // 'message' => 'Code has to be unique'
+    //         ])
+    //         ->allowEmpty('email')
+    //         ->add('email', [
+    //             'ruleValidEmail' => [
+    //                 'rule' => 'email'
+    //             ]
+    //         ])
+    //         ->allowEmpty('telephone')
+    //         ->add('telephone', 'ruleCustomTelephone', [
+    //             'rule' => ['validateCustomPattern', 'institution_telephone'],
+    //             'provider' => 'table',
+    //             'last' => true
+    //         ])
+    //         ->allowEmpty('fax')
+    //         ->add('fax', 'ruleCustomFax', [
+    //             'rule' => ['validateCustomPattern', 'institution_fax'],
+    //             'provider' => 'table',
+    //             'last' => true
+    //         ])
+    //         // ->add('area_id', 'ruleAuthorisedArea', [
+    //         //     'rule' => ['checkAuthorisedArea']
+    //         // ])
+    //         // ->add('area_id', 'ruleConfiguredArea', [
+    //         //     'rule' => ['checkConfiguredArea']
+    //         // ])
+    //         // ->allowEmpty('area_administrative_id')
+    //         // ->add('area_administrative_id', 'ruleConfiguredAreaAdministrative', [
+    //         //     'rule' => ['checkConfiguredArea']
+    //         // ])
+    //         ->add('institution_provider_id', 'ruleLinkedSector', [
+    //             'rule' => 'checkLinkedSector',
+    //             'provider' => 'table'
+    //         ])
+    //         // POCOR-7935:start
+    //         ->add('logo_content', 'hople',
+    //             ['rule' => ['imageSize',
+    //                 ['width' => ['<=', self::logoMaxWidth], 'height' => ['<=', self::logoMaxHeight]]],
+    //                 'message' => 'The image dimensions should not exceed ' . self::logoMaxWidth . 'x' . self::logoMaxHeight . ' pixels.'
+    //             ])
+    //         // POCOR-7935:end
+    //         ->allowEmpty('logo_content');
+    //     return $validator;
+    // }
 
     public function getNonAcademicConstant()
     {

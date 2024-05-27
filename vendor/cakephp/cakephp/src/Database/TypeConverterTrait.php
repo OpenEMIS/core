@@ -36,8 +36,15 @@ trait TypeConverterTrait
             $type = TypeFactory::build($type);
         }
         if ($type instanceof TypeInterface) {
-            $value = $type->toDatabase($value, $this->_driver);
-            $type = $type->toStatement($value, $this->_driver);
+            $server_url = $_SERVER['REQUEST_URI'];
+            $server_url = explode("/", $server_url);
+            if($server_url[1] == 'Securities' && $server_url[2] == 'Permissions'){
+                $value = $type->toDatabase((string)$value, $this->_driver);
+                $type = $type->toStatement($value, $this->_driver);
+            }else{
+                $value = $type->toDatabase($value, $this->_driver);
+                $type = $type->toStatement($value, $this->_driver);
+            }
         }
 
         return [$value, $type];

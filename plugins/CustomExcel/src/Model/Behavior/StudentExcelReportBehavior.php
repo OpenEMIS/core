@@ -57,10 +57,10 @@ class StudentExcelReportBehavior extends Behavior
     {
         parent::initialize($config);
         $model = $this->_table;
-        $folder = WWW_ROOT . $this->config('folder');
-        $subfolder = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder');
+        $folder = WWW_ROOT . $this->getConfig('folder');
+        $subfolder = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder');
         if (!array_key_exists('filename', $config)) {
-            $this->config('filename', $model->alias());
+            $this->getConfig('filename', $model->getAlias());
         }
 
         new Folder($folder, true, 0777);
