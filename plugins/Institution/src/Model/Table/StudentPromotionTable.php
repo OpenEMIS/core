@@ -96,8 +96,13 @@ class StudentPromotionTable extends AppTable
     public function beforeAction(Event $event)
     {
         $params = $this->ControllerAction->getQueryString();
-        $this->institutionId = $this->ControllerAction->getQueryString('institution_id');
-        $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
+        if(!empty($params)) {
+            $this->institutionId = $this->ControllerAction->getQueryString('institution_id');
+            $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
+        } else {
+            $encodedQueryParams = $this->request->getParam('pass')[1];
+            $this->institutionId = $this->paramsDecode($encodedQueryParams)['institution_id'];
+        }
         $this->InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
         $institutionClassTable = TableRegistry::get('Institution.InstitutionClasses');
         $this->institutionClasses = $institutionClassTable->find('list')
@@ -291,8 +296,13 @@ class StudentPromotionTable extends AppTable
     public function onUpdateFieldGradeToPromote(Event $event, array $attr, $action, ServerRequest $request)
     {
         $params = $this->ControllerAction->getQueryString();
-        $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
-        $institutionId = $params['institution_id'];
+        if(!empty($params)) {
+            $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
+            $institutionId = $params['institution_id'];
+        } else {
+            $encodedQueryParams = $this->request->getParam('pass')[1];
+            $institutionId = $this->paramsDecode($encodedQueryParams)['institution_id'];
+        }
         switch ($action) {
             case 'reconfirm':
                 $sessionKey = $this->getRegistryAlias() . '.confirm';
@@ -592,8 +602,13 @@ class StudentPromotionTable extends AppTable
     public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $params = $this->ControllerAction->getQueryString();
-        $institutionId = $params['institution_id'];
-        $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
+        if(!empty($params)) {
+            $institutionId = $params['institution_id'];
+            $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
+        } else {
+            $encodedQueryParams = $this->request->getParam('pass')[1];
+            $institutionId = $this->paramsDecode($encodedQueryParams)['institution_id'];
+        }
         if ($action == 'add') {
             $entity = $attr['entity'];
             if($entity['from_academic_period_id'] != NULL){
@@ -810,6 +825,10 @@ class StudentPromotionTable extends AppTable
     public function onUpdateFieldStudents(Event $event, array $attr, $action, ServerRequest $request)
     {
         $institutionId = $this->getInstitutionID();
+        if(empty($institutionId)) {
+            $encodedQueryParams = $this->request->getParam('pass')[1];
+            $institutionId = $this->paramsDecode($encodedQueryParams)['institution_id'];
+        }
         $currentData = null;
         $showNextClass = false;
 
@@ -1034,6 +1053,12 @@ class StudentPromotionTable extends AppTable
     {
         $params = $this->ControllerAction->getQueryString();
         $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
+        if(!empty($params)) {
+            $this->institutionId = $this->ControllerAction->getQueryString('institution_id');
+            $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
+        } else {
+            $encodedQueryParams = $this->request->getParam('pass')[1];
+        }
         switch ($action) {
             case 'add':
                 $toolbarButtons['back'] = $buttons['back'];

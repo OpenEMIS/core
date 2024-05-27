@@ -109,7 +109,8 @@ class DirectoriesTable extends ControllerActionTable
 //        $this->hasMany('InstitutionStudents', ['className' => 'institution_students', 'foreignKey' => 'student_id', 'dependent' => true]);
         $this->hasMany('InstitutionStudentsReportCardsCommentsStaff', ['className' => 'Institution.InstitutionStudentsReportCardsComments', 'foreignKey' => 'staff_id', 'dependent' => true]);
         $this->hasMany('InstitutionStudentsReportCardsCommentsStudent', ['className' => 'Institution.InstitutionStudentsReportCardsComments', 'foreignKey' => 'student_id', 'dependent' => true]);
-       // not found $this->hasMany('InstitutionStudentsTmp', ['className' => 'institution_students_tmp', 'foreignKey' => 'student_id', 'dependent' => true]);
+       // not found 
+        $this->hasMany('InstitutionStudentsTmp', ['className' => 'institution_students_tmp', 'foreignKey' => 'student_id', 'dependent' => true]);
         $this->hasMany('InstitutionSubjectStaff', ['className' => 'Staff.StaffSubjects', 'foreignKey' => 'staff_id', 'dependent' => true]);
         $this->hasMany('InstitutionSubjectStudents', ['className' => 'Student.StudentSubjects', 'foreignKey' => 'student_id', 'dependent' => true]);
         $this->hasMany('InstitutionTripPassengers', ['className' => 'Student.StudentTransport', 'foreignKey' => 'student_id', 'dependent' => true]);
@@ -151,7 +152,7 @@ class DirectoriesTable extends ControllerActionTable
         $this->hasMany('StaffTrainings', ['className' => 'Staff.StaffTrainings', 'foreignKey' => 'staff_id', 'dependent' => true]);
         $this->hasMany('StudentCustomFieldValues', ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true]);
         $this->hasMany('StudentCustomTableCells', ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true]);
-       // You have not defined the `request` association on 
+       // Undefined property `request` association on 
         $this->hasMany('StudentExtracurriculars', ['className' => 'Student.Extracurriculars', 'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->hasMany('StudentFees', ['className' => 'Institution.StudentFeesAbstract', 'foreignKey' => 'student_id', 'dependent' => true]);
         $this->hasMany('StudentGuardiansGuardian', ['className' => 'Student.StudentGuardians', 'foreignKey' => 'guardian_id', 'dependent' => true]);
@@ -637,6 +638,8 @@ class DirectoriesTable extends ControllerActionTable
                 $this->addCustomUserBehavior($userType);
             }
 
+        } elseif ( $this->action == 'index' && $this->Session->check('Directory')) {
+            $this->Session->delete('Directory');
         }
 
         // Start POCOR-5188
@@ -690,7 +693,7 @@ class DirectoriesTable extends ControllerActionTable
             // Case 2 or 3
 
             // Get all nationalities, which has any default identity
-            $nationalities = TableRegistry::get('User.Nationalities');
+            $nationalities = TableRegistry::get('FieldOption.Nationalities');
             $nationalities_ids = $nationalities->find('all',
                 [
                     'fields' => [
@@ -767,7 +770,7 @@ class DirectoriesTable extends ControllerActionTable
             // Case 2 or 3
 
             // Get all nationalities, which has any default identity
-            $nationalities = TableRegistry::get('User.Nationalities');
+            $nationalities = TableRegistry::get('FieldOption.Nationalities');
             $nationalities_ids = $nationalities->find('all',
                 [
                     'fields' => [
@@ -812,14 +815,16 @@ class DirectoriesTable extends ControllerActionTable
                 return $entity->identity_type_id = $user_id_name->name;
             } else {
                 // Case 3 - returning value, return again from Case 1
-                $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
-                $user_id_name = $users_id_type->find()
-                    ->select(['name'])
-                    ->where([
-                        $users_id_type->aliasField('id') => $user_id_data->identity_type_id,
-                    ])
-                    ->first();
-                return $entity->identity_type_id = $user_id_name->name;
+                if(!empty( $user_id_data)){
+                    $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
+                    $user_id_name = $users_id_type->find()
+                        ->select(['name'])
+                        ->where([
+                            $users_id_type->aliasField('id') => $user_id_data->identity_type_id,
+                        ])
+                        ->first();
+                    return $entity->identity_type_id = $user_id_name->name;
+                }
             }
         }
     }

@@ -43,7 +43,13 @@ class SetupTabBehavior extends Behavior
             $tabElements = $controller->getUserTabElements();
         }
         if ($controllerName == 'Directories') {
-            $tabElements = $controller->getUserTabElements();
+            $queryString = $model->getQueryString();
+            $option = [];
+            if (isset( $queryString['userRole'])) {
+                $option['id'] = $queryString['security_user_id'];
+                $option['userRole'] = $queryString['userRole'];
+            }
+            $tabElements = $controller->getUserTabElements($option);
         }
         if ($controllerName == 'Guardians') {
             $tabElements = $controller->getGuardianTabElements();

@@ -128,13 +128,14 @@ class ScheduleTermsTable extends ControllerActionTable
         } else {
             $selectedPeriodId = $this->AcademicPeriods->getCurrent();
         }
-
+        $encodeQueryString = $this->request->getParam('pass')[1];
         $extra['selectedAcademicPeriodOptions'] = $selectedPeriodId;
         $extra['elements']['control'] = [
             'name' => 'Schedule.Terms/controls',
             'data' => [
                 'periodOptions'=> $academicPeriodOptions,
-                'selectedPeriodOption'=> $extra['selectedAcademicPeriodOptions']
+                'selectedPeriodOption'=> $extra['selectedAcademicPeriodOptions'],
+                'encodeQueryString' => $encodeQueryString
             ],
             'order' => 3
         ];

@@ -82,7 +82,7 @@ class StaffClassesTable extends ControllerActionTable
         $this->fields['capacity']['visible'] = false;
 
         $this->field('total_students', []);
-
+        $this->field('staff_id', ['visible' => false]);
         $this->setFieldOrder([
             'academic_period_id',
             'institution_id',
@@ -213,9 +213,9 @@ class StaffClassesTable extends ControllerActionTable
         $tabElements = $this->getCareerTabElements($options);
         $controllerName = $this->controller->getName();
         $selectedAction = 'Classes';
-        if($controllerName == 'Directories') {
-            $selectedAction = 'StaffClasses';
-        }
+        // if($controllerName == 'Directories') {
+        //     $selectedAction = 'StaffClasses';
+        // }
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $selectedAction);
     }

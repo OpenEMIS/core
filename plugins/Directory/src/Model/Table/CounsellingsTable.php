@@ -55,8 +55,9 @@ class CounsellingsTable extends ControllerActionTable
         return $validator->allowEmpty('file_content');
     }
     public function addEditBeforeAction(Event $event, ArrayObject $extra){
-        $session = $this->request->getSession();
-        $StudentId = $session->read('Student.Students.id');
+        // $session = $this->request->getSession();
+        // $StudentId = $session->read('Student.Students.id');
+        $StudentId = $this->getUserID();
         $table=TableRegistry::get('Institution.InstitutionStudents');
         $institutionStudent = $table->find('all')->select('institution_id')->where([
             $table->aliasField('student_id')=>$StudentId,

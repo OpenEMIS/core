@@ -188,7 +188,7 @@ class PositionsTable extends ControllerActionTable {
         $this->fields['staff_position_grade_id']['visible'] = false;//PCOOR-7238
         $this->fields['is_homeroom']['visible'] = false; //POCOR-5070
         $this->field('shift', ['after' => 'institution_position_id']);
-
+        $this->field('staff_id', ['visible' => false]);
         $this->setFieldOrder([
             'institution_id',
             'institution_position_id',
@@ -417,7 +417,7 @@ class PositionsTable extends ControllerActionTable {
     {
        $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
        $staffId=$institutionStaff->find()->select(['staff_id'])->where(['id' =>$entity->id])->first();
-       $staff_id=$staffId['staff_id'];
+       $staff_id = $this->paramsDecode($this->request->getAttribute('params')['pass'][1])['staff_id'];
        $institutaionStaffid = $entity->id; //POCOR-7185
        $institutionShifts = TableRegistry::get('Institution.InstitutionShifts');
        $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');

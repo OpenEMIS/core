@@ -114,7 +114,7 @@ class StaffTabBehavior extends Behavior
         $tabElements = array_merge($tabElements, $staffTabElements);
         foreach ($staffTabElements as $key => $tab) {
                 $changeKeyArray = ['StaffLeave', 'StaffAttendances','StaffAppraisals','StaffAssociations','StaffCurriculars'];
-                if($controllerName == "Profiles"){
+                if($controllerName == "Profiles" || $controllerName == "Directories"){
                     if(in_array($key, $changeKeyArray)){
                         $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString]);
                     }else{
@@ -166,6 +166,7 @@ class StaffTabBehavior extends Behavior
             $session = $model->request->getSession();
             $isStudent = $session->read('Auth.User.is_student');
             $isStaff = $session->read('Auth.User.is_staff');
+            
             if ($isStaff) {
                 $professionalTabElements = [
                     'Employments' => ['text' => __('Employments')],
@@ -199,8 +200,8 @@ class StaffTabBehavior extends Behavior
             }
             return $controller->TabPermission->checkTabPermission($tabElements);
         }
-
-        if($controllerName == "Directory"){
+        
+        if($controllerName == "Directories"){
             $userID = $this->getUserID();
             if(!is_numeric($userID)){
                 return [];
@@ -210,7 +211,7 @@ class StaffTabBehavior extends Behavior
             $isStaff = $user->is_staff;
             $isStudent = $user->is_student;
             if ($isStaff) {
-                $staffTabElements = [
+                $directoriesTabElements = [
                     'Employments' => ['text' => __('Employments')],
                     'Qualifications' => ['text' => __('Qualifications')],
                     'Memberships' => ['text' => __('Memberships')],
@@ -218,19 +219,20 @@ class StaffTabBehavior extends Behavior
                     'Awards' => ['text' => __('Awards')],
                 ];
             } else if ($isStudent) {
-                $staffTabElements = [
+                $directoriesTabElements = [
                     'Employments' => ['text' => __('Employments')],
                     'Qualifications' => ['text' => __('Qualifications')],
                     'Licenses' => ['text' => __('Licenses')],
                 ];
             } else {
-                $staffTabElements = [
+                $directoriesTabElements = [
                     'Employments' => ['text' => __('Employments')],
                     'Qualifications' => ['text' => __('Qualifications')],
-                    'Licenses' => ['text' => __('Licenses')],
+                    //'Licenses' => ['text' => __('Licenses')],
                 ];
             }
-            foreach ($staffTabElements as $key => $tab) {
+            $tabElements = array_merge($tabElements, $directoriesTabElements);
+            foreach ($directoriesTabElements as $key => $tab) {
                 if ($key != 'Employments') {
                     $url = array_merge($staffUrl, ['action' => 'Staff' . $key, '0' => 'index']);
 

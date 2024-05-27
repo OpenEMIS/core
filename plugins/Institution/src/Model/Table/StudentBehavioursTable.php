@@ -42,7 +42,7 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
        // $this->belongsTo('InstitutionStudents', ['className' => 'InstitutionStudent.InstitutionStudents', 'foreignKey' => 'student_id']);//Remove this link for POCOR-7505
         $this->hasMany('StudentBehaviourAttachments', [
-            'className' => 'Institutions.StudentBehaviourAttachments',
+            'className' => 'Institution.StudentBehaviourAttachments',
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
@@ -639,7 +639,7 @@ class StudentBehavioursTable extends ControllerActionTable
 
     public function addOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $data[$this->alias()]['class'] = 0;
+        $data[$this->getAlias()]['class'] = 0;
     }
 
     public function onUpdateFieldClass(Event $event, array $attr, $action, $request)

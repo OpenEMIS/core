@@ -36,12 +36,12 @@ class BodyMassesTable extends ControllerActionTable
         //     'excludes' => ['comment, security_user_id'],
         //     'pages' => ['index'],
         // ]);
-        // $this->addBehavior('ControllerAction.FileUpload', [
-        //     'size' => '2MB',
-        //     'contentEditable' => false,
-        //     'allowable_file_types' => 'all',
-        //     'useDefaultName' => true
-        // ]);
+        $this->addBehavior('ControllerAction.FileUpload', [
+            'size' => '2MB',
+            'contentEditable' => true,
+            'allowable_file_types' => 'all',
+            'useDefaultName' => true
+        ]);
         //POCOR-6255 start
         // $this->addBehavior('Page.FileUpload', [
         //     'fieldMap' => ['file_name' => 'file_content'],
@@ -168,6 +168,40 @@ class BodyMassesTable extends ControllerActionTable
             }
 
             $data['body_mass_index'] = $bmi;
+        }
+        $sentData = $this->request->getData();
+        $alias = $this->getAlias();
+        $sentData = $sentData[$alias];
+        $name = '';
+        $fileContent = 'file_content';
+        $uploadedFile = $sentData[$fileContent];
+        $fileName = 'file_name';
+    
+        if ($uploadedFile instanceof UploadedFile) {
+            //$content = (string)$uploadedFile->getStream();
+            $error = $uploadedFile->getError();
+            if ($error === UPLOAD_ERR_OK) {
+                // Accessing the file contents
+                $content = (string)$uploadedFile->getStream();
+            }
+            $name = $uploadedFile->getClientFilename();
+        }
+
+        if (isset($content) && isset($error) && $error == UPLOAD_ERR_OK) {
+            $data[$fileName] = $name;
+            $data[$fileContent] = $content;
+        } elseif (isset($error) && $error == UPLOAD_ERR_NO_FILE) {
+            $data->offsetUnset($fileContent);
+            if ($data->offsetExists($fileName)) {
+                $data->offsetUnset($fileName);
+            }
+        } elseif (isset($data[$fileContent . '_remove']) && $data[$fileContent . '_remove'] == 1) {
+            $data[$fileName] = null;
+            $data[$fileContent] = null;
+        } elseif (!isset($data[$fileName])) {
+            $var = null;
+            $data[$fileName] = null;
+            $data[$fileContent] = null;
         }
     }
 

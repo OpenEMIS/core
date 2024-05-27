@@ -249,6 +249,14 @@ class AttachmentsTable extends ControllerActionTable
                 return __('Type');
             case 'security_roles':
                 return __('Shared');
+            case 'created_user_id':
+                return __('Created By');
+            case 'created':
+                return __('Created On');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'modified':
+                return __('Modified On');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -320,12 +328,15 @@ class AttachmentsTable extends ControllerActionTable
         $userId = $this->getUserID();
         $user = $UserTable->get($userId);
         $this->field('file_content', ['type' => 'binary', 'visible' => true]);
-        $this->field('student_attachment_type_id', ['visible' => false]);
-        $this->field('staff_attachment_type_id', ['visible' => false]);
+        $this->field('student_attachment_type_id', ['visible' => true]);
+        $this->field('staff_attachment_type_id', ['visible' => true]);
         $UserTable = TableRegistry::getTableLocator()->get('User.Users');
         $user_id = $this->getUserID();
         $user = $UserTable->get($user_id); // POCOR-7485
-        
+        $this->setFieldOrder([
+            'name', 'file_content', 'date_on_file', 'security_roles', 'created_user_id', 'created'
+        ]);
+
         if ($user->is_staff == 1) {
 
             $staffAttachmentTypesTable = TableRegistry::getTableLocator()->get('Staff.StaffAttachmentTypes');
@@ -354,9 +365,6 @@ class AttachmentsTable extends ControllerActionTable
             $this->field('staff_attachment_type_id', ['visible' => false]);
         }
         $this->field('security_roles', ['attr' => ['label' => __('Shared')]]);
-        $this->setFieldOrder([
-            'file_content', 'security_roles', 'name', 'description' ,'created_user_id', 'created', 'date_on_file'
-        ]);
     }
 
     //END:POCOR-5067
@@ -391,7 +399,7 @@ class AttachmentsTable extends ControllerActionTable
             ]);
 
         } elseif ($user->is_student == 1) {
-            $studentAttachmentTypesTable = TableRegistry::get('Student.StudentAttachmentTypes');
+            $studentAttachmentTypesTable = TableRegistry::getTableLocator()->get('Student.StudentAttachmentTypes');
             $studentAttachmentTypeOptions = $studentAttachmentTypesTable->find('list', ['keyField' => 'id', 'valueField' => 'name'])->toArray();
             $this->fields['student_attachment_type_id']['type'] = 'select';
             $this->fields['student_attachment_type_id']['default'] = '1';
@@ -423,21 +431,16 @@ class AttachmentsTable extends ControllerActionTable
         $fileContent = 'file_content';
         $uploadedFile = $sentData[$fileContent];
         $fileName = 'file_name';
-        // $name = '';
-        // if ($uploadedFile instanceof UploadedFile) {
-        //     //$content = (string)$uploadedFile->getStream();
-        //     $error = $uploadedFile->getError();
-        //     if ($error === UPLOAD_ERR_OK) {
-        //         // Accessing the file contents
-        //         $content = (string)$uploadedFile->getStream();
-        //     }
-        //     $name = $uploadedFile->getClientFilename();
-
-        // }
+        $name = '';
         if ($uploadedFile instanceof UploadedFile) {
-            $content = (string)$uploadedFile->getStream();
-            $name = $uploadedFile->getClientFilename();
+            //$content = (string)$uploadedFile->getStream();
             $error = $uploadedFile->getError();
+            if ($error === UPLOAD_ERR_OK) {
+                // Accessing the file contents
+                $content = (string)$uploadedFile->getStream();
+            }
+            $name = $uploadedFile->getClientFilename();
+
         }
 
         if (isset($content) && isset($error) && $error == UPLOAD_ERR_OK) {

@@ -4,9 +4,9 @@
 			$baseUrl = $this->Url->build([
 					'plugin' => $this->request->getParam('plugin'),
 				    'controller' => $this->request->getParam('controller'),
-				    'action' => 'Absences',
+				    'action' => $this->request->getParam('action'),
 				    '0' => 'index',
-					'1' => $encodedQueryString,
+					'queryString' => $encodedQueryString,
 				]);
 
 			if (!empty($academicPeriodList)) {
