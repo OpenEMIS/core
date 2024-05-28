@@ -515,6 +515,13 @@ class InstitutionController extends Controller
      *         @OA\Schema(type="integer", example=10)
      *     ),
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -626,6 +633,13 @@ class InstitutionController extends Controller
      *         required=false,
      *         description="ID of the academic period",
      *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
      *     ),
      *     @OA\Parameter(
      *         name="page",
@@ -819,6 +833,13 @@ class InstitutionController extends Controller
      *     description="Returns list of institution subjects",
      *     tags={"Institutions"},
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
@@ -918,6 +939,13 @@ class InstitutionController extends Controller
      *         required=true,
      *         description="Insitution Id",
      *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
      *     ),
      *     @OA\Parameter(
      *         name="limit",
@@ -1112,6 +1140,13 @@ class InstitutionController extends Controller
      *     description="Returns list of institution shifts",
      *     tags={"Institutions"},
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
@@ -1190,6 +1225,13 @@ class InstitutionController extends Controller
      *         required=true,
      *         description="Institution Id",
      *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
      *     ),
      *     @OA\Parameter(
      *         name="limit",
@@ -1333,6 +1375,13 @@ class InstitutionController extends Controller
      *     description="Returns list of all institution area",
      *     tags={"Institutions"},
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
@@ -1415,6 +1464,13 @@ class InstitutionController extends Controller
      *         required=true,
      *         description="Institution Id",
      *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
      *     ),
      *     @OA\Parameter(
      *         name="limit",
@@ -1567,6 +1623,20 @@ class InstitutionController extends Controller
      *     description="Returns list of all institution summary",
      *     tags={"Institutions"},
      *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic period id",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="institution_code")
+     *     ),
+     *     @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
@@ -1656,6 +1726,20 @@ class InstitutionController extends Controller
      *         @OA\Schema(type="integer", example=10)
      *     ),
      *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic period id",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="institution_code")
+     *     ),
+     *     @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
@@ -1738,6 +1822,20 @@ class InstitutionController extends Controller
      *     description="Returns list of all institution grade summary",
      *     tags={"Institutions"},
      *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic period id",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="institution_code")
+     *     ),
+     *     @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
@@ -1815,6 +1913,20 @@ class InstitutionController extends Controller
      *         required=true,
      *         description="Institution Id",
      *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic period id",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="institution_code")
      *     ),
      *     @OA\Parameter(
      *         name="limit",
@@ -1902,29 +2014,59 @@ class InstitutionController extends Controller
      *         description="Grade Id",
      *         @OA\Schema(type="integer", example=61)
      *     ),
+     *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic period id",
+     *         @OA\Schema(type="integer", example=25)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="institution_code")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Successful.",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
-     *             @OA\Property(property="data", type="object",
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items(
      *                 type="object",
-     *                 @OA\Property(property="academic_period_id", type="integer", example=32),
-     *                 @OA\Property(property="academic_period_name", type="string", example="2022"),
-     *                 @OA\Property(property="institution_id", type="integer", example=6),
-     *                 @OA\Property(property="institution_code", type="string", example="P1002"),
-     *                 @OA\Property(property="grade_id", type="integer", example=32),
-     *                 @OA\Property(property="grade_name", type="string", example=null),
-     *                 @OA\Property(property="total_classes", type="integer", example=34),
-     *                 @OA\Property(property="total_classes_female", type="integer", example=12),
-     *                 @OA\Property(property="total_classes_male", type="integer", example=21),
-     *                 @OA\Property(property="total_classes_mixed", type="integer", example=1),
-     *                 @OA\Property(property="total_students", type="integer", example=11),
-     *                 @OA\Property(property="total_students_female", type="integer", example=8),
-     *                 @OA\Property(property="total_students_male", type="integer", example=3),
-     *                 @OA\Property(property="total_home_room_teachers", type="integer", example=3),
-     *                 @OA\Property(property="total_secondary_teachers", type="integer", example=2),
+     *                      @OA\Property(property="academic_period_id", type="integer", example=32),
+     *                      @OA\Property(property="academic_period_name", type="string", example="2022"),
+     *                      @OA\Property(property="institution_id", type="integer", example=6),
+     *                      @OA\Property(property="institution_code", type="string", example="P1002"),
+     *                      @OA\Property(property="grade_id", type="integer", example=32),
+     *                      @OA\Property(property="grade_name", type="string", example=null),
+     *                      @OA\Property(property="total_classes", type="integer", example=34),
+     *                      @OA\Property(property="total_classes_female", type="integer", example=12),
+     *                      @OA\Property(property="total_classes_male", type="integer", example=21),
+     *                      @OA\Property(property="total_classes_mixed", type="integer", example=1),
+     *                      @OA\Property(property="total_students", type="integer", example=11),
+     *                      @OA\Property(property="total_students_female", type="integer", example=8),
+     *                      @OA\Property(property="total_students_male", type="integer", example=3),
+     *                      @OA\Property(property="total_home_room_teachers", type="integer", example=3),
+     *                      @OA\Property(property="total_secondary_teachers", type="integer", example=2),
+     *                  )
      *              )
      *         )
      *     ),
@@ -1934,10 +2076,11 @@ class InstitutionController extends Controller
      *     )
      * )
      */
-    public function getInstitutionGradeSummariesData(int $institutionId, int $gradeId)
+    public function getInstitutionGradeSummariesData(Request $request, int $institutionId, int $gradeId)
     {
         try {
-            $data = $this->institutionService->getInstitutionGradeSummariesData($institutionId, $gradeId);
+            $params = $request->all();
+            $data = $this->institutionService->getInstitutionGradeSummariesData($params, $institutionId, $gradeId);
             return $this->sendSuccessResponse("Grade Summaries Data Found", $data);
             
         } catch (\Exception $e) {
@@ -1956,6 +2099,20 @@ class InstitutionController extends Controller
      *     summary="Get list of all institution student nationality summary",
      *     description="Returns list of all institution student nationality summary",
      *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic period id",
+     *         @OA\Schema(type="integer", example=25)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="total_students")
+     *     ),
      *     @OA\Parameter(
      *         name="limit",
      *         in="query",
@@ -2030,6 +2187,20 @@ class InstitutionController extends Controller
      *         @OA\Schema(type="integer", example=6)
      *     ),
      *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic period id",
+     *         @OA\Schema(type="integer", example=25)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="total_students")
+     *     ),
+     *     @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
@@ -2095,6 +2266,20 @@ class InstitutionController extends Controller
      *     summary="Get list of all institution grade student nationality summary",
      *     description="Returns list of all institution student nationality summary",
      *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic period id",
+     *         @OA\Schema(type="integer", example=25)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="total_students")
+     *     ),
      *     @OA\Parameter(
      *         name="limit",
      *         in="query",
@@ -2169,6 +2354,20 @@ class InstitutionController extends Controller
      *         required=true,
      *         description="Institution Id",
      *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic period id",
+     *         @OA\Schema(type="integer", example=25)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="total_students")
      *     ),
      *     @OA\Parameter(
      *         name="limit",
@@ -2253,6 +2452,20 @@ class InstitutionController extends Controller
      *         @OA\Schema(type="integer", example=61)
      *     ),
      *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic period id",
+     *         @OA\Schema(type="integer", example=25)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="total_students")
+     *     ),
+     *     @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
@@ -2321,6 +2534,13 @@ class InstitutionController extends Controller
      *     description="Returns list of all institution staff",
      *     tags={"Institutions"},
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
@@ -2357,6 +2577,18 @@ class InstitutionController extends Controller
      *                          @OA\Property(property="staff_status_name", type="string", example="Assigned"),
      *                          @OA\Property(property="institution_id", type="integer", example=6),
      *                          @OA\Property(property="institution_position_id", type="integer", example=42),
+     *                          @OA\Property(property="classes", type="array",
+     *                              @OA\Items(
+     *                                 @OA\Property(property="id", type="integer", example=524),
+     *                                 @OA\Property(property="name", type="string", example="Primary 1-A"),
+     *                                 @OA\Property(property="subjects", type="array",
+     *                                     @OA\Items(
+     *                                         @OA\Property(property="id", type="integer", example=4101),
+     *                                         @OA\Property(property="name", type="string", example="Social Studies")
+     *                                     )
+     *                                 )
+     *                             )
+     *                          ),
      *                          @OA\Property(property="security_group_user_id", type="string", example="7a37caf1-b411-4db4-9402-1c3163e158c0"),
      *                          @OA\Property(property="modified_user_id", type="integer", example=null),
      *                          @OA\Property(property="modified", type="string", example=null),
@@ -2407,6 +2639,13 @@ class InstitutionController extends Controller
      *         @OA\Schema(type="integer", example=6)
      *     ),
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
@@ -2443,6 +2682,18 @@ class InstitutionController extends Controller
      *                          @OA\Property(property="staff_status_name", type="string", example="Assigned"),
      *                          @OA\Property(property="institution_id", type="integer", example=6),
      *                          @OA\Property(property="institution_position_id", type="integer", example=42),
+     *                          @OA\Property(property="classes", type="array",
+     *                              @OA\Items(
+     *                                 @OA\Property(property="id", type="integer", example=524),
+     *                                 @OA\Property(property="name", type="string", example="Primary 1-A"),
+     *                                 @OA\Property(property="subjects", type="array",
+     *                                     @OA\Items(
+     *                                         @OA\Property(property="id", type="integer", example=4101),
+     *                                         @OA\Property(property="name", type="string", example="Social Studies")
+     *                                     )
+     *                                 )
+     *                             )
+     *                          ),
      *                          @OA\Property(property="security_group_user_id", type="string", example="7a37caf1-b411-4db4-9402-1c3163e158c0"),
      *                          @OA\Property(property="modified_user_id", type="integer", example=null),
      *                          @OA\Property(property="modified", type="string", example=null),
@@ -2520,6 +2771,18 @@ class InstitutionController extends Controller
      *                 @OA\Property(property="staff_status_name", type="string", example="Assigned"),
      *                 @OA\Property(property="institution_id", type="integer", example=6),
      *                 @OA\Property(property="institution_position_id", type="integer", example=42),
+     *                 @OA\Property(property="classes", type="array",
+     *                              @OA\Items(
+     *                                 @OA\Property(property="id", type="integer", example=524),
+     *                                 @OA\Property(property="name", type="string", example="Primary 1-A"),
+     *                                 @OA\Property(property="subjects", type="array",
+     *                                     @OA\Items(
+     *                                         @OA\Property(property="id", type="integer", example=4101),
+     *                                         @OA\Property(property="name", type="string", example="Social Studies")
+     *                                     )
+     *                                 )
+     *                             )
+     *                          ),
      *                 @OA\Property(property="security_group_user_id", type="string", example="7a37caf1-b411-4db4-9402-1c3163e158c0"),
      *                 @OA\Property(property="modified_user_id", type="integer", example=null),
      *                 @OA\Property(property="modified", type="string", example=null),
@@ -2555,6 +2818,71 @@ class InstitutionController extends Controller
     }
 
 
+
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/positions/list",
+     *     summary="Get a list of positions",
+     *     description="Retrieve a paginated list of positions for an institution with sorting options",
+     *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Field by which to order the results",
+     *         @OA\Schema(type="string", example="id")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number for pagination",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="data",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="position_id", type="integer", example=1),
+     *                         @OA\Property(property="status_id", type="integer", example=29),
+     *                         @OA\Property(property="status_name", type="string", example="Active"),
+     *                         @OA\Property(property="position_no", type="string", example="K0001-1522277303"),
+     *                         @OA\Property(property="staff_position_title_id", type="integer", example=240),
+     *                         @OA\Property(property="staff_position_title_name", type="string", example="Principal"),
+     *                         @OA\Property(property="institution_id", type="integer", example=1),
+     *                         @OA\Property(property="assignee_id", type="integer", example=8805),
+     *                         @OA\Property(property="modified_user_id", type="integer", example=2),
+     *                         @OA\Property(property="modified", type="string", format="date-time", example="2018-03-30 17:30:29"),
+     *                         @OA\Property(property="created_user_id", type="integer", example=2),
+     *                         @OA\Property(property="created", type="string", format="date-time", example="2018-03-28 22:48:26")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getPositionsList(Request $request)
     {
         try {
@@ -2585,6 +2913,13 @@ class InstitutionController extends Controller
      *         required=true,
      *         description="Institution Id",
      *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Field by which to order the results",
+     *         @OA\Schema(type="string", example="id")
      *     ),
      *     @OA\Parameter(
      *         name="limit",
@@ -2723,6 +3058,20 @@ class InstitutionController extends Controller
      *     description="Returns list of locale contents",
      *     tags={"Institutions"},
      *     @OA\Parameter(
+     *         name="locale_name",
+     *         in="query",
+     *         required=false,
+     *         description="Locale name",
+     *         @OA\Schema(type="string", example="test")
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Field by which to order the results",
+     *         @OA\Schema(type="string", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
@@ -2795,7 +3144,7 @@ class InstitutionController extends Controller
      *         in="path",
      *         required=true,
      *         description="Locale content translation Id",
-     *         @OA\Schema(type="integer", example=3281)
+     *         @OA\Schema(type="integer", example=76)
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -2852,6 +3201,13 @@ class InstitutionController extends Controller
      *         required=false,
      *         description="Academic period Id",
      *         @OA\Schema(type="integer", example=32)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
      *     ),
      *     @OA\Parameter(
      *         name="limit",
@@ -2923,6 +3279,13 @@ class InstitutionController extends Controller
      *         required=true,
      *         description="Institution Id",
      *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
      *     ),
      *     @OA\Parameter(
      *         name="limit",
@@ -3588,6 +3951,13 @@ class InstitutionController extends Controller
      *         @OA\Schema(type="integer", example=10)
      *     ),
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order.",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
@@ -3638,7 +4008,8 @@ class InstitutionController extends Controller
     public function getStudentAssessmentItemResult(Request $request, $institutionId, $studentId)
     {
         try {
-            $data = $this->institutionService->getStudentAssessmentItemResult($request, $institutionId, $studentId);
+            $params = $request->all();
+            $data = $this->institutionService->getStudentAssessmentItemResult($params, $institutionId, $studentId);
             
             return $this->sendSuccessResponse("Student Assessment Details Found", $data);
             
@@ -3658,6 +4029,13 @@ class InstitutionController extends Controller
      *     summary="Get list of address area level",
      *     description="Returns a list of address area level",
      *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
      *     @OA\Parameter(
      *         name="limit",
      *         in="query",
@@ -3696,7 +4074,8 @@ class InstitutionController extends Controller
     public function displayAddressAreaLevel(Request $request)
     {
         try {
-            $data = $this->institutionService->displayAddressAreaLevel($request);
+            $params = $request->all();
+            $data = $this->institutionService->displayAddressAreaLevel($params);
             
             return $this->sendSuccessResponse("Address area level area found.", $data);
             
@@ -3716,6 +4095,13 @@ class InstitutionController extends Controller
      *     summary="Get list of birthplace area level",
      *     description="Returns a list of birthplace area level",
      *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
      *     @OA\Parameter(
      *         name="limit",
      *         in="query",
@@ -3754,7 +4140,8 @@ class InstitutionController extends Controller
     public function displayBirthplaceAreaLevel(Request $request)
     {
         try {
-            $data = $this->institutionService->displayBirthplaceAreaLevel($request);
+            $params = $request->all();
+            $data = $this->institutionService->displayBirthplaceAreaLevel($params);
             
             return $this->sendSuccessResponse("Birthplace area level area found.", $data);
             
