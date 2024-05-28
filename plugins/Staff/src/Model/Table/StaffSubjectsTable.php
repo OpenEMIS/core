@@ -220,9 +220,6 @@ class StaffSubjectsTable extends ControllerActionTable {
         $tabElements = $this->getCareerTabElements($options);
         $controllerName = $this->controller->getName();
         $selectedAction = 'Subjects';
-        if($controllerName == 'Directories') {
-            $selectedAction = 'StaffSubjects';
-        }
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $selectedAction);
 

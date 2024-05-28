@@ -123,9 +123,6 @@ class EmploymentStatusesTable extends ControllerActionTable {
 		$tabElements = $this->getCareerTabElements($options);
         $controllerName = $this->controller->getName();
         $selectedAction = $this->getAlias();
-        if($controllerName == 'Directories') {
-            $selectedAction = 'Staff'.$this->getAlias();
-        }
         $this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $selectedAction);
 	}
