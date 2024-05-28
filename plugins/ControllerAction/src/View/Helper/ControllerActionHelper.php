@@ -254,19 +254,25 @@ class ControllerActionHelper extends Helper
     public function getTableRow(Entity $entity, array $fields, $searchableFields = [])
     {
         $row = [];
-
+        $request = $this->_View->getRequest();
         $search = '';
-        if ($this->request !== null && $this->request->getData('Search') !== null) {
-            $searchData = $this->request->getData('Search');
+        if ($request !== null && $request->getData('Search') !== null) {
+            $searchData = $request->getData('Search');
 
             if (array_key_exists('searchField', $searchData)) {
-                $search = $this->request->getData('Search')['searchField'];
+                $search = $request->getData('Search')['searchField'];
             }
         }
 
 
         if (null !== $searchData && array_key_exists('searchField', $searchData)) {
-            $search = $this->request->getData('Search')['searchField'];
+            $search = $request->getData('Search')['searchField'];
+        }
+        if(empty($search)) {
+            $session = $request->getSession();
+            $alias = $request->getParam('plugin'). '.' .$request->getParam('action'); 
+            $alias = $session->check('search.search_alias') ? $session->read('search.search_alias') : $alias;
+            $search = $session->check($alias.'.search.key') ? $session->read($alias.'.search.key') : '';// dd($search);
         }
 
         $table = null;
