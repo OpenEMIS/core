@@ -268,6 +268,7 @@ class ControllerActionHelper extends Helper
         if (null !== $searchData && array_key_exists('searchField', $searchData)) {
             $search = $request->getData('Search')['searchField'];
         }
+        // display highlight value in result
         if(empty($search)) {
             $session = $request->getSession();
             $alias = $request->getParam('plugin'). '.' .$request->getParam('action'); 

@@ -869,7 +869,7 @@ class DirectoriesController extends AppController
     public function getUserTabElements($options = [])
     {
         if (array_key_exists('queryString', $this->request->getQuery())) { //to filter if the URL already contain querystring
-            $id = $this->ControllerAction->getQueryString('security_user_id');
+            $id = $this->getQueryString('security_user_id');
         }
         $plugin = $this->getPlugin();
         $name = $this->getName();    
