@@ -124,6 +124,9 @@ class StaffTabBehavior extends Behavior
                     $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString]);
                 }
         }
+        if($controllerName == "Directories") {
+            unset($tabElements['StaffCurriculars']);
+        }
         return $tabElements;
     }
 
