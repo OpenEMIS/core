@@ -32,23 +32,16 @@ class SearchBehavior extends Behavior {
 		$search = $session->check($alias.'.search.key') ? $session->read($alias.'.search.key') : '';
 
 		if ($request->is(['post', 'put'])) {
-			//if (isset($request->data['Search'])) {
 			if (isset($request->getData()['Search'])) {
-				//if (array_key_exists('searchField', $request->data['Search'])) {
 				if (array_key_exists('searchField', $request->getData()['Search'])) {
-					//$search = trim($request->data['Search']['searchField']);
 					$search = trim($request->getData()['Search']['searchField']);
 				}
 			}
-			// cakephp4 add
-			//$request->data['Search']['searchField'] = $search;
-			$request->getData()['Search']['searchField'] = $search;
 		}
-
+		$session->write('search.search_alias', $alias);
 		$session->write($alias.'.search.key', $search);
-		//commnet cakephp4
-		//$request->data['Search']['searchField'] = $search;
-
+		$request->getData()['Search']['searchField'] = $search;
+		$request = $request->withData('Search.searchField', $search);
 		$extra['config']['search'] = $search;
 	}
 
