@@ -258,7 +258,6 @@ class AppController extends Controller
             $basePath = Router::url(['controller' => '', 'action' => 'index', 'plugin' => false]) === '/' ? '/' : Router::url(['controller' => 'false', 'action' => 'index', 'plugin' => false]) . '/';
 
             $loginBackground = $basePath . Configure::read('App.imageBaseUrl') . $themes['login_page_image'];
-            // echo "<pre>";print_r($loginBackground);die;
             $file = new File($customPath . 'layout.core.template.css');
             $template = $file->read();
             $file->close();
