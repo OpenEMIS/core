@@ -551,10 +551,10 @@ class InstitutionService extends Controller
 
 
 
-    public function getInstitutionGradeSummariesData(int $institutionId, int $gradeId)
+    public function getInstitutionGradeSummariesData($params, int $institutionId, int $gradeId)
     {
         try {
-            $data = $this->institutionRepository->getInstitutionGradeSummariesData($institutionId, $gradeId);
+            $data = $this->institutionRepository->getInstitutionGradeSummariesData($params, $institutionId, $gradeId);
             return $data;
             
         } catch (\Exception $e) {
@@ -1243,14 +1243,14 @@ class InstitutionService extends Controller
     }
 
 
-    public function getStudentAssessmentItemResult($request, $institutionId, $studentId)
+    public function getStudentAssessmentItemResult($params, $institutionId, $studentId)
     {
         try {
-            $lists = $this->institutionRepository->getStudentAssessmentItemResult($request, $institutionId, $studentId);
+            $lists = $this->institutionRepository->getStudentAssessmentItemResult($params, $institutionId, $studentId);
             $resp = [];
 
             if(count($lists) > 0){
-                foreach($lists as $k => $l){
+                foreach($lists['data'] as $k => $l){
                     $resp[$k]['id'] = $l['id'];
                     $resp[$k]['academic_period_id'] = $l['academic_period_id'];
                     $resp[$k]['assessment_grading_option_id'] = $l['assessment_grading_option_id'];
@@ -1269,7 +1269,14 @@ class InstitutionService extends Controller
                 }
             }
 
-            return $resp;
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $lists['data'] = $resp;
+                return $lists;
+            } else {
+                return $resp;
+            }
+            //For POCOR-8215/8216 end...
             
         } catch (\Exception $e) {
             Log::error(
@@ -1281,19 +1288,29 @@ class InstitutionService extends Controller
         }
     }
 
-    public function displayAddressAreaLevel($request)
+    public function displayAddressAreaLevel($params)
     {
         try {
-            $data = $this->institutionRepository->displayAddressAreaLevel($request)->map(
-                function ($item, $key) {
-                    return [
-                        "id" => $item->id,
-                        "name" => $item->name,
-                    ];
-                }
-            );
+            $data = $this->institutionRepository->displayAddressAreaLevel($params);
 
-            return $data;
+            $resp = [];
+            if(!empty($data)){
+                foreach($data['data'] as $k => $d){
+                    $resp[$k]['id'] = $d['id'];
+                    $resp[$k]['name'] = $d['name'];
+                }
+            }
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $data['data'] = $resp;
+                return $data;
+            } else {
+                return $resp;
+            }
+            //For POCOR-8215/8216 end...
+
+            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to get address area level area.',
@@ -1305,19 +1322,27 @@ class InstitutionService extends Controller
     }
 
 
-    public function displayBirthplaceAreaLevel($request)
+    public function displayBirthplaceAreaLevel($params)
     {
         try {
-            $data = $this->institutionRepository->displayBirthplaceAreaLevel($request)->map(
-                function ($item, $key) {
-                    return [
-                        "id" => $item->id,
-                        "name" => $item->name,
-                    ];
+            $data = $this->institutionRepository->displayBirthplaceAreaLevel($params);
+            
+            $resp = [];
+            if(!empty($data)){
+                foreach($data['data'] as $k => $d){
+                    $resp[$k]['id'] = $d['id'];
+                    $resp[$k]['name'] = $d['name'];
                 }
-            );
+            }
 
-            return $data;
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $data['data'] = $resp;
+                return $data;
+            } else {
+                return $resp;
+            }
+            //For POCOR-8215/8216 end...
         } catch (\Exception $e) {
             Log::error(
                 'Failed to get birthplace area level area.',

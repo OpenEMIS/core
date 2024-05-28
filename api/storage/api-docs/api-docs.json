@@ -10070,6 +10070,16 @@
                         }
                     },
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number for pagination",
@@ -10278,6 +10288,16 @@
                         "schema": {
                             "type": "integer",
                             "example": 10
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
                         }
                     },
                     {
@@ -10777,6 +10797,16 @@
                 "operationId": "df075040b8abe9912048722ede071786",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "limit",
                         "in": "query",
                         "description": "Number of items to return per page",
@@ -10968,6 +10998,16 @@
                         "schema": {
                             "type": "integer",
                             "example": 6
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
                         }
                     },
                     {
@@ -11334,6 +11374,16 @@
                 "operationId": "e88d27a02fa17ef39c2c76b908973797",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "limit",
                         "in": "query",
                         "description": "Number of items to return per page",
@@ -11468,6 +11518,16 @@
                         "schema": {
                             "type": "integer",
                             "example": 6
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
                         }
                     },
                     {
@@ -11717,6 +11777,16 @@
                 "operationId": "606126c47780f970da23a85ef13042ef",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "limit",
                         "in": "query",
                         "description": "Number of items to return per page",
@@ -11864,6 +11934,16 @@
                         "schema": {
                             "type": "integer",
                             "example": 6
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
                         }
                     },
                     {
@@ -12139,6 +12219,26 @@
                 "operationId": "7e8dcca95cde7177b8deb78ac41dc092",
                 "parameters": [
                     {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "Academic period id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "institution_code"
+                        }
+                    },
+                    {
                         "name": "limit",
                         "in": "query",
                         "description": "Number of items to return per page",
@@ -12315,6 +12415,26 @@
                         }
                     },
                     {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "Academic period id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "institution_code"
+                        }
+                    },
+                    {
                         "name": "limit",
                         "in": "query",
                         "description": "Number of items to return per page",
@@ -12481,6 +12601,26 @@
                 "operationId": "9d2ad019eb67cf32a264eee3fa36d377",
                 "parameters": [
                     {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "Academic period id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "institution_code"
+                        }
+                    },
+                    {
                         "name": "limit",
                         "in": "query",
                         "description": "Number of items to return per page",
@@ -12614,6 +12754,26 @@
                         "schema": {
                             "type": "integer",
                             "example": 10
+                        }
+                    },
+                    {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "Academic period id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "institution_code"
                         }
                     },
                     {
@@ -12761,6 +12921,46 @@
                             "type": "integer",
                             "example": 61
                         }
+                    },
+                    {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "Academic period id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 25
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "institution_code"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items to return per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
                     }
                 ],
                 "responses": {
@@ -12775,69 +12975,72 @@
                                             "example": "Successful."
                                         },
                                         "data": {
-                                            "properties": {
-                                                "academic_period_id": {
-                                                    "type": "integer",
-                                                    "example": 32
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "academic_period_id": {
+                                                        "type": "integer",
+                                                        "example": 32
+                                                    },
+                                                    "academic_period_name": {
+                                                        "type": "string",
+                                                        "example": "2022"
+                                                    },
+                                                    "institution_id": {
+                                                        "type": "integer",
+                                                        "example": 6
+                                                    },
+                                                    "institution_code": {
+                                                        "type": "string",
+                                                        "example": "P1002"
+                                                    },
+                                                    "grade_id": {
+                                                        "type": "integer",
+                                                        "example": 32
+                                                    },
+                                                    "grade_name": {
+                                                        "type": "string",
+                                                        "example": null
+                                                    },
+                                                    "total_classes": {
+                                                        "type": "integer",
+                                                        "example": 34
+                                                    },
+                                                    "total_classes_female": {
+                                                        "type": "integer",
+                                                        "example": 12
+                                                    },
+                                                    "total_classes_male": {
+                                                        "type": "integer",
+                                                        "example": 21
+                                                    },
+                                                    "total_classes_mixed": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "total_students": {
+                                                        "type": "integer",
+                                                        "example": 11
+                                                    },
+                                                    "total_students_female": {
+                                                        "type": "integer",
+                                                        "example": 8
+                                                    },
+                                                    "total_students_male": {
+                                                        "type": "integer",
+                                                        "example": 3
+                                                    },
+                                                    "total_home_room_teachers": {
+                                                        "type": "integer",
+                                                        "example": 3
+                                                    },
+                                                    "total_secondary_teachers": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    }
                                                 },
-                                                "academic_period_name": {
-                                                    "type": "string",
-                                                    "example": "2022"
-                                                },
-                                                "institution_id": {
-                                                    "type": "integer",
-                                                    "example": 6
-                                                },
-                                                "institution_code": {
-                                                    "type": "string",
-                                                    "example": "P1002"
-                                                },
-                                                "grade_id": {
-                                                    "type": "integer",
-                                                    "example": 32
-                                                },
-                                                "grade_name": {
-                                                    "type": "string",
-                                                    "example": null
-                                                },
-                                                "total_classes": {
-                                                    "type": "integer",
-                                                    "example": 34
-                                                },
-                                                "total_classes_female": {
-                                                    "type": "integer",
-                                                    "example": 12
-                                                },
-                                                "total_classes_male": {
-                                                    "type": "integer",
-                                                    "example": 21
-                                                },
-                                                "total_classes_mixed": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "total_students": {
-                                                    "type": "integer",
-                                                    "example": 11
-                                                },
-                                                "total_students_female": {
-                                                    "type": "integer",
-                                                    "example": 8
-                                                },
-                                                "total_students_male": {
-                                                    "type": "integer",
-                                                    "example": 3
-                                                },
-                                                "total_home_room_teachers": {
-                                                    "type": "integer",
-                                                    "example": 3
-                                                },
-                                                "total_secondary_teachers": {
-                                                    "type": "integer",
-                                                    "example": 2
-                                                }
-                                            },
-                                            "type": "object"
+                                                "type": "object"
+                                            }
                                         }
                                     },
                                     "type": "object"
@@ -12860,6 +13063,26 @@
                 "description": "Returns list of all institution student nationality summary",
                 "operationId": "59bf2549252dc92043589475040f8c75",
                 "parameters": [
+                    {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "Academic period id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 25
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "total_students"
+                        }
+                    },
                     {
                         "name": "limit",
                         "in": "query",
@@ -12973,6 +13196,26 @@
                         }
                     },
                     {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "Academic period id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 25
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "total_students"
+                        }
+                    },
+                    {
                         "name": "limit",
                         "in": "query",
                         "description": "Number of items to return per page",
@@ -13074,6 +13317,26 @@
                 "description": "Returns list of all institution student nationality summary",
                 "operationId": "3e333e0a6bfa51f4eec6ec0af5770542",
                 "parameters": [
+                    {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "Academic period id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 25
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "total_students"
+                        }
+                    },
                     {
                         "name": "limit",
                         "in": "query",
@@ -13192,6 +13455,26 @@
                         "schema": {
                             "type": "integer",
                             "example": 6
+                        }
+                    },
+                    {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "Academic period id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 25
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "total_students"
                         }
                     },
                     {
@@ -13325,6 +13608,26 @@
                         }
                     },
                     {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "Academic period id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 25
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "total_students"
+                        }
+                    },
+                    {
                         "name": "limit",
                         "in": "query",
                         "description": "Number of items to return per page",
@@ -13435,6 +13738,16 @@
                 "operationId": "ead96f5337727738b36330d9525ee85b",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "limit",
                         "in": "query",
                         "description": "Number of items to return per page",
@@ -13523,6 +13836,38 @@
                                                             "institution_position_id": {
                                                                 "type": "integer",
                                                                 "example": 42
+                                                            },
+                                                            "classes": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "integer",
+                                                                            "example": 524
+                                                                        },
+                                                                        "name": {
+                                                                            "type": "string",
+                                                                            "example": "Primary 1-A"
+                                                                        },
+                                                                        "subjects": {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "properties": {
+                                                                                    "id": {
+                                                                                        "type": "integer",
+                                                                                        "example": 4101
+                                                                                    },
+                                                                                    "name": {
+                                                                                        "type": "string",
+                                                                                        "example": "Social Studies"
+                                                                                    }
+                                                                                },
+                                                                                "type": "object"
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
                                                             },
                                                             "security_group_user_id": {
                                                                 "type": "string",
@@ -13660,6 +14005,16 @@
                         }
                     },
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "limit",
                         "in": "query",
                         "description": "Number of items to return per page",
@@ -13748,6 +14103,38 @@
                                                             "institution_position_id": {
                                                                 "type": "integer",
                                                                 "example": 42
+                                                            },
+                                                            "classes": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "integer",
+                                                                            "example": 524
+                                                                        },
+                                                                        "name": {
+                                                                            "type": "string",
+                                                                            "example": "Primary 1-A"
+                                                                        },
+                                                                        "subjects": {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "properties": {
+                                                                                    "id": {
+                                                                                        "type": "integer",
+                                                                                        "example": 4101
+                                                                                    },
+                                                                                    "name": {
+                                                                                        "type": "string",
+                                                                                        "example": "Social Studies"
+                                                                                    }
+                                                                                },
+                                                                                "type": "object"
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
                                                             },
                                                             "security_group_user_id": {
                                                                 "type": "string",
@@ -13895,6 +14282,38 @@
                                                     "type": "integer",
                                                     "example": 42
                                                 },
+                                                "classes": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 524
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Primary 1-A"
+                                                            },
+                                                            "subjects": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "integer",
+                                                                            "example": 4101
+                                                                        },
+                                                                        "name": {
+                                                                            "type": "string",
+                                                                            "example": "Social Studies"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
                                                 "security_group_user_id": {
                                                     "type": "string",
                                                     "example": "7a37caf1-b411-4db4-9402-1c3163e158c0"
@@ -13942,6 +14361,132 @@
                 }
             }
         },
+        "/api/v4/institutions/positions/list": {
+            "get": {
+                "tags": [
+                    "Institutions"
+                ],
+                "summary": "Get a list of positions",
+                "description": "Retrieve a paginated list of positions for an institution with sorting options",
+                "operationId": "28365e19d7230af3b6a7436b774c6245",
+                "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Field by which to order the results",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "id"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number for pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "position_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "status_id": {
+                                                                "type": "integer",
+                                                                "example": 29
+                                                            },
+                                                            "status_name": {
+                                                                "type": "string",
+                                                                "example": "Active"
+                                                            },
+                                                            "position_no": {
+                                                                "type": "string",
+                                                                "example": "K0001-1522277303"
+                                                            },
+                                                            "staff_position_title_id": {
+                                                                "type": "integer",
+                                                                "example": 240
+                                                            },
+                                                            "staff_position_title_name": {
+                                                                "type": "string",
+                                                                "example": "Principal"
+                                                            },
+                                                            "institution_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "assignee_id": {
+                                                                "type": "integer",
+                                                                "example": 8805
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2018-03-30 17:30:29"
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2018-03-28 22:48:26"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
         "/api/v4/institutions/{institutionId}/positions": {
             "get": {
                 "tags": [
@@ -13959,6 +14504,16 @@
                         "schema": {
                             "type": "integer",
                             "example": 10
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Field by which to order the results",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "id"
                         }
                     },
                     {
@@ -14186,6 +14741,26 @@
                 "operationId": "2d96b00e4e59ef0d7cd1211c9cd4b7f7",
                 "parameters": [
                     {
+                        "name": "locale_name",
+                        "in": "query",
+                        "description": "Locale name",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "test"
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Field by which to order the results",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "limit",
                         "in": "query",
                         "description": "Number of items to return per page",
@@ -14300,7 +14875,7 @@
                         "required": true,
                         "schema": {
                             "type": "integer",
-                            "example": 3281
+                            "example": 76
                         }
                     }
                 ],
@@ -14391,6 +14966,16 @@
                         "schema": {
                             "type": "integer",
                             "example": 32
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
                         }
                     },
                     {
@@ -14491,6 +15076,16 @@
                         "schema": {
                             "type": "integer",
                             "example": 6
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
                         }
                     },
                     {
@@ -15306,6 +15901,16 @@
                         }
                     },
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "limit",
                         "in": "query",
                         "description": "Number of items to return per page",
@@ -15427,6 +16032,16 @@
                 "operationId": "05ce4a8310579e480e6f6aa2a6430403",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "limit",
                         "in": "query",
                         "description": "Number of items to return per page",
@@ -15495,6 +16110,16 @@
                 "description": "Returns a list of birthplace area level",
                 "operationId": "e2b9ba0a32aa9b392c099368a49008a6",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
                     {
                         "name": "limit",
                         "in": "query",
