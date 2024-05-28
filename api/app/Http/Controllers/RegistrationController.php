@@ -24,8 +24,8 @@ class RegistrationController extends Controller
     /**
      * @OA\Get(
      *      path="/api/v4/academic-periods/list",
-     *      summary="Get list of education grades",
-     *      description="Get list of education grades",
+     *      summary="Get list of current academic year",
+     *      description="Get list of current academic year",
      *      tags={"Academic Period"},
      *      @OA\Parameter(
      *         name="page",
@@ -1008,10 +1008,11 @@ class RegistrationController extends Controller
      *      )
      * )
      */
-    public function areaLevelsDropdown()
+    public function areaLevelsDropdown(Request $request)
     {
         try {
-            $data = $this->registrationService->areaLevelsDropdown();
+            $params = $request->all();
+            $data = $this->registrationService->areaLevelsDropdown($params);
             
             return $this->sendSuccessResponse("Area Levels List Found", $data);
             
@@ -1124,10 +1125,11 @@ class RegistrationController extends Controller
      *      )
      * )
      */
-    public function areaAdministrativeLevelsDropdown()
+    public function areaAdministrativeLevelsDropdown(Request $request)
     {
         try {
-            $data = $this->registrationService->areaAdministrativeLevelsDropdown();
+            $params = $request->all();
+            $data = $this->registrationService->areaAdministrativeLevelsDropdown($params);
             
             return $this->sendSuccessResponse("Area Administrative Levels List Found", $data);
             
@@ -1149,10 +1151,10 @@ class RegistrationController extends Controller
      *      description="Get area administrative list",
      *      tags={"Areas"},
      *      @OA\Parameter(
-     *         name="area_level_id",
+     *         name="area_administrative_level_id",
      *         in="query",
-     *         description="Id of area level",
-     *         @OA\Schema(type="integer", example=4)
+     *         description="Id of area administrative level",
+     *         @OA\Schema(type="integer", example=1)
      *      ),
      *      @OA\Parameter(
      *         name="page",
@@ -1178,7 +1180,7 @@ class RegistrationController extends Controller
      *                 @OA\Items(
      *                     type="object",
      *                     @OA\Property(property="id", type="integer", example=5),
-     *                     @OA\Property(property="name", type="string", example="Continent")
+     *                     @OA\Property(property="name", type="string", example="District")
      *                 )
      *             )
      *          )
