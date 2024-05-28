@@ -166,23 +166,32 @@ class MealRepository extends Controller
                     'institution_class_students.student_id as student_id',
                 )
                 //->select(DB::raw("$default_meal_receive_id as default_meal_receive_id"))
-                ->groupby('institution_class_students.student_id')
-                ->get()
-                ->toArray();
+                ->groupby('institution_class_students.student_id');
 
-                $total = 0;
-                
+                if (isset($options['limit'])) {
+                    $query = $query->paginate($options['limit']);
+                } else {
+                    $query = $query->get();
+                }
                 if(count($query) > 0){
-                    $total = count($query);
-                    foreach($query as $key => $q){
-                        $resp['data'][$key] = $q;
-                        $resp['data'][$key]['default_meal_receive_id'] = $default_meal_receive_id??0;
-                        
+
+                    if (isset($options['limit'])) {
+                        $query->getCollection()->transform(function ($item, $key) use ($default_meal_receive_id) {
+                           $item->default_meal_receive_id = $default_meal_receive_id;
+                           return  $item;
+                        });
+                        $resp  = $query->toArray();
+                    } else {
+                        $query = $query->map(
+                            function ($item, $key) use ($default_meal_receive_id) {
+                                $item->default_meal_receive_id = $default_meal_receive_id;
+                                return  $item;
+                            }
+                        );
+                        $resp['data'] = $query;
                     }
                 }
-                $resp['total'] = $total;
-
-
+                
                 //For POCOR-8210 Start...
                 $helpUrl = "";
                 $getHelpUrl = $this->getHelpUrl();
@@ -193,13 +202,13 @@ class MealRepository extends Controller
                 $insId = '{"id":'.$institutionId.'}';
                 $encodedInstitutionID = base64_encode($insId);
                 $encodedInstitutionID = rtrim($encodedInstitutionID, "=");
-                
-                $resp['url'] = [
+                $urls = [
                     'import' => 'Institution/Institutions/'.$encodedInstitutionID.'.cake_session_id/ImportStudentMeals/add',
 
                     'export' => 'Institution/Institutions/'.$encodedInstitutionID.'.cake_session_id/StudentMeals/excel?institution_id='.$institutionId.'&institution_class_id='.$institutionClassId.'&education_grade_id=undefined&academic_period_id='.$academicPeriodId.'&day_id='.$day.'&attendance_period_id=undefined&week_start_day='.$weekStartDay.'&week_end_day='.$weekEndDay.'&subject_id=undefined&week_id='.$weekId,
                     'help' => $helpUrl
                 ];
+                $resp['url'] = $urls;
                 //For POCOR-8210 End...
 
                 return $resp;
@@ -208,6 +217,7 @@ class MealRepository extends Controller
             }
             
         } catch (\Exception $e) {
+
             Log::error(
                 'Failed to fetch Student Meals List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]

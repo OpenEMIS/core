@@ -454,17 +454,28 @@ class RegistrationService extends Controller
     }
 
 
-    public function areaLevelsDropdown()
+    public function areaLevelsDropdown($params)
     {
         try {
-            $data = $this->registrationRepository->areaLevelsDropdown()->map(
-                function ($item, $key) {
+            $data = $this->registrationRepository->areaLevelsDropdown($params);
+
+            if (isset($params['limit'])) {
+                $data->getCollection()->transform(function ($item, $key) {
                     return [
                         "id" => $item->id,
                         "name" => $item->name,
                     ];
-                }
-            );
+                });
+            } else {
+                $data = $data->map(
+                    function ($item, $key) {
+                        return [
+                            "id" => $item->id,
+                            "name" => $item->name,
+                        ];
+                    }
+                );
+            }
             
             return $data;
             
@@ -482,14 +493,25 @@ class RegistrationService extends Controller
     public function areasDropdown($request)
     {
         try {
-            $data = $this->registrationRepository->areasDropdown($request)->map(
-                function ($item, $key) {
+            $data = $this->registrationRepository->areasDropdown($request);
+
+            if (isset($request['limit'])) {
+                $data->getCollection()->transform(function ($item, $key) {
                     return [
                         "id" => $item->id,
                         "name" => $item->name,
                     ];
-                }
-            );
+                });
+            } else {
+                $data = $data->map(
+                    function ($item, $key) {
+                        return [
+                            "id" => $item->id,
+                            "name" => $item->name,
+                        ];
+                    }
+                );
+            }
             
             return $data;
             
@@ -505,20 +527,31 @@ class RegistrationService extends Controller
 
 
 
-    public function areaAdministrativeLevelsDropdown()
+    public function areaAdministrativeLevelsDropdown($params)
     {
         try {
-            $data = $this->registrationRepository->areaAdministrativeLevelsDropdown()->map(
-                function ($item, $key) {
+            $data = $this->registrationRepository->areaAdministrativeLevelsDropdown($params);
+
+            if (isset($params['limit'])) {
+                $data->getCollection()->transform(function ($item, $key) {
                     return [
                         "id" => $item->id,
                         "name" => $item->name,
                     ];
-                }
-            );
-            
+                });
+            } else {
+                $data = $data->map(
+                    function ($item, $key) {
+                        return [
+                            "id" => $item->id,
+                            "name" => $item->name,
+                        ];
+                    }
+                );
+            }
+
             return $data;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -533,17 +566,27 @@ class RegistrationService extends Controller
     public function areasAdministrativeDropdown($request)
     {
         try {
-            $data = $this->registrationRepository->areasAdministrativeDropdown($request)->map(
-                function ($item, $key) {
+            $data = $this->registrationRepository->areasAdministrativeDropdown($request);
+
+            if (isset($request['limit'])) {
+                $data->getCollection()->transform(function ($item, $key) {
                     return [
                         "id" => $item->id,
                         "name" => $item->name,
                     ];
-                }
-            );
-            
+                });
+            } else {
+                $data = $data->map(
+                    function ($item, $key) {
+                        return [
+                            "id" => $item->id,
+                            "name" => $item->name,
+                        ];
+                    }
+                );
+            }
+
             return $data;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',

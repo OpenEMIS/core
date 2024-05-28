@@ -218,6 +218,20 @@ class ScheduleController extends Controller
      *         description="Timetable id",
      *         @OA\Schema(type="integer", example="1")
      *      ),
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -429,8 +443,8 @@ class ScheduleController extends Controller
     /**
      * @OA\Get(
      *      path="/api/v4/schedules/timeslots/{intervalId}",
-     *      summary="Get details of timeslost by interval id",
-     *      description="Get details of timeslost by interval id",
+     *      summary="Get list of time slots by interval id",
+     *      description="Get list of time slots by interval id",
      *      tags={"Institution time table"},
      *      @OA\Parameter(
      *         name="intervalId",
@@ -438,6 +452,20 @@ class ScheduleController extends Controller
      *         required=true,
      *         description="Interval Id",
      *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
      *     ),
      *      @OA\Response(
      *          response=200,
