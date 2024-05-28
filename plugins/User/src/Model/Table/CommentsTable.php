@@ -42,7 +42,12 @@ class CommentsTable extends ControllerActionTable
     */
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $user_id = $this->getUserID();
         $this->field('comment_type_id', ['type' => 'select']);
+        if($this->request->getParam('controller') == 'Staff') {
+            $this->field('security_user_id', ['attr' => ['value' => $user_id], 'type' => 'hidden']);
+        }
+        
     }
 
     public function findIndex(Query $query, array $options)
@@ -72,6 +77,13 @@ class CommentsTable extends ControllerActionTable
 			$helpBtn['attr']['title'] = __('Help');
 			$extra['toolbarButtons']['help'] = $helpBtn;
 		}
+        if($this->request->getParam('controller') == 'Directories' || $this->request->getParam('controller') == 'Staff') {
+            $this->field('security_user_id', ['visible' => false]);
+            $this->setFieldOrder([
+                'comment_date', 'comment_type_id', 'title', 'comment'
+            ]);
+        }
+        
     }
 
 
