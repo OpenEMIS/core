@@ -619,11 +619,10 @@ class ValidationBehavior extends Behavior
         if ($field == "0") {
             $tableObj =  get_object_vars($globalData['providers']['table']);
             if (!empty($tableObj)) {
-                //$className = $tableObj['controller']->modelClass;//cakephp 3
-                $tableController = $tableObj['controller'];//POCOR-7485
-                $modelClass = $tableController->loadModel();//POCOR-7485
-                //$newEntity = TableRegistry::getTableLocator()->get($className);//cakephp 3
-                $recordWithField = $modelClass->find()
+                // $className = $tableObj['controller']->modelClass;
+                $className = $globalData['providers']['custom']->getRegistryAlias();
+                $newEntity = TableRegistry::getTableLocator()->get($className);
+                $recordWithField = $newEntity->find()
                                             ->select([$fieldName])
                                             ->where([$fieldName => 1]);
 

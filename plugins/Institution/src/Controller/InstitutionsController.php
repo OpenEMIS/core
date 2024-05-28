@@ -1850,12 +1850,108 @@ public function ClassReportCards()
         }
     }
 
+    /******Commented this code becouse it is not working with the $subaction == 'view' */
+    // public function Classes($subaction = 'index', $classId = null)
+    // {
+    //     if ($subaction == 'edit' || $subaction == 'view') {
+    //         $session = $this->request->getSession();
+    //         $queryString = $this->getQueryString();
+    //         $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
+    //         $roles = [];
+    //         $classId = $this->ControllerAction->paramsDecode($classId);
+    //         $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+    //         if (!$this->AccessControl->isAdmin() && $institutionId) {
+    //             $userId = $this->Auth->user('id');
+    //             $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+    //             $AccessControl = $this->AccessControl;
+    //             $action = 'edit';
+    //             if (!$AccessControl->check(['Institutions', 'AllClasses', $action], $roles)) {
+    //                 if ($AccessControl->check(['Institutions', 'Classes', $action], $roles)) {
+    //                     $ClassTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+
+    //                     $classResults = $ClassTable
+    //                         ->find('byAccess', [
+    //                             'accessControl' => $AccessControl,
+    //                             'userId' => $userId,
+    //                             'permission' => $subaction,
+    //                             'controller' => $this
+    //                         ])
+    //                         ->where([$ClassTable->aliasField('id') => $classId['id']])
+    //                         ->all();
+
+    //                         if ($classResults->isEmpty()) {
+    //                             $this->Alert->error('security.noAccess');
+    //                             $url = ['plugin' => $this->getPlugin(),
+    //                                 'controller' => $this->getName(),
+    //                                 'action' => 'dashboard',
+    //                                 //'0' => 'index',
+    //                                 '1' => $encodedQueryString ];
+    //                             return $this->redirect($url);
+    //                         }
+    //                 } else {
+    //                     $this->Alert->error('security.noAccess');
+    //                     $url = ['plugin' => $this->getPlugin(),
+    //                         'controller' => $this->getName(),
+    //                         'action' => 'Classes',
+    //                         '0' => 'index',
+    //                         '1' => $encodedQueryString ];
+    //                     return $this->redirect($url);
+    //                 }
+    //             }
+    //         }
+    //         $viewUrl = $this->ControllerAction->url('view');
+    //         $viewUrl['action'] = 'Classes';
+    //         $viewUrl[0] = 'view';
+    //         $viewUrl[1] =  $this->ControllerAction->paramsEncode(['id' =>  $classId['id'] , 'institution_id' =>  $institutionId]);
+
+    //         //POCOR-8107
+    //         $configItems = TableRegistry::get('Configuration.ConfigItems');
+    //         $configItemsData = $configItems->find()->where(['type'=>'Fields for Institutions Classes Details Page'])->toArray();
+    //         foreach($configItemsData as $configItemsData1){
+    //             if(($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 0)){
+    //                 $unitEnable = 0;
+    //             }elseif(($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 1)){
+    //                 $unitEnable = 1;
+    //             }
+    //             if(($configItemsData1['code'] == 'class_ins_course') && ($configItemsData1['value'] == 0)){
+    //                 $courseEnable = 0;
+    //             }elseif(($configItemsData1['code'] == 'class_ins_course') && ($configItemsData1['value'] == 1)){
+    //                 $courseEnable = 1;
+    //             }
+    //         }
+    //         $viewUrl['unit_field'] = $unitEnable;
+    //         $viewUrl['course_field'] = $courseEnable;
+    //         //POCOR-8107
+
+    //         $indexUrl = [
+    //             'plugin' => 'Institution',
+    //             'controller' => 'Institutions',
+    //             'action' => 'Classes',
+    //             'index',
+    //             $this->ControllerAction->paramsEncode(['id' => $institutionId, 'institution_id'=>$institutionId])
+    //         ];
+
+    //         $alertUrl = [
+    //             'plugin' => 'Configuration',
+    //             'controller' => 'Configurations',
+    //             'action' => 'setAlert',
+    //             'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+    //         ];
+    //         $this->set('alertUrl', $alertUrl);
+    //         $this->set('viewUrl', $viewUrl);
+    //         $this->set('indexUrl', $indexUrl);
+    //         $this->set('classId', $classId['id']);
+    //         $this->set('institutionId', $institutionId);
+    //         $this->render('institution_classes_edit');
+    //     } else {
+    //         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionClasses']);
+    //     }
+    // }
+
     public function Classes($subaction = 'index', $classId = null)
     {
-        if ($subaction == 'edit' || $subaction == 'view') {
+        if ($subaction == 'edit') {
             $session = $this->request->getSession();
-            $queryString = $this->getQueryString();
-            $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
             $roles = [];
             $classId = $this->ControllerAction->paramsDecode($classId);
             $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
@@ -1878,22 +1974,12 @@ public function ClassReportCards()
                             ->where([$ClassTable->aliasField('id') => $classId['id']])
                             ->all();
 
-                            if ($classResults->isEmpty()) {
-                                $this->Alert->error('security.noAccess');
-                                $url = ['plugin' => $this->getPlugin(),
-                                    'controller' => $this->getName(),
-                                    'action' => 'dashboard',
-                                    //'0' => 'index',
-                                    '1' => $encodedQueryString ];
-                                return $this->redirect($url);
-                            }
+                        if ($classResults->isEmpty()) {
+                            $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'Classes'];
+                            return $this->redirect($url);
+                        }
                     } else {
-                        $this->Alert->error('security.noAccess');
-                        $url = ['plugin' => $this->getPlugin(),
-                            'controller' => $this->getName(),
-                            'action' => 'Classes',
-                            '0' => 'index',
-                            '1' => $encodedQueryString ];
+                        $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'Classes'];
                         return $this->redirect($url);
                     }
                 }
@@ -1926,8 +2012,7 @@ public function ClassReportCards()
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'Classes',
-                'index',
-                $this->ControllerAction->paramsEncode(['id' => $institutionId, 'institution_id'=>$institutionId])
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
 
             $alertUrl = [

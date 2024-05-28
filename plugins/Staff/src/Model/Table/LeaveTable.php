@@ -156,10 +156,7 @@ class LeaveTable extends ControllerActionTable
         //$tabElements = $this->controller->getCareerTabElements($options);
         $tabElements = $this->getCareerTabElements($options);
         $controllerName = $this->controller->getName();
-        $selectedAction = $this->getAlias();
-        if($controllerName == 'Profiles') {
-            $selectedAction = 'Staff'.$this->getAlias();
-        }
+        $selectedAction = 'Staff'.$this->getAlias();
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $selectedAction);
     }
