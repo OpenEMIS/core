@@ -61,7 +61,7 @@ class StudentSubjectsTable extends ControllerActionTable
         $this->field('academic_period_id', ['type' => 'integer', 'order' => 0]);
         $this->field('institution_id', ['type' => 'integer', 'after' => 'academic_period_id']);
         $this->field('total_mark', ['after' => 'institution_subject_id']);
-        $queryString = $this->getQueryString();;
+        $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['controls'] = ['name' => 'Student.Subjects/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
         
@@ -75,7 +75,7 @@ class StudentSubjectsTable extends ControllerActionTable
                 'controller' => 'Institutions',
                 'action' => 'Subjects',
                 'view',
-                $this->paramsEncode(['id' => $this->request->getQuery('institution_subject_id')]),
+                $this->paramsEncode(['id' => $this->request->getQuery('institution_subject_id'), 'institution_id'=>$this->request->getQuery('institution_id')]),
                  $encodedQueryString,
             ];
 
@@ -320,14 +320,17 @@ class StudentSubjectsTable extends ControllerActionTable
             ];
 
             if ($this->controller->getName() == 'Directories') {
+                $queryString['institution_subject_id'] = $entity->institution_subject->id;
+                $encodedQueryString = $this->paramsEncode($queryString);
                 $url = [
                     'plugin' => 'Directory',
                     'controller' => 'Directories',
                     'action' => 'StudentSubjects',
                     'index',
                     'type' => 'student',
+                    'institution_id' => $queryString['institution_id'],
                     'institution_subject_id' => $entity->institution_subject->id,
-                     $encodedQueryString,
+                    $encodedQueryString,
                 ];
             }
 
@@ -341,7 +344,9 @@ class StudentSubjectsTable extends ControllerActionTable
         $options = ['type' => 'student'];
         //$tabElements = $this->controller->getAcademicTabElements($options);
         $tabElements = $this->getAcademicTabElements($options);
-
+        if ($this->controller->getName() == 'Directories') {
+            $tabElements = $this->controller->getAcademicTabElements($options);
+        }
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Subjects');
     }
