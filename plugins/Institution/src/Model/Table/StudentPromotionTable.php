@@ -90,9 +90,16 @@ class StudentPromotionTable extends AppTable
 
     public function beforeAction(Event $event)
     {
-        $params = $this->ControllerAction->getQueryString();
-        $this->institutionId = $this->ControllerAction->getQueryString('institution_id');
-        $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
+        //$params = $this->ControllerAction->getQueryString();
+        $params = $this->getQueryString();
+        if(!empty($params)) {
+            //$this->institutionId = $this->ControllerAction->getQueryString('institution_id');
+            $this->institutionId = $this->getQueryString('institution_id');
+            $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
+        } else {
+            $encodedQueryParams = $this->request->getParam('pass')[1];
+            $this->institutionId = $this->paramsDecode($encodedQueryParams)['institution_id'];
+        }
         $this->InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
         $institutionClassTable = TableRegistry::get('Institution.InstitutionClasses');
         $this->institutionClasses = $institutionClassTable->find('list')
@@ -1116,8 +1123,9 @@ class StudentPromotionTable extends AppTable
                         if ($this->checkIsOverStudentClassCapacity($entity->students)) {
                             return false;
                         }
-                        $params = $this->ControllerAction->getQueryString();
-                        $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
+                        //$params = $this->ControllerAction->getQueryString();
+                        //$encodedQueryParams = $this->ControllerAction->paramsEncode($params);
+                        $encodedQueryParams = $this->request->getParam('pass')[1];
                         // redirects to confirmation page
                         //$url = $this->ControllerAction->url('reconfirm');
                         $url = [
@@ -1138,7 +1146,6 @@ class StudentPromotionTable extends AppTable
                         $event->stopPropagation();
 
                         return $this->controller->redirect($url);
-                        // echo "<pre>"; print_r($url); die;
                     } else {
                         $this->Alert->warning($this->getAlias().'.noStudentSelected', ['reset' => true]);
                         return false;
@@ -1154,8 +1161,10 @@ class StudentPromotionTable extends AppTable
 
     public function savePromotion(Entity $entity, ArrayObject $data)
     {
-        $params = $this->ControllerAction->getQueryString();
-        $institutionId = $this->ControllerAction->getQueryString('institution_id');
+        //$params = $this->ControllerAction->getQueryString();
+        //$institutionId = $this->ControllerAction->getQueryString('institution_id');
+        $params = $this->getQueryString();
+        $institutionId = $this->getQueryString('institution_id');
         $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
         $url = $this->ControllerAction->url('index');
 
@@ -1335,7 +1344,8 @@ class StudentPromotionTable extends AppTable
     public function reconfirm()
     {
         $params = $this->ControllerAction->getQueryString();
-        $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
+        //$encodedQueryParams = $this->ControllerAction->paramsEncode($params);
+        $encodedQueryParams = $this->request->getParam('pass')[1];
         $this->Alert->info($this->aliasField('reconfirm'), ['reset' => true]);
 
         $sessionKey = $this->getRegistryAlias() . '.confirm';
@@ -1420,7 +1430,7 @@ class StudentPromotionTable extends AppTable
                     'action' => 'add',
                     '0' => $encodedQueryParams
                 ];
-                
+
                 $cancelUrl = $this->ControllerAction->url($url);
                 $cancelUrl = array_diff_key($cancelUrl, $this->request->getQuery());
                 $cancelButton['url'] = $cancelUrl;
