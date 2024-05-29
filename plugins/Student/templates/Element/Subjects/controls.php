@@ -7,7 +7,7 @@
                     'controller' => $this->request->getParam('controller'),
                     'action' => $this->request->getParam('action'),
                     '0' =>  'index',
-                    'queryString' => $encodedQueryString,
+                    '1'=>$encodedQueryString,
                 ]);
                 $template = $this->ControllerAction->getFormTemplate();
                 $this->Form->templates($template);

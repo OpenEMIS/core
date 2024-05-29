@@ -37,8 +37,7 @@ class StudentClassesTable extends ControllerActionTable
 
         $this->addBehavior('Restful.RestfulAccessControl');
         $this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['Classes' =>[ 'institution_id','institution_class_id','student_id','education_grade_id',
-                'academic_period_id','next_institution_class_id','student_status_id']
+            'appliedAction' => ['Classes' =>['id', 'institution_id']
             ]
         ]);
         // $this->addBehavior('Student.StudentTab', [
@@ -229,10 +228,8 @@ class StudentClassesTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $options = ['type' => 'student'];
+        //$tabElements = $this->controller->getAcademicTabElements($options);
         $tabElements = $this->getAcademicTabElements($options);
-        if($this->controller->getName() == 'GuardianNavs' || $this->controller->getName() == 'Directories') {
-			$tabElements = $this->controller->getAcademicTabElements($options);
-		}
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Classes');
     }
