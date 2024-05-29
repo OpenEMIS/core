@@ -4000,7 +4000,7 @@ class InstitutionRepository extends Controller
         }
     }
 
-    public function getInstitutionStudentStatusByStudentId($studentId)
+    public function getInstitutionStudentStatusByStudentId($studentId, $params)
     {
         try {
 
@@ -4009,7 +4009,12 @@ class InstitutionRepository extends Controller
             ]);
 
             if($isExists){
-                $institutionStudent = InstitutionStudent::where('student_id', $studentId)->get();
+                $institutionStudent = InstitutionStudent::where('student_id', $studentId);
+                if (isset($params['limit'])) {
+                    $institutionStudent = $institutionStudent->paginate($params['limit'])->toArray();
+                } else {
+                    $institutionStudent = $institutionStudent->get()->toArray();
+                }
                 return $institutionStudent;
             }
             else{
@@ -4970,8 +4975,12 @@ class InstitutionRepository extends Controller
                 $lists = $lists->where('academic_periods.current', 1);
             }
 
-            $educationGrades = $lists->get();
-            
+            if (isset($params['limit'])) {
+                $educationGrades = $lists->paginate($params['limit']);
+            } else {
+                $educationGrades = $lists->get();
+            }
+
             return $educationGrades;
 
         } catch (Exception $e) {

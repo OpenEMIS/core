@@ -2100,24 +2100,29 @@ class InstitutionService extends Controller
         }
     }
 
-    public function getInstitutionStudentStatusByStudentId($studentId)
+    public function getInstitutionStudentStatusByStudentId($studentId, $params)
     {
         try {
 
-            $data = $this->institutionRepository->getInstitutionStudentStatusByStudentId($studentId);
+            $data = $this->institutionRepository->getInstitutionStudentStatusByStudentId($studentId, $params);
             $list = [];
-            if(count($data) > 0){
-                foreach($data as $k => $d){
+
+            $record = isset($params['limit']) ? $data['data'] : $data;
+            if(count($record) > 0){
+                foreach($record as $k => $d){
                     $list[$k]['id'] = $d['id'];
                     $list[$k]['security_user_id'] = $d['student_id'];
                     $list[$k]['student_status_id'] = $d['student_status_id'];
                     $list[$k]['created_user_id'] = $d['created_user_id'];
                     $list[$k]['created'] = $d['created'];
-                    
                 }
             }
-
-            return $list;
+            if(isset($params['limit'])){
+                $data['data'] = $list;
+                return $data;
+            } else {
+                return $list;
+            }
 
         } catch (\Exception $e) {
             Log::error(

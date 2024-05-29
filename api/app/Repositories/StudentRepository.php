@@ -68,7 +68,7 @@ class StudentRepository extends Controller
                 $resp = $list->paginate($limit)->toArray();
             } else{
                 $list = $list->get()->toArray();
-                $resp = $list;
+                $resp['data'] = $list;
             }
 
             return $resp;
@@ -540,8 +540,7 @@ class StudentRepository extends Controller
             $resp = [];
             if(isset($params['limit'])){
                 $limit = $params['limit'];
-                $resp = $lists->paginate($limit)
-                ->toArray();
+                $resp = $lists->paginate($limit)->toArray();
             } else{
                 $lists = $lists->get()->toArray();
                 $resp['data'] = $lists;
