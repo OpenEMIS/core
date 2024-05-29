@@ -4176,6 +4176,13 @@ class InstitutionController extends Controller
      *         @OA\Schema(type="integer", example=66)
      *     ),
      *     @OA\Parameter(
+     *         name="order",
+     *         in="path",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
@@ -4232,10 +4239,11 @@ class InstitutionController extends Controller
     public function getSubjectsStaffList(Request $request)
     {
         try {
+            $params = $request->all();
             if(!isset($request['staff_id']) || !isset($request['institution_id'])){
                 return $this->sendErrorResponse('Staff id and institution id is required.');
             }
-            $data = $this->institutionService->getSubjectsStaffList($request);
+            $data = $this->institutionService->getSubjectsStaffList($params);
             return $this->sendSuccessResponse("Subjects Staff List Found", $data);
             
         } catch (\Exception $e) {
@@ -4256,6 +4264,13 @@ class InstitutionController extends Controller
      *     description="Returns a list of absence reasons",
      *     tags={"Institutions"},
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
@@ -4275,14 +4290,15 @@ class InstitutionController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
-     *             @OA\Property(property="data", type="array",
-     *                 @OA\Items(
-     *                     type="object",
-     *                          @OA\Property(property="id", type="integer", example=1),
-     *                          @OA\Property(property="name", type="string", example="Illness"),
-     *                  )
+     *             @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="data", type="array",
+     *                      @OA\Items(
+     *                          type="object",
+     *                                  @OA\Property(property="id", type="integer", example=1),
+     *                                  @OA\Property(property="name", type="string", example="Illness"),
+     *                          )
+     *                  ),
      *             ),
-     *          @OA\Property(property="total", type="intger", example=3),
      *         )
      *     ),
      *     @OA\Response(
@@ -4316,6 +4332,13 @@ class InstitutionController extends Controller
      *     description="Returns a list of absence types",
      *     tags={"Institutions"},
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
@@ -4335,7 +4358,7 @@ class InstitutionController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
-     *             @OA\Property(property="list", type="array",
+     *             @OA\Property(property="data", type="array",
      *                 @OA\Items(
      *                     type="object",
      *                          @OA\Property(property="id", type="integer", example=1),
@@ -4343,7 +4366,6 @@ class InstitutionController extends Controller
      *                          @OA\Property(property="name", type="string", example="Present"),
      *                  )
      *             ),
-     *          @OA\Property(property="total", type="intger", example=3),
      *         )
      *     ),
      *     @OA\Response(
@@ -4375,6 +4397,13 @@ class InstitutionController extends Controller
      *     summary="Get list of area administratives",
      *     description="Returns a list of area-administratives",
      *     tags={"Institutions"},
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
      *     @OA\Parameter(
      *         name="limit",
      *         in="query",
@@ -4523,11 +4552,25 @@ class InstitutionController extends Controller
      *     description="Returns a list of genders",
      *     tags={"Institutions"},
      *     @OA\Parameter(
-     *         name="institutionId",
-     *         in="path",
-     *         required=true,
-     *         description="Institution Id",
-     *         @OA\Schema(type="integer", example=6)
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -4553,11 +4596,11 @@ class InstitutionController extends Controller
      *     )
      * )
      */
-    public function getInstitutionGenders()
+    public function getInstitutionGenders(Request $request)
     {
         try {
-            
-            $data = $this->institutionService->getInstitutionGenders();
+            $params = $request->all();
+            $data = $this->institutionService->getInstitutionGenders($params);
             return $this->sendSuccessResponse("Institution Genders List Found", $data);
             
         } catch (\Exception $e) {
@@ -4993,6 +5036,13 @@ class InstitutionController extends Controller
      *     description="Returns a list of meal programmes",
      *     tags={"Institutions"},
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
@@ -5221,6 +5271,13 @@ class InstitutionController extends Controller
      *     description="Returns a list of behaviour categories",
      *     tags={"Institutions"},
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
@@ -5303,6 +5360,13 @@ class InstitutionController extends Controller
      *         @OA\Schema(type="integer", example=6)
      *     ),
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -5351,11 +5415,11 @@ class InstitutionController extends Controller
      *     )
      * )
      */
-    public function getInstitutionStudentBehaviour(int $institutionId, $studentId)
+    public function getInstitutionStudentBehaviour(Request $request, int $institutionId, $studentId)
     {
         try {
-            
-            $data = $this->institutionService->getInstitutionStudentBehaviour($institutionId, $studentId);
+            $params = $request->all();
+            $data = $this->institutionService->getInstitutionStudentBehaviour($params, $institutionId, $studentId);
 
             if($data){
             return $this->sendSuccessResponse("Institution Student Behaviour Found", $data);
@@ -5573,6 +5637,27 @@ class InstitutionController extends Controller
      *         description="Education Grade Id",
      *         @OA\Schema(type="integer", example=60)
      *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items to return per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Successful.",
@@ -5595,10 +5680,11 @@ class InstitutionController extends Controller
      *     )
      * )
      */
-    public function getInstitutionClassEducationGradeStudents(int $institutionId, int $institutionClassId, int $educationGradeId)
+    public function getInstitutionClassEducationGradeStudents(Request $request, int $institutionId, int $institutionClassId, int $educationGradeId)
     {
         try {
-            $data = $this->institutionService->getInstitutionClassEducationGradeStudents($institutionId, $institutionClassId, $educationGradeId);
+            $params = $request->all();
+            $data = $this->institutionService->getInstitutionClassEducationGradeStudents($params, $institutionId, $institutionClassId, $educationGradeId);
             
             return $this->sendSuccessResponse("Students List Found", $data);
             
@@ -5631,6 +5717,13 @@ class InstitutionController extends Controller
      *         required=true,
      *         description="Education Grade Id",
      *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
      *     ),
      *     @OA\Parameter(
      *         name="limit",
@@ -5673,10 +5766,11 @@ class InstitutionController extends Controller
      *     )
      * )
      */
-    public function getInstitutionEducationSubjectStudents(int $institutionId, int $educationGradeId)
+    public function getInstitutionEducationSubjectStudents(Request $request, int $institutionId, int $educationGradeId)
     {
         try {
-            $data = $this->institutionService->getInstitutionEducationSubjectStudents($institutionId, $educationGradeId);
+            $params = $request->all();
+            $data = $this->institutionService->getInstitutionEducationSubjectStudents($params, $institutionId, $educationGradeId);
             
             return $this->sendSuccessResponse("Students List Found", $data);
             
@@ -5910,6 +6004,13 @@ class InstitutionController extends Controller
      *      description="Returns a list of student meals",
      *      tags={"Institutions"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -5983,6 +6084,13 @@ class InstitutionController extends Controller
      *         @OA\Schema(type="integer", example=6)
      *     ),
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
@@ -6023,11 +6131,11 @@ class InstitutionController extends Controller
      *     )
      * )
      */
-    public function getStudentsMealsByInstitutionId(int $institutionId)
+    public function getStudentsMealsByInstitutionId(Request $request, int $institutionId)
     {
         try {
-            
-            $data = $this->institutionService->getStudentsMealsByInstitutionId($institutionId);
+            $params = $request->all();
+            $data = $this->institutionService->getStudentsMealsByInstitutionId($params, $institutionId);
 
             if($data){
                 return $this->sendSuccessResponse("Students Meals List By Institution Id Found", $data);
