@@ -1595,11 +1595,7 @@ class NavigationComponent extends Component
                     'Staff.Guardians',
                     'Staff.Languages',
                     'Staff.Attachments',
-                    'StaffComments.index',
-                    'StaffComments.view',
-                    'StaffComments.add',
-                    'StaffComments.edit',
-                    'StaffComments.delete',
+                    'Staff.Comments',
                     'Staff.History',
                     'Staff.Demographic']
             ],
