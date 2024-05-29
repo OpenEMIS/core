@@ -6097,11 +6097,11 @@ class InstitutionController extends Controller
      *     )
      * )
      */
-    public function getInstitutionStudentStatusByStudentId(int $studentId)
+    public function getInstitutionStudentStatusByStudentId(int $studentId, Request $request)
     {
         try {
-            
-            $data = $this->institutionService->getInstitutionStudentStatusByStudentId($studentId);
+            $params = $request->all();
+            $data = $this->institutionService->getInstitutionStudentStatusByStudentId($studentId, $params);
 
             if($data){
             return $this->sendSuccessResponse("Institution Students Status By Student Id Found", $data);
@@ -6861,18 +6861,21 @@ class InstitutionController extends Controller
      *     )
      * )
      */
-    public function institutionClassGrade($id)
+    public function institutionClassGrade($id, Request $request)
     {
         //For POCOR-7854 Starts...
         $instituionClassGrades = InstitutionClassGrades::select('institution_class_grades.*')
             ->join('education_grades', 'education_grades.id', '=', 'institution_class_grades.education_grade_id')
             ->with('educationGrades')
             ->orderBy('education_grades.name', 'ASC')
-            ->where('institution_class_id', $id)
-            ->get();
+            ->where('institution_class_id', $id);
         //For POCOR-7854 Ends...
 
-        //$instituionClassGrades = InstitutionClassGrades::with('educationGrades')->where('institution_class_id', $id)->get();
+        if (isset($request['limit'])) {
+            $instituionClassGrades = $instituionClassGrades->paginate($request['limit']);
+        }else {
+            $instituionClassGrades = $instituionClassGrades->get();
+        }
 
         return $this->sendSuccessResponse("Institution Class grades", $instituionClassGrades);
     }
@@ -6894,8 +6897,8 @@ class InstitutionController extends Controller
      *         name="academicYearId",
      *         in="path",
      *         required=true,
-     *         description="Institution Id",
-     *         @OA\Schema(type="integer", example=6)
+     *         description="Academic Period Id",
+     *         @OA\Schema(type="integer", example=33)
      *     ),
      *     @OA\Parameter(
      *         name="limit",
@@ -6951,9 +6954,15 @@ class InstitutionController extends Controller
      *     )
      * )
      */
-    public function institutionRooms($institutionId, $academicYearId)
+    public function institutionRooms($institutionId, $academicYearId, Request $request)
     {
-        $rooms = InstitutionRooms::where('institution_id', $institutionId)->where('academic_period_id', $academicYearId)->get();
+        $rooms = InstitutionRooms::where('institution_id', $institutionId)->where('academic_period_id', $academicYearId);
+
+        if (isset($request['limit'])) {
+            $rooms = $rooms->paginate($request['limit']);
+        }else {
+            $rooms = $rooms->get();
+        }
 
         return $this->sendSuccessResponse('Institution rooms.', $rooms);
     }
@@ -7028,9 +7037,15 @@ class InstitutionController extends Controller
      *     )
      * )
      */
-    public function institutionClassSubjects($institutionClassId)
+    public function institutionClassSubjects($institutionClassId, Request $request)
     {
-        $subjects = InstitutionClassSubjects::with('institutionSubject')->where('institution_class_id', $institutionClassId)->get();
+        $subjects = InstitutionClassSubjects::with('institutionSubject')->where('institution_class_id', $institutionClassId);
+
+        if (isset($request['limit'])) {
+            $subjects = $subjects->paginate($request['limit']);
+        }else {
+            $subjects = $subjects->get();
+        }
 
         return $this->sendSuccessResponse('Institution Subjects.', $subjects);
     }
@@ -7050,6 +7065,13 @@ class InstitutionController extends Controller
      *         required=true,
      *         description="Institution Id",
      *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic Period Id",
+     *         @OA\Schema(type="integer", example=32)
      *     ),
      *     @OA\Parameter(
      *         name="limit",

@@ -27,6 +27,48 @@ class ReportCardController extends Controller
      *      description="Get list of report card comments",
      *      tags={"Report card"},
      *      @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic Period Id",
+     *         @OA\Schema(type="integer", example="32")
+     *      ),
+     *      @OA\Parameter(
+     *         name="institution_id",
+     *         in="query",
+     *         required=false,
+     *         description="Institution id",
+     *         @OA\Schema(type="integer", example="6")
+     *      ),
+     *      @OA\Parameter(
+     *         name="institution_class_id",
+     *         in="query",
+     *         required=false,
+     *         description="Institution Class Id",
+     *         @OA\Schema(type="integer", example="589")
+     *      ),
+     *      @OA\Parameter(
+     *         name="education_grade_id",
+     *         in="query",
+     *         required=false,
+     *         description="Education Grade Id",
+     *         @OA\Schema(type="integer", example="189")
+     *      ),
+     *      @OA\Parameter(
+     *         name="report_card_id",
+     *         in="query",
+     *         required=false,
+     *         description="Report card id",
+     *         @OA\Schema(type="integer", example="7")
+     *      ),
+     *      @OA\Parameter(
+     *         name="type",
+     *         in="query",
+     *         required=true,
+     *         description="Type",
+     *         @OA\Schema(type="integer", example="PRINCIPAL")
+     *      ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -118,6 +160,20 @@ class ReportCardController extends Controller
      *      summary="Get list of report card subjects",
      *      description="Get list of report card subjects",
      *      tags={"Report card"},
+     *      @OA\Parameter(
+     *         name="report_card_id",
+     *         in="query",
+     *         required=false,
+     *         description="Report card id",
+     *         @OA\Schema(type="integer", example="9")
+     *     ),
+     *     @OA\Parameter(
+     *         name="institution_class_id",
+     *         in="query",
+     *         required=false,
+     *         description="Institution Class id",
+     *         @OA\Schema(type="integer", example="591")
+     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
