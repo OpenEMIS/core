@@ -81,6 +81,10 @@ class AttachmentsTable extends ControllerActionTable
         ]);
 
         $this->field('security_roles', ['attr' => ['label' => __('Shared')]]);
+        if($this->request->getParam('controller') == 'Staff') {
+            $userId = $this->getUserID();
+            $this->field('security_user_id', ['attr' => ['value' => $userId], 'type' => 'hidden']);
+        }
 
     }
 
