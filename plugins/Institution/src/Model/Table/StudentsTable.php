@@ -1120,8 +1120,6 @@ class StudentsTable extends ControllerActionTable
 
         //$query->select['student_id' => $this->aliasField('student_id')]
         $query->contain(['EducationGrades']);
-
-
         // Student Statuses
         list($statusOptions, $selectedStatus) = $this->setStatusOptions();
 
@@ -1133,11 +1131,9 @@ class StudentsTable extends ControllerActionTable
         $session = $this->Session;
         $institutionId = $this->institution_id;
         $selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
-
-        
         //POCOR-8092::start
-        if (empty($request->getQuery('academic_period_id'))) {
-            $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
+        if (!empty($request->getQuery('academic_period_id'))) {
+            $selectedAcademicPeriod = $request->getQuery('academic_period_id');
         }else{
             $existCurrentAcademicStudent = $this->find('all', ['conditions'=>[ 'academic_period_id' => $this->AcademicPeriods->getCurrent(), 'institution_id' => $institutionId]])->toArray();
             if($existCurrentAcademicStudent){
@@ -1169,13 +1165,9 @@ class StudentsTable extends ControllerActionTable
 
         $educationGradesOptions = ['-1' => __('All Grades')] + $educationGradesOptions;
 
-        // Query Strings
-
         $selectedEducationGrades = $this->queryString('education_grade_id', $educationGradesOptions);
         // Advanced Select Options
-
-        $queryString = $this->ControllerAction->getQueryString();
-        $this->advancedSelectOptions($statusOptions, $selectedStatus);
+        //$this->advancedSelectOptions($statusOptions, $selectedStatus);
         $studentTable = $this;
         $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod, [
             'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
@@ -1184,7 +1176,7 @@ class StudentsTable extends ControllerActionTable
             }
         ]);
 
-        $this->request = $this->request->withQueryParams(['academic_period_id' => $selectedAcademicPeriod]);
+        $request = $request->withQueryParams(['academic_period_id' => $selectedAcademicPeriod]);
 
         // To add the academic_period_id to export
         if (isset($extra['toolbarButtons']['export']['url'])) {
@@ -1210,17 +1202,7 @@ class StudentsTable extends ControllerActionTable
         }
         $extra['options']['sortWhitelist'] = $sortList;
         // End
-        /*$InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
-        $query->select([
-                $InstitutionStudents->aliasField('student_id'),
-            ])
-            ->InnerJoin([$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()], [
-                $InstitutionStudents->aliasField('student_id = ') . $this->aliasField('id')
-            ]);*/
-
-
         $search = $this->getSearchKey();
-
         if (!empty($search)) {
             // function from AdvancedNameSearchBehavior
             /**
@@ -1236,7 +1218,6 @@ class StudentsTable extends ControllerActionTable
             // Ends POCOR-6532
             $query->where([$this->aliasField('student_status_id') => $selectedStatus]);
         } else {
-
             //POCOR-5690 remove check isAdvancedSearchEnabled for search data from list
             //if (!$this->isAdvancedSearchEnabled() && $selectedStatus != -1) {
             if ($selectedStatus != -1) {
@@ -1263,7 +1244,6 @@ class StudentsTable extends ControllerActionTable
             //get data from Identity Type table
             $typesIdentity = $this->getIdentityTypeData($ConfigItem->value_selection);
             if (!empty($typesIdentity)) {
-
                 $query
                     ->select([
                         'student_id',//POCOR-7485 don't remove
@@ -1308,9 +1288,7 @@ class StudentsTable extends ControllerActionTable
                     );
                 // Ends POCOR-6532
             }
-
         } else {
-
             $query->select([
                 'student_id',//POCOR-7485 don't remove
                 $this->aliasField('id'),
@@ -1336,7 +1314,6 @@ class StudentsTable extends ControllerActionTable
                 ]);
 
             //POCOR-6645 ends
-
         }//POCOR-6248 ends
 
         // POCOR-2869 implemented to hide the retrieval of records from another school resulting in duplication - proper fix will be done in SOJOR-437
