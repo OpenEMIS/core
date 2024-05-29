@@ -28,6 +28,7 @@ use App\Models\InstitutionTypes;
 use App\Models\AreaLevels;
 use App\Models\AreaAdministrativeLevels;
 use App\Models\SecurityGroupUsers;
+use App\Models\UserContacts;
 use Illuminate\Support\Facades\DB;
 use Mail;
 use Illuminate\Support\Str;
@@ -377,7 +378,7 @@ class RegistrationRepository extends Controller
             $encodedOtp = base64_encode($request['otp']??"");
             
             //$otpData = RegistrationOtp::where('otp', $encodedOtp)->first();
-            $userData = SecurityUserCode::select('security_users.id as user_id')->join('security_users', 'security_users.id', '=', 'security_user_codes.security_user_id')->where('verification_otp', $encodedOtp)->first();
+            $userData = SecurityUserCode::select('security_users.id as user_id', 'security_users.email')->join('security_users', 'security_users.id', '=', 'security_user_codes.security_user_id')->where('verification_otp', $encodedOtp)->first();
 
             if(!$userData){
                 return 7; //Invalid otp...
@@ -390,7 +391,7 @@ class RegistrationRepository extends Controller
             }
 
             $validateCustomField = $this->validateCustomField($request);
-
+            
             if(is_array($validateCustomField) && count($validateCustomField) > 0){
                 return $validateCustomField;
             }
@@ -451,6 +452,20 @@ class RegistrationRepository extends Controller
                             $store = InstitutionStudent::insert($storeStu);
                             Log::info("## Stored in InstitutionStudent ##", $storeStu);*/
                             
+
+                            //For POCOR-8178 Start
+                            if(isset($request['email'])  && ($request['email'] <> "")){
+                                $userContactStore['contact_type_id'] = 8; //For email
+                                $userContactStore['value'] = $request['email'];
+                                $userContactStore['preferred'] = 1;
+                                $userContactStore['security_user_id'] = $student->id;
+                                $userContactStore['created_user_id'] = $student->id;
+                                $userContactStore['created'] = Carbon::now()->toDateTimeString();
+
+                                $userContactInsert = UserContacts::insert($userContactStore);
+                            }
+                            //For POCOR-8178 End
+
 
                             //Creating Institution_student_Admission...
                             $assigneeId = $this->getAssigneeId();
@@ -544,7 +559,18 @@ class RegistrationRepository extends Controller
                             $store = InstitutionStudent::insert($storeStu);
                             Log::info("## Stored in InstitutionStudent ##", $storeStu);*/
 
-                            
+                            //For POCOR-8178 Start
+                            if(isset($request['email'])  && ($request['email'] <> "")){
+                                $userContactStore['contact_type_id'] = 8; //For email
+                                $userContactStore['value'] = $request['email'];
+                                $userContactStore['preferred'] = 1;
+                                $userContactStore['security_user_id'] = $student->id;
+                                $userContactStore['created_user_id'] = $student->id;
+                                $userContactStore['created'] = Carbon::now()->toDateTimeString();
+
+                                $userContactInsert = UserContacts::insert($userContactStore);
+                            }
+                            //For POCOR-8178 End
 
                             //Creating Institution_student_Admission...
                             $assigneeId = $this->getAssigneeId();
@@ -632,6 +658,20 @@ class RegistrationRepository extends Controller
                         ->first();
 
 
+                        //For POCOR-8184 Start
+                        if(isset($request['email']) && ($request['email'] <> "")){
+                            $userContactStore['contact_type_id'] = 8; //For email
+                            $userContactStore['value'] = $request['email'];
+                            $userContactStore['preferred'] = 1;
+                            $userContactStore['security_user_id'] = $userId;
+                            $userContactStore['created_user_id'] = $userId;
+                            $userContactStore['created'] = Carbon::now()->toDateTimeString();
+
+                            $userContactInsert = UserContacts::insert($userContactStore);
+                        }
+                        //For POCOR-8184 End
+
+
                         //$stuStatus = StudentStatuses::where('name', 'Pending Admission')->first();
                         $academicPeriod = AcademicPeriod::where('id', $request['academic_period_id'])->first();
 
@@ -709,9 +749,6 @@ class RegistrationRepository extends Controller
             $param = $request->all();
             
             $customFields = $this->getStudentCustomFields();
-            
-            
-            
 
             $requiredCfArray = [];
             $requiredCfIds = [];
@@ -735,16 +772,19 @@ class RegistrationRepository extends Controller
                     
 
                     foreach($requiredCfIds as $reqCfId){
+
                         if(in_array($reqCfId, $allCfIds)){
                             $key = array_search($reqCfId, array_column($customField, 'custom_field_id'));
                             
                             if($key !== false){
                                 $array = $customField[$key];
-                                if($array['text_value'] != null || $array['number_value'] != null || $array['decimal_value'] != null || $array['textarea_value'] != null || $array['time_value'] != null || $array['dropdown_value'] != null || $array['checkbox_value'] != null || $array['file'] != null){
+                                //For POCOR-8237 start...
+                                if($array['text_value'] != null || $array['number_value'] != null || $array['decimal_value'] != null || $array['textarea_value'] != null || $array['time_value'] != null || $array['dropdown_value'] != null || $array['checkbox_value'] != null || $array['file'] != null || $array['date_value'] != null){
                                     //
                                 } else {
                                     return 0;
                                 }
+                                //For POCOR-8237 end...
                             }
                         } else {
                             return 0;
@@ -861,8 +901,15 @@ class RegistrationRepository extends Controller
             $resp = [];
 
             $date_val = $cF['date_value']??"";
+
             $start_date = $paramArr->start_date??"";
             $end_date = $paramArr->end_date??"";
+
+            //For POCOR-8237 start...
+            if($date_val == ""){
+                return $resp;
+            }
+            //For POCOR-8237 end...
 
             if(!strtotime($date_val)){
                 $resp['msg'] = $cFName. ' should be a date value.';

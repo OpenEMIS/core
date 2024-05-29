@@ -136,8 +136,8 @@ class StaffPhotoDownloadShell extends Shell
                     $this->writePhotoToZip($userRecord, $zip);
                 }
                 $zip->close();
-
-                $this->setOKStatus($connection, $filepath, $report_progress_id);
+                $filepathForDB = str_replace('\\', '\\\\', $filepath); //POCOR-8247
+                $this->setOKStatus($connection, $filepathForDB, $report_progress_id);
             } else {
                 $this->setErrorStatus($connection, $report_progress_id);
             }
@@ -180,7 +180,7 @@ class StaffPhotoDownloadShell extends Shell
      */
     private function setErrorStatus(\Cake\Datasource\ConnectionInterface $connection, $report_progress_id)
     {
-        $connection->execute('UPDATE report_progress SET file_path = NULL, status=-1 WHERE id="' . $report_progress_id . '"');
+        $connection->execute('UPDATE report_progress SET file_path = NULL, status=-2 WHERE id="' . $report_progress_id . '"');
     }
 
     /**

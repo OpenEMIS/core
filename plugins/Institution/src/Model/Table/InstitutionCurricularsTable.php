@@ -46,6 +46,8 @@ class InstitutionCurricularsTable extends ControllerActionTable
     {
         $sortable = !is_null($this->request->getQuery('sort')) ? true : false;
         $institutionId = $this->getInstitutionID();
+        $curricularStudent = TableRegistry::get('Institution.InstitutionCurricularStudents');
+        $users = TableRegistry::get('User.Users');
 
         $query->select([
             'id',
@@ -71,7 +73,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
                 ]);
         }
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
-
+        $query = $this->request->getQuery();
         $this->field('modified_user_id', ['visible' => false]);
         $this->field('modified', ['visible' => false]);
         $this->field('created_user_id', ['visible' => false]);
@@ -90,10 +92,9 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-
         $this->field('total_male_students', ['visible' => false]);
         $this->field('total_female_students', ['visible' => false]);
-        $this->field('curricular_type_id', ['visible' => true]);
+        $this->field('curricular_type_id', ['type' => 'select']);
         $this->field('category', ['type' => 'select']);
         $this->field('staff_id', ['type' => 'select', 'visible' => false]);
         $this->setFieldOrder([
@@ -107,7 +108,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
         $this->field('total_male_students', ['visible' => false]);
         $this->field('total_female_students', ['visible' => false]);
         $this->field('academic_period_id', ['visible' => ['index'=>false]]);
-        $this->field('curricular_type_id', ['visible' => true]);
+        $this->field('curricular_type_id', ['type' => 'select']);
         $this->field('category', ['type' => 'select']);
         // $this->field('staff_id', ['type' => 'select']);
         $this->setFieldOrder([
@@ -124,7 +125,6 @@ class InstitutionCurricularsTable extends ControllerActionTable
                 $staff[] = $value->staff_id;
             }
         }
-
 
         $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
         $Institutions = TableRegistry::get('Institution.Institutions');
@@ -169,9 +169,8 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     }
 
-    public function onUpdateFieldCategory(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldCategory(Event $event, array $attr, $action, ServerRequest $request)
     {
-
         $categories = array(1 => 'Co-Curricular', 0 => 'Extracurricular'); //POCOR-7751
         $entity = $attr['entity'];
         if ($action == 'add') {
@@ -190,7 +189,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCurricularTypeId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldCurricularTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $paramPass = $this->request->getParam('pass');
         $ids = !is_null($paramPass[1]) ? $this->paramsDecode($paramPass[1]) : 0;
@@ -280,7 +279,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
     public function onGetCategory(Event $event, Entity $entity)
     {
 
-        return $entity->category ? __('Curricular') : __('Extracurricular');
+        return $entity->category ? __('Co-Curricular') : __('Extracurricular');
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
@@ -436,12 +435,17 @@ class InstitutionCurricularsTable extends ControllerActionTable
     //POCOR-7691 start
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $modelAlias = 'InstitutionCurriculars';
+        $userType = '';
+        $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
         session_start();
         $paramPass = $this->request->getParam('pass');
-        $ids = isset($paramPass[1]) ? $this->paramsDecode($paramPass[1]) : 0;
-        $curricularId = $ids['id'];
-        $_SESSION["curricularId"] = $curricularId;
-
+        if(!empty($paramPass[1])){
+            $ids = isset($paramPass[1]) ? $this->paramsDecode($paramPass[1]) : 0;
+            $curricularId = $ids['id'];
+            //$curricularId = $this->paramsDecode($this->request->pass[1])['id'];
+            $_SESSION["curricularId"] = $curricularId;
+        }
     }
     //POCOR-7691 end
 }

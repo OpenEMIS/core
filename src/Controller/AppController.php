@@ -258,6 +258,7 @@ class AppController extends Controller
             $basePath = Router::url(['controller' => '', 'action' => 'index', 'plugin' => false]) === '/' ? '/' : Router::url(['controller' => 'false', 'action' => 'index', 'plugin' => false]) . '/';
 
             $loginBackground = $basePath . Configure::read('App.imageBaseUrl') . $themes['login_page_image'];
+            // echo "<pre>";print_r($loginBackground);die;
             $file = new File($customPath . 'layout.core.template.css');
             $template = $file->read();
             $file->close();
@@ -899,11 +900,6 @@ class AppController extends Controller
     {
 
         $params = $this->request->getParam('params');
-
-// POCOR-7833 REMOVE UNNECESSARY LOGGING
-        $this->log((string) $params, 'debug');
-// END
-
         // POCOR-7833 MOVE ALL SKIP ACCESS TO ONE FUNCTION
         if ($this->skipCheckAccessControl($params)) {
             return;
@@ -930,26 +926,13 @@ class AppController extends Controller
         //POCOR-7731 end
 
         $check = $this->AccessControl->check($params);
-
-// POCOR-7833 REMOVE UNNECESSARY LOGGING
-//        $this->log($check, 'debug');
-// POCOR-7833 END
-
         if (!$check) {
-
-// POCOR-7833 ADD CHECKING LOGGING
             $this->log(__FUNCTION__, 'debug');
             if ($params !== null) {
                 $this->log($params, 'debug');
             }
-
-// POCOR-7833 END
-
-// POCOR-7833 REDIRECT TO DASHBOARD
             $this->Alert->warning('general.notAccess');
             return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
-// POCOR-7833 END
-//            throw new \Exception("No Rights for $class!");
         }
     }
 }

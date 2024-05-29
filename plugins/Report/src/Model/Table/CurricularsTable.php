@@ -22,11 +22,14 @@ class CurricularsTable extends AppTable
 
     public function initialize(array $config): void
     {
+        //POCOR-8028 removed academic period
         $this->setTable('institution_curriculars');
         parent::initialize($config);
-        //POCOR-8028 removed academic period
+
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('CurricularTypes', ['className' => 'FieldOption.CurricularTypes']);
+        
+
         $this->addBehavior('Excel', [
             'autoFields' => false
         ]);
@@ -49,6 +52,7 @@ class CurricularsTable extends AppTable
         $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
         $UserIdentities = TableRegistry::get('User.Identities');
         $conditions = [];
+        
         if (!empty($institutionId) && $institutionId > 0) {
             $conditions['Institutions.id'] = $institutionId; 
         }
@@ -58,7 +62,7 @@ class CurricularsTable extends AppTable
         $query
             ->select([
                 'institution_code' => 'Institutions.code',
-                'institution_name' => 'Institutions.name',                         
+                'institution_name' => 'Institutions.name',               
                 'area_code' => 'Areas.code',
                 'area_name' => 'Areas.name',
                 'area_administratives_code' => 'AreaAdministratives.code',
@@ -83,6 +87,7 @@ class CurricularsTable extends AppTable
                 
             ])
             ->contain([
+                //POCOR-8028 removed academic period
                 'Institutions' => [
                     'fields' => [
                         'Institutions.id',
@@ -137,8 +142,9 @@ class CurricularsTable extends AppTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
-        $newFields = [];
         //POCOR-8028 removed academic period
+        $newFields = [];
+
         $newFields[] = [
             'key' => 'Institutions.code',
             'field' => 'institution_code',
@@ -281,6 +287,6 @@ class CurricularsTable extends AppTable
 
     public function onExcelGetCategory(Event $event, Entity $entity)
     {
-         return $entity->category ? __('Curricular') : __('Extracurricular');
+         return $entity->category ? __('Co-Curricular') : __('Extracurricular');
     }
 }

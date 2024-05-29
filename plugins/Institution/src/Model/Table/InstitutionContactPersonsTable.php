@@ -24,14 +24,9 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
         $this->addBehavior('ContactExcel', [ //POCOR-6889
             'pages' => ['index']
         ]);
-
-        $this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['InstitutionContactPersons' =>['id']
-            ]
-        ]);
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -54,15 +49,15 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
             ->allowEmpty('email')
             ->add('email', [
                 'ruleValidEmail' => [
-                    'rule' => 'email'
+                    'rule' => 'email',
+                    'message' => 'Invalid email address'
                 ]
-            ]);
-           // ->requirePresence('preferred'); //comment cakephp4
-    }*/
+            ])
+            ->requirePresence('preferred');
+    }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        //comment cakephp 4
         if ($entity->getDirty('preferred')) {
             $institutionId = $entity->institution_id;
 
@@ -147,10 +142,12 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
 
     public function onUpdateFieldPreferred(Event $event, array $attr, $action, ServerRequest $request)
     {
+//        $functionName = __FUNCTION__;
+//        $this->log($functionName, 'debug');
         if ($action == 'view' || $action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
             $attr['select'] = false;
-           $attr['options'] = $this->getSelectOptions('general.yesno');
+            $attr['options'] = $this->getSelectOptions('general.yesno');
         }
 
         return $attr;
@@ -161,6 +158,8 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
         $options = $this->getSelectOptions('general.yesno');
         return $options[$entity->preferred];
     }
+
+    // End POCOR-5188
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
@@ -192,5 +191,6 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
-    }    
+    }
+    
 }

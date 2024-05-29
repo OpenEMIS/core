@@ -95,7 +95,12 @@ class InstitutionLandsTable extends ControllerActionTable
                     'provider' => 'table'
                 ]
             ])
-            //POCOR-8060 - start_date can be empty
+            ->add('area', 'ruleValidateCustomLandSize', [
+                'rule' => ['validateCustomLandSize', 'Maximum_institution_infrastructure_land_size'],
+                'provider' => 'table',
+                'last' => true
+            ])
+            /**POCOR-8060 - start_date can be empty*/
 //            ->add('start_date', [
 //                'ruleInAcademicPeriod' => [
 //                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]

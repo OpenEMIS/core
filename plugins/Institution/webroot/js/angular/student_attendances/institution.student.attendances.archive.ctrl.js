@@ -419,6 +419,7 @@ function InstitutionStudentAttendancesArchiveController($scope, $q, $window, $ht
             removeLoader();
             return;
         }
+
         getTranslatedText()
             .then(getAbsenceTypeOptions)
             .then(setAbsenceTypes)

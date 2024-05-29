@@ -47,6 +47,7 @@ class StaffAttendanceRequest extends FormRequest
         $errors = (new ValidationException($validator))->errors();
         throw new HttpResponseException(
             response()->json([
+                'message' => "Unsuccessful.",
                 'Enter Required Fileds' => $errors,
             ],
             JsonResponse::HTTP_UNPROCESSABLE_ENTITY

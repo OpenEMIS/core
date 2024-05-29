@@ -38,7 +38,6 @@ class ConfigItemsBehavior extends Behavior
 
     public function buildSystemConfigFilters()
     {
-
         $toolbarElements = [
             ['name' => 'Configuration.controls', 'data' => [], 'options' => []]
         ];
@@ -53,17 +52,17 @@ class ConfigItemsBehavior extends Behavior
             ->order('type')
             ->where([$ConfigItem->aliasField('visible') => 1])
             ->toArray();
-            //echo"<pre>";print_r($typeList); die;
-             $typeLists = $ConfigItem
+
+        $typeLists = $ConfigItem
             ->find('all', [
                 // 'fields' => 'label','type'
             ])
             ->order('label')
             ->where([$ConfigItem->aliasField('visible') => 1,'type' => 'Coordinates'])
-            ->toArray();
+            ->toArray();   
+             
         $typeOptions = array_keys($typeList);
         foreach ($typeOptions as $key => $value) {
-
             $value = $value != 'Authentication' ? $value : 'Sso';
             if (in_array($value, (array) Configure::read('School.excludedPlugins'))) {
                 unset($typeOptions[$key]);
@@ -72,7 +71,6 @@ class ConfigItemsBehavior extends Behavior
         $selectedType = $this->model->queryString('type', $typeOptions);
         $this->selectedType = $selectedType;
         $typeValue = $typeOptions[$selectedType];
-        //echo "<pre>"; print_r($typeValue); die;
         $this->model->request = $this->model->request->withQueryParams(['type_value' => $typeValue]);
 
         $this->model->advancedSelectOptions($typeOptions, $selectedType);

@@ -18,14 +18,14 @@ class ScheduleTimeslotsTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('ScheduleIntervals', [
-            'className' => 'Schedule.ScheduleIntervals',
+            'className' => 'Schedule.ScheduleIntervals', 
             'foreignKey' => 'institution_schedule_interval_id'
         ]);
 
         $this->hasMany('Lessons', [
             'className' => 'Schedule.ScheduleLessons',
             'foreignKey' => 'institution_schedule_timeslot_id',
-            'dependent' => true,
+            'dependent' => true, 
             'cascadeCallbacks' => true
         ]);
 
@@ -36,11 +36,12 @@ class ScheduleTimeslotsTable extends ControllerActionTable
         ]);
     }
 
-     public function validationDefault(Validator $validator): Validator
-     {
-         $validator = parent::validationDefault($validator);
-//         $validator
-//             ->requirePresence('interval', 'create');
-         return $validator;
-     }
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        $validator
+            ->requirePresence('interval', 'create');
+        return $validator;
+    }
+
 }

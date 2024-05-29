@@ -145,10 +145,10 @@ class ExaminationsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldExaminationId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldExaminationId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-             $selectedAcademicPeriod = !empty($this->request->getData($this->getAlias())['academic_period_id']) ? $this->request->getData($this->getAlias())['academic_period_id']: $this->AcademicPeriods->getCurrent();
+            $selectedAcademicPeriod = !empty($this->request->getData($this->getAlias())['academic_period_id']) ? $this->request->getData($this->getAlias())['academic_period_id']: $this->AcademicPeriods->getCurrent();
 
             $examinationOptions = $this->find('list', [
                     'keyField' => 'id',
@@ -166,7 +166,7 @@ class ExaminationsTable extends AppTable
                 $this->request->getData($this->getAlias())['examination_id'] = key($examinationOptions);
             }
 
-            $attr['options'] = $examinationOptions;
+            $attr['options'] = ['0' => __('Select Examination')] + $examinationOptions;
             $attr['onChangeReload'] = 'changeExaminationId';
             $attr['type'] = 'select';
             $attr['select'] = false;
@@ -195,8 +195,8 @@ class ExaminationsTable extends AppTable
             switch ($feature) { 
                 case 'Report.RegisteredStudentsExaminationCentre':
                     $fieldsOrder[] = 'academic_period_id';
-                    $fieldsOrder[] = 'examination_centre_id';
                     $fieldsOrder[] = 'examination_id';
+                    $fieldsOrder[] = 'examination_centre_id';
                     $fieldsOrder[] = 'institution_id';
                     $fieldsOrder[] = 'format';
                     break;
@@ -229,7 +229,7 @@ class ExaminationsTable extends AppTable
     }
     //POCOR-6637::END
 
-    public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, Request $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -257,10 +257,15 @@ class ExaminationsTable extends AppTable
                         $examCentreOptions =  ['0' => __('All Exam Centres')] + $examCentreOptions;
                     }
                 }
-
-                $attr['options'] = !empty($examCentreOptions)? $examCentreOptions: [];
+                /*$attr['options'] = !empty($examCentreOptions)? $examCentreOptions: [];
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
+                $attr['onChangeReload'] = true;
+                $attr['select'] = false;*/
+
+                $attr['options'] = $examCentreOptions;
+                $attr['onChangeReload'] = true;
+                $attr['type'] = 'select';
                 $attr['select'] = false;
 
             } else {
@@ -282,7 +287,7 @@ class ExaminationsTable extends AppTable
                 if (!empty($request->getData($this->getAlias())['examination_id'])) {
                     $selectedExamination = $request->getData($this->getAlias())['examination_id'];
 
-                    $ExamCentreStudents = TableRegistry::getTableLocator()->get('Examination.ExaminationCentresExaminationsStudents');
+                    $ExamCentreStudents = TableRegistry::get('Examination.ExaminationCentresExaminationsStudents');
                     $institutionOptions = $ExamCentreStudents
                         ->find('list', [
                             'keyField' => 'institution_id',

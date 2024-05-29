@@ -269,6 +269,12 @@ Route::group(
                 Route::get("exams/{examId}", 'ExaminationController@getExaminationDetails');
                 Route::get("exams/{examId}/centres/{centreId}", 'ExaminationController@getCenterExaminationDetails');
                 Route::get("exams/{examId}/centres/{centreId}/students/{studentId}", 'ExaminationController@getCenterExaminationStudentDetails');
+                // start POCOR - 8076
+                Route::get("exams/{examId}/centres/{centreId}/subjects", 'ExaminationController@examinationCenterExaminationSubjects');
+                Route::get("exams/{examId}/centres/{centreId}/subjects/{subjectId}/students", 'ExaminationController@examinationCenterExaminationSubjectsStudents');
+                Route::post("exams/student-subject-result", 'ExaminationController@examStudentSubjectResult');
+
+                // end POCOR - 8076
             }
         );
 
@@ -416,6 +422,10 @@ Route::group(
         //POCOR-8136 ends
 
 
+        //POCOR-8139 Starts
+        Route::post('external-data-sources', 'UserController@externalDataSources');
+        //POCOR-8139 ends
+        
         //POCOR-8078 starts
         Route::get('meal-programmes/{mealProgrammeId}', 'MealController@getMealProgrammeData');
         Route::get('meal-targets', 'MealController@getMealTargets');
@@ -425,5 +435,43 @@ Route::group(
         Route::get('meal-statuses', 'MealController@getMealStatusTypes');
         Route::get('meal-food-types', 'MealController@getMealFoodTypes');
         //POCOR-8078 ends
+
+
+        //POCOR-8197 Starts
+        Route::get('institutions/{institutionId}/grade-list', 'InstitutionController@getGradesViaInstitutionId');
+        //POCOR-8197 ends
+        
+        //POCOR-8194 starts
+        Route::get('staff/position/grades', 'DirectoryController@getStaffPositionGrades');
+        //POCOR-8194 ends
+
+
+        //POCOR-8259 start...
+        Route::get('themes', 'ThemeController@getAllThemes');
+        Route::get('themes/{themeId}', 'ThemeController@getThemeId');
+        //POCOR-8259 end...
+
+
+
+        //POCOR-8100 start...
+        Route::get('training-courses', 'TrainingController@getAllTrainingCourses');
+        Route::get('training-courses/{courseId}', 'TrainingController@getTrainingCourseData');
+        Route::get('training-providers', 'TrainingController@getTrainingProviders');
+        Route::get('training-providers/{providerId}', 'TrainingController@getTrainingProvidersData');
+        Route::get('training-sessions', 'TrainingController@getTrainingSessions');
+        Route::get('training-sessions/{sessionId}', 'TrainingController@getTrainingSessionData');
+        Route::get('training-sessions/{sessionId}/results', 'TrainingController@getTrainingSessionResults');
+        Route::get('training-sessions/{sessionId}/results/{userId}', 'TrainingController@getTrainingSessionResultsViaUserId');
+        //POCOR-8100 end...
+        
+        //POCOR-8260 start...
+        Route::get('/institutions/classes/reportcards/comment/codes', 'ReportCardController@getReportCardCommentCodes');
+        //POCOR-8260 end...
+
+
+        //POCOR-8270 start...
+        Route::get('/security-roles/{roleId}', 'ReportCardController@getSecurityRoleData');
+        Route::get('/reportcards/{reportcardId}', 'ReportCardController@getReportCardData');
+        //POCOR-8270 end...
     }
 );

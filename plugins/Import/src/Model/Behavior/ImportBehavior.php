@@ -11,8 +11,7 @@ use InvalidArgumentException;
 use Cake\Event\Event;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
-use Cake\Http\Session;
-use Cake\Http\ServerRequest;
+use Cake\Network\Session;
 use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
@@ -23,20 +22,11 @@ use Cake\Utility\Hash;
 use Cake\Validation\Validator;
 use ControllerAction\Model\Traits\EventTrait;
 use Cake\Log\Log;
-use PhpOffice\PhpSpreadsheet\Shared\Date as SharedDate; //POCOR-8082
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
-use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Cell\DataValidation; //POCOR-8082
-
-
-
+use PHPExcel_Worksheet;
+use PHPExcel_Style_NumberFormat;
+use PHPExcel_Shared_Date;
+use PHPExcel_IOFactory;
+use PHPExcel_Cell;
 
 /**
  * ImportBehavior is to be used with import_mapping table.
@@ -79,7 +69,7 @@ use PhpOffice\PhpSpreadsheet\Cell\DataValidation; //POCOR-8082
 class ImportBehavior extends Behavior
 {
     use EventTrait;
-    const DEFAULT_COLUMN_NAME = 'DefaultColumnName'; //POCOR-8082
+
     const FIELD_OPTION = 1;
     const DIRECT_TABLE = 2;
     const NON_TABLE_LIST = 3;
@@ -113,9 +103,9 @@ class ImportBehavior extends Behavior
     private $recordHeader = '';
     private $customText = '';
 
-    public function initialize(array $config): void
+    public function initialize(array $config)
     {
-        $fileTypes = $this->getConfig('fileTypes');
+        $fileTypes = $this->config('fileTypes');
         $allowableFileTypes = [];
         if ($fileTypes) {
             foreach ($fileTypes as $key => $value) {
@@ -126,24 +116,24 @@ class ImportBehavior extends Behavior
         } else {
             $allowableFileTypes = array_keys($this->_fileTypesMap);
         }
-        $this->setConfig('allowable_file_types', $allowableFileTypes);
+        $this->config('allowable_file_types', $allowableFileTypes);
 
         // testing using file size limit set in php.ini settings
         // $this->config('max_size', $this->system_memory_limit());
         // $this->config('max_rows', 50000);
         //
 
-        $plugin = $this->getConfig('plugin');
+        $plugin = $this->config('plugin');
         if (empty($plugin)) {
-            $exploded = explode('.', $this->_table->getRegistryAlias());
+            $exploded = explode('.', $this->_table->registryAlias());
             if (count($exploded) == 2) {
-                $this->setConfig('plugin', $exploded[0]);
+                $this->config('plugin', $exploded[0]);
             }
         }
-        $plugin = $this->getConfig('plugin');
-        $model = $this->getConfig('model');
+        $plugin = $this->config('plugin');
+        $model = $this->config('model');
         if (empty($model)) {
-           $hg =  $this->setConfig('model', Inflector::pluralize($plugin));
+            $this->config('model', Inflector::pluralize($plugin));
         }
 
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -151,7 +141,7 @@ class ImportBehavior extends Behavior
 
     private function isCustomText()
     {
-        $this->customText = $this->getConfig('custom_text');
+        $this->customText = $this->config('custom_text');
         if (!empty($this->customText) && strlen($this->customText) > 0) {
             return true;
         } else {
@@ -165,7 +155,7 @@ class ImportBehavior extends Behavior
      ** Events
      **
      ******************************************************************************************************************/
-    public function implementedEvents(): array
+    public function implementedEvents()
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -181,42 +171,36 @@ class ImportBehavior extends Behavior
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
-        $queryString = $this->_table->request->getParam('pass');
-        $encodedQueryString = $queryString[1];
         switch ($action) {
             case 'add':
                 $downloadUrl = $toolbarButtons['back']['url'];
                 $downloadUrl[0] = 'template';
-                $downloadUrl[2] = $encodedQueryString;
                 if ($buttons['add']['url']['action'] == 'ImportInstitutionSurveys') {
-                    $downloadUrl[1] = $buttons['add']['url'][1]; 
+                    $downloadUrl[1] = $buttons['add']['url'][1];
                 }
                 $this->_table->controller->set('downloadOnClick', "javascript:window.location.href='" . Router::url($downloadUrl) . "'");
                 break;
         }
 
         //back button
-        if (!empty($this->getConfig('backUrl'))) {
-            $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->getConfig('backUrl'));
-            unset($toolbarButtons['back']['url'][0]);
+        if (!empty($this->config('backUrl'))) {
+            $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->config('backUrl'));
         } elseif ($toolbarButtons['back']['url']['plugin'] == 'Directory') { //back button for directory
             $back = [];
-            $back[1] = $queryString[1];
-            
-            if ($this->_table->request->getParam('pass')[0] == 'add') {
+            if ($this->_table->request->params['pass'][0] == 'add') {
                 $back['action'] = 'Directories';
             } elseif ($this->_table->request->params['pass'][0] == 'results') {
-                $back['action'] = $this->_table->getAlias();
-                //$back[0] = 'add';
+                $back['action'] = $this->_table->alias();
+                $back[0] = 'add';
             };
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $back);
         } elseif ($this->institutionId && $toolbarButtons['back']['url']['plugin'] == 'Institution') {
             $back = [];
 
-            if ($this->_table->request->getParam('pass')[0] == 'add') {
-                $back['action'] = str_replace('Import', '', $this->_table->getConfig());
-            } elseif ($this->_table->request->getParam('pass')[0] == 'results') {
-                $back['action'] = $this->_table->getAlias();
+            if ($this->_table->request->params['pass'][0] == 'add') {
+                $back['action'] = str_replace('Import', '', $this->_table->alias());
+            } elseif ($this->_table->request->params['pass'][0] == 'results') {
+                $back['action'] = $this->_table->alias();
                 $back[0] = 'add';
             };
 
@@ -224,26 +208,24 @@ class ImportBehavior extends Behavior
                 $back['action'] = str_replace('Institution', '', $back['action']);
             }
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $back);
-            unset($toolbarButtons['back']['url'][0]);
         } else {
             $toolbarButtons['back']['url']['action'] = 'index';
-            unset($toolbarButtons['back']['url'][0]);
-        }       
+        }
+        unset($toolbarButtons['back']['url'][0]);
     }
 
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
         $buttons[0]['name'] = '<i class="fa kd-import"></i> ' . __('Import');
-
     }
 
     public function beforeAction($event)
     {
-        $session = $this->_table->controller->getRequest()->getSession();
+        $session = $this->_table->Session;
         if ($session->check('Institution.Institutions.id')) {
             $this->institutionId = $session->read('Institution.Institutions.id');
         }
-        $this->sessionKey = $this->getConfig('plugin') . '.' . $this->getConfig('model') . '.Import.data';
+        $this->sessionKey = $this->config('plugin') . '.' . $this->config('model') . '.Import.data';
 
         $this->_table->ControllerAction->field('plugin', ['visible' => false]);
         $this->_table->ControllerAction->field('model', ['visible' => false]);
@@ -254,11 +236,11 @@ class ImportBehavior extends Behavior
         $this->_table->ControllerAction->field('lookup_column', ['visible' => false]);
         $this->_table->ControllerAction->field('foreign_key', ['visible' => false]);
         $this->_table->ControllerAction->field('is_optional', ['visible' => false]);
-        $comment = '* ' . sprintf(__('Format Supported: %s'), implode(', ', $this->getConfig('allowable_file_types')));
+        $comment = '* ' . sprintf(__('Format Supported: %s'), implode(', ', $this->config('allowable_file_types')));
         $comment .= '<br/>';
-        $comment .= '* ' . sprintf(__('File size should not be larger than %s.'), $this->bytesToReadableFormat($this->getConfig('max_size')));
+        $comment .= '* ' . sprintf(__('File size should not be larger than %s.'), $this->bytesToReadableFormat($this->config('max_size')));
         $comment .= '<br/>';
-        $comment .= '* ' . sprintf(__('Recommended Maximum Records: %s'), $this->getConfig('max_rows'));
+        $comment .= '* ' . sprintf(__('Recommended Maximum Records: %s'), $this->config('max_rows'));
 
         $this->_table->ControllerAction->field('select_file', [
             'type' => 'binary',
@@ -276,7 +258,7 @@ class ImportBehavior extends Behavior
     {
         $validator = $this->_table->validationDefault($validator);
         $supportedFormats = array_values(Hash::flatten($this->_fileTypesMap));
-        $maxSize = $this->getConfig('max_size') < $this->file_upload_max_size() ? $this->getConfig('max_size') : $this->file_upload_max_size();
+        $maxSize = $this->config('max_size') < $this->file_upload_max_size() ? $this->config('max_size') : $this->file_upload_max_size();
 
         return $validator
             ->add('select_file', 'ruleUploadFileError', [
@@ -318,7 +300,6 @@ class ImportBehavior extends Behavior
      */
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
-
         /**
          * currently, extending the max execution time for individual scripts from the default of 30 seconds to 180 seconds
          * to avoid server timed out issue.
@@ -328,15 +309,14 @@ class ImportBehavior extends Behavior
         /**
          */
         return function ($model, $entity) {
-
-            $errors = $entity->getErrors();
+            $errors = $entity->errors();
             if (!empty($errors)) {
                 // set error message for php file upload errors
-                $fileError = Hash::get($entity->getInvalid(), 'select_file.error');
+                $fileError = Hash::get($entity->invalid(), 'select_file.error');
                 if (!empty($fileError)) {
                     $errorMessage = $model->getMessage("fileUpload.$fileError");
                     if ($errorMessage != '[Message Not Found]') {
-                        $entity->getErrors('select_file', $errorMessage, true);
+                        $entity->errors('select_file', $errorMessage, true);
                     }
                 }
 
@@ -350,21 +330,14 @@ class ImportBehavior extends Behavior
             $columns = $this->getColumns($mapping);
             $totalColumns = count($columns);
             $lookup = $this->getCodesByMapping($mapping);
-            //POCOR-8082 start
-            $fileObj = $entity->select_file; // Assuming $entity->select_file is an instance of UploadedFile
-            $uploadedName = $fileObj->getClientFilename(); // Get the original file name
-            $temporaryPath = ROOT . DS . 'tmp/' . uniqid() . '-' . $uploadedName; // Generate a unique temporary file path
-            $fileObj->moveTo($temporaryPath); // Move the uploaded file to the temporary directory
 
-            $inputFileType = IOFactory::identify($temporaryPath);
-            $objReader = IOFactory::createReader($inputFileType);
-            $objPHPExcel = $objReader->load($temporaryPath);
+            $fileObj = $entity->select_file;
+            $uploadedName = $fileObj['name'];
+            $uploaded = $fileObj['tmp_name'];
+            $inputFileType = PHPExcel_IOFactory::identify($uploaded);
+            $objReader = PHPExcel_IOFactory::createReader($inputFileType);
+            $objPHPExcel = $objReader->load($uploaded);
 
-// Now you can work with the spreadsheet object
-
-// Don't forget to clean up the temporary file if necessary
-            unlink($temporaryPath);
-            //POCOR-8082 end
             $totalImported = 0;
             $totalUpdated = 0;
             $importedUniqueCodes = new ArrayObject;
@@ -372,41 +345,35 @@ class ImportBehavior extends Behavior
             $dataPassed = [];
             $extra = new ArrayObject(['lookup' => [], 'entityValidate' => true]);
 
-            $activeModel = TableRegistry::get($this->getConfig('plugin') . '.' . $this->getConfig('model'));
+            $activeModel = TableRegistry::get($this->config('plugin') . '.' . $this->config('model'));
             $activeModel->addBehavior('DefaultValidation');
 
-            $maxRows = $this->getConfig('max_rows');
+            $maxRows = $this->config('max_rows');
             $maxRows = $maxRows + 2;
             $sheet = $objPHPExcel->getSheet(0);
-
             $highestRow = $sheet->getHighestRow();
             if ($highestRow > $maxRows) {
-                $entity->getErrors('select_file', [$this->getExcelLabel('Import', 'over_max_rows')], true);
+                $entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max_rows')], true);
                 return false;
             }
 
             ($this->isCustomText()) ? $this->recordHeader = 3 : $this->recordHeader = 2;
 
             if ($highestRow == $this->recordHeader) {
-                $entity->getErrors('select_file', [$this->getExcelLabel('Import', 'no_answers')], true);
+                $entity->errors('select_file', [$this->getExcelLabel('Import', 'no_answers')], true);
                 return false;
             }
 
             ($this->isCustomText()) ? $startCheck = 3 : $startCheck = 2;
 
-
-
             for ($row = $startCheck; $row <= $highestRow; ++$row) {
                 if ($row == $this->recordHeader) { // skip header but check if the uploaded template is correct
-
                     if (!$this->isCorrectTemplate($header, $sheet, $totalColumns, $row)) {
-
-                        $entity->getErrors('select_file', [$this->getExcelLabel('Import', 'wrong_template')], true);
+                        $entity->errors('select_file', [$this->getExcelLabel('Import', 'wrong_template')], true);
                         return false;
                     }
                     continue;
                 }
-
                 if ($row == $highestRow) { // if $row == $highestRow, check if the row cells are really empty, if yes then end the loop
                     if ($this->checkRowCells($sheet, $totalColumns, $row) === false) {
                         break;
@@ -416,9 +383,9 @@ class ImportBehavior extends Behavior
                 // check for unique record
                 $tempRow = new ArrayObject;
                 $rowInvalidCodeCols = new ArrayObject;
-
                 $params = [$sheet, $row, $columns, $tempRow, $importedUniqueCodes, $rowInvalidCodeCols];
                 $this->dispatchEvent($this->_table, $this->eventKey('onImportCheckUnique'), 'onImportCheckUnique', $params);
+
                 // for each columns
                 $references = [
                     'sheet' => $sheet,
@@ -434,8 +401,8 @@ class ImportBehavior extends Behavior
                 $originalRow = new ArrayObject;
                 $checkCustomColumn = new ArrayObject;
                 $extra['entityValidate'] = true;
-
                 $rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols, $extra);
+
                 if ($rowPass !== NULL && !$rowPass) {
                     $activeModel->setImportValidationFailed();
                 } else {
@@ -443,11 +410,10 @@ class ImportBehavior extends Behavior
                 }
 
                 $tempRow = $tempRow->getArrayCopy();
-//                die('<pre>'. print_r($tempRow, true));
 
                 // $tempRow['entity'] must exists!!! should be set in individual model's onImportCheckUnique function
                 if (!isset($tempRow['entity'])) {
-                    $tableEntity = $activeModel->newEmptyEntity();
+                    $tableEntity = $activeModel->newEntity();
                 } else {
                     $tableEntity = $tempRow['entity'];
                     unset($tempRow['entity']);
@@ -456,11 +422,10 @@ class ImportBehavior extends Behavior
                 if ($extra['entityValidate'] == true) {
                     // added for POCOR-4577 import staff leave for workflow related record to save the transition record
                     $tempRow['action_type'] = 'imported';
-
                     $activeModel->patchEntity($tableEntity, $tempRow);
                 }
 
-                $errors = $tableEntity->getErrors(); //POCOR-8082 start
+                $errors = $tableEntity->errors();
                 $rowInvalidCodeCols = $rowInvalidCodeCols->getArrayCopy();
 
                 // to-do: saving of entity into table with composite primary keys (Exam Results) give wrong isNew value
@@ -500,7 +465,7 @@ class ImportBehavior extends Behavior
                     if (!empty($errors)) {
                         foreach ($errors as $field => $arr) {
                             if (in_array($field, $columns)) {
-                                $fieldName = $this->getExcelLabel($activeModel->getRegistryAlias(), $field);
+                                $fieldName = $this->getExcelLabel($activeModel->registryAlias(), $field);
                                 $rowCodeError .= '<li>' . $fieldName . ' => ' . $arr[key($arr)] . '</li>';
                                 $rowCodeErrorForExcel[] = $fieldName . ' => ' . $arr[key($arr)];
                             } else {
@@ -508,13 +473,13 @@ class ImportBehavior extends Behavior
                                     $rowCodeError .= '<li>' . $arr[key($arr)] . '</li>';
                                     $rowCodeErrorForExcel[] = $arr[key($arr)];
                                 }
-                                $model->log('@ImportBehavior line ' . __LINE__ . ': ' . $activeModel->getRegistryAlias() . ' -> ' . $field . ' => ' . $arr[key($arr)], 'info');
+                                $model->log('@ImportBehavior line ' . __LINE__ . ': ' . $activeModel->registryAlias() . ' -> ' . $field . ' => ' . $arr[key($arr)], 'info');
                             }
                         }
                     }
                     if (!empty($rowInvalidCodeCols)) {
                         foreach ($rowInvalidCodeCols as $field => $errMessage) {
-                            $fieldName = $this->getExcelLabel($activeModel->getRegistryAlias(), $field);
+                            $fieldName = $this->getExcelLabel($activeModel->registryAlias(), $field);
                             if (!isset($errors[$field])) {
                                 $rowCodeError .= '<li>' . $fieldName . ' => ' . $errMessage . '</li>';
                                 $rowCodeErrorForExcel[] = $fieldName . ' => ' . $errMessage;
@@ -531,7 +496,7 @@ class ImportBehavior extends Behavior
                     continue;
                 } else {
                     $clonedEntity = clone $tableEntity;
-                    $clonedEntity->setVirtual([]); //POCOR-8082 start
+                    $clonedEntity->virtualProperties([]);
 
                     $tempPassedRecord = [
                         'row_number' => $row,
@@ -561,7 +526,6 @@ class ImportBehavior extends Behavior
                 'passedExcelFile' => $this->_generateDownloadableFile($dataPassed, 'passed', $header, $systemDateFormat),
                 'executionTime' => (microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"])
             ];
-
             $session->write($this->sessionKey, $completedData);
             return $model->controller->redirect($this->_table->ControllerAction->url('results'));
         };
@@ -576,8 +540,7 @@ class ImportBehavior extends Behavior
     public function template()
     {
         $folder = $this->prepareDownload();
-        $modelName = $this->getConfig('model');
-
+        $modelName = $this->config('model');
         $modelName = str_replace(' ', '_', Inflector::humanize(Inflector::tableize($modelName)));
         //5695 starts
         if ($modelName == 'Training_Session_Trainee_Results') {
@@ -591,7 +554,6 @@ class ImportBehavior extends Behavior
 
         $mapping = $this->getMapping();
         $header = $this->getHeader($mapping);
-        //print_r($header); die('hh');
         //5695 starts
         if ($modelName == 'Training_Session_Trainee_Results') {
             $newheader = [];
@@ -606,17 +568,14 @@ class ImportBehavior extends Behavior
             $header = $newheader;
         }//5695 ends
         $dataSheetName = $this->getExcelLabel('general', 'data');
-       // $objPHPExcel = new \PHPExcel(); cakephp4
-        $objPHPExcel = new Spreadsheet();
+        $objPHPExcel = new \PHPExcel();
 
         $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $header, '');
-//
-        $this->setCodesDataTemplate($objPHPExcel);
-//        print('<pre>');
-//        die(print_r($objPHPExcel, true));
-        $objPHPExcel->setActiveSheetIndex(0);
 
-        $objWriter = new Xlsx($objPHPExcel); //POCOR-8082 start
+        $this->setCodesDataTemplate($objPHPExcel);
+
+        $objPHPExcel->setActiveSheetIndex(0);
+        $objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
         $objWriter->save($excelPath);
 
         $this->performDownload($excelFile);
@@ -690,12 +649,12 @@ class ImportBehavior extends Behavior
         if (function_exists('imagecreatefromjpeg')) {
             //POCOR-7474-HINDOL - in case that imagecreatefromjpeg is not available
             $gdImage = imagecreatefromjpeg(ROOT . DS . 'plugins' . DS . 'Import' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.jpg');
-            $objDrawing = new MemoryDrawing();
+            $objDrawing = new \PHPExcel_Worksheet_MemoryDrawing();
             $objDrawing->setName('OpenEMIS Logo');
             $objDrawing->setDescription('OpenEMIS Logo');
             $objDrawing->setImageResource($gdImage);
-            $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_JPEG);
-            $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_DEFAULT);
+            $objDrawing->setRenderingFunction(\PHPExcel_Worksheet_MemoryDrawing::RENDERING_JPEG);
+            $objDrawing->setMimeType(\PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_DEFAULT);
             $objDrawing->setHeight(100);
             $objDrawing->setCoordinates('A1');
             $objDrawing->setWorksheet($activeSheet);
@@ -728,14 +687,14 @@ class ImportBehavior extends Behavior
         $activeSheet->getStyle("A1:" . $headerLastAlpha . "1")->getFont()->setBold(true)->setSize(16);
         $style = [
             'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical' => Alignment::VERTICAL_CENTER
+                'horizontal' => \PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PHPExcel_Style_Alignment::VERTICAL_CENTER
             ]
         ];
         $activeSheet->getStyle("A1:" . $headerLastAlpha . $lastRowToAlign)->applyFromArray($style)->getFont()->setBold(true);
         $activeSheet->getStyle("A" . $applyFillFontSetting['s'] . ":" . $headerLastAlpha . $applyFillFontSetting['e'])->getFont()->setBold(true)->getColor()->setARGB('FFFFFF');
-        $activeSheet->getStyle("A" . $applyFillFontSetting['s'] . ":" . $headerLastAlpha . $applyFillFontSetting['e'])->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('6699CC'); // OpenEMIS Core product color
-        $activeSheet->getStyle("A" . $applyCellBorder['s'] . ":" . $headerLastAlpha . $applyCellBorder['e'])->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $activeSheet->getStyle("A" . $applyFillFontSetting['s'] . ":" . $headerLastAlpha . $applyFillFontSetting['e'])->getFill()->setFillType(\PHPExcel_Style_Fill::FILL_SOLID)->getStartColor()->setARGB('6699CC'); // OpenEMIS Core product color
+        $activeSheet->getStyle("A" . $applyCellBorder['s'] . ":" . $headerLastAlpha . $applyCellBorder['e'])->getBorders()->getAllBorders()->setBorderStyle(\PHPExcel_Style_Border::BORDER_THIN);
     }
 
     public function setImportDataTemplate($objPHPExcel, $dataSheetName, $header, $type)
@@ -768,12 +727,12 @@ class ImportBehavior extends Behavior
             $activeSheet->setCellValue("A2", $this->customText);
         }
 
-        $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName, __(Inflector::humanize(Inflector::tableize($this->_table->getAlias()))) . ' ' . $dataSheetName);
+        $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName, __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) . ' ' . $dataSheetName);
 
         $currentRowHeight = $activeSheet->getRowDimension($lastRowToAlign)->getRowHeight();
 
         foreach ($header as $key => $value) {
-            $alpha = $this->getExcelColumnAlpha($key + 1); //POCOR-8082 start
+            $alpha = $this->getExcelColumnAlpha($key);
             $activeSheet->setCellValue($alpha . $lastRowToAlign, $value);
             $activeSheet->getColumnDimension($alpha)->setAutoSize(true);
             if (strlen($value) < 50) {
@@ -789,7 +748,7 @@ class ImportBehavior extends Behavior
                 $activeSheet->getStyle($alpha . $lastRowToAlign)->getAlignment()->setWrapText(true);
             }
         }
-        $headerLastAlpha = $this->getExcelColumnAlpha(count($header)); //POCOR-8082 start
+        $headerLastAlpha = $this->getExcelColumnAlpha(count($header) - 1);
 
         $this->endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, $lastRowToAlign);
     }
@@ -823,26 +782,22 @@ class ImportBehavior extends Behavior
         } else {
             $codesData = $this->excelGetCodesData($this->_table);
         }
-        $lastColumn = 0; //POCOR-8082 start
+        $lastColumn = -1;
         $currentRowHeight = $objPHPExcel->getActiveSheet()->getRowDimension(2)->getRowHeight();
         foreach ($codesData as $columnOrder => $modelArr) {
             $modelData = $modelArr['data'];
             $firstColumn = $lastColumn + 1;
             $lastColumn = $firstColumn + count($modelArr['data'][0]) - 1;
-            //POCOR-8082 start
-            $startAlpha = $this->getExcelColumnAlpha($firstColumn);
-            $endAlpha = $this->getExcelColumnAlpha($lastColumn);
-            $range = $startAlpha . "2:" . $endAlpha . "2";
-            $objPHPExcel->getActiveSheet()->mergeCells($range);
-            $objPHPExcel->getActiveSheet()->setCellValue($startAlpha . "2", $modelArr['sheetName']);
-            //POCOR-8082 end
+
+            $objPHPExcel->getActiveSheet()->mergeCells($this->getExcelColumnAlpha($firstColumn) . "2:" . $this->getExcelColumnAlpha($lastColumn) . "2");
+            $objPHPExcel->getActiveSheet()->setCellValue($this->getExcelColumnAlpha($firstColumn) . "2", $modelArr['sheetName']);
             if (strlen($modelArr['sheetName']) < 50) {
-                $objPHPExcel->getActiveSheet()->getColumnDimension($startAlpha)->setAutoSize(true);
+                $objPHPExcel->getActiveSheet()->getColumnDimension($this->getExcelColumnAlpha($firstColumn))->setAutoSize(true);
             } else {
                 // $objPHPExcel->getActiveSheet()->getColumnDimension( $this->getExcelColumnAlpha($firstColumn) )->setWidth(35);
                 $currentRowHeight = $this->suggestRowHeight(strlen($modelArr['sheetName']), $currentRowHeight);
                 $objPHPExcel->getActiveSheet()->getRowDimension(2)->setRowHeight($currentRowHeight);
-                $objPHPExcel->getActiveSheet()->getStyle($startAlpha . "2")->getAlignment()->setWrapText(true);
+                $objPHPExcel->getActiveSheet()->getStyle($this->getExcelColumnAlpha($firstColumn) . "2")->getAlignment()->setWrapText(true);
             }
 
             foreach ($modelData as $index => $sets) {
@@ -855,16 +810,14 @@ class ImportBehavior extends Behavior
 
             if (count($modelData) > 1 && !array_key_exists('noDropDownList', $modelArr)) {
                 $lookupColumn = $firstColumn + intval($modelArr['lookupColumn']) - 1;
-                $alpha = $this->getExcelColumnAlpha($columnOrder); //POCOR-8082
+                $alpha = $this->getExcelColumnAlpha($columnOrder - 1);
                 $lookupColumnAlpha = $this->getExcelColumnAlpha($lookupColumn);
                 ($this->isCustomText()) ? $lookupStart = 4 : $lookupStart = 3;
                 for ($i = $lookupStart; $i < 103; $i++) {
                     $objPHPExcel->setActiveSheetIndex(0);
-                    $sheet = $objPHPExcel->getActiveSheet();
-                   // $objValidation = $objPHPExcel->getActiveSheet()->getCell($alpha . $i)->getDataValidation(); //cakephp 4
-                    $objValidation = $sheet->getCell($alpha . $i)->getDataValidation();
-                    $objValidation->setType(DataValidation::TYPE_LIST);
-                    $objValidation->setErrorStyle(DataValidation::STYLE_INFORMATION);
+                    $objValidation = $objPHPExcel->getActiveSheet()->getCell($alpha . $i)->getDataValidation();
+                    $objValidation->setType(\PHPExcel_Cell_DataValidation::TYPE_LIST);
+                    $objValidation->setErrorStyle(\PHPExcel_Cell_DataValidation::STYLE_INFORMATION);
                     $objValidation->setAllowBlank(false);
                     $objValidation->setShowInputMessage(true);
                     $objValidation->setShowErrorMessage(true);
@@ -876,7 +829,7 @@ class ImportBehavior extends Behavior
             }
         }
 
-        if ($lastColumn > 0) { //if got no reference data. //POCOR-8082
+        if ($lastColumn > -1) { //if got no reference data.
             $headerLastAlpha = $this->getExcelColumnAlpha($lastColumn);
             $objPHPExcel->getActiveSheet()->getStyle("A2:" . $headerLastAlpha . "2")->getFont()->setBold(true)->setSize(12);
             $this->endExcelHeaderStyling($objPHPExcel, $headerLastAlpha, 3, ['s' => 3, 'e' => 3], ['s' => 2, 'e' => 3]);
@@ -909,7 +862,7 @@ class ImportBehavior extends Behavior
         if (!empty($data)) {
             $downloadFolder = $this->prepareDownload();
             // Do not lcalize file name as certain non-latin characters might cause issue
-            $excelFile = sprintf('OpenEMIS_Core_Import_%s_%s_%s.xlsx', $this->getConfig('model'), ucwords($type), time());
+            $excelFile = sprintf('OpenEMIS_Core_Import_%s_%s_%s.xlsx', $this->config('model'), ucwords($type), time());
             $excelPath = $downloadFolder . DS . $excelFile;
 
             $newHeader = $header;
@@ -918,7 +871,7 @@ class ImportBehavior extends Behavior
             }
             $dataSheetName = $this->getExcelLabel('general', 'data');
 
-            $objPHPExcel = new Spreadsheet();
+            $objPHPExcel = new \PHPExcel();
 
             ($this->isCustomText()) ? $rowData = 4 : $rowData = 3;
 
@@ -933,11 +886,11 @@ class ImportBehavior extends Behavior
                 }
                 $activeSheet->getRowDimension(($index + $rowData))->setRowHeight(15);
                 foreach ($values as $key => $value) {
-                    $alpha = $this->getExcelColumnAlpha($key + 1); //POCOR-8082
+                    $alpha = $this->getExcelColumnAlpha($key);
                     $activeSheet->setCellValue($alpha . ($index + $rowData), $value);
                     $activeSheet->getColumnDimension($alpha)->setAutoSize(true);
 
-                    if ($key == (count($values)) && $type == 'failed') { //POCOR-8082
+                    if ($key == (count($values) - 1) && $type == 'failed') {
                         $suggestedRowHeight = $this->suggestRowHeight(strlen($value), 15);
                         $activeSheet->getRowDimension(($index + $rowData))->setRowHeight($suggestedRowHeight);
                         $activeSheet->getStyle($alpha . ($index + $rowData))->getAlignment()->setWrapText(true);
@@ -950,7 +903,7 @@ class ImportBehavior extends Behavior
             }
 
             $objPHPExcel->setActiveSheetIndex(0);
-            $objWriter = new Xlsx($objPHPExcel); // Changed class name //POCOR-8082
+            $objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
             $objWriter->save($excelPath);
 
             $downloadUrl = $this->_table->ControllerAction->url('download' . ucwords($type));
@@ -971,7 +924,7 @@ class ImportBehavior extends Behavior
      */
     public function getExcelColumnAlpha($column_number)
     {
-        return Coordinate::stringFromColumnIndex($column_number);
+        return PHPExcel_Cell::stringFromColumnIndex($column_number);
     }
 
     /**
@@ -1017,12 +970,12 @@ class ImportBehavior extends Behavior
                 } else if ($value == 'Training Result Type') {
                     $value = 'Result Types';
                 }
-                $newheader[$key + 1] = $value; //POCOR-8082
+                $newheader[$key] = $value;
             }
             $header = $newheader;
         }//5695 ends
         $cellsValue = [];
-        for ($col = 1; $col <= $totalColumns; $col++) {
+        for ($col = 0; $col < $totalColumns; $col++) {
             $cell = $sheet->getCellByColumnAndRow($col, $row);
             $cellsValue[] = $cell->getValue();
         }
@@ -1032,9 +985,15 @@ class ImportBehavior extends Behavior
     public function getMapping()
     {
         $model = $this->_table;
+        //POCOR-8174
+        $modelName = $this->config('model');
+        if (($this->config('model')) == 'ExaminationStudentSubjectResults') {
+            $modelName = "ExaminationItemResults";
+        }
+        //POCOR-8174
         $mapping = $model->find('all')
             ->where([
-                $model->aliasField('model') => $this->getConfig('plugin') . '.' . $this->getConfig('model')
+                $model->aliasField('model') => $this->config('plugin') . '.' . $modelName //POCOR-8174
             ])
             ->order($model->aliasField('order'))
             ->toArray();
@@ -1047,7 +1006,6 @@ class ImportBehavior extends Behavior
         if (empty($mapping)) {
             $mapping = $this->getMapping($model);
         }
-
 
         $header = [];
         foreach ($mapping as $key => $value) {
@@ -1068,7 +1026,8 @@ class ImportBehavior extends Behavior
                 $column = $value->column_name;
 
                 $label = $this->getExcelLabel('Imports', $value->lookup_model);
-                if ($label === self::DEFAULT_COLUMN_NAME){ //POCOR-8082
+
+                if (empty($label)) {
                     $label = $this->getExcelLabel($value->model, $column);
                 }
 
@@ -1101,7 +1060,6 @@ class ImportBehavior extends Behavior
 
     protected function getColumns($mapping = [])
     {
-        $model = $this->getConfig('model'); //POCOR-8082
         $columns = [];
         if (empty($mapping)) {
             $mapping = $this->getMapping($model);
@@ -1159,7 +1117,7 @@ class ImportBehavior extends Behavior
     {
         $mapping = $model->find('all')
             ->where([
-                $model->aliasField('model') => $this->getConfig('plugin') . '.' . $this->getConfig('model'),
+                $model->aliasField('model') => $this->config('plugin') . '.' . $this->config('model'),
                 $model->aliasField('foreign_key') . ' IN' => [self::FIELD_OPTION, self::DIRECT_TABLE, self::NON_TABLE_LIST]
             ])
             ->order($model->aliasField('order'))
@@ -1278,18 +1236,15 @@ class ImportBehavior extends Behavior
 
     public function getExcelLabel($module, $columnName)
     {
-       
         $translatedCol = '';
         if ($module instanceof Table) {
-            $module = $module->getAlias();
+            $module = $module->alias();
         }
         $dotPost = strpos($module, '.');
         if ($dotPost > -1) {
             $module = substr($module, ($dotPost + 1));
         }
-        if (!empty($this->labels)
-            && isset($this->labels[$module])
-            && isset($this->labels[$module][$columnName])) {
+        if (!empty($this->labels) && isset($this->labels[$module]) && isset($this->labels[$module][$columnName])) {
             $translatedCol = $this->labels[$module][$columnName];
         } else {
             if ($module == 'Import') {
@@ -1299,22 +1254,9 @@ class ImportBehavior extends Behavior
                  * $language should provide the current selected locale language
                  */
                 $language = '';
-                $eventName = 'onGetFieldLabel';  // Event name as a string
-                $translatedCol = $this->_table->onGetFieldLabel(new Event($eventName, $this), $module, $columnName, $language);
-
-                //$translatedCol = $this->_table->onGetFieldLabel(new Event((string) $this), $module, $columnName, $language); // cakephp4
-                /*$eventName = 'label';
-                $translatedCol = $this->_table->onGetFieldLabel(new Event($eventName), $module, $columnName, $language);*/
+                $translatedCol = $this->_table->onGetFieldLabel(new Event($this), $module, $columnName, $language);
                 if (empty($translatedCol) || ($translatedCol == $columnName && $columnName != 'FTE')) { // checking for column name FTE should not be hard-coded here, do revisit this in the future
-                    //$translatedCol = Inflector::humanize(Inflector::singularize(Inflector::tableize($columnName))); // cakephp4
-                if ($columnName !== null) {
-                $translatedCol = Inflector::humanize(Inflector::singularize(Inflector::tableize($columnName)));
-            } else {
-                // Handle the case where $columnName is null
-                $translatedCol = self::DEFAULT_COLUMN_NAME; // //POCOR-8082
-//                    die (print_r("$module $columnName", true));
-            }
-
+                    $translatedCol = Inflector::humanize(Inflector::singularize(Inflector::tableize($columnName)));
                 }
             }
             // saves label in runtime array to avoid multiple calls to the db or cache
@@ -1349,13 +1291,12 @@ class ImportBehavior extends Behavior
         $customColumnCounter = 0;
 
         for ($col = 0; $col < $totalColumns; ++$col) {
-            $cell = $sheet->getCellByColumnAndRow($col + 1, $row); //POCOR-8082
-//            die(print_r($cell->getValue(),true));
+            $cell = $sheet->getCellByColumnAndRow($col, $row);
 
             if (self::timeTwelvehoursValidator($cell->getFormattedValue()) == 1) {
                 $cell->getStyle()->getNumberFormat()->setFormatCode('h:mm:ss');
                 $originalValue = $cell->getFormattedValue();
-            } else if (SharedDate::isDateTime($cell)) { //POCOR-8082
+            } else if (PHPExcel_Shared_Date::isDateTime($cell)) {
                 $cell->getStyle()->getNumberFormat()->setFormatCode('dd/mm/yyyy');
                 $originalValue = $cell->getFormattedValue();
             } else {
@@ -1372,7 +1313,6 @@ class ImportBehavior extends Behavior
             // need to understand the above check
 
             $excelMappingObj = $mapping[$col];
-//            die(print_r($excelMappingObj->column_name,true));
             $foreignKey = $excelMappingObj->foreign_key;
             $lookupPlugin = $excelMappingObj->lookup_plugin;
             $lookupModel = $excelMappingObj->lookup_model;
@@ -1409,11 +1349,11 @@ class ImportBehavior extends Behavior
                         'default' => $identityTypes->aliasField('default')
                     ])
                     ->leftJoin(
-                        [$userIdentities->getAlias() => $userIdentities->table()], //POCOR-8082
+                        [$userIdentities->alias() => $userIdentities->table()],
                         [$userIdentities->aliasField('security_user_id = ') . $User->aliasField('id')]
                     )
                     ->leftJoin(
-                        [$identityTypes->getAlias() => $identityTypes->table()], //POCOR-8082
+                        [$identityTypes->alias() => $identityTypes->table()],
                         [$identityTypes->aliasField('id =') . $userIdentities->aliasField('identity_type_id')]
                     )
                     ->where([
@@ -1460,11 +1400,11 @@ class ImportBehavior extends Behavior
                         'default' => $identityTypes->aliasField('default')
                     ])
                     ->leftJoin(
-                        [$userIdentities->getAlias() => $userIdentities->getTable()], //POCOR-8082
+                        [$userIdentities->alias() => $userIdentities->table()],
                         [$userIdentities->aliasField('security_user_id = ') . $User->aliasField('id')]
                     )
                     ->leftJoin(
-                        [$identityTypes->getAlias() => $identityTypes->getTable()],
+                        [$identityTypes->alias() => $identityTypes->table()],
                         [$identityTypes->aliasField('id =') . $userIdentities->aliasField('identity_type_id')]
                     )
                     ->where([
@@ -1532,23 +1472,23 @@ class ImportBehavior extends Behavior
                 continue;
             }
             if (!empty($val)) {
-                $columnAttr = $activeModel->getSchema()->getColumn($columnName);
+                $columnAttr = $activeModel->schema()->column($columnName);
                 if ($columnAttr['type'] == 'date') { // checking the main table schema data type
-
                     $originalRow[$col] = $val;
 
                     if (!empty($val) && preg_match($datePattern, $val)) {
                         $val = trim($val); // POCOR-4251 trim the whitespace on the date
                         $split = explode('/', $val);
                         $dateObject = new Date();
-                        $dateObject->setDate(intval($split[2]), intval($split[1]), intval($split[0]));
+                        $dateObject->setDate($split[2], $split[1], $split[0]);
+
                         // compare the date input and new formatted date to cater (31/02/2016 changed to 02/03/2016)
                         if ($val != $dateObject->format('d/m/Y')) {
                             $rowInvalidCodeCols[$columnName] = __('You have entered an invalid date');
                             $rowPass = false;
                             $extra['entityValidate'] = false;
                         } else {
-                            $originalRow[$col] = $dateObject->format('Y-m-d');
+                            $originalRow[$col] = $dateObject->format('d/m/Y');
                         }
                     } else {
                         // string input without the correct format (not dd/mm/yyyy)
@@ -1558,8 +1498,7 @@ class ImportBehavior extends Behavior
                     }
                 }
             }
-
-            $translatedCol = $this->getExcelLabel($activeModel->getAlias(), $columnName);
+            $translatedCol = $this->getExcelLabel($activeModel->alias(), $columnName);
             $columnDescription = strtolower($mapping[$col]->description);
             $isOptional = $mapping[$col]->is_optional;
             if (!$isOptional) {
@@ -1590,8 +1529,8 @@ class ImportBehavior extends Behavior
                 }
                 $excludeValidation = false;
                 if (!empty($cellValue)) {
-                    if (isset($extra['lookup'][$excelLookupModel->getAlias()][$cellValue])) {
-                        $record = $extra['lookup'][$excelLookupModel->getAlias()][$cellValue];
+                    if (isset($extra['lookup'][$excelLookupModel->alias()][$cellValue])) {
+                        $record = $extra['lookup'][$excelLookupModel->alias()][$cellValue];
                     } else {
                         //POCOR-5913 starts
                         if ($mappingModel == 'Student.StudentGuardians' && $lookupColumnName == 'guardian_id') {
@@ -1608,10 +1547,10 @@ class ImportBehavior extends Behavior
 
                         $lookupQuery = $excelLookupModel->find()->where([$excelLookupModel->aliasField($lookupColumn) => $cellValue]);
                         $record = $lookupQuery->first();
-                        $extra['lookup'][$excelLookupModel->getAlias()][$cellValue] = $record;
+                        $extra['lookup'][$excelLookupModel->alias()][$cellValue] = $record;
                     }
                 } else {
-                    $columnAttr = $activeModel->getSchema()->getColumn($columnName);
+                    $columnAttr = $activeModel->schema()->column($columnName);
                     // when blank and the field is not nullable, set cell value as default value setup in database
                     if ($columnAttr && !$columnAttr['null']) {
                         if (isset($columnAttr['default']) && strlen($columnAttr['default']) > 0) {
@@ -1662,7 +1601,7 @@ class ImportBehavior extends Behavior
             } elseif ($foreignKey == self::NON_TABLE_LIST) {
                 if (strlen($cellValue) > 0) {
                     $getIdEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportGet' . $excelMappingObj->lookup_model . 'Id'), 'onImportGet' . $excelMappingObj->lookup_model . 'Id', [$cellValue]);
-                    $recordId = $getIdEvent->getResult();
+                    $recordId = $getIdEvent->result;
                     if (strlen($recordId) > 0) {
                         $val = $recordId;
                     } else {
@@ -1680,8 +1619,8 @@ class ImportBehavior extends Behavior
                 $params = [$tempRow, $cellValue];
                 $event = $this->dispatchEvent($this->_table, $this->eventKey('onImportCheck' . ucfirst($excelMappingObj->column_name) . 'Config'), 'onImportCheck' . $excelMappingObj->column_name . 'Config', $params);
 
-                if ($event->getResult() !== true) {
-                    $rowInvalidCodeCols[$columnName] = __($event->getResult());
+                if ($event->result !== true) {
+                    $rowInvalidCodeCols[$columnName] = __($event->result);
                     $rowPass = false;
                 } else {
                     if (!array_key_exists('customColumns', $tempRow)) {
@@ -1695,8 +1634,8 @@ class ImportBehavior extends Behavior
             }
         }
         // add condition to check if its importing institutions
-        $plugin = $this->getConfig('plugin');
-        $model = $this->getConfig('model');
+        $plugin = $this->config('plugin');
+        $model = $this->config('model');
         if ($plugin == 'Institution' && $model == 'Institutions') {
             // if its importing institution will get the userId and super_admin from the session and add the userId and Super_admin to the extracted data.
             $session = $this->_table->Session;
@@ -1709,7 +1648,7 @@ class ImportBehavior extends Behavior
 
         if ($rowPass) {
             $rowPassEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportModelSpecificValidation'), 'onImportModelSpecificValidation', [$references, $tempRow, $originalRow, $rowInvalidCodeCols]);
-            $rowPass = $rowPassEvent->getResult();
+            $rowPass = $rowPassEvent->result;
         }
 
         return $rowPass;

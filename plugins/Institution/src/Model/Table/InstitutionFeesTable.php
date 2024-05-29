@@ -56,9 +56,7 @@ class InstitutionFeesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        
         $session = $this->request->getSession();
-        //$this->institutionId = $session->read('Institution.Institutions.id');
         $this->institutionId = $this->getInstitutionID();
 
         $this->field('total', ['type' => 'float', 'visible' => ['add' => false, 'edit' => false, 'index' => true, 'view' => true]]);
@@ -67,7 +65,7 @@ class InstitutionFeesTable extends ControllerActionTable
         $this->field('education_grade_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
         $this->field('education_programme', ['type' => 'select', 'visible' => ['index'=>true]]);
 
-        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $this->currency = $ConfigItems->value('currency');
         $this->field('fee_types', ['type' => 'element', 'element' => 'Institution.Fees/fee_types', 'currency' => $this->currency, 'visible' => ['view'=>true, 'edit'=>true]]);
 
@@ -184,13 +182,15 @@ class InstitutionFeesTable extends ControllerActionTable
         $feeTypes = [];
         $amount = 0.00;
         foreach ($entity->institution_fee_types as $key=>$obj) {
-            $feeTypes[$obj->fee_type->order] = [
-                'id' => $obj->id,
-                'type' => $obj->fee_type->name,
-                'fee_type_id' => $obj->fee_type_id,
-                'amount' => number_format($obj->amount, 2)
-            ];
-            $amount = (float)$amount + (float)$obj->amount;
+            if ($obj->amount > 0) { //POCOR-8177
+                $feeTypes[$obj->fee_type->order] = [
+                    'id' => $obj->id,
+                    'type' => $obj->fee_type->name,
+                    'fee_type_id' => $obj->fee_type_id,
+                    'amount' => number_format($obj->amount, 2)
+                ];
+                $amount = (float)$amount + (float)$obj->amount;
+            }
         }
         ksort($feeTypes);
         $this->fields['fee_types']['data'] = $feeTypes;
@@ -372,25 +372,17 @@ class InstitutionFeesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, $request)
     {
-        $requestData = $this->request->getData($this->getAlias());
-        // Check if academic_period_id is empty in the request data
-        if (empty($requestData['academic_period_id'])) {
-            // Set academic_period_id to the current academic period if it's empty
-            $requestData['academic_period_id'] = $this->AcademicPeriods->getCurrent();
-            // Update the request data
-            $this->request = $this->request->withData($this->getAlias(), $requestData);
+        if (empty($this->request->getData()[$this->getAlias()]['academic_period_id'])) {
+            $this->request->getData()[$this->getAlias()]['academic_period_id'] = $this->AcademicPeriods->getCurrent();
         }
-        // Update _selectedAcademicPeriodId with the new value
-        $this->_selectedAcademicPeriodId = $requestData['academic_period_id'];
-        // Retrieve grade options based on the institution ID and academic period
+        $this->_selectedAcademicPeriodId = $this->request->getData()[$this->getAlias()]['academic_period_id'];
         $this->_gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
-        // Set the options for the EducationGradeId field
         $attr['options'] = $this->_gradeOptions;
-
         return $attr;
     }
+
 
     /******************************************************************************************************************
     **

@@ -485,7 +485,10 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     $this->aliasField('staff_id') => $entity->staff_id,
                 ])
                 ->first();
-                $entity->end_date = $staffPositionProfilesRecord->end_date->format('Y-m-d');
+                //POCOR-8258
+                if (!empty($staffPositionProfilesRecord->end_date)) {
+                    $entity->end_date = $staffPositionProfilesRecord->end_date->format('Y-m-d');
+                }
                 // echo "<pre>";print_r($staffPositionProfilesRecord->end_date->format('Y-m-d'));die;
             }
             $entity->end_date =  date("Y-m-d", strtotime($entity->end_date) );
@@ -817,6 +820,11 @@ class StaffPositionProfilesTable extends ControllerActionTable
         if ($this->action == 'view') {
             $oldValue = $entity->institution_staff->end_date;
             $newValue = $entity->end_date;
+            if ($newValue->format('Y-m-d H:i:s') === '1969-12-31 00:00:00') {
+                $newValue = '';
+            } else {
+                $newValue = $newValue;
+            }
             if ($newValue != $oldValue) {
                 if (!empty($oldValue) && !empty($newValue)) {
                     // START POCOR-7216
@@ -1174,7 +1182,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $getStaffStartDateData = $getStaffStartData->find()
             ->where([
                 $getStaffStartData->aliasField('staff_id') => $entity->staff_id,
-                $getStaffStartData->aliasField('institution_id') => $entity->institution_id
+                $getStaffStartData->aliasField('institution_id') => $entity->institution_id,
+                $getStaffStartData->aliasField('id') => $entity->institution_staff_id
             ])
             ->order([$getStaffStartData->aliasField('start_date') => 'DESC'])
             ->first();

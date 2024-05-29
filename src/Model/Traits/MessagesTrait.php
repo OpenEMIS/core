@@ -122,6 +122,11 @@ trait MessagesTrait
             'validationRules' => 'Validation Rules',
             'currentNotDeletable' => 'This record cannot be deleted because it is set as Current',
             'custom_validation_pattern' => 'Please enter a valid format',
+            'custom_validation_minimum_height' => 'Height is less then minimum height.',
+            'custom_validation_maximum_height' => 'Height is more then maximum height.',
+            'custom_validation_minimum_weight' => 'Height is less then minimum weight.',
+            'custom_validation_maximum_weight' => 'Height is more then maximum weight.',
+            'custom_validation_land_size' => 'Size is greater then config size.',
             //'bulk_student_transfer_in' => 'Bulk Student Transfer is updated. Pending Student Transfer from Sending Institution.',
             'bulk_student_transfer_in' => 'Bulk Student is updated.', //POCOR-7007 change message
             'bulk_student_transfer_out' => 'Students Transferred Successful.',
@@ -675,14 +680,20 @@ trait MessagesTrait
         'ImportInstitutionSurveys' => [
             'restrictImport' => 'Import operation is not allowed as the record is already Done'
         ],
+
         'TrainingSessions' => [
             'trainer_type' => 'Type',
-            'trainer' => 'Trainer'
+            'trainer' => 'Trainer',
+            'evaluator_types' => 'Type',
+            'evaluator' => 'Evaluator'
         ],
+        
         'TrainingSessionResults' => [
             'noResultTypes' => 'You need to configure Result Types under Training Course.',
             'noTrainees' => 'No Available Trainees'
         ],
+
+
         'StaffTrainingApplications' => [
             'success' => 'This session has been added successfully.',
             'fail' => 'Failed to add the session.',

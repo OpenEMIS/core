@@ -27,10 +27,10 @@ class NationalitiesTable extends ControllerActionTable
         ]);
     }
 
-    public function afterAction(Event $event, ArrayObject $extra) 
+    public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->field('identity_type_id', [
-            'type' => 'select', 
+            'type' => 'select',
             'after' => 'name',
             'entity' => $extra['entity']
         ]);
@@ -49,15 +49,6 @@ class NationalitiesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        //update information on security user table
-        $listeners = [
-            TableRegistry::get('User.Users')
-        ];
-        $this->dispatchEventToModels('Model.Nationalities.onChange', [$entity], $this, $listeners);
-    }
-
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
@@ -70,6 +61,7 @@ class NationalitiesTable extends ControllerActionTable
         $connection->getDriver()->enableAutoQuoting();
     }
 
+    //POCOR-7980
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
@@ -103,4 +95,14 @@ class NationalitiesTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-}
+    //POCOR-7980
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        //update information on security user table
+        $listeners = [
+            TableRegistry::get('User.Users')
+        ];
+        $this->dispatchEventToModels('Model.Nationalities.onChange', [$entity], $this, $listeners);
+    }
+    }

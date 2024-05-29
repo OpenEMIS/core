@@ -9,9 +9,7 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\ORM\ResultSet;
-use Cake\Http\ServerRequest;
 use PHPExcel_IOFactory;
-use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class ReportsController extends AppController
 {
@@ -41,6 +39,7 @@ class ReportsController extends AppController
         $this->loadComponent('Training.Training');
         $this->loadComponent('Navigation');
     }
+
     public function beforeFilter(Event $event)
     { 
         if ($this->getPlugin() == 'Report') {
@@ -212,6 +211,7 @@ class ReportsController extends AppController
                 'Report.PotentialWrongBirthdates' => __('Potential Wrong Birthdates'),
                 'Report.EnrollmentOutliers' => __('Enrollment Outliers'),//POCOR-7211
                 'Report.AgeOutliers' => __('Age Outliers'),//POCOR-7211
+                'Report.ValidationReport' => __('Validation Report'),//POCOR-8144
             ];
         } elseif ($module == 'Audits') {
             $options = [
@@ -224,8 +224,9 @@ class ReportsController extends AppController
             ];
         } elseif ($module == 'Examinations') {
             $options = [
-                'Report.RegisteredStudentsExaminationCentre' => __('Registered Students by Examination Centre'),
+                
                 'Report.NotRegisteredStudents' => __('Not Registered Students'),
+                'Report.RegisteredStudentsExaminationCentre' => __('Registered Students by Examination Centre'),
                 'Report.ExaminationResults' => __('Examination Results'),
             ];
         } elseif ($module == 'UisStatistics') {
@@ -258,7 +259,6 @@ class ReportsController extends AppController
 
     public function index()
     {
-
         return $this->redirect(['action' => 'Users']);
     }
 

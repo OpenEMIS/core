@@ -57,9 +57,10 @@ $this->start('panelBody');
             <p ng-repeat="error in InstitutionClassStudentsController.postError.institution_shift_id">{{ error }}</p>
         </div>
     </div>
-
-    <div class="input select required error">
-        <label><?= __('Unit') ?></label>
+    <!-- create if condition for unit and course visibility  for POCOR-8107 -- --->
+<?php if ($viewUrl['unit_field'] == 1){ ?>
+    <div class="input select error">
+        <label><?= __('Internal Verification') ?></label>
         <div class="input-select-wrapper">
             <select name="InstitutionClasses[institution_unit_id]" id="institutionclasses-institution-unit-id"
                 ng-options="option.id as option.name for option in InstitutionClassStudentsController.unitOptions"
@@ -73,9 +74,10 @@ $this->start('panelBody');
             <p ng-repeat="error in InstitutionClassStudentsController.postError.institution_unit_id">{{ error }}</p>
         </div>
     </div>
-
-    <div class="input select required error">
-        <label><?= __('Course') ?></label>
+<?php } ?>
+<?php if ($viewUrl['course_field'] == 1){ ?>
+    <div class="input select error">
+        <label><?= __('External Verification') ?></label>
         <div class="input-select-wrapper">
             <select name="InstitutionClasses[institution_course_id]" id="institutionclasses-institution-course-id"
                 ng-options="option.id as option.name for option in InstitutionClassStudentsController.courseOptions"
@@ -89,7 +91,7 @@ $this->start('panelBody');
             <p ng-repeat="error in InstitutionClassStudentsController.postError.institution_course_id">{{ error }}</p>
         </div>
     </div>
-
+    <?php } ?>
     <div class="input select">
         <label><?= __('Home Room Teacher') ?></label>
         <div class="input-select-wrapper">

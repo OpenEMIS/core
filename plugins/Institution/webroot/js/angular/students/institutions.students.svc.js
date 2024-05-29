@@ -25,6 +25,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         getAcademicPeriods: getAcademicPeriods,
         getEducationGrades: getEducationGrades,
         getClasses: getClasses,
+        getClassCapacity: getClassCapacity,
         getColumnDefs: getColumnDefs,
         getStudentData: getStudentData,
         postEnrolledStudent: postEnrolledStudent,
@@ -962,6 +963,20 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         return deferred.promise;
     }
 
+    //POCOR-8170 -- Start
+    function getClassCapacity(param) {
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/getClassCapacity';
+        $http.post(url, {params: param})
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    };
+    //POCOR-8170 -- End
+
     function getColumnDefs() {
         var filterParams = {
             cellHeight: 30
@@ -1079,11 +1094,15 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
     }
 
     function getNationalities() {
-        return Nationalities
-            .select()
-            .contain(['IdentityTypes'])
-            .order(['Nationalities.order'])
-            .ajax({defer: true});
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/getNationalities/';
+        $http.get(url)
+            .then(function(response){
+                deferred.resolve(response);
+            }, function(error) {
+                deferred.reject(error);
+            });
+        return deferred.promise;
     }
 
     function getSpecialNeedTypes() {
@@ -1165,11 +1184,15 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
      * @returns {Case 1: for None  [{"value":"None","showExternalSearch ":false}]}
     *  @returns {Case 2: for rest values [{"value":"OpenEMIS Identity","showExternalSearch ":true}]}
      */
-    function checkConfigForExternalSearch()
+    function checkConfigForExternalSearch(nationality_id, identity_type_id)
     {
         var deferred = $q.defer();
         let url = angular.baseUrl + '/Institutions/checkConfigurationForExternalSearch';
-        $http.get(url)
+        let params = {
+            'nationality_id' : nationality_id,
+            'identity_type_id' : identity_type_id
+        };
+        $http.post(url, {params: params})
             .then(function (response)
             {
                 deferred.resolve(response.data[0]);

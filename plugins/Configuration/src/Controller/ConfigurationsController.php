@@ -61,7 +61,6 @@ class ConfigurationsController extends AppController
     }
     public function Theme()
     {
-        echo "dfads";die;
         return $this->redirect(['plugin' => 'Theme', 'controller' => 'Themes', 'action' => 'index', 'querystring' => $this->encode($this->request->getQuery())]);
     }
 
@@ -96,7 +95,8 @@ class ConfigurationsController extends AppController
             ])
             ->innerJoin(['ConfigItems' => 'config_items'], [
                 'ConfigItems.code' => 'external_data_source_type',
-                $ExternalAttributes->aliasField('external_data_source_type').' = ConfigItems.value'
+                //$ExternalAttributes->aliasField('external_data_source_type').' = ConfigItems.value'
+                $ExternalAttributes->aliasField('external_data_source_type').' = ConfigItems.name' //POCOR-7981
             ])
             ->toArray();
 

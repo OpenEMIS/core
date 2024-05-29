@@ -1,4 +1,95 @@
-### [3.99.1] - 2023-03-15
+### [3.107.0] - 2024-05-20
+- Implemented: Develop changes to OpenEMIS Core Training feature
+- Implemented: Develop a migration script to remove edit account permission
+- Implemented: Remove OpenEMIS Core swagger v2 API YAML file
+- Bug Fixed: Institutions > Staff: User can delete position that is still active
+- Bug Fixed: Institutions>Search: when searching for schools that have " ʻ " OR " ' ", the search returned schools with the " ʻ " and " ' "even if search string contained " ' "
+- Bug Fixed: Institutions>Finance>Institution Fees: Fees that show 0 should not show
+- Bug Fixed: Institutions > Finances > Student Fees: The page is not showing the fees configured in Institution Fees page
+- Bug Fixed: Sign in with Microsoft login
+- Bug Fixed: Registration: Identity number api is not able to filter properly
+- Bug Fixed: Institutions>Attendance>Students: When i marked unexcused absent for a class, the system gives an error
+- Bug Fixed: API: Report card Angular pages
+- Bug Fixed: Institutions > Classes > Unit / Course : Labels are not reflected
+
+### [3.106.0] - 2024-05-10
+- Implemented: Develop OpenEMIS Core Training v4 APIs
+- Implemented: Develop changes to OpenEMIS Core Staff v4 API
+- Bug Fixed: Institutions > Infrastructure > Overview > Buildings > Add: When adding buildings, they face a 404 error.
+- Bug Fixed: Institutions>Performance>Report Cards: Error generating Report Card for Student 117372
+- Bug Fixed: Reports>Institutions: Report should not show any error
+- Bug Fixed: Administration > Performance > Outcomes: When user delete Outcomes Templates, user is able to delete the templates together with the associated records.
+- Bug Fixed: Institutions > Academic > Schedules > Intervals > Edit: User is not able to edit the interval
+- Bug Fixed: API: API does not exist as in current core feature in report card comment when user edit user can see dropdown & for that dropdown value for comment code
+- Bug Fixed: Institutions > Staff > Edit > Change in FTE: User's end date is not updated according to the value you add in the interface
+- Bug Fixed: Administration > Performance > Assessments > Assessments Periods > Edit: The field period weight is editable
+
+### [3.105.0] - 2024-05-02
+- Implemented: Develop changes to OpenEMIS Core Institution v4 API
+- Implemented: Develop OpenEMIS Core Themes v4 APIs
+- Bug Fixed: Reports > Custom > Final Emis تقرير الفاينل ايمس : Error Message is showing for Final Emis Report
+- Bug Fixed: Create migration to update primary keys to prevent duplicates
+- Bug Fixed: Institutions > Staff > Add: If there is no configuration under Add New Staff, the system should allow user to add the staff
+- Bug Fixed: Report>Survey: Duplicate institutions in the survey report
+- Bug Fixed: Directory > Students > General > Identities: When adding Identity in Directory page, the page gives 404 error
+- Bug Fixed: Reports>Examinations: Unable to filter for examination centres
+- Bug Fixed: Report>Training: Employee Training Card is not able to filter for any candidates
+- Bug Fixed: Institutions > Staff > Edit > Change in FTE: The system shows 404 error when changing the FTE for staff
+
+### [3.104.0] - 2024-04-26
+- Implemented: Develop individual student and staff completeness feature
+- Implemented: Develop Examinations results feature v4 APIs
+- Bug Fixed: Reports > Students> Student Health Report: When generating Student Health Report and only selected area is selected, the report generated is showing all area
+- Bug Fixed: Institutions>Survey>Forms: When saving answer for one form(repeater question), it is saved across for other forms
+- Bug Fixed: Institutions>Survey>Forms: Survey gives 404 error when trying to save a survey with the question with Checkbox type
+- Bug Fixed: Institutions>Academic>Curriculars: Name change to Co-Curricular in the db instead of Curricular
+- Bug Fixed: Registrations: Custom fields are not working
+
+### [3.103.0] - 2024-04-22
+- Implemented: Develop placeholders for Institution Profile template
+- Implemented: Develop additional advanced search filters
+- Bug Fixed: Institutions > Academic > Institution Curricular: System allows user to select students that are enrolled in previous academic period
+- Bug Fixed: Institutions>Students>Custom Fields: Student with dropdown is not able to be saved
+- Bug Fixed: Registrations: User is not able to complete registrations
+
+### [3.102.0] - 2024-04-16
+- Implemented: Develop an option to allow multiple external data source: identity including "Jordan UNHCR database"
+- Bug Fixed: Institutions > Finance > Student Fees > Add/View: The ordering of the Student fees is not in order for adding or viewing
+- Bug Fixed: Swagger: Update documentation for api/v4/system-configurations/{configId
+- Bug Fixed: Institutions > Students > Add: When adding students, user can save and student is added successfully without entering mandatory custom fields
+- Bug Fixed: Report_queries table-The following queries should be executed without any error
+- Bug Fixed: Institutions>Students>Promote: Dropdown is showing wrongly
+- Bug Fixed: Institutions > Academic > Institutions Curriculars > View > Students tab: Users are not able to add students under Institution Curriculars even though permission is given
+- Bug Fixed: API: Attendance Type Api is not working
+- Bug Fixed: Update Swagger for Academic Period
+- Bug Fixed: Institutions > Survey > Forms: Cannot save survey when adding a number field as "unique"
+- Bug Fixed: Registration: Education grade api should be filtered by Institution
+- Bug Fixed: Add paramters to Student Meal API v4
+
+### [3.101.0] - 2024-04-07
+- Implemented: Develop function to search by OpenEMIS ID when adding students, staff and guardians in Directory and Institution module
+- Implemented: Remove unused System Configurations
+- Implemented: Develop Data Validation Report
+- Bug Fixed: Develop API Directory add staff/student/guardians feature Part 5
+- Bug Fixed: API: Message should show successful
+- Bug Fixed: Registration: Education grade should be filtered by Institution
+- Bug Fixed: Administration > Profiles > Institutions: Staff profile is stuck in progress
+- Bug Fixed: Institutions > Survey > Forms: Text field type with url validation does not work on repeater form question
+
+### [3.100.0] - 2024-04-01
+- Implemented: Develop system validations
+- Implemented: Develop add student/staff/guardian functions v4 APIs (Part III)
+- Bug Fixed: Institutions > Staff > Add: When the user configures the mandatory field for either or all of the following fields, it is not showing as mandatory in the add page
+- Bug Fixed: Update Swagger for API: Post Security Users is showing get response
+- Bug Fixed: Institutions > Students > Add: Able to transfer students when capacity is full
+- Bug Fixed: Administration > Examinations > Results > Import: When downloading the importing template for Examinations results, the page just loads and not showing any error or not downloading the template
+- Bug Fixed: Registration: When inputting email to register students in OpenEMIS Registrations, the email does not show in OpenEMIS Core
+- Bug Fixed: Develop API Directory add staff/student/guardians feature Part 2
+- Bug Fixed: Institutions > Academic > Classes : Classes is not sorted in ascending order
+- Bug Fixed: Institutions > Report Cards > Comments: Class subject staff not able to insert comments
+- Bug Fixed: Institutions > Performance > Report Cards: Report card hitting error status
+
+### [3.99.1] - 2024-03-15
 - Implemented: Update Swagger for institution student and institution student absence v4 APIs
 - Implemented: Develop OpenEMIS Core Meals v4 APIs
 - Bug Fixed: Administration > Security > Groups: When users are not found upon adding users to the user group page, the error message says "No Guardian found
@@ -14,7 +105,7 @@
 - Bug Fixed: Develop add student/staff/guardian functions v4 APIs (Part IV)
 - Bug Fixed: Institutions > Staff: User is not seeing institutions position specifically positions that used to be assigned to them when assigning staff to institutions
 
-### [3.99.0] - 2023-02-05
+### [3.99.0] - 2024-03-05
 - Implemented: Develop new Last Login Report
 - Implemented: Develop changes to the Logins Report
 - Implemented: Develop add student/staff/guardian functions v4 APIs (Part II)
@@ -23,7 +114,7 @@
 - Bug Fixed: API: Attendance API is not working properly
 - Bug Fixed: API: Student Attendance Mark Type Api has the wrong name
 
-### [3.98.15] - 2023-02-23
+### [3.98.15] - 2024-02-23
 - Bug Fixed: Directory>Add>Guardian: Adding as guardian still overwrites their password
 - Bug Fixed: Institution/Directory > Students > Guardian > Add: Contacts does not appear in the Contacts page when adding guardian via Student
 - Bug Fixed: Administrations > System Setup > Labels : Curriculars is not added to Label feature
@@ -33,7 +124,7 @@
 - Bug Fixed: Directory: Photo is not showing
 - Bug Fixed: Develop Staff Attendance feature v4 APIs
 
-### [3.98.14] - 2023-02-16
+### [3.98.14] - 2024-02-16
 - Implemented: Update Swagger document for Meals feature v4 APIs
 - Bug Fixed: Institutions > Academic > Classes: Disabling unit and courses to not be showing on the classes page, the page is still showing unit and courses
 - Bug Fixed: Administration > Examinations > Results: Students are not appearing under Results page. The message displayed seems to be incorrect as weight is already configured
@@ -41,7 +132,7 @@
 - Bug Fixed: Institutions > Students/Staff: Photo is not showing
 - Bug Fixed: Develop Swagger for Student Attendance feature v4 APIs
 
-### [3.98.13] - 2023-02-09
+### [3.98.13] - 2024-02-09
 - Implemented: Develop Institutions Classes feature v4 APIs
 - Implemented: Develop Student Attendance feature v4 APIs
 - Implemented: Develop system configurations v4 APIs
@@ -51,7 +142,7 @@
 - Bug Fixed: Develop Staff Attendance feature v4 APIs Part 2
 - Bug Fixed: Institutions > Survey > Forms: Staff list and student list is not working for Annual Statistical Questionnaire Nursery 2023-2024
 
-### [3.98.12] - 2023-02-02
+### [3.98.12] - 2024-02-02
 - Bug Fixed: Institutions > Performance > Report Cards: Absence - Excused, Unexcused and Lates cells in the student report card default template is not showing any data
 - Bug Fixed: Administration > Data Management: User is not seeing any data management tab even though permission is given
 - Bug Fixed: API: Student Meal API v4
@@ -62,7 +153,7 @@
 - Bug Fixed: Institutions > Students > Add: The file ui is too big
 - Bug Fixed: Institution>Students: Promoting/Graduating button should show Promoting/Repeating/Graduating
 
-### [3.98.11] - 2023-01-26
+### [3.98.11] - 2024-01-26
 - Implemented: Develop Staff Attendance feature v4 APIs
 - Bug Fixed: Update Swagger for OpenEMIS Core v2 APIs (CakePHP) as v4 APIs (Laravel) - Part 4 
 - Bug Fixed: Institutions > Student > Add: Upon adding, the student is not in the pending admission page - this applies when system configuration "Add New Student > "Default Student Admission Status" is set to "Open"
@@ -70,7 +161,7 @@
 - Bug Fixed: Institutions > Performance > Report Cards: Principal placeholder is showing wrongly
 - Bug Fixed: API: It should return "message": "Invalid Parameters", "data": [], error or success}
 
-### [3.98.10] - 2023-01-19
+### [3.98.10] - 2024-01-19
 - Bug Fixed: Institutions > Survey > Forms: When saving, user is getting an error selecting assignee
 - Bug Fixed: API: API Security for all APIs Part two
 - Bug Fixed: Institutions > Performance > Assessments > Report: Marks are not showing in the assessment report even though is it showing on the assessment page
@@ -82,7 +173,7 @@
 - Bug Fixed: Administration > Profiles > Institutions > Generate: Stuck in progress
 - Bug Fixed: User that is not superadmin is unable to create survey
 
-### [3.98.9] - 2023-01-12
+### [3.98.9] - 2024-01-12
 - Implemented: Develop updates to nationalities v4 APIs
 - Implemented: Develop README.md file
 - Bug Fixed: Attendance>Students: Enrolled students should be showing based on start date and end date
@@ -95,7 +186,7 @@
 - Bug Fixed: Institutions > Performance > Assessments > Report: The word "Average" in assessment report is not translated
 - Bug Fixed: API: Get All Staff for All Institution Status shows 500 internal server error and data is not showing in the response (able to replicate in demo too
 
-### [3.98.8] - 2023-01-04
+### [3.98.8] - 2024-01-04
 - Implemented: Develop Institution Timetables feature v4 APIs
 - Bug Fixed: Institutions > Attendance > Students> Import: When importing absences, the system does not update
 - Bug Fixed: Administration>Performance>Assessment>Grading Types: Unable to delete grading types that are newly created

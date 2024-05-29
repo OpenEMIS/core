@@ -34,6 +34,7 @@ $this->start('panelBody');
 	$downloadText = __('Downloading...');
 	
 ?>
+
 <style type="text/css">
 .none { display: none !important; }
 </style>
@@ -79,6 +80,8 @@ $this->start('panelBody');
 						} else if ($status == -1) {
 							$downloadClass = 'none';
 							$errorClass = '';
+						} else if ($status == -2) {
+							echo __('No Data');	//POCOR-8247
 						}	else if ($status == 0 && !empty($obj->file_path)) {
 							echo __('Completed');	
 						}
@@ -93,7 +96,7 @@ $this->start('panelBody');
 							<button class="btn btn-dropdown action-toggle" type="button" id="action-menu" data-toggle="dropdown" aria-expanded="false">
 							Select<span class="caret-down"></span>
 							</button>
-						 <?php
+							<?php
 							$downloadUrl = ['plugin' => $params['plugin'],
 								'controller' => $params['controller'],
 								'action' =>  $ControllerAction['table']->getAlias(),
@@ -125,7 +128,7 @@ $this->start('panelBody');
 								'action' =>  $ControllerAction['table']->getAlias(),
 								'removeReport',$obj->id
 							];
-						?>	
+						?>
 											
 						<ul class="dropdown-menu action-dropdown" role="menu" aria-labelledby="action-menu">
 							<div class="dropdown-arrow"><i class="fa fa-caret-up"></i></div>

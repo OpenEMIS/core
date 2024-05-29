@@ -255,8 +255,8 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 institution_class_id: classId,
                 staff_id: currentUserId
             });
-        // promises.push(KdSessionSvc.read('Auth.User.super_admin')); //Need to check why its not getting value from Session Controller
-        promises.push(localStorage.getItem("login_user_id"));
+
+        promises.push(KdSessionSvc.read('Auth.User.super_admin'));
         promises.push(principalPermission.ajax({
             defer: true
         }));
@@ -321,7 +321,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     subjects = response.data;
                     if (angular.isObject(subjects) && subjects.length > 0) {
                         angular.forEach(subjects, function(subject, key) {
-                            editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id) && (allCommentsEditRequired == 1)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-6800 add allCommentsEditRequired
+                            editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0 && (allCommentsEditRequired == 1)) || (allCommentsEditRequired == 1) || (homeroomTeacherEditCommentsRequired == 1);//POCOR-6800 add allCommentsEditRequired
                             this.push({
                                 tabName: subject.name + " Teacher",
                                 type: roles.TEACHER,
@@ -380,32 +380,22 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
 
     function getCommentCodeOptions() {
         return ReportCardCommentCodesTable
-            .select()
-            .find('commentCodeOptionsData')
+            .select(['id', 'name'])
+            .where({
+                visible: 1
+            })
+            .order(['order'])
             .ajax({
                 defer: true
             });
     };
 
-    // function getCommentCodeOptions() {
-    //     return ReportCardCommentCodesTable
-    //         .select(['id', 'name'])
-    //         .where({
-    //             visible: 1
-    //         })
-    //         .order(['order'])
-    //         .ajax({
-    //             defer: true
-    //         });
-    // };
-
     function getCurrentUser() {
         var deferred = $q.defer();
+
         KdSessionSvc.read('Auth.User.id')
             .then(function(response) {
-                // var staffId = response; // need to check why its not getting value from SessionController
-
-                var staffId = localStorage.getItem("login_user_id");
+                var staffId = response;
                 return StaffUserTable
                     .get(staffId)
                     .ajax({

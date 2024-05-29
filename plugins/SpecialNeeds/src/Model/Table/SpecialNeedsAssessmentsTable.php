@@ -5,11 +5,11 @@ use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Core\Configure;
 use Cake\Event\Event;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use Cake\Http\ServerRequest;
 
 class SpecialNeedsAssessmentsTable extends ControllerActionTable
 {
@@ -62,6 +62,11 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
                 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
                 'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
              ])
+             ->add('date',
+                 'ruleCheckInputWithinRange',
+                     ['rule' => ['checkInputWithinCurrentAcademicRange', 'date_of_behaviour']]
+
+             )
             ->allowEmpty('file_content');
     }
 
@@ -207,10 +212,13 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
 
     public function institutionStudentRiskCalculateRiskValue(Event $event, ArrayObject $params)
     {
+        // $institutionId = $params['institution_id'];
+        // $studentId = $params['student_id'];
+        // $academicPeriodId = $params['academic_period_id'];
+        $studentId = $this->getUserID();
 
-        $userID = $this->getUserID();
         $quantityResult = $this->find()
-            ->where([$this->aliasField('security_user_id') => $userID])
+            ->where([$this->aliasField('security_user_id') => $studentId])
             ->all()
             ->toArray();
         $quantity = !empty(count($quantityResult)) ? count($quantityResult) : 0;
@@ -230,10 +238,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
             $specialNeedName = $obj->special_needs_type->name;
             $specialNeedDifficulties = $obj->special_need_difficulty->name;
 
-            $referenceDetails[$obj->id] =  __($specialNeedDifficulties);
-            if(!empty($specialNeedName)) {
-                $referenceDetails[$obj->id] = __($specialNeedName) . ' (' . __($specialNeedDifficulties) . ')';
-            }       
+            $referenceDetails[$obj->id] = __($specialNeedName) . ' (' . __($specialNeedDifficulties) . ')';
         }
 
         // tooltip only receieved string to be display
@@ -447,7 +452,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $monthOptions = ['1'=> '1', '2'=> '2','3'=> '3','4'=> '4', '5'=> '5', '6'=> '6','7'=> '7','8'=> '8','9'=> '9','10'=> '10', '11'=>'11', '12'=> '12'];
         $monthOptions = ['-1' => '-- ' . __('Select Month') . ' --'] + $monthOptions;    
         $selectedmonth = !is_null($this->request->getQuery('month')) ? $this->request->getQuery('month') : '-1';
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::get('academic_periods');
         $periodsOptions = $AcademicPeriods
                     ->find('list', ['keyField' => 'start_year', 'valueField' => 'start_year'])
                     ->order([$AcademicPeriods->aliasField('start_year') => 'DESC']);

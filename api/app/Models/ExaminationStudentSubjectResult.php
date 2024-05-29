@@ -10,8 +10,10 @@ class ExaminationStudentSubjectResult extends Model
     use HasFactory;
 
     public $timestamps = false;
+    protected $keyType = 'string';
+    public $incrementing = false;
     protected $table = "examination_student_subject_results";
-
+    public $guarded = [];
     public function examination()
     {
         return $this->belongsTo(Examination::class);
@@ -24,7 +26,7 @@ class ExaminationStudentSubjectResult extends Model
 
     public function examinationSubject()
     {
-        return $this->belongsTo(ExaminationCentre::class);
+        return $this->belongsTo(ExaminationSubject::class);
     }
 
     public function educationSubject()

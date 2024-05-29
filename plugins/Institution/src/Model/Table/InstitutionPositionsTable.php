@@ -195,6 +195,31 @@ class InstitutionPositionsTable extends ControllerActionTable
         return $validator;
     }
 
+    //POCOR-8143
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        // Check if there are associated records in InstitutionStaff
+        $institutionStaffCount = $this->InstitutionStaff->find()
+            ->where(['institution_position_id' => $entity->id])
+            ->count();
+
+        // Check if there are associated records in StaffTransferIn
+        $staffTransferInCount = $this->StaffTransferIn->find()
+            ->where(['new_institution_position_id' => $entity->id])
+            ->count();
+
+        // Check if any associated records exist
+        $associatedRecordsExist = ($institutionStaffCount > 0) || ($staffTransferInCount > 0);
+        //print_r($associatedRecordsExist);exit;
+        if ($associatedRecordsExist) {
+            $message = __('Delete operation is not allowed as there are other information linked to this record.');
+            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+            $url = $this->controller->request->referer();
+            $event->stopPropagation();
+            return $this->controller->redirect($url);
+        }
+    }
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         /*POCOR-5069 Starts
@@ -272,8 +297,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         ]);
     }
 
-    // public function onUpdateFieldPositionNo(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldPositionNo(Event $event, array $attr, $action)
+    public function onUpdateFieldPositionNo(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['attr']['value'] = $this->getUniquePositionNo();
@@ -684,7 +708,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             ])->leftJoin([$institutionStaff->getAlias() => $institutionStaff->getTable()],
                 [$institutionStaff->aliasField('institution_position_id = ') . $this->aliasField('id')])
             ->distinct([$this->aliasField('position_no')]);
-            //->where([$this->aliasField('status_id') => ])
+            
         $sortList = ['position_no', 'StaffPositionTitles.order'/*,POCOR-5069 'StaffPositionGrades.order'*/, 'created','Assignees.first_name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
