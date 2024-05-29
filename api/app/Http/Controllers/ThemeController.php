@@ -42,21 +42,16 @@ class ThemeController extends Controller
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="data", type="array",
-     *                     @OA\Items(
-     *                         type="object",
-     *                         @OA\Property(property="id", type="integer", example=76),
-     *                         @OA\Property(property="name", type="string", example="Application Name"),
-     *                         @OA\Property(property="value", type="integer", example=null),
-     *                         @OA\Property(property="content", type="integer", example=null),
-     *                         @OA\Property(property="default_value", type="string", example="OpenEMIS Core"),
-     *                         @OA\Property(property="default_content", type="integer", example=null),
-     *                         @OA\Property(property="modified_user_id", type="integer", example=2),
-     *                         @OA\Property(property="modified", type="string", example="2018-03-28 15:22:40"),
-     *                         @OA\Property(property="created_user_id", type="integer", example=2),
-     *                         @OA\Property(property="created", type="string", example="2016-05-25 09:52:26")
-     *                     )
-     *                 )
+     *                 @OA\Property(property="id", type="integer", example=76),
+     *                 @OA\Property(property="name", type="string", example="Application Name"),
+     *                 @OA\Property(property="value", type="integer", example=null),
+     *                 @OA\Property(property="content", type="integer", example=null),
+     *                 @OA\Property(property="default_value", type="string", example="OpenEMIS Core"),
+     *                 @OA\Property(property="default_content", type="integer", example=null),
+     *                 @OA\Property(property="modified_user_id", type="integer", example=2),
+     *                 @OA\Property(property="modified", type="string", example="2018-03-28 15:22:40"),
+     *                 @OA\Property(property="created_user_id", type="integer", example=2),
+     *                 @OA\Property(property="created", type="string", example="2016-05-25 09:52:26")
      *             )
      *         )
      *     ),

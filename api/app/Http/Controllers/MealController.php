@@ -64,7 +64,6 @@ class MealController extends Controller
      *                          @OA\Property(property="name", type="string", example="WFP")
      *                      )
      *                  ),
-     *                  @OA\Property(property="total", type="integer", example="1")
      *              )
      *          )
      *      ),
@@ -134,7 +133,6 @@ class MealController extends Controller
      *                          @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
      *                      )
      *                  ),
-     *                  @OA\Property(property="total", type="integer", example="1")
      *              )
      *          )
      *      ),
@@ -178,18 +176,21 @@ class MealController extends Controller
      *      @OA\Parameter(
      *         name="academic_period_id",
      *         in="query",
+     *         required=true,
      *         description="Id of the academic year",
      *         @OA\Schema(type="integer", example=30)
      *      ),
      *      @OA\Parameter(
      *         name="institution_class_id",
      *         in="query",
+     *         required=true,
      *         description="Id of the institution class",
      *         @OA\Schema(type="integer", example=52)
      *      ),
      *      @OA\Parameter(
      *         name="meal_program_id",
      *         in="query",
+     *         required=true,
      *         description="Id of meal program",
      *         @OA\Schema(type="integer", example=3)
      *      ),
@@ -212,8 +213,9 @@ class MealController extends Controller
      *         @OA\Schema(type="integer", example=4)
      *      ),
      *      @OA\Parameter(
-     *         name="day",
+     *         name="day_id",
      *         in="query",
+     *         required=true,
      *         description="day Id",
      *         @OA\Schema(type="integer", example=1)
      *      ),
@@ -319,7 +321,6 @@ class MealController extends Controller
      *                          @OA\Property(property="export", type="string", example="Institution/Institutions/eyJpZCI6Nn0.cake_session_id/StudentMeals/excel?institution_id=6&institution_class_id=572&education_grade_id=undefined&academic_period_id=32&day_id=1&attendance_period_id=undefined&week_start_day=&week_end_day=&subject_id=undefined&week_id=0"),
      *                          @OA\Property(property="help", type="string", example="")
      *                  ),
-     *                  @OA\Property(property="total", type="integer", example="1")
      *              )
      *          )
      *      ),
@@ -388,7 +389,6 @@ class MealController extends Controller
      *                          @OA\Property(property="name", type="string", example="Received")
      *                      )
      *                  ),
-     *                  @OA\Property(property="total", type="integer", example="1")
      *              )
      *          )
      *      ),
@@ -522,7 +522,6 @@ class MealController extends Controller
      *                          @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
      *                      )
      *                  ),
-     *                  @OA\Property(property="total", type="integer", example="1")
      *              )
      *          )
      *      ),
@@ -594,7 +593,6 @@ class MealController extends Controller
      *                          @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
      *                      )
      *                  ),
-     *                  @OA\Property(property="total", type="integer", example="1")
      *              )
      *          )
      *      ),
@@ -662,7 +660,6 @@ class MealController extends Controller
      *                          @OA\Property(property="national_code", type="string", example=Null),
      *                      )
      *                  ),
-     *                  @OA\Property(property="total", type="integer", example="1")
      *              )
      *          )
      *      ),
@@ -734,7 +731,6 @@ class MealController extends Controller
      *                          @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
      *                      )
      *                  ),
-     *                  @OA\Property(property="total", type="integer", example="1")
      *              )
      *          )
      *      ),
@@ -804,7 +800,6 @@ class MealController extends Controller
      *                          @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
      *                      )
      *                  ),
-     *                  @OA\Property(property="total", type="integer", example="4")
      *              )
      *          )
      *      ),
@@ -875,7 +870,6 @@ class MealController extends Controller
      *                          @OA\Property(property="created", type="date", example="2022-01-01 10:32:20"),
      *                      )
      *                  ),
-     *                  @OA\Property(property="total", type="integer", example="4")
      *              )
      *          )
      *      ),

@@ -28,19 +28,33 @@ class StudentController extends Controller
      *      description="Get a list of students",
      *      tags={"Institutions"},
      *      @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic period id",
+     *         @OA\Schema(type="integer", example="1")
+     *      ),
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *      ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
      *         description="Page number",
      *         @OA\Schema(type="integer", example="1")
-     *     ),
-     *     @OA\Parameter(
+     *      ),
+     *      @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
      *         description="Limit",
      *         @OA\Schema(type="integer", example="10")
-     *     ),
+     *      ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -122,6 +136,20 @@ class StudentController extends Controller
      *         description="Id of institution",
      *         @OA\Schema(type="integer", example="1")
      *     ),
+     *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic period id",
+     *         @OA\Schema(type="integer", example="1")
+     *      ),
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *      ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -294,6 +322,20 @@ class StudentController extends Controller
      *      description="Get a list of students absences",
      *      tags={"Institutions"},
      *      @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic period id",
+     *         @OA\Schema(type="integer", example="1")
+     *      ),
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *      ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -396,6 +438,20 @@ class StudentController extends Controller
      *         description="Instituton Id",
      *         @OA\Schema(type="integer", example="1")
      *     ),
+     *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic period id",
+     *         @OA\Schema(type="integer", example="1")
+     *      ),
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *      ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -660,6 +716,13 @@ class StudentController extends Controller
      *         description="Instituton Id",
      *         @OA\Schema(type="integer", example="1")
      *     ),
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *      ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",

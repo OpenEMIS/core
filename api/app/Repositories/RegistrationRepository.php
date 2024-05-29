@@ -1337,11 +1337,15 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function areaLevelsDropdown()
+    public function areaLevelsDropdown($params)
     {
         try {
-            $areaLevels = AreaLevels::select('id', 'name')->get();
-            
+            $areaLevels = AreaLevels::select('id', 'name');
+            if (isset($params['limit'])) {
+                $areaLevels = $areaLevels->paginate($params['limit']);
+            } else {
+                $areaLevels = $areaLevels->get();
+            }
             return $areaLevels;
         } catch (\Exception $e) {
             Log::error(
@@ -1363,8 +1367,12 @@ class RegistrationRepository extends Controller
                 $areas = $areas->where('area_level_id', $request['area_level_id']);
             }
 
-            $data = $areas->orderBy('name', 'ASC')->get();
-            
+            $data = $areas->orderBy('name', 'ASC');
+            if (isset($request['limit'])) {
+                $data = $data->paginate($request['limit']);
+            } else {
+                $data = $data->get();
+            }
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -1377,11 +1385,17 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function areaAdministrativeLevelsDropdown()
+    public function areaAdministrativeLevelsDropdown($params)
     {
         try {
-            $areaLevels = AreaAdministrativeLevels::select('id', 'name')->get();
-            
+            $areaLevels = AreaAdministrativeLevels::select('id', 'name');
+
+            if (isset($params['limit'])) {
+                $areaLevels = $areaLevels->paginate($params['limit']);
+            } else {
+                $areaLevels = $areaLevels->get();
+            }
+
             return $areaLevels;
         } catch (\Exception $e) {
             Log::error(
@@ -1398,16 +1412,22 @@ class RegistrationRepository extends Controller
     public function areasAdministrativeDropdown($request)
     {
         try {
-            $areas = AreaAdministrativeLevels::select('id', 'name');
+            $areas = AreaAdministratives::select('id', 'name');
 
-            if($request['area_level_id']){
+            if($request['area_administrative_level_id']){
                 $areas = $areas->where('area_administrative_level_id', $request['area_administrative_level_id']);
             }
 
-            $data = $areas->orderBy('name', 'ASC')->get();
-            
+            $data = $areas->orderBy('name', 'ASC');
+
+            if (isset($request['limit'])) {
+                $data = $data->paginate($request['limit']);
+            } else {
+                $data = $data->get();
+            }
             return $data;
         } catch (\Exception $e) {
+            dd($e);
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]

@@ -1059,7 +1059,8 @@ class WorkbenchController extends Controller
     /**
      * @OA\Get(
      *      path="/api/v4/institutions/staff/release",
-     *      summary="Get a list of transfer out students request",
+     *      summary="Get a list of staff release",
+     *      description="Get a list of staff release",
      *      tags={"Workbench"},
      *      @OA\Parameter(
      *         name="page",
@@ -1102,7 +1103,7 @@ class WorkbenchController extends Controller
      *                              @OA\Property(property="code_name", type="string", example="P1002 - Avory Primary School"),
      *                          ),
      *                          @OA\Property(property="previous_institution_id", type="integer", example=6),
-     *                          @OA\Property(property="request_title", type="string", example=" testtransfer to S2002 - Boster Lower Secondary School"),
+     *                          @OA\Property(property="request_title", type="string", example=" release of S2002"),
      *                          @OA\Property(property="received_date", type="string", example="May 11, 2020"),
      *                          @OA\Property(property="requester", type="string", example="admin - System  Admin"),
      *                          @OA\Property(property="status_id", type="integer", example=126),
