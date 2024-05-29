@@ -200,9 +200,12 @@ class InstitutionTabBehavior extends Behavior
                         foreach ($appliedActions[$url_action] as $additionalParam) {
                             if($url_action == 'Classes' && $additionalParam == 'institution_class_id'){
                                 $queryString['id'] = $entity->{$additionalParam};
-                            }else if($url_action == 'Subjects' && $additionalParam == 'institution_subject_id'){
-                                $queryString['id'] = $entity->{$additionalParam};
-                            }else{
+                            }
+                            else if($url_action == 'Subjects' && $additionalParam == 'institution_subject_id'){
+                                
+                                $queryString['institution_subject_id'] = $entity->id;
+                            }
+                            else{
                                 $queryString[$additionalParam] = $entity->{$additionalParam};
                             }
                         }
