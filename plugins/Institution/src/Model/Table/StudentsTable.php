@@ -1124,8 +1124,6 @@ class StudentsTable extends ControllerActionTable
         $this->setPreviousStudents();
 
         $query->contain(['EducationGrades']);
-
-
         // Student Statuses
         list($statusOptions, $selectedStatus) = $this->setStatusOptions();
 
@@ -1135,11 +1133,11 @@ class StudentsTable extends ControllerActionTable
         // Education Grades
         $InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
         $session = $this->Session;
-        $institutionId = $session->read('Institution.Institutions.id');
-
+        $institutionId = $this->institution_id;
+        $selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
         //POCOR-8092::start
-        if (empty($request->getQuery('academic_period_id'))) {
-            $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
+        if (!empty($request->getQuery('academic_period_id'))) {
+            $selectedAcademicPeriod = $request->getQuery('academic_period_id');
         }else{
             $existCurrentAcademicStudent = $this->find('all', ['conditions'=>[ 'academic_period_id' => $this->AcademicPeriods->getCurrent(), 'institution_id' => $institutionId]])->toArray();
             if($existCurrentAcademicStudent){
@@ -1168,14 +1166,10 @@ class StudentsTable extends ControllerActionTable
 
         $educationGradesOptions = ['-1' => __('All Grades')] + $educationGradesOptions;
 
-        // Query Strings
-
         $selectedEducationGrades = $this->queryString('education_grade_id', $educationGradesOptions);
 
         // Advanced Select Options
-
-        $queryString = $this->ControllerAction->getQueryString();
-        $this->advancedSelectOptions($statusOptions, $selectedStatus);
+        //$this->advancedSelectOptions($statusOptions, $selectedStatus);
         $studentTable = $this;
         $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod, [
             'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
@@ -1184,7 +1178,7 @@ class StudentsTable extends ControllerActionTable
             }
         ]);
 
-        $this->request = $this->request->withQueryParams(['academic_period_id' => $selectedAcademicPeriod]);
+        $request = $request->withQueryParams(['academic_period_id' => $selectedAcademicPeriod]);
 
         // To add the academic_period_id to export
         if (isset($extra['toolbarButtons']['export']['url'])) {
@@ -1210,9 +1204,7 @@ class StudentsTable extends ControllerActionTable
         }
         $extra['options']['sortWhitelist'] = $sortList;
         // End
-
         $search = $this->getSearchKey();
-
         if (!empty($search)) {
             // function from AdvancedNameSearchBehavior
             /**

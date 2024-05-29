@@ -173,6 +173,9 @@ class UndoStudentStatusTable extends AppTable
         }//POCOR-5670 ends
 //        $id = $entity->id;
         $params = $this->ControllerAction->getQueryString();
+        if(empty($params)){
+            $params = $this->getQueryString();
+        }        
 //        $params['id'] = $id;
         $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
 
@@ -835,10 +838,9 @@ class UndoStudentStatusTable extends AppTable
     public
     function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
-
         $request = $this->request;
-
-        $params = $this->ControllerAction->getQueryString();
+        //$params = $this->ControllerAction->getQueryString();
+        $params = $this->getQueryString();
         if(!empty($params)) {
             $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
         } else {
