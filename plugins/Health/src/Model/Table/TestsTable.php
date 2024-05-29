@@ -45,9 +45,8 @@ class TestsTable extends ControllerActionTable
     {
         $this->field('health_test_type_id', ['type' => 'select', 'after' => 'comment']);
         $this->field('file_name', ['visible' => false]);
-        $this->field('file_content', ['after' => 'health_test_type_id','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $userID = $this->getUserID();
-        $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
+        $this->field('file_content', ['after' => 'health_test_type_id','attr' => ['value' => $userID, 'label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -144,7 +143,14 @@ class TestsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        $validator->allowEmpty('file_content');
+        $validator
+        ->allowEmpty('file_content')
+        ->add('date',
+                 'ruleCheckInputWithinRange',
+                     ['rule' => ['checkInputWithinCurrentAcademicRange', 'date_of_behaviour']]
+
+             )//POCOR-8071
+        ;
         return $validator;
     }
 
@@ -190,7 +196,6 @@ class TestsTable extends ControllerActionTable
 
     // POCOR-6131   
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
-
         $iserId = $this->getUserID();
 
         $query
@@ -224,5 +229,4 @@ class TestsTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-
 }

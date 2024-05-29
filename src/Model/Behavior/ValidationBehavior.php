@@ -98,7 +98,7 @@ class ValidationBehavior extends Behavior
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $LongitudeMinimum = $ConfigItems->value("longitude_minimum");
         $LongitudeMaximum = $ConfigItems->value("longitude_maximum");
-        
+
         $isValid = false;
         $longitude = trim($check);
 
@@ -268,7 +268,7 @@ class ValidationBehavior extends Behavior
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $LatitudeMinimum = $ConfigItems->value("latitude_minimum");
         $LatitudeMaximum = $ConfigItems->value("latitude_maximum");
-        
+
         $isValid = false;
         $latitude = trim($check);
 
@@ -400,7 +400,7 @@ class ValidationBehavior extends Behavior
             }
         }
 
-        
+
     }
 
     public static function dateAfterEnrollment($check, array $globalData)
@@ -555,6 +555,11 @@ class ValidationBehavior extends Behavior
         return !preg_match('#[0-9]#', $check);
     }
 
+    public static function checkIfStringGotNoSpecialChar($check, array $globalData)
+    {
+        return !preg_match('/[\'^£$%&*()}{@#~?><>,|=_+¬-]/', $check);
+    }
+
     /**
      * [validatePreferred description]
      * @param  [type] $field      [description]
@@ -691,6 +696,25 @@ class ValidationBehavior extends Behavior
             return true;
         } else {
             return __(Inflector::humanize($field_name)).' is not within date range of '.$start_date.' and '.$end_date;
+        }
+    }
+
+    public static function checkInputWithinCurrentAcademicRange($field, $field_name)
+    {
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $academicPeriodID = $AcademicPeriods->getCurrent();
+        $academicPeriodData = $AcademicPeriods->get($academicPeriodID);
+        $start_date = date('d-m-Y', strtotime($academicPeriodData->start_date));
+        $end_date = date('d-m-Y', strtotime($academicPeriodData->end_date));
+        $type = self::_getFieldType($field_name);
+        $givenDate = new DateTime($field);
+        $startDate = new DateTime($start_date);
+        $endDate = new DateTime($end_date);
+
+        if ($givenDate >= $startDate && $givenDate <= $endDate) {
+            return true;
+        } else {
+            return __('Date range is not within the academic period.');
         }
     }
 
@@ -1550,6 +1574,12 @@ class ValidationBehavior extends Behavior
         return !empty($match);
     }
 
+    public static function checkEmailFormat($field, array $globalData)
+    {
+        $match = preg_match('/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/', $field);
+        return !empty($match);
+    }
+
     public static function checkNonAlphanumericExists($field, array $globalData)
     {
         return !ctype_alnum($field);
@@ -2016,11 +2046,22 @@ class ValidationBehavior extends Behavior
 
     public static function validateCustomPattern($field, $code, array $globalData)
     {
+
         $pattern = '';
         $model = $globalData['providers']['table'];
 
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $valuePattern = '/' . $ConfigItems->value($code) . '/';
+        //$match = preg_match($valuePattern, $field);
+        //echo $valuePattern.'=='.$code.'==='.$field;die;
+        // if($match = preg_match($valuePattern, $field)){
+        //     echo "not matched -".$field;die;
+        // }
+        // if(preg_match($valuePattern, $field)) {
+        //     // $phone is valid
+        //     echo $field;die;
+        //   }
+        // echo "<pre>"; print_r($valuePattern);die;
 
         if (!empty($valuePattern) && !preg_match($valuePattern, $field)) {
             return $model->getMessage('general.custom_validation_pattern');
@@ -2028,7 +2069,71 @@ class ValidationBehavior extends Behavior
 
         return true;
     }
+//POCOR-8071
+    public static function validateCustomMinimumHeight($field, $code, array $globalData)
+    {
+        $pattern = '';
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $valuePattern =  $ConfigItems->value($code);
+        if($field < $valuePattern){
+            return $model->getMessage('general.custom_validation_minimum_height');
+        }
 
+        return true;
+    }
+    public static function validateCustomMaximumHeight($field, $code, array $globalData)
+    {
+        $pattern = '';
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $valuePattern =  $ConfigItems->value($code);
+        if($field > $valuePattern){
+            return $model->getMessage('general.custom_validation_maximum_height');
+        }
+
+        return true;
+    }
+
+    public static function validateCustomMinimumWeight($field, $code, array $globalData)
+    {
+        $pattern = '';
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $valuePattern =  $ConfigItems->value($code);
+        if($field < $valuePattern){
+            return $model->getMessage('general.custom_validation_minimum_weight');
+        }
+
+        return true;
+    }
+
+    public static function validateCustomMaximumWeight($field, $code, array $globalData)
+    {
+        $pattern = '';
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $valuePattern =  $ConfigItems->value($code);
+        if($field > $valuePattern){
+            return $model->getMessage('general.custom_validation_maximum_weight');
+        }
+
+        return true;
+    }
+
+    public static function validateCustomLandSize($field, $code, array $globalData)
+    {
+        $pattern = '';
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $valuePattern =  $ConfigItems->value($code);
+        if($field > $valuePattern){
+            return $model->getMessage('general.custom_validation_land_size');
+        }
+
+        return true;
+    }
+//POCOR-8071
     public static function validateContactValuePattern($field, array $globalData)
     {
         $pattern = '';
@@ -2131,7 +2236,7 @@ class ValidationBehavior extends Behavior
                 $InstitutionStaffAttendances->aliasField("time_out")  . ' IS NOT NULL' //POCOR-6559
             ])
             ->first();
-        
+
         // Check if staff attendance exists
         if ($staffAttendances) {
             return false;
@@ -2935,7 +3040,7 @@ class ValidationBehavior extends Behavior
 
     public static function NumberOfYear($field, $academicFieldName, $options = [], $globalData)
     {
-        
+
         return $field;
 
         return false;
@@ -2945,13 +3050,13 @@ class ValidationBehavior extends Behavior
     {
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $numberOfYear = $ConfigItems->value('allow_no_year');
-        
+
         if ($numberOfYear > 1) {
             $dateTo = (new Date($field))->format('Y-m-d');
-            $dateFrom = (new Date($globalData['data']['date_from']))->format('Y-m-d');       
-            
+            $dateFrom = (new Date($globalData['data']['date_from']))->format('Y-m-d');
+
             $endDate = Time::parse($dateFrom)->modify('+'.(int)$numberOfYear.' years')->format('Y-m-d');
-            
+
             if ($dateTo > $endDate) {
                 return false;
             } else {
@@ -2965,7 +3070,7 @@ class ValidationBehavior extends Behavior
 
     //POCOR-5668 validation for external validation in fieldOption edit Nationalities
     public static function check_external_validation($field)
-    {   
+    {
         //$field is for external variable
         if($field == 1){
             $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
@@ -2974,12 +3079,17 @@ class ValidationBehavior extends Behavior
             if($type == 'None' || $type == ''){
                 return false;
             }
+            // POCOR-7981 - END
+            return false;
         }
         return true;
-    }  
+    }
+
+
+
 
     public static function check_validate_number($field, array $globalData)
-    {   
+    {
         //$field is for external variable
         $nationalityTable = TableRegistry::getTableLocator()->get('Nationalities')
                             ->find()
@@ -3021,18 +3131,18 @@ class ValidationBehavior extends Behavior
                 }
                 return false;
             }else{
-                //add nationality                          
+                //add nationality
                 if($globalData['data']['validate_number'] == 0){
                     return false;
                 }
             }
-        }                    
+        }
         return true;
     }
 
 
     public static function check_identity_type_id_validation($field)
-    {   
+    {
         //$field is for external variable
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $arr = array('StudentIdentities', 'StaffIdentities','GuardianIdentities','OtherIdentities');
@@ -3051,13 +3161,13 @@ class ValidationBehavior extends Behavior
     //POCOR-5668 ends
 
     public static function forOneMonthDate($field, array $globalData)
-    {   
+    {
         //$field is start date for student attandance summary report
         if(!empty($field)){
             $report_start_date =  strtotime($globalData['data']['report_start_date']);
             $report_end_date =  strtotime($globalData['data']['report_end_date']);
             $datediff = $report_end_date - $report_start_date;
-            $days = round($datediff / (60 * 60 * 24));  
+            $days = round($datediff / (60 * 60 * 24));
             if($days <= 31) {
                 return true;
             } else {
@@ -3068,7 +3178,7 @@ class ValidationBehavior extends Behavior
 
     //POCOR-5917 starts
     public static function compareEndDate($field)
-    {   
+    {
         $label = Inflector::humanize($field);
         $enteredDate = new Date($field);
         $today = new Date('now');
@@ -3100,9 +3210,9 @@ class ValidationBehavior extends Behavior
                             $studentStatuses->aliasField('id = ') . $institutionStudents->aliasField('student_status_id')
                         ])
                         ->where([
-                            $institutionStudents->aliasField('student_id') => $studentId, 
+                            $institutionStudents->aliasField('student_id') => $studentId,
                             $institutionStudents->aliasField('institution_id') => $institutionId
-                        ]) 
+                        ])
                         ->first();
         $code = $studentStatus['student_statuses']['code'];
 
@@ -3115,7 +3225,7 @@ class ValidationBehavior extends Behavior
                         $StudentAttendanceMarkedRecords->aliasField('institution_class_id') => $classId,
                         $StudentAttendanceMarkedRecords->aliasField('education_grade_id') => $gradeId,
                         $StudentAttendanceMarkedRecords->aliasField('date') => $startDate
-                    ])->first(); 
+                    ])->first();
 
             if (!empty($check)) {
                 $markedDate = $check->date->format('Y-m-d');
@@ -3142,7 +3252,7 @@ class ValidationBehavior extends Behavior
                         return true;
                     }
                 }
-            } 
+            }
 
             if (!empty($checkTwo)) {
                 $query = $institutionStudents->query();
@@ -3153,7 +3263,7 @@ class ValidationBehavior extends Behavior
                         return true;
                     }
                 }
-            } 
+            }
 
             if (empty($checkTwo) && empty($check)) {
                  return true;
@@ -3162,9 +3272,9 @@ class ValidationBehavior extends Behavior
 			return true;
 		}
     }
-	
+
 	public static function forLatitudeLength($field, array $globalData)
-    {   
+    {
 		if(!empty($field)){
 			$ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 
@@ -3177,28 +3287,28 @@ class ValidationBehavior extends Behavior
 						$ConfigItems->aliasField('code') => 'latitude_length',
 					])
 				->first();
-				
+
 			$default_length = 0;
 			if (!empty($latitudeData->value)) {
 				$default_length = $latitudeData->value;
 			} else {
 				$default_length = $latitudeData->default_value;
-			}	
-			
+			}
+
 			$latitude = explode(".",$globalData['data']['latitude']);
 			$latitude_length = strlen($latitude[1]);
-			
+
 			if($latitude_length < $default_length) {
 				return false;
 			} else {
 				return true;
 			}
 		}
-		
+
     }
-	
+
 	public static function forLongitudeLength($field, array $globalData)
-    {   
+    {
 		if(!empty($field)){
 			$ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 
@@ -3211,28 +3321,28 @@ class ValidationBehavior extends Behavior
 						$ConfigItems->aliasField('code') => 'longitude_length',
 					])
 				->first();
-				
+
 			$longitude = explode(".",$globalData['data']['longitude']);
 			$longitude_length = strlen($longitude[1]);
-			
+
 			$default_length = 0;
 			if (!empty($longitudeData->value)) {
 				$default_length = $longitudeData->value;
 			} else {
 				$default_length = $longitudeData->default_value;
 			}
-			
+
 			if($longitude_length < $default_length) {
 				return false;
 			} else {
 				return true;
 			}
 		}
-		
+
     }
 
     //POCOR-5975 starts
-    public function educationProgrammesCode($field, array $globalData) 
+    public function educationProgrammesCode($field, array $globalData)
     {
         $data = $globalData['data'];
         $code = $data['code'];
@@ -3270,7 +3380,7 @@ class ValidationBehavior extends Behavior
     }
 
 
-    public function educationGradesCode($field, array $globalData) 
+    public function educationGradesCode($field, array $globalData)
     {
         $data = $globalData['data'];
         $code = $data['code'];

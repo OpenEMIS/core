@@ -19,7 +19,10 @@ use App\Models\StudentCustomFieldValues;
 use App\Models\InstitutionStaff;
 use App\Models\StaffCustomFieldValues;
 use App\Models\GuardianRelation;
+use App\Models\InstitutionPositions;
 use App\Models\StaffTypes;
+use App\Models\StaffPositionTitleGrade;
+use App\Models\StaffPositionGrades;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -289,7 +292,7 @@ class DirectoryRepository extends Controller
             $user_id = $params['user_id'] ?? null;
             $nationality_id = $params['nationality_id'] ?? null;
 
-            $checkUser = UserIdentities::where('identity_type_id', $identityTypeId)->where('number', 'LIKE', '%'.$identityNumber.'%');
+            $checkUser = UserIdentities::with('user:id,first_name,middle_name,third_name,last_name,openemis_no,preferred_name')->where('identity_type_id', $identityTypeId)->where('number', 'LIKE', '%'.$identityNumber.'%');
 
             if($user_id){
                 $checkUser = $checkUser->where('security_user_id', $user_id);
@@ -299,7 +302,7 @@ class DirectoryRepository extends Controller
                 $checkUser = $checkUser->where('nationality_id', $nationality_id);
             }
 
-            $checkUser = $checkUser->first();
+            $checkUser = $checkUser->get();
             
             if($checkUser){
                 $checkUser = $checkUser->toArray();
@@ -987,6 +990,52 @@ class DirectoryRepository extends Controller
     }
 
     //For POCOR-8104 End...
+
+
+    //For POCOR-8194 Start...
+    public function getStaffPositionGrades($params)
+    {
+        try {
+            $result_array = [];
+            if(isset($params['id'])){
+                $id = $params['id'];
+
+                $insPostionData = InstitutionPositions::where('id', $id)->first();
+                $staff_position_title_id = $insPostionData->staff_position_title_id??0;
+                $staffPositionTitleGrades = StaffPositionTitleGrade::where('staff_position_title_id', $staff_position_title_id)->get()->toArray();
+
+                $id_arr = [];
+                foreach($staffPositionTitleGrades as $key => $data){
+                    $id_arr[$key] = $data['staff_position_grade_id'];
+                }
+
+                
+
+                if(count($id_arr) > 0){
+                    if($id_arr[0] == '-1'){
+                        $staff_position_grades_result = StaffPositionGrades::select('id', 'name')->where('visible', 1)->get()->toArray();
+                    } else {
+                        $staff_position_grades_result = StaffPositionGrades::select('id', 'name')->where('visible', 1)->whereIn('id', $id_arr)->get()->toArray();
+                    }
+
+                    foreach ($staff_position_grades_result AS $result) {
+                        $result_array[] = array("id" => $result['id'], "name" => $result['name']);
+                    }
+                }
+                
+            }
+
+            return $result_array;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Staff position grades.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse($e->getMessage());
+        }
+    }
+    //For POCOR-8194 End...
 
 }
 

@@ -74,7 +74,7 @@ class TrainingsTable extends AppTable
         $this->controller->Navigation->substituteCrumb($this->getAlias(), $reportName);
         $this->controller->set('contentHeader', __($controllerName).' - '.$reportName);
         $this->fields = [];
-        $feature = $this->request->getData($this->getAlias())['feature'];
+        $feature = $this->request->data[$this->getAlias()]['feature'];
         $this->ControllerAction->field('feature', ['select' => false]);
         if ($feature == 'Report.TrainingSessionParticipants'){//POCOR-6828 change position of field
             $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
@@ -98,7 +98,7 @@ class TrainingsTable extends AppTable
         }
         //End:POCOR-6829
         // Starts POCOR-6592
-        if ($this->request->getData($this->getAlias())['feature'] ==  'Report.EmployeeTrainingCard') {
+        if ($this->request->data[$this->getAlias()]['feature'] ==  'Report.EmployeeTrainingCard') {
             $this->ControllerAction->field('guardian_id');
             $this->ControllerAction->field('format'); 
         }else if ($feature == 'Report.TrainingSessionParticipants'){//POCOR-6828 starts add condition for report TrainingSessionParticipants
@@ -299,47 +299,47 @@ class TrainingsTable extends AppTable
     public function onUpdateFieldGuardianId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
+            
             if (isset($this->request->getData($this->getAlias())['feature'])) {
                 $feature = $this->request->getData($this->getAlias())['feature'];
 
-            if (in_array($feature, ['Report.EmployeeTrainingCard'])) {
-            $attr['type'] = 'autocomplete';
-            $attr['target'] = ['key' => 'guardian_id', 'name' => $this->aliasField('guardian_id')];
-            $attr['noResults'] = __('No Guardian found.');
-            $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
-            $action = 'Guardians';
+                if (in_array($feature, ['Report.EmployeeTrainingCard'])) {
+                    $attr['type'] = 'autocomplete';
+                    $attr['target'] = ['key' => 'guardian_id', 'name' => $this->aliasField('guardian_id')];
+                    $attr['noResults'] = __('No Guardian found.');
+                    $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
+                    $action = 'Guardians';
+                    if ($this->controller->getName() == 'Reports') {
+                        $action = 'Trainings';
+                    }
+                    //POCOR-8249 change ajax file 
+                    $attr['url'] = ['controller' => $this->controller->name, 'action' => $action, 'ajaxUserAutocomplete'];
+                   
+                    $requestData = $this->request->getData();
+                    if (isset($requestData) && !empty($requestData[$this->getAlias()]['guardian_id'])) {
+                        $guardianId = $requestData[$this->getAlias()]['guardian_id'];
+                        $guardianName = $this->Users->get($guardianId)->name_with_id;
 
-            if ($this->controller->getName() == 'Reports') {
-                $action = 'StudentGuardians';
+                        $attr['attr']['value'] = $guardianName;
+                    }
+
+                    $iconSave = '<i class="fa fa-check"></i> ' . __('Save');
+                    $iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
+                    $attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
+                    $attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
+                    $attr['onSelect'] = "$('#reload').click();";
+                }
             }
-            $attr['url'] = ['controller' => $this->controller->getName(), 'action' => $action, 'ajaxUserStaffAutocomplete'];
-            $requestData = $this->request->getData();
-            if (isset($requestData) && !empty($requestData[$this->getAlias()]['guardian_id'])) {
-                $guardianId = $requestData[$this->getAlias()]['guardian_id'];
-                $guardianName = $this->Users->get($guardianId)->name_with_id;
-
-                $attr['attr']['value'] = $guardianName;
-            }
-
-            $iconSave = '<i class="fa fa-check"></i> ' . __('Save');
-            $iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
-            $attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
-            $attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
-            $attr['onSelect'] = "$('#reload').click();";
-        }
-        }
         } elseif ($action == 'index') {
             $attr['sort'] = ['field' => 'Guardians.first_name'];
         }
-        /*echo "<pre>"; print_r($attr);
-die;*/
         return $attr;
     }
 
     public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
-        $events['ControllerAction.Model.ajaxUserStaffAutocomplete'] = 'ajaxUserStaffAutocomplete';
+        $events['ControllerAction.Model.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete';
         return $events;
     }
 
@@ -635,5 +635,56 @@ die;*/
         }
     }
 
+    //POCOR-8249
+    public function ajaxUserAutocomplete()
+    {
+        $this->controller->autoRender = false;
+        $this->ControllerAction->autoRender = false;
+        $Users = TableRegistry::get('Security.Users');
+        if ($this->request->is(['ajax'])) {
+            $term = $this->request->query['term'];
+
+            $UserIdentitiesTable = TableRegistry::get('User.Identities');
+
+            $query = $Users
+                ->find()
+                ->select([
+                    $Users->aliasField('openemis_no'),
+                    $Users->aliasField('first_name'),
+                    $Users->aliasField('middle_name'),
+                    $Users->aliasField('third_name'),
+                    $Users->aliasField('last_name'),
+                    $Users->aliasField('preferred_name'),
+                    $Users->aliasField('id')
+                ])
+                ->leftJoin(
+                    [$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()],
+                    [
+                        $UserIdentitiesTable->aliasField('security_user_id') . ' = ' . $Users->aliasField('id')
+                    ]
+                )
+                ->group([
+                    $Users->aliasField('id')
+                ])
+                ->limit(100);
+
+            $term = trim($term);
+
+            if (!empty($term)) {
+                $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $term, 'OR' => ['`Identities`.number LIKE ' => $term . '%']]);
+            }
+
+            $list = $query->all();
+
+            $data = [];
+            foreach ($list as $obj) {
+                $label = sprintf('%s - %s', $obj->openemis_no, $obj->name);
+                $data[] = ['label' => $label, 'value' => $obj->id];
+            }
+
+            echo json_encode($data);
+            die;
+        }
+    }
     
 }

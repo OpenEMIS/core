@@ -76,7 +76,6 @@ class OutcomeTemplatesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $serverRequest = new ServerRequest();
         // academic period filter
         $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedPeriod = !is_null($serverRequest->getAttribute('query')['period']) ? $serverRequest->getAttribute('query')['period'] : $this->AcademicPeriods->getCurrent();
@@ -230,18 +229,6 @@ class OutcomeTemplatesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
-    {
-        if (empty($entity->getErrors())) {
-            // set redirect url to view page
-            $url = $this->url('view');
-            $url[1] = $this->paramsEncode(['id' => $entity->id, 'academic_period_id' => $entity->academic_period_id]);
-            $extra['redirect'] = $url;
-
-            $this->Alert->success('OutcomeTemplates.addSuccess', ['reset' => true]);
-        }
-    }
-
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'academic_period_id') {
@@ -268,6 +255,38 @@ class OutcomeTemplatesTable extends ControllerActionTable
             return __('Created On');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        if (empty($entity->getRrrors())) {
+            // set redirect url to view page
+            $url = $this->url('view');
+            $url[1] = $this->paramsEncode(['id' => $entity->id, 'academic_period_id' => $entity->academic_period_id]);
+            $extra['redirect'] = $url;
+
+            $this->Alert->success('OutcomeTemplates.addSuccess', ['reset' => true]);
+        }
+    }
+
+    //POCOR-8253 
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        // Check if any associated records exist in any related tables.
+        $associatedRecordsExist = 
+            $this->Periods->exists(['outcome_template_id' => $entity->id]) ||
+            $this->Criterias->exists(['outcome_template_id' => $entity->id]) ||
+            $this->InstitutionOutcomeResults->exists(['outcome_template_id' => $entity->id]) ||
+            $this->InstitutionOutcomeSubjectComments->exists(['outcome_template_id' => $entity->id]);
+        // If associated records exist, show alert message and abort deletion
+        if ($associatedRecordsExist) {
+            $message = __('Delete operation is not allowed as there are other information linked to this record.');
+            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+            
+            $url = $this->controller->request->referer();
+            $event->stopPropagation();
+            return $this->controller->redirect($url);
         }
     }
 }

@@ -47,7 +47,6 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
-        //comment cakephp4
         /*$this->addBehavior('CustomField.Record', [
             'fieldKey' => 'infrastructure_custom_field_id',
             'tableColumnKey' => null,
@@ -58,10 +57,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
             'formFieldClass' => ['className' => 'Infrastructure.BuildingCustomFormsFields'],
             'formFilterClass' => ['className' => 'Infrastructure.BuildingCustomFormsFilters'],
             'recordKey' => 'institution_building_id',
-            'fieldValueClass' => ['className' => 'Infrastructure.BuildingCustomFieldValues', 'foreignKey' => 'institution_building_id', 'dependent' => true]
-            'fieldValueClass' => ['className' => 'Infrastructure.RoomCustomFieldValues', 'foreignKey' => 'institution_building_id', 'dependent' => true]
-
-
+            'fieldValueClass' => ['className' => 'Infrastructure.BuildingCustomFieldValues', 'foreignKey' => 'institution_building_id', 'dependent' => true],
             'tableCellClass' => null
         ]);*/
         $this->addBehavior('Institution.InfrastructureShift');
@@ -80,7 +76,6 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        $validator->setProvider('custom', $this);
         return $validator
             ->add('code', [
                 'ruleUnique' => [
@@ -98,13 +93,21 @@ class InstitutionBuildingsTable extends ControllerActionTable
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []]
                 ],
                 'ruleCompareDateReverse' => [
-                    'rule' => ['compareDateReverse', 'start_date', true]
+                    'rule' => ['compareDateReverse', 'start_date', true],
+                    'on' => function ($context) { //POCOR-8241 -- Date validation when start_date is not empty
+                        return !empty($context['data']['start_date']);
+                    }
                 ]
+
             ])
             ->add('new_start_date', [
                 'ruleCompareDateReverse' => [
                     'rule' => ['compareDateReverse', 'start_date', false]
                 ]
+            ])
+            ->add('area', 'ruleValidateCustomLandSize', [
+                'rule' => ['validateCustomLandSize', 'Maximum_institution_infrastructure_building_size'],
+                'provider' => 'table'
             ])
             ->requirePresence('new_building_type', function ($context) {
                 if (array_key_exists('change_type', $context['data'])) {
@@ -133,7 +136,6 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function validationSavingByAssociation(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
-        $validator->setProvider('custom', $this);
         return $validator;
     }
 
@@ -147,7 +149,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         //Start:POCOR-6693
-        $this->field('area', ['attr' => ['label' => __('Size')]]);
+        $this->field('area', ['attr' => ['label' => __('Size')]]); 
         //End:POCOR-6693
         $this->Navigation->substituteCrumb(__('Institution Buildings'), __('Institution Buildings'));
     }
@@ -160,7 +162,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
             $InstitutionLand = $InstitutionLands->get($entity['institution_land_id']);
         }
         if($entity['area'] >= $InstitutionLand['area']){
-
+           
             if(Router::getRequest()->params['action']=="CopyData"){}
             else{//POCOR_7657
             $this->Alert->warning('InstitutionBuildings.sizeGreater', ['reset' => true]);
@@ -399,7 +401,6 @@ class InstitutionBuildingsTable extends ControllerActionTable
             $event->stopPropagation();
             return $this->controller->redirect($url);
         } else {
-            //$selectedEditType = $this->request->getQuery('edit_type');
             $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if ($selectedEditType == self::CHANGE_IN_TYPE) {
                 $today = new DateTime();
@@ -512,7 +513,6 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        //$selectedEditType = $this->request->getQuery('edit_type');
         $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
         if ($selectedEditType == self::END_OF_USAGE || $selectedEditType == self::CHANGE_IN_TYPE) {
             foreach ($this->fields as $field => $attr) {
@@ -529,7 +529,6 @@ class InstitutionBuildingsTable extends ControllerActionTable
             $attr['visible'] = false;
         } elseif ($action == 'edit') {
             $editTypeOptions = $this->getSelectOptions('InstitutionInfrastructure.change_types');
-            //$selectedEditType = $this->getQueryString('edit_type', $editTypeOptions);
             $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             $this->advancedSelectOptions($editTypeOptions, $selectedEditType);
             $this->controller->set(compact('editTypeOptions'));
@@ -562,7 +561,6 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function onUpdateFieldArea(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
-            //$selectedEditType = $request->getQuery('edit_type');
             $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'hidden';
@@ -611,7 +609,6 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function onUpdateFieldName(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
-            //$selectedEditType = $request->getQuery('edit_type');
             $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'readonly';
@@ -639,7 +636,6 @@ class InstitutionBuildingsTable extends ControllerActionTable
             $attr['options'] = $buildingTypeOptions;
             $attr['onChangeReload'] = 'changeBuildingType';
         } elseif ($action == 'edit') {
-            //$selectedEditType = $request->getQuery('edit_type');
             $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if ($selectedEditType == self::END_OF_USAGE) {
                 $attr['type'] = 'hidden';
@@ -670,13 +666,13 @@ class InstitutionBuildingsTable extends ControllerActionTable
             $attr['date_options']['endDate'] = $endDate;
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
-            /**POCOR-6904 starts - modified condition to get start date at the time of edit*/
+            /**POCOR-6904 starts - modified condition to get start date at the time of edit*/ 
             $sDate = '';
             if (!empty($entity->start_date)) {
                 $sDate = $entity->start_date;
             } else {
                 $sDate = $this->currentAcademicPeriod->start_date;
-            }
+            } 
             $attr['type'] = 'readonly';
             $attr['value'] = $sDate->format('Y-m-d');
             $attr['attr']['value'] = $this->formatDate($sDate);
@@ -698,7 +694,6 @@ class InstitutionBuildingsTable extends ControllerActionTable
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
 
-            //$selectedEditType = $request->getQuery('edit_type');
             $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if ($selectedEditType == self::END_OF_USAGE) {
                 /* restrict End Date from start date until end of academic period
@@ -732,8 +727,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         } elseif ($action == 'edit') {
             $attr['options'] = $this->getYearOptionsByConfig();
             $attr['type'] = 'select';
-            //$selectedEditType = $request->getQuery('edit_type');
-            $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
+            $selectedEditType = $request->query('edit_type');
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'hidden';
             }
@@ -750,7 +744,6 @@ class InstitutionBuildingsTable extends ControllerActionTable
         } elseif ($action == 'edit') {
             $attr['options'] = $this->getYearOptionsByConfig();
             $attr['type'] = 'select';
-            //$selectedEditType = $request->getQuery('edit_type');
             $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'hidden';
@@ -772,7 +765,6 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function onUpdateFieldInfrastructureConditionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
-            //$selectedEditType = $request->getQuery('edit_type');
             $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'hidden';
@@ -785,7 +777,6 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function onUpdateFieldInfrastructureOwnershipId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
-            //$selectedEditType = $request->getQuery('edit_type');
             $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'hidden';
@@ -800,7 +791,6 @@ class InstitutionBuildingsTable extends ControllerActionTable
         if ($action == 'edit') {
             $entity = $attr['entity'];
 
-            //$selectedEditType = $request->getQuery('edit_type');
             $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if ($selectedEditType == self::CHANGE_IN_TYPE) {
                 $buildingTypeOptions = $this->BuildingTypes
@@ -825,7 +815,6 @@ class InstitutionBuildingsTable extends ControllerActionTable
         if ($action == 'edit') {
             $entity = $attr['entity'];
 
-            //$selectedEditType = $request->getQuery('edit_type');
             $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if ($selectedEditType == self::CHANGE_IN_TYPE) {
                 /* restrict End Date from start date until end of academic period

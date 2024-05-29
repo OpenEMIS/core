@@ -29,7 +29,12 @@ class InstitutionService extends Controller
                 $resp[$k]['id'] = $data['id'];
                 $resp[$k]['name'] = $data['name'];
                 $resp[$k]['alternative_name'] = $data['alternative_name'];
-                $resp[$k]['code'] = $data['code'];
+
+                //For POCOR-8250 Start...
+                //$resp[$k]['code'] = $data['code'];
+                $resp[$k]['institution_code'] = $data['code'];
+                //For POCOR-8250 End...
+
                 $resp[$k]['address'] = $data['address'];
                 $resp[$k]['postal_code'] = $data['postal_code'];
                 $resp[$k]['contact_person'] = $data['contact_person'];
@@ -77,6 +82,15 @@ class InstitutionService extends Controller
 
                 $resp[$k]['institution_type_id'] = $data['institution_type_id'];
                 $resp[$k]['institution_type_name'] = $data['institution_types']['name']??"";
+                //For POCOR-8250 Start...
+                $resp[$k]['institution_classification_id'] = $data['classification'];
+                if($data['classification'] == 1){
+                    $resp[$k]['institution_classification_name'] = "Academic Institution";
+                } else {
+                   $resp[$k]['institution_classification_name'] = "Non-Academic Institution"; 
+                }
+                //For POCOR-8250 End...
+
                 $resp[$k]['institution_type_international_code'] = $data['institution_types']['international_code']??"";
                 $resp[$k]['institution_type_national_code'] = $data['institution_types']['national_code']??"";
 
@@ -119,7 +133,12 @@ class InstitutionService extends Controller
                 $resp['id'] = $data['id'];
                 $resp['name'] = $data['name'];
                 $resp['alternative_name'] = $data['alternative_name'];
-                $resp['code'] = $data['code'];
+
+                //For POCOR-8250 Start...
+                //$resp['code'] = $data['code'];
+                $resp['institution_code'] = $data['code'];
+                //For POCOR-8250 End...
+
                 $resp['address'] = $data['address'];
                 $resp['postal_code'] = $data['postal_code'];
                 $resp['contact_person'] = $data['contact_person'];
@@ -167,6 +186,16 @@ class InstitutionService extends Controller
 
                 $resp['institution_type_id'] = $data['institution_type_id'];
                 $resp['institution_type_name'] = $data['institutionTypes']['name']??"";
+
+                //For POCOR-8250 Start...
+                $resp['institution_classification_id'] = $data['classification'];
+                if($data['classification'] == 1){
+                    $resp['institution_classification_name'] = "Academic Institution";
+                } else {
+                   $resp['institution_classification_name'] = "Non-Academic Institution"; 
+                }
+                //For POCOR-8250 End...
+
                 $resp['institution_type_international_code'] = $data['institutionTypes']['international_code']??"";
                 $resp['institution_type_national_code'] = $data['institutionTypes']['national_code']??"";
 
@@ -192,7 +221,7 @@ class InstitutionService extends Controller
                 'Failed to fetch data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
+            dd($e);
             return $this->sendErrorResponse('Institution Data Not Found');
         }
     }
@@ -632,6 +661,24 @@ class InstitutionService extends Controller
             $list = [];
             if(count($data['data']) > 0){
                 foreach($data['data'] as $k => $d){
+                    //dd($d);
+                    // For POCOR-8251 start...
+                    $classData = [];
+                    foreach ($d['classes'] as $c => $class) {
+
+                        $classData[$c]['id'] = $class['id'];
+                        $classData[$c]['name'] = $class['name'];
+                        $classData[$c]['subjects'] = [];
+
+                        $subjects = $this->institutionRepository->getStaffSubjects($d['institution_id'], $d['staff_id'], $class['id']);
+
+                        foreach ($subjects as $s => $subject) {
+                            $classData[$c]['subjects'][$s]['id'] = $subject['id'];
+                            $classData[$c]['subjects'][$s]['name'] = $subject['name'];
+                        }
+                    }
+                    // For POCOR-8251 end...
+
                     $list[$k]['id'] = $d['id'];
                     $list[$k]['fte'] = $d['FTE'];
                     $list[$k]['start_date'] = $d['start_date'];
@@ -645,6 +692,11 @@ class InstitutionService extends Controller
                     $list[$k]['staff_status_name'] = $d['staff_status']['staff_status_name']??"";
                     $list[$k]['institution_id'] = $d['institution_id'];
                     $list[$k]['institution_position_id'] = $d['institution_position_id'];
+                    
+                    // For POCOR-8251 start...
+                    $list[$k]['classes'] = $classData;
+                    // For POCOR-8251 end...
+
                     $list[$k]['security_group_user_id'] = $d['security_group_user_id'];
                     $list[$k]['modified_user_id'] = $d['modified_user_id'];
                     $list[$k]['modified'] = $d['modified'];
@@ -681,6 +733,24 @@ class InstitutionService extends Controller
             $list = [];
             if(count($data['data']) > 0){
                 foreach($data['data'] as $k => $d){
+                    
+                    // For POCOR-8251 start...
+                    $classData = [];
+                    foreach ($d['classes'] as $c => $class) {
+
+                        $classData[$c]['id'] = $class['id'];
+                        $classData[$c]['name'] = $class['name'];
+                        $classData[$c]['subjects'] = [];
+
+                        $subjects = $this->institutionRepository->getStaffSubjects($d['institution_id'], $d['staff_id'], $class['id']);
+
+                        foreach ($subjects as $s => $subject) {
+                            $classData[$c]['subjects'][$s]['id'] = $subject['id'];
+                            $classData[$c]['subjects'][$s]['name'] = $subject['name'];
+                        }
+                    }
+                    // For POCOR-8251 end...
+
                     $list[$k]['id'] = $d['id'];
                     $list[$k]['fte'] = $d['FTE'];
                     $list[$k]['start_date'] = $d['start_date'];
@@ -694,6 +764,11 @@ class InstitutionService extends Controller
                     $list[$k]['staff_status_name'] = $d['staff_status']['staff_status_name']??"";
                     $list[$k]['institution_id'] = $d['institution_id'];
                     $list[$k]['institution_position_id'] = $d['institution_position_id'];
+                    
+                    // For POCOR-8251 start...
+                    $list[$k]['classes'] = $classData;
+                    // For POCOR-8251 end...
+
                     $list[$k]['security_group_user_id'] = $d['security_group_user_id'];
                     $list[$k]['modified_user_id'] = $d['modified_user_id'];
                     $list[$k]['modified'] = $d['modified'];
@@ -729,6 +804,25 @@ class InstitutionService extends Controller
             
             $list = [];
             if($data){
+
+                // For POCOR-8251 start...
+                $classData = [];
+                foreach ($data['classes'] as $c => $class) {
+
+                    $classData[$c]['id'] = $class['id'];
+                    $classData[$c]['name'] = $class['name'];
+                    $classData[$c]['subjects'] = [];
+
+                    $subjects = $this->institutionRepository->getStaffSubjects($data['institution_id'], $data['staff_id'], $class['id']);
+
+                    foreach ($subjects as $s => $subject) {
+                        $classData[$c]['subjects'][$s]['id'] = $subject['id'];
+                        $classData[$c]['subjects'][$s]['name'] = $subject['name'];
+                    }
+                }
+                // For POCOR-8251 end...
+
+
                 $list['id'] = $data['id'];
                 $list['fte'] = $data['FTE'];
                 $list['start_date'] = $data['start_date'];
@@ -742,6 +836,11 @@ class InstitutionService extends Controller
                 $list['staff_status_name'] = $data['staffStatus']['staff_status_name']??"";
                 $list['institution_id'] = $data['institution_id'];
                 $list['institution_position_id'] = $data['institution_position_id'];
+
+                // For POCOR-8251 start...
+                $list['classes'] = $classData;
+                // For POCOR-8251 end...
+
                 $list['security_group_user_id'] = $data['security_group_user_id'];
                 $list['modified_user_id'] = $data['modified_user_id'];
                 $list['modified'] = $data['modified'];
@@ -760,7 +859,6 @@ class InstitutionService extends Controller
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Institution Staff Data Not Found');
         }
     }
@@ -2290,5 +2388,22 @@ class InstitutionService extends Controller
 
         return $errors;
     }
+
+
+
+    //For POCOR-8197 Starts...
+    public function getGradesViaInstitutionId($params, $institutionId)
+    {
+        try {
+
+            $list = $this->institutionRepository->getGradesViaInstitutionId($params, $institutionId);
+            
+            return $list;
+            
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+    //For POCOR-8197 End...
 
 }

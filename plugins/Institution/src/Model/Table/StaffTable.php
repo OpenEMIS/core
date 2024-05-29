@@ -1360,7 +1360,7 @@ public function getIdentityTypeData($value_selection)
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if (!$entity->isNew() && $entity->dirty('FTE')) {
+        if (!$entity->isNew() && $entity->getDirty('FTE')) {
             $newFTE = $entity->FTE;
             $newEndDate = $entity->end_date;
 
@@ -1627,7 +1627,17 @@ public function getIdentityTypeData($value_selection)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (isset($buttons['view'])) {
+            // $primaryKey = is_array($this->getPrimaryKey()) ? array_flip($this->getPrimaryKey()) : [0 => $this->primaryKey()];
+            // $entityArr = $entity->getOriginalValues();
+            // $primaryKeyValues = array_intersect_key($entityArr, $primaryKey);
+            // $encodeValue = $this->paramsEncode($primaryKeyValues);
+
             $url = $this->url('view');
+            // $url['action'] = 'StaffUser';
+            // $url[1] = $this->paramsEncode(['id' => $entity['_matchingData']['Users']['id']]);
+            // $url['id'] = $encodeValue;
+            // $buttons['view']['url'] = $url;
+            //this code for cakephp 4 starts
             $userId = $this->paramsEncode([
                 'staff_id' => $entity->_matchingData['Users']->id,
                 'id' => $entity->_matchingData['Users']->id,
@@ -1636,7 +1646,7 @@ public function getIdentityTypeData($value_selection)
             $buttons['view']['url'] = array_merge($url, [
                 'action' => 'StaffUser',
                 '0' => $userId,
-            ]);
+            ]);//this code for cakephp 4 ends
             // POCOR-3125 history button permission to hide and show the link
             if ($this->AccessControl->check(['StaffHistories', 'index'])) {
                 $institutionId = $this->paramsEncode(['id' => $entity->institution->id]);
@@ -1938,12 +1948,96 @@ public function getIdentityTypeData($value_selection)
      */
     public function beforeDelete(Event $event, Entity $entity)
     {
-
         $staff_id = !empty($entity->staff_id) ? $entity->staff_id : NULL;
         $institution_id = !empty($entity->institution_id) ? $entity->institution_id : 0;
-        $affected = $this->removeIndividualChildRecords($staff_id, $institution_id);
-
+        //$affected = $this->removeIndividualChildRecords($staff_id, $institution_id);
+        //POCOR-8143
+        if ($this->checkStaffRecords($entity)) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        } else {
+            $affected = $this->removeIndividualChildRecords($staff_id, $institution_id);
+        }
 //        $this->log("deleted $affected children", 'debug');
+    }
+
+    /**
+     * @param Entity $entity
+     * POCOR-8143 -- check if association exits before deleting child records.
+     */
+    public function checkStaffRecords($entity)
+    {
+        $result = false;
+        $checkAllRecords = [];
+        $institutionId = $entity->institution_id ?? 0;
+        $staffId = $entity->staff_id ?? 0;
+        if ($institutionId && $staffId) {
+            $InstitutionStaffTransfers = TableRegistry::get('Institution.InstitutionStaffTransfers');
+            $doneStatus = $InstitutionStaffTransfers::DONE;
+            
+            $transferOutRecordsCount = $InstitutionStaffTransfers->find()
+                    ->matching('Statuses', function ($q) use ($doneStatus) {
+                    return $q->where(['category <> ' => $doneStatus]);
+                })
+                ->where([
+                    $InstitutionStaffTransfers->aliasField('staff_id') => $entity->staff_id,
+                    $InstitutionStaffTransfers->aliasField('previous_institution_id') => $entity->institution_id
+                ])
+                ->count();
+ 
+            $checkAllRecords['associatedRecords'][] = ['model' => 'StaffTransferOut', 'count' => $transferOutRecordsCount];
+            $InstitutionStaffReleases = TableRegistry::get('Institution.InstitutionStaffReleases');
+ 
+            $releaseDoneStatus = $InstitutionStaffReleases::DONE;
+            $releaseOutRecordsCount = $InstitutionStaffReleases->find()
+                ->matching('Statuses', function ($q) use ($releaseDoneStatus) {
+                    return $q->where(['category <>' => $releaseDoneStatus]);
+                })
+                ->where([
+                    $InstitutionStaffReleases->aliasField('staff_id') => $entity->staff_id,
+                    $InstitutionStaffReleases->aliasField('previous_institution_id') => $entity->institution_id
+                ])
+                ->count();
+ 
+            $checkAllRecords['associatedRecords'][] = ['model' => 'StaffRelease', 'count' => $releaseOutRecordsCount];
+ 
+            $associationArray = [
+                'Institution.StaffPositionProfiles' => 'StaffChangeInAssignment',
+                'Institution.StaffLeave' => 'StaffLeave',
+                'Institution.InstitutionClasses' => 'InstitutionClasses',
+                'Institution.InstitutionSubjectStaff' => 'InstitutionSubjects'
+            ];
+  
+            if (!Configure::read('schoolMode')) {
+                $coreAssociationArray = [
+                    'Institution.InstitutionRubrics' => 'InstitutionRubrics',
+                    'Quality.InstitutionQualityVisits' => 'InstitutionVisits'
+                ];
+                $associationArray = array_merge($associationArray, $coreAssociationArray);
+            }
+  
+            foreach ($associationArray as $tableName => $model) {
+                $Table = TableRegistry::get($tableName);
+                $recordsCount = $Table->find()
+                    ->where([
+                        $Table->aliasField('staff_id') => $entity->staff_id,
+                        $Table->aliasField('institution_id') => $entity->institution_id
+                    ])->count();
+                 $checkAllRecords['associatedRecords'][] = ['model' => $model, 'count' => $recordsCount];
+            }
+ 
+            if (!empty($checkAllRecords)) {
+                foreach ($checkAllRecords['associatedRecords'] as $record) {
+                    echo $record['count'];
+                    if ($record['count'] > 0) {
+                        $result = true;
+                    }
+                }
+            }
+        }
+ 
+        return $result;
     }
 
     /**
@@ -2614,13 +2708,12 @@ public function getIdentityTypeData($value_selection)
 
     }
 
-    /*
-     * Function to check whether Teacher role user have "'All Subjects','Comments'" view permission for all subject
-    * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
-    * @return boolean
-    * @ticket POCOR-6734
-    */
-
+    // Functions that are migrated over
+    /******************************************************************************************************************
+     **
+     ** finders functions to be used with query
+     **
+     ******************************************************************************************************************/
     /**
      * $options['type'] == 0 > non-teaching
      * $options['type'] == 1 > teaching
@@ -3890,7 +3983,7 @@ public function getIdentityTypeData($value_selection)
             $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
         }
         if ($archive) {
-            $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
+            $StaffLeaveTable = ArchiveConnections::getArchiveTable('Institution.InstitutionStaffLeave');
         }
         if ($weekEndDate == $weekStartDate) {
             $whereForLeaveTable = [

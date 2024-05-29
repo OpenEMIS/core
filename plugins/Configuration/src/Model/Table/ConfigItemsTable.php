@@ -130,12 +130,14 @@ class ConfigItemsTable extends AppTable
      **
      ******************************************************************************************************************/
 
-    public function indexBeforePaginate(Event $event, $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options)
     {
-        $type = $this->request->getQuery('type_value');
+        //$type = $this->request->getQuery('type_value');
+        $type = $request->getQuery('type_value');
         $query
             ->find('visible')
-            ->where([$this->aliasField('type') => $type]);
+            ->where([$this->aliasField('type') => $type])
+            ->orderAsc($this->aliasField('name')); // POCOR-8039
     }
 
 
@@ -287,7 +289,8 @@ class ConfigItemsTable extends AppTable
     public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'add'])) {
-            $pass = $this->request->getParam('pass');
+            //$pass = $this->request->getParam('pass');
+            $pass = $request->getParam('pass');
             if (!empty($pass)) {
                 $ids = $this->paramsDecode($pass[0]);
                 $entity = $this->get($ids);

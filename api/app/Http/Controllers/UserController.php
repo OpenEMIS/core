@@ -9,6 +9,7 @@ use App\Http\Requests\SaveStudentDataRequest;
 use App\Http\Requests\SaveStaffDataRequest;
 use App\Http\Requests\SaveGuardianDataRequest;
 use App\Http\Requests\UsersAddRequest;
+use App\Http\Requests\ExternalDataSourceRequest;
 
 class UserController extends Controller
 {
@@ -212,4 +213,24 @@ class UserController extends Controller
         }
     }
     //POCOR-8136 end
+
+
+    //POCOR-8139 Starts
+
+    public function externalDataSources(ExternalDataSourceRequest $request)
+    {
+        try {
+            $data = $this->userService->externalDataSources($request);
+            return $this->sendSuccessResponse("Successful Operation.", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get data from external data sources.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get data from external data sources.');
+        }
+    }
+    
+    //POCOR-8139 Ends
 }

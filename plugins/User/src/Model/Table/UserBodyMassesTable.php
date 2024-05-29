@@ -73,6 +73,16 @@ class UserBodyMassesTable extends ControllerActionTable
                     'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
                 ],
             ])
+            ->add('height', 'ruleValidateCustomMinimumHeight', [
+                'rule' => ['validateCustomMinimumHeight', 'StudentMinimumHeight'],
+                'provider' => 'table',
+                'last' => true
+            ])
+            ->add('height', 'ruleValidateCustomMaximumHeight', [
+                'rule' => ['validateCustomMaximumHeight', 'StudentMaximumHeight'],
+                'provider' => 'table',
+                'last' => true
+            ])
             ->add('weight', [
                 'notZero' => [
                     'rule' => ['comparison', '>', 0],
@@ -85,6 +95,16 @@ class UserBodyMassesTable extends ControllerActionTable
                 'validateDecimal' => [
                     'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
                 ],
+            ])
+            ->add('weight', 'ruleValidateCustomMinimumWeight', [
+                'rule' => ['validateCustomMinimumWeight', 'StudentMinimumWeight'],
+                'provider' => 'table',
+                'last' => true
+            ])
+            ->add('weight', 'ruleValidateCustomMaximumWeight', [
+                'rule' => ['validateCustomMaximumWeight', 'StudentMaximumWeight'],
+                'provider' => 'table',
+                'last' => true
             ])
             ->add('date', [
                 'ruleUnique' => [

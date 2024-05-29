@@ -53,7 +53,7 @@ class DirectoriesTable extends ControllerActionTable
         $this->hasMany('InstitutionStaff', ['className' => 'Institution.Staff', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('UserNationalities', ['className' => 'User.UserNationalities', 'foreignKey' => 'security_user_id', 'dependent' => true]);
 
-       $this->hasMany('ExaminationCentreRoomsExaminationsInvigilators', ['className' => 'Examination.ExaminationCentreRoomsExaminationsInvigilators', 'foreignKey' => 'invigilator_id', 'dependent' => true]);
+        $this->hasMany('ExaminationCentreRoomsExaminationsInvigilators', ['className' => 'Examination.ExaminationCentreRoomsExaminationsInvigilators', 'foreignKey' => 'invigilator_id', 'dependent' => true]);
         $this->hasMany('ExaminationCentreRoomsExaminationsStudents', ['className' => 'Examination.ExaminationCentreRoomsExaminationsStudents', 'foreignKey' => 'student_id', 'dependent' => true]);
         $this->hasMany('ExaminationCentresExaminationsInvigilators', ['className' => 'Examination.ExaminationCentresExaminationsInvigilators', 'foreignKey' => 'invigilator_id', 'dependent' => true]);
         $this->hasMany('ExaminationCentresExaminationsStudents', ['className' => 'Examination.ExaminationCentresExaminationsStudents', 'foreignKey' => 'student_id', 'dependent' => true]);
@@ -1511,37 +1511,33 @@ class DirectoriesTable extends ControllerActionTable
         return $tooltipMessage;
     }
 
-//POCOR-7083 :: Start
+    //POCOR-7083 :: Start
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-        //$institutionStudents = $this->institutionstudents;
-        //print_r($institutionStudents->exists([$institutionStudents->aliasField($institutionStudents->foreignKey()) => $entity->id]));
-        //POCOR-7179[START] delete custom field becouse when user is created from directory it insert value in custom field
-        TableRegistry::get('StudentCustomField.StudentCustomFieldValues')->deleteAll(['student_id' => $entity->id]);
-        //POCOR-7179[END]
-        if ($this->checkUsersChildRecords($entity)) {
+        if ($this->hasAssociatedRecords($this, $entity, $extra)) {
+            //Inflector::humanize(Inflector::underscore());
             $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
             $event->stopPropagation();
             return $this->controller->redirect($this->url('remove'));
         } else {
-
-            $user = TableRegistry::get('Security.Users')
-                ->find()->where(['id' => $$entity->id])->first();
-            // echo "<pre>";print_r($entity);die;
-            if (TableRegistry::get('Security.Users')->delete($entity)) {
+            try {
+                TableRegistry::get('StudentCustomField.StudentCustomFieldValues')->deleteAll(['student_id' => $entity->id]);
+            } catch (\Exception $exception) {
+                $this->log($exception->getMessage(), 'error');
+            }
+            $users = TableRegistry::get('Security.Users');
+            $user = $users->get($entity->id);
+            if ($users->delete($user)) {
                 $this->Alert->success('general.delete.success', ['reset' => true]);
                 return $this->controller->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories', 'index']);
             }
-
         }
     }
-
+    //POCOR-8012-n
     private function checkUsersChildRecords($entity)
     {
         $result = false;
         $securityUserId = $entity->id ?? 0;
-
-
         // First count child records and after that delete main record if there is no any child record found
         // Records to delete from tables-
         // institution_class_students (student_id),
@@ -2044,7 +2040,6 @@ class DirectoriesTable extends ControllerActionTable
      */
     public static function getUserInternalSearch($requestDataParams)
     {
-
         $institutionId = (array_key_exists('institution_id', $requestDataParams)) ? $requestDataParams['institution_id'] : null;
         $userTypeId = (array_key_exists('user_type_id', $requestDataParams)) ? $requestDataParams['user_type_id'] : null;
         $firstName = (array_key_exists('first_name', $requestDataParams)) ? $requestDataParams['first_name'] : null;

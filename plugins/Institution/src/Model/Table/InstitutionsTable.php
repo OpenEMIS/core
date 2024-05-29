@@ -98,8 +98,11 @@ class InstitutionsTable extends ControllerActionTable
         $this->hasMany('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'id']);
         $this->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-        $this->hasMany('InstitutionCustomFieldValues', ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_id']);
-        $this->hasMany('InstitutionCustomFields', ['className' => 'InstitutionCustomField.InstitutionCustomFields', 'foreignKey' => 'id']);
+        //$this->hasMany('InstitutionCustomFieldValues', ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_id']); //not same as cakephp 3 code
+        //$this->hasMany('InstitutionCustomFields', ['className' => 'InstitutionCustomField.InstitutionCustomFields', 'foreignKey' => 'id']); //not same as cakephp 3 code
+        $this->hasMany('InstitutionCustomFieldValues', ['className' => 'Institution.InstitutionCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_id']);
+
+        $this->hasMany('InstitutionCustomFields', ['className' => 'InstitutionCustomFieldValues.InstitutionCustomFields', 'foreignKey' => 'id']);
 
         // Note: InstitutionClasses already cascade deletes 'InstitutionSubjectStudents' - dependent and cascade not neccessary
         $this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -170,25 +173,25 @@ class InstitutionsTable extends ControllerActionTable
         //POCOR-6520 starts: add isset condition only
         $request = Router::getRequest();
         if ($request !== null && isset($request->getParam('pass')[0]) && $request->getParam('pass')[0] != 'excel') {//POCOR-6520 ends
-
-//            $this->addBehavior('CustomField.Record', [
-//                'fieldKey' => 'institution_custom_field_id',
-//                'tableColumnKey' => 'institution_custom_table_column_id',
-//                'tableRowKey' => 'institution_custom_table_row_id',
-//                'fieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFields'],
-//                'formKey' => 'institution_custom_form_id',
-//                'filterKey' => 'institution_custom_filter_id',
-//                'formFieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFields'],
-//                'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
-//                'recordKey' => 'institution_id',
-//                'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
-//                'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
-//            ]);
+            // $this->addBehavior('CustomField.Record', [
+            //     'fieldKey' => 'institution_custom_field_id',
+            //     'tableColumnKey' => 'institution_custom_table_column_id',
+            //     'tableRowKey' => 'institution_custom_table_row_id',
+            //     'fieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFields'],
+            //     'formKey' => 'institution_custom_form_id',
+            //     'filterKey' => 'institution_custom_filter_id',
+            //     'formFieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFields'],
+            //     'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
+            //     'recordKey' => 'institution_id',
+            //     'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
+            //     'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+            // ]);
         }
         $this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionActivities', 'key' => 'institution_id', 'session' => 'Institution.Institutions.id']);
 
         // specify order of advanced search fields
+        // POCOR-8219 added
         $advancedSearchFieldOrder = [
             'code', 'name', 'classification', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id',
             'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'education_programmes', 'alternative_name', 'shift_type'
@@ -204,7 +207,7 @@ class InstitutionsTable extends ControllerActionTable
 
         $this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => ['view']]);
         $this->addBehavior('Security.Institution');
-        $this->addBehavior('Area.Areapicker'); //comment cakephp4
+        $this->addBehavior('Area.Areapicker'); 
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('OpenEmis.Map');
         $this->addBehavior('HighChart', ['institutions' => ['_function' => 'getNumberOfInstitutionsByModel']]);
@@ -258,97 +261,98 @@ class InstitutionsTable extends ControllerActionTable
 
     }
 
-    // public function validationDefault(Validator $validator): Validator
-    // {
-    //     $validator = parent::validationDefault($validator);
-    //     $validator = $this->LatLongValidation(); //POCOR-6625 incomment <vikas.rathore@mail.valocoders.com>
-    //     $validator
-    //         ->setProvider('custom', $this)
-    //         ->add('date_opened', [
-    //             'ruleCompare' => [
-    //                 'rule' => ['comparison', 'notequal', '0000-00-00'],
-    //             ]
-    //         ])
-    //         ->allowEmpty('date_closed')
-    //         ->add('date_opened', 'ruleLessThanToday', [
-    //             'rule' => ['lessThanToday', true]
-    //         ])
-    //         ->add('date_closed', 'ruleCompareDateReverse', [
-    //             'rule' => ['compareDateReverse', 'date_opened', true]
-    //         ])
-    //         ->add('date_closed', 'ruleCheckPendingWorkbench', [
-    //             'rule' => 'checkPendingWorkbench',
-    //             'last' => true
-    //         ])
-    //         ->add('classification', [
-    //             'validClassification' => [
-    //                 'rule' => ['range', 1, 2],
-    //             ]
-    //         ])
-    //         // ->add('address', 'ruleMaximum255', [
-    //         //      'rule' => ['maxLength', 255],
-    //         //      'message' => 'Maximum allowable character is 255',
-    //         //      'last' => true
-    //         //  ])
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        $validator = $this->LatLongValidation(); //POCOR-6625 incomment <vikas.rathore@mail.valocoders.com>
+        $validator
+            ->setProvider('custom', $this)
+            ->add('date_opened', [
+                'ruleCompare' => [
+                    'rule' => ['comparison', 'notequal', '0000-00-00'],
+                ]
+            ])
+            ->allowEmpty('date_closed')
+            ->add('date_opened', 'ruleLessThanToday', [
+                'rule' => ['lessThanToday', true]
+            ])
+            ->add('date_closed', 'ruleCompareDateReverse', [
+                'rule' => ['compareDateReverse', 'date_opened', true]
+            ])
+            ->add('date_closed', 'ruleCheckPendingWorkbench', [
+                'rule' => 'checkPendingWorkbench',
+                'last' => true
+            ])
+            ->add('classification', [
+                'validClassification' => [
+                    'rule' => ['range', 1, 2],
+                ]
+            ])
+            // ->add('address', 'ruleMaximum255', [
+            //      'rule' => ['maxLength', 255],
+            //      'message' => 'Maximum allowable character is 255',
+            //      'last' => true
+            //  ])
 
-    //         ->add('code', 'ruleCustomCode', [
-    //             'rule' => ['validateCustomPattern', 'institution_code'],
-    //             'provider' => 'table',
-    //             'last' => true
-    //         ])
-    //         ->allowEmpty('postal_code')
-    //         ->add('postal_code', 'ruleCustomPostalCode', [
-    //             'rule' => ['validateCustomPattern', 'postal_code'],
-    //             'provider' => 'table',
-    //             'last' => true
-    //         ])
-    //         ->add('code', 'ruleUnique', [
-    //             'rule' => 'validateUnique',
-    //             'provider' => 'table',
-    //             // 'message' => 'Code has to be unique'
-    //         ])
-    //         ->allowEmpty('email')
-    //         ->add('email', [
-    //             'ruleValidEmail' => [
-    //                 'rule' => 'email'
-    //             ]
-    //         ])
-    //         ->allowEmpty('telephone')
-    //         ->add('telephone', 'ruleCustomTelephone', [
-    //             'rule' => ['validateCustomPattern', 'institution_telephone'],
-    //             'provider' => 'table',
-    //             'last' => true
-    //         ])
-    //         ->allowEmpty('fax')
-    //         ->add('fax', 'ruleCustomFax', [
-    //             'rule' => ['validateCustomPattern', 'institution_fax'],
-    //             'provider' => 'table',
-    //             'last' => true
-    //         ])
-    //         // ->add('area_id', 'ruleAuthorisedArea', [
-    //         //     'rule' => ['checkAuthorisedArea']
-    //         // ])
-    //         // ->add('area_id', 'ruleConfiguredArea', [
-    //         //     'rule' => ['checkConfiguredArea']
-    //         // ])
-    //         // ->allowEmpty('area_administrative_id')
-    //         // ->add('area_administrative_id', 'ruleConfiguredAreaAdministrative', [
-    //         //     'rule' => ['checkConfiguredArea']
-    //         // ])
-    //         ->add('institution_provider_id', 'ruleLinkedSector', [
-    //             'rule' => 'checkLinkedSector',
-    //             'provider' => 'table'
-    //         ])
-    //         // POCOR-7935:start
-    //         ->add('logo_content', 'hople',
-    //             ['rule' => ['imageSize',
-    //                 ['width' => ['<=', self::logoMaxWidth], 'height' => ['<=', self::logoMaxHeight]]],
-    //                 'message' => 'The image dimensions should not exceed ' . self::logoMaxWidth . 'x' . self::logoMaxHeight . ' pixels.'
-    //             ])
-    //         // POCOR-7935:end
-    //         ->allowEmpty('logo_content');
-    //     return $validator;
-    // }
+            ->add('code', 'ruleCustomCode', [
+                'rule' => ['validateCustomPattern', 'institution_code'],
+                'provider' => 'table',
+                'last' => true
+            ])
+            ->allowEmpty('postal_code')
+            ->add('postal_code', 'ruleCustomPostalCode', [
+                'rule' => ['validateCustomPattern', 'postal_code'],
+                'provider' => 'table',
+                'last' => true
+            ])
+            ->add('code', 'ruleUnique', [
+                'rule' => 'validateUnique',
+                'provider' => 'table',
+                // 'message' => 'Code has to be unique'
+            ])
+            ->allowEmpty('email')
+            ->add('email', [
+                'ruleValidEmail' => [
+                    'rule' => 'checkEmailFormat',
+                    'message' => 'Invalid email address'
+                ]
+            ])
+            ->allowEmpty('telephone')
+            ->add('telephone', 'ruleCustomTelephone', [
+                'rule' => ['validateCustomPattern', 'institution_telephone'],
+                'provider' => 'table',
+                'last' => true
+            ])
+            ->allowEmpty('fax')
+            ->add('fax', 'ruleCustomFax', [
+                'rule' => ['validateCustomPattern', 'institution_fax'],
+                'provider' => 'table',
+                'last' => true
+            ])
+            // ->add('area_id', 'ruleAuthorisedArea', [
+            //     'rule' => ['checkAuthorisedArea']
+            // ])
+            // ->add('area_id', 'ruleConfiguredArea', [
+            //     'rule' => ['checkConfiguredArea']
+            // ])
+            // ->allowEmpty('area_administrative_id')
+            // ->add('area_administrative_id', 'ruleConfiguredAreaAdministrative', [
+            //     'rule' => ['checkConfiguredArea']
+            // ])
+            ->add('institution_provider_id', 'ruleLinkedSector', [
+                'rule' => 'checkLinkedSector',
+                'provider' => 'table'
+            ])
+            // POCOR-7935:start
+            ->add('logo_content', 'hople',
+                ['rule' => ['imageSize',
+                    ['width' => ['<=', self::logoMaxWidth], 'height' => ['<=', self::logoMaxHeight]]],
+                    'message' => 'The image dimensions should not exceed ' . self::logoMaxWidth . 'x' . self::logoMaxHeight . ' pixels.'
+                ])
+            // POCOR-7935:end
+            ->allowEmpty('logo_content');
+        return $validator;
+    }
 
     public function getNonAcademicConstant()
     {
@@ -1437,12 +1441,17 @@ class InstitutionsTable extends ControllerActionTable
         $this->Session->delete('Institution.Institutions.id');
         $plugin = $this->controller->getPlugin();
         $name = $this->controller->getName();
-        $imageUrl =  ['plugin' => $plugin,
-            'controller' => $name,
-            'action' => $this->getAlias(),
+        // POCOR-8219 no pics if localhost
+        // Get the base URL from configuration
+        $baseUrl = Configure::read('App.fullBaseUrl');
+        // Check if the base URL contains 'localhost' or '127.0.0.1'
+        $isLocalhost = strpos($baseUrl, 'localhost') !== false || strpos($baseUrl, '127.0.0.1') !== false;
+        $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->getAlias(),
             'image'];
         $imageDefault = 'fa kd-institutions';
-        $this->field('logo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"' . $imageDefault . '"', 'order' => 0]);
+        if (!$isLocalhost){
+            $this->field('logo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"' . $imageDefault . '"', 'order' => 0]);
+        }
         $this->field('area_id', ['sort' => ['field' => 'Areas.name']]); //POCOR-6849
         $this->field('institution_type_id', ['sort' => ['field' => 'Types.name']]); //POCOR-6849
         $this->setFieldOrder([
@@ -1658,6 +1667,8 @@ class InstitutionsTable extends ControllerActionTable
                     'action' => 'Institutions',
                     'add'];
                 return $this->controller->redirect($action);
+            } elseif(empty(!$search) && empty($this->isAdvancedSearchEnabled())){
+                $query->find('SearchInstitution', ['search' => $search]);
             }
         }
         
@@ -1926,6 +1937,7 @@ class InstitutionsTable extends ControllerActionTable
                 $button['url']['institutionId'] = $button['url'][1];
             }
         }
+        // POCOR-3125 history button permission to hide and show the link
         if (isset($buttons['view']) && $this->AccessControl->check(['InstitutionHistories', 'index'])) {
             $customUrl = [
                 'plugin' => 'Institution',
@@ -2050,7 +2062,7 @@ class InstitutionsTable extends ControllerActionTable
             )
             ->select([$SecurityGroupAreas->aliasField('security_group_id')])
             ->distinct([$SecurityGroupAreas->aliasField('security_group_id')])
-            // ->hydrate(false)
+            ->enableHydration(false)
             ->toArray();
         $securityGroupIds = $this->array_column($securityGroupIds, 'security_group_id');
         return $securityGroupIds;

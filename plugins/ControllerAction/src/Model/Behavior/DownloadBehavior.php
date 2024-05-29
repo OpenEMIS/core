@@ -115,14 +115,14 @@ class DownloadBehavior extends Behavior
         exit();
     }
 
-    private function getFile($phpResourceFile)
-    {
-        $file = '';
-        while (!feof($phpResourceFile)) {
-            $file .= fread($phpResourceFile, 8192);
-        }
-        fclose($phpResourceFile);
+    // private function getFile($phpResourceFile)
+    // {
+    //     $file = '';
+    //     while (!feof($phpResourceFile)) {
+    //         $file .= fread($phpResourceFile, 8192);
+    //     }
+    //     fclose($phpResourceFile);
 
-        return $file;
-    }
+    //     return $file;
+    // }
 }

@@ -69,9 +69,6 @@ class StudentFeesTable extends ControllerActionTable
 
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Excel', ['pages' => ['index']]);//POCOR-6165
-        $this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['StudentFees'=>['id']]
-        ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -80,10 +77,10 @@ class StudentFeesTable extends ControllerActionTable
         //$this->institutionId = $session->read('Institution.Institutions.id');
         $this->institutionId = $this->getInstitutionID();
 
-        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $this->currency = $ConfigItems->value('currency');
-        $this->StudentFeesAbstract = TableRegistry::getTableLocator()->get('Institution.StudentFeesAbstract');
-        $this->InstitutionFees = TableRegistry::getTableLocator()->get('Institution.InstitutionFees');
+        $this->StudentFeesAbstract = TableRegistry::get('Institution.StudentFeesAbstract');
+        $this->InstitutionFees = TableRegistry::get('Institution.InstitutionFees');
 
         $this->field('institution_id', ['visible' => false]);
         $this->field('student_status_id', ['visible' => false]);
@@ -235,18 +232,18 @@ class StudentFeesTable extends ControllerActionTable
             ->first()
             ;
 
-        $queryString = $this->getQueryString();
-        $encodedQueryString = $this->paramsEncode($queryString);    
-        $extra['elements']['custom'] = [
-            'name' => 'Institution.StudentFees/controls',
-            'data' => [
-                'encodedQueryString' => $encodedQueryString,
-                'academicPeriodOptions'=>$academicPeriodOptions,
-                'gradeOptions'=>$gradeOptions,
-            ],
-            'options' => [],
-             'order' => 0
-        ];
+            $queryString = $this->getQueryString();
+            $encodedQueryString = $this->paramsEncode($queryString);    
+            $extra['elements']['custom'] = [
+                'name' => 'Institution.StudentFees/controls',
+                'data' => [
+                    'encodedQueryString' => $encodedQueryString,
+                    'academicPeriodOptions'=>$academicPeriodOptions,
+                    'gradeOptions'=>$gradeOptions,
+                ],
+                'options' => [],
+                 'order' => 0
+            ];
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -255,7 +252,7 @@ class StudentFeesTable extends ControllerActionTable
         ->where([
             $this->aliasField('institution_id') => $this->institutionId,
             $this->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId,
-            // $this->aliasField('education_grade_id') => $this->_selectedEducationGradeId, //POCOR-7485
+            $this->aliasField('education_grade_id') => $this->_selectedEducationGradeId,
         ])
         ;
 
@@ -300,17 +297,41 @@ class StudentFeesTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->InstitutionFees = TableRegistry::get('Institution.InstitutionFees');
         $this->InstitutionFeeEntity = $this->InstitutionFees
-                ->find()
-                ->contain(['InstitutionFeeTypes.FeeTypes'])
-                ->where([
-                    'InstitutionFees.education_grade_id' => $entity->education_grade_id,
-                    'InstitutionFees.academic_period_id' => $entity->academic_period_id,
-                    'InstitutionFees.institution_id' => $entity->institution_id
-                ])
-                ->first()
-                ;
-
+        ->find()
+        ->select([
+            'InstitutionFees.id',
+            'InstitutionFees.total',
+            'InstitutionFees.institution_id',
+            'InstitutionFees.academic_period_id',
+            'InstitutionFees.education_grade_id',
+            'InstitutionFees.modified_user_id',
+            'InstitutionFees.modified',
+            'InstitutionFees.created_user_id',
+            'InstitutionFees.created'
+        ])
+        ->contain([
+            'InstitutionFeeTypes' => function ($q) {
+                return $q  //POCOR-8024 and POCOR-8255
+                    ->select([
+                        'InstitutionFeeTypes.id',
+                        'InstitutionFeeTypes.amount',
+                        'InstitutionFeeTypes.institution_fee_id',
+                        'FeeTypes.id',
+                        'FeeTypes.name'
+                    ])
+                    ->contain(['FeeTypes'])
+                    ->where(['InstitutionFeeTypes.amount >' => 0]) // POCOR-8177 fetch only records where amount > 0
+                    ->order(['FeeTypes.order ASC']);
+            }
+        ])
+        ->where([
+            'InstitutionFees.education_grade_id' => $entity->education_grade_id,
+            'InstitutionFees.academic_period_id' => $entity->academic_period_id,
+            'InstitutionFees.institution_id' => $entity->institution_id
+        ])
+        ->first();
         $feeTypes = [];
         foreach ($this->InstitutionFeeEntity->institution_fee_types as $key=>$obj) {
             $feeTypes[] = [
@@ -400,16 +421,39 @@ class StudentFeesTable extends ControllerActionTable
         $this->fields['outstanding_fee']['type'] = 'readonly';
 
         $this->InstitutionFeeEntity = $this->InstitutionFees
-                ->find()
-                ->contain('InstitutionFeeTypes.FeeTypes')
-                ->where([
-                    'InstitutionFees.education_grade_id' => $entity->education_grade_id,
-                    'InstitutionFees.academic_period_id' => $entity->academic_period_id,
-                    'InstitutionFees.institution_id' => $entity->institution_id
-                ])
-                ->first()
-                ;
-
+        ->find()
+        ->select([
+            'InstitutionFees.id',
+            'InstitutionFees.total',
+            'InstitutionFees.institution_id',
+            'InstitutionFees.academic_period_id',
+            'InstitutionFees.education_grade_id',
+            'InstitutionFees.modified_user_id',
+            'InstitutionFees.modified',
+            'InstitutionFees.created_user_id',
+            'InstitutionFees.created'
+        ])
+        ->contain([
+            'InstitutionFeeTypes' => function ($q) {
+                return $q  //POCOR-8024 and POCOR-8255
+                    ->select([
+                        'InstitutionFeeTypes.id',
+                        'InstitutionFeeTypes.amount',
+                        'InstitutionFeeTypes.institution_fee_id',
+                        'FeeTypes.id',
+                        'FeeTypes.name'
+                    ])
+                    ->contain(['FeeTypes'])
+                    ->where(['InstitutionFeeTypes.amount >' => 0]) // POCOR-8177 fetch only records where amount > 0
+                    ->order(['FeeTypes.order ASC']);
+            }
+        ])
+        ->where([
+            'InstitutionFees.education_grade_id' => $entity->education_grade_id,
+            'InstitutionFees.academic_period_id' => $entity->academic_period_id,
+            'InstitutionFees.institution_id' => $entity->institution_id
+        ])
+        ->first();
         /**
          * Hidden fields value
          */
@@ -465,17 +509,15 @@ class StudentFeesTable extends ControllerActionTable
         $StudentFees = $this->StudentFeesAbstract;
         $student_id = $entity->student_id;
         $institution_fee_id = $this->InstitutionFeeEntity->id;
-
         // die('addBeforeSave');
         $process = function ($model, $entity) use ($event, $data, $StudentFees, $student_id, $institution_fee_id) {
-
             if (array_key_exists('StudentFeesAbstract', $data)) {
                 $fees = $StudentFees->newEntities($data['StudentFeesAbstract']);
                 $error = false;
                 $totalPaid = 0.00;
                 foreach ($fees as $key=>$fee) {
-                    if ($fee->getErrors()) {
-                        $error = $fee->getErrors();
+                    if ($fee->getErors()) {
+                        $error = $fee->getErors();
                         $data['StudentFeesAbstract'][$key]['errors'] = $error;
                     }
                     $totalPaid = (float)$totalPaid + (float)$fee->amount;
@@ -723,13 +765,11 @@ class StudentFeesTable extends ControllerActionTable
             //$this->request->getQuery('academic_period_id') = $this->AcademicPeriods->getCurrent();
             $this->request = $this->request->withQueryParams(['academic_period_id' => $this->AcademicPeriods->getCurrent()]);
         }
-
         //$institutionId = $this->Session->read('Institution.Institutions.id');
         $institutionId  = $this->getInstitutionID();
-        $academicPeriod = $this->request->getQuery('academic_period_id');  
+        $academicPeriod = $this->request->query['academic_period_id'];  
         $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($institutionId,  $academicPeriod);
         $educationGradeId = $this->queryString('education_grade_id', $gradeOptions);
-        
         $this->advancedSelectOptions($gradeOptions, $this->_selectedEducationGradeId);
         $query->select([
             'student_id' => $this->Users->aliasField('id'),
@@ -749,11 +789,11 @@ class StudentFeesTable extends ControllerActionTable
              'StudentFees.institution_id' =>  $institutionId,
              'StudentFees.education_grade_id' =>   $educationGradeId
         ]);
-
+       
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
                     
-                    $InstitutionFees= TableRegistry::getTableLocator()->get('Institution.InstitutionFees');
+                    $InstitutionFees= TableRegistry::get('Institution.InstitutionFees');
                     $InstitutionFeeEntity = $InstitutionFees
                                              ->find()
                                              ->contain('InstitutionFeeTypes.FeeTypes')
@@ -763,7 +803,20 @@ class StudentFeesTable extends ControllerActionTable
                                                      'InstitutionFees.institution_id' => $row['institution_id']
                                              ])
                                              ->first();
+     
+                    $StudentFees= TableRegistry::get('student_fees');
+                    $StudentFeeEntity = $StudentFees
+                                            ->find()
+                                            ->select([
+                                                "amount"=> $StudentFees->find()->func()->sum('amount')
+                                            ])
+                                            ->where([
+                                                $StudentFees->aliasField('institution_fee_id') =>$InstitutionFeeEntity->id,
+                                                $StudentFees->aliasField('student_id') => $row['student_id']
 
+                                             ])
+                                             ->toArray();
+                  
                     //total fee                         
                     $row->total_fee='00';
                     if(isset($InstitutionFeeEntity->total)){
@@ -842,7 +895,7 @@ class StudentFeesTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
     //POCOR-6165 end
-
+    
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
@@ -874,4 +927,5 @@ class StudentFeesTable extends ControllerActionTable
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
 }

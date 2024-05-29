@@ -41,7 +41,7 @@ class InstitutionController extends Controller
         try {
 
             $data = $this->institutionService->getInstitutions($request);
-            return $this->sendSuccessResponse("Institutions List Found", $data);
+            return $this->sendSuccessResponse("Successful.", $data);
             
         } catch (\Exception $e) {
             Log::error(
@@ -1817,4 +1817,20 @@ class InstitutionController extends Controller
 
         return $this->sendSuccessResponse('Institution Subjects.', $subjects);
     }
+
+
+    //For POCOR-8197 Starts...
+    public function getGradesViaInstitutionId(Request $request, $institutionId)
+    {
+        try {
+            $params = $request->all();
+            $list = $this->institutionService->getGradesViaInstitutionId($params, $institutionId);
+            
+            return  $this->sendSuccessResponse('Successful.',$list);
+            
+        } catch (Exception $e) {
+           return $this->sendErrorResponse($e->getMessage());
+        }
+    }
+    //For POCOR-8197 End...
 }

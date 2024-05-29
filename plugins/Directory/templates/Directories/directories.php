@@ -186,6 +186,12 @@
                             <p>{{ error.user_type_id }}</p>
                         </div>
                     </div>
+                    <!-- POCOR-8112 - New section for OpenEMIS ID -->
+                    <div class="row section-header header-space-lg">Search By OpenEMIS ID</div>
+                    <div class="input string">
+                        <label><?= __('OpenEMIS ID') ?></label>
+                        <input ng-model="selectedUserData.openemis_no" type="string">
+                    </div>
                     <div class="row section-header header-space-lg">Search By Identity</div>
                     <div ng-class="nationality_class" class="input select">
                         <label><?= __('Nationality') ?></label>
@@ -224,19 +230,19 @@
                         </div>
                     </div>
                     <!-- Always show Identity Number POCOR-7245 -->
-                    <?php /*<div ng-class="identity_class" class="input select">
+                    <div ng-class="identity_class" class="input select">
                         <label><?= __('{{selectedUserData.identity_type_name ? selectedUserData.identity_type_name : "Identity Number"}}') ?></label>
                         <input ng-model="selectedUserData.identity_number" type="string">
                     </div>
-                     <div ng-class="identity_class" ng-show="selectedUserData.identity_type_id" class="input select required">
+                    <!-- <div ng-class="identity_class" ng-show="selectedUserData.identity_type_id" class="input select required">
                         <label><?php //echo __('{{selectedUserData.identity_type_name ? selectedUserData.identity_type_name : "Identity Number"}}') ?></label>
                         <input ng-model="selectedUserData.identity_number" type="string">
-                    </div> */ ?>
-                    <div class="row section-header header-space-lg">Search By Basic Information</div>
+                    </div> --> 
+                    <!-- <div class="row section-header header-space-lg">Search By Basic Information</div>
                     <div class="input string">
-                        <label><?= __('OpenEMIS ID') ?></label>
+                        <label><?php //echo __('OpenEMIS ID') ?></label>
                         <input ng-model="selectedUserData.openemis_no" type="string">
-                    </div>
+                    </div> -->
                     <div class="input string required">
                         <label><?= __('First Name') ?></label>
                         <input ng-model="selectedUserData.first_name" ng-change="setName()" type="string">

@@ -179,7 +179,6 @@ public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 public function viewEditBeforeQuery(Event $event, Query $query)
 {
     $query->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels']);
-    //echo "<pre>";print_r($query->sql());die;
 }
 
 
@@ -1250,7 +1249,7 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
 			'EducationSystems.academic_period_id' => $academicPeriodId,
 			$conditions
 		])
-        ->order(['EducationProgrammes.order', 'EducationGrades.education_programme_id', 'EducationGrades.order']); //POCOR-8165 - Update order by fields for sorting
+        ->order(['EducationLevels.order' =>'ASC','EducationCycles.order'=>'ASC','EducationProgrammes.order' => 'ASC','EducationGrades.order' => 'ASC']); //POCOR-8185 - Update order by fields for sorting
         $data = $query->toArray();
 
         if($listOnly) {

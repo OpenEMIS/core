@@ -301,4 +301,24 @@ class UserService extends Controller
         }
     }
     //POCOR-8136 end
+
+
+    //POCOR-8139 Starts
+
+    public function externalDataSources($request)
+    {
+        try {
+            $data = $this->userRepository->externalDataSources($request);
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get data from external data sources.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get data from external data sources.');
+        }
+    }
+    
+    //POCOR-8139 Ends
 }

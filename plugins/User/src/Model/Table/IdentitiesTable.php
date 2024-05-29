@@ -2,15 +2,18 @@
 
 namespace User\Model\Table;
 
-use App\Model\Table\ControllerActionTable;
+use Exception;
+use DateTime;
 use ArrayObject;
+
+use Cake\ORM\TableRegistry;
+use Cake\Validation\Validator;
 use Cake\Event\Event;
-use Cake\I18n\Time;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\ORM\TableRegistry;
+use Cake\I18n\Time;
 
-use Cake\Validation\Validator;
+use App\Model\Table\ControllerActionTable;
 
 class IdentitiesTable extends ControllerActionTable
 {
@@ -62,7 +65,6 @@ class IdentitiesTable extends ControllerActionTable
             ],
             ]);
         $this->addBehavior('User.SetupTab');
-        $this->addBehavior('User.UserTab');
         $this->excludeDefaultValidations(['security_user_id']);
     }
 
@@ -79,9 +81,9 @@ class IdentitiesTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $extra)
     {
-//        $this->log('beforeSave', 'debug');
-//        $this->log($entity, 'debug');
-//        die('<pre>'.print_r($entity, true));
+        //$this->log('beforeSave', 'debug');
+        //$this->log($entity, 'debug');
+        //POCOR-8243
         $options = [];
         $options['identity_type_id'] = $entity->identity_type_id;
         $options['identity_number'] = $entity->number;
@@ -95,41 +97,6 @@ class IdentitiesTable extends ControllerActionTable
             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
             $event->stopPropagation();
         }
-    }
-
-    private function checkCustomIdentityNumber($options)
-    {
-        $pattern = '';
-
-
-        if (array_key_exists('identity_type_id', $options) && !empty($options['identity_type_id'])) {
-            $identityTypeId = $options['identity_type_id'];
-        } else {
-            return "";
-        }
-        if (array_key_exists('identity_number', $options) && !empty($options['identity_number'])) {
-            $identityNumber = $options['identity_number'];
-        } else {
-            return "";
-        }
-
-        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
-        $IdentityTypesData = $IdentityTypes
-            ->find()
-            ->where([$IdentityTypes->aliasField('id') => $identityTypeId])
-            ->first();
-
-        if (!empty($IdentityTypesData->validation_pattern)) {
-            $pattern = '/' . $IdentityTypesData->validation_pattern . '/';
-        }
-
-
-        // custom validation is nullable, have to cater for the null pattern.
-        if (!empty($pattern) && !preg_match($pattern, $identityNumber)) {
-            return __("Please enter a valid Identity Number");
-        }
-
-        return "";
     }
 
     public function afterSaveUsers(Event $event, Entity $entity)
@@ -154,12 +121,52 @@ class IdentitiesTable extends ControllerActionTable
         }
     }
 
+    private function checkCustomIdentityNumber($options)
+    {
+        $pattern = '';
+
+
+        if (array_key_exists('identity_type_id', $options) && !empty($options['identity_type_id'])) {
+            $identityTypeId = $options['identity_type_id'];
+        } else {
+            return "";
+        }
+        if (array_key_exists('identity_number', $options) && !empty($options['identity_number'])) {
+            $identityNumber = $options['identity_number'];
+        } else {
+            return "";
+        }
+
+        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityTypesData = $IdentityTypes
+            ->find()
+            ->where([$IdentityTypes->aliasField('id') => $identityTypeId])
+            ->first();
+
+        if (!empty($IdentityTypesData->validation_pattern)) {
+            $pattern = '/' . $IdentityTypesData->validation_pattern . '/';
+        }
+
+
+        // custom validation is nullable, have to cater for the null pattern.
+        if (!empty($pattern) && !preg_match($pattern, $identityNumber)) {
+            return __("Please enter a valid Identity Number");
+        }
+
+        return "";
+    }
+
     public function beforeAction($event, ArrayObject $extra)
     {
         $session = $this->request->getSession();
         $UserNationalityTable = TableRegistry::get('User.UserNationalities');
-        $users = TableRegistry::getTableLocator()->get('User.Users');
-        $userId = $this->getUserID();
+        $users = TableRegistry::get('User.Users');
+        $userId = null;
+        $queryString = $this->getQueryString();
+        if (isset($queryString['security_user_id'])) {
+            $userId = $queryString['security_user_id'];
+        }
+
         /*POCOR-6396 starts*/
         if ($this->action == 'add' || $this->action == 'edit') {
             $checkUserNationality = $UserNationalityTable->find()
@@ -190,8 +197,6 @@ class IdentitiesTable extends ControllerActionTable
         $this->fields['nationality_id']['options'] = (!empty($NationalityOptions)) ? $NationalityOptions : ['' => $this->getMessage('general.select.noOptions')]; //POCOR-6396
         $this->setFieldOrder(['identity_type_id', 'nationality_id', 'number', 'issue_date', 'expiry_date', 'issue_location', 'comments']);
     }
-
-    /*POCOR-6267 Starts*/
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -278,8 +283,7 @@ class IdentitiesTable extends ControllerActionTable
 
     }
 
-    /*POCOR-6267 Ends*/
-
+    /*POCOR-6267 Starts*/
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $userId = $this->getUserID();
@@ -287,10 +291,23 @@ class IdentitiesTable extends ControllerActionTable
         $query->where([$this->aliasField('security_user_id') => $userId]);
     }
 
+    /*POCOR-6267 Ends*/
+
+    public function editOnInitialize(Event $event, Entity $entity)
+    {
+        // set the defaultDate to false on initialize, for the empty date.
+        if (empty($entity->issue_date)) {
+            $this->fields['issue_date']['default_date'] = false;
+        }
+
+        if (empty($entity->expiry_date)) {
+            $this->fields['expiry_date']['default_date'] = false;
+        }
+    }
+
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        $validator->setProvider('custom', $this);
         return $validator
             ->add('issue_date', 'ruleCompareDate', [
                 'rule' => ['compareDate', 'expiry_date', false]
@@ -317,25 +334,13 @@ class IdentitiesTable extends ControllerActionTable
         //POCOR-5987 ends
     }
 
-    public function editOnInitialize(Event $event, Entity $entity)
-    {
-        // set the defaultDate to false on initialize, for the empty date.
-        if (empty($entity->issue_date)) {
-            $this->fields['issue_date']['default_date'] = false;
-        }
-
-        if (empty($entity->expiry_date)) {
-            $this->fields['expiry_date']['default_date'] = false;
-        }
-    }
-
     public function validationAddByAssociation(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
         return $validator->requirePresence('security_user_id', false);
     }
 
-    public function validationNonMandatory(Validator $validator)
+    public function validationNonMandatory(Validator $validator): Validator
     {
         $validator = $this->validationDefault($validator);
         return $validator->allowEmpty('number');
@@ -347,8 +352,8 @@ class IdentitiesTable extends ControllerActionTable
             $nationalitiesLookUp = TableRegistry::getTableLocator()->get('FieldOption.Nationalities')->get($entity->nationality_id);
             // if($nationalitiesLookUp->identity_type_id == $entity->identity_type_id){
             if ($nationalitiesLookUp) {
-                $user = TableRegistry::getTableLocator()->get('User.Users');
-                $preferredNationality = TableRegistry::getTableLocator()->get('User.UserNationalities')
+                $user = TableRegistry::get('User.Users');
+                $preferredNationality = TableRegistry::get('User.UserNationalities')
                     ->find()
                     ->where(['nationality_id' => $entity->nationality_id,
                         'preferred' => self::ISPREFERRED
@@ -365,7 +370,7 @@ class IdentitiesTable extends ControllerActionTable
             }
         }
         try {
-            $Users = TableRegistry::getTableLocator()->get('User.Users');
+            $Users = TableRegistry::get('User.Users');
             //echo "<pre>";print_r($this->request);die();
             $result = $Users
                 ->find()
@@ -382,7 +387,7 @@ class IdentitiesTable extends ControllerActionTable
         }
 
         $listeners = [
-            TableRegistry::getTableLocator()->get('User.Users')
+            TableRegistry::get('User.Users')
         ];
         $this->dispatchEventToModels('Model.UserIdentities.onChange', [$entity], $this, $listeners);
     }
@@ -390,7 +395,7 @@ class IdentitiesTable extends ControllerActionTable
     public function afterDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
         $listeners = [
-            TableRegistry::getTableLocator()->get('User.Users')
+            TableRegistry::get('User.Users')
         ];
         $this->dispatchEventToModels('Model.UserIdentities.onChange', [$entity], $this, $listeners);
     }
@@ -398,7 +403,7 @@ class IdentitiesTable extends ControllerActionTable
     public function getLatestDefaultIdentityNo($userId)
     {
         //check identity type that ties to the nationality
-        $UserNationalityTable = TableRegistry::getTableLocator()->get('User.UserNationalities');
+        $UserNationalityTable = TableRegistry::get('User.UserNationalities');
 
         $nationalityId = null;
         $identityType = $UserNationalityTable
@@ -460,5 +465,4 @@ class IdentitiesTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-
 }

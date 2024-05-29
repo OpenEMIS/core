@@ -146,7 +146,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
     
     public function onGetCurricularCategory(Event $event, Entity $entity)
     {
-        return $entity['institution_curricular']['category'] ? __('Curricular') : $entity->category ? __('Curricular') : __('Extracurricular');    
+        return $entity['institution_curricular']['category'] ? __('Co-Curricular') : $entity->category ? __('Co-Curricular') : __('Extracurricular');    
         
     }
     
@@ -170,7 +170,7 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
                             ->where([$curriculars->aliasField('id') => $curricularIdGet])->first();
         
         $entity->name = $curricularData->name;
-        $entity->category = $curricularData->category ? __('Curricular') : __('Extracurricular');
+        $entity->category = $curricularData->category ? __('Co-Curricular') : __('Extracurricular');
         $entity->curricularType = $curricularData->curricularType;
         $this->field('name', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $entity->name, 'required' => true]]);
         $this->field('curricular_type_id', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $entity->curricularType, 'required' => true]]);
@@ -190,15 +190,45 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
    public function onUpdateFieldStartDate(Event $event, array $attr, $action, ServerRequest $request)
     {
+        //POCOR- 8220 chnage academic period condition
+        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
         if ($action == 'add' || $action == 'edit') {
-            return $this->updateDateRangeField('start_date', $attr, $request);
+            //return $this->updateDateRangeField('start_date', $attr, $request);
+            $entity = $attr['entity'];
+            $academicPeriodId = $selectedAcademicPeriodId;
+            $periodStartDate = $this->AcademicPeriods->get($academicPeriodId)->start_date;
+            $periodEndDate = $this->AcademicPeriods->get($academicPeriodId)->end_date;
+
+            $attr['type'] = 'date';
+            $attr['date_options'] = [
+                'startDate' => $periodStartDate->format('d-m-Y'),
+                'endDate' => $periodEndDate->format('d-m-Y'),
+                'todayBtn' => false
+            ];
+            return $attr;
         }
     }
 
     public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
     {
+        //POCOR- 8220 chnage academic period condition
+        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
         if ($action == 'add' || $action == 'edit') {
-            return $this->updateDateRangeField('end_date', $attr, $request);
+            //return $this->updateDateRangeField('end_date', $attr, $request);
+            $entity = $attr['entity'];
+            $academicPeriodId = $selectedAcademicPeriodId;
+            $periodStartDate = $this->AcademicPeriods->get($academicPeriodId)->start_date;
+            $periodEndDate = $this->AcademicPeriods->get($academicPeriodId)->end_date;
+            
+            $attr['type'] = 'date';
+            $attr['date_options'] = [
+                'startDate' => $periodStartDate->format('d-m-Y'),
+                'endDate' => $periodEndDate->format('d-m-Y'),
+                'todayBtn' => false
+            ];
+            return $attr;
         }
     }
 
@@ -245,6 +275,11 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     public function onUpdateFieldStudentId(Event $event, array $attr, $action, ServerRequest $request)
     {
+        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
+        //$session = $this->controller->request->session();
+        //$institutionId = $session->read('Institution.Institutions.id');
+
         $institutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
         $securityUsers = TableRegistry::getTableLocator()->get('User.Users');
         $institutionId = $this->getInstitutionID();
@@ -258,8 +293,10 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
                         ->LeftJoin([$securityUsers->getAlias() => $securityUsers->getTable()],[
                             $securityUsers->aliasField('id').' = ' . $institutionStudents->aliasField('student_id')
                         ])
-                        ->where(['student_status_id'=>1,
-                        'institution_id'=>$institutionId,
+                        ->where([
+                            'student_status_id'=>1,
+                            'institution_id'=>$institutionId,
+                            'academic_period_id'=>$selectedAcademicPeriodId,
                         ])
                         ->orderAsc($securityUsers->aliasField('first_name'))
                         ->orderAsc($securityUsers->aliasField('last_name'))
@@ -335,12 +372,11 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     public function onGetCategory(Event $event, Entity $entity)
     {
-        return $entity->category ? __('Curricular') : __('Extracurricular');
+        return $entity->category ? __('Co-Curricular') : __('Extracurricular');
     }
 
     public function onGetOpenemisNo(Event $event, Entity $entity)
     {
-
         return $entity->user->openemis_no;
     }
 
@@ -373,6 +409,15 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
         
         return $student;
     }
+    
+    //POCOR-8056
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $modelAlias = 'InstitutionCurricularStudents';
+        $userType = 'StudentUser';
+        $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
+    }
+    //POCOR-8056
 
     public function findByStudentData(Query $query, array $options)
     {

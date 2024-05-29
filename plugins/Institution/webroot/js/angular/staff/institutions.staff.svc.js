@@ -55,6 +55,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         getInstitution: getInstitution,
         addStaffTransferRequest: addStaffTransferRequest,
         generatePassword: generatePassword,
+        checkUserAge: checkUserAge,//POCOR-8071
         translate: translate,
         getPositionTypes: getPositionTypes,
         getFtes: getFtes,
@@ -114,6 +115,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
     };
 
     function saveStaffDetails(param) {
+        // console.log(param)
         var deferred = $q.defer();
         let url = angular.baseUrl + '/Institutions/saveStaffData';
         $http.post(url, param)
@@ -1068,10 +1070,15 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
     }
 
     function getNationalities() {
-        return Nationalities
-            .select()
-            .contain(['IdentityTypes'])
-            .ajax({defer: true});
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/getNationalities/';
+        $http.get(url)
+            .then(function(response){
+                deferred.resolve(response);
+            }, function(error) {
+                deferred.reject(error);
+            });
+        return deferred.promise;
     }
     function getSpecialNeedTypes() {
         return SpecialNeedTypes
@@ -1101,17 +1108,37 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
             });
         return deferred.promise;
     }
-
+    //POCOR-8071
+    function checkUserAge(params)
+    {
+        // console.log(params);
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Institutions/checkUserAge';
+        $http.post(url, { params: params })
+            .then(function (response)
+            {
+                deferred.resolve(response);
+            }, function (error)
+            {
+                deferred.reject(error);
+            });
+        return deferred.promise;
+    }
+    //POCOR-8071
     /**
         * Based on showExternalSearch property need to hide external search step in form wizard
         * @returns {Case 1: for None  [{"value":"None","showExternalSearch ":false}]}
        *  @returns {Case 2: for rest values [{"value":"OpenEMIS Identity","showExternalSearch ":true}]}
         */
-    function checkConfigForExternalSearch()
+    function checkConfigForExternalSearch(nationality_id, identity_type_id)
     {
         var deferred = $q.defer();
         let url = angular.baseUrl + '/Institutions/checkConfigurationForExternalSearch';
-        $http.get(url)
+        let params = {
+            'nationality_id' : nationality_id,
+            'identity_type_id' : identity_type_id
+        };
+        $http.post(url, {params: params})
             .then(function (response)
             {
                 deferred.resolve(response.data[0]);
