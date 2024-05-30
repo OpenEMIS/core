@@ -20706,7 +20706,7 @@
                         "description": "Institution class student id",
                         "schema": {
                             "type": "integer",
-                            "example": 3
+                            "example": "410ce5e7-e869-4323-8340-165db3a2abc9"
                         }
                     },
                     {
