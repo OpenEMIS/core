@@ -24,6 +24,11 @@
       margin:0;
       background: #fafafa;
     }
+
+    /* Add this CSS to your Swagger UI custom CSS file */
+    .response-col_links {
+        display: none;
+    }
     </style>
 </head>
 
