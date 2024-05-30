@@ -35,6 +35,12 @@ class MealRepository extends Controller
                 ->where('meal_institution_programmes.institution_id', $institutionId)
                 ->where('meal_programmes.academic_period_id', $academic_period_id);
 
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             if (isset($params['limit'])) {
                 $list = $list->paginate($params['limit']);
             } else {
@@ -66,11 +72,19 @@ class MealRepository extends Controller
         try {
             $params = $request->all();
 
+            $list = new MealBenefits;
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             if (isset($params['limit'])) {
-                $mealBenefits = MealBenefits::paginate($params['limit']);
+                $mealBenefits = $list->paginate($params['limit']);
                 $resp = $mealBenefits;
             } else {
-                $mealBenefits = MealBenefits::get();
+                $mealBenefits = $list->get();
                 $resp['data'] = $mealBenefits;
             }
 
@@ -168,6 +182,13 @@ class MealRepository extends Controller
                 //->select(DB::raw("$default_meal_receive_id as default_meal_receive_id"))
                 ->groupby('institution_class_students.student_id');
 
+
+                if(isset($options['order'])){
+                    $orderBy = $options['order_by']??"ASC";
+                    $col = $options['order'];
+                    $query = $query->orderBy($col, $orderBy);
+                }
+    
                 if (isset($options['limit'])) {
                     $query = $query->paginate($options['limit']);
                 } else {
@@ -254,11 +275,19 @@ class MealRepository extends Controller
 
             $resp = [];
 
+            $list = new MealReceived;
+
+            if(isset($options['order'])){
+                $orderBy = $options['order_by']??"ASC";
+                $col = $options['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+        
             if (isset($options['limit'])) {
-                $list = MealReceived::paginate($options['limit'])->toArray();
+                $list = $list->paginate($options['limit'])->toArray();
                 $resp = $list;
             } else {
-                $list = MealReceived::get()->toArray();
+                $list = $list->get()->toArray();
                 $resp['data'] = $list;
             }
 
@@ -298,11 +327,19 @@ class MealRepository extends Controller
         try {
             $resp = [];
 
+            $list = new MealTargetType;
+
+            if(isset($options['order'])){
+                $orderBy = $options['order_by']??"ASC";
+                $col = $options['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             if (isset($options['limit'])) {
-                $list = MealTargetType::paginate($options['limit'])->toArray();
+                $list = $list->paginate($options['limit'])->toArray();
                 $resp = $list;
             } else {
-                $list = MealTargetType::get()->toArray();
+                $list = $list->get()->toArray();
                 $resp['data'] = $list;
             }
 
@@ -323,11 +360,19 @@ class MealRepository extends Controller
         try {
             $resp = [];
 
+            $list = new MealImplementer;
+
+            if(isset($options['order'])){
+                $orderBy = $options['order_by']??"ASC";
+                $col = $options['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             if (isset($options['limit'])) {
-                $list = MealImplementer::paginate($options['limit'])->toArray();
+                $list = $list->paginate($options['limit'])->toArray();
                 $resp = $list;
             } else {
-                $list = MealImplementer::get()->toArray();
+                $list = $list->get()->toArray();
                 $resp['data'] = $list;
             }
 
@@ -349,11 +394,19 @@ class MealRepository extends Controller
         try {
             $resp = [];
 
+            $list = new MealNutrition;
+
+            if(isset($options['order'])){
+                $orderBy = $options['order_by']??"ASC";
+                $col = $options['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             if (isset($options['limit'])) {
-                $list = MealNutrition::paginate($options['limit'])->toArray();
+                $list = $list->paginate($options['limit'])->toArray();
                 $resp = $list;
             } else {
-                $list = MealNutrition::get()->toArray();
+                $list = $list->get()->toArray();
                 $resp['data'] = $list;
             }
 
@@ -374,11 +427,19 @@ class MealRepository extends Controller
         try {
             $resp = [];
 
+            $list = new MealRating;
+
+            if(isset($options['order'])){
+                $orderBy = $options['order_by']??"ASC";
+                $col = $options['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             if (isset($options['limit'])) {
-                $list = MealRating::paginate($options['limit'])->toArray();
+                $list = $list->paginate($options['limit'])->toArray();
                 $resp = $list;
             } else {
-                $list = MealRating::get()->toArray();
+                $list = $list->get()->toArray();
                 $resp['data'] = $list;
             }
 
@@ -399,11 +460,19 @@ class MealRepository extends Controller
         try {
             $resp = [];
 
+            $list = new MealStatusType;
+
+            if(isset($options['order'])){
+                $orderBy = $options['order_by']??"ASC";
+                $col = $options['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             if (isset($options['limit'])) {
-                $list = MealStatusType::paginate($options['limit'])->toArray();
+                $list = $list->paginate($options['limit'])->toArray();
                 $resp = $list;
             } else {
-                $list = MealStatusType::get()->toArray();
+                $list = $list->get()->toArray();
                 $resp['data'] = $list;
             }
 
@@ -424,11 +493,19 @@ class MealRepository extends Controller
         try {
             $resp = [];
 
+            $list = new FoodType;
+
+            if(isset($options['order'])){
+                $orderBy = $options['order_by']??"ASC";
+                $col = $options['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             if (isset($options['limit'])) {
-                $list = FoodType::paginate($options['limit'])->toArray();
+                $list = $list->paginate($options['limit'])->toArray();
                 $resp = $list;
             } else {
-                $list = FoodType::get()->toArray();
+                $list = $list->get()->toArray();
                 $resp['data'] = $list;
             }
 

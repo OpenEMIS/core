@@ -14,12 +14,18 @@ class ThemeRepository extends Controller
     public function getAllThemes($params)
     {
         try {
-            $list = Theme::get()->toArray();
+            $list = new Theme;
 
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+            
             if (isset($params['limit'])) {
-                $list = Theme::paginate($params['limit']);
+                $list = $list->paginate($params['limit']);
             } else {
-                $list = Theme::get();
+                $list = $list->get();
             }
             return $list;
         } catch (\Exception $e) {

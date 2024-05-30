@@ -58,6 +58,12 @@ class ScheduleRepository extends Controller
     {
         $lessons =  InstitutionScheduleLessons::with('scheduleLessonDetails','timeslots.instituteInterval.shift')->where('institution_schedule_timetable_id', $id);
 
+        if(isset($params['order'])){
+            $orderBy = $params['order_by']??"ASC";
+            $col = $params['order'];
+            $lessons = $lessons->orderBy($col, $orderBy);
+        }
+
         if (isset($params['limit'])) {
             $lessons = $lessons->paginate($params['limit']);
         } else {
@@ -100,6 +106,12 @@ class ScheduleRepository extends Controller
     {
         $slots =  InstitutionScheduleTimeslots::with('instituteInterval.shift')->where('institution_schedule_interval_id', $intervalId);
         
+        if(isset($params['order'])){
+            $orderBy = $params['order_by']??"ASC";
+            $col = $params['order'];
+            $slots = $slots->orderBy($col, $orderBy);
+        }
+    
         if (isset($params['limit'])) {
             $slots = $slots->paginate($params['limit']);
         } else {

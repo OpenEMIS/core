@@ -22,6 +22,13 @@ class SystemConfigurationController extends Controller
      *      description="Get list of system configuration ",
      *      tags={"System Configuration"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
