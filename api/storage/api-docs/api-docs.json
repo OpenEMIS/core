@@ -420,6 +420,15 @@
                         }
                     },
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "schema": {
+                            "type": "integer",
+                            "example": "order"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -717,6 +726,16 @@
                         "schema": {
                             "type": "integer",
                             "example": 6
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "student_id"
                         }
                     },
                     {
@@ -2351,6 +2370,16 @@
                         }
                     },
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -2777,23 +2806,13 @@
                         "example": "33"
                     },
                     {
-                        "name": "page",
+                        "name": "order",
                         "in": "query",
-                        "description": "Page number",
+                        "description": "Order",
                         "required": false,
                         "schema": {
                             "type": "integer",
-                            "example": "1"
-                        }
-                    },
-                    {
-                        "name": "limit",
-                        "in": "query",
-                        "description": "Limit",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": "10"
+                            "example": "id"
                         }
                     }
                 ],
@@ -2986,26 +3005,6 @@
                         "schema": {
                             "type": "boolean",
                             "example": true
-                        }
-                    },
-                    {
-                        "name": "page",
-                        "in": "query",
-                        "description": "Page number",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": "1"
-                        }
-                    },
-                    {
-                        "name": "limit",
-                        "in": "query",
-                        "description": "Limit",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": "10"
                         }
                     }
                 ],
@@ -3257,6 +3256,16 @@
                         }
                     },
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -3302,10 +3311,6 @@
                                                         }
                                                     },
                                                     "type": "object"
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": 1
                                                 }
                                             },
                                             "type": "object"
@@ -21846,6 +21851,16 @@
                 "operationId": "d818abf6d5a59b8bc32068c8a8d33399",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -21921,6 +21936,16 @@
                         "schema": {
                             "type": "integer",
                             "example": 30
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
                         }
                     },
                     {
@@ -22289,6 +22314,16 @@
                         }
                     },
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -22365,6 +22400,36 @@
                         "schema": {
                             "type": "integer",
                             "example": "1"
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
                         }
                     }
                 ],
@@ -22499,6 +22564,16 @@
                 "description": "Get a list of nationalities",
                 "operationId": "d49ed1f8d039a22f5233082d4f0f9500",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "order"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -22770,6 +22845,38 @@
                 "summary": "Get a list of student custom fields",
                 "description": "Get a list of student custom fields",
                 "operationId": "99cc67743b62d88e73bf14fcd89af3f3",
+                "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful.",
@@ -22859,6 +22966,16 @@
                 "description": "Get a list of identity types",
                 "operationId": "ff5f2ec623e817822b9241a7644d92d9",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "order"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -22954,6 +23071,16 @@
                         "schema": {
                             "type": "integer",
                             "example": 4
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "name"
                         }
                     },
                     {
@@ -23105,6 +23232,16 @@
                 "operationId": "4c3e07d857204dea16df91f6f3b19878",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -23174,6 +23311,16 @@
                 "operationId": "40cf9fe8566ffbbc5aa7bf706e02f721",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "name"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -23242,6 +23389,16 @@
                 "description": "Get area administrative level list",
                 "operationId": "44b2ee21f47ee969e5aaf6e4f6cce33a",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -23318,6 +23475,16 @@
                         "schema": {
                             "type": "integer",
                             "example": 1
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "name"
                         }
                     },
                     {
@@ -23504,6 +23671,16 @@
                         "schema": {
                             "type": "integer",
                             "example": "PRINCIPAL"
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "first_name"
                         }
                     },
                     {
@@ -23713,6 +23890,16 @@
                         }
                     },
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "order"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -23775,6 +23962,352 @@
                                                 },
                                                 "type": "object"
                                             }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/institutions/classes/reportcards/comment/codes": {
+            "get": {
+                "tags": [
+                    "Report card"
+                ],
+                "summary": "Get a list of report card comment codes",
+                "description": "Retrieve a list of report card comment codes.",
+                "operationId": "26f3777c3da94962013851f48348b31d",
+                "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Field by which to order the results",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "order"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number for pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "A keen student who does well in the subject."
+                                                    },
+                                                    "order": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "visible": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "editable": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "default": {
+                                                        "type": "integer",
+                                                        "example": 0
+                                                    },
+                                                    "international_code": {
+                                                        "type": "string",
+                                                        "example": ""
+                                                    },
+                                                    "national_code": {
+                                                        "type": "string",
+                                                        "example": ""
+                                                    },
+                                                    "modified_user_id": {
+                                                        "type": "integer",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "modified": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "created_user_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "created": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2018-04-18 08:47:42"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/security-roles/{roleId}": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get security role details",
+                "description": "Retrieve details of a specific security role by ID",
+                "operationId": "268b86f7f32ca92289f7527092222c9f",
+                "parameters": [
+                    {
+                        "name": "roleId",
+                        "in": "path",
+                        "description": "ID of the security role",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 4
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 4
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Principal"
+                                                },
+                                                "code": {
+                                                    "type": "string",
+                                                    "example": "PRINCIPAL"
+                                                },
+                                                "order": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "visible": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "security_group_id": {
+                                                    "type": "integer",
+                                                    "example": -1
+                                                },
+                                                "modified_user_id": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "modified": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2022-06-14 17:34:20"
+                                                },
+                                                "created_user_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "created": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "1990-01-01 00:00:00"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/reportcards/{reportCardId}": {
+            "get": {
+                "tags": [
+                    "Report card"
+                ],
+                "summary": "Get report card details",
+                "description": "Retrieve details of a specific report card by ID",
+                "operationId": "febbd8fbe21708b2740bcdf869feba5b",
+                "parameters": [
+                    {
+                        "name": "reportCardId",
+                        "in": "path",
+                        "description": "ID of the report card.",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 9
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 9
+                                                },
+                                                "code": {
+                                                    "type": "string",
+                                                    "example": "P1 Test"
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "P1 Test"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": ""
+                                                },
+                                                "start_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2023-01-01"
+                                                },
+                                                "end_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2023-06-30"
+                                                },
+                                                "generate_start_date": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2023-01-01 00:00:00"
+                                                },
+                                                "generate_end_date": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2023-12-31 00:00:00"
+                                                },
+                                                "principal_comments_required": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "homeroom_teacher_comments_required": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "teacher_comments_required": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "excel_template_name": {
+                                                    "type": "string",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "pdf_page_number": {
+                                                    "type": "integer",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "academic_period_id": {
+                                                    "type": "integer",
+                                                    "example": 33
+                                                },
+                                                "education_grade_id": {
+                                                    "type": "integer",
+                                                    "example": 206
+                                                },
+                                                "modified_user_id": {
+                                                    "type": "integer",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "modified": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "1970-01-01 00:00:00"
+                                                },
+                                                "created_user_id": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "created": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2023-07-28 17:41:00"
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -25667,7 +26200,7 @@
                         "required": true,
                         "schema": {
                             "type": "integer",
-                            "example": "1"
+                            "example": "6"
                         }
                     },
                     {
@@ -25677,7 +26210,7 @@
                         "required": true,
                         "schema": {
                             "type": "integer",
-                            "example": "1"
+                            "example": "11763"
                         }
                     }
                 ],
@@ -25857,6 +26390,16 @@
                 "description": "Get a list of education grades",
                 "operationId": "23b3587e13335107d6700ac9d95d028a",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -28951,6 +29494,16 @@
                 "operationId": "ea0401135d07d83f2baf03c5898e6ace",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -29994,6 +30547,38 @@
                 "summary": "Get genders",
                 "description": "Get genders",
                 "operationId": "310fcfac301194d99a198ea5ba4ad9b3",
+                "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful.",
@@ -30311,14 +30896,14 @@
                 }
             }
         },
-        "/api/v4/pocor-openemis-core/api/v4/institutions/getStudentAdmissionStatus": {
+        "/api/v4/institutions/getStudentAdmissionStatus": {
             "get": {
                 "tags": [
                     "Users"
                 ],
                 "summary": "Get student admission status",
                 "description": "Returns a list of student admission statuses.",
-                "operationId": "51da5a57f0346b581b9c92e9714e53be",
+                "operationId": "c3b8f7967efe35804e8ceee77b247f4f",
                 "responses": {
                     "200": {
                         "description": "Successful.",

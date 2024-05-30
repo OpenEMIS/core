@@ -248,6 +248,12 @@ class ExaminationController extends Controller
      *         @OA\Schema(type="integer", example=12)
      *     ),
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="order")
+     *     ),
+     *     @OA\Parameter(
      *         name="page",
      *         in="query",
      *         description="Page number",
@@ -384,6 +390,13 @@ class ExaminationController extends Controller
      *         required=true,
      *         description="ID of the subject",
      *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="student_id")
      *     ),
      *     @OA\Parameter(
      *         name="page",

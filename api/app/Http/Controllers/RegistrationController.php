@@ -28,6 +28,13 @@ class RegistrationController extends Controller
      *      description="Get list of current academic year",
      *      tags={"Academic Period"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -91,6 +98,13 @@ class RegistrationController extends Controller
      *         in="query",
      *         description="Id of academic period",
      *         @OA\Schema(type="integer", example=30)
+     *      ),
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
      *      ),
      *      @OA\Parameter(
      *         name="page",
@@ -409,6 +423,13 @@ class RegistrationController extends Controller
      *         required=true,
      *         description="User open emis Id",
      *         @OA\Schema(type="integer", example="1")
+     *      ),
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
      *     ),
      *      @OA\Parameter(
      *         name="page",
@@ -445,10 +466,11 @@ class RegistrationController extends Controller
      *      )
      * )
      */
-    public function autocompleteOpenemisNo($id)
+    public function autocompleteOpenemisNo(Request $request, $id)
     {
         try {
-            $data = $this->registrationService->autocompleteOpenemisNo($id);
+            $params = $request->all();
+            $data = $this->registrationService->autocompleteOpenemisNo($params, $id);
 
             return $this->sendSuccessResponse("Candidate data found.", $data);
             
@@ -492,6 +514,27 @@ class RegistrationController extends Controller
      *         required=true,
      *         description="User open emis Id",
      *         @OA\Schema(type="integer", example="1")
+     *      ),
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
      *     ),
      *      @OA\Response(
      *          response=200,
@@ -537,10 +580,11 @@ class RegistrationController extends Controller
      *      )
      * )
      */
-    public function detailsByEmis($id)
+    public function detailsByEmis(Request $request, $id)
     {
         try {
-            $data = $this->registrationService->detailsByEmis($id);
+            $params = $request->all();
+            $data = $this->registrationService->detailsByEmis($params, $id);
 
             return $this->sendSuccessResponse("Candidate data found.", $data);
             
@@ -560,6 +604,13 @@ class RegistrationController extends Controller
      *      summary="Get a list of nationalities",
      *      description="Get a list of nationalities",
      *      tags={"Nationalities"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="order")
+     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -737,6 +788,27 @@ class RegistrationController extends Controller
      *      summary="Get a list of student custom fields",
      *      description="Get a list of student custom fields",
      *      tags={"Users"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -771,10 +843,11 @@ class RegistrationController extends Controller
      *      )
      * )
      */
-    public function getStudentCustomFields()
+    public function getStudentCustomFields(Request $request)
     {
         try {
-            $data = $this->registrationService->getStudentCustomFields();
+            $params = $request->all();
+            $data = $this->registrationService->getStudentCustomFields($params);
 
             return $this->sendSuccessResponse("Custom fields list found.", $data);
             
@@ -794,6 +867,13 @@ class RegistrationController extends Controller
      *      summary="Get a list of identity types",
      *      description="Get a list of identity types",
      *      tags={"Identity types"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="order")
+     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -873,6 +953,13 @@ class RegistrationController extends Controller
      *         description="Id of area",
      *         @OA\Schema(type="integer", example=4)
      *      ),
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="name")
+     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -997,6 +1084,13 @@ class RegistrationController extends Controller
      *      description="Get a list of area levels",
      *      tags={"Areas"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -1056,6 +1150,13 @@ class RegistrationController extends Controller
      *      description="Get a list of area's",
      *      tags={"Areas"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="name")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -1113,6 +1214,13 @@ class RegistrationController extends Controller
      *      summary="Get area administrative level list",
      *      description="Get area administrative level list",
      *      tags={"Areas"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -1179,6 +1287,13 @@ class RegistrationController extends Controller
      *         description="Id of area administrative level",
      *         @OA\Schema(type="integer", example=1)
      *      ),
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="name")
+     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",

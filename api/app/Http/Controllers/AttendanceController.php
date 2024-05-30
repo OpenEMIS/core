@@ -199,6 +199,13 @@ class AttendanceController extends Controller
      *         @OA\Schema(type="integer", example="1")
      *     ),
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -407,18 +414,11 @@ class AttendanceController extends Controller
      *         @OA\Schema(type="integer", example="33")
      *     ),
      *     @OA\Parameter(
-     *         name="page",
+     *         name="order",
      *         in="query",
      *         required=false,
-     *         description="Page number",
-     *         @OA\Schema(type="integer", example="1")
-     *     ),
-     *     @OA\Parameter(
-     *         name="limit",
-     *         in="query",
-     *         required=false,
-     *         description="Limit",
-     *         @OA\Schema(type="integer", example="10")
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -523,20 +523,6 @@ class AttendanceController extends Controller
      *         required=true,
      *         description="Indicates if school closed days are required",
      *         @OA\Schema(type="boolean", example=true)
-     *     ),
-     *     @OA\Parameter(
-     *         name="page",
-     *         in="query",
-     *         required=false,
-     *         description="Page number",
-     *         @OA\Schema(type="integer", example="1")
-     *     ),
-     *     @OA\Parameter(
-     *         name="limit",
-     *         in="query",
-     *         required=false,
-     *         description="Limit",
-     *         @OA\Schema(type="integer", example="10")
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -693,6 +679,13 @@ class AttendanceController extends Controller
      *         @OA\Schema(type="string", format="date", example="2024-02-08")
      *     ),
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -716,8 +709,7 @@ class AttendanceController extends Controller
      *                 @OA\Property(property="data", type="object",
      *                      @OA\Property(property="id", type="integer", example=1),
      *                      @OA\Property(property="code", type="string", example="DAY")
-     *                 ),
-     *                 @OA\Property(property="total", type="integer", example=1)
+     *                 )
      *             )
      *         )
      *     ),
@@ -864,6 +856,13 @@ class AttendanceController extends Controller
      *         required=true,
      *         description="ID of the class",
      *         @OA\Schema(type="integer", example=591)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
      *     ),
      *     @OA\Parameter(
      *         name="page",

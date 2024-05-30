@@ -513,10 +513,27 @@ class UserRepository extends Controller
     public function getUsersGender($request)
     {
         try {
+            $params = $request->all();
 
-            $usersGender = Gender::get();
+            $usersGender = new Gender();
 
-            return $usersGender;
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $usersGender = $usersGender->orderBy($col, $orderBy);
+            }
+                        
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $usersGender->paginate($limit)->toArray();
+                
+            } else {
+                $list = $usersGender->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
+            return $list;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Users Gender list from DB',

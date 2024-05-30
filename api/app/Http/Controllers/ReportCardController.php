@@ -69,6 +69,13 @@ class ReportCardController extends Controller
      *         @OA\Schema(type="integer", example="PRINCIPAL")
      *      ),
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="first_name")
+     *      ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -166,28 +173,35 @@ class ReportCardController extends Controller
      *         required=false,
      *         description="Report card id",
      *         @OA\Schema(type="integer", example="9")
-     *     ),
-     *     @OA\Parameter(
+     *      ),
+     *      @OA\Parameter(
      *         name="institution_class_id",
      *         in="query",
      *         required=false,
      *         description="Institution Class id",
      *         @OA\Schema(type="integer", example="591")
-     *     ),
+     *      ),
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="order")
+     *      ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
      *         description="Page number",
      *         @OA\Schema(type="integer", example="1")
-     *     ),
-     *     @OA\Parameter(
+     *      ),
+     *      @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
      *         description="Limit",
      *         @OA\Schema(type="integer", example="10")
-     *     ),
+     *      ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -234,6 +248,67 @@ class ReportCardController extends Controller
 
     
     //For pocor-8260 start...
+
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/classes/reportcards/comment/codes",
+     *     summary="Get a list of report card comment codes",
+     *     description="Retrieve a list of report card comment codes.",
+     *     tags={"Report card"},
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Field by which to order the results",
+     *         @OA\Schema(type="string", example="order")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number for pagination",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="A keen student who does well in the subject."),
+     *                     @OA\Property(property="order", type="integer", example=1),
+     *                     @OA\Property(property="visible", type="integer", example=1),
+     *                     @OA\Property(property="editable", type="integer", example=1),
+     *                     @OA\Property(property="default", type="integer", example=0),
+     *                     @OA\Property(property="international_code", type="string", example=""),
+     *                     @OA\Property(property="national_code", type="string", example=""),
+     *                     @OA\Property(property="modified_user_id", type="integer", nullable=true, example=null),
+     *                     @OA\Property(property="modified", type="string", format="date-time", nullable=true, example=null),
+     *                     @OA\Property(property="created_user_id", type="integer", example=2),
+     *                     @OA\Property(property="created", type="string", format="date-time", example="2018-04-18 08:47:42")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getReportCardCommentCodes(Request $request)
     {
         try {
@@ -255,6 +330,48 @@ class ReportCardController extends Controller
 
 
     //For pocor-8270 start...
+
+    /**
+     * @OA\Get(
+     *     path="/api/v4/security-roles/{roleId}",
+     *     summary="Get security role details",
+     *     description="Retrieve details of a specific security role by ID",
+     *     tags={"Users"},
+     *     @OA\Parameter(
+     *         name="roleId",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the security role",
+     *         @OA\Schema(type="integer", example=4)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=4),
+     *                 @OA\Property(property="name", type="string", example="Principal"),
+     *                 @OA\Property(property="code", type="string", example="PRINCIPAL"),
+     *                 @OA\Property(property="order", type="integer", example=5),
+     *                 @OA\Property(property="visible", type="integer", example=1),
+     *                 @OA\Property(property="security_group_id", type="integer", example=-1),
+     *                 @OA\Property(property="modified_user_id", type="integer", example=2),
+     *                 @OA\Property(property="modified", type="string", format="date-time", example="2022-06-14 17:34:20"),
+     *                 @OA\Property(property="created_user_id", type="integer", example=1),
+     *                 @OA\Property(property="created", type="string", format="date-time", example="1990-01-01 00:00:00")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getSecurityRoleData(Request $request, $roleId)
     {
         try {
@@ -274,6 +391,56 @@ class ReportCardController extends Controller
     }
 
 
+    /**
+     * @OA\Get(
+     *     path="/api/v4/reportcards/{reportCardId}",
+     *     summary="Get report card details",
+     *     description="Retrieve details of a specific report card by ID",
+     *     tags={"Report card"},
+     *     @OA\Parameter(
+     *         name="reportCardId",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the report card.",
+     *         @OA\Schema(type="integer", example=9)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=9),
+     *                 @OA\Property(property="code", type="string", example="P1 Test"),
+     *                 @OA\Property(property="name", type="string", example="P1 Test"),
+     *                 @OA\Property(property="description", type="string", example=""),
+     *                 @OA\Property(property="start_date", type="string", format="date", example="2023-01-01"),
+     *                 @OA\Property(property="end_date", type="string", format="date", example="2023-06-30"),
+     *                 @OA\Property(property="generate_start_date", type="string", format="date-time", example="2023-01-01 00:00:00"),
+     *                 @OA\Property(property="generate_end_date", type="string", format="date-time", example="2023-12-31 00:00:00"),
+     *                 @OA\Property(property="principal_comments_required", type="integer", example=1),
+     *                 @OA\Property(property="homeroom_teacher_comments_required", type="integer", example=1),
+     *                 @OA\Property(property="teacher_comments_required", type="integer", example=1),
+     *                 @OA\Property(property="excel_template_name", type="string", nullable=true, example=null),
+     *                 @OA\Property(property="pdf_page_number", type="integer", nullable=true, example=null),
+     *                 @OA\Property(property="academic_period_id", type="integer", example=33),
+     *                 @OA\Property(property="education_grade_id", type="integer", example=206),
+     *                 @OA\Property(property="modified_user_id", type="integer", nullable=true, example=null),
+     *                 @OA\Property(property="modified", type="string", format="date-time", example="1970-01-01 00:00:00"),
+     *                 @OA\Property(property="created_user_id", type="integer", example=2),
+     *                 @OA\Property(property="created", type="string", format="date-time", example="2023-07-28 17:41:00")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getReportCardData(Request $request, $reportCardId)
     {
         try {

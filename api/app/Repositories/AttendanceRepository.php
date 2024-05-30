@@ -1122,7 +1122,6 @@ class AttendanceRepository extends Controller
                 ->toArray();
 
             if (count($studentAttendanceMarkTypesData) > 0) {
-
                 $list = StudentAttendanceType::leftjoin('student_attendance_mark_types', 'student_attendance_mark_types.student_attendance_type_id', '=', 'student_attendance_types.id')
                     ->leftjoin('student_mark_type_statuses', 'student_mark_type_statuses.student_attendance_mark_type_id', '=', 'student_attendance_mark_types.id')
                     ->leftjoin('student_mark_type_status_grades', 'student_mark_type_status_grades.student_mark_type_status_id', '=', 'student_mark_type_statuses.id')
@@ -1134,25 +1133,44 @@ class AttendanceRepository extends Controller
                     ->where('student_mark_type_statuses.date_enabled', '<=', $day_id)
                     ->where('student_mark_type_statuses.date_disabled', '>=', $day_id)
                     ->groupby('institution_class_grades.institution_class_id')
-                    ->select('student_attendance_types.id', 'student_attendance_types.code')
-                    ->get()
-                    ->toArray();
+                    ->select('student_attendance_types.id', 'student_attendance_types.code');
 
-                $total = count($list);
-
-                $resp['data'] = $list;
-                $resp['total'] = $total;
+                //For POCOR-8215/8216 start...
+                if(isset($options['order'])){
+                    $orderBy = $options['order_by']??"ASC";
+                    $col = 'student_attendance_types.'.$options['order'];
+                    $list = $list->orderBy($col, $orderBy);
+                }
+                            
+                if(isset($options['limit'])){
+                    $limit = $options['limit'];
+                    $resp = $list->paginate($limit)->toArray();
+                    
+                } else {
+                    $resp['data'] = $list->get()->toArray();
+                }
+                //For POCOR-8215/8216 end...
 
             } else {
                 $list = StudentAttendanceType::select('id', 'code')
-                        ->where('code', 'DAY')
-                        ->get()
-                        ->toArray();
+                        ->where('code', 'DAY');
 
-                $total = count($list);
+                //For POCOR-8215/8216 start...
+                if(isset($options['order'])){
+                    $orderBy = $options['order_by']??"ASC";
+                    $col = 'student_attendance_types.'.$options['order'];
+                    $list = $list->orderBy($col, $orderBy);
+                }
+                            
+                if(isset($options['limit'])){
+                    $limit = $options['limit'];
+                    $resp = $list->paginate($limit)->toArray();
+                    
+                } else {
+                    $resp['data'] = $list->get()->toArray();
+                }
+                //For POCOR-8215/8216 end...
 
-                $resp['data'] = $list;
-                $resp['total'] = $total;
             }
             return $resp;
         } catch (\Exception $e) {
@@ -1559,6 +1577,12 @@ class AttendanceRepository extends Controller
 
 
             //For POCOR-8215/8216 start...
+            if(isset($options['order'])){
+                $orderBy = $options['order_by']??"ASC";
+                $col = 'institution_class_students.'.$options['order'];
+                $query = $query->orderBy($col, $orderBy);
+            }
+
             if(isset($options['limit'])){
                 $limit = $options['limit'];
                 $resp = $query->paginate($limit)->toArray();

@@ -221,12 +221,6 @@ class StudentRepository extends Controller
 
             $params = $request->all();
 
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
-
             $getStudents = InstitutionStudentAbsenceDetails::with(
                         'securityUser',
                         'securityUser.gender:id,name',
@@ -256,13 +250,24 @@ class StudentRepository extends Controller
                 $getStudents = $getStudents->orderBy($col, $orderBy);
             }
 
-            $getStudents = $getStudents->paginate($limit)->toArray();
+            //$getStudents = $getStudents->paginate($limit)->toArray();
             //dd("getStudents", $getStudents);
+
+
+            //For POCOR-8215/8216 start...          
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $getStudents->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $getStudents->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
 
             $data = [];
 
-            if(count($getStudents['data']) > 0){
-                foreach($getStudents['data'] as $k => $d){
+            if(count($list['data']) > 0){
+                foreach($list['data'] as $k => $d){
                     
                     $data[$k] = $d;
                     $dateData = InstitutionStudentAbsenceDetails::with('absenceType:id,name', 'studentAbsenceReason:id,name', 'period:id,name', 'subject:id,name')->where('student_id', $d['student_id'])->where('institution_id', $d['institution_id'])->get()->toArray();
@@ -285,9 +290,9 @@ class StudentRepository extends Controller
                 }
             }
             
-            $getStudents['data'] = $data;
+            $list['data'] = $data;
 
-            return $getStudents;
+            return $list;
             
         } catch (\Exception $e) {
             Log::error(
@@ -321,12 +326,6 @@ class StudentRepository extends Controller
             }
             //For POCOR-7772 End
 
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
-
             $getStudents = InstitutionStudentAbsenceDetails::with(
                         'securityUser',
                         'securityUser.gender:id,name',
@@ -359,13 +358,25 @@ class StudentRepository extends Controller
 
 
 
-            $getStudents = $getStudents->paginate($limit)->toArray();
+            //$getStudents = $getStudents->paginate($limit)->toArray();
             //dd("getStudents", $getStudents);
+
+
+            //For POCOR-8215/8216 start...          
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $getStudents->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $getStudents->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
 
             $data = [];
 
-            if(count($getStudents['data']) > 0){
-                foreach($getStudents['data'] as $k => $d){
+            if(count($list['data']) > 0){
+                foreach($list['data'] as $k => $d){
                     
                     $data[$k] = $d;
                     $dateData = InstitutionStudentAbsenceDetails::with('absenceType:id,name', 'studentAbsenceReason:id,name', 'period:id,name', 'subject:id,name')->where('student_id', $d['student_id'])->where('institution_id', $d['institution_id'])->get()->toArray();
@@ -388,9 +399,9 @@ class StudentRepository extends Controller
                 }
             }
             
-            $getStudents['data'] = $data;
+            $list['data'] = $data;
             
-            return $getStudents;
+            return $list;
             
         } catch (\Exception $e) {
             Log::error(

@@ -27,6 +27,13 @@ class UserController extends Controller
      *      description="Get a list of users",
      *      tags={"Users"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -475,6 +482,27 @@ class UserController extends Controller
      *      summary="Get genders",
      *      description="Get genders",
      *      tags={"Users"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful.",
@@ -677,7 +705,7 @@ class UserController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v4/pocor-openemis-core/api/v4/institutions/getStudentAdmissionStatus",
+     *     path="/api/v4/institutions/getStudentAdmissionStatus",
      *     summary="Get student admission status",
      *     description="Returns a list of student admission statuses.",
      *     tags={"Users"},
