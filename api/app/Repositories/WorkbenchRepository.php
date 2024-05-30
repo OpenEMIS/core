@@ -52,11 +52,17 @@ class WorkbenchRepository extends Controller
         try {
             $params = $request->all();
 
+            $notices = new Notice;
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $notices = $notices->orderBy($col, $orderBy);
+            }
             if(isset($params['limit'])){
                 $limit = $params['limit'];
-                $list = Notice::paginate($limit)->toArray();
+                $list = $notices->paginate($limit)->toArray();
             } else{
-                $list['data'] = Notice::get()->toArray();
+                $list['data'] = $notices->get()->toArray();
             }
 
             return $list;
@@ -97,7 +103,13 @@ class WorkbenchRepository extends Controller
                         }        
                     )
                     ->where('assignee_id', $assigneeId);
-            
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             $resp = [];
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -150,6 +162,12 @@ class WorkbenchRepository extends Controller
                     )
                     ->where('assignee_id', $userId);
 
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             $resp = [];
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -193,6 +211,12 @@ class WorkbenchRepository extends Controller
                         }        
                     )
                     ->where('assignee_id', $userId);
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
 
             $resp = [];
             if(isset($params['limit'])){
@@ -238,7 +262,12 @@ class WorkbenchRepository extends Controller
                     )
                     ->where('assignee_id', $userId);
 
-            
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             $resp = [];
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -298,6 +327,12 @@ class WorkbenchRepository extends Controller
                     )
                     ->where('assignee_id', $userId);
 
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             $resp = [];
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -356,6 +391,12 @@ class WorkbenchRepository extends Controller
                     )
                     ->where('assignee_id', $userId);
 
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             $resp = [];
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -400,6 +441,12 @@ class WorkbenchRepository extends Controller
                     )
                     ->where('assignee_id', $userId);
 
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             $resp = [];
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -442,7 +489,13 @@ class WorkbenchRepository extends Controller
                         }        
                     )
                     ->where('assignee_id', $userId);
-            
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             $resp = [];
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -488,6 +541,12 @@ class WorkbenchRepository extends Controller
                         }        
                     )
                     ->where('assignee_id', $userId);
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
 
             $resp = [];
             if(isset($params['limit'])){
@@ -538,6 +597,12 @@ class WorkbenchRepository extends Controller
                         }        
                     )
                     ->where('assignee_id', $userId);
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
 
             $resp = [];
             if(isset($params['limit'])){
@@ -591,6 +656,12 @@ class WorkbenchRepository extends Controller
                     )
                     ->where('assignee_id', $userId);
 
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             $resp = [];
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -642,6 +713,12 @@ class WorkbenchRepository extends Controller
                     )
                     ->where('assignee_id', $userId);
 
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             $resp = [];
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -684,6 +761,12 @@ class WorkbenchRepository extends Controller
                         }        
                     )
                     ->where('assignee_id', $userId);
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
 
             $resp = [];
             if(isset($params['limit'])){
@@ -729,6 +812,12 @@ class WorkbenchRepository extends Controller
                     )
                     ->where('assignee_id', $userId);
 
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             $resp = [];
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -772,6 +861,12 @@ class WorkbenchRepository extends Controller
                     )
                     ->where('assignee_id', $userId);
 
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             $resp = [];
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -814,6 +909,12 @@ class WorkbenchRepository extends Controller
                     )
                     ->where('assignee_id', $userId);
 
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             $resp = [];
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -854,6 +955,12 @@ class WorkbenchRepository extends Controller
                         }        
                     )
                     ->where('assignee_id', $userId);
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
 
             $resp = [];
             if(isset($params['limit'])){
@@ -896,6 +1003,12 @@ class WorkbenchRepository extends Controller
                         }        
                     )
                     ->where('assignee_id', $userId);
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
 
             $resp = [];
             if(isset($params['limit'])){
@@ -940,6 +1053,12 @@ class WorkbenchRepository extends Controller
                         }        
                     )
                     ->where('assignee_id', $userId);
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
 
             $resp = [];
             if(isset($params['limit'])){
@@ -987,6 +1106,12 @@ class WorkbenchRepository extends Controller
                     )
                     ->where('assignee_id', $userId);
 
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             $resp = [];
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1032,6 +1157,12 @@ class WorkbenchRepository extends Controller
                     )
                     ->where('assignee_id', $userId);
 
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             $resp = [];
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1073,6 +1204,12 @@ class WorkbenchRepository extends Controller
                         }        
                     )
                     ->where('assignee_id', $userId);
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
 
             $resp = [];
             if(isset($params['limit'])){
@@ -1117,6 +1254,12 @@ class WorkbenchRepository extends Controller
                         }        
                     )
                     ->where('assignee_id', $userId);
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
 
             $resp = [];
             if(isset($params['limit'])){

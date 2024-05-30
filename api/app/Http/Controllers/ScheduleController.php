@@ -219,6 +219,13 @@ class ScheduleController extends Controller
      *         @OA\Schema(type="integer", example="1")
      *      ),
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -452,6 +459,13 @@ class ScheduleController extends Controller
      *         required=true,
      *         description="Interval Id",
      *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
      *     ),
      *     @OA\Parameter(
      *         name="page",

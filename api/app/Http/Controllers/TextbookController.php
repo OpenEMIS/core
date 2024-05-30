@@ -24,6 +24,13 @@ class TextbookController extends Controller
      *      description="Get list of textbook conditions",
      *      tags={"Textbook"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -154,6 +161,13 @@ class TextbookController extends Controller
      *      description="Get list of textbook statuses",
      *      tags={"Textbook"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -231,6 +245,13 @@ class TextbookController extends Controller
      *      summary="Get list of textbook dimensions",
      *      description="Get list of textbook dimensions",
      *      tags={"Textbook"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
