@@ -23,10 +23,18 @@ class TextbookRepository extends Controller
         try {
             $data = [];
 
+            $list = new TextbookConditions;
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             if (isset($params['limit'])) {
-                $data = TextbookConditions::paginate($params['limit']);
+                $data = $list->paginate($params['limit']);
             } else {
-                $data = TextbookConditions::get();
+                $data = $list->get();
             }
 
             return $data;
@@ -60,10 +68,17 @@ class TextbookRepository extends Controller
         try {
             $data = [];
 
+            $list = new TextbookStatuses;
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             if (isset($params['limit'])) {
-                $data = TextbookStatuses::paginate($params['limit']);
+                $data = $list->paginate($params['limit']);
             } else {
-                $data = TextbookStatuses::get();
+                $data = $list->get();
             }
 
             return $data;
@@ -81,10 +96,18 @@ class TextbookRepository extends Controller
     {
         try {
             $data = [];
+
+            $list = new TextbookDimensions;
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
             if (isset($params['limit'])) {
-                $data = TextbookDimensions::paginate($params['limit']);
+                $data = $list->paginate($params['limit']);
             } else {
-                $data = TextbookDimensions::get();
+                $data = $list->get();
             }
 
             return $data;

@@ -7163,7 +7163,7 @@ class InstitutionController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v4/institutions/{institutionId}/grades-list",
+     *     path="/api/v4/institutions/{institutionId}/grade-list",
      *     summary="Get grades list of institutions",
      *     description="Returns a list of grades by institution id",
      *     tags={"Institutions"},

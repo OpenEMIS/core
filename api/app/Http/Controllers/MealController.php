@@ -36,6 +36,13 @@ class MealController extends Controller
      *         @OA\Schema(type="integer", example=30)
      *      ),
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="student_id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -96,6 +103,13 @@ class MealController extends Controller
      *      summary="Get a list of meal benefits type",
      *      description="Get a list of meal benefits type",
      *      tags={"Meals"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -232,6 +246,13 @@ class MealController extends Controller
      *         @OA\Schema(type="integer", example=3)
      *      ),
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -361,6 +382,13 @@ class MealController extends Controller
      *         @OA\Schema(type="integer", example=6)
      *      ),
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -486,6 +514,13 @@ class MealController extends Controller
      *      description="Get a list of meal targets",
      *      tags={"Meals"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -555,6 +590,13 @@ class MealController extends Controller
      *      summary="Get a list of meal implementers",
      *      description="Get a list of meal implementers",
      *      tags={"Meals"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -628,6 +670,13 @@ class MealController extends Controller
      *      description="Get a list of meal nutritions",
      *      tags={"Meals"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -693,6 +742,13 @@ class MealController extends Controller
      *      summary="Get a list of meal ratings",
      *      description="Get a list of meal ratings",
      *      tags={"Meals"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -764,6 +820,13 @@ class MealController extends Controller
      *      summary="Get a list of meal statuses",
      *      description="Get a list of meal statuses",
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -833,6 +896,13 @@ class MealController extends Controller
      *      summary="Get a list of meal food types",
      *      description="Get a list of meal food types",
      *      tags={"Meals"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
