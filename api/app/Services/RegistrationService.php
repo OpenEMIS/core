@@ -84,19 +84,27 @@ class RegistrationService extends Controller
     }
 
 
-    public function institutionDropdown($request)
+    public function institutionDropdown($params)
     {
         try {
-            $data = $this->registrationRepository->institutionDropdown($request)->map(
-                function ($item, $key) {
-                    return [
-                        "id" => $item->id,
-                        "name" => $item->code.' - '.$item->name,
-                    ];
-                }
-            );
+            $data = $this->registrationRepository->institutionDropdown($params);
 
-            return $data;
+            $resp = [];
+            if(!empty($data)){
+                foreach ($data['data'] as $k => $d) {
+                    $resp[$k]['id'] = $d['id'];
+                    $resp[$k]['name'] = $d['code'].' - '.$d['name'];
+                }
+            }
+
+            //For POCOR-8215/8216 start...          
+            if(isset($params['limit'])){
+                $data['data'] = $resp;
+                return $data;
+            } else {
+                return $resp;
+            }
+            //For POCOR-8215/8216 end...
 
         } catch (\Exception $e) {
             Log::error(
@@ -429,19 +437,29 @@ class RegistrationService extends Controller
     }
 
 
-    public function institutionTypesDropdown()
+    public function institutionTypesDropdown($params)
     {
         try {
-            $data = $this->registrationRepository->institutionTypesDropdown()->map(
-                function ($item, $key) {
-                    return [
-                        "id" => $item->id,
-                        "name" => $item->name,
-                    ];
+            $data = $this->registrationRepository->institutionTypesDropdown($params);
+
+            $resp = [];
+            if(!empty($data)){
+                foreach ($data['data'] as $k => $d) {
+                    $resp[$k]['id'] = $d['id'];
+                    $resp[$k]['name'] = $d['name'];
                 }
-            );
-            
-            return $data;
+            }
+
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $data['data'] = $resp;
+                return $data;
+                
+            } else {
+                return $data;
+            }
+            //For POCOR-8215/8216 end...
             
         } catch (\Exception $e) {
             Log::error(

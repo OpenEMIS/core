@@ -163,6 +163,13 @@ class RegistrationController extends Controller
      *         @OA\Schema(type="integer", example=4)
      *      ),
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -200,7 +207,8 @@ class RegistrationController extends Controller
     public function institutionDropdown(Request $request)
     {
         try {
-            $data = $this->registrationService->institutionDropdown($request);
+            $params = $request->all();
+            $data = $this->registrationService->institutionDropdown($params);
             
             return $this->sendSuccessResponse("Institutions List Found", $data);
             
@@ -220,6 +228,13 @@ class RegistrationController extends Controller
      *      summary="Get a list of institution's areas",
      *      description="Get a list of institution's areas",
      *      tags={"Institutions"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -916,6 +931,13 @@ class RegistrationController extends Controller
      *      description="Get a list of institution's type",
      *      tags={"Institutions"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -950,10 +972,11 @@ class RegistrationController extends Controller
      *      )
      * )
      */
-    public function institutionTypesDropdown()
+    public function institutionTypesDropdown(Request $request)
     {
         try {
-            $data = $this->registrationService->institutionTypesDropdown();
+            $params = $request->all();
+            $data = $this->registrationService->institutionTypesDropdown($params);
             
             return $this->sendSuccessResponse("Institution Types List Found", $data);
             
