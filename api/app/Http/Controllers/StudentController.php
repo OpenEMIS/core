@@ -355,6 +355,7 @@ class StudentController extends Controller
      *          @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
      *             @OA\Property(property="data", type="array",
      *                 @OA\Items(
      *                      type="object",
@@ -400,6 +401,7 @@ class StudentController extends Controller
      *                      @OA\Property(property="created", type="string", example="2019-11-25 18:23:42")
      *                  )
      *              ) 
+     *              )
      *          )
      *      ),
      *      @OA\Response(
@@ -472,6 +474,7 @@ class StudentController extends Controller
      *          @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
      *             @OA\Property(property="data", type="array",
      *                 @OA\Items(
      *                      type="object",
@@ -516,6 +519,7 @@ class StudentController extends Controller
      *                      @OA\Property(property="created_user_id", type="integer", example=2),
      *                      @OA\Property(property="created", type="string", example="2019-11-25 18:23:42")
      *                  )
+     *              )
      *              )
      *          )
      *      ),
@@ -669,6 +673,7 @@ class StudentController extends Controller
      *          @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
      *             @OA\Property(property="data", type="array",
      *                 @OA\Items(
      *                      type="object",
@@ -684,6 +689,7 @@ class StudentController extends Controller
      *                      @OA\Property(property="value", type="string", example="1"),
      *                      @OA\Property(property="day_configuration", type="string", example="Mark absent if one or more records absent"),
      *                  )
+     *              )
      *              )
      *          )
      *      ),
@@ -721,7 +727,7 @@ class StudentController extends Controller
      *         in="path",
      *         required=true,
      *         description="Instituton Id",
-     *         @OA\Schema(type="integer", example="1")
+     *         @OA\Schema(type="integer", example="6")
      *     ),
      *      @OA\Parameter(
      *         name="order",
@@ -750,6 +756,7 @@ class StudentController extends Controller
      *          @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
      *             @OA\Property(property="data", type="array",
      *                 @OA\Items(
      *                      type="object",
@@ -769,6 +776,7 @@ class StudentController extends Controller
      *                      @OA\Property(property="created", type="string", example="2019-11-20 19:51:58")
 
      *                  )
+     *              )
      *              )
      *          )
      *      ),

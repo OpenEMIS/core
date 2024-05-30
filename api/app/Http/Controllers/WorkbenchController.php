@@ -24,6 +24,13 @@ class WorkbenchController extends Controller
      *      description="Returns a list of notices",
      *      tags={"Workbench"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -85,6 +92,13 @@ class WorkbenchController extends Controller
      *      summary="Get a list of staff leaves",
      *      description="Returns a list of staff leaves",
      *      tags={"Workbench"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -243,6 +257,13 @@ class WorkbenchController extends Controller
      *      description="Get a list of survey forms",
      *      tags={"Workbench"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *      ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -336,6 +357,13 @@ class WorkbenchController extends Controller
      *      summary="Get a list of withdrawn students requests",
      *      description="Get a list of withdrawn students requests",
      *      tags={"Workbench"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *      ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -436,6 +464,13 @@ class WorkbenchController extends Controller
      *      description="Get a list of students admission requests",
      *      tags={"Workbench"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *      ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -535,6 +570,13 @@ class WorkbenchController extends Controller
      *      summary="Get a list of transfer out students request",
      *      description="Get a list of transfer out students request",
      *      tags={"Workbench"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *      ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -643,6 +685,13 @@ class WorkbenchController extends Controller
      *      description="Get a list of transfer in students request",
      *      tags={"Workbench"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -749,6 +798,13 @@ class WorkbenchController extends Controller
      *      description="Get a list of student behaviour requests",
      *      tags={"Workbench"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -849,6 +905,13 @@ class WorkbenchController extends Controller
      *      description="Get a list of staff behaviour requests",
      *      tags={"Workbench"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -948,6 +1011,13 @@ class WorkbenchController extends Controller
      *      summary="Get a list of staff appraisals",
      *      description="Get a list of staff appraisals",
      *      tags={"Workbench"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -1063,6 +1133,13 @@ class WorkbenchController extends Controller
      *      description="Get a list of staff release",
      *      tags={"Workbench"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -1167,6 +1244,13 @@ class WorkbenchController extends Controller
      *      summary="Get a list of transfer out staff request",
      *      description="Get a list of transfer out staff request",
      *      tags={"Workbench"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -1281,6 +1365,13 @@ class WorkbenchController extends Controller
      *      description="Get a list of transfer in staff request",
      *      tags={"Workbench"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -1394,6 +1485,13 @@ class WorkbenchController extends Controller
      *      description="Get a list of change in assignment staff request",
      *      tags={"Workbench"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -1492,6 +1590,13 @@ class WorkbenchController extends Controller
      *      summary="Get a list of training needs",
      *      description="Get a list of training needs",
      *      tags={"Workbench"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -1605,6 +1710,13 @@ class WorkbenchController extends Controller
      *      description="Get a list of licenses",
      *      tags={"Workbench"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -1708,6 +1820,13 @@ class WorkbenchController extends Controller
      *      description="Get a list of training courses",
      *      tags={"Workbench"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -1795,6 +1914,13 @@ class WorkbenchController extends Controller
      *      description="Get a list of training sessions",
      *      tags={"Workbench"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -1881,6 +2007,13 @@ class WorkbenchController extends Controller
      *      summary="Get a list of training results",
      *      description="Get a list of training results",
      *      tags={"Workbench"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -1972,6 +2105,13 @@ class WorkbenchController extends Controller
      *      summary="Get a list of institutions visits",
      *      description="Get a list of institutions visits",
      *      tags={"Workbench"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -2065,6 +2205,13 @@ class WorkbenchController extends Controller
      *      summary="Get a list of training applications",
      *      description="Get a list of training applications",
      *      tags={"Workbench"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -2175,6 +2322,13 @@ class WorkbenchController extends Controller
      *      description="Get a list of scholarships applications",
      *      tags={"Workbench"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -2277,6 +2431,13 @@ class WorkbenchController extends Controller
      *      description="Get a list of institution cases",
      *      tags={"Workbench"},
      *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
      *         name="page",
      *         in="query",
      *         required=false,
@@ -2361,6 +2522,13 @@ class WorkbenchController extends Controller
      *      summary="Get a list of institution positions",
      *      description="Get a list of institution positions",
      *      tags={"Workbench"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",

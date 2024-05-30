@@ -24,6 +24,12 @@ class SystemConfigurationRepository
     {
         $items = ConfigItem::with('itemOptions');
 
+        if(isset($params['order'])){
+            $orderBy = $params['order_by']??"ASC";
+            $col = $params['order'];
+            $items = $items->orderBy($col, $orderBy);
+        }
+
         if (isset($params['limit'])) {
             $items = $items->paginate($params['limit']);
         } else {

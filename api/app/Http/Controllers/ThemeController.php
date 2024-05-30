@@ -22,6 +22,13 @@ class ThemeController extends Controller
      *     description="Returns a list of all the themes available",
      *     tags={"Themes"},
      *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
