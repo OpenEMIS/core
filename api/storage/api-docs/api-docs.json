@@ -19102,6 +19102,26 @@
                 "operationId": "162c14a7ddb7f9ca664afa4f1c0f7131",
                 "parameters": [
                     {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "Academic period id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -19923,11 +19943,11 @@
                     {
                         "name": "academicYearId",
                         "in": "path",
-                        "description": "Institution Id",
+                        "description": "Academic Period Id",
                         "required": true,
                         "schema": {
                             "type": "integer",
-                            "example": 6
+                            "example": 33
                         }
                     },
                     {
@@ -20256,6 +20276,16 @@
                         }
                     },
                     {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "Academic Period Id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 32
+                        }
+                    },
+                    {
                         "name": "limit",
                         "in": "query",
                         "description": "Number of items to return per page",
@@ -20412,10 +20442,6 @@
                                                         },
                                                         "type": "object"
                                                     }
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": "1"
                                                 }
                                             },
                                             "type": "object"
@@ -20528,10 +20554,6 @@
                                                         },
                                                         "type": "object"
                                                     }
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": "1"
                                                 }
                                             },
                                             "type": "object"
@@ -20571,6 +20593,7 @@
                         "name": "academic_period_id",
                         "in": "query",
                         "description": "Id of the academic year",
+                        "required": true,
                         "schema": {
                             "type": "integer",
                             "example": 30
@@ -20580,6 +20603,7 @@
                         "name": "institution_class_id",
                         "in": "query",
                         "description": "Id of the institution class",
+                        "required": true,
                         "schema": {
                             "type": "integer",
                             "example": 52
@@ -20589,6 +20613,7 @@
                         "name": "meal_program_id",
                         "in": "query",
                         "description": "Id of meal program",
+                        "required": true,
                         "schema": {
                             "type": "integer",
                             "example": 3
@@ -20622,9 +20647,10 @@
                         }
                     },
                     {
-                        "name": "day",
+                        "name": "day_id",
                         "in": "query",
                         "description": "day Id",
+                        "required": true,
                         "schema": {
                             "type": "integer",
                             "example": 1
@@ -20939,10 +20965,6 @@
                                                         }
                                                     },
                                                     "type": "object"
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": "1"
                                                 }
                                             },
                                             "type": "object"
@@ -21031,10 +21053,6 @@
                                                         },
                                                         "type": "object"
                                                     }
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": "1"
                                                 }
                                             },
                                             "type": "object"
@@ -21256,10 +21274,6 @@
                                                         },
                                                         "type": "object"
                                                     }
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": "1"
                                                 }
                                             },
                                             "type": "object"
@@ -21376,10 +21390,6 @@
                                                         },
                                                         "type": "object"
                                                     }
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": "1"
                                                 }
                                             },
                                             "type": "object"
@@ -21474,10 +21484,6 @@
                                                         },
                                                         "type": "object"
                                                     }
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": "1"
                                                 }
                                             },
                                             "type": "object"
@@ -21594,10 +21600,6 @@
                                                         },
                                                         "type": "object"
                                                     }
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": "1"
                                                 }
                                             },
                                             "type": "object"
@@ -21706,10 +21708,6 @@
                                                         },
                                                         "type": "object"
                                                     }
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": "4"
                                                 }
                                             },
                                             "type": "object"
@@ -21822,10 +21820,6 @@
                                                         },
                                                         "type": "object"
                                                     }
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": "4"
                                                 }
                                             },
                                             "type": "object"
@@ -21847,8 +21841,8 @@
                 "tags": [
                     "Academic Period"
                 ],
-                "summary": "Get list of education grades",
-                "description": "Get list of education grades",
+                "summary": "Get list of current academic year",
+                "description": "Get list of current academic year",
                 "operationId": "d818abf6d5a59b8bc32068c8a8d33399",
                 "parameters": [
                     {
@@ -22017,6 +22011,16 @@
                         }
                     },
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -22085,6 +22089,16 @@
                 "description": "Get a list of institution's areas",
                 "operationId": "41871c5e68b7b7aa6c514d81f7b9de88",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -23012,6 +23026,16 @@
                 "operationId": "6560919eae723c0fe9fc3c05a3941189",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -23288,12 +23312,12 @@
                 "operationId": "1667d959a920d19754dba27baeb99dd2",
                 "parameters": [
                     {
-                        "name": "area_level_id",
+                        "name": "area_administrative_level_id",
                         "in": "query",
-                        "description": "Id of area level",
+                        "description": "Id of area administrative level",
                         "schema": {
                             "type": "integer",
-                            "example": 4
+                            "example": 1
                         }
                     },
                     {
@@ -23338,7 +23362,7 @@
                                                     },
                                                     "name": {
                                                         "type": "string",
-                                                        "example": "Continent"
+                                                        "example": "District"
                                                     }
                                                 },
                                                 "type": "object"
@@ -23422,6 +23446,66 @@
                 "description": "Get list of report card comments",
                 "operationId": "a40edcaf2eccffb813385e71b9582ee5",
                 "parameters": [
+                    {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "Academic Period Id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "32"
+                        }
+                    },
+                    {
+                        "name": "institution_id",
+                        "in": "query",
+                        "description": "Institution id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "6"
+                        }
+                    },
+                    {
+                        "name": "institution_class_id",
+                        "in": "query",
+                        "description": "Institution Class Id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "589"
+                        }
+                    },
+                    {
+                        "name": "education_grade_id",
+                        "in": "query",
+                        "description": "Education Grade Id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "189"
+                        }
+                    },
+                    {
+                        "name": "report_card_id",
+                        "in": "query",
+                        "description": "Report card id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "7"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Type",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "PRINCIPAL"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -23608,6 +23692,26 @@
                 "description": "Get list of report card subjects",
                 "operationId": "dae2989b65c2a543d1dcb5a8a8959219",
                 "parameters": [
+                    {
+                        "name": "report_card_id",
+                        "in": "query",
+                        "description": "Report card id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "9"
+                        }
+                    },
+                    {
+                        "name": "institution_class_id",
+                        "in": "query",
+                        "description": "Institution Class id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "591"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -24122,6 +24226,26 @@
                             "type": "integer",
                             "example": "1"
                         }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
+                        }
                     }
                 ],
                 "responses": {
@@ -24407,8 +24531,8 @@
                 "tags": [
                     "Institution time table"
                 ],
-                "summary": "Get details of timeslost by interval id",
-                "description": "Get details of timeslost by interval id",
+                "summary": "Get list of time slots by interval id",
+                "description": "Get list of time slots by interval id",
                 "operationId": "5188a2680ac9001655f193a918acc985",
                 "parameters": [
                     {
@@ -24419,6 +24543,26 @@
                         "schema": {
                             "type": "integer",
                             "example": "1"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "10"
                         }
                     }
                 ],
@@ -24583,6 +24727,26 @@
                         "schema": {
                             "type": "integer",
                             "example": "1"
+                        }
+                    },
+                    {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "Academic period id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
                         }
                     },
                     {
@@ -24958,6 +25122,26 @@
                 "operationId": "1e572bd6e8d9de22f29e0edbdb263aa6",
                 "parameters": [
                     {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "Academic period id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -25254,6 +25438,26 @@
                         "schema": {
                             "type": "integer",
                             "example": "1"
+                        }
+                    },
+                    {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "Academic period id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
                         }
                     },
                     {
@@ -25766,6 +25970,16 @@
                         "schema": {
                             "type": "integer",
                             "example": "1"
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
                         }
                     },
                     {
@@ -27094,53 +27308,45 @@
                                         },
                                         "data": {
                                             "properties": {
-                                                "data": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "integer",
-                                                                "example": 76
-                                                            },
-                                                            "name": {
-                                                                "type": "string",
-                                                                "example": "Application Name"
-                                                            },
-                                                            "value": {
-                                                                "type": "integer",
-                                                                "example": null
-                                                            },
-                                                            "content": {
-                                                                "type": "integer",
-                                                                "example": null
-                                                            },
-                                                            "default_value": {
-                                                                "type": "string",
-                                                                "example": "OpenEMIS Core"
-                                                            },
-                                                            "default_content": {
-                                                                "type": "integer",
-                                                                "example": null
-                                                            },
-                                                            "modified_user_id": {
-                                                                "type": "integer",
-                                                                "example": 2
-                                                            },
-                                                            "modified": {
-                                                                "type": "string",
-                                                                "example": "2018-03-28 15:22:40"
-                                                            },
-                                                            "created_user_id": {
-                                                                "type": "integer",
-                                                                "example": 2
-                                                            },
-                                                            "created": {
-                                                                "type": "string",
-                                                                "example": "2016-05-25 09:52:26"
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    }
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 76
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Application Name"
+                                                },
+                                                "value": {
+                                                    "type": "integer",
+                                                    "example": null
+                                                },
+                                                "content": {
+                                                    "type": "integer",
+                                                    "example": null
+                                                },
+                                                "default_value": {
+                                                    "type": "string",
+                                                    "example": "OpenEMIS Core"
+                                                },
+                                                "default_content": {
+                                                    "type": "integer",
+                                                    "example": null
+                                                },
+                                                "modified_user_id": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "modified": {
+                                                    "type": "string",
+                                                    "example": "2018-03-28 15:22:40"
+                                                },
+                                                "created_user_id": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "created": {
+                                                    "type": "string",
+                                                    "example": "2016-05-25 09:52:26"
                                                 }
                                             },
                                             "type": "object"
@@ -32785,7 +32991,8 @@
                 "tags": [
                     "Workbench"
                 ],
-                "summary": "Get a list of transfer out students request",
+                "summary": "Get a list of staff release",
+                "description": "Get a list of staff release",
                 "operationId": "897dca1feea62a4a6120c498be855256",
                 "parameters": [
                     {
@@ -32890,7 +33097,7 @@
                                                             },
                                                             "request_title": {
                                                                 "type": "string",
-                                                                "example": " testtransfer to S2002 - Boster Lower Secondary School"
+                                                                "example": " release of S2002"
                                                             },
                                                             "received_date": {
                                                                 "type": "string",

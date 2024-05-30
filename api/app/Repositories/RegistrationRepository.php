@@ -107,26 +107,42 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function institutionDropdown($request)
+    public function institutionDropdown($params)
     {
         try {
             $institutions = Institutions::select('id', 'name', 'code');
 
-            if($request['institution_type_id']){
-                $institutions = $institutions->where('institution_type_id', $request['institution_type_id']);
+            if(isset($params['institution_type_id'])){
+                $institutions = $institutions->where('institution_type_id', $params['institution_type_id']);
             }
 
 
-            if($request['area_id']){
-                $institutions = $institutions->where('area_id', $request['area_id']);
+            if(isset($params['area_id'])){
+                $institutions = $institutions->where('area_id', $params['area_id']);
             }
 
 
-            $data = $institutions->get();
+            //$data = $institutions->get();
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $institutions = $institutions->orderBy($col, $orderBy);
+            }
+                        
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $institutions->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $institutions->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
             
-            return $data;
+            return $list;
         } catch (\Exception $e) {
-            
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -1320,12 +1336,28 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function institutionTypesDropdown()
+    public function institutionTypesDropdown($params)
     {
         try {
-            $institutions = InstitutionTypes::select('id', 'name')->get();
+            $institutions = InstitutionTypes::select('id', 'name');
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $institutions = $institutions->orderBy($col, $orderBy);
+            }
+                        
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $institutions->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $institutions->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
             
-            return $institutions;
+            return $list;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
