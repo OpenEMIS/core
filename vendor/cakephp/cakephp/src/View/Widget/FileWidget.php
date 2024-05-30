@@ -1,39 +1,42 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\View\Widget;
 
+use Cake\Core\Configure;
 use Cake\View\Form\ContextInterface;
 
 /**
  * Input widget class for generating a file upload control.
  *
- * This class is intended as an internal implementation detail
- * of Cake\View\Helper\FormHelper and is not intended for direct use.
+ * This class is usually used internally by `Cake\View\Helper\FormHelper`,
+ * it but can be used to generate standalone file upload controls.
  */
-class FileWidget implements WidgetInterface
+class FileWidget extends BasicWidget
 {
-
     /**
-     * Constructor
+     * Data defaults.
      *
-     * @param \Cake\View\StringTemplate $templates Templates list.
+     * @var array<string, mixed>
      */
-    public function __construct($templates)
-    {
-        $this->_templates = $templates;
-    }
+    protected $defaults = [
+        'name' => '',
+        'escape' => true,
+        'templateVars' => [],
+    ];
 
     /**
      * Render a file upload form widget.
@@ -47,17 +50,14 @@ class FileWidget implements WidgetInterface
      * Unlike other input objects the `val` property will be specifically
      * ignored.
      *
-     * @param array $data The data to build a file input with.
+     * @param array<string, mixed> $data The data to build a file input with.
      * @param \Cake\View\Form\ContextInterface $context The current form context.
      * @return string HTML elements.
      */
-    public function render(array $data, ContextInterface $context)
+    public function render(array $data, ContextInterface $context): string
     {
-        $data += [
-            'name' => '',
-            'escape' => true,
-            'templateVars' => [],
-        ];
+        $data += $this->mergeDefaults($data, $context);
+
         unset($data['val']);
 
         return $this->_templates->format('file', [
@@ -66,15 +66,21 @@ class FileWidget implements WidgetInterface
             'attrs' => $this->_templates->formatAttributes(
                 $data,
                 ['name']
-            )
+            ),
         ]);
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
-    public function secureFields(array $data)
+    public function secureFields(array $data): array
     {
+        // PSR7 UploadedFileInterface objects are used.
+        if (Configure::read('App.uploadedFilesAsObjects', true)) {
+            return [$data['name']];
+        }
+
+        // Backwards compatibility for array files.
         $fields = [];
         foreach (['name', 'type', 'tmp_name', 'error', 'size'] as $suffix) {
             $fields[] = $data['name'] . '[' . $suffix . ']';

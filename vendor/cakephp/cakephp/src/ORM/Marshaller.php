@@ -1,25 +1,30 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\ORM;
 
 use ArrayObject;
 use Cake\Collection\Collection;
 use Cake\Database\Expression\TupleComparison;
-use Cake\Database\Type;
+use Cake\Database\TypeFactory;
 use Cake\Datasource\EntityInterface;
 use Cake\Datasource\InvalidPropertyInterface;
+use Cake\ORM\Association\BelongsToMany;
+use Cake\Utility\Hash;
+use InvalidArgumentException;
 use RuntimeException;
 
 /**
@@ -34,7 +39,6 @@ use RuntimeException;
  */
 class Marshaller
 {
-
     use AssociationsNormalizerTrait;
 
     /**
@@ -58,56 +62,57 @@ class Marshaller
      * Build the map of property => marshalling callable.
      *
      * @param array $data The data being marshalled.
-     * @param array $options List of options containing the 'associated' key.
+     * @param array<string, mixed> $options List of options containing the 'associated' key.
      * @throws \InvalidArgumentException When associations do not exist.
      * @return array
      */
-    protected function _buildPropertyMap($data, $options)
+    protected function _buildPropertyMap(array $data, array $options): array
     {
         $map = [];
-        $schema = $this->_table->schema();
+        $schema = $this->_table->getSchema();
 
         // Is a concrete column?
         foreach (array_keys($data) as $prop) {
-            $columnType = $schema->columnType($prop);
+            $prop = (string)$prop;
+            $columnType = $schema->getColumnType($prop);
             if ($columnType) {
                 $map[$prop] = function ($value, $entity) use ($columnType) {
-                    return Type::build($columnType)->marshal($value);
+                    return TypeFactory::build($columnType)->marshal($value);
                 };
             }
         }
 
         // Map associations
-        if (!isset($options['associated'])) {
-            $options['associated'] = [];
-        }
+        $options['associated'] = $options['associated'] ?? [];
         $include = $this->_normalizeAssociations($options['associated']);
         foreach ($include as $key => $nested) {
             if (is_int($key) && is_scalar($nested)) {
                 $key = $nested;
                 $nested = [];
             }
-            $assoc = $this->_table->association($key);
             // If the key is not a special field like _ids or _joinData
             // it is a missing association that we should error on.
-            if (!$assoc) {
+            if (!$this->_table->hasAssociation($key)) {
                 if (substr($key, 0, 1) !== '_') {
-                    throw new \InvalidArgumentException(sprintf(
+                    throw new InvalidArgumentException(sprintf(
                         'Cannot marshal data for "%s" association. It is not associated with "%s".',
-                        $key,
-                        $this->_table->alias()
+                        (string)$key,
+                        $this->_table->getAlias()
                     ));
                 }
                 continue;
             }
+            $assoc = $this->_table->getAssociation($key);
+
             if (isset($options['forceNew'])) {
                 $nested['forceNew'] = $options['forceNew'];
             }
             if (isset($options['isMerge'])) {
                 $callback = function ($value, $entity) use ($assoc, $nested) {
-                    $options = $nested + ['associated' => []];
+                    /** @var \Cake\Datasource\EntityInterface $entity */
+                    $options = $nested + ['associated' => [], 'association' => $assoc];
 
-                    return $this->_mergeAssociation($entity->get($assoc->property()), $assoc, $value, $options);
+                    return $this->_mergeAssociation($entity->get($assoc->getProperty()), $assoc, $value, $options);
                 };
             } else {
                 $callback = function ($value, $entity) use ($assoc, $nested) {
@@ -116,7 +121,7 @@ class Marshaller
                     return $this->_marshalAssociation($assoc, $value, $options);
                 };
             }
-            $map[$assoc->property()] = $callback;
+            $map[$assoc->getProperty()] = $callback;
         }
 
         $behaviors = $this->_table->behaviors();
@@ -138,7 +143,7 @@ class Marshaller
      * - validate: Set to false to disable validation. Can also be a string of the validator ruleset to be applied.
      *   Defaults to true/default.
      * - associated: Associations listed here will be marshalled as well. Defaults to null.
-     * - fieldList: A whitelist of fields to be assigned to the entity. If not present,
+     * - fields: An allowed list of fields to be assigned to the entity. If not present,
      *   the accessible fields list in the entity will be used. Defaults to null.
      * - accessibleFields: A list of fields to allow or deny in entity accessible fields. Defaults to null
      * - forceNew: When enabled, belongsToMany associations will have 'new' entities created
@@ -155,23 +160,32 @@ class Marshaller
      * ]);
      * ```
      *
+     * ```
+     * $result = $marshaller->one($data, [
+     *   'associated' => [
+     *     'Tags' => ['accessibleFields' => ['*' => true]]
+     *   ]
+     * ]);
+     * ```
+     *
      * @param array $data The data to hydrate.
-     * @param array $options List of options
-     * @return \Cake\ORM\Entity
+     * @param array<string, mixed> $options List of options
+     * @return \Cake\Datasource\EntityInterface
      * @see \Cake\ORM\Table::newEntity()
+     * @see \Cake\ORM\Entity::$_accessible
      */
-    public function one(array $data, array $options = [])
+    public function one(array $data, array $options = []): EntityInterface
     {
-        list($data, $options) = $this->_prepareDataAndOptions($data, $options);
+        [$data, $options] = $this->_prepareDataAndOptions($data, $options);
 
-        $primaryKey = (array)$this->_table->primaryKey();
-        $entityClass = $this->_table->entityClass();
+        $primaryKey = (array)$this->_table->getPrimaryKey();
+        $entityClass = $this->_table->getEntityClass();
         $entity = new $entityClass();
-        $entity->source($this->_table->registryAlias());
+        $entity->setSource($this->_table->getRegistryAlias());
 
         if (isset($options['accessibleFields'])) {
             foreach ((array)$options['accessibleFields'] as $key => $value) {
-                $entity->accessible($key, $value);
+                $entity->setAccess($key, $value);
             }
         }
         $errors = $this->_validate($data, $options, true);
@@ -182,7 +196,7 @@ class Marshaller
         foreach ($data as $key => $value) {
             if (!empty($errors[$key])) {
                 if ($entity instanceof InvalidPropertyInterface) {
-                    $entity->invalid($key, $value);
+                    $entity->setInvalidField($key, $value);
                 }
                 continue;
             }
@@ -190,27 +204,34 @@ class Marshaller
             if ($value === '' && in_array($key, $primaryKey, true)) {
                 // Skip marshalling '' for pk fields.
                 continue;
-            } elseif (isset($propertyMap[$key])) {
+            }
+            if (isset($propertyMap[$key])) {
                 $properties[$key] = $propertyMap[$key]($value, $entity);
             } else {
                 $properties[$key] = $value;
             }
         }
 
-        if (!isset($options['fieldList'])) {
+        if (isset($options['fields'])) {
+            foreach ((array)$options['fields'] as $field) {
+                if (array_key_exists($field, $properties)) {
+                    $entity->set($field, $properties[$field]);
+                }
+            }
+        } else {
             $entity->set($properties);
-            $entity->errors($errors);
-
-            return $entity;
         }
 
-        foreach ((array)$options['fieldList'] as $field) {
-            if (array_key_exists($field, $properties)) {
-                $entity->set($field, $properties[$field]);
+        // Don't flag clean association entities as
+        // dirty so we don't persist empty records.
+        foreach ($properties as $field => $value) {
+            if ($value instanceof EntityInterface) {
+                $entity->setDirty($field, $value->isDirty());
             }
         }
 
-        $entity->errors($errors);
+        $entity->setErrors($errors);
+        $this->dispatchAfterMarshal($entity, $data, $options);
 
         return $entity;
     }
@@ -219,44 +240,54 @@ class Marshaller
      * Returns the validation errors for a data set based on the passed options
      *
      * @param array $data The data to validate.
-     * @param array $options The options passed to this marshaller.
+     * @param array<string, mixed> $options The options passed to this marshaller.
      * @param bool $isNew Whether it is a new entity or one to be updated.
      * @return array The list of validation errors.
      * @throws \RuntimeException If no validator can be created.
      */
-    protected function _validate($data, $options, $isNew)
+    protected function _validate(array $data, array $options, bool $isNew): array
     {
         if (!$options['validate']) {
             return [];
         }
+
+        $validator = null;
         if ($options['validate'] === true) {
-            $options['validate'] = $this->_table->validator('default');
+            $validator = $this->_table->getValidator();
+        } elseif (is_string($options['validate'])) {
+            $validator = $this->_table->getValidator($options['validate']);
+        } elseif (is_object($options['validate'])) {
+            deprecationWarning(
+                'Passing validator instance for the `validate` option is deprecated,'
+                . ' use `ValidatorAwareTrait::setValidator() instead.`'
+            );
+
+            /** @var \Cake\Validation\Validator $validator */
+            $validator = $options['validate'];
         }
-        if (is_string($options['validate'])) {
-            $options['validate'] = $this->_table->validator($options['validate']);
-        }
-        if (!is_object($options['validate'])) {
+
+        if ($validator === null) {
             throw new RuntimeException(
-                sprintf('validate must be a boolean, a string or an object. Got %s.', gettype($options['validate']))
+                sprintf('validate must be a boolean, a string or an object. Got %s.', getTypeName($options['validate']))
             );
         }
 
-        return $options['validate']->errors($data, $isNew);
+        return $validator->validate($data, $isNew);
     }
 
     /**
      * Returns data and options prepared to validate and marshall.
      *
      * @param array $data The data to prepare.
-     * @param array $options The options passed to this marshaller.
+     * @param array<string, mixed> $options The options passed to this marshaller.
      * @return array An array containing prepared data and options.
      */
-    protected function _prepareDataAndOptions($data, $options)
+    protected function _prepareDataAndOptions(array $data, array $options): array
     {
         $options += ['validate' => true];
 
-        $tableName = $this->_table->alias();
-        if (isset($data[$tableName])) {
+        $tableName = $this->_table->getAlias();
+        if (isset($data[$tableName]) && is_array($data[$tableName])) {
             $data += $data[$tableName];
             unset($data[$tableName]);
         }
@@ -272,22 +303,23 @@ class Marshaller
      * Create a new sub-marshaller and marshal the associated data.
      *
      * @param \Cake\ORM\Association $assoc The association to marshall
-     * @param array $value The data to hydrate
-     * @param array $options List of options.
-     * @return mixed
+     * @param mixed $value The data to hydrate. If not an array, this method will return null.
+     * @param array<string, mixed> $options List of options.
+     * @return \Cake\Datasource\EntityInterface|array<\Cake\Datasource\EntityInterface>|null
      */
-    protected function _marshalAssociation($assoc, $value, $options)
+    protected function _marshalAssociation(Association $assoc, $value, array $options)
     {
         if (!is_array($value)) {
             return null;
         }
-        $targetTable = $assoc->target();
+        $targetTable = $assoc->getTarget();
         $marshaller = $targetTable->marshaller();
         $types = [Association::ONE_TO_ONE, Association::MANY_TO_ONE];
-        if (in_array($assoc->type(), $types)) {
-            return $marshaller->one($value, (array)$options);
+        $type = $assoc->type();
+        if (in_array($type, $types, true)) {
+            return $marshaller->one($value, $options);
         }
-        if ($assoc->type() === Association::ONE_TO_MANY || $assoc->type() === Association::MANY_TO_MANY) {
+        if ($type === Association::ONE_TO_MANY || $type === Association::MANY_TO_MANY) {
             $hasIds = array_key_exists('_ids', $value);
             $onlyIds = array_key_exists('onlyIds', $options) && $options['onlyIds'];
 
@@ -298,11 +330,12 @@ class Marshaller
                 return [];
             }
         }
-        if ($assoc->type() === Association::MANY_TO_MANY) {
-            return $marshaller->_belongsToMany($assoc, $value, (array)$options);
+        if ($type === Association::MANY_TO_MANY) {
+            /** @psalm-suppress ArgumentTypeCoercion */
+            return $marshaller->_belongsToMany($assoc, $value, $options);
         }
 
-        return $marshaller->many($value, (array)$options);
+        return $marshaller->many($value, $options);
     }
 
     /**
@@ -313,7 +346,7 @@ class Marshaller
      * - validate: Set to false to disable validation. Can also be a string of the validator ruleset to be applied.
      *   Defaults to true/default.
      * - associated: Associations listed here will be marshalled as well. Defaults to null.
-     * - fieldList: A whitelist of fields to be assigned to the entity. If not present,
+     * - fields: An allowed list of fields to be assigned to the entity. If not present,
      *   the accessible fields list in the entity will be used. Defaults to null.
      * - accessibleFields: A list of fields to allow or deny in entity accessible fields. Defaults to null
      * - forceNew: When enabled, belongsToMany associations will have 'new' entities created
@@ -321,11 +354,12 @@ class Marshaller
      *   on missing entities would be ignored. Defaults to false.
      *
      * @param array $data The data to hydrate.
-     * @param array $options List of options
-     * @return array An array of hydrated records.
+     * @param array<string, mixed> $options List of options
+     * @return array<\Cake\Datasource\EntityInterface> An array of hydrated records.
      * @see \Cake\ORM\Table::newEntities()
+     * @see \Cake\ORM\Entity::$_accessible
      */
-    public function many(array $data, array $options = [])
+    public function many(array $data, array $options = []): array
     {
         $output = [];
         foreach ($data as $record) {
@@ -344,23 +378,25 @@ class Marshaller
      * Builds the related entities and handles the special casing
      * for junction table entities.
      *
-     * @param \Cake\ORM\Association $assoc The association to marshal.
+     * @param \Cake\ORM\Association\BelongsToMany $assoc The association to marshal.
      * @param array $data The data to convert into entities.
-     * @param array $options List of options.
-     * @return array An array of built entities.
+     * @param array<string, mixed> $options List of options.
+     * @return array<\Cake\Datasource\EntityInterface> An array of built entities.
+     * @throws \BadMethodCallException
+     * @throws \InvalidArgumentException
+     * @throws \RuntimeException
      */
-    protected function _belongsToMany(Association $assoc, array $data, $options = [])
+    protected function _belongsToMany(BelongsToMany $assoc, array $data, array $options = []): array
     {
-        $associated = isset($options['associated']) ? $options['associated'] : [];
-        $forceNew = isset($options['forceNew']) ? $options['forceNew'] : false;
+        $associated = $options['associated'] ?? [];
+        $forceNew = $options['forceNew'] ?? false;
 
         $data = array_values($data);
 
-        $target = $assoc->target();
-        $primaryKey = array_flip((array)$target->primaryKey());
+        $target = $assoc->getTarget();
+        $primaryKey = array_flip((array)$target->getPrimaryKey());
         $records = $conditions = [];
         $primaryCount = count($primaryKey);
-        $conditions = [];
 
         foreach ($data as $i => $row) {
             if (!is_array($row)) {
@@ -371,7 +407,7 @@ class Marshaller
                 if (count($keys) === $primaryCount) {
                     $rowConditions = [];
                     foreach ($keys as $key => $value) {
-                        $rowConditions[][$target->aliasfield($key)] = $value;
+                        $rowConditions[][$target->aliasField($key)] = $value;
                     }
 
                     if ($forceNew && !$target->exists($rowConditions)) {
@@ -388,7 +424,8 @@ class Marshaller
         if (!empty($conditions)) {
             $query = $target->find();
             $query->andWhere(function ($exp) use ($conditions) {
-                return $exp->or_($conditions);
+                /** @var \Cake\Database\Expression\QueryExpression $exp */
+                return $exp->or($conditions);
             });
 
             $keyFields = array_keys($primaryKey);
@@ -438,42 +475,35 @@ class Marshaller
      *
      * @param \Cake\ORM\Association $assoc The association class for the belongsToMany association.
      * @param array $ids The list of ids to load.
-     * @return array An array of entities.
+     * @return array<\Cake\Datasource\EntityInterface> An array of entities.
      */
-    protected function _loadAssociatedByIds($assoc, $ids)
+    protected function _loadAssociatedByIds(Association $assoc, array $ids): array
     {
         if (empty($ids)) {
             return [];
         }
 
-        $target = $assoc->target();
-        $primaryKey = (array)$target->primaryKey();
+        $target = $assoc->getTarget();
+        $primaryKey = (array)$target->getPrimaryKey();
         $multi = count($primaryKey) > 1;
         $primaryKey = array_map([$target, 'aliasField'], $primaryKey);
 
         if ($multi) {
-            if (count(current($ids)) !== count($primaryKey)) {
+            $first = current($ids);
+            if (!is_array($first) || count($first) !== count($primaryKey)) {
                 return [];
             }
-            $filter = new TupleComparison($primaryKey, $ids, [], 'IN');
+            $type = [];
+            $schema = $target->getSchema();
+            foreach ((array)$target->getPrimaryKey() as $column) {
+                $type[] = $schema->getColumnType($column);
+            }
+            $filter = new TupleComparison($primaryKey, $ids, $type, 'IN');
         } else {
             $filter = [$primaryKey[0] . ' IN' => $ids];
         }
 
         return $target->find()->where($filter)->toArray();
-    }
-
-    /**
-     * Loads a list of belongs to many from ids.
-     *
-     * @param \Cake\ORM\Association $assoc The association class for the belongsToMany association.
-     * @param array $ids The list of ids to load.
-     * @return array An array of entities.
-     * @deprecated Use _loadAssociatedByIds()
-     */
-    protected function _loadBelongsToMany($assoc, $ids)
-    {
-        return $this->_loadAssociatedByIds($assoc, $ids);
     }
 
     /**
@@ -490,9 +520,9 @@ class Marshaller
      * ### Options:
      *
      * - associated: Associations listed here will be marshalled as well.
-     * - validate: Whether or not to validate data before hydrating the entities. Can
+     * - validate: Whether to validate data before hydrating the entities. Can
      *   also be set to a string to use a specific validator. Defaults to true/default.
-     * - fieldList: A whitelist of fields to be assigned to the entity. If not present
+     * - fields: An allowed list of fields to be assigned to the entity. If not present
      *   the accessible fields list in the entity will be used.
      * - accessibleFields: A list of fields to allow or deny in entity accessible fields.
      *
@@ -509,35 +539,35 @@ class Marshaller
      * @param \Cake\Datasource\EntityInterface $entity the entity that will get the
      * data merged in
      * @param array $data key value list of fields to be merged into the entity
-     * @param array $options List of options.
+     * @param array<string, mixed> $options List of options.
      * @return \Cake\Datasource\EntityInterface
+     * @see \Cake\ORM\Entity::$_accessible
      */
-    public function merge(EntityInterface $entity, array $data, array $options = [])
+    public function merge(EntityInterface $entity, array $data, array $options = []): EntityInterface
     {
-        list($data, $options) = $this->_prepareDataAndOptions($data, $options);
+        [$data, $options] = $this->_prepareDataAndOptions($data, $options);
 
         $isNew = $entity->isNew();
         $keys = [];
 
         if (!$isNew) {
-            $keys = $entity->extract((array)$this->_table->primaryKey());
+            $keys = $entity->extract((array)$this->_table->getPrimaryKey());
         }
 
         if (isset($options['accessibleFields'])) {
             foreach ((array)$options['accessibleFields'] as $key => $value) {
-                $entity->accessible($key, $value);
+                $entity->setAccess($key, $value);
             }
         }
 
         $errors = $this->_validate($data + $keys, $options, $isNew);
-        $schema = $this->_table->schema();
         $options['isMerge'] = true;
         $propertyMap = $this->_buildPropertyMap($data, $options);
-        $properties = $marshalledAssocs = [];
+        $properties = [];
         foreach ($data as $key => $value) {
             if (!empty($errors[$key])) {
                 if ($entity instanceof InvalidPropertyInterface) {
-                    $entity->invalid($key, $value);
+                    $entity->setInvalidField($key, $value);
                 }
                 continue;
             }
@@ -550,9 +580,20 @@ class Marshaller
                 // change. Arrays will always be marked as dirty because
                 // the original/updated list could contain references to the
                 // same objects, even though those objects may have changed internally.
-                if ((is_scalar($value) && $original === $value) ||
-                    ($value === null && $original === $value) ||
-                    (is_object($value) && !($value instanceof EntityInterface) && $original == $value)
+                if (
+                    (
+                        is_scalar($value)
+                        && $original === $value
+                    )
+                    || (
+                        $value === null
+                        && $original === $value
+                    )
+                    || (
+                        is_object($value)
+                        && !($value instanceof EntityInterface)
+                        && $original == $value
+                    )
                 ) {
                     continue;
                 }
@@ -560,27 +601,30 @@ class Marshaller
             $properties[$key] = $value;
         }
 
-        $entity->errors($errors);
-        if (!isset($options['fieldList'])) {
+        $entity->setErrors($errors);
+        if (!isset($options['fields'])) {
             $entity->set($properties);
 
             foreach ($properties as $field => $value) {
                 if ($value instanceof EntityInterface) {
-                    $entity->dirty($field, $value->dirty());
+                    $entity->setDirty($field, $value->isDirty());
                 }
             }
+            $this->dispatchAfterMarshal($entity, $data, $options);
 
             return $entity;
         }
 
-        foreach ((array)$options['fieldList'] as $field) {
-            if (array_key_exists($field, $properties)) {
-                $entity->set($field, $properties[$field]);
-                if ($properties[$field] instanceof EntityInterface) {
-                    $entity->dirty($field, $properties[$field]->dirty());
-                }
+        foreach ((array)$options['fields'] as $field) {
+            if (!array_key_exists($field, $properties)) {
+                continue;
+            }
+            $entity->set($field, $properties[$field]);
+            if ($properties[$field] instanceof EntityInterface) {
+                $entity->setDirty($field, $properties[$field]->isDirty());
             }
         }
+        $this->dispatchAfterMarshal($entity, $data, $options);
 
         return $entity;
     }
@@ -602,28 +646,30 @@ class Marshaller
      *
      * ### Options:
      *
-     * - validate: Whether or not to validate data before hydrating the entities. Can
+     * - validate: Whether to validate data before hydrating the entities. Can
      *   also be set to a string to use a specific validator. Defaults to true/default.
      * - associated: Associations listed here will be marshalled as well.
-     * - fieldList: A whitelist of fields to be assigned to the entity. If not present,
+     * - fields: An allowed list of fields to be assigned to the entity. If not present,
      *   the accessible fields list in the entity will be used.
      * - accessibleFields: A list of fields to allow or deny in entity accessible fields.
      *
-     * @param array|\Traversable $entities the entities that will get the
+     * @param iterable<\Cake\Datasource\EntityInterface> $entities the entities that will get the
      *   data merged in
      * @param array $data list of arrays to be merged into the entities
-     * @param array $options List of options.
-     * @return array
+     * @param array<string, mixed> $options List of options.
+     * @return array<\Cake\Datasource\EntityInterface>
+     * @see \Cake\ORM\Entity::$_accessible
+     * @psalm-suppress NullArrayOffset
      */
-    public function mergeMany($entities, array $data, array $options = [])
+    public function mergeMany(iterable $entities, array $data, array $options = []): array
     {
-        $primary = (array)$this->_table->primaryKey();
+        $primary = (array)$this->_table->getPrimaryKey();
 
         $indexed = (new Collection($data))
             ->groupBy(function ($el) use ($primary) {
                 $keys = [];
                 foreach ($primary as $key) {
-                    $keys[] = isset($el[$key]) ? $el[$key] : '';
+                    $keys[] = $el[$key] ?? '';
                 }
 
                 return implode(';', $keys);
@@ -633,8 +679,8 @@ class Marshaller
             })
             ->toArray();
 
-        $new = isset($indexed[null]) ? $indexed[null] : [];
-        unset($indexed[null]);
+        $new = $indexed[''] ?? [];
+        unset($indexed['']);
         $output = [];
 
         foreach ($entities as $entity) {
@@ -643,7 +689,7 @@ class Marshaller
             }
 
             $key = implode(';', $entity->extract($primary));
-            if ($key === null || !isset($indexed[$key])) {
+            if (!isset($indexed[$key])) {
                 continue;
             }
 
@@ -651,18 +697,20 @@ class Marshaller
             unset($indexed[$key]);
         }
 
-        $maybeExistentQuery = (new Collection($indexed))
+        $conditions = (new Collection($indexed))
             ->map(function ($data, $key) {
-                return explode(';', $key);
+                return explode(';', (string)$key);
             })
             ->filter(function ($keys) use ($primary) {
-                return count(array_filter($keys, 'strlen')) === count($primary);
+                return count(Hash::filter($keys)) === count($primary);
             })
-            ->reduce(function ($query, $keys) use ($primary) {
+            ->reduce(function ($conditions, $keys) use ($primary) {
                 $fields = array_map([$this->_table, 'aliasField'], $primary);
+                $conditions['OR'][] = array_combine($fields, $keys);
 
-                return $query->orWhere($query->newExpr()->and_(array_combine($fields, $keys)));
-            }, $this->_table->find());
+                return $conditions;
+            }, ['OR' => []]);
+        $maybeExistentQuery = $this->_table->find()->where($conditions);
 
         if (!empty($indexed) && count($maybeExistentQuery->clause('where'))) {
             foreach ($maybeExistentQuery as $entity) {
@@ -687,13 +735,13 @@ class Marshaller
     /**
      * Creates a new sub-marshaller and merges the associated data.
      *
-     * @param \Cake\Datasource\EntityInterface $original The original entity
+     * @param \Cake\Datasource\EntityInterface|array<\Cake\Datasource\EntityInterface> $original The original entity
      * @param \Cake\ORM\Association $assoc The association to merge
-     * @param array $value The data to hydrate
-     * @param array $options List of options.
-     * @return mixed
+     * @param mixed $value The array of data to hydrate. If not an array, this method will return null.
+     * @param array<string, mixed> $options List of options.
+     * @return \Cake\Datasource\EntityInterface|array<\Cake\Datasource\EntityInterface>|null
      */
-    protected function _mergeAssociation($original, $assoc, $value, $options)
+    protected function _mergeAssociation($original, Association $assoc, $value, array $options)
     {
         if (!$original) {
             return $this->_marshalAssociation($assoc, $value, $options);
@@ -702,32 +750,47 @@ class Marshaller
             return null;
         }
 
-        $targetTable = $assoc->target();
+        $targetTable = $assoc->getTarget();
         $marshaller = $targetTable->marshaller();
         $types = [Association::ONE_TO_ONE, Association::MANY_TO_ONE];
-        if (in_array($assoc->type(), $types)) {
-            return $marshaller->merge($original, $value, (array)$options);
+        $type = $assoc->type();
+        if (in_array($type, $types, true)) {
+            /** @psalm-suppress PossiblyInvalidArgument, ArgumentTypeCoercion */
+            return $marshaller->merge($original, $value, $options);
         }
-        if ($assoc->type() === Association::MANY_TO_MANY) {
-            return $marshaller->_mergeBelongsToMany($original, $assoc, $value, (array)$options);
+        if ($type === Association::MANY_TO_MANY) {
+            /** @psalm-suppress PossiblyInvalidArgument, ArgumentTypeCoercion */
+            return $marshaller->_mergeBelongsToMany($original, $assoc, $value, $options);
         }
 
-        return $marshaller->mergeMany($original, $value, (array)$options);
+        if ($type === Association::ONE_TO_MANY) {
+            $hasIds = array_key_exists('_ids', $value);
+            $onlyIds = array_key_exists('onlyIds', $options) && $options['onlyIds'];
+            if ($hasIds && is_array($value['_ids'])) {
+                return $this->_loadAssociatedByIds($assoc, $value['_ids']);
+            }
+            if ($hasIds || $onlyIds) {
+                return [];
+            }
+        }
+
+        /** @psalm-suppress PossiblyInvalidArgument */
+        return $marshaller->mergeMany($original, $value, $options);
     }
 
     /**
      * Creates a new sub-marshaller and merges the associated data for a BelongstoMany
      * association.
      *
-     * @param \Cake\Datasource\EntityInterface $original The original entity
-     * @param \Cake\ORM\Association $assoc The association to marshall
+     * @param array<\Cake\Datasource\EntityInterface> $original The original entities list.
+     * @param \Cake\ORM\Association\BelongsToMany $assoc The association to marshall
      * @param array $value The data to hydrate
-     * @param array $options List of options.
-     * @return array
+     * @param array<string, mixed> $options List of options.
+     * @return array<\Cake\Datasource\EntityInterface>
      */
-    protected function _mergeBelongsToMany($original, $assoc, $value, $options)
+    protected function _mergeBelongsToMany(array $original, BelongsToMany $assoc, array $value, array $options): array
     {
-        $associated = isset($options['associated']) ? $options['associated'] : [];
+        $associated = $options['associated'] ?? [];
 
         $hasIds = array_key_exists('_ids', $value);
         $onlyIds = array_key_exists('onlyIds', $options) && $options['onlyIds'];
@@ -739,7 +802,7 @@ class Marshaller
             return [];
         }
 
-        if (!empty($associated) && !in_array('_joinData', $associated) && !isset($associated['_joinData'])) {
+        if (!empty($associated) && !in_array('_joinData', $associated, true) && !isset($associated['_joinData'])) {
             return $this->mergeMany($original, $value, $options);
         }
 
@@ -749,19 +812,19 @@ class Marshaller
     /**
      * Merge the special _joinData property into the entity set.
      *
-     * @param \Cake\Datasource\EntityInterface $original The original entity
-     * @param \Cake\ORM\Association $assoc The association to marshall
+     * @param array<\Cake\Datasource\EntityInterface> $original The original entities list.
+     * @param \Cake\ORM\Association\BelongsToMany $assoc The association to marshall
      * @param array $value The data to hydrate
-     * @param array $options List of options.
-     * @return array An array of entities
+     * @param array<string, mixed> $options List of options.
+     * @return array<\Cake\Datasource\EntityInterface> An array of entities
      */
-    protected function _mergeJoinData($original, $assoc, $value, $options)
+    protected function _mergeJoinData(array $original, BelongsToMany $assoc, array $value, array $options): array
     {
-        $associated = isset($options['associated']) ? $options['associated'] : [];
+        $associated = $options['associated'] ?? [];
         $extra = [];
         foreach ($original as $entity) {
             // Mark joinData as accessible so we can marshal it properly.
-            $entity->accessible('_joinData', true);
+            $entity->setAccess('_joinData', true);
 
             $joinData = $entity->get('_joinData');
             if ($joinData && $joinData instanceof EntityInterface) {
@@ -791,19 +854,34 @@ class Marshaller
 
             // Scalar data can't be handled
             if (!is_array($value)) {
-                $record->unsetProperty('_joinData');
+                $record->unset('_joinData');
                 continue;
             }
 
             // Marshal data into the old object, or make a new joinData object.
             if (isset($extra[$hash])) {
                 $record->set('_joinData', $marshaller->merge($extra[$hash], $value, $nested));
-            } elseif (is_array($value)) {
+            } else {
                 $joinData = $marshaller->one($value, $nested);
                 $record->set('_joinData', $joinData);
             }
         }
 
         return $records;
+    }
+
+    /**
+     * dispatch Model.afterMarshal event.
+     *
+     * @param \Cake\Datasource\EntityInterface $entity The entity that was marshaled.
+     * @param array $data readOnly $data to use.
+     * @param array<string, mixed> $options List of options that are readOnly.
+     * @return void
+     */
+    protected function dispatchAfterMarshal(EntityInterface $entity, array $data, array $options = []): void
+    {
+        $data = new ArrayObject($data);
+        $options = new ArrayObject($options);
+        $this->_table->dispatchEvent('Model.afterMarshal', compact('entity', 'data', 'options'));
     }
 }

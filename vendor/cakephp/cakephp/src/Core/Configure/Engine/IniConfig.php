@@ -1,16 +1,18 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         2.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Core\Configure\Engine;
 
@@ -42,18 +44,17 @@ use Cake\Utility\Hash;
  *
  * `Configure::read('section.key');
  *
- * You can combine `.` separated values with sections to create more deeply
+ * You can also use `.` separated values in section names to create more deeply
  * nested structures.
  *
  * IniConfig also manipulates how the special ini values of
  * 'yes', 'no', 'on', 'off', 'null' are handled. These values will be
  * converted to their boolean equivalents.
  *
- * @see http://php.net/parse_ini_file
+ * @see https://secure.php.net/parse_ini_file
  */
 class IniConfig implements ConfigEngineInterface
 {
-
     use FileConfigTrait;
 
     /**
@@ -66,7 +67,7 @@ class IniConfig implements ConfigEngineInterface
     /**
      * The section to read, if null all sections will be read.
      *
-     * @var string
+     * @var string|null
      */
     protected $_section;
 
@@ -78,7 +79,7 @@ class IniConfig implements ConfigEngineInterface
      * @param string|null $section Only get one section, leave null to parse and fetch
      *     all sections in the ini file.
      */
-    public function __construct($path = null, $section = null)
+    public function __construct(?string $path = null, ?string $section = null)
     {
         if ($path === null) {
             $path = CONFIG;
@@ -93,15 +94,15 @@ class IniConfig implements ConfigEngineInterface
      * @param string $key The identifier to read from. If the key has a . it will be treated
      *  as a plugin prefix. The chosen file must be on the engine's path.
      * @return array Parsed configuration values.
-     * @throws \Cake\Core\Exception\Exception when files don't exist.
+     * @throws \Cake\Core\Exception\CakeException when files don't exist.
      *  Or when files contain '..' as this could lead to abusive reads.
      */
-    public function read($key)
+    public function read(string $key): array
     {
         $file = $this->_getFilePath($key, true);
 
         $contents = parse_ini_file($file, true);
-        if (!empty($this->_section) && isset($contents[$this->_section])) {
+        if ($this->_section && isset($contents[$this->_section])) {
             $values = $this->_parseNestedValues($contents[$this->_section]);
         } else {
             $values = [];
@@ -124,7 +125,7 @@ class IniConfig implements ConfigEngineInterface
      * @param array $values Values to be exploded.
      * @return array Array of values exploded
      */
-    protected function _parseNestedValues($values)
+    protected function _parseNestedValues(array $values): array
     {
         foreach ($values as $key => $value) {
             if ($value === '1') {
@@ -134,7 +135,7 @@ class IniConfig implements ConfigEngineInterface
                 $value = false;
             }
             unset($values[$key]);
-            if (strpos($key, '.') !== false) {
+            if (strpos((string)$key, '.') !== false) {
                 $values = Hash::insert($values, $key, $value);
             } else {
                 $values[$key] = $value;
@@ -152,11 +153,12 @@ class IniConfig implements ConfigEngineInterface
      * @param array $data The data to convert to ini file.
      * @return bool Success.
      */
-    public function dump($key, array $data)
+    public function dump(string $key, array $data): bool
     {
         $result = [];
         foreach ($data as $k => $value) {
             $isSection = false;
+            /** @psalm-suppress InvalidArrayAccess */
             if ($k[0] !== '[') {
                 $result[] = "[$k]";
                 $isSection = true;
@@ -184,7 +186,7 @@ class IniConfig implements ConfigEngineInterface
      * @param mixed $value Value to export.
      * @return string String value for ini file.
      */
-    protected function _value($value)
+    protected function _value($value): string
     {
         if ($value === null) {
             return 'null';

@@ -16,7 +16,7 @@ class UpdateStaffRolesShell extends Shell {
 	const ERROR = -2;
 	const ABORT = -1;
 
-	public function initialize() {
+	public function initialize(): void {
 		parent::initialize();
 	}
 

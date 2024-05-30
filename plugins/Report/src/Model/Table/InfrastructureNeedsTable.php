@@ -17,8 +17,8 @@ use Institution\Model\Table\InstitutionsTable as Institutions;
 use Cake\Database\Connection;
 
 class InfrastructureNeedsTable extends AppTable  {
-    public function initialize(array $config) {
-        $this->table('infrastructure_needs');
+    public function initialize(array $config): void {
+        $this->setTable('infrastructure_needs');
         parent::initialize($config);
 
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -53,9 +53,9 @@ class InfrastructureNeedsTable extends AppTable  {
         }
         
         $infrastructureNeeds = TableRegistry::get('Institutions.InfrastructureNeeds');
-        $infrastructureNeedTypes = TableRegistry::get('infrastructure_need_types');
-        $institutionStatus = TableRegistry::get('institution_statuses');
-        $institutions = TableRegistry::get('institutions');
+        $infrastructureNeedTypes = TableRegistry::get('Institution.InfrastructureNeedTypes');
+        $institutionStatus = TableRegistry::get('Institution.InstitutionStatuses');
+        $institutions = TableRegistry::get('Institution.Institutions');
         $areas = TableRegistry::get('Area.Areas');
         $areaAdministratives = TableRegistry::get('Area.AreaAdministratives');
         $query
@@ -80,25 +80,25 @@ class InfrastructureNeedsTable extends AppTable  {
                 'need_comment'=>'InfrastructureNeeds.comment'
                 ])
                 //status
-                ->LeftJoin(['Institutions' => $institutions->table()], [
+                ->LeftJoin(['Institutions' => $institutions->getTable()], [
                     'InfrastructureNeeds.institution_id = Institutions.id',
                 ])
-                ->LeftJoin(['Areas' => $areas->table()], [
+                ->LeftJoin(['Areas' => $areas->getTable()], [
                     'Areas.id = Institutions.area_id',
                 ])
-                ->LeftJoin(['AreaAdministratives' => $areaAdministratives->table()], [
+                ->LeftJoin(['AreaAdministratives' => $areaAdministratives->getTable()], [
                     'AreaAdministratives.id = Institutions.area_administrative_id',
                 ])
-                ->LeftJoin(['InstitutionStatuses' => $institutionStatus->table()], [
+                ->LeftJoin(['InstitutionStatuses' => $institutionStatus->getTable()], [
                     'InstitutionStatuses.id = Institutions.institution_status_id',
                 ])
-                ->LeftJoin(['InfrastructureNeedTypes' => $infrastructureNeedTypes->table()], [
+                ->LeftJoin(['InfrastructureNeedTypes' => $infrastructureNeedTypes->getTable()], [
                     'InfrastructureNeeds.infrastructure_need_type_id = InfrastructureNeedTypes.id',
                 ])
                 ->where($conditions);   
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request) {
             $attr['options'] = $this->controller->getFeatureOptions('Institutions');
             return $attr;
     }
@@ -223,7 +223,7 @@ class InfrastructureNeedsTable extends AppTable  {
         $needId = $entity->need_id;
         $data = $InfrastructureProjectsNeeds->find()
                 ->select([$InfrastructureProjects->aliasField('name')])
-                ->leftJoin([$InfrastructureProjects->alias() => $InfrastructureProjects->table()], [
+                ->leftJoin([$InfrastructureProjects->getAlias() => $InfrastructureProjects->getTable()], [
                     $InfrastructureProjects->aliasField('id = ') . $InfrastructureProjectsNeeds->aliasField('infrastructure_project_id'),
                 ])
                 ->where([$InfrastructureProjectsNeeds->aliasField('infrastructure_need_id') => $needId])

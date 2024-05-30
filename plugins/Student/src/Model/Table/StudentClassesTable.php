@@ -15,9 +15,9 @@ class StudentClassesTable extends ControllerActionTable
 {
     use MessagesTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_class_students');
+        $this->setTable('institution_class_students');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -36,11 +36,20 @@ class StudentClassesTable extends ControllerActionTable
         $this->toggle('search', false);
 
         $this->addBehavior('Restful.RestfulAccessControl');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Classes' =>['id', 'institution_id']
+            ]
+        ]);
+        // $this->addBehavior('Student.StudentTab', [
+        //     'appliedAction' => ['Classes' =>['id', 'institution_id']
+        //     ]
+        // ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $contentHeader = $this->controller->viewVars['contentHeader'];
+        //$contentHeader = $this->controller->viewVars['contentHeader'];
+        $contentHeader = $this->controller->viewBuilder()->getVars()['contentHeader'];
         list($studentName, $module) = explode(' - ', $contentHeader);
         $module = __('Classes');
         $contentHeader = $studentName . ' - ' . $module;
@@ -68,7 +77,7 @@ class StudentClassesTable extends ControllerActionTable
         $this->setFieldOrder('institution_class_id', $order++);
         $this->setFieldOrder('homeroom_teacher_name', $order++);
         
-        if (!empty($this->request->query['institution_class_id'])) {
+        if (!empty($this->request->getQuery('institution_class_id'))) {
             $action = 'view';
             $hasAllClassesPermission = $this->AccessControl->check(['Institutions', 'AllClasses', $action]);
             $hasMyClassesPermission = $this->AccessControl->check(['Institutions', 'Classes', $action]);
@@ -78,8 +87,8 @@ class StudentClassesTable extends ControllerActionTable
                 'controller' => 'Institutions',
                 'action' => 'Classes',
                 'view',
-                $this->paramsEncode(['id' => $this->request->query['institution_class_id']]),
-                'institution_id' => $this->request->query['institution_id'],
+                $this->paramsEncode(['id' => $this->request->getQuery('institution_class_id')]),
+                'institution_id' => $this->request->getQuery('institution_id'),
             ];
 
             if ($hasAllClassesPermission) {
@@ -88,7 +97,7 @@ class StudentClassesTable extends ControllerActionTable
             
             if ($hasMyClassesPermission) {
                 $userId = $this->Auth->user('id');
-                if ($userId == $this->request->query['staff_id'] || $userId == $this->request->query['secondary_staff_id']) {
+                if ($userId == $this->request->getQuery('staff_id') || $userId == $this->request->getQuery('secondary_staff_id')) {
                     return $this->controller->redirect($url);
                 }
             }
@@ -97,7 +106,7 @@ class StudentClassesTable extends ControllerActionTable
         }
 
 		// Start POCOR-5188
-		if($this->request->params['controller'] == 'Students'){
+		if($this->request->getParam('controller') == 'Students'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Classes','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -115,7 +124,7 @@ class StudentClassesTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Classes','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -142,26 +151,25 @@ class StudentClassesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
 		$userData = $this->Session->read();
-        $session = $this->request->session();//POCOR-6267
+        $session = $this->request->getSession();//POCOR-6267
         if ($userData['Auth']['User']['is_guardian'] == 1) { 
             /*POCOR-6267 starts*/
-            if ($this->request->controller == 'GuardianNavs') {
-                $studentId = $session->read('Student.Students.id');
+            if ($this->request->getParam('controller') == 'GuardianNavs') {
+                $studentId = $this->getStudentID();
             }/*POCOR-6267 ends*/ else {
                 $sId = $userData['Student']['ExaminationResults']['student_id'];
                 if ($sId) {
                     $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
                 } else {
-                    $studentId = $session->read('Student.Students.id');
+                    $studentId = $this->getUserID();
                 }
             }
         } else {
             $studentId = $userData['Auth']['User']['id'];
         }
-
 		$conditions = [];
         /*POCOR-6267 starts*/
-        if ($this->request->controller == 'GuardianNavs') {
+        if ($this->request->getParam('controller') == 'GuardianNavs') {
             $conditions[$this->aliasField('student_id')] = $studentId;
         }/*POCOR-6267 ends*/ else {
             if(!empty($userData['System']['User']['roles']) & !empty($userData['Student']['Students']['id'])) {
@@ -184,18 +192,22 @@ class StudentClassesTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $queryString = $this->getQueryString();
+        $institutionId = $queryString['institution_id'];
+        $encodedQueryString = $this->paramsEncode($queryString);
         if (array_key_exists('view', $buttons)) {
-            $institutionId = $entity->institution_class->institution_id;
             $url = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'Classes',
-                'view',
-                $this->paramsEncode(['id' => $entity->institution_class->id]),
-                'institution_id' => $institutionId,
+                0 => 'view',
+                1 =>$encodedQueryString,
+                2 =>$this->paramsEncode(['id' => $entity->id]),
+                3 =>$this->paramsEncode(['id' => $entity->institution_class]),
+                
             ];
 
-            if ($this->controller->name == 'Directories') {
+            if ($this->controller->getName() == 'Directories') {
                 $url = [
                     'plugin' => 'Directory',
                     'controller' => 'Directories',
@@ -205,7 +217,7 @@ class StudentClassesTable extends ControllerActionTable
                     'staff_id' => $entity->institution_class->staff_id,
                     'secondary_staff_id' => $entity->institution_class->secondary_staff_id,
                     'institution_class_id' => $entity->institution_class->id,
-                    'institution_id' => $institutionId,
+                    $encodedQueryString,
                 ];
             }
             $buttons['view']['url'] = $url;
@@ -216,7 +228,8 @@ class StudentClassesTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $options = ['type' => 'student'];
-        $tabElements = $this->controller->getAcademicTabElements($options);
+        //$tabElements = $this->controller->getAcademicTabElements($options);
+        $tabElements = $this->getAcademicTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Classes');
     }
@@ -234,4 +247,34 @@ class StudentClassesTable extends ControllerActionTable
                 ])
                 ->toArray();
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period') {
+            return __('Academic Period');
+        } elseif ($field == 'institution') {
+            return __('Institution');
+        } elseif ($field == 'current_class') {
+            return __('Current Class');
+        } elseif ($field == 'education_grade') {
+            return __('Education Grade');
+        } elseif ($field == 'homeroom_teacher_name') {
+            return __('Homeroom Teacher Name');
+        } elseif ($field == 'next_institution_class_id') {
+            return __('Next Institution Class');
+        } elseif ($field == 'student_status_id') {
+            return __('Student Status');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

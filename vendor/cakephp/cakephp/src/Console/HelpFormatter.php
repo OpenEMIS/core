@@ -1,21 +1,23 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         2.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Console;
 
 use Cake\Utility\Text;
-use SimpleXmlElement;
+use SimpleXMLElement;
 
 /**
  * HelpFormatter formats help for console shells. Can format to either
@@ -28,7 +30,6 @@ use SimpleXmlElement;
  */
 class HelpFormatter
 {
-
     /**
      * The maximum number of arguments shown when generating usage.
      *
@@ -51,6 +52,13 @@ class HelpFormatter
     protected $_parser;
 
     /**
+     * Alias to display in the output.
+     *
+     * @var string
+     */
+    protected $_alias = 'cake';
+
+    /**
      * Build the help formatter for an OptionParser
      *
      * @param \Cake\Console\ConsoleOptionParser $parser The option parser help is being generated for.
@@ -61,16 +69,27 @@ class HelpFormatter
     }
 
     /**
+     * Set the alias
+     *
+     * @param string $alias The alias
+     * @return void
+     */
+    public function setAlias(string $alias): void
+    {
+        $this->_alias = $alias;
+    }
+
+    /**
      * Get the help as formatted text suitable for output on the command line.
      *
      * @param int $width The width of the help output.
      * @return string
      */
-    public function text($width = 72)
+    public function text(int $width = 72): string
     {
         $parser = $this->_parser;
         $out = [];
-        $description = $parser->description();
+        $description = $parser->getDescription();
         if (!empty($description)) {
             $out[] = Text::wrap($description, $width);
             $out[] = '';
@@ -87,16 +106,19 @@ class HelpFormatter
                 $out[] = Text::wrapBlock($command->help($max), [
                     'width' => $width,
                     'indent' => str_repeat(' ', $max),
-                    'indentAt' => 1
+                    'indentAt' => 1,
                 ]);
             }
             $out[] = '';
-            $out[] = sprintf('To see help on a subcommand use <info>`cake %s [subcommand] --help`</info>', $parser->command());
+            $out[] = sprintf(
+                'To see help on a subcommand use <info>`' . $this->_alias . ' %s [subcommand] --help`</info>',
+                $parser->getCommand()
+            );
             $out[] = '';
         }
 
         $options = $parser->options();
-        if (!empty($options)) {
+        if ($options) {
             $max = $this->_getMaxLength($options) + 8;
             $out[] = '<info>Options:</info>';
             $out[] = '';
@@ -104,7 +126,7 @@ class HelpFormatter
                 $out[] = Text::wrapBlock($option->help($max), [
                     'width' => $width,
                     'indent' => str_repeat(' ', $max),
-                    'indentAt' => 1
+                    'indentAt' => 1,
                 ]);
             }
             $out[] = '';
@@ -119,12 +141,12 @@ class HelpFormatter
                 $out[] = Text::wrapBlock($argument->help($max), [
                     'width' => $width,
                     'indent' => str_repeat(' ', $max),
-                    'indentAt' => 1
+                    'indentAt' => 1,
                 ]);
             }
             $out[] = '';
         }
-        $epilog = $parser->epilog();
+        $epilog = $parser->getEpilog();
         if (!empty($epilog)) {
             $out[] = Text::wrap($epilog, $width);
             $out[] = '';
@@ -140,9 +162,9 @@ class HelpFormatter
      *
      * @return string
      */
-    protected function _generateUsage()
+    protected function _generateUsage(): string
     {
-        $usage = ['cake ' . $this->_parser->command()];
+        $usage = [$this->_alias . ' ' . $this->_parser->getCommand()];
         $subcommands = $this->_parser->subcommands();
         if (!empty($subcommands)) {
             $usage[] = '[subcommand]';
@@ -170,33 +192,32 @@ class HelpFormatter
     /**
      * Iterate over a collection and find the longest named thing.
      *
-     * @param array $collection The collection to find a max length of.
+     * @param array<\Cake\Console\ConsoleInputOption|\Cake\Console\ConsoleInputArgument|\Cake\Console\ConsoleInputSubcommand> $collection The collection to find a max length of.
      * @return int
      */
-    protected function _getMaxLength($collection)
+    protected function _getMaxLength(array $collection): int
     {
         $max = 0;
         foreach ($collection as $item) {
-            $max = (strlen($item->name()) > $max) ? strlen($item->name()) : $max;
+            $max = strlen($item->name()) > $max ? strlen($item->name()) : $max;
         }
 
         return $max;
     }
 
     /**
-     * Get the help as an xml string.
+     * Get the help as an XML string.
      *
      * @param bool $string Return the SimpleXml object or a string. Defaults to true.
-     * @return string|\SimpleXmlElement See $string
+     * @return \SimpleXMLElement|string See $string
      */
-    public function xml($string = true)
+    public function xml(bool $string = true)
     {
         $parser = $this->_parser;
-        $xml = new SimpleXmlElement('<shell></shell>');
-        $xml->addChild('command', $parser->command());
-        $xml->addChild('description', $parser->description());
+        $xml = new SimpleXMLElement('<shell></shell>');
+        $xml->addChild('command', $parser->getCommand());
+        $xml->addChild('description', $parser->getDescription());
 
-        $xml->addChild('epilog', $parser->epilog());
         $subcommands = $xml->addChild('subcommands');
         foreach ($parser->subcommands() as $command) {
             $command->xml($subcommands);
@@ -209,7 +230,8 @@ class HelpFormatter
         foreach ($parser->arguments() as $argument) {
             $argument->xml($arguments);
         }
+        $xml->addChild('epilog', $parser->getEpilog());
 
-        return $string ? $xml->asXml() : $xml;
+        return $string ? (string)$xml->asXML() : $xml;
     }
 }

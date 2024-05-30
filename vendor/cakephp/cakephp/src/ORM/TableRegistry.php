@@ -1,19 +1,22 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\ORM;
 
+use Cake\Datasource\FactoryLocator;
 use Cake\ORM\Locator\LocatorInterface;
 
 /**
@@ -24,12 +27,15 @@ use Cake\ORM\Locator\LocatorInterface;
  *
  * ### Configuring instances
  *
- * You may need to configure your table objects, using TableRegistry you can
+ * You may need to configure your table objects. Using the `TableLocator` you can
  * centralize configuration. Any configuration set before instances are created
  * will be used when creating instances. If you modify configuration after
  * an instance is made, the instances *will not* be updated.
  *
  * ```
+ * TableRegistry::getTableLocator()->setConfig('Users', ['table' => 'my_users']);
+ *
+ * // Prior to 3.6.0
  * TableRegistry::config('Users', ['table' => 'my_users']);
  * ```
  *
@@ -38,62 +44,40 @@ use Cake\ORM\Locator\LocatorInterface;
  *
  * ### Getting instances
  *
- * You can fetch instances out of the registry using get(). One instance is stored
- * per alias. Once an alias is populated the same instance will always be returned.
- * This is used to make the ORM use less memory and help make cyclic references easier
- * to solve.
+ * You can fetch instances out of the registry through `TableLocator::get()`.
+ * One instance is stored per alias. Once an alias is populated the same
+ * instance will always be returned. This reduces the ORM memory cost and
+ * helps make cyclic references easier to solve.
  *
  * ```
+ * $table = TableRegistry::getTableLocator()->get('Users', $config);
+ *
+ * // Prior to 3.6.0
  * $table = TableRegistry::get('Users', $config);
  * ```
  */
 class TableRegistry
 {
-
     /**
-     * LocatorInterface implementation instance.
+     * Returns a singleton instance of LocatorInterface implementation.
      *
-     * @var \Cake\ORM\Locator\LocatorInterface
-     */
-    protected static $_locator;
-
-    /**
-     * Default LocatorInterface implementation class.
-     *
-     * @var string
-     */
-    protected static $_defaultLocatorClass = 'Cake\ORM\Locator\TableLocator';
-
-    /**
-     * Sets and returns a singleton instance of LocatorInterface implementation.
-     *
-     * @param \Cake\ORM\Locator\LocatorInterface|null $locator Instance of a locator to use.
      * @return \Cake\ORM\Locator\LocatorInterface
      */
-    public static function locator(LocatorInterface $locator = null)
+    public static function getTableLocator(): LocatorInterface
     {
-        if ($locator) {
-            static::$_locator = $locator;
-        }
-
-        if (!static::$_locator) {
-            static::$_locator = new static::$_defaultLocatorClass;
-        }
-
-        return static::$_locator;
+        /** @var \Cake\ORM\Locator\LocatorInterface */
+        return FactoryLocator::get('Table');
     }
 
     /**
-     * Stores a list of options to be used when instantiating an object
-     * with a matching alias.
+     * Sets singleton instance of LocatorInterface implementation.
      *
-     * @param string|null $alias Name of the alias
-     * @param array|null $options list of options for the alias
-     * @return array The config data.
+     * @param \Cake\ORM\Locator\LocatorInterface $tableLocator Instance of a locator to use.
+     * @return void
      */
-    public static function config($alias = null, $options = null)
+    public static function setTableLocator(LocatorInterface $tableLocator): void
     {
-        return static::locator()->config($alias, $options);
+        FactoryLocator::add('Table', $tableLocator);
     }
 
     /**
@@ -102,12 +86,13 @@ class TableRegistry
      * See options specification in {@link TableLocator::get()}.
      *
      * @param string $alias The alias name you want to get.
-     * @param array $options The options you want to build the table with.
+     * @param array<string, mixed> $options The options you want to build the table with.
      * @return \Cake\ORM\Table
+     * @deprecated 3.6.0 Use {@link \Cake\ORM\Locator\LocatorAwareTrait::fetchTable()} instead. Will be removed in 5.0.
      */
-    public static function get($alias, array $options = [])
+    public static function get(string $alias, array $options = []): Table
     {
-        return static::locator()->get($alias, $options);
+        return static::getTableLocator()->get($alias, $options);
     }
 
     /**
@@ -115,10 +100,11 @@ class TableRegistry
      *
      * @param string $alias The alias to check for.
      * @return bool
+     * @deprecated 3.6.0 Use {@link \Cake\ORM\Locator\TableLocator::exists()} instead. Will be removed in 5.0
      */
-    public static function exists($alias)
+    public static function exists(string $alias): bool
     {
-        return static::locator()->exists($alias);
+        return static::getTableLocator()->exists($alias);
     }
 
     /**
@@ -127,10 +113,11 @@ class TableRegistry
      * @param string $alias The alias to set.
      * @param \Cake\ORM\Table $object The table to set.
      * @return \Cake\ORM\Table
+     * @deprecated 3.6.0 Use {@link \Cake\ORM\Locator\TableLocator::set()} instead. Will be removed in 5.0
      */
-    public static function set($alias, Table $object)
+    public static function set(string $alias, Table $object): Table
     {
-        return static::locator()->set($alias, $object);
+        return static::getTableLocator()->set($alias, $object);
     }
 
     /**
@@ -138,31 +125,21 @@ class TableRegistry
      *
      * @param string $alias The alias to remove.
      * @return void
+     * @deprecated 3.6.0 Use {@link \Cake\ORM\Locator\TableLocator::remove()} instead. Will be removed in 5.0
      */
-    public static function remove($alias)
+    public static function remove(string $alias): void
     {
-        static::locator()->remove($alias);
+        static::getTableLocator()->remove($alias);
     }
 
     /**
      * Clears the registry of configuration and instances.
      *
      * @return void
+     * @deprecated 3.6.0 Use {@link \Cake\ORM\Locator\TableLocator::clear()} instead. Will be removed in 5.0
      */
-    public static function clear()
+    public static function clear(): void
     {
-        static::locator()->clear();
-    }
-
-    /**
-     * Proxy for static calls on a locator.
-     *
-     * @param string $name Method name.
-     * @param array $arguments Method arguments.
-     * @return mixed
-     */
-    public static function __callStatic($name, $arguments)
-    {
-        return call_user_func_array([static::locator(), $name], $arguments);
+        static::getTableLocator()->clear();
     }
 }

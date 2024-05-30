@@ -1,19 +1,22 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         2.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Mailer;
 
+use Cake\Core\Exception\CakeException;
 use Cake\Core\InstanceConfigTrait;
 
 /**
@@ -21,54 +24,52 @@ use Cake\Core\InstanceConfigTrait;
  */
 abstract class AbstractTransport
 {
-
     use InstanceConfigTrait;
 
     /**
      * Default config for this class
      *
-     * @var array
+     * @var array<string, mixed>
      */
     protected $_defaultConfig = [];
 
     /**
      * Send mail
      *
-     * @param \Cake\Mailer\Email $email Email instance.
+     * @param \Cake\Mailer\Message $message Email message.
      * @return array
+     * @psalm-return array{headers: string, message: string}
      */
-    abstract public function send(Email $email);
+    abstract public function send(Message $message): array;
 
     /**
      * Constructor
      *
-     * @param array $config Configuration options.
+     * @param array<string, mixed> $config Configuration options.
      */
-    public function __construct($config = [])
+    public function __construct(array $config = [])
     {
-        $this->config($config);
+        $this->setConfig($config);
     }
 
     /**
-     * Help to convert headers in string
+     * Check that at least one destination header is set.
      *
-     * @param array $headers Headers in format key => value
-     * @param string $eol End of line string.
-     * @return string
+     * @param \Cake\Mailer\Message $message Message instance.
+     * @return void
+     * @throws \Cake\Core\Exception\CakeException If at least one of to, cc or bcc is not specified.
      */
-    protected function _headersToString($headers, $eol = "\r\n")
+    protected function checkRecipient(Message $message): void
     {
-        $out = '';
-        foreach ($headers as $key => $value) {
-            if ($value === false || $value === null || $value === '') {
-                continue;
-            }
-            $out .= $key . ': ' . $value . $eol;
+        if (
+            $message->getTo() === []
+            && $message->getCc() === []
+            && $message->getBcc() === []
+        ) {
+            throw new CakeException(
+                'You must specify at least one recipient.'
+                . ' Use one of `setTo`, `setCc` or `setBcc` to define a recipient.'
+            );
         }
-        if (!empty($out)) {
-            $out = substr($out, 0, -1 * strlen($eol));
-        }
-
-        return $out;
     }
 }

@@ -15,7 +15,7 @@ class AreasController extends AppController
 	use UtilityTrait;
 	use MessagesTrait;
 
-	public function initialize() {
+	public function initialize(): void {
 		parent::initialize();
 		$this->loadComponent('Paginator');
 	}
@@ -27,7 +27,6 @@ class AreasController extends AppController
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
-
 		$tabElements = [
 			'Levels' => [
 				'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'Levels'],
@@ -46,9 +45,11 @@ class AreasController extends AppController
 				'text' => __('Areas (Administrative)')
 			]
 		];
+
 		$tabElements = $this->TabPermission->checkTabPermission($tabElements);
 		$this->set('tabElements', $tabElements);
-		$this->set('selectedAction', $this->request->action);
+		$this->set('selectedAction', $this->request->getParam('action'));
+
 	}
 
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
@@ -62,13 +63,13 @@ class AreasController extends AppController
 	}
 
 	public function ajaxGetArea($tableName, $targetModel, $id, $displayCountry = true) {
-		$this->viewBuilder()->layout('ajax');
+		$this->viewBuilder()->setLayout('ajax');
 		$rootId = null; // Root node
 
 		$condition = [];
 		$accessControlAreaCount = 0;
 		$AccessControl = $this->AccessControl;
-		$Table = TableRegistry::get($tableName);
+		$Table = TableRegistry::getTableLocator()->get($tableName);
 		if ($id == 0) {
 			$areaEntity = $Table->find()->first();
 		} else {
@@ -76,7 +77,7 @@ class AreasController extends AppController
 		}
 		$pathId = $areaEntity->id;
 		$hasChildren = false;
-		$formError = $this->request->query('formerror');
+		$formError = $this->request->getQuery('formerror');
 		if (!$displayCountry) {
 			if ($tableName == 'Area.AreaAdministratives') {
 				$worldId = $Table->find()->where([$Table->aliasField('parent_id') . ' IS NULL'])->first()->id;
@@ -161,7 +162,7 @@ class AreasController extends AppController
 			$hasChildren = true;
 		}
 
-		$levelAssociation = Inflector::singularize($Table->alias()).'Levels';
+		$levelAssociation = Inflector::singularize($Table->getAlias()).'Levels';
 
 		// Find the path of the tree from the children to the root
 		$path = $Table

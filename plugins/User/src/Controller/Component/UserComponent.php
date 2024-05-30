@@ -18,13 +18,13 @@ class UserComponent extends Component
 
     public $components = ['Area.Areapicker'];
     
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->controller = $this->_registry->getController();
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $event = parent::implementedEvents();
         $event['Controller.Page.onRenderPhotoContent'] = 'onRenderPhotoContent';

@@ -1,18 +1,22 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\I18n\Parser;
+
+use Cake\I18n\Translator;
 
 /**
  * Parses file in PO format
@@ -23,11 +27,10 @@ namespace Cake\I18n\Parser;
  */
 class PoFileParser
 {
-
     /**
      * Parses portable object (PO) format.
      *
-     * From http://www.gnu.org/software/gettext/manual/gettext.html#PO-Files
+     * From https://www.gnu.org/software/gettext/manual/gettext.html#PO-Files
      * we should be able to parse files having:
      *
      * white-space
@@ -59,27 +62,26 @@ class PoFileParser
      *
      * This parser sacrifices some features of the reference implementation the
      * differences to that implementation are as follows.
-     * - No support for comments spanning multiple lines.
      * - Translator and extracted comments are treated as being the same type.
      * - Message IDs are allowed to have other encodings as just US-ASCII.
      *
      * Items with an empty id are ignored.
      *
      * @param string $resource The file name to parse
-     *
      * @return array
      */
-    public function parse($resource)
+    public function parse(string $resource): array
     {
-        $stream = fopen($resource, 'r');
+        $stream = fopen($resource, 'rb');
 
         $defaults = [
             'ids' => [],
-            'translated' => null
+            'translated' => null,
         ];
 
         $messages = [];
         $item = $defaults;
+        $stage = [];
 
         while ($line = fgets($stream)) {
             $line = trim($line);
@@ -88,28 +90,49 @@ class PoFileParser
                 // Whitespace indicated current item is done
                 $this->_addMessage($messages, $item);
                 $item = $defaults;
+                $stage = [];
             } elseif (substr($line, 0, 7) === 'msgid "') {
                 // We start a new msg so save previous
                 $this->_addMessage($messages, $item);
+                /** @psalm-suppress InvalidArrayOffset */
                 $item['ids']['singular'] = substr($line, 7, -1);
+                $stage = ['ids', 'singular'];
             } elseif (substr($line, 0, 8) === 'msgstr "') {
                 $item['translated'] = substr($line, 8, -1);
+                $stage = ['translated'];
             } elseif (substr($line, 0, 9) === 'msgctxt "') {
                 $item['context'] = substr($line, 9, -1);
+                $stage = ['context'];
             } elseif ($line[0] === '"') {
-                $continues = isset($item['translated']) ? 'translated' : 'ids';
+                switch (count($stage)) {
+                    case 2:
+                        /**
+                         * @psalm-suppress PossiblyUndefinedArrayOffset
+                         * @psalm-suppress InvalidArrayOffset
+                         * @psalm-suppress PossiblyNullArrayAccess
+                         */
+                        $item[$stage[0]][$stage[1]] .= substr($line, 1, -1);
+                        break;
 
-                if (is_array($item[$continues])) {
-                    end($item[$continues]);
-                    $item[$continues][key($item[$continues])] .= substr($line, 1, -1);
-                } else {
-                    $item[$continues] .= substr($line, 1, -1);
+                    case 1:
+                        /**
+                         * @psalm-suppress PossiblyUndefinedArrayOffset
+                         * @psalm-suppress PossiblyInvalidOperand
+                         * @psalm-suppress PossiblyNullOperand
+                         */
+                        $item[$stage[0]] .= substr($line, 1, -1);
+                        break;
                 }
             } elseif (substr($line, 0, 14) === 'msgid_plural "') {
+                /** @psalm-suppress InvalidArrayOffset */
                 $item['ids']['plural'] = substr($line, 14, -1);
+                $stage = ['ids', 'plural'];
             } elseif (substr($line, 0, 7) === 'msgstr[') {
+                /** @var int $size */
                 $size = strpos($line, ']');
-                $item['translated'][(int)substr($line, 7, 1)] = substr($line, $size + 3, -1);
+                $row = (int)substr($line, 7, 1);
+                $item['translated'][$row] = substr($line, $size + 3, -1);
+                $stage = ['translated', $row];
             }
         }
         // save last item
@@ -126,27 +149,26 @@ class PoFileParser
      * @param array $item The current item being inspected
      * @return void
      */
-    protected function _addMessage(array &$messages, array $item)
+    protected function _addMessage(array &$messages, array $item): void
     {
         if (empty($item['ids']['singular']) && empty($item['ids']['plural'])) {
             return;
         }
 
         $singular = stripcslashes($item['ids']['singular']);
-        $context = isset($item['context']) ? $item['context'] : null;
+        $context = $item['context'] ?? null;
         $translation = $item['translated'];
 
         if (is_array($translation)) {
             $translation = $translation[0];
         }
 
-        $translation = stripcslashes($translation);
+        $translation = stripcslashes((string)$translation);
 
-        if ($context && (!isset($messages[$singular]) || is_array($messages[$singular]))) {
+        if ($context !== null && !isset($messages[$singular]['_context'][$context])) {
             $messages[$singular]['_context'][$context] = $translation;
-        }
-        if ($context === null) {
-            $messages[$singular] = $translation;
+        } elseif (!isset($messages[$singular]['_context'][''])) {
+            $messages[$singular]['_context'][''] = $translation;
         }
 
         if (isset($item['ids']['plural'])) {
@@ -156,7 +178,7 @@ class PoFileParser
 
             // Make sure every index is filled.
             end($plurals);
-            $count = key($plurals);
+            $count = (int)key($plurals);
 
             // Fill missing spots with an empty string.
             $empties = array_fill(0, $count + 1, '');
@@ -166,10 +188,10 @@ class PoFileParser
             $plurals = array_map('stripcslashes', $plurals);
             $key = stripcslashes($item['ids']['plural']);
 
-            if ($context) {
-                $messages[$key]['_context'][$context] = $plurals;
+            if ($context !== null) {
+                $messages[Translator::PLURAL_PREFIX . $key]['_context'][$context] = $plurals;
             } else {
-                $messages[$key] = $plurals;
+                $messages[Translator::PLURAL_PREFIX . $key]['_context'][''] = $plurals;
             }
         }
     }

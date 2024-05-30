@@ -35,7 +35,7 @@ class ArchiveStaffAttendancesShell extends Shell
     /**
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function initialize()
+    public function initialize(): void
     {
         //POCOR-7521-HINDOL cleaned the code even more
         parent::initialize();

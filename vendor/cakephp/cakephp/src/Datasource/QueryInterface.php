@@ -1,16 +1,18 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.1
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 
 namespace Cake\Datasource;
@@ -18,10 +20,27 @@ namespace Cake\Datasource;
 /**
  * The basis for every query object
  *
- * @package Cake\Datasource
+ * @method $this andWhere($conditions, array $types = []) Connects any previously defined set of conditions to the
+ *   provided list using the AND operator. {@see \Cake\Database\Query::andWhere()}
+ * @method \Cake\Datasource\EntityInterface|array firstOrFail() Get the first result from the executing query or raise an exception.
+ *   {@see \Cake\Database\Query::firstOrFail()}
  */
 interface QueryInterface
 {
+    /**
+     * Adds fields to be selected from datasource.
+     *
+     * Calling this function multiple times will append more fields to the list
+     * of fields to be selected.
+     *
+     * If `true` is passed in the second argument, any previous selections will
+     * be overwritten with the list passed in the first argument.
+     *
+     * @param \Cake\Database\ExpressionInterface|\Cake\ORM\Association|\Cake\ORM\Table|callable|array|string $fields Fields.
+     * @param bool $overwrite whether to reset fields with passed list or not
+     * @return $this
+     */
+    public function select($fields, bool $overwrite = false);
 
     /**
      * Returns a key => value array representing a single aliased field
@@ -33,9 +52,9 @@ interface QueryInterface
      *
      * @param string $field The field to alias
      * @param string|null $alias the alias used to prefix the field
-     * @return array
+     * @return array<string, string>
      */
-    public function aliasField($field, $alias = null);
+    public function aliasField(string $field, ?string $alias = null): array;
 
     /**
      * Runs `aliasField()` for each field in the provided list and returns
@@ -43,9 +62,9 @@ interface QueryInterface
      *
      * @param array $fields The fields to alias
      * @param string|null $defaultAlias The default alias
-     * @return array
+     * @return array<string, string>
      */
-    public function aliasFields($fields, $defaultAlias = null);
+    public function aliasFields(array $fields, ?string $defaultAlias = null): array;
 
     /**
      * Fetch the results for this query.
@@ -58,7 +77,7 @@ interface QueryInterface
      *
      * @return \Cake\Datasource\ResultSetInterface
      */
-    public function all();
+    public function all(): ResultSetInterface;
 
     /**
      * Populates or adds parts to current query clauses using an array.
@@ -96,7 +115,7 @@ interface QueryInterface
      *  ->limit(10)
      * ```
      *
-     * @param array $options list of query clauses to apply new parts to.
+     * @param array<string, mixed> $options list of query clauses to apply new parts to.
      * @return $this
      */
     public function applyOptions(array $options);
@@ -114,10 +133,10 @@ interface QueryInterface
      * a single query.
      *
      * @param string $finder The finder method to use.
-     * @param array $options The options for the finder.
-     * @return $this Returns a modified query.
+     * @param array<string, mixed> $options The options for the finder.
+     * @return static Returns a modified query.
      */
-    public function find($finder, array $options = []);
+    public function find(string $finder, array $options = []);
 
     /**
      * Returns the first result out of executing this query, if the query has not been
@@ -129,7 +148,7 @@ interface QueryInterface
      * $singleUser = $query->select(['id', 'username'])->first();
      * ```
      *
-     * @return mixed the first result from the ResultSet
+     * @return \Cake\Datasource\EntityInterface|array|null the first result from the ResultSet
      */
     public function first();
 
@@ -138,7 +157,7 @@ interface QueryInterface
      *
      * @return int
      */
-    public function count();
+    public function count(): int;
 
     /**
      * Sets the number of records that should be retrieved from database,
@@ -153,10 +172,10 @@ interface QueryInterface
      * $query->limit($query->newExpr()->add(['1 + 1'])); // LIMIT (1 + 1)
      * ```
      *
-     * @param int $num number of records to be returned
+     * @param \Cake\Database\ExpressionInterface|int|null $limit number of records to be returned
      * @return $this
      */
-    public function limit($num);
+    public function limit($limit);
 
     /**
      * Sets the number of records that should be skipped from the original result set
@@ -173,10 +192,10 @@ interface QueryInterface
      *  $query->offset($query->newExpr()->add(['1 + 1'])); // OFFSET (1 + 1)
      * ```
      *
-     * @param int $num number of records to be skipped
+     * @param \Cake\Database\ExpressionInterface|int|null $offset number of records to be skipped
      * @return $this
      */
-    public function offset($num);
+    public function offset($offset);
 
     /**
      * Adds a single or multiple fields to be used in the ORDER clause for this query.
@@ -202,7 +221,9 @@ interface QueryInterface
      * `ORDER BY title DESC, author_id ASC`
      *
      * ```
-     * $query->order(['title' => 'DESC NULLS FIRST'])->order('author_id');
+     * $query
+     *     ->order(['title' => $query->newExpr('DESC NULLS FIRST')])
+     *     ->order('author_id');
      * ```
      *
      * Will generate:
@@ -221,7 +242,7 @@ interface QueryInterface
      * If you need to set complex expressions as order conditions, you
      * should use `orderAsc()` or `orderDesc()`.
      *
-     * @param array|string $fields fields to be added to the list
+     * @param \Cake\Database\ExpressionInterface|\Closure|array|string $fields fields to be added to the list
      * @param bool $overwrite whether to reset order with field list or not
      * @return $this
      */
@@ -234,30 +255,39 @@ interface QueryInterface
      * in the record set you want as results. If empty the limit will default to
      * the existing limit clause, and if that too is empty, then `25` will be used.
      *
-     * Pages should start at 1.
+     * Pages must start at 1.
      *
      * @param int $num The page number you want.
      * @param int|null $limit The number of rows you want in the page. If null
      *  the current limit clause will be used.
      * @return $this
+     * @throws \InvalidArgumentException If page number < 1.
      */
-    public function page($num, $limit = null);
+    public function page(int $num, ?int $limit = null);
 
     /**
      * Returns an array representation of the results after executing the query.
      *
      * @return array
      */
-    public function toArray();
+    public function toArray(): array;
+
+    /**
+     * Set the default Table object that will be used by this query
+     * and form the `FROM` clause.
+     *
+     * @param \Cake\Datasource\RepositoryInterface $repository The default repository object to use
+     * @return $this
+     */
+    public function repository(RepositoryInterface $repository);
 
     /**
      * Returns the default repository object that will be used by this query,
      * that is, the repository that will appear in the from clause.
      *
-     * @param \Cake\Datasource\RepositoryInterface|null $repository The default repository object to use
-     * @return \Cake\Datasource\RepositoryInterface|$this
+     * @return \Cake\Datasource\RepositoryInterface|null $repository The default repository object to use
      */
-    public function repository(RepositoryInterface $repository = null);
+    public function getRepository(): ?RepositoryInterface;
 
     /**
      * Adds a condition or set of conditions to be used in the WHERE clause for this
@@ -340,8 +370,8 @@ interface QueryInterface
      *  $query
      *  ->where(['title !=' => 'Hello World'])
      *  ->where(function ($exp, $query) {
-     *      $or = $exp->or_(['id' => 1]);
-     *      $and = $exp->and_(['id >' => 2, 'id <' => 10]);
+     *      $or = $exp->or(['id' => 1]);
+     *      $and = $exp->and(['id >' => 2, 'id <' => 10]);
      *  return $or->add($and);
      *  });
      * ```
@@ -366,10 +396,10 @@ interface QueryInterface
      * If you use string conditions make sure that your values are correctly quoted.
      * The safest thing you can do is to never use string conditions.
      *
-     * @param string|array|callable|null $conditions The conditions to filter on.
-     * @param array $types associative array of type names used to bind values to query
+     * @param \Closure|array|string|null $conditions The conditions to filter on.
+     * @param array<string, string> $types Associative array of type names used to bind values to query
      * @param bool $overwrite whether to reset conditions with passed list or not
      * @return $this
      */
-    public function where($conditions = null, $types = [], $overwrite = false);
+    public function where($conditions = null, array $types = [], bool $overwrite = false);
 }

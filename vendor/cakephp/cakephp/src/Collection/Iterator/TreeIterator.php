@@ -1,19 +1,22 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Collection\Iterator;
 
+use Cake\Collection\CollectionInterface;
 use Cake\Collection\CollectionTrait;
 use RecursiveIterator;
 use RecursiveIteratorIterator;
@@ -22,9 +25,8 @@ use RecursiveIteratorIterator;
  * A Recursive iterator used to flatten nested structures and also exposes
  * all Collection methods
  */
-class TreeIterator extends RecursiveIteratorIterator
+class TreeIterator extends RecursiveIteratorIterator implements CollectionInterface
 {
-
     use CollectionTrait;
 
     /**
@@ -41,8 +43,11 @@ class TreeIterator extends RecursiveIteratorIterator
      * @param int $mode Iterator mode.
      * @param int $flags Iterator flags.
      */
-    public function __construct(RecursiveIterator $items, $mode = RecursiveIteratorIterator::SELF_FIRST, $flags = 0)
-    {
+    public function __construct(
+        RecursiveIterator $items,
+        int $mode = RecursiveIteratorIterator::SELF_FIRST,
+        int $flags = 0
+    ) {
         parent::__construct($items, $mode, $flags);
         $this->_mode = $mode;
     }
@@ -77,9 +82,9 @@ class TreeIterator extends RecursiveIteratorIterator
      *      });
      * ```
      *
-     * @param string|callable $valuePath The property to extract or a callable to return
+     * @param callable|string $valuePath The property to extract or a callable to return
      * the display value
-     * @param string|callable|null $keyPath The property to use as iteration key or a
+     * @param callable|string|null $keyPath The property to use as iteration key or a
      * callable returning the key value.
      * @param string $spacer The string to use for prefixing the values according to
      * their depth in the tree

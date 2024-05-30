@@ -1,20 +1,22 @@
 <?php
+declare(strict_types=1);
+
 /**
  * ValidationRule.
  *
  * Provides the Model validation logic.
  *
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         2.2.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Validation;
 
@@ -26,20 +28,19 @@ use InvalidArgumentException;
  */
 class ValidationRule
 {
-
     /**
      * The method to be called for a given scope
      *
-     * @var string|callable
+     * @var callable|string
      */
     protected $_rule;
 
     /**
      * The 'on' key
      *
-     * @var string
+     * @var callable|string
      */
-    protected $_on = null;
+    protected $_on;
 
     /**
      * The 'last' key
@@ -53,7 +54,7 @@ class ValidationRule
      *
      * @var string
      */
-    protected $_message = null;
+    protected $_message;
 
     /**
      * Key under which the object or class where the method to be used for
@@ -73,7 +74,7 @@ class ValidationRule
     /**
      * Constructor
      *
-     * @param array $validator [optional] The validator properties
+     * @param array<string, mixed> $validator [optional] The validator properties
      */
     public function __construct(array $validator = [])
     {
@@ -86,9 +87,9 @@ class ValidationRule
      *
      * @return bool
      */
-    public function isLast()
+    public function isLast(): bool
     {
-        return (bool)$this->_last;
+        return $this->_last;
     }
 
     /**
@@ -97,15 +98,15 @@ class ValidationRule
      * it is assumed that the rule failed and the error message was given as a result.
      *
      * @param mixed $value The data to validate
-     * @param array $providers associative array with objects or class names that will
+     * @param array<string, mixed> $providers Associative array with objects or class names that will
      * be passed as the last argument for the validation method
-     * @param array $context A key value list of data that could be used as context
+     * @param array<string, mixed> $context A key value list of data that could be used as context
      * during validation. Recognized keys are:
-     * - newRecord: (boolean) whether or not the data to be validated belongs to a
+     * - newRecord: (boolean) whether the data to be validated belongs to a
      *   new record
      * - data: The full data that was passed to the validation process
      * - field: The name of the field that is being processed
-     * @return bool|string
+     * @return array|string|bool
      * @throws \InvalidArgumentException when the supplied rule is not a valid
      * callable for the configured scope
      */
@@ -127,15 +128,19 @@ class ValidationRule
         }
 
         if (!$isCallable) {
-            $message = 'Unable to call method "%s" in "%s" provider for field "%s"';
-            throw new InvalidArgumentException(
-                sprintf($message, $this->_rule, $this->_provider, $context['field'])
+            /** @psalm-suppress PossiblyInvalidArgument */
+            $message = sprintf(
+                'Unable to call method "%s" in "%s" provider for field "%s"',
+                $this->_rule,
+                $this->_provider,
+                $context['field']
             );
+            throw new InvalidArgumentException($message);
         }
 
         if ($this->_pass) {
-            $args = array_merge([$value], $this->_pass, [$context]);
-            $result = call_user_func_array($callable, $args);
+            $args = array_values(array_merge([$value], $this->_pass, [$context]));
+            $result = $callable(...$args);
         } else {
             $result = $callable($value, $context);
         }
@@ -150,16 +155,16 @@ class ValidationRule
     /**
      * Checks if the validation rule should be skipped
      *
-     * @param array $context A key value list of data that could be used as context
+     * @param array<string, mixed> $context A key value list of data that could be used as context
      * during validation. Recognized keys are:
-     * - newRecord: (boolean) whether or not the data to be validated belongs to a
+     * - newRecord: (boolean) whether the data to be validated belongs to a
      *   new record
      * - data: The full data that was passed to the validation process
      * - providers associative array with objects or class names that will
      *   be passed as the last argument for the validation method
      * @return bool True if the ValidationRule should be skipped
      */
-    protected function _skip($context)
+    protected function _skip(array $context): bool
     {
         if (!is_string($this->_on) && is_callable($this->_on)) {
             $function = $this->_on;
@@ -169,9 +174,8 @@ class ValidationRule
 
         $newRecord = $context['newRecord'];
         if (!empty($this->_on)) {
-            if ($this->_on === 'create' && !$newRecord || $this->_on === 'update' && $newRecord) {
-                return true;
-            }
+            return ($this->_on === Validator::WHEN_CREATE && !$newRecord)
+                || ($this->_on === Validator::WHEN_UPDATE && $newRecord);
         }
 
         return false;
@@ -180,20 +184,20 @@ class ValidationRule
     /**
      * Sets the rule properties from the rule entry in validate
      *
-     * @param array $validator [optional]
+     * @param array<string, mixed> $validator [optional]
      * @return void
      */
-    protected function _addValidatorProps($validator = [])
+    protected function _addValidatorProps(array $validator = []): void
     {
         foreach ($validator as $key => $value) {
-            if (!isset($value) || empty($value)) {
+            if (empty($value)) {
                 continue;
             }
             if ($key === 'rule' && is_array($value) && !is_callable($value)) {
                 $this->_pass = array_slice($value, 1);
                 $value = array_shift($value);
             }
-            if (in_array($key, ['rule', 'on', 'message', 'last', 'provider', 'pass'])) {
+            if (in_array($key, ['rule', 'on', 'message', 'last', 'provider', 'pass'], true)) {
                 $this->{"_$key"} = $value;
             }
         }
@@ -205,11 +209,10 @@ class ValidationRule
      * @param string $property The name of the property to retrieve.
      * @return mixed
      */
-    public function get($property)
+    public function get(string $property)
     {
         $property = '_' . $property;
-        if (isset($this->{$property})) {
-            return $this->{$property};
-        }
+
+        return $this->{$property} ?? null;
     }
 }

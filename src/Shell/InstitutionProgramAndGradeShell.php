@@ -10,7 +10,7 @@ use Cake\Utility\Text;
 class InstitutionProgramAndGradeShell extends Shell
 {
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
     }

@@ -6,15 +6,14 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use App\Model\Table\AppTable;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Behavior;
-use Cake\Network\Session;
+use Cake\Http\Session;
 
 class StudentBehavioursTable extends AppTable {
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
-
 		$this->belongsTo('Students', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('StudentBehaviourCategories', ['className' => 'Student.StudentBehaviourCategories']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
@@ -22,6 +21,10 @@ class StudentBehavioursTable extends AppTable {
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']); //POCOR-7488
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);//POCOR-7488
 		$this->belongsTo('StudentBehaviourClassifications', ['className' => 'Student.StudentBehaviourClassifications']);//POCOR-7557
+		$this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Behaviours' =>['id', 'institution_id']
+            ]
+        ]);
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $settings) {
@@ -36,7 +39,7 @@ class StudentBehavioursTable extends AppTable {
 	public function beforeFind(Event $event, Query $query, $options) 
 	{
 		//$userData = $this->Session->read();
-		if (isset($this->controller->name) && $this->controller->name == 'Profiles' && $this->request->query['type'] == 'student') {
+		if ($this->controller->getName() != null && $this->controller->getName() == 'Profiles' && $this->request->getQuery('type' == 'student')) {
 			//if ($this->Session->read('Auth.User.is_guardian') == 1) {
 			if ($_SESSION['Auth']['User']['is_guardian'] == 1) {
 				$userData = $this->Session->read();
@@ -61,8 +64,8 @@ class StudentBehavioursTable extends AppTable {
 		} 
 
 		/*POCOR-6267 starts*/
-	    if (isset($this->controller->name) && $this->controller->name == 'GuardianNavs') {
-	    	$session = $this->request->session();
+	    if ($this->controller->getName()!= null && $this->controller->getName() == 'GuardianNavs') {
+	    	$session = $this->request->getSession();
 	        $studentId = $session->read('Student.Students.id');
 	    }/*POCOR-6267 ends*/ 
 	    if(!empty($studentId)){ //POCOR-7196
@@ -83,13 +86,13 @@ class StudentBehavioursTable extends AppTable {
 				'controller' => 'Institutions',
 				'action' => 'StudentBehaviours',
 				'view',
-				$this->paramsEncode(['id' => $entity->id]),
+				$this->paramsEncode(['id' => $entity->id, 'institution_id'=> $entity->institution->id]),
 				'institution_id' => $entity->institution->id,
 			];
 			$buttons['view']['url'] = $url;
 
 			// POCOR-1893 unset the view button on profiles controller
-			if ($this->controller->name == 'Profiles') {
+			if ($this->controller->getName() == 'Profiles') {
 				unset($buttons['view']);
 			}
 			// end POCOR-1893
@@ -100,7 +103,11 @@ class StudentBehavioursTable extends AppTable {
 
 	private function setupTabElements() {
 		$options['type'] = 'student';
-		$tabElements = $this->controller->getAcademicTabElements($options);
+		//$tabElements = $this->controller->getAcademicTabElements($options);
+		$tabElements = $this->getAcademicTabElements($options);
+		if($this->controller->getName() == 'GuardianNavs' || $this->controller->getName() == 'Directories') {
+			$tabElements = $this->controller->getAcademicTabElements($options);
+		}
 		$this->controller->set('tabElements', $tabElements);
 		$alias = 'Behaviours';
 		$this->controller->set('selectedAction', $alias);
@@ -109,4 +116,36 @@ class StudentBehavioursTable extends AppTable {
 	public function indexAfterAction(Event $event, $data) {
 		$this->setupTabElements();
 	}
+
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'institution_id') {
+            return __('Institution');
+        } elseif ($field == 'date_of_behaviour') {
+            return __('Date Of Behaviour');
+        } elseif ($field == 'time_of_behaviour') {
+            return __('Time Of Behaviour');
+        } elseif ($field == 'student_behaviour_category_id') {
+            return __('Student Behaviour Category');
+        } elseif ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'status_id') {
+            return __('Status');
+        } elseif ($field == 'assignee_id') {
+            return __('Assignee');
+        } elseif ($field == 'student_behaviour_classification_id') {
+            return __('Student Behaviour Classification');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

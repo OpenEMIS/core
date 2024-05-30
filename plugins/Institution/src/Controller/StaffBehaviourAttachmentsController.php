@@ -7,16 +7,20 @@ use App\Controller\PageController;
 
 class StaffBehaviourAttachmentsController extends PageController
 {
-    public function initialize()
+    public function initialize(): void
     {
+        $this->viewBuilder()->setTemplatePath('Page');
+        $this->viewBuilder()->disableAutoLayout();
         parent::initialize();
         $this->Page->disable(['search']);
         $this->Page->enable(['download']);
+        $this->viewBuilder()->setTemplatePath('Page'); //POCOR-8074-6
+        $this->viewBuilder()->disableAutoLayout(); //POCOR-8074-6
     }
 
     public function beforeFilter(Event $event)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID();
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
         $institutionName = $session->read('Institution.Institutions.name');
@@ -48,7 +52,7 @@ class StaffBehaviourAttachmentsController extends PageController
         // // set header
         $page->setHeader($institutionName . ' - ' . __('Attachments'));
 
-        $query = $this->request->query['querystring'];
+        $query = $this->request->getQuery['querystring'];
 
         $this->setupTabElements($encodedInstitutionId, $query);
     }
@@ -137,7 +141,7 @@ class StaffBehaviourAttachmentsController extends PageController
 
     private function getInstitutionID()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $insitutionIDFromSession = $session->read('Institution.Institutions.id');
         $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
         $encodedInstitutionID = isset($this->request->params['institutionId']) ?

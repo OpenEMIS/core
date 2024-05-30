@@ -1,0 +1,124 @@
+@charset "UTF-8";
+
+@import "../general/variables.scss";
+@import "../general/classes.scss";
+@import "~primeng/resources/primeng.min.css";
+
+/* Tooltip V1.1.0 */
+
+$tooltipThemes: (kdx-tooltip-info, $infoColor),
+(kdx-tooltip-error, $errorColor),
+(kdx-tooltip-warning, $warningColor),
+(kdx-tooltip-custom, $successColor),
+(kdx-tooltip-default, #000000);
+
+.kdx-tooltip {
+    font-size: $bodyTextSize;
+    padding: $padding5 $padding10;
+}
+
+@each $tooltipType,
+$color in $tooltipThemes {
+    .kdx-tooltip .#{$tooltipType} {
+        color:#{$color};
+    }
+
+    .ui-tooltip.#{$tooltipType} {
+        max-width: 500px;
+
+        @media #{$tabletPortrait} {
+            max-width: 300px;
+        }
+
+        @media #{$mobileLandscape} {
+            max-width: 200px;
+        }
+
+        .ui-tooltip-text {
+            background-color: #{$color};
+            color: $whiteColor;
+            font-size: $bodyTextSize;
+            padding: $padding5 $padding10;
+            font-family: $bodyFont !important;
+        }
+
+        &.ui-tooltip-right .ui-tooltip-arrow {
+            border-right-color: #{$color};
+        }
+
+        &.ui-tooltip-left .ui-tooltip-arrow {
+            border-left-color: #{$color};
+        }
+
+        &.ui-tooltip-top .ui-tooltip-arrow {
+            border-top-color: #{$color};
+        }
+
+        &.ui-tooltip-bottom .ui-tooltip-arrow {
+            border-bottom-color: #{$color};
+        }
+
+        .tooltip-list {
+            margin: $noMargin;
+            list-style-type: disc;
+            padding-left: $padding15;
+            padding-top: 3px;
+
+            li {
+                padding-bottom: 3px;
+                line-height: 15px;
+            }
+        }
+    }
+
+    .rtl {
+        .ui-tooltip.#{$tooltipType} {
+            .ui-tooltip-text {
+                font-size: $textSizeS;
+            }
+            .tooltip-list {
+                padding-right: $padding15;
+                padding-left: $noPadding;
+            }
+        }
+    }
+}
+
+.ui-tooltip {
+    &.ui-tooltip-top-right .ui-tooltip-arrow,
+    &.ui-tooltip-bottom-right .ui-tooltip-arrow {
+        left: 10px !important;
+    }
+    &.ui-tooltip-top-left .ui-tooltip-arrow,
+    &.ui-tooltip-bottom-left .ui-tooltip-arrow {
+        right: 10px !important;
+        margin-right: -0.25em;
+        margin-left: 0 !important;
+        left: auto !important;
+    }
+}
+
+.rtl {
+    .form-row {
+        .tooltip-container {
+            @media #{$tabletPortrait} {
+                right: auto;
+                left: 0;
+            }
+        }
+    }
+}
+
+/* Specific to example tooltip html*/
+
+.tooltip-example-container {
+    .description {
+        font-size: $bodyTextSize;
+    }
+    .position-center {
+        @media #{$tabletLandscape} {
+            display: flex;
+            justify-content: center;
+        }
+    }
+}

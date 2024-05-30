@@ -45,6 +45,10 @@ class Random
      */
     static function string($length)
     {
+        if (!$length) {
+            return '';
+        }
+
         if (version_compare(PHP_VERSION, '7.0.0', '>=')) {
             try {
                 return \random_bytes($length);
@@ -93,7 +97,10 @@ class Random
                 $fp = @fopen('/dev/urandom', 'rb');
             }
             if ($fp !== true && $fp !== false) { // surprisingly faster than !is_bool() or is_resource()
-                return fread($fp, $length);
+                $temp = fread($fp, $length);
+                if (strlen($temp) == $length) {
+                    return $temp;
+                }
             }
             // method 3. pretty much does the same thing as method 2 per the following url:
             // https://github.com/php/php-src/blob/7014a0eb6d1611151a286c0ff4f2238f92c120d6/ext/mcrypt/mcrypt.c#L1391
@@ -144,7 +151,10 @@ class Random
                 (isset($_POST) ? phpseclib_safe_serialize($_POST) : '') .
                 (isset($_GET) ? phpseclib_safe_serialize($_GET) : '') .
                 (isset($_COOKIE) ? phpseclib_safe_serialize($_COOKIE) : '') .
-                phpseclib_safe_serialize($GLOBALS) .
+                // as of PHP 8.1 $GLOBALS can't be accessed by reference, which eliminates
+                // the need for phpseclib_safe_serialize. see https://wiki.php.net/rfc/restrict_globals_usage
+                // for more info
+                (version_compare(PHP_VERSION, '8.1.0', '>=') ? serialize($GLOBALS) : phpseclib_safe_serialize($GLOBALS)) .
                 phpseclib_safe_serialize($_SESSION) .
                 phpseclib_safe_serialize($_OLD_SESSION)
             ));

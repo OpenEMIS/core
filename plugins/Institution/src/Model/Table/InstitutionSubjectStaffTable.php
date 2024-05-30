@@ -20,7 +20,7 @@ class InstitutionSubjectStaffTable extends AppTable
 {
     private $isSubjectExistData;
     use OptionsTrait;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
@@ -31,7 +31,7 @@ class InstitutionSubjectStaffTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Staff.afterSave'] = 'staffAfterSave';
@@ -51,7 +51,7 @@ class InstitutionSubjectStaffTable extends AppTable
         if (empty($existingRecord)) {
             $todayDate = Time::now()->format('Y-m-d');
 
-            $InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+            $InstitutionStaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
             $institutionStaff = $InstitutionStaffTable
                                 ->find()
                                 ->where([
@@ -126,8 +126,8 @@ class InstitutionSubjectStaffTable extends AppTable
 
     public function staffAfterSave(Event $event, $staff)
     {
-        $StaffStatusesTable = TableRegistry::get('Staff.StaffStatuses');
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $StaffStatusesTable = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
 
         // if ($staff->dirty('end_date')) {
             $selectConditions = [];
@@ -281,6 +281,7 @@ class InstitutionSubjectStaffTable extends AppTable
         {
             $query->where([$this->aliasField('institution_id') => $institutionId]);
         }
+        return $query;
     }
 
     public function findBySecurityAccess(Query $query, array $options)
@@ -288,7 +289,7 @@ class InstitutionSubjectStaffTable extends AppTable
         if (array_key_exists('id', $options['user'])) {
             $userId = $options['user']['id'];
 
-            $Institutions = TableRegistry::get('Institution.Institutions');
+            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 
             $institutionQuery = $Institutions->find()
                 ->select([
@@ -451,10 +452,10 @@ class InstitutionSubjectStaffTable extends AppTable
     
     public function getRoleEditPermissionAccessForAllSubjects($userId, $institutionId)
     {
-        $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
+        $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
         $userAccessRoles = implode(', ', $roles);
         
-        $QueryResult = TableRegistry::get('SecurityRoleFunctions')->find()              
+        $QueryResult = TableRegistry::getTableLocator()->get('SecurityRoleFunctions')->find()              
                 ->innerJoin(['SecurityFunctions' => 'security_functions'], [
                     [
                         'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
@@ -536,8 +537,8 @@ class InstitutionSubjectStaffTable extends AppTable
                        ->hydrate(false)
                         ->formatResults(function (ResultSetInterface $results) {
                         return $results->map(function ($row) {
-                            $classSubject = TableRegistry::get('Institution.InstitutionClassSubjects');
-                            $subjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+                            $classSubject = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
+                            $subjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
                             /**fetching institution subject's classed data*/
                             $classObj = $classSubject->find()
                                     ->select(['InstitutionClasses.name','InstitutionClasses.id'])

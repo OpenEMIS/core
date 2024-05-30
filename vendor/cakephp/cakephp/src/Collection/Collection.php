@@ -1,25 +1,25 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Collection;
 
 use ArrayIterator;
-use InvalidArgumentException;
+use Exception;
 use IteratorIterator;
-use LogicException;
 use Serializable;
-use Traversable;
 
 /**
  * A collection is an immutable list of elements with a handful of functions to
@@ -27,24 +27,18 @@ use Traversable;
  */
 class Collection extends IteratorIterator implements CollectionInterface, Serializable
 {
-
     use CollectionTrait;
 
     /**
      * Constructor. You can provide an array or any traversable object
      *
-     * @param array|\Traversable $items Items.
+     * @param iterable $items Items.
      * @throws \InvalidArgumentException If passed incorrect type for items.
      */
-    public function __construct($items)
+    public function __construct(iterable $items)
     {
         if (is_array($items)) {
             $items = new ArrayIterator($items);
-        }
-
-        if (!($items instanceof Traversable)) {
-            $msg = 'Only an array or \Traversable is allowed for Collection';
-            throw new InvalidArgumentException($msg);
         }
 
         parent::__construct($items);
@@ -56,9 +50,19 @@ class Collection extends IteratorIterator implements CollectionInterface, Serial
      *
      * @return string
      */
-    public function serialize()
+    public function serialize(): string
     {
         return serialize($this->buffered());
+    }
+
+    /**
+     * Returns an array for serializing this of this object.
+     *
+     * @return array
+     */
+    public function __serialize(): array
+    {
+        return $this->buffered()->toArray();
     }
 
     /**
@@ -67,35 +71,64 @@ class Collection extends IteratorIterator implements CollectionInterface, Serial
      * @param string $collection The serialized collection
      * @return void
      */
-    public function unserialize($collection)
+    public function unserialize($collection): void
     {
         $this->__construct(unserialize($collection));
     }
 
     /**
-     * Throws an exception.
+     * Rebuilds the Collection instance.
      *
-     * Issuing a count on a Collection can have many side effects, some making the
-     * Collection unusable after the count operation.
-     *
+     * @param array $data Data array.
      * @return void
-     * @throws \LogicException
      */
-    public function count()
+    public function __unserialize(array $data): void
     {
-        throw new LogicException('You cannot issue a count on a Collection.');
+        $this->__construct($data);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return int
+     */
+    public function count(): int
+    {
+        $traversable = $this->optimizeUnwrap();
+
+        if (is_array($traversable)) {
+            return count($traversable);
+        }
+
+        return iterator_count($traversable);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return int
+     */
+    public function countKeys(): int
+    {
+        return count($this->toArray());
     }
 
     /**
      * Returns an array that can be used to describe the internal state of this
      * object.
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function __debugInfo()
+    public function __debugInfo(): array
     {
+        try {
+            $count = $this->count();
+        } catch (Exception $e) {
+            $count = 'An exception occurred while getting count';
+        }
+
         return [
-            'count' => iterator_count($this),
+            'count' => $count,
         ];
     }
 }

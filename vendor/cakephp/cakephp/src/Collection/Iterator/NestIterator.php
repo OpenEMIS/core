@@ -1,16 +1,18 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Collection\Iterator;
 
@@ -24,22 +26,21 @@ use Traversable;
  */
 class NestIterator extends Collection implements RecursiveIterator
 {
-
     /**
      * The name of the property that contains the nested items for each element
      *
-     * @var string|callable
+     * @var callable|string
      */
     protected $_nestKey;
 
     /**
      * Constructor
      *
-     * @param array|\Traversable $items Collection items.
-     * @param string|callable $nestKey the property that contains the nested items
+     * @param iterable $items Collection items.
+     * @param callable|string $nestKey the property that contains the nested items
      * If a callable is passed, it should return the childrens for the passed item
      */
-    public function __construct($items, $nestKey)
+    public function __construct(iterable $items, $nestKey)
     {
         parent::__construct($items);
         $this->_nestKey = $nestKey;
@@ -48,13 +49,13 @@ class NestIterator extends Collection implements RecursiveIterator
     /**
      * Returns a traversable containing the children for the current item
      *
-     * @return \Traversable
+     * @return \RecursiveIterator
      */
-    public function getChildren()
+    public function getChildren(): RecursiveIterator
     {
         $property = $this->_propertyExtractor($this->_nestKey);
 
-        return new self($property($this->current()), $this->_nestKey);
+        return new static($property($this->current()), $this->_nestKey);
     }
 
     /**
@@ -63,7 +64,7 @@ class NestIterator extends Collection implements RecursiveIterator
      *
      * @return bool
      */
-    public function hasChildren()
+    public function hasChildren(): bool
     {
         $property = $this->_propertyExtractor($this->_nestKey);
         $children = $property($this->current());

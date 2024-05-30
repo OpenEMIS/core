@@ -15,11 +15,12 @@ use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\Utility\Text;
+use Cake\Log\Log;
+use Cake\ORM\Locator\TableLocator;
 
 class InstitutionSubjectStudentsTable extends AppTable
 {
-    use UserTrait;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
 
         parent::initialize($config);
@@ -55,7 +56,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Students.afterSave'] = 'studentsAfterSave';
@@ -391,6 +392,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         $institution_subject_id = self::getFromArray($options, 'institution_subject_id'); //60
         $education_grade_id = self::getFromArray($options, 'education_grade_id');
         $archive = self::getFromArray($options, 'archive');
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         if($archive){
             $archive = true;
         }
@@ -406,12 +408,13 @@ class InstitutionSubjectStudentsTable extends AppTable
 //        $this->log('$where', 'debug');
 //        $this->log($where, 'debug');
         if(!$archive){
-            $where[$this->StudentStatuses->aliasField('code NOT IN ')] = ['TRANSFERRED', 'WITHDRAWN', 'REPEATED'];
+            $where[$StudentStatuses->aliasField('code NOT IN ')] = ['TRANSFERRED', 'WITHDRAWN', 'REPEATED'];
         }
         $query = $this->getBasicAssessmentQuery($query, $where, $assessment_id);
         $query = $this->getBasicAssessmentStatusesQuery($query);
         $query = $this->getBasicAssessmentUsersQuery($query);
         $query = $this->getBasicAssessmentMarksQuery($query, $options, $archive);
+        // echo "<pre>";print_r('sfs');die;
         return $query;
     }
 
@@ -685,7 +688,7 @@ class InstitutionSubjectStudentsTable extends AppTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
 
-        if ($entity->isNew() || $entity->dirty('student_status_id')) {
+        if ($entity->isNew() || $entity->getDirty('student_status_id')) {
             $id = $entity->institution_subject_id;
             $countMale = $this->getMaleCountBySubject($id);
             $countFemale = $this->getFemaleCountBySubject($id);
@@ -696,7 +699,6 @@ class InstitutionSubjectStudentsTable extends AppTable
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
-
         $res = $this->InstitutionSubjects->find()->select(['InstitutionSubjects.id'])->join([
             'institution_subject_students' => [
                 'table' => 'institution_subject_students',
@@ -883,7 +885,8 @@ class InstitutionSubjectStudentsTable extends AppTable
     {
         if ($institution_subject_id) {
             if (!$education_subject_id) {
-                $institution_subject = self::getRelatedRecord('institution_subjects', $institution_subject_id);
+                $tableName = 'Institution.InstitutionSubjects';
+                $institution_subject = self::getRelatedRecord($tableName, $institution_subject_id);
                 $education_subject_id = $institution_subject['education_subject_id'];
             }
         }
@@ -899,7 +902,7 @@ class InstitutionSubjectStudentsTable extends AppTable
 
     private function getBasicAssessmentQuery(Query $query, array $where, $assessment_id)
     {
-        $AssessmentPeriods = TableRegistry::get('assessment_periods');
+        $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
 
         return $query
             ->select([
@@ -910,13 +913,14 @@ class InstitutionSubjectStudentsTable extends AppTable
                 'assessment_id' => $AssessmentPeriods->aliasField('assessment_id'),
                 'assessment_period_id' => $AssessmentPeriods->aliasField('id'),
             ])
+            ->contain('StudentStatuses')
             ->where($where)
             ->group([
                 $this->aliasField('student_id'),
                 $AssessmentPeriods->aliasField('id'),
             ])
             ->innerJoin(
-                [$AssessmentPeriods->alias() => $AssessmentPeriods->table()],
+                [$AssessmentPeriods->getAlias() => $AssessmentPeriods->getTable()],
                 [
                     $AssessmentPeriods->aliasField('assessment_id = ') . $assessment_id,
                 ]
@@ -949,18 +953,20 @@ class InstitutionSubjectStudentsTable extends AppTable
      */
     private function getBasicAssessmentUsersQuery(Query $query)
     {
+        $Users = TableRegistry::get('User.Users');
         $query =$query->contain('Users')
             ->select([
                 $this->aliasField('student_id'),
-                'first_name' => $this->Users->aliasField('first_name'),
-                'middle_name' => $this->Users->aliasField('middle_name'),
-                'third_name' => $this->Users->aliasField('third_name'),
-                'last_name' => $this->Users->aliasField('last_name'),
-                'preferred_name' => $this->Users->aliasField('preferred_name'),
-                'the_student_code' => $this->Users->aliasField('openemis_no'),
+                'first_name' => $Users->aliasField('first_name'),
+                'middle_name' => $Users->aliasField('middle_name'),
+                'third_name' => $Users->aliasField('third_name'),
+                'last_name' => $Users->aliasField('last_name'),
+                'preferred_name' => $Users->aliasField('preferred_name'),
+                'the_student_code' => $Users->aliasField('openemis_no'),
             ])->formatResults(function ($results) {
                 return $results->map(function ($row) {
-                    $row['the_student_name'] = $this->getUserName($row);
+                    // $row['the_student_name'] = $this->getUserName($row);
+                    $row['the_student_name'] = 'Only for testing';
                     return $row;
                 });
             });

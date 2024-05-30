@@ -5,10 +5,19 @@ namespace Mpdf\Image;
 class ImageTypeGuesser
 {
 
+	/**
+	 * @param string $data
+	 *
+	 * @return null|string
+	 */
 	public function guess($data)
 	{
 		if (in_array(substr($data, 6, 4), ['JFIF', 'Exif'], true) || strpos($data, chr(255) . chr(216)) === 0) { // 0xFF 0xD8	// mpDF 5.7.2
 			return 'jpeg';
+		}
+
+		if (in_array(substr($data, 0, 4), ['RIFF'], true)) {
+			return 'webp';
 		}
 
 		if (in_array(substr($data, 0, 6), ['GIF87a', 'GIF89a'], true)) {
