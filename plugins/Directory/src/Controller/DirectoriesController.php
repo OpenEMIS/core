@@ -354,6 +354,10 @@ class DirectoriesController extends AppController
         //POCOR-7231 :: Start
         $requestDataa = base64_decode($this->request->getQuery('queryString'));
         $requestDataa = json_decode($requestDataa, true);
+        if(empty($requestDataa) && isset($this->request->getParam('pass')[0])) {
+            $requestDataa = base64_decode($this->request->getParam('pass')[0]);
+            $requestDataa = json_decode($requestDataa, true);
+        }
         $UsersTable = TableRegistry::get('User.Users');
         $InstitutionTable = TableRegistry::get('Institution.Institutions');
         $UserData = $UsersTable->find('all',['conditions'=>['id'=>$requestDataa['student_id']]])->first();
