@@ -69,6 +69,10 @@ Router::scope('/', function (RouteBuilder $routes) {
     $routes->connect('/Notices/*', ['controller' => 'Notices', 'action' => 'Notices']);
     $routes->connect('/Credentials/*', ['controller' => 'Credentials', 'action' => 'Credentials']);
     $routes->connect('/Labels/*', ['controller' => 'Labels', 'action' => 'Labels']);
+    $routes->connect('/Calendars/*', ['controller' => 'Calendars', 'action' => 'Calendars']);
+    $routes->connect('/ScholarshipRecipients/*', ['controller' => 'Scholarship', 'action' => 'ScholarshipRecipients']);
+    $routes->connect('/Themes/*', ['controller' => 'Themes', 'action' => 'Themes']);
+    $routes->connect('/Profiles/ScholarshipsDirectory/*', ['controller' => 'ScholarshipsDirectory', 'action' => 'ScholarshipsDirectory']);
     $routes->connect('/Locales/*', ['controller' => 'Locales', 'action' => 'Locales']);
     $routes->connect('/LocaleContents/*', ['controller' => 'LocaleContents', 'action' => 'LocaleContents']);
     $routes->connect('/:controller/:action/*', ['action' => 'Healths', '_method' => 'GET'], ['pass' => ['key']]);
@@ -78,7 +82,12 @@ Router::scope('/', function (RouteBuilder $routes) {
      */
     $routes->connect('', ['controller' => '','action' => 'profiles']);
     $routes->connect('/pages/*', ['controller' => 'Pages', 'action' => 'display']);
-
+    $routes->scope('/institutions', function ($routes) {
+        $routes->setExtensions(['json']);
+        $routes->connect('/class-details/:id', ['controller' => 'InstitutionClasses', 'action' => 'classDetails'])
+            ->setPass(['id'])
+            ->setMethods(['GET']);
+    });
 
 
     /**
@@ -101,7 +110,7 @@ Router::scope('/', function (RouteBuilder $routes) {
 });
 
 Router::scope('/Installer', ['plugin' => 'Installer', 'controller' => 'Installer'], function ($route) {
-    // $route->extensions(['json']);
+    $route->setExtensions(['json']);
     $route->connect('/:action');
 });
 
@@ -121,7 +130,7 @@ Router::scope('/restful', [], function ($routes) {
     });
 
     $routes->scope('/', ['controller' => 'Restful'], function ($routes) {
-        // $routes->extensions(['json', 'xml']);
+        $routes->setExtensions(['json', 'xml']);
         $routes->connect( '/', ['action' => 'nothing']);
 
         // Regex ([v][\d+]|[v][\d+][.\d]+|latest), start with a lowercase v followed by the following format (v1 or v1.1 or v1.1.1 ..) or latest
@@ -217,7 +226,7 @@ Router::scope('/restful', [], function ($routes) {
 // For restful session
 Router::scope('/session', ['plugin' => 'Restful'], function ($routes) {
     $routes->scope('/', ['controller' => 'Session'], function ($routes) {
-        // $routes->extensions(['json']);
+        $routes->setExtensions(['json']);
 
         $routes->connect('/:key', ['action' => 'check', '_method' => 'GET'], ['pass' => ['key']]);
         $routes->connect('/:key', ['action' => 'read', '_method' => 'GET'], ['pass' => ['key']]);
@@ -226,13 +235,13 @@ Router::scope('/session', ['plugin' => 'Restful'], function ($routes) {
     });
 });
 
-Router::scope('/Areas', ['plugin' => 'Area'], function ($routes) {
-    $routes->scope('/', ['controller' => 'Areas'], function ($routes) {
-        // $routes->extensions(['json']);
+// Router::scope('/Areas', ['plugin' => 'Area'], function ($routes) {
+//     $routes->scope('/', ['controller' => 'Areas'], function ($routes) {
+//         $routes->setExtensions(['json']);
 
-        $routes->connect('/:key', ['action' => 'index', '_method' => 'GET'], ['pass' => ['key']]);
-    });
-});
+//         $routes->connect('/:key', ['action' => 'index', '_method' => 'GET'], ['pass' => ['key']]);
+//     });
+// });
 
 Router::scope('/', function ($routes) {
     $routes->connect('/Profile', ['controller' => 'Profiles', 'action' => 'Healths']);

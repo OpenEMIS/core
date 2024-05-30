@@ -291,14 +291,14 @@ class View implements EventDispatcherInterface
      *
      * @var string
      */
-    public const TYPE_ELEMENT = 'element';
+    public const TYPE_ELEMENT = 'Element';
 
     /**
-     * Constant for view file type 'layout'
+     * Constant for view file type 'Layout'
      *
      * @var string
      */
-    public const TYPE_LAYOUT = 'layout';
+    public const TYPE_LAYOUT = 'Layout';
 
     /**
      * Constant for type used for App::path().
