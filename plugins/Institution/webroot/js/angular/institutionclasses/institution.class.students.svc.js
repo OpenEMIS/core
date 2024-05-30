@@ -58,6 +58,8 @@ function InstitutionClassStudentsSvc($http, $q, $filter, KdDataSvc) {
 
     function getUnassignedStudent(classId) {
         var success = function(response, deferred) {
+            console.log("getUnassignedStudent")
+            console.log(response)
             deferred.resolve(response.data.data);
         };
         return Users.find('InstitutionStudentsNotInClass', {institution_class_id: classId}).ajax({success: success, defer: true});

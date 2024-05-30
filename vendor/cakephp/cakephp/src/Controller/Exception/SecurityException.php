@@ -1,18 +1,20 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Controller\Exception;
 
-use Cake\Network\Exception\BadRequestException;
+use Cake\Http\Exception\BadRequestException;
 
 /**
  * Security exception - used when SecurityComponent detects any issue with the current request
@@ -21,6 +23,7 @@ class SecurityException extends BadRequestException
 {
     /**
      * Security Exception type
+     *
      * @var string
      */
     protected $_type = 'secure';
@@ -28,16 +31,16 @@ class SecurityException extends BadRequestException
     /**
      * Reason for request blackhole
      *
-     * @var string
+     * @var string|null
      */
-    protected $_reason = null;
+    protected $_reason;
 
     /**
      * Getter for type
      *
      * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return $this->_type;
     }
@@ -48,7 +51,7 @@ class SecurityException extends BadRequestException
      * @param string $message Exception message
      * @return void
      */
-    public function setMessage($message)
+    public function setMessage(string $message): void
     {
         $this->message = $message;
     }
@@ -57,19 +60,21 @@ class SecurityException extends BadRequestException
      * Set Reason
      *
      * @param string|null $reason Reason details
-     * @return void
+     * @return $this
      */
-    public function setReason($reason = null)
+    public function setReason(?string $reason = null)
     {
         $this->_reason = $reason;
+
+        return $this;
     }
 
     /**
      * Get Reason
      *
-     * @return string
+     * @return string|null
      */
-    public function getReason()
+    public function getReason(): ?string
     {
         return $this->_reason;
     }

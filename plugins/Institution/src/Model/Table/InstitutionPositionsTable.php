@@ -10,7 +10,7 @@ use Cake\ORM\Entity;
 use Cake\I18n\Date;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Collection\Collection;
 use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\ControllerActionTable;
@@ -26,7 +26,7 @@ class InstitutionPositionsTable extends ControllerActionTable
     const IN_PROGRESS = 2;
     const DONE = 3;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -41,6 +41,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         $this->hasMany('InstitutionStaff', ['className' => 'Institution.Staff', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffPositions', ['className' => 'Staff.Positions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffTransferIn', ['className' => 'Institution.StaffTransferIn', 'foreignKey' => 'new_institution_position_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->addBehavior('ControllerAction.FileUpload');
         $this->addBehavior('Workflow.Workflow');
         $this->setDeleteStrategy('restrict');
         $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
@@ -51,6 +52,10 @@ class InstitutionPositionsTable extends ControllerActionTable
         $this->addBehavior('Excel', [
             'pages' => ['index']
         ]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Positions' =>['id']
+            ]
+        ]);
     }
 
     public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -60,7 +65,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             ->matching('StaffPositionTitles.SecurityRoles')
             ->where([$this->aliasField('id') => $transferredTo])
             ->select(['security_role_id' => 'SecurityRoles.id'])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->first();
         $securityRole = $securityRole['security_role_id'];
 
@@ -75,10 +80,10 @@ class InstitutionPositionsTable extends ControllerActionTable
         );
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         $validator
             ->add('position_no', 'ruleUnique', [
                 'rule' => 'validateUnique',
@@ -202,6 +207,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         $staffTransferInCount = $this->StaffTransferIn->find()
             ->where(['new_institution_position_id' => $entity->id])
             ->count();
+
         // Check if any associated records exist
         $associatedRecordsExist = ($institutionStaffCount > 0) || ($staffTransferInCount > 0);
         //print_r($associatedRecordsExist);exit;
@@ -262,7 +268,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                         }
                     }
                 } catch (InvalidPrimaryKeyException $ex) {
-                    Log::write('error', __METHOD__ . ': ' . $this->Institutions->alias() . ' primary key not found (' . $entity->institution_id . ')');
+                    Log::write('error', __METHOD__ . ': ' . $this->Institutions->getAlias() . ' primary key not found (' . $entity->institution_id . ')');
                 }
             }
         }POCOR-5069 Ends*/
@@ -291,7 +297,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldPositionNo(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPositionNo(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['attr']['value'] = $this->getUniquePositionNo();
@@ -323,8 +329,8 @@ class InstitutionPositionsTable extends ControllerActionTable
             $requestData = $request->data;
 
             if ($action == 'add') {
-                if (isset($requestData[$this->alias()]) && !empty($requestData[$this->alias()]['staff_position_title_id'])) {
-                    $positionTitleId = $requestData[$this->alias()]['staff_position_title_id'];
+                if (isset($requestData[$this->getAlias()]) && !empty($requestData[$this->getAlias()]['staff_position_title_id'])) {
+                    $positionTitleId = $requestData[$this->getAlias()]['staff_position_title_id'];
                     $positionTypeId = $this->StaffPositionTitles->get($positionTitleId)->type;
 
                     if ($positionTypeId == 1) { // teaching
@@ -388,7 +394,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             $types = $this->getSelectOptions('Staff.position_types');
             $staffPositionData = $this->StaffPositionTitles->find()
                 ->select(['name', 'type'])
-                ->where([$this->StaffPositionTitles->aliasField($this->StaffPositionTitles->primaryKey()) => $entity->staff_position_title_id])
+                ->where([$this->StaffPositionTitles->aliasField($this->StaffPositionTitles->getPrimaryKey()) => $entity->staff_position_title_id])
                 ->first();
             if (!empty($staffPositionData)) {
                 $type = (array_key_exists($staffPositionData->type, $types))? $types[$staffPositionData->type]: null;
@@ -412,7 +418,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         $titles = new ArrayObject();
         if (in_array($action, ['add'])) {
             $userId = $this->Auth->user('id');
-            $institutionId = $this->Session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionID();
             if ($this->AccessControl->isAdmin()) {
                 $userId = null;
                 $roles = [];
@@ -430,7 +436,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                         $this->StaffPositionTitles->aliasField('type') => 'DESC',
                         $this->StaffPositionTitles->aliasField('order'),
                     ])
-                    ->autoFields(true)
+                    ->enableAutoFields(true)
                     ->toArray();
 
             // Filter by role previlege
@@ -443,7 +449,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             // Adding the opt group
             $titles = [];
             foreach ($staffTitleOptions as $title) {
-                $type = __($types[$title->type]);
+                $type = __((string)$types[$title->type]);
                 $titles[$type][$title->id] = $title->name;
             }
         } else {
@@ -470,7 +476,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         $currentStamp = time();
 
         if (is_null($institutionId)) {
-            $institutionId = $this->Session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionID();
         }
 
         $latestPositionEntity = $this
@@ -544,9 +550,9 @@ class InstitutionPositionsTable extends ControllerActionTable
                 $extra['OR'] = [$this->StaffPositionTitles->aliasField('name').' LIKE' => '%' . $search . '%'];
             }
         }
-        if (is_null($this->request->query('sort'))) {
-            $this->request->query['sort'] = 'created';
-            $this->request->query['direction'] = 'desc';
+        if (is_null($this->request->getQuery('sort'))) {
+            $this->request->getQuery['sort'] = 'created';
+            $this->request->getQuery['direction'] = 'desc';
         }
     }
 
@@ -579,8 +585,8 @@ class InstitutionPositionsTable extends ControllerActionTable
         $currentStaff = $this->getCurrentStaff($id)->toArray();
         
         $session = $this->Session;
-        $Staff = TableRegistry::get('institution_staff');
-        $StaffPositionGrades = TableRegistry::get('staff_position_grades');
+        $Staff = TableRegistry::get('Report.InstitutionStaff');
+        $StaffPositionGrades = TableRegistry::get('Institution.StaffPositionGrades');
         if (empty($currentStaff[0])) {
             $value = '-';
         } else {
@@ -597,12 +603,12 @@ class InstitutionPositionsTable extends ControllerActionTable
                                     'staff_position_grade_id'=> $Staff->aliasField('staff_position_grade_id'),
                                     'staff_position_grade_name'=> $StaffPositionGrades->aliasField('name')
                                 ])
-                                ->LeftJoin([$StaffPositionGrades->alias() => $StaffPositionGrades->table()],
+                                ->LeftJoin([$StaffPositionGrades->getAlias() => $StaffPositionGrades->getTable()],
                                         [
                                             $StaffPositionGrades->aliasField('id') . ' = '. $Staff->aliasField('staff_position_grade_id')
                                         ])
                                 ->where([
-                                    $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                                    $Staff->aliasField('institution_id') => $this->getInstitutionID(),
                                     $Staff->aliasField('institution_position_id') => $id,
                                     $Staff->aliasField('staff_id') => $staffId
                                 ])->first();
@@ -622,7 +628,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         $currentStaff = $this->getCurrentStaff($id)->toArray();
         
         $session = $this->Session;
-        $Staff = TableRegistry::get('institution_staff');
+        $Staff = TableRegistry::get('Report.InstitutionStaff');
         if (empty($currentStaff[0])) {
             $value = '';
         } else {
@@ -639,7 +645,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                                     'is_homeroom'=> $Staff->aliasField('is_homeroom'),
                                 ])
                                 ->where([
-                                    $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                                    $Staff->aliasField('institution_id') => $this->getInstitutionID(),
                                     $Staff->aliasField('institution_position_id') => $id,
                                     $Staff->aliasField('staff_id') => $staffId
                                 ])->first();
@@ -656,8 +662,7 @@ class InstitutionPositionsTable extends ControllerActionTable
     {
         $extra['auto_contain'] = false;
         $extra['auto_order'] = false;
-        $institutionStaff = TableRegistry::get('institution_staff');
-
+        $institutionStaff = TableRegistry::get('Report.InstitutionStaff');
         $query
             ->select([
                 $this->aliasField('id'),
@@ -666,7 +671,6 @@ class InstitutionPositionsTable extends ControllerActionTable
                 $this->aliasField('staff_position_title_id'),
                 //$this->aliasField('staff_position_grade_id'),
                 $this->aliasField('assignee_id'),
-               
                 $this->aliasField('created')
             ])
             ->contain([
@@ -701,9 +705,10 @@ class InstitutionPositionsTable extends ControllerActionTable
                     ]
                 ]
                 
-            ])->leftJoin([$institutionStaff->alias() => $institutionStaff->table()],
+            ])->leftJoin([$institutionStaff->getAlias() => $institutionStaff->getTable()],
                 [$institutionStaff->aliasField('institution_position_id = ') . $this->aliasField('id')])
             ->distinct([$this->aliasField('position_no')]);
+            
         $sortList = ['position_no', 'StaffPositionTitles.order'/*,POCOR-5069 'StaffPositionGrades.order'*/, 'created','Assignees.first_name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
@@ -769,13 +774,13 @@ class InstitutionPositionsTable extends ControllerActionTable
         ]);
 
         $session = $this->Session;
-        $pass = $this->request->param('pass');
+        $pass = $this->request->getParam('pass');
         if (is_array($pass) && !empty($pass)) {
             $id = $this->paramsDecode($pass[1])['id'];
         }
         if (!isset($id)) {
-            if ($session->check($this->registryAlias() . '.id')) {
-                $id = $session->read($this->registryAlias() . '.id');
+            if ($session->check($this->getRegistryAlias() . '.id')) {
+                $id = $session->read($this->getRegistryAlias() . '.id');
             }
         }
 
@@ -814,7 +819,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             ])
             ->contain(['Users', 'StaffStatuses'])
             ->where([
-                $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                $Staff->aliasField('institution_id') => $this->getInstitutionID(),
                 $Staff->aliasField('institution_position_id') => $id,
                 $Staff->aliasField('end_date').' IS NOT NULL',
                 $Staff->aliasField('end_date').' < DATE(NOW())'
@@ -843,7 +848,7 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function transferOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $query->where([$this->aliasField('institution_id') => $institutionId]);
     }
 
@@ -869,7 +874,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                     'SUM('.$StaffTable->aliasField('FTE') .') > ' => (1-$selectedFTE)
                 ]
             ])
-            ->hydrate(false);
+            ->enableHydration(false);
 
         if (!empty($endDate)) {
             $endDate = new Date($endDate);
@@ -913,7 +918,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                 //->innerJoinWith('StaffPositionGrades')//POCOR-5069
                 ->where($positionConditions)
                 ->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order'])
-                ->autoFields(true)
+                ->enableAutoFields(true)
                 ->toArray();
         } else {
             $staffPositionsOptions = [];
@@ -941,7 +946,7 @@ class InstitutionPositionsTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->getRequest()->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -967,8 +972,8 @@ class InstitutionPositionsTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->StaffPositionTitles->alias(), $this->Institutions->alias(), $this->CreatedUser->alias(),'Assignees'])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->contain([$this->StaffPositionTitles->getAlias(), $this->Institutions->getAlias(), $this->CreatedUser->getAlias(),'Assignees'])
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
             ->where([$this->aliasField('assignee_id') => $userId,
@@ -1010,7 +1015,7 @@ class InstitutionPositionsTable extends ControllerActionTable
      * POCOR-6820 change in query get position number and associated staff
     */
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $query
             ->select([
                'id'=> $this->aliasField('id'),
@@ -1221,7 +1226,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             ])
             ->contain(['Users'])
             ->where([
-                $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                $Staff->aliasField('institution_id') => $this->getInstitutionID(),
                 $Staff->aliasField('institution_position_id') => $id,
                 'OR' => [
                     $Staff->aliasField('end_date').' IS NULL',
@@ -1246,7 +1251,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         $Staff = $this->Institutions->Staff;
         $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
         $UserIdentities = TableRegistry::get('User.Identities');
-        $StaffPositionGrades = TableRegistry::get('staff_position_grades');
+        $StaffPositionGrades = TableRegistry::get('Institution.StaffPositionGrades');
         $entity->fte = '';
         $entity->openemis_no = '';
         $entity->staff_name = '';
@@ -1271,7 +1276,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                         ->contain(['Users'])
                         ->leftJoinWith('StaffStatuses')
                         ->where([
-                            $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                            $Staff->aliasField('institution_id') => $this->getInstitutionID(),
                             $Staff->aliasField('institution_position_id') => $position_id,
                         ])->first();
                 if(!empty($currentStaff)){
@@ -1284,7 +1289,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                     
                     $UserIdentitiesIds = $UserIdentities->find()->select(['number'=>'Identities.number','name'=>'IdentityTypes.name'])
                                         ->leftJoin(
-                                    [$IdentityTypes->alias() => $IdentityTypes->table()],
+                                    [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
                                     [
                                         $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
                                     ])
@@ -1316,7 +1321,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         $session = $this->Session;
         $position_id = $entity->id;
         $Staff = $this->Institutions->Staff;
-        $StaffPositionGrades = TableRegistry::get('staff_position_grades');
+        $StaffPositionGrades = TableRegistry::get('Institution.StaffPositionGrades');
         $entity->staff_position_grade_name = '';
         
         $currentStaff = $Staff
@@ -1326,12 +1331,12 @@ class InstitutionPositionsTable extends ControllerActionTable
                             'staff_position_grade_id'=>$Staff->aliasField('staff_position_grade_id'),
                             'staff_position_grade_name'=>  $StaffPositionGrades->aliasField('name')
                         ])
-                        ->LeftJoin([$StaffPositionGrades->alias() => $StaffPositionGrades->table()],
+                        ->LeftJoin([$StaffPositionGrades->getAlias() => $StaffPositionGrades->getTable()],
                                 [
                                     $StaffPositionGrades->aliasField('id') . ' = '. $Staff->aliasField('staff_position_grade_id')
                                 ])
                         ->where([
-                            $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                            $Staff->aliasField('institution_id') => $this->getInstitutionID(),
                             $Staff->aliasField('institution_position_id') => $position_id,
                         ])->first();
                 if(!empty($currentStaff)){
@@ -1353,19 +1358,19 @@ class InstitutionPositionsTable extends ControllerActionTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Institutions > Positions';
-            $workflowModelsTable = TableRegistry::get('workflow_models');
-            $workflowStepsTable = TableRegistry::get('workflow_steps');
-            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $workflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+            $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
                             'workflow_id'=>$Workflows->aliasField('id'),
                             'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
-                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                            ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                                 [
                                     $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
                                 ])
@@ -1380,19 +1385,17 @@ class InstitutionPositionsTable extends ControllerActionTable
                             ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $request->session();
-            if ($session->check('Institution.Institutions.id')) {
-                $institutionId = $session->read('Institution.Institutions.id');
-            }
-            $institutionId = $institutionId;
+            $session = $request->getSession();
+            $institutionId = $this->getInstitutionID();
+            
             $assigneeOptions = [];
             if (!is_null($stepId)) {
-                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
                 $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
                 if (!empty($stepRoles)) {
-                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                    $Areas = TableRegistry::get('Area.Areas');
-                    $Institutions = TableRegistry::get('Institution.Institutions');
+                    $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                    $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+                    $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                     if ($isSchoolBased) {
                         if (is_null($institutionId)) {                        
                             Log::write('debug', 'Institution Id not found.');
@@ -1442,21 +1445,22 @@ class InstitutionPositionsTable extends ControllerActionTable
      * POCOR-6971 change in POCOR-7221
      * add shift dropdown
     */
-    public function onUpdateFieldShiftId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldShiftId(Event $event, array $attr, $action, ServerRequest $request)
     {   
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
         $this->currentAcademicPeriod = $this->AcademicPeriods->get($currentAcademicPeriodId);
         $currentAcademicPeriodIdd = $this->currentAcademicPeriod->id;
-        $institutionShifts = TableRegistry::get('institution_shifts');
-        $shiftOptions = TableRegistry::get('shift_options'); //POCOR-7233 add shift name
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
+        $shiftOptions = TableRegistry::getTableLocator()->get('Institution.ShiftOptions'); //POCOR-7233 add shift name
+        $institutionId = $this->getInstitutionID();
+
         $option = [];
-        $optionAll = $institutionShifts->find('all')->select(['stime'=>$institutionShifts->aliasField('start_time'),'          etime'=>$institutionShifts->aliasField('end_time'),
+        $optionAll = $institutionShifts->find('all')->select(['stime'=>$institutionShifts->aliasField('start_time'),'etime'=>$institutionShifts->aliasField('end_time'),
                       'shift_option_id'=>$institutionShifts->   aliasField('shift_option_id'),
                       'name'=>$shiftOptions->aliasField('name')
                     ])
-                    ->leftJoin([$shiftOptions->alias() => $shiftOptions->table()],
+                    ->leftJoin([$shiftOptions->getAlias() => $shiftOptions->getTable()],
                     [$shiftOptions->aliasField('id = ') . $institutionShifts->aliasField('shift_option_id')])
                     ->where([$institutionShifts->aliasField('location_institution_id')=>$institutionId, $institutionShifts->aliasField('academic_period_id')=>$currentAcademicPeriodIdd])->toArray();
         foreach($optionAll as $key => $result){
@@ -1487,6 +1491,16 @@ class InstitutionPositionsTable extends ControllerActionTable
                 return __('Grade');
             case 'staff_position_title_description':
                 return __('Description');
+            case 'assignee_id':
+                return __('Assignee');
+            case 'shift_id':
+                return __('Shift');
+            case 'status_id':
+                return __('Status');
+            case 'homeroom_teacher':
+                return __('Homeroom Teacher');
+            case '':
+                return __('Status');
 
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
@@ -1510,11 +1524,18 @@ class InstitutionPositionsTable extends ControllerActionTable
     {
         if ($entity->has('staff_position_title')) {
             $value = $entity->staff_position_title->file_name;
-            $ControllerActionHelper = $event->subject();
-            $htmlHelper = $event->subject()->Html;
+            $ControllerActionHelper = $event->getSubject();
+            $htmlHelper = $event->getSubject()->Html;
             $url = ['plugin' => 'FieldOption', 'controller' => 'FieldOptions', 'action' => 'StaffPositionTitles', 'download'];
             $url[] = $this->paramsEncode(['id' => $entity->staff_position_title->id]);
-            return $htmlHelper->link(__($value), $url);
+            // Check if $value is not null before attempting translation
+            if ($value !== null) {
+                return $htmlHelper->link(__($value), $url);
+            } else {
+                // Handle the case where $value is null (e.g., provide a default value)
+                return $htmlHelper->link(__(''), $url);
+            }
+
         }
     }
     //POCOR-7758 end

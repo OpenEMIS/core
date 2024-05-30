@@ -3,14 +3,14 @@ namespace Infrastructure\Model\Table;
 
 use ArrayObject;
 use CustomField\Model\Table\CustomFormsTable;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 
 class RoomCustomFormsTable extends CustomFormsTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $config['extra'] = [
+        /*$config['extra'] = [
             'fieldClass' => [
                 'className' => 'Infrastructure.RoomCustomFields',
                 'joinTable' => 'infrastructure_custom_forms_fields',
@@ -27,16 +27,25 @@ class RoomCustomFormsTable extends CustomFormsTable
                 'through' => 'Infrastructure.RoomCustomFormsFilters',
                 'dependent' => true
             ]
-        ];
-        $this->table('infrastructure_custom_forms');
+        ];*/
+
+        $this->belongsToMany('RoomCustomFields', [
+            'className' => 'Infrastructure.RoomTypes',
+            'joinTable' => 'infrastructure_custom_forms_filters',
+            'foreignKey' => 'infrastructure_custom_form_id',
+            'targetForeignKey' => 'infrastructure_custom_filter_id',
+            'through' => 'Infrastructure.RoomCustomFormsFilters',
+            'dependent' => true
+        ]);
+        $this->setTable('infrastructure_custom_forms');
         parent::initialize($config);
         $this->addBehavior('Infrastructure.Pages', ['module' => 'Room']);
         $this->setDeleteStrategy('restrict');
     }
 
-    public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $selectedModule = !is_null($request->query('module')) ? $request->query('module') : '';
+        $selectedModule = !is_null($request->getQuery('module')) ? $request->getQuery('module') : '';
         $module = $this->CustomModules
             ->find()
             ->where([$this->CustomModules->aliasField('id') => $selectedModule])

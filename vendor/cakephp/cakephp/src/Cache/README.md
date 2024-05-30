@@ -29,7 +29,7 @@ Cache::config('default', [
 
 // Using a fully namespaced name.
 Cache::config('long', [
-    'className' => 'Cake\Cache\Engine\ApcEngine',
+    'className' => \Cake\Cache\Engine\ApcuEngine::class,
     'duration' => '+1 week',
     'prefix' => 'my_app_'
 ]);
@@ -39,7 +39,7 @@ $object = new FileEngine($config);
 Cache::config('other', $object);
 ```
 
-You can now read a write from the cache:
+You can now read and write from the cache:
 
 ```php
 $data = Cache::remember('my_cache_key', function () {
@@ -52,6 +52,6 @@ the callback will be executed and the returned data will be cached for future ca
 
 ## Documentation
 
-Please make sure you check the [official documentation](http://book.cakephp.org/3.0/en/core-libraries/caching.html)
+Please make sure you check the [official documentation](https://book.cakephp.org/4/en/core-libraries/caching.html)
 
 

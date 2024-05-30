@@ -18,9 +18,9 @@ class CustomReportsTable extends AppTable
 
     private $formatOptions = [];
 
-	public function initialize(array $config)
+	public function initialize(array $config): void
 	{
-		$this->table('reports');
+		$this->setTable('reports');
 		parent::initialize($config);
 
         $this->addBehavior('Report.ReportList');
@@ -40,7 +40,7 @@ class CustomReportsTable extends AppTable
         ];
 	}
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onExcelTemplateBeforeGenerate'] = 'onExcelTemplateBeforeGenerate';
@@ -50,7 +50,7 @@ class CustomReportsTable extends AppTable
         return $events;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator->notEmpty('feature');
@@ -58,10 +58,10 @@ class CustomReportsTable extends AppTable
 
 	public function beforeAction(Event $event)
 	{
-		$controllerName = $this->controller->name;
+		$controllerName = $this->controller->getName();
 		$reportName = __('Custom');
 
-		$this->controller->Navigation->substituteCrumb($this->alias(), $reportName);
+		$this->controller->Navigation->substituteCrumb($this->getAlias(), $reportName);
 		$this->controller->set('contentHeader', __($controllerName).' - '.$reportName);
 	}
 
@@ -71,8 +71,8 @@ class CustomReportsTable extends AppTable
         $this->ControllerAction->field('feature', ['type' => 'select', 'select' => false]);
        // $this->ControllerAction->field('format');
 
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $id = $this->request->data[$this->alias()]['feature'];
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $id = $this->request->getData($this->getAlias())['feature'];
             $customReportData = $this->find()
                 ->where([$this->aliasField('id') => $id])
                 ->first();
@@ -133,7 +133,7 @@ class CustomReportsTable extends AppTable
                 // other filters
                 foreach ($filters as $field => $filterData) {
                     if ($toReset) {
-                        unset($this->request->data[$this->alias()][$field]);
+                        unset($this->request->getData($this->getAlias())[$field]);
                     }
                     if (isset($this->request->data["submit"]) && $field == $this->request->data["submit"]) {
                         $toReset = true;
@@ -145,7 +145,7 @@ class CustomReportsTable extends AppTable
 
                     if ($fieldType == 'select' || $fieldType == 'chosenSelect') {
                         // get options
-                        $queryParams = $this->request->data[$this->alias()];
+                        $queryParams = $this->request->getData($this->getAlias());
                         $queryParams['user_id'] = $this->Auth->user('id');
                         $queryParams['super_admin'] = $this->Auth->user('super_admin');
                         $byaccess = false;
@@ -177,8 +177,8 @@ class CustomReportsTable extends AppTable
                             $fieldParams['attr'] = ['multiple' => false];
                         }
 
-                        if (!(isset($this->request->data[$this->alias()][$field]))) {
-                            $this->request->data[$this->alias()][$field] = key($options);
+                        if (!(isset($this->request->getData($this->getAlias())[$field]))) {
+                            $this->request->getData($this->getAlias())[$field] = key($options);
                         }
                     }
 
@@ -195,11 +195,11 @@ class CustomReportsTable extends AppTable
         }
     }
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+	public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         ini_set('memory_limit', '-1');
         if ($action == 'add') {
-            $queryParams = isset($this->request->data[$this->alias()]) ? $this->request->data[$this->alias()] : [];
+            $queryParams = (null !== $this->request->getData($this->getAlias())) ? $this->request->getData($this->getAlias()) : [];
             $queryParams['user_id'] = $this->Auth->user('id');
             $queryParams['super_admin'] = $this->Auth->user('super_admin');
 
@@ -228,10 +228,12 @@ class CustomReportsTable extends AppTable
 
             $attr['options'] = $reportOptions;
             $attr['onChangeReload'] = true;
-            if (!(isset($this->request->data[$this->alias()]['feature']))) {
+            $option = $this->controller->getFeatureOptions($this->getAlias());
+            if (!(isset($this->request->getData($this->getAlias())['feature']))) {
                 $option = $attr['options'];
                 reset($option);
-                $this->request->data[$this->alias()]['feature'] = key($option);
+                $defaultFeatureValue = key($option);
+                $this->request = $this->request->withData($this->getAlias() . '.feature', $defaultFeatureValue);
             }
             return $attr;
         }
@@ -240,8 +242,8 @@ class CustomReportsTable extends AppTable
     public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            if (isset($this->request->data[$this->alias()]['feature']) && !empty($this->request->data[$this->alias()]['feature'])) {
-                $reportId = $this->request->data[$this->alias()]['feature'];
+            if (isset($this->request->getData($this->getAlias())['feature']) && !empty($this->request->getData($this->getAlias())['feature'])) {
+                $reportId = $this->request->getData($this->getAlias())['feature'];
                 $format = $this->get($reportId)->format;
 
                 $key = $this->formatOptions[$format]['key'];
@@ -280,7 +282,7 @@ class CustomReportsTable extends AppTable
     {
         $str = $this->get($params['feature'])->name;
         $reportName = str_replace(' ', '_', $str);
-        $this->behaviors()->get('ExcelReport')->config([
+        $this->behaviors()->get('ExcelReport')->setConfig([
             'filename' => $reportName
         ]);
     }
@@ -413,10 +415,10 @@ class CustomReportsTable extends AppTable
                                 'valueField' => 'programme_grade_name'])
                             ->find('visible')
                             ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
-                            ->LeftJoin([$grades->alias() => $grades->table()],[
+                            ->LeftJoin([$grades->getAlias() => $grades->getTable()],[
                                 $grades->aliasField('education_grade_id').' = ' . $EducationGrades->aliasField('id')
                             ])
-                            ->LeftJoin([$institutions->alias() => $institutions->table()],[
+                            ->LeftJoin([$institutions->getAlias() => $institutions->getTable()],[
                                 $institutions->aliasField('id').' = ' . $grades->aliasField('institution_id')
                             ])
                             ->where($conditions)
@@ -460,6 +462,16 @@ class CustomReportsTable extends AppTable
             $attr['select'] = true;
             $attr['required'] = true;
             return $attr;
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }

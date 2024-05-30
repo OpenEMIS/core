@@ -1,28 +1,34 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.3.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Datasource;
 
-use Cake\ORM\TableRegistry;
+use Cake\Datasource\Locator\LocatorInterface;
+use Cake\ORM\Locator\TableLocator;
 use InvalidArgumentException;
 
+/**
+ * Class FactoryLocator
+ */
 class FactoryLocator
 {
     /**
      * A list of model factory functions.
      *
-     * @var callable[]
+     * @var array<callable|\Cake\Datasource\Locator\LocatorInterface>
      */
     protected static $_modelFactories = [];
 
@@ -30,12 +36,33 @@ class FactoryLocator
      * Register a callable to generate repositories of a given type.
      *
      * @param string $type The name of the repository type the factory function is for.
-     * @param callable $factory The factory function used to create instances.
+     * @param \Cake\Datasource\Locator\LocatorInterface|callable $factory The factory function used to create instances.
      * @return void
      */
-    public static function add($type, callable $factory)
+    public static function add(string $type, $factory): void
     {
-        static::$_modelFactories[$type] = $factory;
+        if ($factory instanceof LocatorInterface) {
+            static::$_modelFactories[$type] = $factory;
+
+            return;
+        }
+
+        if (is_callable($factory)) {
+            deprecationWarning(
+                'Using a callable as a locator has been deprecated.'
+                . ' Use an instance of Cake\Datasource\Locator\LocatorInterface instead.'
+            );
+
+            static::$_modelFactories[$type] = $factory;
+
+            return;
+        }
+
+        throw new InvalidArgumentException(sprintf(
+            '`$factory` must be an instance of Cake\Datasource\Locator\LocatorInterface or a callable.'
+            . ' Got type `%s` instead.',
+            getTypeName($factory)
+        ));
     }
 
     /**
@@ -44,7 +71,7 @@ class FactoryLocator
      * @param string $type The name of the repository type to drop the factory for.
      * @return void
      */
-    public static function drop($type)
+    public static function drop(string $type): void
     {
         unset(static::$_modelFactories[$type]);
     }
@@ -53,13 +80,13 @@ class FactoryLocator
      * Get the factory for the specified repository type.
      *
      * @param string $type The repository type to get the factory for.
-     * @throws InvalidArgumentException If the specified repository type has no factory.
-     * @return callable The factory for the repository type.
+     * @throws \InvalidArgumentException If the specified repository type has no factory.
+     * @return \Cake\Datasource\Locator\LocatorInterface|callable The factory for the repository type.
      */
-    public static function get($type)
+    public static function get(string $type)
     {
         if (!isset(static::$_modelFactories['Table'])) {
-            static::$_modelFactories['Table'] = [TableRegistry::locator(), 'get'];
+            static::$_modelFactories['Table'] = new TableLocator();
         }
 
         if (!isset(static::$_modelFactories[$type])) {

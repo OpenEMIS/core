@@ -1,28 +1,30 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Routing\Exception;
 
-use Cake\Core\Exception\Exception;
+use Cake\Core\Exception\CakeException;
+use Throwable;
 
 /**
  * Exception raised when a URL cannot be reverse routed
  * or when a URL cannot be parsed.
  */
-class MissingRouteException extends Exception
+class MissingRouteException extends CakeException
 {
-
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     protected $_messageTemplate = 'A route matching "%s" could not be found.';
 
@@ -34,9 +36,14 @@ class MissingRouteException extends Exception
     protected $_messageTemplateWithMethod = 'A "%s" route matching "%s" could not be found.';
 
     /**
-     * {@inheritDoc}
+     * Constructor.
+     *
+     * @param array<string, mixed>|string $message Either the string of the error message, or an array of attributes
+     *   that are made available in the view, and sprintf()'d into Exception::$_messageTemplate
+     * @param int|null $code The code of the error, is also the HTTP status code for the error. Defaults to 404.
+     * @param \Throwable|null $previous the previous exception.
      */
-    public function __construct($message, $code = 404)
+    public function __construct($message, ?int $code = 404, ?Throwable $previous = null)
     {
         if (is_array($message)) {
             if (isset($message['message'])) {
@@ -45,6 +52,6 @@ class MissingRouteException extends Exception
                 $this->_messageTemplate = $this->_messageTemplateWithMethod;
             }
         }
-        parent::__construct($message, $code);
+        parent::__construct($message, $code, $previous);
     }
 }

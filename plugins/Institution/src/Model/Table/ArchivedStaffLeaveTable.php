@@ -153,10 +153,10 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
     public function getUserId()
     {
         $userId = null;
-        if (!is_null($this->request->query('user_id'))) {
-            $userId = $this->request->query('user_id');
+        if (!is_null($this->request->getQuery('user_id'))) {
+            $userId = $this->request->getQuery('user_id');
         } else {
-            $session = $this->request->session();
+            $session = $this->request->getSession()();
             if ($session->check('Staff.Staff.id')) {
                 $userId = $session->read('Staff.Staff.id');
             }

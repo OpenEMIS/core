@@ -8,20 +8,20 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\I18n\Time;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 use App\Model\Traits\OptionsTrait;
 use Cake\Http\Client;
-use Cake\Network\Session;
+use Cake\Http\Session;
 
 class UserNationalitiesTable extends ControllerActionTable {
     use OptionsTrait;
     use MessagesTrait;
 
-	public function initialize(array $config)
+	public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -34,12 +34,18 @@ class UserNationalitiesTable extends ControllerActionTable {
             'Students' => ['index', 'add'],
             'Staff' => ['index', 'add']
         ]);
+        $this->addBehavior('Institution.InstitutionTab',
+            ['implementedMethods' => [
+                'setUserTabElements' => 'setUserTabElements',
+            ],
+            ]);
         $this->addBehavior('User.SetupTab');
+        $this->addBehavior('User.UserTab');
         $this->addBehavior('User.CreateUser');//POCOR-7727
         $this->addBehavior('CompositeKey');
 	}
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
         $newEvent = [
             'Model.Users.afterSave' => 'afterSaveUsers'
@@ -52,9 +58,10 @@ class UserNationalitiesTable extends ControllerActionTable {
     public function afterSaveUsers(Event $event, Entity $entity)
     {
         //check whether the combination user and nationality exist
+        $userID = $this->getUserID();
         $query = $this->find()
                 ->where([
-                    $this->aliasField('security_user_id') => $entity->id,
+                    $this->aliasField('security_user_id') => $userID,
                     $this->aliasField('nationality_id') => $entity->nationality_id
                 ]);
 
@@ -68,7 +75,7 @@ class UserNationalitiesTable extends ControllerActionTable {
             $userNationalityEntity = $this->newEntity([
                 'preferred' => 1,
                 'nationality_id' => $entity->nationality_id,
-                'security_user_id' => $entity->id,
+                'security_user_id' => $userID,
                 'created_user_id' => 1,
                 'created' => new Time()
             ]);
@@ -93,8 +100,9 @@ class UserNationalitiesTable extends ControllerActionTable {
         $this->setupFields($entity);
     }
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
 		$validator
             ->add('nationality_id', 'notBlank', ['rule' => 'notBlank'])
             ->add('preferred', 'ruleValidatePreferredNationality', [
@@ -140,7 +148,12 @@ class UserNationalitiesTable extends ControllerActionTable {
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
-            if (!$this->exists([$this->aliasField('security_user_id') => $entity->security_user_id])) { // user does not have existing nationality record
+            $userID = $this->getUserID();
+            $entity['security_user_id'] = $userID;
+        }
+        if ($entity->isNew()) {
+            if (!$this->exists([$this->aliasField('security_user_id') =>
+                $entity->security_user_id])) { // user does not have existing nationality record
                 $entity->preferred = 1;
             }
         }
@@ -148,7 +161,7 @@ class UserNationalitiesTable extends ControllerActionTable {
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if ($entity->dirty('preferred')) {
+        if ($entity->getDirty('preferred')) {
             if ($entity->preferred == 1) { //if set as preferred
                 // update the rest of user nationality to not preferred
                 $this->updateAll(
@@ -241,7 +254,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         //         ])
         //         ->count();
 
-        $UserNationalities = TableRegistry::get('user_identities');
+        $UserNationalities = TableRegistry::getTableLocator()->get('User.Identities');
         $checkexistingNationalities = $UserNationalities->find()
             ->where([
                 $UserNationalities->aliasField('nationality_id') => $entity->nationality_id,
@@ -297,20 +310,17 @@ class UserNationalitiesTable extends ControllerActionTable {
     public function onUpdateFieldIdentityTypeId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            $userId = null;
-            $queryString = $this->getQueryString();
-            if (isset($queryString['security_user_id'])) {
-                $userId = $queryString['security_user_id'];
-            }
+            $userId = $this->getUserID();
+            $entity = $attr['entity'];
             if ($action == 'add') {
                 if(!empty($userId)){
                     //nationality_id
-                    if(!empty($request->query['nationality_id'])){
-                        $nationalityId = $request->query['nationality_id'];
+                    if(!empty($request->getQuery('nationality_id'))){
+                        $nationalityId = $request->getQuery('nationality_id');
                     }else{
-                        $nationalityId = $attr['entity']->nationality_id;
+                        $nationalityId = $entity->nationality_id;
                     }
-                    $IdentityTypes = TableRegistry::get('identity_types')->find('list',
+                    $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types')->find('list',
                                         ['keyField' => 'id','valueField' => 'name'
                                     ])->toArray();
 
@@ -336,8 +346,8 @@ class UserNationalitiesTable extends ControllerActionTable {
                 }
             } else if ($action == 'edit') {
                 if(!empty($userId)){
-                    $IdentityTypes = TableRegistry::get('identity_types');
-                    $nationality = TableRegistry::get('Nationalities');
+                    $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types');
+                    $nationality = TableRegistry::getTableLocator()->get('Nationalities');
                     $nationalityTable = $nationality
                                         ->find()
                                         ->select([
@@ -355,7 +365,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                                         )
                                         ->where([
                                             'Nationalities.default' => 1,
-                                            'Nationalities.id' => $attr['entity']->nationality_id
+                                            'Nationalities.id' => $entity->nationality_id
                                         ])
                                         ->first();
 
@@ -365,7 +375,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                         $attr['value'] = $nationalityTable->identity_types['id'];
                         $attr['attr']['value'] = $nationalityTable->identity_types['name'];
                     }else{
-                        $IdentityTypes = TableRegistry::get('identity_types')->find('list',
+                        $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types')->find('list',
                                             ['keyField' => 'id','valueField' => 'name'
                                         ])->toArray();
                         $attr['options'] = $IdentityTypes;
@@ -380,19 +390,15 @@ class UserNationalitiesTable extends ControllerActionTable {
     public function onUpdateFieldNumber(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            $userId = null;
-            $queryString = $this->getQueryString();
-            if (isset($queryString['security_user_id'])) {
-                $userId = $queryString['security_user_id'];
-            }
+            $userId = $this->getUserID();
 
-            $identity_number = !empty($request->query['number']) ? trim($request->query['number']) : '';
+            $identity_number = !empty($request->getQuery('number')) ? trim($request->getQuery('number')) : '';
             if ($action == 'add') {
                 $attr['attr']['value'] = $identity_number;
             } else if ($action == 'edit') {
                 if(!empty($userId)){
                     //first check nationality have default or not
-                    $nationalityTable = TableRegistry::get('Nationalities')
+                    $nationalityTable = TableRegistry::getTableLocator()->get('Nationalities')
                                     ->find()
                                     ->where([
                                         'Nationalities.default' => 1,
@@ -426,18 +432,14 @@ class UserNationalitiesTable extends ControllerActionTable {
 
     public function onUpdateFieldValidateNumber(Event $event, array $attr, $action, Request $request)
     {
-        $userId = null;
-        $queryString = $this->getQueryString();
-        if (isset($queryString['security_user_id'])) {
-            $userId = $queryString['security_user_id'];
-        }
-        $validate_number = !empty($request->query['validate_number']) ? $request->query['validate_number'] : 0;
+        $userId = $this->getUserID();
+        $validate_number = !empty($request->getQuery('validate_number')) ? $request->getQuery('validate_number') : 0;
         if ($action == 'add') {
             $attr['attr']['value'] = $validate_number;
         }  else if ($action == 'edit') {
             if(!empty($userId)){
                 //first check nationality have default or not
-                $nationalityTable = TableRegistry::get('Nationalities')
+                $nationalityTable = TableRegistry::getTableLocator()->get('Nationalities')
                                 ->find()
                                 ->where([
                                     'Nationalities.default' => 1,
@@ -461,11 +463,10 @@ class UserNationalitiesTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldNationalityId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNationalityId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $request->data['UserNationalities']['security_user_id'] = $this->securityUserId;//POCOR-8243
+        $user_id = $this->getUserID();
         if ($action == 'add' || $action == 'edit') {
-
             if ($action == 'add') {
                 $currentNationalities = $this
                                         ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
@@ -478,7 +479,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                                         ])
                                         ->toArray();
 
-                $nationalities = $this->NationalitiesLookUp->find('all')->find('list')->order(['order','name']);
+                $nationalities = $this->NationalitiesLookUp->find('all')->find('list')/*->order(['order','name'])*/;
 
                 if (!empty($currentNationalities)) {
                     $nationalities = $nationalities
@@ -529,20 +530,20 @@ class UserNationalitiesTable extends ControllerActionTable {
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
         $nationalityId = '';
-        if(array_key_exists('nationality_id',$this->request->query)){ //when add nationality
-            $nationalityId = $this->request->query['nationality_id'];
-        } else if(isset($this->request->params['pass'][0]) && $this->request->params['pass'][0] == 'edit'){ //when edit nationality
-            $nationalityId = $this->paramsDecode($this->request->params['pass']['1'])['nationality_id'];
+        if(array_key_exists('nationality_id',$this->request->getQuery())){ //when add nationality
+            $nationalityId = $this->request->getQuery('nationality_id');
+        } else if(isset($this->request->getParam('pass')[0]) && $this->request->getParam('pass')[0] == 'edit'){ //when edit nationality
+            $nationalityId = $this->paramsDecode($this->request->getParam('pass')['1'])['nationality_id'];
         }else { //when add nationality
-            $nationalityId = $this->request->data['UserNationalities']['nationality_id'];
+            $nationalityId = $this->request->getData()['UserNationalities']['nationality_id'];
         }
-        $userId = null;
+        $userId = $this->getUserID();
         $queryString = $this->getQueryString();
         if (isset($queryString['security_user_id'])) {
             $userId = $queryString['security_user_id'];
         }
 
-        $nationalityTable = TableRegistry::get('Nationalities')
+        $nationalityTable = TableRegistry::getTableLocator()->get('FieldOption.Nationalities')
                             ->find()
                             ->where([
                                 'Nationalities.id' => $nationalityId
@@ -591,7 +592,7 @@ class UserNationalitiesTable extends ControllerActionTable {
     //search external users
     public function addEditOnGetExternalUsers()
     {
-        $userId = null;
+        $userId = $this->getUserID();
         $queryString = $this->getQueryString();
         if (isset($queryString['security_user_id'])) {
             $userId = $queryString['security_user_id'];

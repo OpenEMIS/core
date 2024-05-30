@@ -11,9 +11,9 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
 class StaffLicensesTable extends AppTable  {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('staff_licenses');
+        $this->setTable('staff_licenses');
         parent::initialize($config);
         $this->belongsTo('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
@@ -87,7 +87,7 @@ class StaffLicensesTable extends AppTable  {
             ->leftJoin(['InstitutionStaff' => 'institution_staff'], [
                 'InstitutionStaff.staff_id = ' . $this->aliasField('security_user_id')
             ])
-            ->leftJoin([$InstitutionsTable->alias() => $InstitutionsTable->table()], [
+            ->leftJoin([$InstitutionsTable->getAlias() => $InstitutionsTable->getTable()], [
                 $InstitutionsTable->aliasField('id = ') . 'InstitutionStaff.institution_id'
             ])
             ->where([$conditions])
@@ -263,9 +263,9 @@ class StaffLicensesTable extends AppTable  {
         $InstitutionStaffTable = TableRegistry::get('Institution.InstitutionStaff');
         $InstitutionsTable = TableRegistry::get('Institution.Institutions');
         $query
-            ->leftJoin([$InstitutionStaffTable->alias() => $InstitutionStaffTable->table()], [
+            ->leftJoin([$InstitutionStaffTable->getAlias() => $InstitutionStaffTable->getTable()], [
                 $InstitutionStaffTable->aliasField('staff_id') => $this->aliasField('security_user_id')
-            ])->leftJoin([$InstitutionsTable->alias() => $InstitutionsTable->table()], [
+            ])->leftJoin([$InstitutionsTable->getAlias() => $InstitutionsTable->getTable()], [
                 $InstitutionsTable->aliasField('id') => $InstitutionStaffTable->aliasField('institution_id')
             ]);
     }

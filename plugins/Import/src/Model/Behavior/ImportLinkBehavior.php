@@ -14,18 +14,18 @@ use Cake\I18n\I18n;
 
 class ImportLinkBehavior extends Behavior
 {
-    protected $_defaultConfig = [
+    protected $_defaultgetConfig = [
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $getConfig): void
     {
-        $importModel = $this->config('import_model');
+        $importModel = $this->getConfig('import_model');
         if (empty($importModel)) {
-            $this->config('import_model', 'Import'.$this->_table->alias());
+            $this->setConfig('import_model', 'Import'.$this->_table->getAlias());
         };
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 1];
@@ -45,7 +45,7 @@ class ImportLinkBehavior extends Behavior
             $attr = $this->_table->getButtonAttr();
             $customButton = [];
             $customButton['url'] = $this->_table->url('index');
-            $customButton['url']['action'] = $this->config('import_model');
+            $customButton['url']['action'] = $this->getConfig('import_model');
             $customButton['url'][0] = 'add';
             $this->generateImportButton($extra['toolbarButtons'], $attr, $customButton);
         }
@@ -57,7 +57,7 @@ class ImportLinkBehavior extends Behavior
             $attr = $this->_table->getButtonAttr();
             $customButton = [];
             $customButton['url'] = $this->_table->url('view');
-            $customButton['url']['action'] = 'Import'.$this->_table->alias();
+            $customButton['url']['action'] = 'Import'.$this->_table->getAlias();
             $this->generateImportButton($extra['toolbarButtons'], $attr, $customButton);
         }
     }
@@ -71,7 +71,7 @@ class ImportLinkBehavior extends Behavior
                     break;
                 }
                 $customButton['url'] = $this->_table->ControllerAction->url('add');
-                $customButton['url']['action'] = $this->config('import_model');
+                $customButton['url']['action'] = $this->getConfig('import_model');
 
                 $this->generateImportButton($toolbarButtons, $attr, $customButton);
                 break;
@@ -81,7 +81,7 @@ class ImportLinkBehavior extends Behavior
                     break;
                 }
                 $customButton['url'] = $buttons['view']['url'];
-                $customButton['url']['action'] = 'Import'.$this->_table->alias();
+                $customButton['url']['action'] = 'Import'.$this->_table->getAlias();
 
                 $this->generateImportButton($toolbarButtons, $attr, $customButton);
                 break;

@@ -1,15 +1,17 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c), Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c), Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\View;
 
@@ -23,26 +25,10 @@ use Cake\Event\EventDispatcherInterface;
  */
 trait ViewVarsTrait
 {
-
-    /**
-     * The name of default View class.
-     *
-     * @var string
-     * @deprecated 3.1.0 Use `$this->viewBuilder()->className()` instead.
-     */
-    public $viewClass = null;
-
-    /**
-     * Variables for the view
-     *
-     * @var array
-     */
-    public $viewVars = [];
-
     /**
      * The view builder instance being used.
      *
-     * @var \Cake\View\ViewBuilder
+     * @var \Cake\View\ViewBuilder|null
      */
     protected $_viewBuilder;
 
@@ -51,7 +37,7 @@ trait ViewVarsTrait
      *
      * @return \Cake\View\ViewBuilder
      */
-    public function viewBuilder()
+    public function viewBuilder(): ViewBuilder
     {
         if (!isset($this->_viewBuilder)) {
             $this->_viewBuilder = new ViewBuilder();
@@ -67,62 +53,33 @@ trait ViewVarsTrait
      * @return \Cake\View\View
      * @throws \Cake\View\Exception\MissingViewException If view class was not found.
      */
-    public function createView($viewClass = null)
+    public function createView(?string $viewClass = null): View
     {
         $builder = $this->viewBuilder();
-        if ($viewClass === null && $builder->className() === null) {
-            $builder->className($this->viewClass);
-        }
         if ($viewClass) {
-            $builder->className($viewClass);
+            $builder->setClassName($viewClass);
         }
 
-        $validViewOptions = $this->viewOptions();
-        $viewOptions = [];
-        foreach ($validViewOptions as $option) {
-            if (property_exists($this, $option)) {
-                $viewOptions[$option] = $this->{$option};
-            }
-        }
-
-        $deprecatedOptions = [
-            'layout' => 'layout',
-            'view' => 'template',
-            'theme' => 'theme',
-            'autoLayout' => 'autoLayout',
-            'viewPath' => 'templatePath',
-            'layoutPath' => 'layoutPath',
-        ];
-        foreach ($deprecatedOptions as $old => $new) {
-            if (property_exists($this, $old)) {
-                $builder->{$new}($this->{$old});
-                trigger_error(sprintf(
-                    'Property $%s is deprecated. Use $this->viewBuilder()->%s() instead in beforeRender().',
-                    $old,
-                    $new
-                ), E_USER_DEPRECATED);
-            }
-        }
-
-        foreach (['name', 'helpers', 'plugin'] as $prop) {
+        foreach (['name', 'plugin'] as $prop) {
             if (isset($this->{$prop})) {
-                $builder->{$prop}($this->{$prop});
+                $method = 'set' . ucfirst($prop);
+                $builder->{$method}($this->{$prop});
             }
         }
-        $builder->options($viewOptions);
 
+        /** @psalm-suppress RedundantPropertyInitializationCheck */
         return $builder->build(
-            $this->viewVars,
-            isset($this->request) ? $this->request : null,
-            isset($this->response) ? $this->response : null,
-            $this instanceof EventDispatcherInterface ? $this->eventManager() : null
+            [],
+            $this->request ?? null,
+            $this->response ?? null,
+            $this instanceof EventDispatcherInterface ? $this->getEventManager() : null
         );
     }
 
     /**
      * Saves a variable or an associative array of variables for use inside a template.
      *
-     * @param string|array $name A string or an array of data.
+     * @param array|string $name A string or an array of data.
      * @param mixed $value Value in case $name is a string (which then works as the key).
      *   Unused if $name is an associative array, otherwise serves as the values to $name's keys.
      * @return $this
@@ -138,35 +95,8 @@ trait ViewVarsTrait
         } else {
             $data = [$name => $value];
         }
-        $this->viewVars = $data + $this->viewVars;
+        $this->viewBuilder()->setVars($data);
 
         return $this;
-    }
-
-    /**
-     * Get/Set valid view options in the object's _validViewOptions property. The property is
-     * created as an empty array if it is not set. If called without any parameters it will
-     * return the current list of valid view options. See `createView()`.
-     *
-     * @param string|array|null $options string or array of string to be appended to _validViewOptions.
-     * @param bool $merge Whether to merge with or override existing valid View options.
-     *   Defaults to `true`.
-     * @return array The updated view options as an array.
-     */
-    public function viewOptions($options = null, $merge = true)
-    {
-        if (!isset($this->_validViewOptions)) {
-            $this->_validViewOptions = [];
-        }
-
-        if ($options === null) {
-            return $this->_validViewOptions;
-        }
-
-        if (!$merge) {
-            return $this->_validViewOptions = (array)$options;
-        }
-
-        return $this->_validViewOptions = array_merge($this->_validViewOptions, (array)$options);
     }
 }

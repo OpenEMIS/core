@@ -1,21 +1,24 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Collection\Iterator;
 
 use IteratorIterator;
 use RecursiveIterator;
+use Traversable;
 
 /**
  * An iterator that can be used to generate nested iterators out of a collection
@@ -26,7 +29,6 @@ use RecursiveIterator;
  */
 class UnfoldIterator extends IteratorIterator implements RecursiveIterator
 {
-
     /**
      * A function that is passed each element in this iterator and
      * must return an array or Traversable object.
@@ -38,7 +40,7 @@ class UnfoldIterator extends IteratorIterator implements RecursiveIterator
     /**
      * A reference to the internal iterator this object is wrapping.
      *
-     * @var \Iterator
+     * @var \Traversable
      */
     protected $_innerIterator;
 
@@ -46,12 +48,12 @@ class UnfoldIterator extends IteratorIterator implements RecursiveIterator
      * Creates the iterator that will generate child iterators from each of the
      * elements it was constructed with.
      *
-     * @param array|\Traversable $items The list of values to iterate
+     * @param \Traversable $items The list of values to iterate
      * @param callable $unfolder A callable function that will receive the
      * current item and key. It must return an array or Traversable object
      * out of which the nested iterators will be yielded.
      */
-    public function __construct($items, callable $unfolder)
+    public function __construct(Traversable $items, callable $unfolder)
     {
         $this->_unfolder = $unfolder;
         parent::__construct($items);
@@ -64,7 +66,7 @@ class UnfoldIterator extends IteratorIterator implements RecursiveIterator
      *
      * @return bool
      */
-    public function hasChildren()
+    public function hasChildren(): bool
     {
         return true;
     }
@@ -75,7 +77,7 @@ class UnfoldIterator extends IteratorIterator implements RecursiveIterator
      *
      * @return \RecursiveIterator
      */
-    public function getChildren()
+    public function getChildren(): RecursiveIterator
     {
         $current = $this->current();
         $key = $this->key();

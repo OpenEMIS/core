@@ -30,7 +30,6 @@ function KdSessionSvc($q, $http) {
     function write(key, value) {
         var data = {};
         data[key] = value;
-
         var settings = _settings;
         settings['method'] = 'POST';
         settings['data'] = data;

@@ -45,7 +45,7 @@ use Cake\Utility\Inflector;
  *
  */
 class SectionBehavior extends Behavior {
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'ControllerAction.Model.index.afterAction' 		=> 'indexAfterAction',

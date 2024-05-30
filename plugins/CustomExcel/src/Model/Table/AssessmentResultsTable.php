@@ -18,9 +18,9 @@ class AssessmentResultsTable extends AppTable
     private $groupAssessmentPeriodCount = 0;
     const STUDENT_ENROLLED_STATUS = 1;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_class_students');
+        $this->setTable('institution_class_students');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -67,7 +67,7 @@ class AssessmentResultsTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseEducationGrades'] = 'onExcelTemplateInitialiseEducationGrades';
@@ -124,7 +124,7 @@ class AssessmentResultsTable extends AppTable
             $institution_id = $params['institution_id'];
             $results = $AssessmentItemResults->find()
                 ->innerJoin(
-                    [$this->alias() => $this->table()],
+                    [$this->getAlias() => $this->getTable()],
                     [
                         $this->aliasField('institution_id = ') . $AssessmentItemResults->aliasField('institution_id'),
                         $this->aliasField('academic_period_id = ') . $AssessmentItemResults->aliasField('academic_period_id'),
@@ -194,18 +194,18 @@ class AssessmentResultsTable extends AppTable
 
             $results = $AssessmentItems->find()
                 ->select($selectedColumns)
-                ->contain([$EducationSubjects->alias()])
-                ->innerJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
+                ->contain([$EducationSubjects->getAlias()])
+                ->innerJoin([$InstitutionSubjects->getAlias() => $InstitutionSubjects->getTable()], [
                     $InstitutionSubjects->aliasField('education_subject_id = ') . $AssessmentItems->aliasField('education_subject_id')
                 ])
-                ->innerJoin([$ClassSubjects->alias() => $ClassSubjects->table()], [
+                ->innerJoin([$ClassSubjects->getAlias() => $ClassSubjects->getTable()], [
                     $InstitutionSubjects->aliasField('id = ') . $ClassSubjects->aliasField('institution_subject_id'),
                     $ClassSubjects->aliasField('institution_class_id') => $params['class_id']
                 ])
                 ->where([$AssessmentItems->aliasField('assessment_id') => $params['assessment_id']])
                 ->order(['subject_order', 'subject_classification', $EducationSubjects->aliasField('code'), $EducationSubjects->aliasField('name')])
                 ->group(['subject_classification'])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->all();
 //            $functionName = __FUNCTION__;
 //            $end_time = microtime(true);
@@ -240,9 +240,9 @@ class AssessmentResultsTable extends AppTable
                     'academic_term_value' => $AssessmentPeriods->aliasField('name'),
                     'academic_term_total_weighted_max' => $query->func()->sum($AssessmentGradingTypes->aliasField('max * ') . $AssessmentPeriods->aliasField('weight'))
                 ])
-                ->contain([$AssessmentGradingTypes->alias(), $AssessmentPeriods->alias(), $EducationSubjects->alias()])
+                ->contain([$AssessmentGradingTypes->getAlias(), $AssessmentPeriods->getAlias(), $EducationSubjects->getAlias()])
                 ->leftJoin(
-                    [$AssessmentItems->alias() => $AssessmentItems->table()],
+                    [$AssessmentItems->getAlias() => $AssessmentItems->getTable()],
                     [
                         $AssessmentItems->aliasField('assessment_id = ') . $AssessmentItemsGradingTypes->aliasField('assessment_id'),
                         $AssessmentItems->aliasField('education_subject_id = ') . $AssessmentItemsGradingTypes->aliasField('education_subject_id')
@@ -250,7 +250,7 @@ class AssessmentResultsTable extends AppTable
                 )
                 ->where([$AssessmentItemsGradingTypes->aliasField('assessment_id') => $params['assessment_id']])
                 ->group(['subject_classification', 'academic_term_value'])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->all();
 
             $withTerm = $query
@@ -264,9 +264,9 @@ class AssessmentResultsTable extends AppTable
                     'academic_term_value' => $AssessmentPeriods->aliasField('academic_term'),
                     'academic_term_total_weighted_max' => $query->func()->sum($AssessmentGradingTypes->aliasField('max * ') . $AssessmentPeriods->aliasField('weight'))
                 ])
-                ->contain([$AssessmentGradingTypes->alias(), $AssessmentPeriods->alias(), $EducationSubjects->alias()])
+                ->contain([$AssessmentGradingTypes->getAlias(), $AssessmentPeriods->getAlias(), $EducationSubjects->getAlias()])
                 ->leftJoin(
-                    [$AssessmentItems->alias() => $AssessmentItems->table()],
+                    [$AssessmentItems->getAlias() => $AssessmentItems->getTable()],
                     [
                         $AssessmentItems->aliasField('assessment_id = ') . $AssessmentItemsGradingTypes->aliasField('assessment_id'),
                         $AssessmentItems->aliasField('education_subject_id = ') . $AssessmentItemsGradingTypes->aliasField('education_subject_id')
@@ -277,7 +277,7 @@ class AssessmentResultsTable extends AppTable
                     $AssessmentPeriods->aliasField('academic_term <> ') => ""
                 ])
                 ->group(['subject_classification'])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->all();
 
             if (!$withTerm->isEmpty()) { // If academic_term is setup, to use the academic_term to calculate the average
@@ -343,7 +343,7 @@ class AssessmentResultsTable extends AppTable
                 ->select($selectedColumns)
                 ->where([$AssessmentPeriods->aliasField('assessment_id') => $params['assessment_id']])
                 ->group(['academic_term_value'])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->all();
 
             $academicTermResults = $results->toArray();
@@ -390,7 +390,7 @@ class AssessmentResultsTable extends AppTable
                     'total_period_weight' => $AssessmentPeriods->aliasField('weight')
                 ])
                 ->where([$AssessmentPeriods->aliasField('assessment_id') => $params['assessment_id']])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->all();
 
             $withTerm = $query
@@ -403,7 +403,7 @@ class AssessmentResultsTable extends AppTable
                     $AssessmentPeriods->aliasField('academic_term <> ') => ""
                 ])
                 ->group(['academic_term_value'])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->all();
 
             $periodsWithTermOrders = [];
@@ -621,7 +621,7 @@ class AssessmentResultsTable extends AppTable
             $studentAbsenceResults = $InstitutionStudentAbsences
                 ->find()
                 ->innerJoin(
-                    [$this->alias() => $this->table()],
+                    [$this->getAlias() => $this->getTable()],
                     [
                         $this->aliasField('institution_id = ') . $InstitutionStudentAbsences->aliasField('institution_id'),
                         $this->aliasField('student_id = ') . $InstitutionStudentAbsences->aliasField('student_id'),
@@ -632,7 +632,7 @@ class AssessmentResultsTable extends AppTable
                     $InstitutionStudentAbsences->aliasField('institution_id') => $params['institution_id'],
                     $InstitutionStudentAbsences->aliasField('academic_period_id') => $params['academic_period_id']
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->all();
 
             $results = [];
@@ -898,7 +898,7 @@ class AssessmentResultsTable extends AppTable
             ->select($selectedColumns)
             ->where([$AssessmentPeriods->aliasField('assessment_id IN') => $assessment_ids])
             ->group(['academic_term_value'])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->all();
         }
 
@@ -1107,7 +1107,7 @@ class AssessmentResultsTable extends AppTable
                 ->contain(['EducationSubjects'])
                 ->where([$AssessmentItems->aliasField('assessment_id') => $assessment_id])
                 ->order(['EducationSubjects.order', 'EducationSubjects.code', 'EducationSubjects.name'])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->all();
             return $results->toArray();
         }
@@ -1150,7 +1150,7 @@ class AssessmentResultsTable extends AppTable
                         return $row;
                     });
                 })
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->all();
 //            $functionName = __FUNCTION__;
 //            $end_time = microtime(true);
@@ -1174,7 +1174,7 @@ class AssessmentResultsTable extends AppTable
             $assessment_id = $params['assessment_id'];
             $results = $AssessmentPeriods->find()
                 ->where([$AssessmentPeriods->aliasField('assessment_id') => $assessment_id])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->all();
             return $results->toArray();
         }

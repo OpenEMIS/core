@@ -1,33 +1,36 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\TestSuite\Fixture;
 
 use Cake\TestSuite\TestCase;
-use Exception;
-use PHPUnit_Framework_AssertionFailedError;
-use PHPUnit_Framework_Test;
-use PHPUnit_Framework_TestListener;
-use PHPUnit_Framework_TestSuite;
-use PHPUnit_Framework_Warning;
+use Cake\TestSuite\TestListenerTrait;
+use PHPUnit\Framework\Test;
+use PHPUnit\Framework\TestListener;
+use PHPUnit\Framework\TestSuite;
 
 /**
  * Test listener used to inject a fixture manager in all tests that
  * are composed inside a Test Suite
+ *
+ * @deprecated 4.3.0
  */
-class FixtureInjector implements PHPUnit_Framework_TestListener
+class FixtureInjector implements TestListener
 {
+    use TestListenerTrait;
 
     /**
      * The instance of the fixture manager to use
@@ -39,7 +42,7 @@ class FixtureInjector implements PHPUnit_Framework_TestListener
     /**
      * Holds a reference to the container test suite
      *
-     * @var \PHPUnit_Framework_TestSuite
+     * @var \PHPUnit\Framework\TestSuite|null
      */
     protected $_first;
 
@@ -51,22 +54,30 @@ class FixtureInjector implements PHPUnit_Framework_TestListener
     public function __construct(FixtureManager $manager)
     {
         if (isset($_SERVER['argv'])) {
-            $manager->setDebug(in_array('--debug', $_SERVER['argv']));
+            $manager->setDebug(in_array('--debug', $_SERVER['argv'], true));
         }
         $this->_fixtureManager = $manager;
-        $this->_fixtureManager->shutdown();
+        $this->_fixtureManager->shutDown();
+        TestCase::$fixtureManager = $manager;
     }
 
     /**
      * Iterates the tests inside a test suite and creates the required fixtures as
      * they were expressed inside each test case.
      *
-     * @param \PHPUnit_Framework_TestSuite $suite The test suite
+     * @param \PHPUnit\Framework\TestSuite $suite The test suite
      * @return void
      */
-    public function startTestSuite(PHPUnit_Framework_TestSuite $suite)
+    public function startTestSuite(TestSuite $suite): void
     {
         if (empty($this->_first)) {
+            deprecationWarning(
+                'You are using the listener based PHPUnit integration. ' .
+                'This fixture system is deprecated, and we recommend you ' .
+                'upgrade to the extension based PHPUnit integration. ' .
+                'See https://book.cakephp.org/4/en/appendices/fixture-upgrade.html',
+                0
+            );
             $this->_first = $suite;
         }
     }
@@ -75,85 +86,24 @@ class FixtureInjector implements PHPUnit_Framework_TestListener
      * Destroys the fixtures created by the fixture manager at the end of the test
      * suite run
      *
-     * @param \PHPUnit_Framework_TestSuite $suite The test suite
+     * @param \PHPUnit\Framework\TestSuite $suite The test suite
      * @return void
      */
-    public function endTestSuite(PHPUnit_Framework_TestSuite $suite)
+    public function endTestSuite(TestSuite $suite): void
     {
         if ($this->_first === $suite) {
-            $this->_fixtureManager->shutdown();
+            $this->_fixtureManager->shutDown();
         }
-    }
-
-    /**
-     * Not Implemented
-     *
-     * @param \PHPUnit_Framework_Test $test The test to add errors from.
-     * @param \Exception $e The exception
-     * @param float $time current time
-     * @return void
-     */
-    public function addError(PHPUnit_Framework_Test $test, Exception $e, $time)
-    {
-    }
-
-    /**
-     * Not Implemented
-     *
-     * @param \PHPUnit_Framework_Test $test The test to add warnings from.
-     * @param \PHPUnit_Framework_Warning $e The warning
-     * @param float $time current time
-     * @return void
-     */
-    public function addWarning(PHPUnit_Framework_Test $test, PHPUnit_Framework_Warning $e, $time)
-    {
-    }
-
-    /**
-     * Not Implemented
-     *
-     * @param \PHPUnit_Framework_Test $test The test case
-     * @param \PHPUnit_Framework_AssertionFailedError $e The failed assertion
-     * @param float $time current time
-     * @return void
-     */
-    public function addFailure(PHPUnit_Framework_Test $test, PHPUnit_Framework_AssertionFailedError $e, $time)
-    {
-    }
-
-    /**
-     * Not Implemented
-     *
-     * @param \PHPUnit_Framework_Test $test The test case
-     * @param \Exception $e The incomplete test error.
-     * @param float $time current time
-     * @return void
-     */
-    public function addIncompleteTest(PHPUnit_Framework_Test $test, Exception $e, $time)
-    {
-    }
-
-    /**
-     * Not Implemented
-     *
-     * @param \PHPUnit_Framework_Test $test The test case
-     * @param \Exception $e Skipped test exception
-     * @param float $time current time
-     * @return void
-     */
-    public function addSkippedTest(PHPUnit_Framework_Test $test, Exception $e, $time)
-    {
     }
 
     /**
      * Adds fixtures to a test case when it starts.
      *
-     * @param \PHPUnit_Framework_Test $test The test case
+     * @param \PHPUnit\Framework\Test $test The test case
      * @return void
      */
-    public function startTest(PHPUnit_Framework_Test $test)
+    public function startTest(Test $test): void
     {
-        $test->fixtureManager = $this->_fixtureManager;
         if ($test instanceof TestCase) {
             $this->_fixtureManager->fixturize($test);
             $this->_fixtureManager->load($test);
@@ -163,26 +113,14 @@ class FixtureInjector implements PHPUnit_Framework_TestListener
     /**
      * Unloads fixtures from the test case.
      *
-     * @param \PHPUnit_Framework_Test $test The test case
+     * @param \PHPUnit\Framework\Test $test The test case
      * @param float $time current time
      * @return void
      */
-    public function endTest(PHPUnit_Framework_Test $test, $time)
+    public function endTest(Test $test, float $time): void
     {
         if ($test instanceof TestCase) {
             $this->_fixtureManager->unload($test);
         }
-    }
-
-    /**
-     * Not Implemented
-     *
-     * @param \PHPUnit_Framework_Test $test The test case
-     * @param \Exception $e The exception to track
-     * @param float $time current time
-     * @return void
-     */
-    public function addRiskyTest(PHPUnit_Framework_Test $test, Exception $e, $time)
-    {
     }
 }

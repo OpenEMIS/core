@@ -8,9 +8,9 @@ use App\Model\Table\AppTable;
 
 class SecurityUserPasswordRequestsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_user_password_requests');
+        $this->setTable('security_user_password_requests');
         parent::initialize($config);
     }
 }

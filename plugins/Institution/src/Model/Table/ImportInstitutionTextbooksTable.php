@@ -12,9 +12,9 @@ use PHPExcel_Worksheet;
 
 class ImportInstitutionTextbooksTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('import_mapping');
+        $this->setTable('import_mapping');
         parent::initialize($config);
 
         $this->addBehavior('Import.Import', [
@@ -23,7 +23,7 @@ class ImportInstitutionTextbooksTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.import.onImportPopulateTextbooksData'] = 'onImportPopulateTextbooksData';
@@ -34,9 +34,10 @@ class ImportInstitutionTextbooksTable extends AppTable
     }
 
     public function beforeAction($event) {
-        $session = $this->request->session();
-        if ($session->check('Institution.Institutions.id')) {
-            $this->institutionId = $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        $institutionId =  $this->getQueryString('institution_id');
+        if (!is_null($institutionId)) {
+            $this->institutionId = $institutionId;
         }
     }
 
@@ -108,7 +109,7 @@ class ImportInstitutionTextbooksTable extends AppTable
 
     public function getAssignedStaffId(){
 
-        $staff = TableRegistry::get('institution_staff');
+        $staff = TableRegistry::get('Institution.InstitutionStaff');
         $query = $staff->find()
                 ->select([
                     'su.id'
@@ -143,7 +144,7 @@ class ImportInstitutionTextbooksTable extends AppTable
     
         public function getEnrolledStudentId(){
 
-            $staff = TableRegistry::get('institution_students');
+            $staff = TableRegistry::get('Institution.InstitutionStudents');
             $query = $staff->find()
                     ->select([
                         'su.id'
@@ -164,7 +165,7 @@ class ImportInstitutionTextbooksTable extends AppTable
     
                         'ss.id' => 1
                     ])
-                    ->hydrate(false);
+                    ->enableHydration(false);
     
             $result = $query->toArray();
     

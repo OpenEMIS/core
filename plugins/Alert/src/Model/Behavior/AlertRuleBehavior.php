@@ -19,7 +19,7 @@ class AlertRuleBehavior extends Behavior
         'placeholder' => []
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -27,11 +27,11 @@ class AlertRuleBehavior extends Behavior
         $class = str_replace('AlertRule', '', $class);
         $class = str_replace('Behavior', '', $class);
 
-        $this->_table->addAlertRuleType($class, $this->config());
+        $this->_table->addAlertRuleType($class, $this->getConfig());
         $this->alertRule = $class;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $eventMap = [
@@ -52,7 +52,7 @@ class AlertRuleBehavior extends Behavior
     protected function onAlertRuleSetupFields(Event $event, Entity $entity)
     {
         $model = $this->_table;
-        $thresholdConfig = $this->config('threshold');
+        $thresholdConfig = $this->getConfig('threshold');
         // logic to auto render fields based on setting in config threshold
         if (!empty($thresholdConfig)) {
             if ($model->action == 'view') {
@@ -66,7 +66,7 @@ class AlertRuleBehavior extends Behavior
                     if (in_array($fieldType, ['select', 'chosenSelect'])) {
                         $options = [];
                         if (array_key_exists('options', $attr) && !empty($attr['options'])) {
-                            $options = $model->getSelectOptions($model->alias().".".$attr['options']);
+                            $options = $model->getSelectOptions($model->getAlias().".".$attr['options']);
 
                         } else if (array_key_exists('lookupModel', $attr) && !empty($attr['lookupModel'])) {
                             $modelTable = TableRegistry::get($attr['lookupModel']);
@@ -78,7 +78,7 @@ class AlertRuleBehavior extends Behavior
 
                 if (array_key_exists('tooltip', $attr)) {
                     $sprintf = $attr['tooltip']['sprintf'];
-                    $message = $model->getMessage($model->alias().".".$entity->feature.'.'.$field, ['sprintf' => $sprintf]);
+                    $message = $model->getMessage($model->getAlias().".".$entity->feature.'.'.$field, ['sprintf' => $sprintf]);
 
                     $label = $attr['tooltip']['label'];
                     $attr['attr']['label']['escape'] = false;

@@ -6,7 +6,7 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
@@ -15,7 +15,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
     private $queryString;
     private $examCentreId;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
        
         parent::initialize($config);
@@ -48,16 +48,16 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
     {
-        $this->queryString = $request->query['queryString'];
+        $this->queryString = $this->request->getQuery['queryString'];
         $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
         $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'view', 'queryString' => $this->queryString];
 
@@ -119,7 +119,9 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
     {
         // set queryString for page refresh
         $this->controller->set('queryString', $this->queryString);
-
+        if($this->examCentreId == null){
+            $this->examCentreId = 1;
+        }
         // Examination filter
         $ExaminationCentresExaminations = $this->ExaminationCentresExaminations;
         $examinationOptions = $this->ExaminationCentresExaminations
@@ -132,7 +134,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
             ->toArray();
 
         $examinationOptions = ['-1' => '-- '.__('Select Examination').' --'] + $examinationOptions;
-        $selectedExamination = !is_null($this->request->query('examination_id')) ? $this->request->query('examination_id') : -1;
+        $selectedExamination = !is_null($this->request->getQuery('examination_id')) ? $this->request->getQuery('examination_id') : -1;
         $this->controller->set(compact('examinationOptions', 'selectedExamination'));
         if ($selectedExamination != -1) {
            $where[$this->aliasField('examination_id')] = $selectedExamination;
@@ -264,5 +266,52 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
             ])
             ->toArray();
         return $subjectList;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'examination_id') {
+            return __('Examination');
+        } elseif ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'examination_date') {
+            return __('Examination Date');
+        } elseif ($field == 'institution_type') {
+            return __('Institution Type');
+        } elseif ($field == 'education_subject_id') {
+            return __('Education Subject');
+        } elseif ($field == 'institutions') {
+            return __('Institutions');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }elseif ($field == 'code') {
+            return __('Code');
+        }elseif ($field == 'name') {
+            return __('Name');
+        }elseif ($field == 'area_id') {
+            return __('Area');
+        }elseif ($field == 'address') {
+            return __('Address');
+        }elseif ($field == 'postal_code') {
+            return __('Postal Code');
+        }elseif ($field == 'contact_person') {
+            return __('Contact Person');
+        }elseif ($field == 'telephone') {
+            return __('Telephone');
+        }elseif ($field == 'fax') {
+            return __('Fax');
+        }elseif ($field == 'email') {
+            return __('Email');
+        }elseif ($field == 'website') {
+            return __('Website');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

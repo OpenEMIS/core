@@ -1,16 +1,18 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Validation;
 
@@ -19,14 +21,15 @@ use ReflectionClass;
 /**
  * A Proxy class used to remove any extra arguments when the user intended to call
  * a method in another class that is not aware of validation providers signature
+ *
+ * @method bool extension(mixed $check, array $extensions, array $context = [])
  */
 class RulesProvider
 {
-
     /**
      * The class/object to proxy.
      *
-     * @var mixed
+     * @var object|string
      */
     protected $_class;
 
@@ -40,9 +43,11 @@ class RulesProvider
     /**
      * Constructor, sets the default class to use for calling methods
      *
-     * @param string $class the default class to proxy
+     * @param object|string $class the default class to proxy
+     * @throws \ReflectionException
+     * @psalm-param object|class-string $class
      */
-    public function __construct($class = '\Cake\Validation\Validation')
+    public function __construct($class = Validation::class)
     {
         $this->_class = $class;
         $this->_reflection = new ReflectionClass($class);
@@ -58,9 +63,9 @@ class RulesProvider
      *
      * @param string $method the validation method to call
      * @param array $arguments the list of arguments to pass to the method
-     * @return bool whether or not the validation rule passed
+     * @return bool Whether the validation rule passed
      */
-    public function __call($method, $arguments)
+    public function __call(string $method, array $arguments)
     {
         $method = $this->_reflection->getMethod($method);
         $argumentList = $method->getParameters();

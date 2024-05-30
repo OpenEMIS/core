@@ -29,9 +29,9 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     // fte options
     public $fteOptions = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff_transfers');
+        $this->setTable('institution_staff_transfers');
         parent::initialize($config);
 
         // Mandatory data
@@ -54,7 +54,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('User.AdvancedNameSearch');
 
-        $this->fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
+        $this->fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1.00' => '100%'];
     }
 
     private $workflowEvents = [
@@ -67,7 +67,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         ]
     ];
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Workflow.getEvents'] = 'getWorkflowEvents';
@@ -157,7 +157,9 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     {
         $canAddButtons = false;
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
-        $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $requestInstitutionId = $this->request->getParam('institutionId');
+        $currentInstitutionId = isset($requestInstitutionId) ? $this->paramsDecode($requestInstitutionId)['id'] : $getInstitutionId;
 
         $ConfigStaffTransfersTable = TableRegistry::get('Configuration.ConfigStaffTransfers');
         $isRestricted = $ConfigStaffTransfersTable->checkStaffTransferRestricted($entity->previous_institution_id, $entity->new_institution_id);
@@ -208,7 +210,10 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     public function onGetStatusId(Event $event, Entity $entity)
     {
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
-        $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $requestInstitutionId = $this->request->getParam('institutionId');
+        $currentInstitutionId = isset($requestInstitutionId) ? $this->paramsDecode($requestInstitutionId)['id'] : $getInstitutionId;
+        //$currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
 
         $belongsToCurrentInstitution = ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->new_institution_id) || ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id);
 
@@ -223,7 +228,10 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
     public function onGetWorkflowStatus(Event $event, Entity $entity)
     {
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
-        $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $requestInstitutionId = $this->request->getParam('institutionId');
+        $currentInstitutionId = isset($requestInstitutionId) ? $this->paramsDecode($requestInstitutionId)['id'] : $getInstitutionId;
+       //$currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
 
         $belongsToCurrentInstitution = ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->new_institution_id) || ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id);
 
@@ -281,7 +289,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
             $this->InstitutionStaffShifts->save($saveShift);
         }
 
-        if (!$entity->isNew() && $entity->dirty('status_id')) {
+        if (!$entity->isNew() && $entity->getDirty('status_id')) {
             if (!$entity->all_visible) {
                 $currentInstitutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
                 $previousInstitutionOwner = $this->getWorkflowStepsParamValue($entity->getOriginal('status_id'), 'institution_owner');

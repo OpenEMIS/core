@@ -10,8 +10,8 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 
 class StudentContactsTable extends AppTable  {
-	public function initialize(array $config) {
-		$this->table('security_users');
+	public function initialize(array $config): void {
+		$this->setTable('security_users');
 		parent::initialize($config);
 		
 		//$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
@@ -28,7 +28,7 @@ class StudentContactsTable extends AppTable  {
 	}
 
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
-		$attr['options'] = $this->controller->getFeatureOptions($this->alias());
+		$attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
 		return $attr;
 	}
 
@@ -81,35 +81,35 @@ class StudentContactsTable extends AppTable  {
                     $this->aliasField('last_name') => 'literal'
                 ]),
             ])
-            ->leftJoin([$institutionStudents->alias() => $institutionStudents->table()],
+            ->leftJoin([$institutionStudents->getAlias() => $institutionStudents->getTable()],
                 [
                 $institutionStudents->aliasField('student_id') . ' = '. $this->aliasField('id')
                 ])
-            ->leftJoin([$institutionStudents->alias() => $institutionStudents->table()],
+            ->leftJoin([$institutionStudents->getAlias() => $institutionStudents->getTable()],
                 [
                 $institutionStudents->aliasField('student_id') . ' = '. $this->aliasField('id')
                 ])
-           ->leftJoin([$institutionStudents->alias() => $institutionStudents->table()],
+           ->leftJoin([$institutionStudents->getAlias() => $institutionStudents->getTable()],
                 [
                 $institutionStudents->aliasField('student_id') . ' = '. $this->aliasField('id')
                 ])
-            ->leftJoin([$UserIdentities->alias() => $UserIdentities->table()],
+            ->leftJoin([$UserIdentities->getAlias() => $UserIdentities->getTable()],
                 [
                 $UserIdentities->aliasField('security_user_id') . ' = '. $this->aliasField('id')
                 ])
-            ->leftJoin([$IdentityTypes->alias() => $IdentityTypes->table()],
+            ->leftJoin([$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
                 [
                 $IdentityTypes->aliasField('id') . ' = '. $UserIdentities->aliasField('identity_type_id')
                 ])
-            ->innerJoin([$institutionIds->alias() => $institutionIds->table()],
+            ->innerJoin([$institutionIds->getAlias() => $institutionIds->getTable()],
                 [
                 $institutionIds->aliasField('id') . ' = '. $institutionStudents->aliasField('institution_id')
                 ])
-            ->innerJoin([$educationGrades->alias() => $educationGrades->table()],
+            ->innerJoin([$educationGrades->getAlias() => $educationGrades->getTable()],
                 [
                 $educationGrades->aliasField('id') . ' = '. $institutionStudents->aliasField('education_grade_id')
                 ])
-            ->leftJoin([$academicPeriods->alias() => $academicPeriods->table()],
+            ->leftJoin([$academicPeriods->getAlias() => $academicPeriods->getTable()],
                 [
                 $academicPeriods->aliasField('id') . ' = '. $institutionStudents->aliasField('academic_period_id')
                 ])
@@ -131,15 +131,15 @@ class StudentContactsTable extends AppTable  {
                    'description' => $contactsType->aliasField('name'),
                    'preferred' => $userContacts->aliasField('preferred'),
                 ])
-                ->innerJoin([$userContacts->alias() => $userContacts->table()],
+                ->innerJoin([$userContacts->getAlias() => $userContacts->getTable()],
                 [
                     $userContacts->aliasField('security_user_id') . ' = '. $this->aliasField('id')
                 ])
-                ->innerJoin([$contactsType->alias() => $contactsType->table()],
+                ->innerJoin([$contactsType->getAlias() => $contactsType->getTable()],
                 [
                     $contactsType->aliasField('id') . ' = '. $userContacts->aliasField('contact_type_id')
                 ])
-                ->innerJoin([$contactsOptions->alias() => $contactsOptions->table()],
+                ->innerJoin([$contactsOptions->getAlias() => $contactsOptions->getTable()],
                 [
                     $contactsOptions->aliasField('id') . ' = '. $contactsType->aliasField('contact_option_id')
                 ])

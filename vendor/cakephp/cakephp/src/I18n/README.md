@@ -20,7 +20,7 @@ should you wish to create them manually instead of using the conventions this li
 ```php
 use Cake\I18n\I18n;
 
-I18n::locale('en_US');
+I18n::setLocale('en_US');
 ```
 
 ### Setting path to folder containing po files.
@@ -29,8 +29,9 @@ I18n::locale('en_US');
 use Cake\Core\Configure;
 
 Configure::write('App.paths.locales', ['/path/with/trailing/slash/']);
+```
 
-Please refer to the [CakePHP Manual](http://book.cakephp.org/3.0/en/core-libraries/internationalization-and-localization.html#language-files) for details
+Please refer to the [CakePHP Manual](https://book.cakephp.org/4/en/core-libraries/internationalization-and-localization.html#language-files) for details
 about expected folder structure and file naming.
 
 ### Translating a Message
@@ -49,7 +50,7 @@ Hi Charles, your balance on the Jan 13, 2014, 11:12 AM is $ 1,354.37
 
 ```php
 use Cake\I18n\I18n;
-use Aura\Intl\Package;
+use Cake\I18n\Package;
 
 I18n::translator('animals', 'fr_FR', function () {
     $package = new Package(
@@ -66,7 +67,7 @@ I18n::translator('animals', 'fr_FR', function () {
     return $package;
 });
 
-I18n::locale('fr_FR');
+I18n::getLocale('fr_FR');
 __d('animals', 'Dog'); // Returns "Chien"
 ```
 
@@ -91,12 +92,12 @@ echo Number::currency(123456.7890, 'EUR');
 ## Documentation
 
 Please make sure you check the [official I18n
-documentation](http://book.cakephp.org/3.0/en/core-libraries/internationalization-and-localization.html).
+documentation](https://book.cakephp.org/4/en/core-libraries/internationalization-and-localization.html).
 
 The [documentation for the Time
-class](http://book.cakephp.org/3.0/en/core-libraries/time.html) contains
+class](https://book.cakephp.org/4/en/core-libraries/time.html) contains
 instructions on how to configure and output time strings for selected locales.
 
 The [documentation for the Number
-class](http://book.cakephp.org/3.0/en/core-libraries/number.html) shows how to
+class](https://book.cakephp.org/4/en/core-libraries/number.html) shows how to
 use the `Number` class for displaying numbers in specific locales.

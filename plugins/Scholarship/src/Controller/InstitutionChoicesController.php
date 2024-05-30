@@ -13,7 +13,7 @@ class InstitutionChoicesController extends PageController
 
     private $locationTypeOptions = [];
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Security.Users');
@@ -31,7 +31,7 @@ class InstitutionChoicesController extends PageController
         $this->institutionChoiceOptions = $this->InstitutionChoiceTypes->getList()->toArray();
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $event = parent::implementedEvents();
         $event['Controller.Page.onRenderLocationType'] = 'onRenderLocationType';
@@ -145,8 +145,8 @@ class InstitutionChoicesController extends PageController
     public function setBreadCrumb($options)
     {
         $page = $this->Page;
-        $plugin = $this->plugin;
-        $name = $this->name;
+        $plugin = $this->getPlugin();
+        $name = $this->getName();
 
         $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
         $userId = array_key_exists('userId', $options) ? $options['userId'] : '';
@@ -195,7 +195,7 @@ class InstitutionChoicesController extends PageController
     public function setupTabElements()
     {
         $page = $this->Page;
-        $name = $this->name;
+        $name = $this->getName();
 
         $tabElements = [];
         if ($name == 'ScholarshipApplicationInstitutionChoices') {

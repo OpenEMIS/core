@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\I18n\Time;
@@ -15,8 +15,8 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 
 class DataQualityTable extends AppTable {
-	public function initialize(array $config) {
-		$this->table('security_users');
+	public function initialize(array $config): void {
+		$this->setTable('security_users');
 		parent::initialize($config);
 		
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
@@ -31,9 +31,9 @@ class DataQualityTable extends AppTable {
 	}
 
 	public function beforeAction(Event $event) {
-		$controllerName = $this->controller->name;
+		$controllerName = $this->controller->getName();
 		$reportName = __('Data Quality');
-		$this->controller->Navigation->substituteCrumb($this->alias(), $reportName);
+		$this->controller->Navigation->substituteCrumb($this->getAlias(), $reportName);
 		$this->controller->set('contentHeader', __($controllerName).' - '.$reportName);
 		$this->fields = [];
 		$this->ControllerAction->field('feature', ['select' => false]);
@@ -49,15 +49,15 @@ class DataQualityTable extends AppTable {
 		return $attr;
 	}*/
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+	public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $attr['options'] = $this->controller->getFeatureOptions($this->alias());
+            $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
             $attr['onChangeReload'] = true;
-            if (!(isset($this->request->data[$this->alias()]['feature']))) {
+            if (!(isset($this->request->getData($this->getAlias())['feature']))) {
                 $option = $attr['options'];
                 reset($option);
-                $this->request->data[$this->alias()]['feature'] = key($option);
+                $this->request->getData($this->getAlias())['feature'] = key($option);
             }
             return $attr;
         }
@@ -93,21 +93,20 @@ class DataQualityTable extends AppTable {
      * add academic period id
      * POCOR-7211
      */
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
-    	if (isset($request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
-            if (in_array($feature,['Report.EnrollmentOutliers','Report.AgeOutliers','Report.ValidationReport'])){
-            
-            	$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+    	if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
+            if (in_array($feature,['Report.EnrollmentOutliers','Report.AgeOutliers'])){
+            	$AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
                 $currentPeriod = $AcademicPeriodTable->getCurrent();
                 $attr['options'] = $academicPeriodOptions;
                 $attr['type'] = 'select';
                 $attr['select'] = false;
                 $attr['onChangeReload'] = true;
-                if (empty($request->data[$this->alias()]['academic_period_id'])) {
-                    $request->data[$this->alias()]['academic_period_id'] = $currentPeriod;
+                if (empty($request->getData($this->getAlias())['academic_period_id'])) {
+                    $request->getData($this->getAlias())['academic_period_id'] = $currentPeriod;
                 }
                 return $attr;
             }
@@ -325,6 +324,20 @@ class DataQualityTable extends AppTable {
                 }
             }
             return $attr;
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            case 'format':
+                return __('Format');
+            case 'academic_period_id':
+                return __('Academic Period');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 	    

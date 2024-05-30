@@ -1,16 +1,18 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Database;
 
@@ -19,65 +21,73 @@ namespace Cake\Database;
  */
 class TypeMap
 {
-
     /**
-     * Associative array with the default fields and the related types this query might contain.
+     * Array with the default fields and the related types this query might contain.
      *
      * Used to avoid repetition when calling multiple functions inside this class that
      * may require a custom type for a specific field.
      *
-     * @var array
+     * @var array<int|string, string>
      */
-    protected $_defaults;
+    protected $_defaults = [];
 
     /**
-     * Associative array with the fields and the related types that override defaults this query might contain
+     * Array with the fields and the related types that override defaults this query might contain
      *
      * Used to avoid repetition when calling multiple functions inside this class that
      * may require a custom type for a specific field.
      *
-     * @var array
+     * @var array<int|string, string>
      */
     protected $_types = [];
 
     /**
      * Creates an instance with the given defaults
      *
-     * @param array $defaults The defaults to use.
+     * @param array<int|string, string> $defaults The defaults to use.
      */
     public function __construct(array $defaults = [])
     {
-        $this->defaults($defaults);
+        $this->setDefaults($defaults);
     }
 
     /**
-     * Configures a map of default fields and their associated types to be
-     * used as the default list of types for every function in this class
-     * with a $types param. Useful to avoid repetition when calling the same
-     * functions using the same fields and types.
+     * Configures a map of fields and associated type.
      *
-     * If called with no arguments it will return the currently configured types.
+     * These values will be used as the default mapping of types for every function
+     * in this instance that supports a `$types` param.
+     *
+     * This method is useful when you want to avoid repeating type definitions
+     * as setting types overwrites the last set of types.
      *
      * ### Example
      *
      * ```
-     * $query->defaults(['created' => 'datetime', 'is_visible' => 'boolean']);
+     * $query->setDefaults(['created' => 'datetime', 'is_visible' => 'boolean']);
      * ```
      *
-     * This method will replace all the existing type maps with the ones provided.
+     * This method will replace all the existing default mappings with the ones provided.
+     * To add into the mappings use `addDefaults()`.
      *
-     * @param array|null $defaults associative array where keys are field names and values
+     * @param array<int|string, string> $defaults Array where keys are field names / positions and values
      * are the correspondent type.
-     * @return $this|array
+     * @return $this
      */
-    public function defaults(array $defaults = null)
+    public function setDefaults(array $defaults)
     {
-        if ($defaults === null) {
-            return $this->_defaults;
-        }
         $this->_defaults = $defaults;
 
         return $this;
+    }
+
+    /**
+     * Returns the currently configured types.
+     *
+     * @return array<int|string, string>
+     */
+    public function getDefaults(): array
+    {
+        return $this->_defaults;
     }
 
     /**
@@ -85,39 +95,44 @@ class TypeMap
      *
      * If a key already exists it will not be overwritten.
      *
-     * @param array $types The additional types to add.
+     * @param array<int|string, string> $types The additional types to add.
      * @return void
      */
-    public function addDefaults(array $types)
+    public function addDefaults(array $types): void
     {
-        $this->_defaults = $this->_defaults + $types;
+        $this->_defaults += $types;
     }
 
     /**
      * Sets a map of fields and their associated types for single-use.
      *
-     * If called with no arguments it will return the currently configured types.
-     *
      * ### Example
      *
      * ```
-     * $query->types(['created' => 'time']);
+     * $query->setTypes(['created' => 'time']);
      * ```
      *
      * This method will replace all the existing type maps with the ones provided.
      *
-     * @param array|null $types associative array where keys are field names and values
+     * @param array<int|string, string> $types Array where keys are field names / positions and values
      * are the correspondent type.
-     * @return $this|array
+     * @return $this
      */
-    public function types(array $types = null)
+    public function setTypes(array $types)
     {
-        if ($types === null) {
-            return $this->_types;
-        }
         $this->_types = $types;
 
         return $this;
+    }
+
+    /**
+     * Gets a map of fields and their associated types for single-use.
+     *
+     * @return array<int|string, string>
+     */
+    public function getTypes(): array
+    {
+        return $this->_types;
     }
 
     /**
@@ -125,27 +140,20 @@ class TypeMap
      * the column type will be looked for inside the default mapping. If neither exist,
      * null will be returned.
      *
-     * @param string $column The type for a given column
-     * @return null|string
+     * @param string|int $column The type for a given column
+     * @return string|null
      */
-    public function type($column)
+    public function type($column): ?string
     {
-        if (isset($this->_types[$column])) {
-            return $this->_types[$column];
-        }
-        if (isset($this->_defaults[$column])) {
-            return $this->_defaults[$column];
-        }
-
-        return null;
+        return $this->_types[$column] ?? $this->_defaults[$column] ?? null;
     }
 
     /**
      * Returns an array of all types mapped types
      *
-     * @return array
+     * @return array<int|string, string>
      */
-    public function toArray()
+    public function toArray(): array
     {
         return $this->_types + $this->_defaults;
     }

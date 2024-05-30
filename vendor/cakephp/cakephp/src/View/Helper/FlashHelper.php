@@ -1,21 +1,22 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\View\Helper;
 
 use Cake\View\Helper;
-use UnexpectedValueException;
 
 /**
  * FlashHelper class to render flash messages.
@@ -25,11 +26,10 @@ use UnexpectedValueException;
  */
 class FlashHelper extends Helper
 {
-
     /**
      * Used to render the message set in FlashComponent::set()
      *
-     * In your view: $this->Flash->render('somekey');
+     * In your template file: $this->Flash->render('somekey');
      * Will default to flash if no param is passed
      *
      * You can pass additional information into the flash message generation. This allows you
@@ -62,29 +62,20 @@ class FlashHelper extends Helper
      * element.
      *
      * @param string $key The [Flash.]key you are rendering in the view.
-     * @param array $options Additional options to use for the creation of this flash message.
+     * @param array<string, mixed> $options Additional options to use for the creation of this flash message.
      *    Supports the 'params', and 'element' keys that are used in the helper.
      * @return string|null Rendered flash message or null if flash key does not exist
      *   in session.
-     * @throws \UnexpectedValueException If value for flash settings key is not an array.
      */
-    public function render($key = 'flash', array $options = [])
+    public function render(string $key = 'flash', array $options = []): ?string
     {
-        if (!$this->request->session()->check("Flash.$key")) {
+        $messages = $this->_View->getRequest()->getFlash()->consume($key);
+        if ($messages === null) {
             return null;
         }
 
-        $flash = $this->request->session()->read("Flash.$key");
-        if (!is_array($flash)) {
-            throw new UnexpectedValueException(sprintf(
-                'Value for flash setting key "%s" must be an array.',
-                $key
-            ));
-        }
-        $this->request->session()->delete("Flash.$key");
-
         $out = '';
-        foreach ($flash as $message) {
+        foreach ($messages as $message) {
             $message = $options + $message;
             $out .= $this->_View->element($message['element'], $message);
         }
@@ -95,9 +86,9 @@ class FlashHelper extends Helper
     /**
      * Event listeners.
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         return [];
     }

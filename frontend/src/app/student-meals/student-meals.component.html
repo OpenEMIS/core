@@ -1,0 +1,24 @@
+<kd-progressloader *ngIf="displayLoading" configtype="small-spinner" [configvalue]="null"></kd-progressloader>
+<kd-breadcrumb [config]="breadcrumbList"></kd-breadcrumb>
+<kd-pageheader [config]='pageheader'></kd-pageheader>
+<div style="display: flex; flex-flow: row wrap;">
+    <div style="width:80%; display:flex; flex-flow:column; gap:20px 0;padding-inline:15px" class="mt-4">
+        <kd-mini-dashboard [config]="miniDashboardConfig" [input]="miniDashboardData" *ngIf="displayMiniDashboard">
+        </kd-mini-dashboard>
+        <kd-table #changetable [row]="_row" [column]="_column" [config]="_config" [api]="_tableApi" class="student-table-data">
+        </kd-table>
+    </div>
+    <div style="width:20%; display:flex; flex-flow:column; gap:20px 0; padding-inline:15px">
+        <h3>Filter</h3>
+        <kd-view displayType="stacked-form" [inputData]="academicPeriod" [button]="filterButtons"
+            (change)="_submitEvent($event, 'academicPeriod')"></kd-view>
+        <kd-view displayType="stacked-form" [inputData]="week" [button]="filterButtons"
+            (change)="_submitEvent($event, 'week')"></kd-view>
+        <kd-view displayType="stacked-form" [inputData]="day" [button]="filterButtons"
+            (change)="_submitEvent($event, 'day')"></kd-view>
+        <kd-view displayType="stacked-form" [inputData]="class" [button]="filterButtons"
+            (change)="_submitEvent($event, 'class')"></kd-view>
+        <kd-view displayType="stacked-form" [inputData]="mealProgram" [button]="filterButtons"
+            (change)="_submitEvent($event, 'mealProgram')"></kd-view>
+    </div>
+</div>

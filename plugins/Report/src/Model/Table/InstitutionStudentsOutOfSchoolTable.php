@@ -13,8 +13,8 @@ use App\Model\Traits\MessagesTrait;
 class InstitutionStudentsOutOfSchoolTable extends AppTable  {
     use MessagesTrait;
 
-    public function initialize(array $config) {
-        $this->table('security_users');
+    public function initialize(array $config): void {
+        $this->setTable('security_users');
         parent::initialize($config);
 
         $this->belongsTo('Genders', ['className' => 'User.Genders']);
@@ -412,15 +412,15 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
 
         $StudentWithdrawReasons = TableRegistry::get('Student.StudentWithdrawReasons');
         $Statuses = TableRegistry::get('Student.StudentStatuses');
-        $InstitutionStudents = TableRegistry::get('institution_students');
-        $studentWithdraw = TableRegistry::get('institution_student_withdraw');
+        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+        $studentWithdraw = TableRegistry::get('Institution.InstitutionStudentWithdraw');
         $reason = $studentWithdraw
         ->find()
         ->select([
                 'student_withdraw_reason' => $StudentWithdrawReasons->aliasField('name')
             ])
         ->leftJoin(
-            [$StudentWithdrawReasons->alias() => $StudentWithdrawReasons->table()],
+            [$StudentWithdrawReasons->getAlias() => $StudentWithdrawReasons->getTable()],
             [
                 $StudentWithdrawReasons->aliasField('id = ') . $studentWithdraw->aliasField('student_withdraw_reason_id')
             ]
@@ -437,7 +437,7 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
 
     public function getIdByAcademicPeriods($code)
     {
-        $academicPeriods = TableRegistry::get('academic_periods');
+        $academicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $entity = $academicPeriods->find()
             ->where([$academicPeriods->aliasField('name') => $code])
             ->first();
@@ -571,7 +571,7 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         $userContactResults = $UserContacts
         ->find()
         ->contain(['ContactTypes.ContactOptions'])
-        ->select(['value'])                     
+        ->select(['value' => $UserContacts->aliasField('value')])                     
         ->where([
             $UserContacts->aliasField('security_user_id') => $StudentGuardiansContactResult->guardian_id,
             'OR' => $conditionForGuardian

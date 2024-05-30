@@ -33,7 +33,7 @@ class FieldOptionComponent extends Component
     public $components = ['AccessControl'];
 
     // Is called before the controller's beforeFilter method.
-    public function initialize(array $config)   
+    public function initialize(array $config): void   
     {
         foreach ($this->fieldOptions as $key => $className) {
             $this->AccessControl->addAccessMap($key);
@@ -42,9 +42,9 @@ class FieldOptionComponent extends Component
 
     public function getFieldOptions()
     {
-        $FieldOptionTable = TableRegistry::get('field_options');
+        $FieldOptionTable = TableRegistry::get('FieldOption.FieldOptions');
         $FieldOptions = $FieldOptionTable->find('all')->toArray();
-        $session=$this->request->session();//POCOR-7396
+        $session=$this->getController()->getRequest()->getSession();//POCOR-7396
         $FieldOptionPermissions= $session->read('Permissions.FieldOptions');//POCOR-7396
         $option = [];
         foreach($FieldOptions as $key => $FieldOption1 ){
@@ -81,7 +81,7 @@ class FieldOptionComponent extends Component
 
     public function getClassName($key)
     {  
-        $FieldOptionTable = TableRegistry::get('field_options');
+        $FieldOptionTable = TableRegistry::get('FieldOption.FieldOptions');
         $Words = trim(preg_replace('/(?<!\ )[A-Z]/', ' $0', $key));
         //echo $key;die;
         $FieldOptions = $FieldOptionTable->find('all',['conditions'=>['name' => $Words]])->first();

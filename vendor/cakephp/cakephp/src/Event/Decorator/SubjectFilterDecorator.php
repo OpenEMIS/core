@@ -1,20 +1,23 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP Project
  * @since         3.3.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Event\Decorator;
 
-use Cake\Event\Event;
+use Cake\Core\Exception\CakeException;
+use Cake\Event\EventInterface;
 use RuntimeException;
 
 /**
@@ -28,9 +31,8 @@ use RuntimeException;
  */
 class SubjectFilterDecorator extends AbstractDecorator
 {
-
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function __invoke()
     {
@@ -45,12 +47,11 @@ class SubjectFilterDecorator extends AbstractDecorator
     /**
      * Checks if the event is triggered for this listener.
      *
-     * @param \Cake\Event\Event $event Event object.
+     * @param \Cake\Event\EventInterface $event Event object.
      * @return bool
      */
-    public function canTrigger(Event $event)
+    public function canTrigger(EventInterface $event): bool
     {
-        $class = get_class($event->subject());
         if (!isset($this->_options['allowedSubject'])) {
             throw new RuntimeException(self::class . ' Missing subject filter options!');
         }
@@ -58,6 +59,12 @@ class SubjectFilterDecorator extends AbstractDecorator
             $this->_options['allowedSubject'] = [$this->_options['allowedSubject']];
         }
 
-        return in_array($class, $this->_options['allowedSubject']);
+        try {
+            $subject = $event->getSubject();
+        } catch (CakeException $e) {
+            return false;
+        }
+
+        return in_array(get_class($subject), $this->_options['allowedSubject'], true);
     }
 }

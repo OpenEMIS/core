@@ -17,9 +17,9 @@ use LDAP\Result;
 class Uis2Table extends AppTable
 {
     private $uisTabsData = [0 => "UIS-A2"];
-    public function initialize(array $config)       
+    public function initialize(array $config): void       
     {
-        $this->table('summary_programme_sector_genders');
+        $this->setTable('summary_programme_sector_genders');
         parent::initialize($config);
 
         $this->addBehavior('Excel', [
@@ -207,7 +207,7 @@ class Uis2Table extends AppTable
         
         if ($uisType == 'UIS-A2')
         {
-            $summaryProgrammeSectorGendersTypes = TableRegistry::get('summary_programme_sector_genders');
+            $summaryProgrammeSectorGendersTypes = TableRegistry::get('Report.SummaryProgrammeSectorGenders');
             $res = $query->select([
                 'academic_period_name' => 'academic_period_name',
                 'institution_sector_name' => 'institution_sector_name',

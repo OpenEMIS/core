@@ -7,7 +7,7 @@ use App\Controller\PageController;
 
 class InstitutionHistoriesController extends PageController
 {
-	public function initialize()
+	public function initialize(): void
     {
         parent::initialize();
 
@@ -18,7 +18,7 @@ class InstitutionHistoriesController extends PageController
 
     public function beforeFilter(Event $event)
     {
-        $institutionId = $this->paramsDecode($this->request->params['pass'][1])['id'];
+        $institutionId = $this->getQueryString('institution_id');
         $institutionName = $this->Institutions->get($institutionId)->name;
 
         parent::beforeFilter($event);

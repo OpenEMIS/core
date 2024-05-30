@@ -9,7 +9,7 @@ use Cake\Utility\Inflector;
 
 class StaffCustomFieldsController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
     }
@@ -26,31 +26,40 @@ class StaffCustomFieldsController extends AppController
 
     public function beforeFilter(Event $event)
     {
+        if ($this->getPlugin() == 'StaffCustomField') {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
 
         $tabElements = [
             'Fields' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Fields'],
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Fields'],
                 'text' => __('Fields')
             ],
             'Pages' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Pages'],
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Pages'],
                 'text' => __('Pages')
             ]
         ];
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
-        $this->set('selectedAction', $this->request->action);
+        $this->set('selectedAction', $this->request->getParam('action'));
     }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
         $header = __('Custom Field (Staff)');
 
-        $header .= ' - ' . $model->getHeader($model->alias);
-        $this->Navigation->addCrumb('Custom Field (Staff)', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
-        $this->Navigation->addCrumb($model->getHeader($model->alias));
+        $header .= ' - ' . $model->getHeader($model->getAlias());
+        $this->Navigation->addCrumb('Custom Field (Staff)', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $model->alias]);
+        $this->Navigation->addCrumb($model->getHeader($model->getAlias()));
 
         $this->set('contentHeader', $header);
+    }
+
+    public function beforeRender(Event $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 }

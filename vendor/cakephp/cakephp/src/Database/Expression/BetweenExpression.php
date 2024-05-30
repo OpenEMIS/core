@@ -1,31 +1,31 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Database\Expression;
 
 use Cake\Database\ExpressionInterface;
 use Cake\Database\Type\ExpressionTypeCasterTrait;
 use Cake\Database\ValueBinder;
+use Closure;
 
 /**
  * An expression object that represents a SQL BETWEEN snippet
- *
- * @internal
  */
 class BetweenExpression implements ExpressionInterface, FieldInterface
 {
-
     use ExpressionTypeCasterTrait;
     use FieldTrait;
 
@@ -53,7 +53,7 @@ class BetweenExpression implements ExpressionInterface, FieldInterface
     /**
      * Constructor
      *
-     * @param string|\Cake\Database\ExpressionInterface $field The field name to compare for values in between the range.
+     * @param \Cake\Database\ExpressionInterface|string $field The field name to compare for values inbetween the range.
      * @param mixed $from The initial value of the range.
      * @param mixed $to The ending value in the comparison range.
      * @param string|null $type The data type name to bind the values with.
@@ -72,59 +72,58 @@ class BetweenExpression implements ExpressionInterface, FieldInterface
     }
 
     /**
-     * Converts the expression to its string representation
-     *
-     * @param \Cake\Database\ValueBinder $generator Placeholder generator object
-     * @return string
+     * @inheritDoc
      */
-    public function sql(ValueBinder $generator)
+    public function sql(ValueBinder $binder): string
     {
         $parts = [
             'from' => $this->_from,
-            'to' => $this->_to
+            'to' => $this->_to,
         ];
 
+        /** @var \Cake\Database\ExpressionInterface|string $field */
         $field = $this->_field;
         if ($field instanceof ExpressionInterface) {
-            $field = $field->sql($generator);
+            $field = $field->sql($binder);
         }
 
         foreach ($parts as $name => $part) {
             if ($part instanceof ExpressionInterface) {
-                $parts[$name] = $part->sql($generator);
+                $parts[$name] = $part->sql($binder);
                 continue;
             }
-            $parts[$name] = $this->_bindValue($part, $generator, $this->_type);
+            $parts[$name] = $this->_bindValue($part, $binder, $this->_type);
         }
 
         return sprintf('%s BETWEEN %s AND %s', $field, $parts['from'], $parts['to']);
     }
 
     /**
-     * {@inheritDoc}
-     *
+     * @inheritDoc
      */
-    public function traverse(callable $callable)
+    public function traverse(Closure $callback)
     {
         foreach ([$this->_field, $this->_from, $this->_to] as $part) {
             if ($part instanceof ExpressionInterface) {
-                $callable($part);
+                $callback($part);
             }
         }
+
+        return $this;
     }
 
     /**
      * Registers a value in the placeholder generator and returns the generated placeholder
      *
      * @param mixed $value The value to bind
-     * @param \Cake\Database\ValueBinder $generator The value binder to use
+     * @param \Cake\Database\ValueBinder $binder The value binder to use
      * @param string $type The type of $value
      * @return string generated placeholder
      */
-    protected function _bindValue($value, $generator, $type)
+    protected function _bindValue($value, $binder, $type): string
     {
-        $placeholder = $generator->placeholder('c');
-        $generator->bind($placeholder, $value, $type);
+        $placeholder = $binder->placeholder('c');
+        $binder->bind($placeholder, $value, $type);
 
         return $placeholder;
     }

@@ -7,7 +7,7 @@ class LandCustomFieldValuesTable extends CustomFieldValuesTable
 {
     protected $extra = ['scope' => 'infrastructure_custom_field_id'];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('CustomFields', ['className' => 'Infrastructure.LandCustomFields', 'foreignKey' => 'infrastructure_custom_field_id']);

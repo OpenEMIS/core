@@ -59,21 +59,21 @@ class ResourceHelper extends Helper {
 		return $this->Html->script($path);
 	}
         
-        public function urlsafeB64Encode($input)
-        {
-            return str_replace('=', '', strtr(base64_encode($input), '+/', '-_'));
-        }
-        
-        public function paramsEncode($params = [])
-        {
-            $sessionId = Security::hash('session_id', 'sha256');
-            $jsonParam = json_encode($params);
-            $base64Param = $this->urlsafeB64Encode($jsonParam);
-            $params[$sessionId] = session_id();
-            $jsonParamWithSessionTocken = json_encode($params);
-            $signature = Security::hash($jsonParamWithSessionTocken, 'sha256', true);
-            $base64Signature = $this->urlsafeB64Encode($signature);
-            return "$base64Param.$base64Signature";
-        }
+    public function urlsafeB64Encode($input)
+    {
+        return str_replace('=', '', strtr(base64_encode($input), '+/', '-_'));
+    }
+    
+    public function paramsEncode($params = [])
+    {
+        $sessionId = Security::hash('session_id', 'sha256');
+        $jsonParam = json_encode($params);
+        $base64Param = $this->urlsafeB64Encode($jsonParam);
+        $params[$sessionId] = session_id();
+        $jsonParamWithSessionTocken = json_encode($params);
+        $signature = Security::hash($jsonParamWithSessionTocken, 'sha256', true);
+        $base64Signature = $this->urlsafeB64Encode($signature);
+        return "$base64Param.$base64Signature";
+    }
         
 }

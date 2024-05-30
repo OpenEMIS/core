@@ -1,24 +1,30 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Routing;
 
 use BadMethodCallException;
 use Cake\Core\App;
+use Cake\Core\Exception\MissingPluginException;
+use Cake\Core\Plugin;
+use Cake\Routing\Route\RedirectRoute;
 use Cake\Routing\Route\Route;
 use Cake\Utility\Inflector;
 use InvalidArgumentException;
+use RuntimeException;
 
 /**
  * Provides features for building routes inside scopes.
@@ -28,32 +34,31 @@ use InvalidArgumentException;
  */
 class RouteBuilder
 {
-
     /**
      * Regular expression for auto increment IDs
      *
      * @var string
      */
-    const ID = '[0-9]+';
+    public const ID = '[0-9]+';
 
     /**
      * Regular expression for UUIDs
      *
      * @var string
      */
-    const UUID = '[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}';
+    public const UUID = '[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}';
 
     /**
      * Default HTTP request method => controller action map.
      *
-     * @var array
+     * @var array<string, array>
      */
     protected static $_resourceMap = [
         'index' => ['action' => 'index', 'method' => 'GET', 'path' => ''],
         'create' => ['action' => 'add', 'method' => 'POST', 'path' => ''],
-        'view' => ['action' => 'view', 'method' => 'GET', 'path' => ':id'],
-        'update' => ['action' => 'edit', 'method' => ['PUT', 'PATCH'], 'path' => ':id'],
-        'delete' => ['action' => 'delete', 'method' => 'DELETE', 'path' => ':id'],
+        'view' => ['action' => 'view', 'method' => 'GET', 'path' => '{id}'],
+        'update' => ['action' => 'edit', 'method' => ['PUT', 'PATCH'], 'path' => '{id}'],
+        'delete' => ['action' => 'delete', 'method' => 'DELETE', 'path' => '{id}'],
     ];
 
     /**
@@ -61,12 +66,12 @@ class RouteBuilder
      *
      * @var string
      */
-    protected $_routeClass = 'Cake\Routing\Route\Route';
+    protected $_routeClass = Route::class;
 
     /**
      * The extensions that should be set into the routes connected.
      *
-     * @var array
+     * @var array<string>
      */
     protected $_extensions = [];
 
@@ -99,6 +104,14 @@ class RouteBuilder
     protected $_collection;
 
     /**
+     * The list of middleware that routes in this builder get
+     * added during construction.
+     *
+     * @var array<string>
+     */
+    protected $middleware = [];
+
+    /**
      * Constructor
      *
      * ### Options
@@ -106,13 +119,14 @@ class RouteBuilder
      * - `routeClass` - The default route class to use when adding routes.
      * - `extensions` - The extensions to connect when adding routes.
      * - `namePrefix` - The prefix to prepend to all route names.
+     * - `middleware` - The names of the middleware routes should have applied.
      *
      * @param \Cake\Routing\RouteCollection $collection The route collection to append routes into.
      * @param string $path The path prefix the scope is for.
      * @param array $params The scope's routing parameters.
-     * @param array $options Options list.
+     * @param array<string, mixed> $options Options list.
      */
-    public function __construct(RouteCollection $collection, $path, array $params = [], array $options = [])
+    public function __construct(RouteCollection $collection, string $path, array $params = [], array $options = [])
     {
         $this->_collection = $collection;
         $this->_path = $path;
@@ -126,49 +140,72 @@ class RouteBuilder
         if (isset($options['namePrefix'])) {
             $this->_namePrefix = $options['namePrefix'];
         }
-    }
-
-    /**
-     * Get or set default route class.
-     *
-     * @param string|null $routeClass Class name.
-     * @return string|null
-     */
-    public function routeClass($routeClass = null)
-    {
-        if ($routeClass === null) {
-            return $this->_routeClass;
+        if (isset($options['middleware'])) {
+            $this->middleware = (array)$options['middleware'];
         }
-        $this->_routeClass = $routeClass;
     }
 
     /**
-     * Get or set the extensions in this route builder's scope.
+     * Set default route class.
+     *
+     * @param string $routeClass Class name.
+     * @return $this
+     */
+    public function setRouteClass(string $routeClass)
+    {
+        $this->_routeClass = $routeClass;
+
+        return $this;
+    }
+
+    /**
+     * Get default route class.
+     *
+     * @return string
+     */
+    public function getRouteClass(): string
+    {
+        return $this->_routeClass;
+    }
+
+    /**
+     * Set the extensions in this route builder's scope.
      *
      * Future routes connected in through this builder will have the connected
      * extensions applied. However, setting extensions does not modify existing routes.
      *
-     * @param null|string|array $extensions Either the extensions to use or null.
-     * @return array|null
+     * @param array<string>|string $extensions The extensions to set.
+     * @return $this
      */
-    public function extensions($extensions = null)
+    public function setExtensions($extensions)
     {
-        if ($extensions === null) {
-            return $this->_extensions;
-        }
         $this->_extensions = (array)$extensions;
+
+        return $this;
+    }
+
+    /**
+     * Get the extensions in this route builder's scope.
+     *
+     * @return array<string>
+     */
+    public function getExtensions(): array
+    {
+        return $this->_extensions;
     }
 
     /**
      * Add additional extensions to what is already in current scope
      *
-     * @param string|array $extensions One or more extensions to add
-     * @return void
+     * @param array<string>|string $extensions One or more extensions to add
+     * @return $this
      */
     public function addExtensions($extensions)
     {
         $extensions = array_merge($this->_extensions, (array)$extensions);
         $this->_extensions = array_unique($extensions);
+
+        return $this;
     }
 
     /**
@@ -176,8 +213,13 @@ class RouteBuilder
      *
      * @return string
      */
-    public function path()
+    public function path(): string
     {
+        $routeKey = strpos($this->_path, '{');
+        if ($routeKey !== false && strpos($this->_path, '}') !== false) {
+            return substr($this->_path, 0, $routeKey);
+        }
+
         $routeKey = strpos($this->_path, ':');
         if ($routeKey !== false) {
             return substr($this->_path, 0, $routeKey);
@@ -189,9 +231,9 @@ class RouteBuilder
     /**
      * Get the parameter names/values for this scope.
      *
-     * @return string
+     * @return array
      */
-    public function params()
+    public function params(): array
     {
         return $this->_params;
     }
@@ -202,7 +244,7 @@ class RouteBuilder
      * @param string $name Name.
      * @return bool
      */
-    public function nameExists($name)
+    public function nameExists(string $name): bool
     {
         return array_key_exists($name, $this->_collection->named());
     }
@@ -216,7 +258,7 @@ class RouteBuilder
      * @param string|null $value Either the value to set or null.
      * @return string
      */
-    public function namePrefix($value = null)
+    public function namePrefix(?string $value = null): string
     {
         if ($value !== null) {
             $this->_namePrefix = $value;
@@ -247,19 +289,19 @@ class RouteBuilder
      * });
      * ```
      *
-     * Plugins will create lower_case underscored resource routes. e.g
+     * Plugins will create lowercase dasherized resource routes. e.g
      * `/comments/comments`
      *
      * Connect resource routes for the Articles controller in the
      * Admin prefix:
      *
      * ```
-     * Router::prefix('admin', function ($routes) {
+     * Router::prefix('Admin', function ($routes) {
      *   $routes->resources('Articles');
      * });
      * ```
      *
-     * Prefixes will create lower_case underscored resource routes. e.g
+     * Prefixes will create lowercase dasherized resource routes. e.g
      * `/admin/posts`
      *
      * You can create nested resources by passing a callback in:
@@ -270,7 +312,7 @@ class RouteBuilder
      * });
      * ```
      *
-     * The above would generate both resource routes for `/articles`, and `/articles/:article_id/comments`.
+     * The above would generate both resource routes for `/articles`, and `/articles/{article_id}/comments`.
      * You can use the `map` option to connect additional resource methods:
      *
      * ```
@@ -280,13 +322,13 @@ class RouteBuilder
      * ```
      *
      * In addition to the default routes, this would also connect a route for `/articles/delete_all`.
-     * By default the path segment will match the key name. You can use the 'path' key inside the resource
+     * By default, the path segment will match the key name. You can use the 'path' key inside the resource
      * definition to customize the path name.
      *
      * You can use the `inflect` option to change how path segments are generated:
      *
      * ```
-     * $routes->resources('PaymentTypes', ['inflect' => 'dasherize']);
+     * $routes->resources('PaymentTypes', ['inflect' => 'underscore']);
      * ```
      *
      * Will generate routes like `/payment-types` instead of `/payment_types`
@@ -295,35 +337,38 @@ class RouteBuilder
      *
      * - 'id' - The regular expression fragment to use when matching IDs. By default, matches
      *    integer values and UUIDs.
-     * - 'inflect' - Choose the inflection method used on the resource name. Defaults to 'underscore'.
+     * - 'inflect' - Choose the inflection method used on the resource name. Defaults to 'dasherize'.
      * - 'only' - Only connect the specific list of actions.
      * - 'actions' - Override the method names used for connecting actions.
      * - 'map' - Additional resource routes that should be connected. If you define 'only' and 'map',
      *   make sure that your mapped methods are also in the 'only' list.
      * - 'prefix' - Define a routing prefix for the resource controller. If the current scope
      *   defines a prefix, this prefix will be appended to it.
-     * - 'connectOptions' – Custom options for connecting the routes.
+     * - 'connectOptions' - Custom options for connecting the routes.
+     * - 'path' - Change the path so it doesn't match the resource name. E.g ArticlesController
+     *   is available at `/posts`
      *
      * @param string $name A controller name to connect resource routes for.
-     * @param array|callable $options Options to use when generating REST routes, or a callback.
+     * @param callable|array $options Options to use when generating REST routes, or a callback.
      * @param callable|null $callback An optional callback to be executed in a nested scope. Nested
      *   scopes inherit the existing path and 'id' parameter.
-     * @return void
+     * @return $this
      */
-    public function resources($name, $options = [], $callback = null)
+    public function resources(string $name, $options = [], $callback = null)
     {
-        if (is_callable($options) && $callback === null) {
+        if (!is_array($options)) {
             $callback = $options;
             $options = [];
         }
         $options += [
             'connectOptions' => [],
-            'inflect' => 'underscore',
+            'inflect' => 'dasherize',
             'id' => static::ID . '|' . static::UUID,
             'only' => [],
             'actions' => [],
             'map' => [],
             'prefix' => null,
+            'path' => null,
         ];
 
         foreach ($options['map'] as $k => $mapped) {
@@ -336,8 +381,10 @@ class RouteBuilder
         }
 
         $connectOptions = $options['connectOptions'];
-        $method = $options['inflect'];
-        $urlName = Inflector::$method($name);
+        if (empty($options['path'])) {
+            $method = $options['inflect'];
+            $options['path'] = Inflector::$method($name);
+        }
         $resourceMap = array_merge(static::$_resourceMap, $options['map']);
 
         $only = (array)$options['only'];
@@ -358,12 +405,9 @@ class RouteBuilder
                 continue;
             }
 
-            $action = $params['action'];
-            if (isset($options['actions'][$method])) {
-                $action = $options['actions'][$method];
-            }
+            $action = $options['actions'][$method] ?? $params['action'];
 
-            $url = '/' . implode('/', array_filter([$urlName, $params['path']]));
+            $url = '/' . implode('/', array_filter([$options['path'], $params['path']]));
             $params = [
                 'controller' => $name,
                 'action' => $action,
@@ -380,11 +424,168 @@ class RouteBuilder
             $this->connect($url, $params, $routeOptions);
         }
 
-        if (is_callable($callback)) {
-            $idName = Inflector::singularize(str_replace('-', '_', $urlName)) . '_id';
-            $path = '/' . $urlName . '/:' . $idName;
+        if ($callback !== null) {
+            $idName = Inflector::singularize(Inflector::underscore($name)) . '_id';
+            $path = '/' . $options['path'] . '/{' . $idName . '}';
             $this->scope($path, [], $callback);
         }
+
+        return $this;
+    }
+
+    /**
+     * Create a route that only responds to GET requests.
+     *
+     * @param string $template The URL template to use.
+     * @param array|string $target An array describing the target route parameters. These parameters
+     *   should indicate the plugin, prefix, controller, and action that this route points to.
+     * @param string|null $name The name of the route.
+     * @return \Cake\Routing\Route\Route
+     */
+    public function get(string $template, $target, ?string $name = null): Route
+    {
+        return $this->_methodRoute('GET', $template, $target, $name);
+    }
+
+    /**
+     * Create a route that only responds to POST requests.
+     *
+     * @param string $template The URL template to use.
+     * @param array|string $target An array describing the target route parameters. These parameters
+     *   should indicate the plugin, prefix, controller, and action that this route points to.
+     * @param string|null $name The name of the route.
+     * @return \Cake\Routing\Route\Route
+     */
+    public function post(string $template, $target, ?string $name = null): Route
+    {
+        return $this->_methodRoute('POST', $template, $target, $name);
+    }
+
+    /**
+     * Create a route that only responds to PUT requests.
+     *
+     * @param string $template The URL template to use.
+     * @param array|string $target An array describing the target route parameters. These parameters
+     *   should indicate the plugin, prefix, controller, and action that this route points to.
+     * @param string|null $name The name of the route.
+     * @return \Cake\Routing\Route\Route
+     */
+    public function put(string $template, $target, ?string $name = null): Route
+    {
+        return $this->_methodRoute('PUT', $template, $target, $name);
+    }
+
+    /**
+     * Create a route that only responds to PATCH requests.
+     *
+     * @param string $template The URL template to use.
+     * @param array|string $target An array describing the target route parameters. These parameters
+     *   should indicate the plugin, prefix, controller, and action that this route points to.
+     * @param string|null $name The name of the route.
+     * @return \Cake\Routing\Route\Route
+     */
+    public function patch(string $template, $target, ?string $name = null): Route
+    {
+        return $this->_methodRoute('PATCH', $template, $target, $name);
+    }
+
+    /**
+     * Create a route that only responds to DELETE requests.
+     *
+     * @param string $template The URL template to use.
+     * @param array|string $target An array describing the target route parameters. These parameters
+     *   should indicate the plugin, prefix, controller, and action that this route points to.
+     * @param string|null $name The name of the route.
+     * @return \Cake\Routing\Route\Route
+     */
+    public function delete(string $template, $target, ?string $name = null): Route
+    {
+        return $this->_methodRoute('DELETE', $template, $target, $name);
+    }
+
+    /**
+     * Create a route that only responds to HEAD requests.
+     *
+     * @param string $template The URL template to use.
+     * @param array|string $target An array describing the target route parameters. These parameters
+     *   should indicate the plugin, prefix, controller, and action that this route points to.
+     * @param string|null $name The name of the route.
+     * @return \Cake\Routing\Route\Route
+     */
+    public function head(string $template, $target, ?string $name = null): Route
+    {
+        return $this->_methodRoute('HEAD', $template, $target, $name);
+    }
+
+    /**
+     * Create a route that only responds to OPTIONS requests.
+     *
+     * @param string $template The URL template to use.
+     * @param array|string $target An array describing the target route parameters. These parameters
+     *   should indicate the plugin, prefix, controller, and action that this route points to.
+     * @param string|null $name The name of the route.
+     * @return \Cake\Routing\Route\Route
+     */
+    public function options(string $template, $target, ?string $name = null): Route
+    {
+        return $this->_methodRoute('OPTIONS', $template, $target, $name);
+    }
+
+    /**
+     * Helper to create routes that only respond to a single HTTP method.
+     *
+     * @param string $method The HTTP method name to match.
+     * @param string $template The URL template to use.
+     * @param array|string $target An array describing the target route parameters. These parameters
+     *   should indicate the plugin, prefix, controller, and action that this route points to.
+     * @param string|null $name The name of the route.
+     * @return \Cake\Routing\Route\Route
+     */
+    protected function _methodRoute(string $method, string $template, $target, ?string $name): Route
+    {
+        if ($name !== null) {
+            $name = $this->_namePrefix . $name;
+        }
+        $options = [
+            '_name' => $name,
+            '_ext' => $this->_extensions,
+            '_middleware' => $this->middleware,
+            'routeClass' => $this->_routeClass,
+        ];
+
+        $target = $this->parseDefaults($target);
+        $target['_method'] = $method;
+
+        $route = $this->_makeRoute($template, $target, $options);
+        $this->_collection->add($route, $options);
+
+        return $route;
+    }
+
+    /**
+     * Load routes from a plugin.
+     *
+     * The routes file will have a local variable named `$routes` made available which contains
+     * the current RouteBuilder instance.
+     *
+     * @param string $name The plugin name
+     * @return $this
+     * @throws \Cake\Core\Exception\MissingPluginException When the plugin has not been loaded.
+     * @throws \InvalidArgumentException When the plugin does not have a routes file.
+     */
+    public function loadPlugin(string $name)
+    {
+        $plugins = Plugin::getCollection();
+        if (!$plugins->has($name)) {
+            throw new MissingPluginException(['plugin' => $name]);
+        }
+        $plugin = $plugins->get($name);
+        $plugin->routes($this);
+
+        // Disable the routes hook to prevent duplicate route issues.
+        $plugin->disable('routes');
+
+        return $this;
     }
 
     /**
@@ -397,7 +598,7 @@ class RouteBuilder
      * Examples:
      *
      * ```
-     * $routes->connect('/:controller/:action/*');
+     * $routes->connect('/{controller}/{action}/*');
      * ```
      *
      * The first parameter will be used as a controller name while the second is
@@ -414,7 +615,7 @@ class RouteBuilder
      *
      * ```
      * $routes->connect(
-     *   '/:lang/:controller/:action/:id',
+     *   '/{lang}/{controller}/{action}/{id}',
      *   [],
      *   ['id' => '[0-9]+', 'lang' => '[a-z]{3}']
      * );
@@ -427,12 +628,12 @@ class RouteBuilder
      * $options offers several 'special' keys that have special meaning
      * in the $options array.
      *
-     * - `pass` is used to define which of the routed parameters should be shifted
-     *   into the pass array. Adding a parameter to pass will remove it from the
-     *   regular route array. Ex. `'pass' => ['slug']`.
      * - `routeClass` is used to extend and change how individual routes parse requests
      *   and handle reverse routing, via a custom routing class.
      *   Ex. `'routeClass' => 'SlugRoute'`
+     * - `pass` is used to define which of the routed parameters should be shifted
+     *   into the pass array. Adding a parameter to pass will remove it from the
+     *   regular route array. Ex. `'pass' => ['slug']`.
      * -  `persist` is used to define which route parameters should be automatically
      *   included when generating new URLs. You can override persistent parameters
      *   by redefining them in a URL or remove them by setting the parameter to `false`.
@@ -443,8 +644,12 @@ class RouteBuilder
      *   reverse routing lookups. If undefined a name will be generated for each
      *   connected route.
      * - `_ext` is an array of filename extensions that will be parsed out of the url if present.
-     *   See {@link ScopedRouteCollection::extensions()}.
+     *   See {@link \Cake\Routing\RouteCollection::setExtensions()}.
      * - `_method` Only match requests with specific HTTP verbs.
+     * - `_host` - Define the host name pattern if you want this route to only match
+     *   specific host names. You can use `.*` and to create wildcard subdomains/hosts
+     *   e.g. `*.example.com` matches all subdomains on `example.com`.
+     * - '_port` - Define the port if you want this route to only match specific port number.
      *
      * Example of using the `_method` condition:
      *
@@ -454,53 +659,70 @@ class RouteBuilder
      *
      * The above route will only be matched for GET requests. POST requests will fail to match this route.
      *
-     * @param string $route A string describing the template of the route
-     * @param array $defaults An array describing the default route parameters. These parameters will be used by default
-     *   and can supply routing parameters that are not dynamic. See above.
-     * @param array $options An array matching the named elements in the route to regular expressions which that
+     * @param \Cake\Routing\Route\Route|string $route A string describing the template of the route
+     * @param array|string $defaults An array describing the default route parameters.
+     *   These parameters will be used by default and can supply routing parameters that are not dynamic. See above.
+     * @param array<string, mixed> $options An array matching the named elements in the route to regular expressions which that
      *   element should match. Also contains additional parameters such as which routed parameters should be
      *   shifted into the passed arguments, supplying patterns for routing parameters and supplying the name of a
      *   custom routing class.
-     * @return void
+     * @return \Cake\Routing\Route\Route
      * @throws \InvalidArgumentException
      * @throws \BadMethodCallException
      */
-    public function connect($route, array $defaults = [], array $options = [])
+    public function connect($route, $defaults = [], array $options = []): Route
     {
-        if (!isset($options['action']) && !isset($defaults['action'])) {
-            $defaults['action'] = 'index';
-        }
-
+        $defaults = $this->parseDefaults($defaults);
         if (empty($options['_ext'])) {
             $options['_ext'] = $this->_extensions;
         }
-
         if (empty($options['routeClass'])) {
             $options['routeClass'] = $this->_routeClass;
         }
         if (isset($options['_name']) && $this->_namePrefix) {
             $options['_name'] = $this->_namePrefix . $options['_name'];
         }
+        if (empty($options['_middleware'])) {
+            $options['_middleware'] = $this->middleware;
+        }
 
         $route = $this->_makeRoute($route, $defaults, $options);
         $this->_collection->add($route, $options);
+
+        return $route;
+    }
+
+    /**
+     * Parse the defaults if they're a string
+     *
+     * @param array|string $defaults Defaults array from the connect() method.
+     * @return array
+     */
+    protected function parseDefaults($defaults): array
+    {
+        if (!is_string($defaults)) {
+            return $defaults;
+        }
+
+        return Router::parseRoutePath($defaults);
     }
 
     /**
      * Create a route object, or return the provided object.
      *
-     * @param string|\Cake\Routing\Route\Route $route The route template or route object.
+     * @param \Cake\Routing\Route\Route|string $route The route template or route object.
      * @param array $defaults Default parameters.
-     * @param array $options Additional options parameters.
+     * @param array<string, mixed> $options Additional options parameters.
      * @return \Cake\Routing\Route\Route
      * @throws \InvalidArgumentException when route class or route object is invalid.
      * @throws \BadMethodCallException when the route to make conflicts with the current scope
      */
-    protected function _makeRoute($route, $defaults, $options)
+    protected function _makeRoute($route, $defaults, $options): Route
     {
         if (is_string($route)) {
+            /** @var class-string<\Cake\Routing\Route\Route>|null $routeClass */
             $routeClass = App::className($options['routeClass'], 'Routing/Route');
-            if ($routeClass === false) {
+            if ($routeClass === null) {
                 throw new InvalidArgumentException(sprintf(
                     'Cannot find route class %s',
                     $options['routeClass']
@@ -508,7 +730,9 @@ class RouteBuilder
             }
 
             $route = str_replace('//', '/', $this->_path . $route);
-            $route = $route === '/' ? $route : rtrim($route, '/');
+            if ($route !== '/') {
+                $route = rtrim($route, '/');
+            }
 
             foreach ($this->_params as $param => $val) {
                 if (isset($defaults[$param]) && $param !== 'prefix' && $defaults[$param] !== $val) {
@@ -523,18 +747,15 @@ class RouteBuilder
                     ));
                 }
             }
-            $defaults += $this->_params;
-            $defaults += ['plugin' => null];
+            $defaults += $this->_params + ['plugin' => null];
+            if (!isset($defaults['action']) && !isset($options['action'])) {
+                $defaults['action'] = 'index';
+            }
 
             $route = new $routeClass($route, $defaults, $options);
         }
 
-        if ($route instanceof Route) {
-            return $route;
-        }
-        throw new InvalidArgumentException(
-            'Route class not found, or route class is not a subclass of Cake\Routing\Route\Route'
-        );
+        return $route;
     }
 
     /**
@@ -547,11 +768,11 @@ class RouteBuilder
      * Examples:
      *
      * ```
-     * $routes->redirect('/home/*', ['controller' => 'posts', 'action' => 'view']);
+     * $routes->redirect('/home/*', ['controller' => 'Posts', 'action' => 'view']);
      * ```
      *
      * Redirects /home/* to /posts/view and passes the parameters to /posts/view. Using an array as the
-     * redirect destination allows you to use other routes to define where an URL string should be redirected to.
+     * redirect destination allows you to use other routes to define where a URL string should be redirected to.
      *
      * ```
      * $routes->redirect('/posts/*', 'http://google.com', ['status' => 302]);
@@ -563,22 +784,23 @@ class RouteBuilder
      *
      * - `status` Sets the HTTP status (default 301)
      * - `persist` Passes the params to the redirected route, if it can. This is useful with greedy routes,
-     *   routes that end in `*` are greedy. As you can remap URLs and not loose any passed args.
+     *   routes that end in `*` are greedy. As you can remap URLs and not lose any passed args.
      *
      * @param string $route A string describing the template of the route
-     * @param array $url An URL to redirect to. Can be a string or a Cake array-based URL
-     * @param array $options An array matching the named elements in the route to regular expressions which that
+     * @param array|string $url A URL to redirect to. Can be a string or a Cake array-based URL
+     * @param array<string, mixed> $options An array matching the named elements in the route to regular expressions which that
      *   element should match. Also contains additional parameters such as which routed parameters should be
      *   shifted into the passed arguments. As well as supplying patterns for routing parameters.
-     * @return void
+     * @return \Cake\Routing\Route\Route|\Cake\Routing\Route\RedirectRoute
      */
-    public function redirect($route, $url, array $options = [])
+    public function redirect(string $route, $url, array $options = []): Route
     {
-        $options['routeClass'] = 'Cake\Routing\Route\RedirectRoute';
+        $options['routeClass'] = $options['routeClass'] ?? RedirectRoute::class;
         if (is_string($url)) {
             $url = ['redirect' => $url];
         }
-        $this->connect($route, $url, $options);
+
+        return $this->connect($route, $url, $options);
     }
 
     /**
@@ -587,7 +809,7 @@ class RouteBuilder
      * This method creates a scoped route collection that includes
      * relevant prefix information.
      *
-     * The path parameter is used to generate the routing parameter name.
+     * The $name parameter is used to generate the routing parameter name.
      * For example a path of `admin` would result in `'prefix' => 'admin'` being
      * applied to all connected routes.
      *
@@ -595,19 +817,43 @@ class RouteBuilder
      * Nested prefixes will result in prefix values like `admin/api` which translates
      * to the `Controller\Admin\Api\` namespace.
      *
+     * If you need to have prefix with dots, eg: '/api/v1.0', use 'path' key
+     * for $params argument:
+     *
+     * ```
+     * $route->prefix('Api', function($route) {
+     *     $route->prefix('V10', ['path' => '/v1.0'], function($route) {
+     *         // Translates to `Controller\Api\V10\` namespace
+     *     });
+     * });
+     * ```
+     *
      * @param string $name The prefix name to use.
-     * @param callable $callback The callback to invoke that builds the prefixed routes.
-     * @return void
+     * @param callable|array $params An array of routing defaults to add to each connected route.
+     *   If you have no parameters, this argument can be a callable.
+     * @param callable|null $callback The callback to invoke that builds the prefixed routes.
+     * @return $this
+     * @throws \InvalidArgumentException If a valid callback is not passed
      */
-    public function prefix($name, callable $callback)
+    public function prefix(string $name, $params = [], $callback = null)
     {
-        $name = Inflector::underscore($name);
-        $path = '/' . $name;
+        if (!is_array($params)) {
+            $callback = $params;
+            $params = [];
+        }
+        $path = '/' . Inflector::dasherize($name);
+        $name = Inflector::camelize($name);
+        if (isset($params['path'])) {
+            $path = $params['path'];
+            unset($params['path']);
+        }
         if (isset($this->_params['prefix'])) {
             $name = $this->_params['prefix'] . '/' . $name;
         }
-        $params = ['prefix' => $name];
+        $params = array_merge($params, ['prefix' => $name]);
         $this->scope($path, $params, $callback);
+
+        return $this;
     }
 
     /**
@@ -622,23 +868,31 @@ class RouteBuilder
      * Routes connected in the scoped collection will have the correct path segment
      * prepended, and have a matching plugin routing key set.
      *
+     * ### Options
+     *
+     * - `path` The path prefix to use. Defaults to `Inflector::dasherize($name)`.
+     * - `_namePrefix` Set a prefix used for named routes. The prefix is prepended to the
+     *   name of any route created in a scope callback.
+     *
      * @param string $name The plugin name to build routes for
-     * @param array|callable $options Either the options to use, or a callback
+     * @param callable|array $options Either the options to use, or a callback to build routes.
      * @param callable|null $callback The callback to invoke that builds the plugin routes
      *   Only required when $options is defined.
-     * @return void
+     * @return $this
      */
-    public function plugin($name, $options = [], $callback = null)
+    public function plugin(string $name, $options = [], $callback = null)
     {
-        if ($callback === null) {
+        if (!is_array($options)) {
             $callback = $options;
             $options = [];
         }
-        $params = ['plugin' => $name] + $this->_params;
-        if (empty($options['path'])) {
-            $options['path'] = '/' . Inflector::underscore($name);
-        }
-        $this->scope($options['path'], $params, $callback);
+
+        $path = $options['path'] ?? '/' . Inflector::dasherize($name);
+        unset($options['path']);
+        $options = ['plugin' => $name] + $options;
+        $this->scope($path, $options, $callback);
+
+        return $this;
     }
 
     /**
@@ -648,22 +902,29 @@ class RouteBuilder
      * added to. This means that both the current path and parameters will be appended
      * to the supplied parameters.
      *
+     * ### Special Keys in $params
+     *
+     * - `_namePrefix` Set a prefix used for named routes. The prefix is prepended to the
+     *   name of any route created in a scope callback.
+     *
      * @param string $path The path to create a scope for.
-     * @param array|callable $params Either the parameters to add to routes, or a callback.
+     * @param callable|array $params Either the parameters to add to routes, or a callback.
      * @param callable|null $callback The callback to invoke that builds the plugin routes.
      *   Only required when $params is defined.
-     * @return void
+     * @return $this
      * @throws \InvalidArgumentException when there is no callable parameter.
      */
-    public function scope($path, $params, $callback = null)
+    public function scope(string $path, $params, $callback = null)
     {
-        if ($callback === null) {
+        if (!is_array($params)) {
             $callback = $params;
             $params = [];
         }
         if (!is_callable($callback)) {
-            $msg = 'Need a callable function/object to connect routes.';
-            throw new InvalidArgumentException($msg);
+            throw new InvalidArgumentException(sprintf(
+                'Need a valid callable to connect routes. Got `%s` instead.',
+                getTypeName($callback)
+            ));
         }
 
         if ($this->_path !== '/') {
@@ -675,28 +936,99 @@ class RouteBuilder
         }
         unset($params['_namePrefix']);
 
-        $params = $params + $this->_params;
+        $params += $this->_params;
         $builder = new static($this->_collection, $path, $params, [
             'routeClass' => $this->_routeClass,
             'extensions' => $this->_extensions,
             'namePrefix' => $namePrefix,
+            'middleware' => $this->middleware,
         ]);
         $callback($builder);
+
+        return $this;
     }
 
     /**
-     * Connect the `/:controller` and `/:controller/:action/*` fallback routes.
+     * Connect the `/{controller}` and `/{controller}/{action}/*` fallback routes.
      *
      * This is a shortcut method for connecting fallback routes in a given scope.
      *
      * @param string|null $routeClass the route class to use, uses the default routeClass
      *   if not specified
-     * @return void
+     * @return $this
      */
-    public function fallbacks($routeClass = null)
+    public function fallbacks(?string $routeClass = null)
     {
         $routeClass = $routeClass ?: $this->_routeClass;
-        $this->connect('/:controller', ['action' => 'index'], compact('routeClass'));
-        $this->connect('/:controller/:action/*', [], compact('routeClass'));
+        $this->connect('/{controller}', ['action' => 'index'], compact('routeClass'));
+        $this->connect('/{controller}/{action}/*', [], compact('routeClass'));
+
+        return $this;
+    }
+
+    /**
+     * Register a middleware with the RouteCollection.
+     *
+     * Once middleware has been registered, it can be applied to the current routing
+     * scope or any child scopes that share the same RouteCollection.
+     *
+     * @param string $name The name of the middleware. Used when applying middleware to a scope.
+     * @param \Psr\Http\Server\MiddlewareInterface|\Closure|string $middleware The middleware to register.
+     * @return $this
+     * @see \Cake\Routing\RouteCollection
+     */
+    public function registerMiddleware(string $name, $middleware)
+    {
+        $this->_collection->registerMiddleware($name, $middleware);
+
+        return $this;
+    }
+
+    /**
+     * Apply one or many middleware to the current route scope.
+     *
+     * Requires middleware to be registered via `registerMiddleware()`.
+     *
+     * @param string ...$names The names of the middleware to apply to the current scope.
+     * @return $this
+     * @throws \RuntimeException If it cannot apply one of the given middleware or middleware groups.
+     * @see \Cake\Routing\RouteCollection::addMiddlewareToScope()
+     */
+    public function applyMiddleware(string ...$names)
+    {
+        foreach ($names as $name) {
+            if (!$this->_collection->middlewareExists($name)) {
+                $message = "Cannot apply '$name' middleware or middleware group. " .
+                    'Use registerMiddleware() to register middleware.';
+                throw new RuntimeException($message);
+            }
+        }
+        $this->middleware = array_unique(array_merge($this->middleware, $names));
+
+        return $this;
+    }
+
+    /**
+     * Get the middleware that this builder will apply to routes.
+     *
+     * @return array
+     */
+    public function getMiddleware(): array
+    {
+        return $this->middleware;
+    }
+
+    /**
+     * Apply a set of middleware to a group
+     *
+     * @param string $name Name of the middleware group
+     * @param array<string> $middlewareNames Names of the middleware
+     * @return $this
+     */
+    public function middlewareGroup(string $name, array $middlewareNames)
+    {
+        $this->_collection->middlewareGroup($name, $middlewareNames);
+
+        return $this;
     }
 }

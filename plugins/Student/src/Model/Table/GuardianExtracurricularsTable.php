@@ -70,13 +70,13 @@ class GuardianExtracurricularsTable extends AppTable {
 
 	public function beforeFind( Event $event, Query $query )
 	{   
-		$session = $this->request->session();
+		$session = $this->request->getSession();
 		$userData = $this->Session->read();
 		$studentId = $session->read('Student.Students.id');
 		if ($this->alias() == 'Extracurriculars') {
-			$periodId = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+			$periodId = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
 			$conditions[$this->aliasField('academic_period_id')] = $periodId;
-			if ($this->controller->name == 'Profiles') {
+			if ($this->controller->getName() == 'Profiles') {
 				if ($this->Session->read('Auth.User.is_guardian') == 1) {
 					$sId = $this->Session->read('Student.ExaminationResults.student_id');
 					
@@ -95,14 +95,14 @@ class GuardianExtracurricularsTable extends AppTable {
 					$studentId = $this->Session->read('Auth.User.id');
 				}
 			} 
-			if ($this->controller->name == 'GuardianNavs') {
-				$session = $this->request->session();
+			if ($this->controller->getName() == 'GuardianNavs') {
+				$session = $this->request->getSession();
 				$studentId = $session->read('Student.Students.id');
 			}
 			
 			$conditions[$this->aliasField('security_user_id')] = $studentId;
 			if ($this->action == 'view' || $this->action == 'edit') {
-				$id = $this->ControllerAction->paramsDecode($this->request->params['pass'][1])['id'];
+				$id = $this->ControllerAction->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
     			$conditions[$this->aliasField('id')] = $id;
 				$query->where($conditions, [], true);
 			} else {
@@ -114,7 +114,7 @@ class GuardianExtracurricularsTable extends AppTable {
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $conditions[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 
