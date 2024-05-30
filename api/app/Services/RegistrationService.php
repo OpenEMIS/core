@@ -171,18 +171,28 @@ class RegistrationService extends Controller
     }
 
 
-    public function autocompleteOpenemisNo($id)
+    public function autocompleteOpenemisNo($params, $id)
     {
         try {
-            $data = $this->registrationRepository->autocompleteOpenemisNo($id);
+            $data = $this->registrationRepository->autocompleteOpenemisNo($params, $id);
             $resp = [];
 
-            foreach ($data as $key => $d) {
+            foreach ($data['data'] as $key => $d) {
                 $resp[$key]['key'] = $d['key'];
                 $resp[$key]['value'] = $d['value'];
             }
             
-            return $resp;
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $data['data'] = $resp;
+                return $data;
+            } else {
+                return $resp;
+            }
+            //For POCOR-8215/8216 end...
+
+            
             
         } catch (\Exception $e) {
             Log::error(
@@ -213,12 +223,15 @@ class RegistrationService extends Controller
     }
 
 
-    public function detailsByEmis($id)
+    public function detailsByEmis($params, $id)
     {
         try {
-            $data = $this->registrationRepository->detailsByEmis($id)
-                ->map(function ($item, $key) {
-                    return [
+            $data = $this->registrationRepository->detailsByEmis($params, $id);
+
+            $resp = [];
+            if(!empty($data)){
+                foreach ($data['data'] as $k => $item) {
+                    $resp[$k] = [
                         "openemis_no" => $item['openemis_no'],
                         "first_name" => $item['first_name'],
                         "middle_name" => $item['middle_name'],
@@ -241,20 +254,28 @@ class RegistrationService extends Controller
                             "value" => (!empty($item["nationality"]["name"]))?$item["nationality"]["name"]:'',
                         ],
                         "institution" => [
-                                "key" => (!empty($item["institutionStudent"]["institution"]["id"]))?$item["institutionStudent"]["institution"]["id"]:'',
-                            "value" => (!empty($item["institutionStudent"]["institution"]["name"]))?$item["institutionStudent"]["institution"]["name"]:'',
+                                "key" => (!empty($item["institution_student"]["institution"]["id"]))?$item["institution_student"]["institution"]["id"]:'',
+                            "value" => (!empty($item["institution_student"]["institution"]["name"]))?$item["institution_student"]["institution"]["name"]:'',
                         ],
                     ];
-                });
+                }
+            }
             
-            return $data;
-            
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $data['data'] = $resp;
+                return $data;
+            } else {
+                return $resp;
+            }
+            //For POCOR-8215/8216 end...
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to find candidate data.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
+            dd($e);
             return $this->sendErrorResponse('Failed to find candidate data.');
         }
     }
@@ -326,13 +347,13 @@ class RegistrationService extends Controller
     }
 
 
-    public function getStudentCustomFields()
+    public function getStudentCustomFields($params)
     {
         try {
-            $data = $this->registrationRepository->getStudentCustomFields();
+            $data = $this->registrationRepository->getStudentCustomFields($params);
             $resp = [];
-
-            foreach($data as $k => $d){
+            
+            foreach($data['data'] as $k => $d){
                 //dd($d);
                 $section = $d['section'];
                 $arr['student_custom_form_id'] = $d['student_custom_form_id'];
@@ -355,8 +376,16 @@ class RegistrationService extends Controller
                 $resp[$section][] = $arr;
             }
 
-            return $resp;
-            
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $data['data'] = $resp;
+                return $data;
+                
+            } else {
+                return $resp;
+            }
+            //For POCOR-8215/8216 end...
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to find custom fields list.',

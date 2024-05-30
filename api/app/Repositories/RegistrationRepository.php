@@ -90,6 +90,13 @@ class RegistrationRepository extends Controller
                 $lists = $lists->where('academic_periods.current', 1);
             }
 
+            if(isset($request['order'])){
+                $orderBy = $request['order_by']??"ASC";
+                $col = 'education_grades.'.$request['order'];
+                $lists = $lists->orderBy($col, $orderBy);
+            }
+
+
             if ($request['limit']) {
                 $educationGrades = $lists->paginate($request['limit']);
             } else {
@@ -101,7 +108,6 @@ class RegistrationRepository extends Controller
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Failed to fetch list from DB');
         }
     }
@@ -307,7 +313,7 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function autocompleteOpenemisNo($id)
+    public function autocompleteOpenemisNo($params, $id)
     {
         try {
             $data = SecurityUsers::select(
@@ -318,9 +324,25 @@ class RegistrationRepository extends Controller
                     'third_name',
                     'last_name',
                     'openemis_no',
-                    )->where('openemis_no', 'LIKE', '%'.$id.'%')->get()->toArray();
+                    )->where('openemis_no', 'LIKE', '%'.$id.'%');
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $data = $data->orderBy($col, $orderBy);
+            }
+                        
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $data->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $data->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
             
-            return $data;
+            return $list;
             
         } catch (\Exception $e) {
             Log::error(
@@ -350,7 +372,7 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function detailsByEmis($id)
+    public function detailsByEmis($params,$id)
     {
         try {
             $data = SecurityUsers::with(
@@ -359,17 +381,33 @@ class RegistrationRepository extends Controller
                     'institutionStudent',
                     'institutionStudent.institution'
                 )
-                ->where('openemis_no', $id)
-                ->orWhere('identity_number', $id)
-                ->get();
-            return $data;
+                ->where('openemis_no', 'LIKE', '%'.$id.'%')
+                ->orWhere('identity_number', 'LIKE', '%'.$id.'%');
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $data = $data->orderBy($col, $orderBy);
+            }
+                        
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $data->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $data->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
+            return $list;
             
         } catch (\Exception $e) {
             Log::error(
                 'Failed to find candidate data.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
+            dd($e);
             return $this->sendErrorResponse('Failed to find candidate data.');
         }
     }
@@ -1245,7 +1283,7 @@ class RegistrationRepository extends Controller
 
 
 
-    public function getStudentCustomFields()
+    public function getStudentCustomFields($params)
     {
         try {
             $customFields = StudentCustomFormField::with([
@@ -1255,11 +1293,27 @@ class RegistrationRepository extends Controller
             ])
             ->whereHas('studentCustomField')
             ->where('student_custom_form_id', 1)
-            ->orderBy('order', 'ASC')
-            ->get()
-            ->toArray();
+            ->orderBy('order', 'ASC');
             //dd($customFields);
-            return $customFields;
+
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $customFields = $customFields->orderBy($col, $orderBy);
+            }
+                        
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $customFields->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $customFields->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
+            return $list;
 
         } catch (\Exception $e) {
             Log::error(
@@ -1373,6 +1427,13 @@ class RegistrationRepository extends Controller
     {
         try {
             $areaLevels = AreaLevels::select('id', 'name');
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $areaLevels = $areaLevels->orderBy($col, $orderBy);
+            }
+
             if (isset($params['limit'])) {
                 $areaLevels = $areaLevels->paginate($params['limit']);
             } else {
@@ -1421,6 +1482,12 @@ class RegistrationRepository extends Controller
     {
         try {
             $areaLevels = AreaAdministrativeLevels::select('id', 'name');
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $areaLevels = $areaLevels->orderBy($col, $orderBy);
+            }
 
             if (isset($params['limit'])) {
                 $areaLevels = $areaLevels->paginate($params['limit']);

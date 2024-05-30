@@ -552,14 +552,14 @@ class StudentController extends Controller
      *         in="path",
      *         required=true,
      *         description="Instituton Id",
-     *         @OA\Schema(type="integer", example="1")
+     *         @OA\Schema(type="integer", example="6")
      *      ),
      *      @OA\Parameter(
      *         name="studentId",
      *         in="path",
      *         required=true,
      *         description="Student Id",
-     *         @OA\Schema(type="integer", example="1")
+     *         @OA\Schema(type="integer", example="11763")
      *      ),
      *      @OA\Response(
      *          response=200,
@@ -642,6 +642,13 @@ class StudentController extends Controller
      *      summary="Get a list of education grades",
      *      description="Get a list of education grades",
      *      tags={"Institutions"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
      *      @OA\Parameter(
      *         name="page",
      *         in="query",
