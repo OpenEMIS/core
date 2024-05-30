@@ -507,6 +507,16 @@ class LeaveTable extends ControllerActionTable
         }
     }
 
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action != 'add' && $action != 'edit'){
+            return $attr;
+        }
+        $attr['value'] = 0;
+        $attr['type'] = 'hidden';
+        return $attr;
+    }
+
     public function onGetInstitutionId(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
@@ -660,7 +670,7 @@ class LeaveTable extends ControllerActionTable
             }
             $StaffTable = TableRegistry::get('Institution.Staff');
             $institutionOptions = $StaffTable
-                ->find('list', ['keyField' => 'Institutions.id', 'valueField' => 'Institutions.name'])
+                ->find('list', ['keyField' => 'institution.id', 'valueField' => 'institution.name'])
                 ->select([
                     $this->Institutions->aliasField('id'),
                     $this->Institutions->aliasField('name')
