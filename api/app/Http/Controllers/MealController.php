@@ -243,7 +243,7 @@ class MealController extends Controller
      *         name="id",
      *         in="query",
      *         description="Institution class student id",
-     *         @OA\Schema(type="integer", example=3)
+     *         @OA\Schema(type="integer", example="410ce5e7-e869-4323-8340-165db3a2abc9")
      *      ),
      *      @OA\Parameter(
      *         name="order",

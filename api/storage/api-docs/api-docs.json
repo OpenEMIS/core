@@ -3481,6 +3481,16 @@
                         }
                     },
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -20261,14 +20271,14 @@
                 }
             }
         },
-        "/api/v4/institutions/{institutionId}/grades-list": {
+        "/api/v4/institutions/{institutionId}/grade-list": {
             "get": {
                 "tags": [
                     "Institutions"
                 ],
                 "summary": "Get grades list of institutions",
                 "description": "Returns a list of grades by institution id",
-                "operationId": "307b6425b153b06a7450c41b136cce18",
+                "operationId": "c8fff093721f67b1a83aa136feff4e5c",
                 "parameters": [
                     {
                         "name": "institutionId",
@@ -20395,6 +20405,16 @@
                         }
                     },
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "student_id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -20472,6 +20492,16 @@
                 "description": "Get a list of meal benefits type",
                 "operationId": "eb29a01550240c85b0654140c9ba2c11",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -20677,6 +20707,16 @@
                         "schema": {
                             "type": "integer",
                             "example": 3
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
                         }
                     },
                     {
@@ -21006,6 +21046,16 @@
                         }
                     },
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -21193,6 +21243,16 @@
                 "operationId": "0761747916cf142abf825dab28b745d3",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -21304,6 +21364,16 @@
                 "description": "Get a list of meal implementers",
                 "operationId": "acfe9cd55a7e5c9fcd697d48527b52c1",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -21421,6 +21491,16 @@
                 "operationId": "2910a79fdc19e9baaa4da30197c967f1",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -21514,6 +21594,16 @@
                 "description": "Get a list of meal ratings",
                 "operationId": "e8ed17e99e0325cb425680d83b5acf2e",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -21631,6 +21721,16 @@
                 "operationId": "fb3d4508ee6ef7cc5c4fa1129de4a504",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -21738,6 +21838,16 @@
                 "description": "Get a list of meal food types",
                 "operationId": "f77ea96e1fece4b270813e332b7d7122",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -24761,6 +24871,16 @@
                         }
                     },
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -25076,6 +25196,16 @@
                         "schema": {
                             "type": "integer",
                             "example": "1"
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
                         }
                     },
                     {
@@ -25707,151 +25837,156 @@
                                             "example": "Successful."
                                         },
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "student_id": {
-                                                        "type": "integer",
-                                                        "example": 10602
-                                                    },
-                                                    "first_name": {
-                                                        "type": "string",
-                                                        "example": "Francklin"
-                                                    },
-                                                    "middle_name": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "third_name": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "last_name": {
-                                                        "type": "string",
-                                                        "example": "Samter"
-                                                    },
-                                                    "openemis_no": {
-                                                        "type": "string",
-                                                        "example": "1548403445"
-                                                    },
-                                                    "date_of_birth": {
-                                                        "type": "string",
-                                                        "example": "2013-06-27"
-                                                    },
-                                                    "date_of_death": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "identity_number": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "external_reference": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "gender_id": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "gender_name": {
-                                                        "type": "string",
-                                                        "example": "Male"
-                                                    },
-                                                    "institution_id": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "institution_code": {
-                                                        "type": "string",
-                                                        "example": "K0001"
-                                                    },
-                                                    "institution_name": {
-                                                        "type": "string",
-                                                        "example": "Star Kindergarten"
-                                                    },
-                                                    "education_grade_id": {
-                                                        "type": "integer",
-                                                        "example": 119
-                                                    },
-                                                    "education_grade_name": {
-                                                        "type": "string",
-                                                        "example": "Kindergarten 1"
-                                                    },
-                                                    "academic_period_id": {
-                                                        "type": "integer",
-                                                        "example": 28
-                                                    },
-                                                    "academic_period_name": {
-                                                        "type": "string",
-                                                        "example": "2019"
-                                                    },
-                                                    "institution_class_id": {
-                                                        "type": "integer",
-                                                        "example": 488
-                                                    },
-                                                    "institution_class_name": {
-                                                        "type": "string",
-                                                        "example": "Kindergarten 1-A"
-                                                    },
-                                                    "date": {
-                                                        "type": "array",
-                                                        "items": {
-                                                            "properties": {
-                                                                "period_id": {
-                                                                    "type": "null"
-                                                                },
-                                                                "period_name": {
-                                                                    "type": "null"
-                                                                },
-                                                                "subject_id": {
-                                                                    "type": "null"
-                                                                },
-                                                                "subject_name": {
-                                                                    "type": "null"
-                                                                },
-                                                                "absence_type_id": {
-                                                                    "type": "integer",
-                                                                    "example": 2
-                                                                },
-                                                                "absence_type_name": {
-                                                                    "type": "string",
-                                                                    "example": "Absence - Unexcused"
-                                                                },
-                                                                "student_absence_reason_id": {
-                                                                    "type": "null"
-                                                                },
-                                                                "student_absence_reason_name": {
-                                                                    "type": "null"
-                                                                },
-                                                                "comment": {
-                                                                    "type": "null"
-                                                                },
-                                                                "date": {
-                                                                    "type": "string",
-                                                                    "example": "2019-05-07"
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "student_id": {
+                                                                "type": "integer",
+                                                                "example": 10602
+                                                            },
+                                                            "first_name": {
+                                                                "type": "string",
+                                                                "example": "Francklin"
+                                                            },
+                                                            "middle_name": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "third_name": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "last_name": {
+                                                                "type": "string",
+                                                                "example": "Samter"
+                                                            },
+                                                            "openemis_no": {
+                                                                "type": "string",
+                                                                "example": "1548403445"
+                                                            },
+                                                            "date_of_birth": {
+                                                                "type": "string",
+                                                                "example": "2013-06-27"
+                                                            },
+                                                            "date_of_death": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "identity_number": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "external_reference": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "gender_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "gender_name": {
+                                                                "type": "string",
+                                                                "example": "Male"
+                                                            },
+                                                            "institution_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "institution_code": {
+                                                                "type": "string",
+                                                                "example": "K0001"
+                                                            },
+                                                            "institution_name": {
+                                                                "type": "string",
+                                                                "example": "Star Kindergarten"
+                                                            },
+                                                            "education_grade_id": {
+                                                                "type": "integer",
+                                                                "example": 119
+                                                            },
+                                                            "education_grade_name": {
+                                                                "type": "string",
+                                                                "example": "Kindergarten 1"
+                                                            },
+                                                            "academic_period_id": {
+                                                                "type": "integer",
+                                                                "example": 28
+                                                            },
+                                                            "academic_period_name": {
+                                                                "type": "string",
+                                                                "example": "2019"
+                                                            },
+                                                            "institution_class_id": {
+                                                                "type": "integer",
+                                                                "example": 488
+                                                            },
+                                                            "institution_class_name": {
+                                                                "type": "string",
+                                                                "example": "Kindergarten 1-A"
+                                                            },
+                                                            "date": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "period_id": {
+                                                                            "type": "null"
+                                                                        },
+                                                                        "period_name": {
+                                                                            "type": "null"
+                                                                        },
+                                                                        "subject_id": {
+                                                                            "type": "null"
+                                                                        },
+                                                                        "subject_name": {
+                                                                            "type": "null"
+                                                                        },
+                                                                        "absence_type_id": {
+                                                                            "type": "integer",
+                                                                            "example": 2
+                                                                        },
+                                                                        "absence_type_name": {
+                                                                            "type": "string",
+                                                                            "example": "Absence - Unexcused"
+                                                                        },
+                                                                        "student_absence_reason_id": {
+                                                                            "type": "null"
+                                                                        },
+                                                                        "student_absence_reason_name": {
+                                                                            "type": "null"
+                                                                        },
+                                                                        "comment": {
+                                                                            "type": "null"
+                                                                        },
+                                                                        "date": {
+                                                                            "type": "string",
+                                                                            "example": "2019-05-07"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
                                                                 }
                                                             },
-                                                            "type": "object"
-                                                        }
-                                                    },
-                                                    "modified_user_id": {
-                                                        "type": "null"
-                                                    },
-                                                    "modified": {
-                                                        "type": "null"
-                                                    },
-                                                    "created_user_id": {
-                                                        "type": "integer",
-                                                        "example": 2
-                                                    },
-                                                    "created": {
-                                                        "type": "string",
-                                                        "example": "2019-11-25 18:23:42"
+                                                            "modified_user_id": {
+                                                                "type": "null"
+                                                            },
+                                                            "modified": {
+                                                                "type": "null"
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "example": "2019-11-25 18:23:42"
+                                                            }
+                                                        },
+                                                        "type": "object"
                                                     }
-                                                },
-                                                "type": "object"
-                                            }
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -26026,151 +26161,156 @@
                                             "example": "Successful."
                                         },
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "student_id": {
-                                                        "type": "integer",
-                                                        "example": 10602
-                                                    },
-                                                    "first_name": {
-                                                        "type": "string",
-                                                        "example": "Francklin"
-                                                    },
-                                                    "middle_name": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "third_name": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "last_name": {
-                                                        "type": "string",
-                                                        "example": "Samter"
-                                                    },
-                                                    "openemis_no": {
-                                                        "type": "string",
-                                                        "example": "1548403445"
-                                                    },
-                                                    "date_of_birth": {
-                                                        "type": "string",
-                                                        "example": "2013-06-27"
-                                                    },
-                                                    "date_of_death": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "identity_number": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "external_reference": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "gender_id": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "gender_name": {
-                                                        "type": "string",
-                                                        "example": "Male"
-                                                    },
-                                                    "institution_id": {
-                                                        "type": "integer",
-                                                        "example": 1
-                                                    },
-                                                    "institution_code": {
-                                                        "type": "string",
-                                                        "example": "K0001"
-                                                    },
-                                                    "institution_name": {
-                                                        "type": "string",
-                                                        "example": "Star Kindergarten"
-                                                    },
-                                                    "education_grade_id": {
-                                                        "type": "integer",
-                                                        "example": 119
-                                                    },
-                                                    "education_grade_name": {
-                                                        "type": "string",
-                                                        "example": "Kindergarten 1"
-                                                    },
-                                                    "academic_period_id": {
-                                                        "type": "integer",
-                                                        "example": 28
-                                                    },
-                                                    "academic_period_name": {
-                                                        "type": "string",
-                                                        "example": "2019"
-                                                    },
-                                                    "institution_class_id": {
-                                                        "type": "integer",
-                                                        "example": 488
-                                                    },
-                                                    "institution_class_name": {
-                                                        "type": "string",
-                                                        "example": "Kindergarten 1-A"
-                                                    },
-                                                    "date": {
-                                                        "type": "array",
-                                                        "items": {
-                                                            "properties": {
-                                                                "period_id": {
-                                                                    "type": "null"
-                                                                },
-                                                                "period_name": {
-                                                                    "type": "null"
-                                                                },
-                                                                "subject_id": {
-                                                                    "type": "null"
-                                                                },
-                                                                "subject_name": {
-                                                                    "type": "null"
-                                                                },
-                                                                "absence_type_id": {
-                                                                    "type": "integer",
-                                                                    "example": 2
-                                                                },
-                                                                "absence_type_name": {
-                                                                    "type": "string",
-                                                                    "example": "Absence - Unexcused"
-                                                                },
-                                                                "student_absence_reason_id": {
-                                                                    "type": "null"
-                                                                },
-                                                                "student_absence_reason_name": {
-                                                                    "type": "null"
-                                                                },
-                                                                "comment": {
-                                                                    "type": "null"
-                                                                },
-                                                                "date": {
-                                                                    "type": "string",
-                                                                    "example": "2019-05-07"
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "student_id": {
+                                                                "type": "integer",
+                                                                "example": 10602
+                                                            },
+                                                            "first_name": {
+                                                                "type": "string",
+                                                                "example": "Francklin"
+                                                            },
+                                                            "middle_name": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "third_name": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "last_name": {
+                                                                "type": "string",
+                                                                "example": "Samter"
+                                                            },
+                                                            "openemis_no": {
+                                                                "type": "string",
+                                                                "example": "1548403445"
+                                                            },
+                                                            "date_of_birth": {
+                                                                "type": "string",
+                                                                "example": "2013-06-27"
+                                                            },
+                                                            "date_of_death": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "identity_number": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "external_reference": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "gender_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "gender_name": {
+                                                                "type": "string",
+                                                                "example": "Male"
+                                                            },
+                                                            "institution_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "institution_code": {
+                                                                "type": "string",
+                                                                "example": "K0001"
+                                                            },
+                                                            "institution_name": {
+                                                                "type": "string",
+                                                                "example": "Star Kindergarten"
+                                                            },
+                                                            "education_grade_id": {
+                                                                "type": "integer",
+                                                                "example": 119
+                                                            },
+                                                            "education_grade_name": {
+                                                                "type": "string",
+                                                                "example": "Kindergarten 1"
+                                                            },
+                                                            "academic_period_id": {
+                                                                "type": "integer",
+                                                                "example": 28
+                                                            },
+                                                            "academic_period_name": {
+                                                                "type": "string",
+                                                                "example": "2019"
+                                                            },
+                                                            "institution_class_id": {
+                                                                "type": "integer",
+                                                                "example": 488
+                                                            },
+                                                            "institution_class_name": {
+                                                                "type": "string",
+                                                                "example": "Kindergarten 1-A"
+                                                            },
+                                                            "date": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "period_id": {
+                                                                            "type": "null"
+                                                                        },
+                                                                        "period_name": {
+                                                                            "type": "null"
+                                                                        },
+                                                                        "subject_id": {
+                                                                            "type": "null"
+                                                                        },
+                                                                        "subject_name": {
+                                                                            "type": "null"
+                                                                        },
+                                                                        "absence_type_id": {
+                                                                            "type": "integer",
+                                                                            "example": 2
+                                                                        },
+                                                                        "absence_type_name": {
+                                                                            "type": "string",
+                                                                            "example": "Absence - Unexcused"
+                                                                        },
+                                                                        "student_absence_reason_id": {
+                                                                            "type": "null"
+                                                                        },
+                                                                        "student_absence_reason_name": {
+                                                                            "type": "null"
+                                                                        },
+                                                                        "comment": {
+                                                                            "type": "null"
+                                                                        },
+                                                                        "date": {
+                                                                            "type": "string",
+                                                                            "example": "2019-05-07"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
                                                                 }
                                                             },
-                                                            "type": "object"
-                                                        }
-                                                    },
-                                                    "modified_user_id": {
-                                                        "type": "null"
-                                                    },
-                                                    "modified": {
-                                                        "type": "null"
-                                                    },
-                                                    "created_user_id": {
-                                                        "type": "integer",
-                                                        "example": 2
-                                                    },
-                                                    "created": {
-                                                        "type": "string",
-                                                        "example": "2019-11-25 18:23:42"
+                                                            "modified_user_id": {
+                                                                "type": "null"
+                                                            },
+                                                            "modified": {
+                                                                "type": "null"
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "example": "2019-11-25 18:23:42"
+                                                            }
+                                                        },
+                                                        "type": "object"
                                                     }
-                                                },
-                                                "type": "object"
-                                            }
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -26433,56 +26573,61 @@
                                             "example": "Successful."
                                         },
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "academic_period_id": {
-                                                        "type": "integer",
-                                                        "example": 28
-                                                    },
-                                                    "academic_period_name": {
-                                                        "type": "string",
-                                                        "example": "2019"
-                                                    },
-                                                    "education_grade_id": {
-                                                        "type": "integer",
-                                                        "example": 119
-                                                    },
-                                                    "education_grade_name": {
-                                                        "type": "string",
-                                                        "example": "Kindergarten 1"
-                                                    },
-                                                    "attendance_by": {
-                                                        "type": "string",
-                                                        "example": "DAY"
-                                                    },
-                                                    "period_name": {
-                                                        "type": "string",
-                                                        "example": "Period 1"
-                                                    },
-                                                    "attendance_per_day": {
-                                                        "type": "interger",
-                                                        "example": 2
-                                                    },
-                                                    "date_enabled": {
-                                                        "type": "string",
-                                                        "example": "2023-12-31"
-                                                    },
-                                                    "date_disabled": {
-                                                        "type": "string",
-                                                        "example": "2023-12-31"
-                                                    },
-                                                    "value": {
-                                                        "type": "string",
-                                                        "example": "1"
-                                                    },
-                                                    "day_configuration": {
-                                                        "type": "string",
-                                                        "example": "Mark absent if one or more records absent"
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "academic_period_id": {
+                                                                "type": "integer",
+                                                                "example": 28
+                                                            },
+                                                            "academic_period_name": {
+                                                                "type": "string",
+                                                                "example": "2019"
+                                                            },
+                                                            "education_grade_id": {
+                                                                "type": "integer",
+                                                                "example": 119
+                                                            },
+                                                            "education_grade_name": {
+                                                                "type": "string",
+                                                                "example": "Kindergarten 1"
+                                                            },
+                                                            "attendance_by": {
+                                                                "type": "string",
+                                                                "example": "DAY"
+                                                            },
+                                                            "period_name": {
+                                                                "type": "string",
+                                                                "example": "Period 1"
+                                                            },
+                                                            "attendance_per_day": {
+                                                                "type": "interger",
+                                                                "example": 2
+                                                            },
+                                                            "date_enabled": {
+                                                                "type": "string",
+                                                                "example": "2023-12-31"
+                                                            },
+                                                            "date_disabled": {
+                                                                "type": "string",
+                                                                "example": "2023-12-31"
+                                                            },
+                                                            "value": {
+                                                                "type": "string",
+                                                                "example": "1"
+                                                            },
+                                                            "day_configuration": {
+                                                                "type": "string",
+                                                                "example": "Mark absent if one or more records absent"
+                                                            }
+                                                        },
+                                                        "type": "object"
                                                     }
-                                                },
-                                                "type": "object"
-                                            }
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -26512,7 +26657,7 @@
                         "required": true,
                         "schema": {
                             "type": "integer",
-                            "example": "1"
+                            "example": "6"
                         }
                     },
                     {
@@ -26558,68 +26703,73 @@
                                             "example": "Successful."
                                         },
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "academic_period_id": {
-                                                        "type": "integer",
-                                                        "example": 28
-                                                    },
-                                                    "institution_id": {
-                                                        "type": "integer",
-                                                        "example": 6
-                                                    },
-                                                    "institution_class_id": {
-                                                        "type": "integer",
-                                                        "example": 119
-                                                    },
-                                                    "institution_class_name": {
-                                                        "type": "string",
-                                                        "example": "Kindergarten 1"
-                                                    },
-                                                    "institution_subject_id": {
-                                                        "type": "integer",
-                                                        "example": 40
-                                                    },
-                                                    "institution_subject_name": {
-                                                        "type": "string",
-                                                        "example": "Science"
-                                                    },
-                                                    "education_subject_id": {
-                                                        "type": "integer",
-                                                        "example": 2
-                                                    },
-                                                    "education_grade_id": {
-                                                        "type": "integer",
-                                                        "example": 13
-                                                    },
-                                                    "total_male_students": {
-                                                        "type": "integer",
-                                                        "example": 131
-                                                    },
-                                                    "total_female_students": {
-                                                        "type": "integer",
-                                                        "example": 13
-                                                    },
-                                                    "modified_user_id": {
-                                                        "type": "integer",
-                                                        "example": null
-                                                    },
-                                                    "modified": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "created_user_id": {
-                                                        "type": "integer",
-                                                        "example": 2
-                                                    },
-                                                    "created": {
-                                                        "type": "string",
-                                                        "example": "2019-11-20 19:51:58"
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "academic_period_id": {
+                                                                "type": "integer",
+                                                                "example": 28
+                                                            },
+                                                            "institution_id": {
+                                                                "type": "integer",
+                                                                "example": 6
+                                                            },
+                                                            "institution_class_id": {
+                                                                "type": "integer",
+                                                                "example": 119
+                                                            },
+                                                            "institution_class_name": {
+                                                                "type": "string",
+                                                                "example": "Kindergarten 1"
+                                                            },
+                                                            "institution_subject_id": {
+                                                                "type": "integer",
+                                                                "example": 40
+                                                            },
+                                                            "institution_subject_name": {
+                                                                "type": "string",
+                                                                "example": "Science"
+                                                            },
+                                                            "education_subject_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "education_grade_id": {
+                                                                "type": "integer",
+                                                                "example": 13
+                                                            },
+                                                            "total_male_students": {
+                                                                "type": "integer",
+                                                                "example": 131
+                                                            },
+                                                            "total_female_students": {
+                                                                "type": "integer",
+                                                                "example": 13
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": null
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "example": "2019-11-20 19:51:58"
+                                                            }
+                                                        },
+                                                        "type": "object"
                                                     }
-                                                },
-                                                "type": "object"
-                                            }
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -26780,6 +26930,16 @@
                 "description": "Get list of system configuration ",
                 "operationId": "2a500bcf318fdb7ccbcd236e650be3f8",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -27085,6 +27245,16 @@
                 "operationId": "e05f9f0d738ff11f3f08c9632acb4eb1",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -27308,6 +27478,16 @@
                 "operationId": "d81039dfce8d033287ff2c7a86fa2999",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -27420,6 +27600,16 @@
                 "description": "Get list of textbook dimensions",
                 "operationId": "44dce97b679fd75d874ff311d752677b",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -27817,6 +28007,16 @@
                 "description": "Returns a list of all the themes available",
                 "operationId": "ce203bf12b25e086fb41bd0911a6cbf8",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
                     {
                         "name": "limit",
                         "in": "query",
@@ -29275,6 +29475,36 @@
                         "schema": {
                             "type": "integer",
                             "example": 8815
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
                         }
                     }
                 ],
@@ -31145,6 +31375,16 @@
                 "operationId": "ca264d05ff0610f3427c3f6578ee7154",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -31236,6 +31476,16 @@
                 "description": "Returns a list of staff leaves",
                 "operationId": "9b22e95396aa7faea727224e5ce2e3c3",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -31695,6 +31945,16 @@
                 "operationId": "291e21425bf6b18266c2d2565b9c41b0",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -31896,6 +32156,16 @@
                 "description": "Get a list of withdrawn students requests",
                 "operationId": "b33a2cee8de8ca1f95f5737d77eee599",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -32122,6 +32392,16 @@
                 "operationId": "1983e58ad0cd1d73c200cb5a553c2241",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -32346,6 +32626,16 @@
                 "description": "Get a list of transfer out students request",
                 "operationId": "3a96f6e3b58400aacf602e211e62fbe0",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -32601,6 +32891,16 @@
                 "operationId": "a9d953829ff881be8b6c9fccae749114",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -32851,6 +33151,16 @@
                 "operationId": "a6b34b05f5d151b328f2d5b53f9b4c9f",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -33075,6 +33385,16 @@
                 "description": "Get a list of staff behaviour requests",
                 "operationId": "1b012ec7d6511658014d3de535f95f7a",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -33304,6 +33624,16 @@
                 "description": "Get a list of staff appraisals",
                 "operationId": "dd94b43ce6f3f2f762b84ce2324b5b84",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -33581,6 +33911,16 @@
                 "operationId": "897dca1feea62a4a6120c498be855256",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -33826,6 +34166,16 @@
                 "description": "Get a list of transfer out staff request",
                 "operationId": "1f1358a8d908e31be7ac4d7c15dc4f8e",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -34102,6 +34452,16 @@
                 "operationId": "b73098afbbc366fd8cddc66ebba0f209",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -34377,6 +34737,16 @@
                 "operationId": "eb2736139790b4c03c7a938346369203",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -34601,6 +34971,16 @@
                 "description": "Get a list of training needs",
                 "operationId": "53d6d7c3c577f01b55853972c6cf3848",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -34873,6 +35253,16 @@
                 "operationId": "5652fb7f7cb37c948b1ab9896b3281d8",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -35111,6 +35501,16 @@
                 "operationId": "3a88fe16b1d9e2aa7df15dadb67acabe",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -35291,6 +35691,16 @@
                 "operationId": "5f4040bccead66e80b4eaae05b9aebc6",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -35470,6 +35880,16 @@
                 "description": "Get a list of training results",
                 "operationId": "215fc98a30e2378ce23fb220fd986326",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -35663,6 +36083,16 @@
                 "description": "Get a list of institutions visits",
                 "operationId": "aec4cfb818f65535700cbd38df1317e0",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -35861,6 +36291,16 @@
                 "description": "Get a list of training applications",
                 "operationId": "0e2ab135bf588b006ebafa11115472a0",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -36117,6 +36557,16 @@
                 "operationId": "2329dd5a33a339dfcfc1a4238050ebff",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -36351,6 +36801,16 @@
                 "operationId": "aac7fa02fef74d5189767bd6d3c8484b",
                 "parameters": [
                     {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
@@ -36522,6 +36982,16 @@
                 "description": "Get a list of institution positions",
                 "operationId": "2e66262bc2174407e3764c4d6a6e0525",
                 "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "id"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",

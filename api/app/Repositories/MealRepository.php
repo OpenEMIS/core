@@ -135,7 +135,7 @@ class MealRepository extends Controller
 
             if (!empty($ID)) {
                 if (intval($ID) > 0) {
-                    $query = $query->where('id', $ID);
+                    $query = $query->where('institution_class_students.id', $ID);
                 }
             }
 
