@@ -1,0 +1,381 @@
+<?php return array (
+  'root' => 
+  array (
+    'pretty_version' => 'dev-master',
+    'version' => 'dev-master',
+    'aliases' => 
+    array (
+    ),
+    'reference' => 'f00a67306a24841423eb7b49efcf251cb1096974',
+    'name' => 'korditpteltd/kd-cakephp-restful',
+  ),
+  'versions' => 
+  array (
+    'admad/cakephp-jwt-auth' => 
+    array (
+      'pretty_version' => '3.0.0',
+      'version' => '3.0.0.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '4e86ca3480bf5724049f90aa5261de795689105e',
+    ),
+    'cakephp/cache' => 
+    array (
+      'replaced' => 
+      array (
+        0 => '9999999-dev',
+        1 => '4.x-dev',
+      ),
+    ),
+    'cakephp/cakephp' => 
+    array (
+      'pretty_version' => '4.x-dev',
+      'version' => '4.9999999.9999999.9999999-dev',
+      'aliases' => 
+      array (
+        0 => '9999999-dev',
+      ),
+      'reference' => '45bfe18bd422f49ea69c6cceac3238ad879cde9b',
+    ),
+    'cakephp/cakephp-codesniffer' => 
+    array (
+      'pretty_version' => '2.4.0',
+      'version' => '2.4.0.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => 'd4436f44a482b7539dac1047a5d13d1f1a74b66b',
+    ),
+    'cakephp/chronos' => 
+    array (
+      'pretty_version' => '2.x-dev',
+      'version' => '2.9999999.9999999.9999999-dev',
+      'aliases' => 
+      array (
+        0 => '9999999-dev',
+      ),
+      'reference' => '2362dc620ec8ea05bd335f335ad8e0881efc8f93',
+    ),
+    'cakephp/collection' => 
+    array (
+      'replaced' => 
+      array (
+        0 => '9999999-dev',
+        1 => '4.x-dev',
+      ),
+    ),
+    'cakephp/console' => 
+    array (
+      'replaced' => 
+      array (
+        0 => '9999999-dev',
+        1 => '4.x-dev',
+      ),
+    ),
+    'cakephp/core' => 
+    array (
+      'replaced' => 
+      array (
+        0 => '9999999-dev',
+        1 => '4.x-dev',
+      ),
+    ),
+    'cakephp/database' => 
+    array (
+      'replaced' => 
+      array (
+        0 => '9999999-dev',
+        1 => '4.x-dev',
+      ),
+    ),
+    'cakephp/datasource' => 
+    array (
+      'replaced' => 
+      array (
+        0 => '9999999-dev',
+        1 => '4.x-dev',
+      ),
+    ),
+    'cakephp/event' => 
+    array (
+      'replaced' => 
+      array (
+        0 => '9999999-dev',
+        1 => '4.x-dev',
+      ),
+    ),
+    'cakephp/filesystem' => 
+    array (
+      'replaced' => 
+      array (
+        0 => '9999999-dev',
+        1 => '4.x-dev',
+      ),
+    ),
+    'cakephp/form' => 
+    array (
+      'replaced' => 
+      array (
+        0 => '9999999-dev',
+        1 => '4.x-dev',
+      ),
+    ),
+    'cakephp/http' => 
+    array (
+      'replaced' => 
+      array (
+        0 => '9999999-dev',
+        1 => '4.x-dev',
+      ),
+    ),
+    'cakephp/i18n' => 
+    array (
+      'replaced' => 
+      array (
+        0 => '9999999-dev',
+        1 => '4.x-dev',
+      ),
+    ),
+    'cakephp/log' => 
+    array (
+      'replaced' => 
+      array (
+        0 => '9999999-dev',
+        1 => '4.x-dev',
+      ),
+    ),
+    'cakephp/orm' => 
+    array (
+      'replaced' => 
+      array (
+        0 => '9999999-dev',
+        1 => '4.x-dev',
+      ),
+    ),
+    'cakephp/utility' => 
+    array (
+      'replaced' => 
+      array (
+        0 => '9999999-dev',
+        1 => '4.x-dev',
+      ),
+    ),
+    'cakephp/validation' => 
+    array (
+      'replaced' => 
+      array (
+        0 => '9999999-dev',
+        1 => '4.x-dev',
+      ),
+    ),
+    'composer/ca-bundle' => 
+    array (
+      'pretty_version' => 'dev-main',
+      'version' => 'dev-main',
+      'aliases' => 
+      array (
+        0 => '1.x-dev',
+      ),
+      'reference' => '90d087e988ff194065333d16bc5cf649872d9cdb',
+    ),
+    'firebase/php-jwt' => 
+    array (
+      'pretty_version' => 'v5.5.1',
+      'version' => '5.5.1.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '83b609028194aa042ea33b5af2d41a7427de80e6',
+    ),
+    'korditpteltd/kd-cakephp-restful' => 
+    array (
+      'pretty_version' => 'dev-master',
+      'version' => 'dev-master',
+      'aliases' => 
+      array (
+      ),
+      'reference' => 'f00a67306a24841423eb7b49efcf251cb1096974',
+    ),
+    'laminas/laminas-diactoros' => 
+    array (
+      'pretty_version' => '2.17.x-dev',
+      'version' => '2.17.9999999.9999999-dev',
+      'aliases' => 
+      array (
+        0 => '9999999-dev',
+      ),
+      'reference' => '5b32597aa46b83c8b85bb1cf9a6ed4fe7dd980c5',
+    ),
+    'laminas/laminas-httphandlerrunner' => 
+    array (
+      'pretty_version' => '2.2.x-dev',
+      'version' => '2.2.9999999.9999999-dev',
+      'aliases' => 
+      array (
+        0 => '9999999-dev',
+      ),
+      'reference' => 'eb670c5c7167cd218c61a8b4f6ab9ce339200c16',
+    ),
+    'league/container' => 
+    array (
+      'pretty_version' => '4.x-dev',
+      'version' => '4.9999999.9999999.9999999-dev',
+      'aliases' => 
+      array (
+        0 => '9999999-dev',
+      ),
+      'reference' => '388e992884ab75632d93dbaf4d29ec024d64b964',
+    ),
+    'orno/di' => 
+    array (
+      'replaced' => 
+      array (
+        0 => '~2.0',
+      ),
+    ),
+    'psr/container' => 
+    array (
+      'pretty_version' => 'dev-master',
+      'version' => 'dev-master',
+      'aliases' => 
+      array (
+        0 => '2.0.x-dev',
+      ),
+      'reference' => '90db7b9ac2a2c5b849fcb69dde58f3ae182c68f5',
+    ),
+    'psr/container-implementation' => 
+    array (
+      'provided' => 
+      array (
+        0 => '^1.0 || ^2.0',
+        1 => '^1.0',
+      ),
+    ),
+    'psr/http-client' => 
+    array (
+      'pretty_version' => 'dev-master',
+      'version' => 'dev-master',
+      'aliases' => 
+      array (
+        0 => '1.0.x-dev',
+      ),
+      'reference' => '0955afe48220520692d2d09f7ab7e0f93ffd6a31',
+    ),
+    'psr/http-client-implementation' => 
+    array (
+      'provided' => 
+      array (
+        0 => '^1.0',
+      ),
+    ),
+    'psr/http-factory' => 
+    array (
+      'pretty_version' => 'dev-master',
+      'version' => 'dev-master',
+      'aliases' => 
+      array (
+        0 => '1.0.x-dev',
+      ),
+      'reference' => '6d70f402f0eddb2b154b22950b5381bbf5b28469',
+    ),
+    'psr/http-factory-implementation' => 
+    array (
+      'provided' => 
+      array (
+        0 => '1.0',
+      ),
+    ),
+    'psr/http-message' => 
+    array (
+      'pretty_version' => '1.1',
+      'version' => '1.1.0.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => 'cb6ce4845ce34a8ad9e68117c10ee90a29919eba',
+    ),
+    'psr/http-message-implementation' => 
+    array (
+      'provided' => 
+      array (
+        0 => '1.0',
+      ),
+    ),
+    'psr/http-server-handler' => 
+    array (
+      'pretty_version' => 'dev-master',
+      'version' => 'dev-master',
+      'aliases' => 
+      array (
+        0 => '1.0.x-dev',
+      ),
+      'reference' => '84c4fb66179be4caaf8e97bd239203245302e7d4',
+    ),
+    'psr/http-server-handler-implementation' => 
+    array (
+      'provided' => 
+      array (
+        0 => '^1.0',
+      ),
+    ),
+    'psr/http-server-middleware' => 
+    array (
+      'pretty_version' => 'dev-master',
+      'version' => 'dev-master',
+      'aliases' => 
+      array (
+        0 => '1.0.x-dev',
+      ),
+      'reference' => 'c1481f747daaa6a0782775cd6a8c26a1bf4a3829',
+    ),
+    'psr/http-server-middleware-implementation' => 
+    array (
+      'provided' => 
+      array (
+        0 => '^1.0',
+      ),
+    ),
+    'psr/log' => 
+    array (
+      'pretty_version' => '1.1.4',
+      'version' => '1.1.4.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => 'd49695b909c3b7628b6289db5479a1c204601f11',
+    ),
+    'psr/log-implementation' => 
+    array (
+      'provided' => 
+      array (
+        0 => '^1.0 || ^2.0',
+      ),
+    ),
+    'psr/simple-cache' => 
+    array (
+      'pretty_version' => '1.0.1',
+      'version' => '1.0.1.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '408d5eafb83c57f6365a3ca330ff23aa4a5fa39b',
+    ),
+    'psr/simple-cache-implementation' => 
+    array (
+      'provided' => 
+      array (
+        0 => '^1.0 || ^2.0',
+      ),
+    ),
+    'squizlabs/php_codesniffer' => 
+    array (
+      'pretty_version' => '2.9.x-dev',
+      'version' => '2.9.9999999.9999999-dev',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '4665f6411253f737658f9aae12e6cafd3ca26b13',
+    ),
+  ),
+);
