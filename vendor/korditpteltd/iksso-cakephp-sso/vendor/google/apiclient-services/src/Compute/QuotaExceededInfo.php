@@ -23,7 +23,6 @@ class QuotaExceededInfo extends \Google\Model
    * @var string[]
    */
   public $dimensions;
-  public $futureLimit;
   public $limit;
   /**
    * @var string
@@ -33,10 +32,6 @@ class QuotaExceededInfo extends \Google\Model
    * @var string
    */
   public $metricName;
-  /**
-   * @var string
-   */
-  public $rolloutStatus;
 
   /**
    * @param string[]
@@ -51,14 +46,6 @@ class QuotaExceededInfo extends \Google\Model
   public function getDimensions()
   {
     return $this->dimensions;
-  }
-  public function setFutureLimit($futureLimit)
-  {
-    $this->futureLimit = $futureLimit;
-  }
-  public function getFutureLimit()
-  {
-    return $this->futureLimit;
   }
   public function setLimit($limit)
   {
@@ -95,20 +82,6 @@ class QuotaExceededInfo extends \Google\Model
   public function getMetricName()
   {
     return $this->metricName;
-  }
-  /**
-   * @param string
-   */
-  public function setRolloutStatus($rolloutStatus)
-  {
-    $this->rolloutStatus = $rolloutStatus;
-  }
-  /**
-   * @return string
-   */
-  public function getRolloutStatus()
-  {
-    return $this->rolloutStatus;
   }
 }
 

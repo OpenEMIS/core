@@ -26,15 +26,7 @@ class UsageSnapshot extends \Google\Model
   /**
    * @var string
    */
-  public $milliDcuPremium;
-  /**
-   * @var string
-   */
   public $shuffleStorageGb;
-  /**
-   * @var string
-   */
-  public $shuffleStorageGbPremium;
   /**
    * @var string
    */
@@ -57,20 +49,6 @@ class UsageSnapshot extends \Google\Model
   /**
    * @param string
    */
-  public function setMilliDcuPremium($milliDcuPremium)
-  {
-    $this->milliDcuPremium = $milliDcuPremium;
-  }
-  /**
-   * @return string
-   */
-  public function getMilliDcuPremium()
-  {
-    return $this->milliDcuPremium;
-  }
-  /**
-   * @param string
-   */
   public function setShuffleStorageGb($shuffleStorageGb)
   {
     $this->shuffleStorageGb = $shuffleStorageGb;
@@ -81,20 +59,6 @@ class UsageSnapshot extends \Google\Model
   public function getShuffleStorageGb()
   {
     return $this->shuffleStorageGb;
-  }
-  /**
-   * @param string
-   */
-  public function setShuffleStorageGbPremium($shuffleStorageGbPremium)
-  {
-    $this->shuffleStorageGbPremium = $shuffleStorageGbPremium;
-  }
-  /**
-   * @return string
-   */
-  public function getShuffleStorageGbPremium()
-  {
-    return $this->shuffleStorageGbPremium;
   }
   /**
    * @param string

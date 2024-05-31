@@ -23,10 +23,6 @@ class ConfigManagementManaged extends \Google\Model
    * @var bool
    */
   public $enabled;
-  /**
-   * @var bool
-   */
-  public $stopSyncing;
 
   /**
    * @param bool
@@ -41,20 +37,6 @@ class ConfigManagementManaged extends \Google\Model
   public function getEnabled()
   {
     return $this->enabled;
-  }
-  /**
-   * @param bool
-   */
-  public function setStopSyncing($stopSyncing)
-  {
-    $this->stopSyncing = $stopSyncing;
-  }
-  /**
-   * @return bool
-   */
-  public function getStopSyncing()
-  {
-    return $this->stopSyncing;
   }
 }
 

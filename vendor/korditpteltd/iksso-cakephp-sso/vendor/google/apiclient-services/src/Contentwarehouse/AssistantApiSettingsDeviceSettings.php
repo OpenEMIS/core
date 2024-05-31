@@ -201,6 +201,10 @@ class AssistantApiSettingsDeviceSettings extends \Google\Collection
    */
   public $truncatedLocalNetworkId;
   /**
+   * @var bool
+   */
+  public $trustedVoiceEnabled;
+  /**
    * @var string
    */
   public $type;
@@ -1074,6 +1078,20 @@ class AssistantApiSettingsDeviceSettings extends \Google\Collection
   public function getTruncatedLocalNetworkId()
   {
     return $this->truncatedLocalNetworkId;
+  }
+  /**
+   * @param bool
+   */
+  public function setTrustedVoiceEnabled($trustedVoiceEnabled)
+  {
+    $this->trustedVoiceEnabled = $trustedVoiceEnabled;
+  }
+  /**
+   * @return bool
+   */
+  public function getTrustedVoiceEnabled()
+  {
+    return $this->trustedVoiceEnabled;
   }
   /**
    * @param string

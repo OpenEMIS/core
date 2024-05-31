@@ -46,7 +46,6 @@ class ServiceNetworking extends \Google\Service
   public $services;
   public $services_connections;
   public $services_dnsRecordSets;
-  public $services_dnsZone;
   public $services_dnsZones;
   public $services_projects_global_networks;
   public $services_projects_global_networks_peeredDnsDomains;
@@ -268,50 +267,6 @@ class ServiceNetworking extends \Google\Service
                   'required' => true,
                 ],
               ],
-            ],'get' => [
-              'path' => 'v1/{+parent}/dnsRecordSets:get',
-              'httpMethod' => 'GET',
-              'parameters' => [
-                'parent' => [
-                  'location' => 'path',
-                  'type' => 'string',
-                  'required' => true,
-                ],
-                'consumerNetwork' => [
-                  'location' => 'query',
-                  'type' => 'string',
-                ],
-                'domain' => [
-                  'location' => 'query',
-                  'type' => 'string',
-                ],
-                'type' => [
-                  'location' => 'query',
-                  'type' => 'string',
-                ],
-                'zone' => [
-                  'location' => 'query',
-                  'type' => 'string',
-                ],
-              ],
-            ],'list' => [
-              'path' => 'v1/{+parent}/dnsRecordSets:list',
-              'httpMethod' => 'GET',
-              'parameters' => [
-                'parent' => [
-                  'location' => 'path',
-                  'type' => 'string',
-                  'required' => true,
-                ],
-                'consumerNetwork' => [
-                  'location' => 'query',
-                  'type' => 'string',
-                ],
-                'zone' => [
-                  'location' => 'query',
-                  'type' => 'string',
-                ],
-              ],
             ],'remove' => [
               'path' => 'v1/{+parent}/dnsRecordSets:remove',
               'httpMethod' => 'POST',
@@ -336,26 +291,6 @@ class ServiceNetworking extends \Google\Service
           ]
         ]
     );
-    $this->services_dnsZone = new ServiceNetworking\Resource\ServicesDnsZone(
-        $this,
-        $this->serviceName,
-        'dnsZone',
-        [
-          'methods' => [
-            'get' => [
-              'path' => 'v1/{+name}/dnsZone:get',
-              'httpMethod' => 'GET',
-              'parameters' => [
-                'name' => [
-                  'location' => 'path',
-                  'type' => 'string',
-                  'required' => true,
-                ],
-              ],
-            ],
-          ]
-        ]
-    );
     $this->services_dnsZones = new ServiceNetworking\Resource\ServicesDnsZones(
         $this,
         $this->serviceName,
@@ -365,16 +300,6 @@ class ServiceNetworking extends \Google\Service
             'add' => [
               'path' => 'v1/{+parent}/dnsZones:add',
               'httpMethod' => 'POST',
-              'parameters' => [
-                'parent' => [
-                  'location' => 'path',
-                  'type' => 'string',
-                  'required' => true,
-                ],
-              ],
-            ],'list' => [
-              'path' => 'v1/{+parent}/dnsZones:list',
-              'httpMethod' => 'GET',
               'parameters' => [
                 'parent' => [
                   'location' => 'path',

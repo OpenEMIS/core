@@ -8,7 +8,7 @@ use Cake\ORM\Entity;
 use ArrayObject;
 
 class AuthenticationTypeAttributesTable extends Table {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 		$this->addBehavior('Timestamp', [
 			'events' => [
@@ -20,7 +20,7 @@ class AuthenticationTypeAttributesTable extends Table {
 		]);
 	}
 
-    public function implementedEvents() {
+    public function implementedEvents():array {
     	$events = parent::implementedEvents();
         $events =  [
             'Model.beforeSave' => ['callable' => 'beforeSave', 'priority' => 5]

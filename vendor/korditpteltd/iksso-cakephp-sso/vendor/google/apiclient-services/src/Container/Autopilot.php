@@ -23,8 +23,6 @@ class Autopilot extends \Google\Model
    * @var bool
    */
   public $enabled;
-  protected $workloadPolicyConfigType = WorkloadPolicyConfig::class;
-  protected $workloadPolicyConfigDataType = '';
 
   /**
    * @param bool
@@ -39,20 +37,6 @@ class Autopilot extends \Google\Model
   public function getEnabled()
   {
     return $this->enabled;
-  }
-  /**
-   * @param WorkloadPolicyConfig
-   */
-  public function setWorkloadPolicyConfig(WorkloadPolicyConfig $workloadPolicyConfig)
-  {
-    $this->workloadPolicyConfig = $workloadPolicyConfig;
-  }
-  /**
-   * @return WorkloadPolicyConfig
-   */
-  public function getWorkloadPolicyConfig()
-  {
-    return $this->workloadPolicyConfig;
   }
 }
 

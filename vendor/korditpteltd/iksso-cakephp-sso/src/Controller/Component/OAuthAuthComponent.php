@@ -24,7 +24,7 @@ class OAuthAuthComponent extends Component
 
     public $components = ['Auth'];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $oAuthAttributes = $config['authAttribute'];
         $mappingAttributes = $config['mappingAttribute'];
@@ -129,7 +129,7 @@ class OAuthAuthComponent extends Component
             ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Controller.Auth.authenticate'] = 'authenticate';

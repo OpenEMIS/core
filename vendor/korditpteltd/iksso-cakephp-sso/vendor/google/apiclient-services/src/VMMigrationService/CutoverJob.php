@@ -20,8 +20,6 @@ namespace Google\Service\VMMigrationService;
 class CutoverJob extends \Google\Collection
 {
   protected $collection_key = 'steps';
-  protected $computeEngineDisksTargetDetailsType = ComputeEngineDisksTargetDetails::class;
-  protected $computeEngineDisksTargetDetailsDataType = '';
   protected $computeEngineTargetDetailsType = ComputeEngineTargetDetails::class;
   protected $computeEngineTargetDetailsDataType = '';
   /**
@@ -57,20 +55,6 @@ class CutoverJob extends \Google\Collection
   protected $stepsType = CutoverStep::class;
   protected $stepsDataType = 'array';
 
-  /**
-   * @param ComputeEngineDisksTargetDetails
-   */
-  public function setComputeEngineDisksTargetDetails(ComputeEngineDisksTargetDetails $computeEngineDisksTargetDetails)
-  {
-    $this->computeEngineDisksTargetDetails = $computeEngineDisksTargetDetails;
-  }
-  /**
-   * @return ComputeEngineDisksTargetDetails
-   */
-  public function getComputeEngineDisksTargetDetails()
-  {
-    return $this->computeEngineDisksTargetDetails;
-  }
   /**
    * @param ComputeEngineTargetDetails
    */

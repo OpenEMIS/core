@@ -40,10 +40,6 @@ class GoogleCloudFunctionsV2OperationMetadata extends \Google\Collection
    * @var array[]
    */
   public $requestResource;
-  /**
-   * @var string
-   */
-  public $sourceToken;
   protected $stagesType = GoogleCloudFunctionsV2Stage::class;
   protected $stagesDataType = 'array';
   /**
@@ -128,20 +124,6 @@ class GoogleCloudFunctionsV2OperationMetadata extends \Google\Collection
   public function getRequestResource()
   {
     return $this->requestResource;
-  }
-  /**
-   * @param string
-   */
-  public function setSourceToken($sourceToken)
-  {
-    $this->sourceToken = $sourceToken;
-  }
-  /**
-   * @return string
-   */
-  public function getSourceToken()
-  {
-    return $this->sourceToken;
   }
   /**
    * @param GoogleCloudFunctionsV2Stage[]

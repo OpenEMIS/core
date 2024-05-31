@@ -27,10 +27,6 @@ class BatchTranslateDocumentRequest extends \Google\Collection
   /**
    * @var bool
    */
-  public $enableRotationCorrection;
-  /**
-   * @var bool
-   */
   public $enableShadowRemovalNativePdf;
   /**
    * @var string[]
@@ -68,20 +64,6 @@ class BatchTranslateDocumentRequest extends \Google\Collection
   public function getCustomizedAttribution()
   {
     return $this->customizedAttribution;
-  }
-  /**
-   * @param bool
-   */
-  public function setEnableRotationCorrection($enableRotationCorrection)
-  {
-    $this->enableRotationCorrection = $enableRotationCorrection;
-  }
-  /**
-   * @return bool
-   */
-  public function getEnableRotationCorrection()
-  {
-    return $this->enableRotationCorrection;
   }
   /**
    * @param bool

@@ -102,10 +102,8 @@ class SpacesMembers extends \Google\Service\Resource
    * requires the `chat.memberships` or `chat.memberships.readonly` authorization
    * scope. (members.get)
    *
-   * @param string $name Required. Resource name of the membership to retrieve. To
-   * get the app's own membership, you can optionally use
-   * `spaces/{space}/members/app`. Format: `spaces/{space}/members/{member}` or
-   * `spaces/{space}/members/app`
+   * @param string $name Required. Resource name of the membership to retrieve.
+   * Format: `spaces/{space}/members/{member}`
    * @param array $optParams Optional parameters.
    * @return Membership
    */
@@ -152,16 +150,16 @@ class SpacesMembers extends \Google\Service\Resource
    * following queries are invalid: ``` member.type = "HUMAN" AND member.type =
    * "BOT" role = "ROLE_MANAGER" AND role = "ROLE_MEMBER" ``` Invalid queries are
    * rejected by the server with an `INVALID_ARGUMENT` error.
-   * @opt_param int pageSize Optional. The maximum number of memberships to
-   * return. The service might return fewer than this value. If unspecified, at
-   * most 100 memberships are returned. The maximum value is 1,000. If you use a
-   * value more than 1,000, it's automatically changed to 1,000. Negative values
-   * return an `INVALID_ARGUMENT` error.
-   * @opt_param string pageToken Optional. A page token, received from a previous
-   * call to list memberships. Provide this parameter to retrieve the subsequent
-   * page. When paginating, all other parameters provided should match the call
-   * that provided the page token. Passing different values to the other
-   * parameters might lead to unexpected results.
+   * @opt_param int pageSize The maximum number of memberships to return. The
+   * service might return fewer than this value. If unspecified, at most 100
+   * memberships are returned. The maximum value is 1,000. If you use a value more
+   * than 1,000, it's automatically changed to 1,000. Negative values return an
+   * `INVALID_ARGUMENT` error.
+   * @opt_param string pageToken A page token, received from a previous call to
+   * list memberships. Provide this parameter to retrieve the subsequent page.
+   * When paginating, all other parameters provided should match the call that
+   * provided the page token. Passing different values to the other parameters
+   * might lead to unexpected results.
    * @opt_param bool showInvited Optional. When `true`, also returns memberships
    * associated with invited members, in addition to other types of memberships.
    * If a filter is set, invited memberships that don't match the filter criteria

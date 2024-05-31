@@ -71,10 +71,6 @@ class GoogleCloudApigeeV1Organization extends \Google\Collection
    */
   public $description;
   /**
-   * @var bool
-   */
-  public $disableVpcPeering;
-  /**
    * @var string
    */
   public $displayName;
@@ -306,20 +302,6 @@ class GoogleCloudApigeeV1Organization extends \Google\Collection
   public function getDescription()
   {
     return $this->description;
-  }
-  /**
-   * @param bool
-   */
-  public function setDisableVpcPeering($disableVpcPeering)
-  {
-    $this->disableVpcPeering = $disableVpcPeering;
-  }
-  /**
-   * @return bool
-   */
-  public function getDisableVpcPeering()
-  {
-    return $this->disableVpcPeering;
   }
   /**
    * @param string

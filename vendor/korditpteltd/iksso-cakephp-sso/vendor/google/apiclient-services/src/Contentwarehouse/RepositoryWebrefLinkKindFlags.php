@@ -43,6 +43,10 @@ class RepositoryWebrefLinkKindFlags extends \Google\Model
    * @var string
    */
   public $property;
+  /**
+   * @var string
+   */
+  public $resolution;
 
   /**
    * @param string
@@ -127,6 +131,20 @@ class RepositoryWebrefLinkKindFlags extends \Google\Model
   public function getProperty()
   {
     return $this->property;
+  }
+  /**
+   * @param string
+   */
+  public function setResolution($resolution)
+  {
+    $this->resolution = $resolution;
+  }
+  /**
+   * @return string
+   */
+  public function getResolution()
+  {
+    return $this->resolution;
   }
 }
 

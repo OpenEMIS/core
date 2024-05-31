@@ -31,10 +31,6 @@ class InvocationConfig extends \Google\Collection
   protected $includedTargetsType = Target::class;
   protected $includedTargetsDataType = 'array';
   /**
-   * @var string
-   */
-  public $serviceAccount;
-  /**
    * @var bool
    */
   public $transitiveDependenciesIncluded;
@@ -84,20 +80,6 @@ class InvocationConfig extends \Google\Collection
   public function getIncludedTargets()
   {
     return $this->includedTargets;
-  }
-  /**
-   * @param string
-   */
-  public function setServiceAccount($serviceAccount)
-  {
-    $this->serviceAccount = $serviceAccount;
-  }
-  /**
-   * @return string
-   */
-  public function getServiceAccount()
-  {
-    return $this->serviceAccount;
   }
   /**
    * @param bool

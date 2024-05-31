@@ -27,10 +27,6 @@ class Evaluation extends \Google\Collection
   /**
    * @var string
    */
-  public $customRulesBucket;
-  /**
-   * @var string
-   */
   public $description;
   /**
    * @var string[]
@@ -74,20 +70,6 @@ class Evaluation extends \Google\Collection
   public function getCreateTime()
   {
     return $this->createTime;
-  }
-  /**
-   * @param string
-   */
-  public function setCustomRulesBucket($customRulesBucket)
-  {
-    $this->customRulesBucket = $customRulesBucket;
-  }
-  /**
-   * @return string
-   */
-  public function getCustomRulesBucket()
-  {
-    return $this->customRulesBucket;
   }
   /**
    * @param string

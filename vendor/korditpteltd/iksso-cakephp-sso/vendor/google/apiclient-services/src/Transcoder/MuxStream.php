@@ -31,10 +31,6 @@ class MuxStream extends \Google\Collection
   /**
    * @var string
    */
-  public $encryptionId;
-  /**
-   * @var string
-   */
   public $fileName;
   /**
    * @var string
@@ -70,20 +66,6 @@ class MuxStream extends \Google\Collection
   public function getElementaryStreams()
   {
     return $this->elementaryStreams;
-  }
-  /**
-   * @param string
-   */
-  public function setEncryptionId($encryptionId)
-  {
-    $this->encryptionId = $encryptionId;
-  }
-  /**
-   * @return string
-   */
-  public function getEncryptionId()
-  {
-    return $this->encryptionId;
   }
   /**
    * @param string

@@ -32,10 +32,6 @@ class MembershipBinding extends \Google\Model
    */
   public $fleet;
   /**
-   * @var string[]
-   */
-  public $labels;
-  /**
    * @var string
    */
   public $name;
@@ -95,20 +91,6 @@ class MembershipBinding extends \Google\Model
   public function getFleet()
   {
     return $this->fleet;
-  }
-  /**
-   * @param string[]
-   */
-  public function setLabels($labels)
-  {
-    $this->labels = $labels;
-  }
-  /**
-   * @return string[]
-   */
-  public function getLabels()
-  {
-    return $this->labels;
   }
   /**
    * @param string

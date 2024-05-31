@@ -32,15 +32,8 @@ class CaseClassifications extends \Google\Service\Resource
   /**
    * Retrieve valid classifications to be used when creating a support case. The
    * classications are hierarchical, with each classification containing all
-   * levels of the hierarchy, separated by `" > "`. For example `"Technical Issue
-   * > Compute > Compute Engine"`. Classification IDs returned by
-   * `caseClassifications.search` are guaranteed to be valid for at least six
-   * months. If a given classification is deactivated, it immediately stops being
-   * returned. After six months, `case.create` requests using the classification
-   * ID will fail. Here is an example of calling this endpoint using cURL:
-   * ```shell curl \ --header "Authorization: Bearer $(gcloud auth print-access-
-   * token)" \ 'https://cloudsupport.googleapis.com/v2/caseClassifications:search?
-   * query=display_name:"*Compute%20Engine*"' ``` (caseClassifications.search)
+   * levels of the hierarchy, separated by " > ". For example "Technical Issue >
+   * Compute > Compute Engine". (caseClassifications.search)
    *
    * @param array $optParams Optional parameters.
    *

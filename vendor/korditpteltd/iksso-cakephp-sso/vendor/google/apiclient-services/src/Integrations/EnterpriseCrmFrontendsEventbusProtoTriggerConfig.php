@@ -65,10 +65,6 @@ class EnterpriseCrmFrontendsEventbusProtoTriggerConfig extends \Google\Collectio
   /**
    * @var string
    */
-  public $triggerName;
-  /**
-   * @var string
-   */
   public $triggerNumber;
   /**
    * @var string
@@ -256,20 +252,6 @@ class EnterpriseCrmFrontendsEventbusProtoTriggerConfig extends \Google\Collectio
   public function getTriggerId()
   {
     return $this->triggerId;
-  }
-  /**
-   * @param string
-   */
-  public function setTriggerName($triggerName)
-  {
-    $this->triggerName = $triggerName;
-  }
-  /**
-   * @return string
-   */
-  public function getTriggerName()
-  {
-    return $this->triggerName;
   }
   /**
    * @param string

@@ -46,8 +46,6 @@ class DiscoveryOccurrence extends \Google\Collection
    * @var string
    */
   public $lastScanTime;
-  protected $sbomStatusType = SBOMStatus::class;
-  protected $sbomStatusDataType = '';
 
   /**
    * @param AnalysisCompleted
@@ -160,20 +158,6 @@ class DiscoveryOccurrence extends \Google\Collection
   public function getLastScanTime()
   {
     return $this->lastScanTime;
-  }
-  /**
-   * @param SBOMStatus
-   */
-  public function setSbomStatus(SBOMStatus $sbomStatus)
-  {
-    $this->sbomStatus = $sbomStatus;
-  }
-  /**
-   * @return SBOMStatus
-   */
-  public function getSbomStatus()
-  {
-    return $this->sbomStatus;
   }
 }
 

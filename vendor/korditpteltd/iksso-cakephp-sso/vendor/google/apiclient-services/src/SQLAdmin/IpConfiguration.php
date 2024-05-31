@@ -38,8 +38,6 @@ class IpConfiguration extends \Google\Collection
    * @var string
    */
   public $privateNetwork;
-  protected $pscConfigType = PscConfig::class;
-  protected $pscConfigDataType = '';
   /**
    * @var bool
    */
@@ -114,20 +112,6 @@ class IpConfiguration extends \Google\Collection
   public function getPrivateNetwork()
   {
     return $this->privateNetwork;
-  }
-  /**
-   * @param PscConfig
-   */
-  public function setPscConfig(PscConfig $pscConfig)
-  {
-    $this->pscConfig = $pscConfig;
-  }
-  /**
-   * @return PscConfig
-   */
-  public function getPscConfig()
-  {
-    return $this->pscConfig;
   }
   /**
    * @param bool

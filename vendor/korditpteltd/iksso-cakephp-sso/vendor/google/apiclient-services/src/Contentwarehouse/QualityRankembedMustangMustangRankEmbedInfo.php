@@ -17,13 +17,8 @@
 
 namespace Google\Service\Contentwarehouse;
 
-class QualityRankembedMustangMustangRankEmbedInfo extends \Google\Collection
+class QualityRankembedMustangMustangRankEmbedInfo extends \Google\Model
 {
-  protected $collection_key = 'additionalFixedPointEncodings';
-  /**
-   * @var string[]
-   */
-  public $additionalFixedPointEncodings;
   protected $compressedDocumentEmbeddingType = QualityRankembedMustangMustangRankEmbedInfoCompressedEmbedding::class;
   protected $compressedDocumentEmbeddingDataType = '';
   /**
@@ -47,20 +42,6 @@ class QualityRankembedMustangMustangRankEmbedInfo extends \Google\Collection
    */
   public $versionAndImprovInfo;
 
-  /**
-   * @param string[]
-   */
-  public function setAdditionalFixedPointEncodings($additionalFixedPointEncodings)
-  {
-    $this->additionalFixedPointEncodings = $additionalFixedPointEncodings;
-  }
-  /**
-   * @return string[]
-   */
-  public function getAdditionalFixedPointEncodings()
-  {
-    return $this->additionalFixedPointEncodings;
-  }
   /**
    * @param QualityRankembedMustangMustangRankEmbedInfoCompressedEmbedding
    */

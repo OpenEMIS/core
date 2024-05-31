@@ -85,12 +85,7 @@ class CivicInfo extends \Google\Service
             'electionQuery' => [
               'path' => 'civicinfo/v2/elections',
               'httpMethod' => 'GET',
-              'parameters' => [
-                'productionDataOnly' => [
-                  'location' => 'query',
-                  'type' => 'boolean',
-                ],
-              ],
+              'parameters' => [],
             ],'voterInfoQuery' => [
               'path' => 'civicinfo/v2/voterinfo',
               'httpMethod' => 'GET',
@@ -105,10 +100,6 @@ class CivicInfo extends \Google\Service
                   'type' => 'string',
                 ],
                 'officialOnly' => [
-                  'location' => 'query',
-                  'type' => 'boolean',
-                ],
-                'productionDataOnly' => [
                   'location' => 'query',
                   'type' => 'boolean',
                 ],

@@ -8,7 +8,7 @@ use Exception;
 
 class LoginShell extends Shell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
     }

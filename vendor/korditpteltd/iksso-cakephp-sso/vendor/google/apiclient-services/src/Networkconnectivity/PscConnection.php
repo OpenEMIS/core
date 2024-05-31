@@ -32,8 +32,6 @@ class PscConnection extends \Google\Model
    */
   public $consumerTargetProject;
   protected $errorDataType = '';
-  protected $errorInfoType = GoogleRpcErrorInfo::class;
-  protected $errorInfoDataType = '';
   /**
    * @var string
    */
@@ -106,20 +104,6 @@ class PscConnection extends \Google\Model
   public function getError()
   {
     return $this->error;
-  }
-  /**
-   * @param GoogleRpcErrorInfo
-   */
-  public function setErrorInfo(GoogleRpcErrorInfo $errorInfo)
-  {
-    $this->errorInfo = $errorInfo;
-  }
-  /**
-   * @return GoogleRpcErrorInfo
-   */
-  public function getErrorInfo()
-  {
-    return $this->errorInfo;
   }
   /**
    * @param string

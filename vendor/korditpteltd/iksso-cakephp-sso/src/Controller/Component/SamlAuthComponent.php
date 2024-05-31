@@ -18,7 +18,7 @@ class SamlAuthComponent extends Component
     private $authType;
     private $createUser;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->session = $this->request->session();
         $settings = [];
@@ -99,7 +99,7 @@ class SamlAuthComponent extends Component
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Controller.Auth.authenticate'] = 'authenticate';

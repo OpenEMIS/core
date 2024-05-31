@@ -7,7 +7,7 @@ use ArrayObject;
 
 class SystemAuthenticationsTable extends Table
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->hasOne('Google', ['className' => 'SSO.IdpGoogle', 'foreignKey' => 'system_authentication_id']);
@@ -23,8 +23,8 @@ class SystemAuthenticationsTable extends Table
             ->innerJoinWith('AuthenticationTypes')
             ->where([$this->aliasField('status') => 1])
             ->select(['authentication_type' => 'AuthenticationTypes.name'])
-            ->autoFields(true)
-            ->hydrate(false)
+            /*->autoFields(true)
+            ->hydrate(false)*/
             ->toArray();
     }
 }

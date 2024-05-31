@@ -22,26 +22,8 @@ class PlacementPolicy extends \Google\Model
   /**
    * @var string
    */
-  public $policyName;
-  /**
-   * @var string
-   */
   public $type;
 
-  /**
-   * @param string
-   */
-  public function setPolicyName($policyName)
-  {
-    $this->policyName = $policyName;
-  }
-  /**
-   * @return string
-   */
-  public function getPolicyName()
-  {
-    return $this->policyName;
-  }
   /**
    * @param string
    */

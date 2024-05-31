@@ -29,8 +29,6 @@ class AssistantDevicesPlatformProtoSupportedDeviceOps extends \Google\Model
   protected $deviceModifySettingDataType = '';
   protected $deviceTakePhotoType = AssistantDevicesPlatformProtoDeviceTakePhotoCapability::class;
   protected $deviceTakePhotoDataType = '';
-  protected $executionWaitType = AssistantDevicesPlatformProtoExecutionWaitCapability::class;
-  protected $executionWaitDataType = '';
   protected $mediaNextType = AssistantDevicesPlatformProtoMediaNextCapability::class;
   protected $mediaNextDataType = '';
   protected $mediaPauseType = AssistantDevicesPlatformProtoMediaPauseCapability::class;
@@ -121,20 +119,6 @@ class AssistantDevicesPlatformProtoSupportedDeviceOps extends \Google\Model
   public function getDeviceTakePhoto()
   {
     return $this->deviceTakePhoto;
-  }
-  /**
-   * @param AssistantDevicesPlatformProtoExecutionWaitCapability
-   */
-  public function setExecutionWait(AssistantDevicesPlatformProtoExecutionWaitCapability $executionWait)
-  {
-    $this->executionWait = $executionWait;
-  }
-  /**
-   * @return AssistantDevicesPlatformProtoExecutionWaitCapability
-   */
-  public function getExecutionWait()
-  {
-    return $this->executionWait;
   }
   /**
    * @param AssistantDevicesPlatformProtoMediaNextCapability

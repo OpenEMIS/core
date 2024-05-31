@@ -21,6 +21,10 @@ class QualityDniExtendedNewsPreviews extends \Google\Collection
 {
   protected $collection_key = 'desnippetedCountryCode';
   /**
+   * @var string
+   */
+  public $countryCode;
+  /**
    * @var string[]
    */
   public $desnippetedCountryCode;
@@ -37,6 +41,20 @@ class QualityDniExtendedNewsPreviews extends \Google\Collection
    */
   public $version;
 
+  /**
+   * @param string
+   */
+  public function setCountryCode($countryCode)
+  {
+    $this->countryCode = $countryCode;
+  }
+  /**
+   * @return string
+   */
+  public function getCountryCode()
+  {
+    return $this->countryCode;
+  }
   /**
    * @param string[]
    */

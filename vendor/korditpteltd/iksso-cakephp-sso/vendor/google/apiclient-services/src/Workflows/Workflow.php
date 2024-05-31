@@ -69,10 +69,6 @@ class Workflow extends \Google\Model
    * @var string
    */
   public $updateTime;
-  /**
-   * @var string[]
-   */
-  public $userEnvVars;
 
   /**
    * @param string
@@ -255,20 +251,6 @@ class Workflow extends \Google\Model
   public function getUpdateTime()
   {
     return $this->updateTime;
-  }
-  /**
-   * @param string[]
-   */
-  public function setUserEnvVars($userEnvVars)
-  {
-    $this->userEnvVars = $userEnvVars;
-  }
-  /**
-   * @return string[]
-   */
-  public function getUserEnvVars()
-  {
-    return $this->userEnvVars;
   }
 }
 

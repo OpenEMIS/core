@@ -39,10 +39,6 @@ class Release extends \Google\Collection
   protected $deliveryPipelineSnapshotType = DeliveryPipeline::class;
   protected $deliveryPipelineSnapshotDataType = '';
   /**
-   * @var string[]
-   */
-  public $deployParameters;
-  /**
    * @var string
    */
   public $description;
@@ -176,20 +172,6 @@ class Release extends \Google\Collection
   public function getDeliveryPipelineSnapshot()
   {
     return $this->deliveryPipelineSnapshot;
-  }
-  /**
-   * @param string[]
-   */
-  public function setDeployParameters($deployParameters)
-  {
-    $this->deployParameters = $deployParameters;
-  }
-  /**
-   * @return string[]
-   */
-  public function getDeployParameters()
-  {
-    return $this->deployParameters;
   }
   /**
    * @param string

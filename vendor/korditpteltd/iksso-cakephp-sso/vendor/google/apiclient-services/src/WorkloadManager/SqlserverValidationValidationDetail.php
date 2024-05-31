@@ -17,29 +17,48 @@
 
 namespace Google\Service\WorkloadManager;
 
-class SqlserverValidationValidationDetail extends \Google\Collection
+class SqlserverValidationValidationDetail extends \Google\Model
 {
-  protected $collection_key = 'details';
-  protected $detailsType = SqlserverValidationDetails::class;
-  protected $detailsDataType = 'array';
+  /**
+   * @var string[]
+   */
+  public $details;
+  /**
+   * @var string
+   */
+  public $instanceId;
   /**
    * @var string
    */
   public $type;
 
   /**
-   * @param SqlserverValidationDetails[]
+   * @param string[]
    */
   public function setDetails($details)
   {
     $this->details = $details;
   }
   /**
-   * @return SqlserverValidationDetails[]
+   * @return string[]
    */
   public function getDetails()
   {
     return $this->details;
+  }
+  /**
+   * @param string
+   */
+  public function setInstanceId($instanceId)
+  {
+    $this->instanceId = $instanceId;
+  }
+  /**
+   * @return string
+   */
+  public function getInstanceId()
+  {
+    return $this->instanceId;
   }
   /**
    * @param string

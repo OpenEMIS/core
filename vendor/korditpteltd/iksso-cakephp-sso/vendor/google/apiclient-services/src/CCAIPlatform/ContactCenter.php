@@ -40,10 +40,6 @@ class ContactCenter extends \Google\Model
   protected $instanceConfigType = InstanceConfig::class;
   protected $instanceConfigDataType = '';
   /**
-   * @var string
-   */
-  public $kmsKey;
-  /**
    * @var string[]
    */
   public $labels;
@@ -151,20 +147,6 @@ class ContactCenter extends \Google\Model
   public function getInstanceConfig()
   {
     return $this->instanceConfig;
-  }
-  /**
-   * @param string
-   */
-  public function setKmsKey($kmsKey)
-  {
-    $this->kmsKey = $kmsKey;
-  }
-  /**
-   * @return string
-   */
-  public function getKmsKey()
-  {
-    return $this->kmsKey;
   }
   /**
    * @param string[]

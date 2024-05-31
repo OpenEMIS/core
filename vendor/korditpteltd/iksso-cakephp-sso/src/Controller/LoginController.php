@@ -8,7 +8,7 @@ use Cake\Controller\Controller;
 use Cake\Log\Log;
 
 class LoginController extends Controller {
-	public function initialize() {
+	public function initialize(): void {
 		parent::initialize();
 	}
 

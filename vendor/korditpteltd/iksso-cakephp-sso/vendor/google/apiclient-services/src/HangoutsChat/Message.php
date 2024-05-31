@@ -28,8 +28,6 @@ class Message extends \Google\Collection
    * @var string
    */
   public $argumentText;
-  protected $attachedGifsType = AttachedGif::class;
-  protected $attachedGifsDataType = 'array';
   protected $attachmentType = Attachment::class;
   protected $attachmentDataType = 'array';
   protected $cardsType = Card::class;
@@ -66,8 +64,6 @@ class Message extends \Google\Collection
    * @var string
    */
   public $name;
-  protected $quotedMessageMetadataType = QuotedMessageMetadata::class;
-  protected $quotedMessageMetadataDataType = '';
   protected $senderType = User::class;
   protected $senderDataType = '';
   protected $slashCommandType = SlashCommand::class;
@@ -126,20 +122,6 @@ class Message extends \Google\Collection
   public function getArgumentText()
   {
     return $this->argumentText;
-  }
-  /**
-   * @param AttachedGif[]
-   */
-  public function setAttachedGifs($attachedGifs)
-  {
-    $this->attachedGifs = $attachedGifs;
-  }
-  /**
-   * @return AttachedGif[]
-   */
-  public function getAttachedGifs()
-  {
-    return $this->attachedGifs;
   }
   /**
    * @param Attachment[]
@@ -308,20 +290,6 @@ class Message extends \Google\Collection
   public function getName()
   {
     return $this->name;
-  }
-  /**
-   * @param QuotedMessageMetadata
-   */
-  public function setQuotedMessageMetadata(QuotedMessageMetadata $quotedMessageMetadata)
-  {
-    $this->quotedMessageMetadata = $quotedMessageMetadata;
-  }
-  /**
-   * @return QuotedMessageMetadata
-   */
-  public function getQuotedMessageMetadata()
-  {
-    return $this->quotedMessageMetadata;
   }
   /**
    * @param User

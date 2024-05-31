@@ -22,8 +22,6 @@ class MigratingVm extends \Google\Collection
   protected $collection_key = 'recentCutoverJobs';
   protected $awsSourceVmDetailsType = AwsSourceVmDetails::class;
   protected $awsSourceVmDetailsDataType = '';
-  protected $computeEngineDisksTargetDefaultsType = ComputeEngineDisksTargetDefaults::class;
-  protected $computeEngineDisksTargetDefaultsDataType = '';
   protected $computeEngineTargetDefaultsType = ComputeEngineTargetDefaults::class;
   protected $computeEngineTargetDefaultsDataType = '';
   /**
@@ -96,20 +94,6 @@ class MigratingVm extends \Google\Collection
   public function getAwsSourceVmDetails()
   {
     return $this->awsSourceVmDetails;
-  }
-  /**
-   * @param ComputeEngineDisksTargetDefaults
-   */
-  public function setComputeEngineDisksTargetDefaults(ComputeEngineDisksTargetDefaults $computeEngineDisksTargetDefaults)
-  {
-    $this->computeEngineDisksTargetDefaults = $computeEngineDisksTargetDefaults;
-  }
-  /**
-   * @return ComputeEngineDisksTargetDefaults
-   */
-  public function getComputeEngineDisksTargetDefaults()
-  {
-    return $this->computeEngineDisksTargetDefaults;
   }
   /**
    * @param ComputeEngineTargetDefaults

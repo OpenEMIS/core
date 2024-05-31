@@ -157,10 +157,6 @@ class TrawlerTrawlerPrivateFetchReplyData extends \Google\Model
   /**
    * @var string
    */
-  public $credentialId;
-  /**
-   * @var string
-   */
   public $dependentFetchType;
   /**
    * @var string
@@ -608,20 +604,6 @@ class TrawlerTrawlerPrivateFetchReplyData extends \Google\Model
   public function getConcurrentStreamNum()
   {
     return $this->concurrentStreamNum;
-  }
-  /**
-   * @param string
-   */
-  public function setCredentialId($credentialId)
-  {
-    $this->credentialId = $credentialId;
-  }
-  /**
-   * @return string
-   */
-  public function getCredentialId()
-  {
-    return $this->credentialId;
   }
   /**
    * @param string

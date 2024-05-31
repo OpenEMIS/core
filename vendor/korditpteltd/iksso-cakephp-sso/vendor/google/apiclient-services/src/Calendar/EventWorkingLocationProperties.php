@@ -27,10 +27,6 @@ class EventWorkingLocationProperties extends \Google\Model
   public $homeOffice;
   protected $officeLocationType = EventWorkingLocationPropertiesOfficeLocation::class;
   protected $officeLocationDataType = '';
-  /**
-   * @var string
-   */
-  public $type;
 
   /**
    * @param EventWorkingLocationPropertiesCustomLocation
@@ -73,20 +69,6 @@ class EventWorkingLocationProperties extends \Google\Model
   public function getOfficeLocation()
   {
     return $this->officeLocation;
-  }
-  /**
-   * @param string
-   */
-  public function setType($type)
-  {
-    $this->type = $type;
-  }
-  /**
-   * @return string
-   */
-  public function getType()
-  {
-    return $this->type;
   }
 }
 

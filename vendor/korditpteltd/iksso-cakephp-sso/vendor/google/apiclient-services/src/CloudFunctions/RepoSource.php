@@ -32,6 +32,10 @@ class RepoSource extends \Google\Model
    */
   public $dir;
   /**
+   * @var bool
+   */
+  public $invertRegex;
+  /**
    * @var string
    */
   public $projectId;
@@ -85,6 +89,20 @@ class RepoSource extends \Google\Model
   public function getDir()
   {
     return $this->dir;
+  }
+  /**
+   * @param bool
+   */
+  public function setInvertRegex($invertRegex)
+  {
+    $this->invertRegex = $invertRegex;
+  }
+  /**
+   * @return bool
+   */
+  public function getInvertRegex()
+  {
+    return $this->invertRegex;
   }
   /**
    * @param string

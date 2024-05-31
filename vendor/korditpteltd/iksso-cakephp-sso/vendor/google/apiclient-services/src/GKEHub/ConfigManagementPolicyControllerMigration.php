@@ -22,26 +22,8 @@ class ConfigManagementPolicyControllerMigration extends \Google\Model
   /**
    * @var string
    */
-  public $copyTime;
-  /**
-   * @var string
-   */
   public $stage;
 
-  /**
-   * @param string
-   */
-  public function setCopyTime($copyTime)
-  {
-    $this->copyTime = $copyTime;
-  }
-  /**
-   * @return string
-   */
-  public function getCopyTime()
-  {
-    return $this->copyTime;
-  }
   /**
    * @param string
    */

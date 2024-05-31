@@ -23,8 +23,6 @@ class ReportRow extends \Google\Model
   protected $bestSellersDataType = '';
   protected $brandType = Brand::class;
   protected $brandDataType = '';
-  protected $competitiveVisibilityType = CompetitiveVisibility::class;
-  protected $competitiveVisibilityDataType = '';
   protected $metricsType = Metrics::class;
   protected $metricsDataType = '';
   protected $priceCompetitivenessType = PriceCompetitiveness::class;
@@ -65,20 +63,6 @@ class ReportRow extends \Google\Model
   public function getBrand()
   {
     return $this->brand;
-  }
-  /**
-   * @param CompetitiveVisibility
-   */
-  public function setCompetitiveVisibility(CompetitiveVisibility $competitiveVisibility)
-  {
-    $this->competitiveVisibility = $competitiveVisibility;
-  }
-  /**
-   * @return CompetitiveVisibility
-   */
-  public function getCompetitiveVisibility()
-  {
-    return $this->competitiveVisibility;
   }
   /**
    * @param Metrics

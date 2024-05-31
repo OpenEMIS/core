@@ -96,9 +96,17 @@ class Firestore extends \Google\Service
                   'type' => 'string',
                   'required' => true,
                 ],
+                'allowMissing' => [
+                  'location' => 'query',
+                  'type' => 'boolean',
+                ],
                 'etag' => [
                   'location' => 'query',
                   'type' => 'string',
+                ],
+                'validateOnly' => [
+                  'location' => 'query',
+                  'type' => 'boolean',
                 ],
               ],
             ],'exportDocuments' => [

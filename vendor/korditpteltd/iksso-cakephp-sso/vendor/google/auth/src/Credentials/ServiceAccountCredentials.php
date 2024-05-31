@@ -158,7 +158,9 @@ class ServiceAccountCredentials extends CredentialsLoader implements
             'additionalClaims' => $additionalClaims,
         ]);
 
-        $this->projectId = $jsonKey['project_id'] ?? null;
+        $this->projectId = isset($jsonKey['project_id'])
+            ? $jsonKey['project_id']
+            : null;
     }
 
     /**

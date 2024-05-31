@@ -62,10 +62,6 @@ class JobConfigurationLoad extends \Google\Collection
    * @var string
    */
   public $fieldDelimiter;
-  /**
-   * @var string
-   */
-  public $fileSetSpecType;
   protected $hivePartitioningOptionsType = HivePartitioningOptions::class;
   protected $hivePartitioningOptionsDataType = '';
   /**
@@ -322,20 +318,6 @@ class JobConfigurationLoad extends \Google\Collection
   public function getFieldDelimiter()
   {
     return $this->fieldDelimiter;
-  }
-  /**
-   * @param string
-   */
-  public function setFileSetSpecType($fileSetSpecType)
-  {
-    $this->fileSetSpecType = $fileSetSpecType;
-  }
-  /**
-   * @return string
-   */
-  public function getFileSetSpecType()
-  {
-    return $this->fileSetSpecType;
   }
   /**
    * @param HivePartitioningOptions

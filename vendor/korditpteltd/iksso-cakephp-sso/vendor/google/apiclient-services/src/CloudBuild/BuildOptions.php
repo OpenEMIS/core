@@ -21,10 +21,6 @@ class BuildOptions extends \Google\Collection
 {
   protected $collection_key = 'volumes';
   /**
-   * @var bool
-   */
-  public $automapSubstitutions;
-  /**
    * @var string
    */
   public $defaultLogsBucketBehavior;
@@ -77,20 +73,6 @@ class BuildOptions extends \Google\Collection
    */
   public $workerPool;
 
-  /**
-   * @param bool
-   */
-  public function setAutomapSubstitutions($automapSubstitutions)
-  {
-    $this->automapSubstitutions = $automapSubstitutions;
-  }
-  /**
-   * @return bool
-   */
-  public function getAutomapSubstitutions()
-  {
-    return $this->automapSubstitutions;
-  }
   /**
    * @param string
    */

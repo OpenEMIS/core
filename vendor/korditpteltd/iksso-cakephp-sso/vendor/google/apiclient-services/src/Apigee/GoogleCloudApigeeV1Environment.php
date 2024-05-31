@@ -44,10 +44,6 @@ class GoogleCloudApigeeV1Environment extends \Google\Model
    */
   public $forwardProxyUri;
   /**
-   * @var bool
-   */
-  public $hasAttachedFlowHooks;
-  /**
    * @var string
    */
   public $lastModifiedAt;
@@ -63,10 +59,6 @@ class GoogleCloudApigeeV1Environment extends \Google\Model
    * @var string
    */
   public $state;
-  /**
-   * @var string
-   */
-  public $type;
 
   /**
    * @param string
@@ -153,20 +145,6 @@ class GoogleCloudApigeeV1Environment extends \Google\Model
     return $this->forwardProxyUri;
   }
   /**
-   * @param bool
-   */
-  public function setHasAttachedFlowHooks($hasAttachedFlowHooks)
-  {
-    $this->hasAttachedFlowHooks = $hasAttachedFlowHooks;
-  }
-  /**
-   * @return bool
-   */
-  public function getHasAttachedFlowHooks()
-  {
-    return $this->hasAttachedFlowHooks;
-  }
-  /**
    * @param string
    */
   public function setLastModifiedAt($lastModifiedAt)
@@ -235,20 +213,6 @@ class GoogleCloudApigeeV1Environment extends \Google\Model
   public function getState()
   {
     return $this->state;
-  }
-  /**
-   * @param string
-   */
-  public function setType($type)
-  {
-    $this->type = $type;
-  }
-  /**
-   * @return string
-   */
-  public function getType()
-  {
-    return $this->type;
   }
 }
 

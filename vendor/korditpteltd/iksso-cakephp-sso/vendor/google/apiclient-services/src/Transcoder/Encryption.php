@@ -21,18 +21,18 @@ class Encryption extends \Google\Model
 {
   protected $aes128Type = Aes128Encryption::class;
   protected $aes128DataType = '';
-  protected $drmSystemsType = DrmSystems::class;
-  protected $drmSystemsDataType = '';
   /**
    * @var string
    */
-  public $id;
+  public $iv;
+  /**
+   * @var string
+   */
+  public $key;
   protected $mpegCencType = MpegCommonEncryption::class;
   protected $mpegCencDataType = '';
   protected $sampleAesType = SampleAesEncryption::class;
   protected $sampleAesDataType = '';
-  protected $secretManagerKeySourceType = SecretManagerSource::class;
-  protected $secretManagerKeySourceDataType = '';
 
   /**
    * @param Aes128Encryption
@@ -49,32 +49,32 @@ class Encryption extends \Google\Model
     return $this->aes128;
   }
   /**
-   * @param DrmSystems
-   */
-  public function setDrmSystems(DrmSystems $drmSystems)
-  {
-    $this->drmSystems = $drmSystems;
-  }
-  /**
-   * @return DrmSystems
-   */
-  public function getDrmSystems()
-  {
-    return $this->drmSystems;
-  }
-  /**
    * @param string
    */
-  public function setId($id)
+  public function setIv($iv)
   {
-    $this->id = $id;
+    $this->iv = $iv;
   }
   /**
    * @return string
    */
-  public function getId()
+  public function getIv()
   {
-    return $this->id;
+    return $this->iv;
+  }
+  /**
+   * @param string
+   */
+  public function setKey($key)
+  {
+    $this->key = $key;
+  }
+  /**
+   * @return string
+   */
+  public function getKey()
+  {
+    return $this->key;
   }
   /**
    * @param MpegCommonEncryption
@@ -103,20 +103,6 @@ class Encryption extends \Google\Model
   public function getSampleAes()
   {
     return $this->sampleAes;
-  }
-  /**
-   * @param SecretManagerSource
-   */
-  public function setSecretManagerKeySource(SecretManagerSource $secretManagerKeySource)
-  {
-    $this->secretManagerKeySource = $secretManagerKeySource;
-  }
-  /**
-   * @return SecretManagerSource
-   */
-  public function getSecretManagerKeySource()
-  {
-    return $this->secretManagerKeySource;
   }
 }
 

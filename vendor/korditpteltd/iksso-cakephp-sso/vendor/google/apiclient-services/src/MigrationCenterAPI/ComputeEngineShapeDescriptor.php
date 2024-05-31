@@ -17,9 +17,8 @@
 
 namespace Google\Service\MigrationCenterAPI;
 
-class ComputeEngineShapeDescriptor extends \Google\Collection
+class ComputeEngineShapeDescriptor extends \Google\Model
 {
-  protected $collection_key = 'storage';
   /**
    * @var int
    */
@@ -40,8 +39,6 @@ class ComputeEngineShapeDescriptor extends \Google\Collection
    * @var string
    */
   public $series;
-  protected $storageType = ComputeStorageDescriptor::class;
-  protected $storageDataType = 'array';
 
   /**
    * @param int
@@ -112,20 +109,6 @@ class ComputeEngineShapeDescriptor extends \Google\Collection
   public function getSeries()
   {
     return $this->series;
-  }
-  /**
-   * @param ComputeStorageDescriptor[]
-   */
-  public function setStorage($storage)
-  {
-    $this->storage = $storage;
-  }
-  /**
-   * @return ComputeStorageDescriptor[]
-   */
-  public function getStorage()
-  {
-    return $this->storage;
   }
 }
 
