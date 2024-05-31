@@ -680,14 +680,20 @@ trait MessagesTrait
         'ImportInstitutionSurveys' => [
             'restrictImport' => 'Import operation is not allowed as the record is already Done'
         ],
+
         'TrainingSessions' => [
             'trainer_type' => 'Type',
-            'trainer' => 'Trainer'
+            'trainer' => 'Trainer',
+            'evaluator_types' => 'Type',
+            'evaluator' => 'Evaluator'
         ],
+        
         'TrainingSessionResults' => [
             'noResultTypes' => 'You need to configure Result Types under Training Course.',
             'noTrainees' => 'No Available Trainees'
         ],
+
+
         'StaffTrainingApplications' => [
             'success' => 'This session has been added successfully.',
             'fail' => 'Failed to add the session.',

@@ -461,5 +461,28 @@ Route::group(
         Route::get('themes', 'ThemeController@getAllThemes');
         Route::get('themes/{themeId}', 'ThemeController@getThemeId');
         //POCOR-8259 end...
+
+
+
+        //POCOR-8100 start...
+        Route::get('training-courses', 'TrainingController@getAllTrainingCourses');
+        Route::get('training-courses/{courseId}', 'TrainingController@getTrainingCourseData');
+        Route::get('training-providers', 'TrainingController@getTrainingProviders');
+        Route::get('training-providers/{providerId}', 'TrainingController@getTrainingProvidersData');
+        Route::get('training-sessions', 'TrainingController@getTrainingSessions');
+        Route::get('training-sessions/{sessionId}', 'TrainingController@getTrainingSessionData');
+        Route::get('training-sessions/{sessionId}/results', 'TrainingController@getTrainingSessionResults');
+        Route::get('training-sessions/{sessionId}/results/{userId}', 'TrainingController@getTrainingSessionResultsViaUserId');
+        //POCOR-8100 end...
+        
+        //POCOR-8260 start...
+        Route::get('/institutions/classes/reportcards/comment/codes', 'ReportCardController@getReportCardCommentCodes');
+        //POCOR-8260 end...
+
+
+        //POCOR-8270 start...
+        Route::get('/security-roles/{roleId}', 'ReportCardController@getSecurityRoleData');
+        Route::get('/reportcards/{reportcardId}', 'ReportCardController@getReportCardData');
+        //POCOR-8270 end...
     }
 );
