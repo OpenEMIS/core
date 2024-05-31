@@ -1,0 +1,18 @@
+v1.2.11
+- Added mapped_email to system_authentications
+
+v1.2.10
+- Updated readme with information on single logout
+
+v1.2.9
+- Fixed a bug with the OAuth2 class where the error text is not initialised
+
+v1.2.8
+- Added change log
+- Added readme with instructions on how to set up SSO Plugin
+
+v1.2.7
+- Added change in migration patch and commit patch
+
+v1.2
+- Added support for logic to trigger specific IDP login without altering database value
