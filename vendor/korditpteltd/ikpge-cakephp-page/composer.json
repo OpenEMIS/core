@@ -1,0 +1,30 @@
+{
+    "name": "korditpteltd/ikpge-cakephp-page",
+    "description": "KORDIT CakePHP Page Plugin",
+    "type": "cakephp-plugin",
+    "keywords": ["kordit", "cakephp", "page"],
+    "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-page",
+    "license": "GPL-2.0",
+    "authors": [
+        {
+            "name": "KORDIT PHP DEVELOPERS",
+            "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-page/commits/all"
+        }
+    ],
+    "support": {
+        "source": "https://bitbucket.org/korditpteltd/kd-cakephp-page/src"
+    },
+    "require": {
+        "cakephp/cakephp": "^4.4",
+        "ikpge-cakephp-page": "1.1@dev"
+    },
+    "require-dev": {
+        "cakephp/cakephp-codesniffer": "^2.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Page\\": "src"
+        }
+    },
+    "minimum-stability": "dev"
+}
