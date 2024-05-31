@@ -22,10 +22,10 @@ class PageController extends AppController
 {
     private $excludedFields = ['order', 'modified', 'modified_user_id', 'created', 'created_user_id'];
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
-
+        //$this->loadHelper('Page.Page');
         $this->loadComponent('Page.Page');
         $this->loadComponent('Page.Alert');
         $this->loadComponent('Paginator');
@@ -53,7 +53,7 @@ class PageController extends AppController
     {
         $page = $this->Page;
         $request = $this->request;
-        $requestQueries = $request->query;
+        $requestQueries = $request->getQuery();
 
         $showData = !array_key_exists('data', $requestQueries);
 
@@ -64,7 +64,7 @@ class PageController extends AppController
         if ($request->is(['get', 'ajax']) && $page->hasMainTable() && $showData) {
             $table = $page->getMainTable();
 
-            $primaryKey = $table->primaryKey();
+            $primaryKey = $table->getPrimaryKey();
             if (!is_array($primaryKey)) { // if primary key is not composite key, then hide from index page
                 $page->exclude($primaryKey);
             }

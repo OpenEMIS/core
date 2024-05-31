@@ -305,7 +305,7 @@ class PageHelper extends Helper
 
     public function getQueryString($key)
     {
-        $querystring = $this->request->query('querystring');
+        $querystring = $this->request->getQuery('querystring');
         $value = false;
         if ($querystring) {
             $object = $this->decode($querystring);
