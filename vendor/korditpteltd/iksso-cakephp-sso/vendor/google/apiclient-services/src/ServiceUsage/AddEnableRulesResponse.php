@@ -19,30 +19,14 @@ namespace Google\Service\ServiceUsage;
 
 class AddEnableRulesResponse extends \Google\Collection
 {
-  protected $collection_key = 'addedValues';
-  /**
-   * @var string[]
-   */
-  public $addedValues;
+  protected $collection_key = 'values';
   /**
    * @var string
    */
   public $parent;
+  protected $valuesType = ValueInfo::class;
+  protected $valuesDataType = 'array';
 
-  /**
-   * @param string[]
-   */
-  public function setAddedValues($addedValues)
-  {
-    $this->addedValues = $addedValues;
-  }
-  /**
-   * @return string[]
-   */
-  public function getAddedValues()
-  {
-    return $this->addedValues;
-  }
   /**
    * @param string
    */
@@ -56,6 +40,20 @@ class AddEnableRulesResponse extends \Google\Collection
   public function getParent()
   {
     return $this->parent;
+  }
+  /**
+   * @param ValueInfo[]
+   */
+  public function setValues($values)
+  {
+    $this->values = $values;
+  }
+  /**
+   * @return ValueInfo[]
+   */
+  public function getValues()
+  {
+    return $this->values;
   }
 }
 

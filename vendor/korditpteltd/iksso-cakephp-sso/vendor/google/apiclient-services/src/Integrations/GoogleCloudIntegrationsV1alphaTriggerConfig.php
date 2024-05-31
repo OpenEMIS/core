@@ -51,10 +51,6 @@ class GoogleCloudIntegrationsV1alphaTriggerConfig extends \Google\Collection
   /**
    * @var string
    */
-  public $trigger;
-  /**
-   * @var string
-   */
   public $triggerId;
   /**
    * @var string
@@ -190,20 +186,6 @@ class GoogleCloudIntegrationsV1alphaTriggerConfig extends \Google\Collection
   public function getStartTasks()
   {
     return $this->startTasks;
-  }
-  /**
-   * @param string
-   */
-  public function setTrigger($trigger)
-  {
-    $this->trigger = $trigger;
-  }
-  /**
-   * @return string
-   */
-  public function getTrigger()
-  {
-    return $this->trigger;
   }
   /**
    * @param string

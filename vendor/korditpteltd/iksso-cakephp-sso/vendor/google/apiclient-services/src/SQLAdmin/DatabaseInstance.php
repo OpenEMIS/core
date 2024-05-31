@@ -55,10 +55,6 @@ class DatabaseInstance extends \Google\Collection
   /**
    * @var string
    */
-  public $dnsName;
-  /**
-   * @var string
-   */
   public $etag;
   protected $failoverReplicaType = DatabaseInstanceFailoverReplica::class;
   protected $failoverReplicaDataType = '';
@@ -104,10 +100,6 @@ class DatabaseInstance extends \Google\Collection
    * @var string
    */
   public $project;
-  /**
-   * @var string
-   */
-  public $pscServiceAttachmentLink;
   /**
    * @var string
    */
@@ -278,20 +270,6 @@ class DatabaseInstance extends \Google\Collection
   public function getDiskEncryptionStatus()
   {
     return $this->diskEncryptionStatus;
-  }
-  /**
-   * @param string
-   */
-  public function setDnsName($dnsName)
-  {
-    $this->dnsName = $dnsName;
-  }
-  /**
-   * @return string
-   */
-  public function getDnsName()
-  {
-    return $this->dnsName;
   }
   /**
    * @param string
@@ -488,20 +466,6 @@ class DatabaseInstance extends \Google\Collection
   public function getProject()
   {
     return $this->project;
-  }
-  /**
-   * @param string
-   */
-  public function setPscServiceAttachmentLink($pscServiceAttachmentLink)
-  {
-    $this->pscServiceAttachmentLink = $pscServiceAttachmentLink;
-  }
-  /**
-   * @return string
-   */
-  public function getPscServiceAttachmentLink()
-  {
-    return $this->pscServiceAttachmentLink;
   }
   /**
    * @param string

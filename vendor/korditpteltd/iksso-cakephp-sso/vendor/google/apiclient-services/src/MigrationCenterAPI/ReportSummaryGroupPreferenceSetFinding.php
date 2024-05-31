@@ -51,14 +51,10 @@ class ReportSummaryGroupPreferenceSetFinding extends \Google\Model
    * @var string
    */
   public $pricingTrack;
-  protected $soleTenantFindingType = ReportSummarySoleTenantFinding::class;
-  protected $soleTenantFindingDataType = '';
   /**
    * @var string
    */
   public $topPriority;
-  protected $vmwareEngineFindingType = ReportSummaryVMWareEngineFinding::class;
-  protected $vmwareEngineFindingDataType = '';
 
   /**
    * @param string
@@ -229,20 +225,6 @@ class ReportSummaryGroupPreferenceSetFinding extends \Google\Model
     return $this->pricingTrack;
   }
   /**
-   * @param ReportSummarySoleTenantFinding
-   */
-  public function setSoleTenantFinding(ReportSummarySoleTenantFinding $soleTenantFinding)
-  {
-    $this->soleTenantFinding = $soleTenantFinding;
-  }
-  /**
-   * @return ReportSummarySoleTenantFinding
-   */
-  public function getSoleTenantFinding()
-  {
-    return $this->soleTenantFinding;
-  }
-  /**
    * @param string
    */
   public function setTopPriority($topPriority)
@@ -255,20 +237,6 @@ class ReportSummaryGroupPreferenceSetFinding extends \Google\Model
   public function getTopPriority()
   {
     return $this->topPriority;
-  }
-  /**
-   * @param ReportSummaryVMWareEngineFinding
-   */
-  public function setVmwareEngineFinding(ReportSummaryVMWareEngineFinding $vmwareEngineFinding)
-  {
-    $this->vmwareEngineFinding = $vmwareEngineFinding;
-  }
-  /**
-   * @return ReportSummaryVMWareEngineFinding
-   */
-  public function getVmwareEngineFinding()
-  {
-    return $this->vmwareEngineFinding;
   }
 }
 

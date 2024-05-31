@@ -42,10 +42,6 @@ class ExternalDataConfiguration extends \Google\Collection
    * @var string[]
    */
   public $decimalTargetTypes;
-  /**
-   * @var string
-   */
-  public $fileSetSpecType;
   protected $googleSheetsOptionsType = GoogleSheetsOptions::class;
   protected $googleSheetsOptionsDataType = '';
   protected $hivePartitioningOptionsType = HivePartitioningOptions::class;
@@ -182,20 +178,6 @@ class ExternalDataConfiguration extends \Google\Collection
   public function getDecimalTargetTypes()
   {
     return $this->decimalTargetTypes;
-  }
-  /**
-   * @param string
-   */
-  public function setFileSetSpecType($fileSetSpecType)
-  {
-    $this->fileSetSpecType = $fileSetSpecType;
-  }
-  /**
-   * @return string
-   */
-  public function getFileSetSpecType()
-  {
-    return $this->fileSetSpecType;
   }
   /**
    * @param GoogleSheetsOptions

@@ -24,10 +24,6 @@ class Accelerator extends \Google\Model
    */
   public $count;
   /**
-   * @var string
-   */
-  public $driverVersion;
-  /**
    * @var bool
    */
   public $installGpuDrivers;
@@ -49,20 +45,6 @@ class Accelerator extends \Google\Model
   public function getCount()
   {
     return $this->count;
-  }
-  /**
-   * @param string
-   */
-  public function setDriverVersion($driverVersion)
-  {
-    $this->driverVersion = $driverVersion;
-  }
-  /**
-   * @return string
-   */
-  public function getDriverVersion()
-  {
-    return $this->driverVersion;
   }
   /**
    * @param bool

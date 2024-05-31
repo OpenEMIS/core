@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\Controller\Component;
 use Cake\Event\Event;
+use Cake\Http\ServerRequest;
 
 class LocalAuthComponent extends Component {
     public $components = ['Auth', 'Alert'];
@@ -14,16 +15,16 @@ class LocalAuthComponent extends Component {
         'loginPageURL' => null,
     ];
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
-        // $events['Controller.Auth.beforeAuthenticate'] = 'beforeAuthenticate';
+        //$events['Controller.Auth.beforeAuthenticate'] = 'beforeAuthenticate';
         $events['Controller.Auth.authenticate'] = 'authenticate';
         return $events;
     }
 
     public function beforeFilter(Event $event) {
         $controller = $this->_registry->getController();
-        $controller->Auth->config('authenticate', [
+        $controller->Auth->setConfig('authenticate', [
             'Form' => [
                 'userModel' => $this->_config['userModel'],
                 'passwordHasher' => [
@@ -36,31 +37,38 @@ class LocalAuthComponent extends Component {
 
     public function authenticate(Event $event, ArrayObject $extra) {
         $controller = $this->_registry->getController();
-        if ($this->request->is('post')) {
-            if ($this->request->data('submit') == 'login') {
-                $username = $this->request->data('username');
+        $request = $controller->getRequest();
+        
+        if ($request->is('post')) {
+            if ($request->getData('submit') == 'login') {
+                $username = $request->getData('username');
                 return $this->checkLogin($username);
-            } else if ($this->request->data('submit') == 'reload') {
-                $username = $this->request->data['username'];
-                $password = $this->request->data['password'];
+            } else if ($request->getData('submit') == 'reload') {
+                $username = $request->getData['username'];
+                $password = $request->getData['password'];
                 $session = $this->request->session();
                 $session->write('login.username', $username);
                 $session->write('login.password', $password);
                 return $controller->redirect($this->loginPageURL);
             }
         } else {
-            return false;
+            return $controller->redirect($this->homePageURL);
+            // return false;
         }
     }
 
     private function checkLogin($username = null, $extra = [])
     {
+
         $controller = $this->_registry->getController();
-        $session = $this->request->session();
+        $request = $controller->getRequest();
+        $session = $this->getController()->getRequest()->getSession();
         if (array_key_exists('REMOTE_ADDR', $_SERVER)) {
             $this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'debug');
         }
+        
         $user = $this->Auth->identify();
+
         $extra['status'] = true;
         $extra['loginStatus'] = false;
         $extra['fallback'] = false;
@@ -70,9 +78,9 @@ class LocalAuthComponent extends Component {
             } else {
                 $this->Auth->setUser($user);
                 if ($this->Auth->authenticationProvider()->needsPasswordRehash()) {
-                    $this->Users = TableRegistry::get($this->_config['userModel']);
+                    $this->Users = TableRegistry::getTableLocator()->get($this->_config['userModel']);
                     $user = $this->Users->get($this->Auth->user('id'));
-                    $user->password = $this->request->data('password');
+                    $user->password = $request->getData['password'];
                     $this->Users->save($user);
                 }
                 $extra['loginStatus'] = true;
@@ -81,5 +89,6 @@ class LocalAuthComponent extends Component {
         }
         $controller->dispatchEvent('Controller.Auth.afterCheckLogin', [$extra], $this);
         return $extra['loginStatus'];
+
     }
 }

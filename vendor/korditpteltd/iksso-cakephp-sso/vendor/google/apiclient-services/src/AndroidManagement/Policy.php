@@ -112,8 +112,6 @@ class Policy extends \Google\Collection
   protected $deviceConnectivityManagementDataType = '';
   protected $deviceOwnerLockScreenInfoType = UserFacingMessage::class;
   protected $deviceOwnerLockScreenInfoDataType = '';
-  protected $deviceRadioStateType = DeviceRadioState::class;
-  protected $deviceRadioStateDataType = '';
   /**
    * @var string
    */
@@ -706,20 +704,6 @@ class Policy extends \Google\Collection
   public function getDeviceOwnerLockScreenInfo()
   {
     return $this->deviceOwnerLockScreenInfo;
-  }
-  /**
-   * @param DeviceRadioState
-   */
-  public function setDeviceRadioState(DeviceRadioState $deviceRadioState)
-  {
-    $this->deviceRadioState = $deviceRadioState;
-  }
-  /**
-   * @return DeviceRadioState
-   */
-  public function getDeviceRadioState()
-  {
-    return $this->deviceRadioState;
   }
   /**
    * @param string

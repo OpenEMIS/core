@@ -37,7 +37,6 @@ class IPAllocationPolicy extends \Google\Model
    * @var bool
    */
   public $createSubnetwork;
-  public $defaultPodIpv4RangeUtilization;
   /**
    * @var string
    */
@@ -162,14 +161,6 @@ class IPAllocationPolicy extends \Google\Model
   public function getCreateSubnetwork()
   {
     return $this->createSubnetwork;
-  }
-  public function setDefaultPodIpv4RangeUtilization($defaultPodIpv4RangeUtilization)
-  {
-    $this->defaultPodIpv4RangeUtilization = $defaultPodIpv4RangeUtilization;
-  }
-  public function getDefaultPodIpv4RangeUtilization()
-  {
-    return $this->defaultPodIpv4RangeUtilization;
   }
   /**
    * @param string

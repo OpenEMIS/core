@@ -15,7 +15,7 @@ use Cake\Log\Log;
 
 class SingleLogoutTable extends Table
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }

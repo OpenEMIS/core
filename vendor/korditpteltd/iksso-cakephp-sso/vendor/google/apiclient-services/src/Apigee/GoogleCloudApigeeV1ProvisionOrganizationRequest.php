@@ -28,10 +28,6 @@ class GoogleCloudApigeeV1ProvisionOrganizationRequest extends \Google\Model
    */
   public $authorizedNetwork;
   /**
-   * @var bool
-   */
-  public $disableVpcPeering;
-  /**
    * @var string
    */
   public $runtimeLocation;
@@ -63,20 +59,6 @@ class GoogleCloudApigeeV1ProvisionOrganizationRequest extends \Google\Model
   public function getAuthorizedNetwork()
   {
     return $this->authorizedNetwork;
-  }
-  /**
-   * @param bool
-   */
-  public function setDisableVpcPeering($disableVpcPeering)
-  {
-    $this->disableVpcPeering = $disableVpcPeering;
-  }
-  /**
-   * @return bool
-   */
-  public function getDisableVpcPeering()
-  {
-    return $this->disableVpcPeering;
   }
   /**
    * @param string

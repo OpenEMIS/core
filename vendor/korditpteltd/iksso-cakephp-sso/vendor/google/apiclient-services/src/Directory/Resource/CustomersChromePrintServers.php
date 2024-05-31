@@ -38,10 +38,9 @@ class CustomersChromePrintServers extends \Google\Service\Resource
   /**
    * Creates multiple print servers. (printServers.batchCreatePrintServers)
    *
-   * @param string $parent Required. The [unique
-   * ID](https://developers.google.com/admin-
-   * sdk/directory/reference/rest/v1/customers) of the customer's Google Workspace
-   * account. Format: `customers/{id}`
+   * @param string $parent Required. The [unique ID](https://developers.google.com
+   * /admin-sdk/directory/reference/rest/v1/customers) of the customer's Google
+   * Workspace account. Format: `customers/{id}`
    * @param BatchCreatePrintServersRequest $postBody
    * @param array $optParams Optional parameters.
    * @return BatchCreatePrintServersResponse
@@ -55,10 +54,9 @@ class CustomersChromePrintServers extends \Google\Service\Resource
   /**
    * Deletes multiple print servers. (printServers.batchDeletePrintServers)
    *
-   * @param string $parent Required. The [unique
-   * ID](https://developers.google.com/admin-
-   * sdk/directory/reference/rest/v1/customers) of the customer's Google Workspace
-   * account. Format: `customers/{customer.id}`
+   * @param string $parent Required. The [unique ID](https://developers.google.com
+   * /admin-sdk/directory/reference/rest/v1/customers) of the customer's Google
+   * Workspace account. Format: `customers/{customer.id}`
    * @param BatchDeletePrintServersRequest $postBody
    * @param array $optParams Optional parameters.
    * @return BatchDeletePrintServersResponse
@@ -72,10 +70,9 @@ class CustomersChromePrintServers extends \Google\Service\Resource
   /**
    * Creates a print server. (printServers.create)
    *
-   * @param string $parent Required. The [unique
-   * ID](https://developers.google.com/admin-
-   * sdk/directory/reference/rest/v1/customers) of the customer's Google Workspace
-   * account. Format: `customers/{id}`
+   * @param string $parent Required. The [unique ID](https://developers.google.com
+   * /admin-sdk/directory/reference/rest/v1/customers) of the customer's Google
+   * Workspace account. Format: `customers/{id}`
    * @param PrintServer $postBody
    * @param array $optParams Optional parameters.
    * @return PrintServer
@@ -103,10 +100,9 @@ class CustomersChromePrintServers extends \Google\Service\Resource
   /**
    * Returns a print server's configuration. (printServers.get)
    *
-   * @param string $name Required. The [unique
-   * ID](https://developers.google.com/admin-
-   * sdk/directory/reference/rest/v1/customers) of the customer's Google Workspace
-   * account. Format: `customers/{id}`
+   * @param string $name Required. The [unique ID](https://developers.google.com
+   * /admin-sdk/directory/reference/rest/v1/customers) of the customer's Google
+   * Workspace account. Format: `customers/{id}`
    * @param array $optParams Optional parameters.
    * @return PrintServer
    */
@@ -120,16 +116,15 @@ class CustomersChromePrintServers extends \Google\Service\Resource
    * Lists print server configurations.
    * (printServers.listCustomersChromePrintServers)
    *
-   * @param string $parent Required. The [unique
-   * ID](https://developers.google.com/admin-
-   * sdk/directory/reference/rest/v1/customers) of the customer's Google Workspace
-   * account. Format: `customers/{id}`
+   * @param string $parent Required. The [unique ID](https://developers.google.com
+   * /admin-sdk/directory/reference/rest/v1/customers) of the customer's Google
+   * Workspace account. Format: `customers/{id}`
    * @param array $optParams Optional parameters.
    *
    * @opt_param string filter Search query in [Common Expression Language
    * syntax](https://github.com/google/cel-spec). Supported filters are
-   * `display_name`, `description`, and `uri`. Example:
-   * `printServer.displayName=='marketing-queue'`.
+   * `display_name`, `description`, and `uri`. Example: `printServer.displayName
+   * =='marketing-queue'`.
    * @opt_param string orderBy Sort order for results. Supported values are
    * `display_name`, `description`, or `create_time`. Default order is ascending,
    * but descending order can be returned by appending "desc" to the `order_by`

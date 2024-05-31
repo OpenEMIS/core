@@ -51,8 +51,6 @@ class Step extends \Google\Model
   protected $forwardingRuleDataType = '';
   protected $gkeMasterType = GKEMasterInfo::class;
   protected $gkeMasterDataType = '';
-  protected $googleServiceType = GoogleServiceInfo::class;
-  protected $googleServiceDataType = '';
   protected $instanceType = InstanceInfo::class;
   protected $instanceDataType = '';
   protected $loadBalancerType = LoadBalancerInfo::class;
@@ -271,20 +269,6 @@ class Step extends \Google\Model
   public function getGkeMaster()
   {
     return $this->gkeMaster;
-  }
-  /**
-   * @param GoogleServiceInfo
-   */
-  public function setGoogleService(GoogleServiceInfo $googleService)
-  {
-    $this->googleService = $googleService;
-  }
-  /**
-   * @return GoogleServiceInfo
-   */
-  public function getGoogleService()
-  {
-    return $this->googleService;
   }
   /**
    * @param InstanceInfo

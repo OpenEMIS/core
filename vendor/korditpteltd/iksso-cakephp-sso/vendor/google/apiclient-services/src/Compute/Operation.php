@@ -82,8 +82,6 @@ class Operation extends \Google\Collection
    * @var string
    */
   public $selfLink;
-  protected $setCommonInstanceMetadataOperationMetadataType = SetCommonInstanceMetadataOperationMetadata::class;
-  protected $setCommonInstanceMetadataOperationMetadataDataType = '';
   /**
    * @var string
    */
@@ -338,20 +336,6 @@ class Operation extends \Google\Collection
   public function getSelfLink()
   {
     return $this->selfLink;
-  }
-  /**
-   * @param SetCommonInstanceMetadataOperationMetadata
-   */
-  public function setSetCommonInstanceMetadataOperationMetadata(SetCommonInstanceMetadataOperationMetadata $setCommonInstanceMetadataOperationMetadata)
-  {
-    $this->setCommonInstanceMetadataOperationMetadata = $setCommonInstanceMetadataOperationMetadata;
-  }
-  /**
-   * @return SetCommonInstanceMetadataOperationMetadata
-   */
-  public function getSetCommonInstanceMetadataOperationMetadata()
-  {
-    return $this->setCommonInstanceMetadataOperationMetadata;
   }
   /**
    * @param string

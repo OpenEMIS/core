@@ -51,10 +51,6 @@ class Access extends \Google\Collection
   /**
    * @var string
    */
-  public $userAgent;
-  /**
-   * @var string
-   */
   public $userAgentFamily;
   /**
    * @var string
@@ -172,20 +168,6 @@ class Access extends \Google\Collection
   public function getServiceName()
   {
     return $this->serviceName;
-  }
-  /**
-   * @param string
-   */
-  public function setUserAgent($userAgent)
-  {
-    $this->userAgent = $userAgent;
-  }
-  /**
-   * @return string
-   */
-  public function getUserAgent()
-  {
-    return $this->userAgent;
   }
   /**
    * @param string

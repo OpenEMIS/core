@@ -35,8 +35,6 @@ class OperationMetadata extends \Google\Model
    * @var string
    */
   public $endTime;
-  protected $progressType = OperationProgress::class;
-  protected $progressDataType = '';
   /**
    * @var bool
    */
@@ -113,20 +111,6 @@ class OperationMetadata extends \Google\Model
   public function getEndTime()
   {
     return $this->endTime;
-  }
-  /**
-   * @param OperationProgress
-   */
-  public function setProgress(OperationProgress $progress)
-  {
-    $this->progress = $progress;
-  }
-  /**
-   * @return OperationProgress
-   */
-  public function getProgress()
-  {
-    return $this->progress;
   }
   /**
    * @param bool

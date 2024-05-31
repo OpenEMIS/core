@@ -31,10 +31,6 @@ class QualityFringeFringeQueryPriorPerDocData extends \Google\Collection
   /**
    * @var string
    */
-  public $encodedChardXlqTranslatedPrediction;
-  /**
-   * @var string
-   */
   public $encodedChardXlqYmylPrediction;
   /**
    * @var string
@@ -96,20 +92,6 @@ class QualityFringeFringeQueryPriorPerDocData extends \Google\Collection
   public function getEncodedChardXlqHoaxPrediction()
   {
     return $this->encodedChardXlqHoaxPrediction;
-  }
-  /**
-   * @param string
-   */
-  public function setEncodedChardXlqTranslatedPrediction($encodedChardXlqTranslatedPrediction)
-  {
-    $this->encodedChardXlqTranslatedPrediction = $encodedChardXlqTranslatedPrediction;
-  }
-  /**
-   * @return string
-   */
-  public function getEncodedChardXlqTranslatedPrediction()
-  {
-    return $this->encodedChardXlqTranslatedPrediction;
   }
   /**
    * @param string

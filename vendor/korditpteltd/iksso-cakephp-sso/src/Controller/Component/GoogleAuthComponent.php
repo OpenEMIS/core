@@ -21,7 +21,7 @@ class GoogleAuthComponent extends Component
 
     public $components = ['Auth'];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->controller = $this->_registry->getController();
         $this->session = $this->request->session();

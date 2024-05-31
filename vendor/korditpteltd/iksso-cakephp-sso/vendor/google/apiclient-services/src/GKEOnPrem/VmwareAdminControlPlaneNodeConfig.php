@@ -27,10 +27,6 @@ class VmwareAdminControlPlaneNodeConfig extends \Google\Model
    * @var string
    */
   public $memory;
-  /**
-   * @var string
-   */
-  public $replicas;
 
   /**
    * @param string
@@ -59,20 +55,6 @@ class VmwareAdminControlPlaneNodeConfig extends \Google\Model
   public function getMemory()
   {
     return $this->memory;
-  }
-  /**
-   * @param string
-   */
-  public function setReplicas($replicas)
-  {
-    $this->replicas = $replicas;
-  }
-  /**
-   * @return string
-   */
-  public function getReplicas()
-  {
-    return $this->replicas;
   }
 }
 

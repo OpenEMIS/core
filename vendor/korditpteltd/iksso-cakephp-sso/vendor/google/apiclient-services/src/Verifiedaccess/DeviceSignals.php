@@ -133,10 +133,6 @@ class DeviceSignals extends \Google\Collection
   /**
    * @var string
    */
-  public $trigger;
-  /**
-   * @var string
-   */
   public $windowsMachineDomain;
   /**
    * @var string
@@ -534,20 +530,6 @@ class DeviceSignals extends \Google\Collection
   public function getThirdPartyBlockingEnabled()
   {
     return $this->thirdPartyBlockingEnabled;
-  }
-  /**
-   * @param string
-   */
-  public function setTrigger($trigger)
-  {
-    $this->trigger = $trigger;
-  }
-  /**
-   * @return string
-   */
-  public function getTrigger()
-  {
-    return $this->trigger;
   }
   /**
    * @param string

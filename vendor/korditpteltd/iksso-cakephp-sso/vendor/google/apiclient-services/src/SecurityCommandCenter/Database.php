@@ -40,10 +40,6 @@ class Database extends \Google\Collection
    * @var string
    */
   public $userName;
-  /**
-   * @var string
-   */
-  public $version;
 
   /**
    * @param string
@@ -114,20 +110,6 @@ class Database extends \Google\Collection
   public function getUserName()
   {
     return $this->userName;
-  }
-  /**
-   * @param string
-   */
-  public function setVersion($version)
-  {
-    $this->version = $version;
-  }
-  /**
-   * @return string
-   */
-  public function getVersion()
-  {
-    return $this->version;
   }
 }
 

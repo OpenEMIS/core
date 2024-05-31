@@ -20,8 +20,6 @@ namespace Google\Service\Networkconnectivity;
 class ConsumerPscConnection extends \Google\Model
 {
   protected $errorDataType = '';
-  protected $errorInfoType = GoogleRpcErrorInfo::class;
-  protected $errorInfoDataType = '';
   /**
    * @var string
    */
@@ -72,20 +70,6 @@ class ConsumerPscConnection extends \Google\Model
   public function getError()
   {
     return $this->error;
-  }
-  /**
-   * @param GoogleRpcErrorInfo
-   */
-  public function setErrorInfo(GoogleRpcErrorInfo $errorInfo)
-  {
-    $this->errorInfo = $errorInfo;
-  }
-  /**
-   * @return GoogleRpcErrorInfo
-   */
-  public function getErrorInfo()
-  {
-    return $this->errorInfo;
   }
   /**
    * @param string

@@ -56,10 +56,6 @@ class ChromeOsDevice extends \Google\Collection
    * @var string
    */
   public $deviceId;
-  /**
-   * @var string
-   */
-  public $deviceLicenseType;
   protected $diskVolumeReportsType = ChromeOsDeviceDiskVolumeReports::class;
   protected $diskVolumeReportsDataType = 'array';
   /**
@@ -328,20 +324,6 @@ class ChromeOsDevice extends \Google\Collection
   public function getDeviceId()
   {
     return $this->deviceId;
-  }
-  /**
-   * @param string
-   */
-  public function setDeviceLicenseType($deviceLicenseType)
-  {
-    $this->deviceLicenseType = $deviceLicenseType;
-  }
-  /**
-   * @return string
-   */
-  public function getDeviceLicenseType()
-  {
-    return $this->deviceLicenseType;
   }
   /**
    * @param ChromeOsDeviceDiskVolumeReports[]

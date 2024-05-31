@@ -21,18 +21,34 @@ class AssistantGroundingRankerProviderGroundingProviderFeatures extends \Google\
 {
   protected $collection_key = 'providerClusterIds';
   /**
+   * @var bool
+   */
+  public $isInAppProvider;
+  /**
    * @var string[]
    */
   public $providerClusterIds;
   protected $providerIdType = AssistantContextProviderId::class;
   protected $providerIdDataType = '';
-  protected $providerSignalResultType = AssistantGroundingProviderProviderSignalResult::class;
-  protected $providerSignalResultDataType = '';
   /**
    * @var float
    */
   public $pslScore;
 
+  /**
+   * @param bool
+   */
+  public function setIsInAppProvider($isInAppProvider)
+  {
+    $this->isInAppProvider = $isInAppProvider;
+  }
+  /**
+   * @return bool
+   */
+  public function getIsInAppProvider()
+  {
+    return $this->isInAppProvider;
+  }
   /**
    * @param string[]
    */
@@ -60,20 +76,6 @@ class AssistantGroundingRankerProviderGroundingProviderFeatures extends \Google\
   public function getProviderId()
   {
     return $this->providerId;
-  }
-  /**
-   * @param AssistantGroundingProviderProviderSignalResult
-   */
-  public function setProviderSignalResult(AssistantGroundingProviderProviderSignalResult $providerSignalResult)
-  {
-    $this->providerSignalResult = $providerSignalResult;
-  }
-  /**
-   * @return AssistantGroundingProviderProviderSignalResult
-   */
-  public function getProviderSignalResult()
-  {
-    return $this->providerSignalResult;
   }
   /**
    * @param float

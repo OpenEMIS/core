@@ -18,7 +18,6 @@
 namespace Google\Service\Contentwarehouse\Resource;
 
 use Google\Service\Contentwarehouse\GoogleCloudContentwarehouseV1InitializeProjectRequest;
-use Google\Service\Contentwarehouse\GoogleCloudContentwarehouseV1ProjectStatus;
 use Google\Service\Contentwarehouse\GoogleLongrunningOperation;
 
 /**
@@ -31,20 +30,6 @@ use Google\Service\Contentwarehouse\GoogleLongrunningOperation;
  */
 class ProjectsLocations extends \Google\Service\Resource
 {
-  /**
-   * Get the project status. (locations.getStatus)
-   *
-   * @param string $location Required. The location to be queried Format:
-   * projects/{project_number}/locations/{location}.
-   * @param array $optParams Optional parameters.
-   * @return GoogleCloudContentwarehouseV1ProjectStatus
-   */
-  public function getStatus($location, $optParams = [])
-  {
-    $params = ['location' => $location];
-    $params = array_merge($params, $optParams);
-    return $this->call('getStatus', [$params], GoogleCloudContentwarehouseV1ProjectStatus::class);
-  }
   /**
    * Provisions resources for given tenant project. Returns a long running
    * operation. (locations.initialize)

@@ -32,8 +32,6 @@ class GoogleCloudConnectorsV1Connection extends \Google\Collection
    * @var string
    */
   public $connectorVersion;
-  protected $connectorVersionInfraConfigType = GoogleCloudConnectorsV1ConnectorVersionInfraConfig::class;
-  protected $connectorVersionInfraConfigDataType = '';
   /**
    * @var string
    */
@@ -52,14 +50,6 @@ class GoogleCloudConnectorsV1Connection extends \Google\Collection
    * @var string
    */
   public $envoyImageLocation;
-  protected $eventingConfigType = GoogleCloudConnectorsV1EventingConfig::class;
-  protected $eventingConfigDataType = '';
-  /**
-   * @var string
-   */
-  public $eventingEnablementType;
-  protected $eventingRuntimeDataType = GoogleCloudConnectorsV1EventingRuntimeData::class;
-  protected $eventingRuntimeDataDataType = '';
   /**
    * @var string
    */
@@ -160,20 +150,6 @@ class GoogleCloudConnectorsV1Connection extends \Google\Collection
     return $this->connectorVersion;
   }
   /**
-   * @param GoogleCloudConnectorsV1ConnectorVersionInfraConfig
-   */
-  public function setConnectorVersionInfraConfig(GoogleCloudConnectorsV1ConnectorVersionInfraConfig $connectorVersionInfraConfig)
-  {
-    $this->connectorVersionInfraConfig = $connectorVersionInfraConfig;
-  }
-  /**
-   * @return GoogleCloudConnectorsV1ConnectorVersionInfraConfig
-   */
-  public function getConnectorVersionInfraConfig()
-  {
-    return $this->connectorVersionInfraConfig;
-  }
-  /**
    * @param string
    */
   public function setConnectorVersionLaunchStage($connectorVersionLaunchStage)
@@ -242,48 +218,6 @@ class GoogleCloudConnectorsV1Connection extends \Google\Collection
   public function getEnvoyImageLocation()
   {
     return $this->envoyImageLocation;
-  }
-  /**
-   * @param GoogleCloudConnectorsV1EventingConfig
-   */
-  public function setEventingConfig(GoogleCloudConnectorsV1EventingConfig $eventingConfig)
-  {
-    $this->eventingConfig = $eventingConfig;
-  }
-  /**
-   * @return GoogleCloudConnectorsV1EventingConfig
-   */
-  public function getEventingConfig()
-  {
-    return $this->eventingConfig;
-  }
-  /**
-   * @param string
-   */
-  public function setEventingEnablementType($eventingEnablementType)
-  {
-    $this->eventingEnablementType = $eventingEnablementType;
-  }
-  /**
-   * @return string
-   */
-  public function getEventingEnablementType()
-  {
-    return $this->eventingEnablementType;
-  }
-  /**
-   * @param GoogleCloudConnectorsV1EventingRuntimeData
-   */
-  public function setEventingRuntimeData(GoogleCloudConnectorsV1EventingRuntimeData $eventingRuntimeData)
-  {
-    $this->eventingRuntimeData = $eventingRuntimeData;
-  }
-  /**
-   * @return GoogleCloudConnectorsV1EventingRuntimeData
-   */
-  public function getEventingRuntimeData()
-  {
-    return $this->eventingRuntimeData;
   }
   /**
    * @param string

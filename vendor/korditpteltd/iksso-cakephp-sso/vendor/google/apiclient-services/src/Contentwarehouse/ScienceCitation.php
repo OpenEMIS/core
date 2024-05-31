@@ -28,7 +28,6 @@ class ScienceCitation extends \Google\Collection
         "abstractLanguage" => "AbstractLanguage",
         "abstractSource" => "AbstractSource",
         "abstractText" => "AbstractText",
-        "abstractTypeFromSource" => "AbstractTypeFromSource",
         "alternateVersionID" => "AlternateVersionID",
         "anchors" => "Anchors",
         "arxivSection" => "ArxivSection",
@@ -40,7 +39,6 @@ class ScienceCitation extends \Google\Collection
         "borrowedFields" => "BorrowedFields",
         "chapter" => "Chapter",
         "citationSource" => "CitationSource",
-        "citationSourceCrawlTimestamp" => "CitationSourceCrawlTimestamp",
         "citationSourceUrl" => "CitationSourceUrl",
         "citationSrc" => "CitationSrc",
         "clearedReason" => "ClearedReason",
@@ -153,10 +151,6 @@ class ScienceCitation extends \Google\Collection
   /**
    * @var string
    */
-  public $abstractTypeFromSource;
-  /**
-   * @var string
-   */
   public $alternateVersionID;
   protected $anchorsType = ScienceCitationAnchor::class;
   protected $anchorsDataType = 'array';
@@ -196,10 +190,6 @@ class ScienceCitation extends \Google\Collection
    * @var int
    */
   public $citationSource;
-  /**
-   * @var string
-   */
-  public $citationSourceCrawlTimestamp;
   /**
    * @var string
    */
@@ -642,20 +632,6 @@ class ScienceCitation extends \Google\Collection
   /**
    * @param string
    */
-  public function setAbstractTypeFromSource($abstractTypeFromSource)
-  {
-    $this->abstractTypeFromSource = $abstractTypeFromSource;
-  }
-  /**
-   * @return string
-   */
-  public function getAbstractTypeFromSource()
-  {
-    return $this->abstractTypeFromSource;
-  }
-  /**
-   * @param string
-   */
   public function setAlternateVersionID($alternateVersionID)
   {
     $this->alternateVersionID = $alternateVersionID;
@@ -806,20 +782,6 @@ class ScienceCitation extends \Google\Collection
   public function getCitationSource()
   {
     return $this->citationSource;
-  }
-  /**
-   * @param string
-   */
-  public function setCitationSourceCrawlTimestamp($citationSourceCrawlTimestamp)
-  {
-    $this->citationSourceCrawlTimestamp = $citationSourceCrawlTimestamp;
-  }
-  /**
-   * @return string
-   */
-  public function getCitationSourceCrawlTimestamp()
-  {
-    return $this->citationSourceCrawlTimestamp;
   }
   /**
    * @param string

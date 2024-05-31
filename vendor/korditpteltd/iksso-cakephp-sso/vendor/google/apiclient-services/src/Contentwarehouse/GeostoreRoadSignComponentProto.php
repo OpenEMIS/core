@@ -37,10 +37,6 @@ class GeostoreRoadSignComponentProto extends \Google\Model
    * @var string
    */
   public $routeDirection;
-  /**
-   * @var string
-   */
-  public $semanticType;
   protected $textType = GeostoreNameProto::class;
   protected $textDataType = '';
   /**
@@ -117,20 +113,6 @@ class GeostoreRoadSignComponentProto extends \Google\Model
   public function getRouteDirection()
   {
     return $this->routeDirection;
-  }
-  /**
-   * @param string
-   */
-  public function setSemanticType($semanticType)
-  {
-    $this->semanticType = $semanticType;
-  }
-  /**
-   * @return string
-   */
-  public function getSemanticType()
-  {
-    return $this->semanticType;
   }
   /**
    * @param GeostoreNameProto

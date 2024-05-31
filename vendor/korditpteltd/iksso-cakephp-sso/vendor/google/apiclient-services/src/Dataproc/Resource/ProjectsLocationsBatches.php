@@ -61,9 +61,9 @@ class ProjectsLocationsBatches extends \Google\Service\Resource
     return $this->call('create', [$params], Operation::class);
   }
   /**
-   * Deletes the batch workload resource. If the batch is not in a CANCELLED,
-   * SUCCEEDED or FAILED State, the delete operation fails and the response
-   * returns FAILED_PRECONDITION. (batches.delete)
+   * Deletes the batch workload resource. If the batch is not in terminal state,
+   * the delete fails and the response returns FAILED_PRECONDITION.
+   * (batches.delete)
    *
    * @param string $name Required. The fully qualified name of the batch to
    * retrieve in the format
@@ -105,9 +105,9 @@ class ProjectsLocationsBatches extends \Google\Service\Resource
    * multiple clauses combined with logical operators (AND/OR). Supported fields
    * are batch_id, batch_uuid, state, and create_time.e.g. state = RUNNING and
    * create_time < "2023-01-01T00:00:00Z" filters for batches in state RUNNING
-   * that were created before 2023-01-01See
-   * https://google.aip.dev/assets/misc/ebnf-filtering.txt for a detailed
-   * description of the filter syntax and a list of supported comparisons.
+   * that were created before 2023-01-01See https://google.aip.dev/assets/misc
+   * /ebnf-filtering.txt for a detailed description of the filter syntax and a
+   * list of supported comparisons.
    * @opt_param string orderBy Optional. Field(s) on which to sort the list of
    * batches.Currently the only supported sort orders are unspecified (empty) and
    * create_time desc to sort by most recently created batches first.See

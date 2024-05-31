@@ -17,9 +17,8 @@
 
 namespace Google\Service\Document;
 
-class GoogleCloudDocumentaiV1Processor extends \Google\Collection
+class GoogleCloudDocumentaiV1Processor extends \Google\Model
 {
-  protected $collection_key = 'processorVersionAliases';
   /**
    * @var string
    */
@@ -44,8 +43,6 @@ class GoogleCloudDocumentaiV1Processor extends \Google\Collection
    * @var string
    */
   public $processEndpoint;
-  protected $processorVersionAliasesType = GoogleCloudDocumentaiV1ProcessorVersionAlias::class;
-  protected $processorVersionAliasesDataType = 'array';
   /**
    * @var string
    */
@@ -138,20 +135,6 @@ class GoogleCloudDocumentaiV1Processor extends \Google\Collection
   public function getProcessEndpoint()
   {
     return $this->processEndpoint;
-  }
-  /**
-   * @param GoogleCloudDocumentaiV1ProcessorVersionAlias[]
-   */
-  public function setProcessorVersionAliases($processorVersionAliases)
-  {
-    $this->processorVersionAliases = $processorVersionAliases;
-  }
-  /**
-   * @return GoogleCloudDocumentaiV1ProcessorVersionAlias[]
-   */
-  public function getProcessorVersionAliases()
-  {
-    return $this->processorVersionAliases;
   }
   /**
    * @param string

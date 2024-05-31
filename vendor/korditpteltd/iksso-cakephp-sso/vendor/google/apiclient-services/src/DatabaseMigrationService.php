@@ -336,10 +336,6 @@ class DatabaseMigrationService extends \Google\Service
                   'type' => 'string',
                   'required' => true,
                 ],
-                'force' => [
-                  'location' => 'query',
-                  'type' => 'boolean',
-                ],
                 'requestId' => [
                   'location' => 'query',
                   'type' => 'string',
@@ -391,10 +387,6 @@ class DatabaseMigrationService extends \Google\Service
                 'uncommitted' => [
                   'location' => 'query',
                   'type' => 'boolean',
-                ],
-                'view' => [
-                  'location' => 'query',
-                  'type' => 'string',
                 ],
               ],
             ],'get' => [
@@ -533,49 +525,7 @@ class DatabaseMigrationService extends \Google\Service
         'mappingRules',
         [
           'methods' => [
-            'create' => [
-              'path' => 'v1/{+parent}/mappingRules',
-              'httpMethod' => 'POST',
-              'parameters' => [
-                'parent' => [
-                  'location' => 'path',
-                  'type' => 'string',
-                  'required' => true,
-                ],
-                'mappingRuleId' => [
-                  'location' => 'query',
-                  'type' => 'string',
-                ],
-                'requestId' => [
-                  'location' => 'query',
-                  'type' => 'string',
-                ],
-              ],
-            ],'delete' => [
-              'path' => 'v1/{+name}',
-              'httpMethod' => 'DELETE',
-              'parameters' => [
-                'name' => [
-                  'location' => 'path',
-                  'type' => 'string',
-                  'required' => true,
-                ],
-                'requestId' => [
-                  'location' => 'query',
-                  'type' => 'string',
-                ],
-              ],
-            ],'get' => [
-              'path' => 'v1/{+name}',
-              'httpMethod' => 'GET',
-              'parameters' => [
-                'name' => [
-                  'location' => 'path',
-                  'type' => 'string',
-                  'required' => true,
-                ],
-              ],
-            ],'import' => [
+            'import' => [
               'path' => 'v1/{+parent}/mappingRules:import',
               'httpMethod' => 'POST',
               'parameters' => [
@@ -583,24 +533,6 @@ class DatabaseMigrationService extends \Google\Service
                   'location' => 'path',
                   'type' => 'string',
                   'required' => true,
-                ],
-              ],
-            ],'list' => [
-              'path' => 'v1/{+parent}/mappingRules',
-              'httpMethod' => 'GET',
-              'parameters' => [
-                'parent' => [
-                  'location' => 'path',
-                  'type' => 'string',
-                  'required' => true,
-                ],
-                'pageSize' => [
-                  'location' => 'query',
-                  'type' => 'integer',
-                ],
-                'pageToken' => [
-                  'location' => 'query',
-                  'type' => 'string',
                 ],
               ],
             ],
@@ -651,16 +583,6 @@ class DatabaseMigrationService extends \Google\Service
               ],
             ],'generateSshScript' => [
               'path' => 'v1/{+migrationJob}:generateSshScript',
-              'httpMethod' => 'POST',
-              'parameters' => [
-                'migrationJob' => [
-                  'location' => 'path',
-                  'type' => 'string',
-                  'required' => true,
-                ],
-              ],
-            ],'generateTcpProxyScript' => [
-              'path' => 'v1/{+migrationJob}:generateTcpProxyScript',
               'httpMethod' => 'POST',
               'parameters' => [
                 'migrationJob' => [

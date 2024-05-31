@@ -57,10 +57,6 @@ class Route extends \Google\Collection
   /**
    * @var string
    */
-  public $nextHopHub;
-  /**
-   * @var string
-   */
   public $nextHopIlb;
   /**
    * @var string
@@ -230,20 +226,6 @@ class Route extends \Google\Collection
   public function getNextHopGateway()
   {
     return $this->nextHopGateway;
-  }
-  /**
-   * @param string
-   */
-  public function setNextHopHub($nextHopHub)
-  {
-    $this->nextHopHub = $nextHopHub;
-  }
-  /**
-   * @return string
-   */
-  public function getNextHopHub()
-  {
-    return $this->nextHopHub;
   }
   /**
    * @param string

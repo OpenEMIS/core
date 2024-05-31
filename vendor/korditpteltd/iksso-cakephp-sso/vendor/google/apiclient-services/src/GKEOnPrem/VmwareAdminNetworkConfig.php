@@ -22,8 +22,6 @@ class VmwareAdminNetworkConfig extends \Google\Collection
   protected $collection_key = 'serviceAddressCidrBlocks';
   protected $dhcpIpConfigType = VmwareDhcpIpConfig::class;
   protected $dhcpIpConfigDataType = '';
-  protected $haControlPlaneConfigType = VmwareAdminHAControlPlaneConfig::class;
-  protected $haControlPlaneConfigDataType = '';
   protected $hostConfigType = VmwareHostConfig::class;
   protected $hostConfigDataType = '';
   /**
@@ -54,20 +52,6 @@ class VmwareAdminNetworkConfig extends \Google\Collection
   public function getDhcpIpConfig()
   {
     return $this->dhcpIpConfig;
-  }
-  /**
-   * @param VmwareAdminHAControlPlaneConfig
-   */
-  public function setHaControlPlaneConfig(VmwareAdminHAControlPlaneConfig $haControlPlaneConfig)
-  {
-    $this->haControlPlaneConfig = $haControlPlaneConfig;
-  }
-  /**
-   * @return VmwareAdminHAControlPlaneConfig
-   */
-  public function getHaControlPlaneConfig()
-  {
-    return $this->haControlPlaneConfig;
   }
   /**
    * @param VmwareHostConfig

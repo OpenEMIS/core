@@ -17,8 +17,9 @@
 
 namespace Google\Service\Networkconnectivity;
 
-class ServiceClass extends \Google\Model
+class ServiceClass extends \Google\Collection
 {
+  protected $collection_key = 'serviceConnectionMaps';
   /**
    * @var string
    */
@@ -27,10 +28,6 @@ class ServiceClass extends \Google\Model
    * @var string
    */
   public $description;
-  /**
-   * @var string
-   */
-  public $etag;
   /**
    * @var string[]
    */
@@ -43,6 +40,10 @@ class ServiceClass extends \Google\Model
    * @var string
    */
   public $serviceClass;
+  /**
+   * @var string[]
+   */
+  public $serviceConnectionMaps;
   /**
    * @var string
    */
@@ -75,20 +76,6 @@ class ServiceClass extends \Google\Model
   public function getDescription()
   {
     return $this->description;
-  }
-  /**
-   * @param string
-   */
-  public function setEtag($etag)
-  {
-    $this->etag = $etag;
-  }
-  /**
-   * @return string
-   */
-  public function getEtag()
-  {
-    return $this->etag;
   }
   /**
    * @param string[]
@@ -131,6 +118,20 @@ class ServiceClass extends \Google\Model
   public function getServiceClass()
   {
     return $this->serviceClass;
+  }
+  /**
+   * @param string[]
+   */
+  public function setServiceConnectionMaps($serviceConnectionMaps)
+  {
+    $this->serviceConnectionMaps = $serviceConnectionMaps;
+  }
+  /**
+   * @return string[]
+   */
+  public function getServiceConnectionMaps()
+  {
+    return $this->serviceConnectionMaps;
   }
   /**
    * @param string

@@ -17,15 +17,12 @@
 
 namespace Google\Service\ServiceConsumerManagement;
 
-class Control extends \Google\Collection
+class Control extends \Google\Model
 {
-  protected $collection_key = 'methodPolicies';
   /**
    * @var string
    */
   public $environment;
-  protected $methodPoliciesType = MethodPolicy::class;
-  protected $methodPoliciesDataType = 'array';
 
   /**
    * @param string
@@ -40,20 +37,6 @@ class Control extends \Google\Collection
   public function getEnvironment()
   {
     return $this->environment;
-  }
-  /**
-   * @param MethodPolicy[]
-   */
-  public function setMethodPolicies($methodPolicies)
-  {
-    $this->methodPolicies = $methodPolicies;
-  }
-  /**
-   * @return MethodPolicy[]
-   */
-  public function getMethodPolicies()
-  {
-    return $this->methodPolicies;
   }
 }
 

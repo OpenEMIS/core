@@ -21,10 +21,7 @@ class DiagnoseInstanceRequest extends \Google\Model
 {
   protected $diagnosticConfigType = DiagnosticConfig::class;
   protected $diagnosticConfigDataType = '';
-  /**
-   * @var int
-   */
-  public $timeoutMinutes;
+  public $diagnosticConfig;
 
   /**
    * @param DiagnosticConfig
@@ -39,20 +36,6 @@ class DiagnoseInstanceRequest extends \Google\Model
   public function getDiagnosticConfig()
   {
     return $this->diagnosticConfig;
-  }
-  /**
-   * @param int
-   */
-  public function setTimeoutMinutes($timeoutMinutes)
-  {
-    $this->timeoutMinutes = $timeoutMinutes;
-  }
-  /**
-   * @return int
-   */
-  public function getTimeoutMinutes()
-  {
-    return $this->timeoutMinutes;
   }
 }
 

@@ -34,10 +34,6 @@ class Group extends \Google\Model
   /**
    * @var string
    */
-  public $migrationTargetType;
-  /**
-   * @var string
-   */
   public $name;
   /**
    * @var string
@@ -85,20 +81,6 @@ class Group extends \Google\Model
   public function getDisplayName()
   {
     return $this->displayName;
-  }
-  /**
-   * @param string
-   */
-  public function setMigrationTargetType($migrationTargetType)
-  {
-    $this->migrationTargetType = $migrationTargetType;
-  }
-  /**
-   * @return string
-   */
-  public function getMigrationTargetType()
-  {
-    return $this->migrationTargetType;
   }
   /**
    * @param string

@@ -4,13 +4,15 @@ namespace SSO\Controller\Component;
 use Cake\Controller\Component;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
 
 class SLOComponent extends Component
 {
     public function login()
     {
-        Log::write('debug', $this->request);
-        if ($this->request->is('post')) {
+        //Log::write('debug', $this->request);
+        $request = new ServerRequest();
+        if ($request->is('post')) {
             $username = $this->request->data('username');
             $sessionId = $this->request->data('session_id');
             // Commit session
@@ -38,7 +40,7 @@ class SLOComponent extends Component
                 $SingleLogoutTable = TableRegistry::get('SSO.SingleLogout');
                 $SingleLogoutTable->removeLogoutRecord($username);
             }
-        } else if ($this->request->is('put')) {
+        } else if ($request->is('put')) {
             $this->captureLogin();
         }
     }

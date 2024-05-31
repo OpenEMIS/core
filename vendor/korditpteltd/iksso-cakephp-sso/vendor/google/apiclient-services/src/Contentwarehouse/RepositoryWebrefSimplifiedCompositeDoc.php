@@ -17,17 +17,14 @@
 
 namespace Google\Service\Contentwarehouse;
 
-class RepositoryWebrefSimplifiedCompositeDoc extends \Google\Collection
+class RepositoryWebrefSimplifiedCompositeDoc extends \Google\Model
 {
-  protected $collection_key = 'forwardingDups';
   protected $anchorsType = RepositoryWebrefSimplifiedAnchors::class;
   protected $anchorsDataType = '';
   protected $cdocContainerType = Proto2BridgeMessageSet::class;
   protected $cdocContainerDataType = '';
   protected $documentMentionSpansType = RepositoryWebrefRefconDocumentMentionSpans::class;
   protected $documentMentionSpansDataType = '';
-  protected $forwardingDupsType = RepositoryWebrefSimplifiedForwardingDup::class;
-  protected $forwardingDupsDataType = 'array';
   protected $matchingMetadataType = RepositoryWebrefPreprocessingUrlMatchingMetadata::class;
   protected $matchingMetadataDataType = '';
   protected $refconDocumentMetadataType = RepositoryWebrefRefconRefconDocumentMetadata::class;
@@ -40,10 +37,8 @@ class RepositoryWebrefSimplifiedCompositeDoc extends \Google\Collection
    * @var string
    */
   public $url;
-  protected $webrefOutlinkInfosType = RepositoryWebrefWebrefOutlinkInfos::class;
-  protected $webrefOutlinkInfosDataType = '';
-  protected $webrefOutlinksLegacyType = Proto2BridgeMessageSet::class;
-  protected $webrefOutlinksLegacyDataType = '';
+  protected $webrefOutlinksType = Proto2BridgeMessageSet::class;
+  protected $webrefOutlinksDataType = '';
 
   /**
    * @param RepositoryWebrefSimplifiedAnchors
@@ -86,20 +81,6 @@ class RepositoryWebrefSimplifiedCompositeDoc extends \Google\Collection
   public function getDocumentMentionSpans()
   {
     return $this->documentMentionSpans;
-  }
-  /**
-   * @param RepositoryWebrefSimplifiedForwardingDup[]
-   */
-  public function setForwardingDups($forwardingDups)
-  {
-    $this->forwardingDups = $forwardingDups;
-  }
-  /**
-   * @return RepositoryWebrefSimplifiedForwardingDup[]
-   */
-  public function getForwardingDups()
-  {
-    return $this->forwardingDups;
   }
   /**
    * @param RepositoryWebrefPreprocessingUrlMatchingMetadata
@@ -158,32 +139,18 @@ class RepositoryWebrefSimplifiedCompositeDoc extends \Google\Collection
     return $this->url;
   }
   /**
-   * @param RepositoryWebrefWebrefOutlinkInfos
-   */
-  public function setWebrefOutlinkInfos(RepositoryWebrefWebrefOutlinkInfos $webrefOutlinkInfos)
-  {
-    $this->webrefOutlinkInfos = $webrefOutlinkInfos;
-  }
-  /**
-   * @return RepositoryWebrefWebrefOutlinkInfos
-   */
-  public function getWebrefOutlinkInfos()
-  {
-    return $this->webrefOutlinkInfos;
-  }
-  /**
    * @param Proto2BridgeMessageSet
    */
-  public function setWebrefOutlinksLegacy(Proto2BridgeMessageSet $webrefOutlinksLegacy)
+  public function setWebrefOutlinks(Proto2BridgeMessageSet $webrefOutlinks)
   {
-    $this->webrefOutlinksLegacy = $webrefOutlinksLegacy;
+    $this->webrefOutlinks = $webrefOutlinks;
   }
   /**
    * @return Proto2BridgeMessageSet
    */
-  public function getWebrefOutlinksLegacy()
+  public function getWebrefOutlinks()
   {
-    return $this->webrefOutlinksLegacy;
+    return $this->webrefOutlinks;
   }
 }
 

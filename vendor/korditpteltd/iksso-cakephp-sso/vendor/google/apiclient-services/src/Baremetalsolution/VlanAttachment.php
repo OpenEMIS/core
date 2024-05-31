@@ -26,10 +26,6 @@ class VlanAttachment extends \Google\Model
   /**
    * @var string
    */
-  public $interconnectAttachment;
-  /**
-   * @var string
-   */
   public $pairingKey;
   /**
    * @var string
@@ -59,20 +55,6 @@ class VlanAttachment extends \Google\Model
   public function getId()
   {
     return $this->id;
-  }
-  /**
-   * @param string
-   */
-  public function setInterconnectAttachment($interconnectAttachment)
-  {
-    $this->interconnectAttachment = $interconnectAttachment;
-  }
-  /**
-   * @return string
-   */
-  public function getInterconnectAttachment()
-  {
-    return $this->interconnectAttachment;
   }
   /**
    * @param string

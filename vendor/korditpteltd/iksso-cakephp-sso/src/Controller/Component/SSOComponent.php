@@ -6,6 +6,7 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
+use Cake\Http\ServerRequest;
 
 class SSOComponent extends Component
 {
@@ -36,14 +37,14 @@ class SSOComponent extends Component
     ];
 
     // Is called before the controller's beforeFilter method.
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $controller = $this->_registry->getController();
         $this->controller = $controller;
-        $this->session = $this->request->session();
+        $this->session = $this->getController()->getRequest()->getSession();
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Controller.Auth.afterAuthenticate'] = 'afterAuthenticate';
@@ -83,10 +84,10 @@ class SSOComponent extends Component
         $extra = new ArrayObject([]);
         // $this->controller->dispatchEvent('Controller.Auth.beforeAuthenticate', [$extra], $this);
         $event = $this->controller->dispatchEvent('Controller.Auth.authenticate', [$extra], $this);
-        if ($event->result) {
+        if ($event->getResult()) {
             $this->controller->dispatchEvent('Controller.Auth.afterAuthenticate', [$extra], $this);
             $event = $this->controller->dispatchEvent('Controller.Auth.beforeRedirection', [$extra], $this);
-            if (!$event->result) {
+            if (!$event->getResult()) {
                 $this->controller->redirect($this->_config['homePageURL']);
             }
         }
@@ -95,12 +96,13 @@ class SSOComponent extends Component
 
     public function afterAuthenticate(Event $event, ArrayObject $extra)
     {
+        $request = new ServerRequest();
         $user = $this->Auth->user();
         if ($user) {
-            $this->request->trustProxy = true;
-            $clientIp = $this->request->clientIp();
-            $sessionId = $this->request->session()->id();
-            TableRegistry::get('SSO.SecurityUserLogins')->addLoginEntry($user['id'], $clientIp, $sessionId);
+            $request->trustProxy = true;
+            $clientIp = $request->clientIp();
+            $sessionId = $request->getSession()->id();
+            TableRegistry::getTableLocator()->get('SSO.SecurityUserLogins')->addLoginEntry($user['id'], $clientIp, $sessionId);
         }
     }
 }

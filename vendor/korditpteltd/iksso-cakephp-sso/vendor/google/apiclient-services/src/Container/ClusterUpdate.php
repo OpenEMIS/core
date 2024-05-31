@@ -26,8 +26,6 @@ class ClusterUpdate extends \Google\Collection
   protected $desiredAddonsConfigDataType = '';
   protected $desiredAuthenticatorGroupsConfigType = AuthenticatorGroupsConfig::class;
   protected $desiredAuthenticatorGroupsConfigDataType = '';
-  protected $desiredAutopilotWorkloadPolicyConfigType = WorkloadPolicyConfig::class;
-  protected $desiredAutopilotWorkloadPolicyConfigDataType = '';
   protected $desiredBinaryAuthorizationType = BinaryAuthorization::class;
   protected $desiredBinaryAuthorizationDataType = '';
   protected $desiredClusterAutoscalingType = ClusterAutoscaling::class;
@@ -94,8 +92,6 @@ class ClusterUpdate extends \Google\Collection
    * @var string
    */
   public $desiredMonitoringService;
-  protected $desiredNetworkPerformanceConfigType = ClusterNetworkPerformanceConfig::class;
-  protected $desiredNetworkPerformanceConfigDataType = '';
   protected $desiredNodePoolAutoConfigNetworkTagsType = NetworkTags::class;
   protected $desiredNodePoolAutoConfigNetworkTagsDataType = '';
   protected $desiredNodePoolAutoscalingType = NodePoolAutoscaling::class;
@@ -122,8 +118,6 @@ class ClusterUpdate extends \Google\Collection
   protected $desiredReleaseChannelDataType = '';
   protected $desiredResourceUsageExportConfigType = ResourceUsageExportConfig::class;
   protected $desiredResourceUsageExportConfigDataType = '';
-  protected $desiredSecurityPostureConfigType = SecurityPostureConfig::class;
-  protected $desiredSecurityPostureConfigDataType = '';
   protected $desiredServiceExternalIpsConfigType = ServiceExternalIPsConfig::class;
   protected $desiredServiceExternalIpsConfigDataType = '';
   protected $desiredShieldedNodesType = ShieldedNodes::class;
@@ -186,20 +180,6 @@ class ClusterUpdate extends \Google\Collection
   public function getDesiredAuthenticatorGroupsConfig()
   {
     return $this->desiredAuthenticatorGroupsConfig;
-  }
-  /**
-   * @param WorkloadPolicyConfig
-   */
-  public function setDesiredAutopilotWorkloadPolicyConfig(WorkloadPolicyConfig $desiredAutopilotWorkloadPolicyConfig)
-  {
-    $this->desiredAutopilotWorkloadPolicyConfig = $desiredAutopilotWorkloadPolicyConfig;
-  }
-  /**
-   * @return WorkloadPolicyConfig
-   */
-  public function getDesiredAutopilotWorkloadPolicyConfig()
-  {
-    return $this->desiredAutopilotWorkloadPolicyConfig;
   }
   /**
    * @param BinaryAuthorization
@@ -552,20 +532,6 @@ class ClusterUpdate extends \Google\Collection
     return $this->desiredMonitoringService;
   }
   /**
-   * @param ClusterNetworkPerformanceConfig
-   */
-  public function setDesiredNetworkPerformanceConfig(ClusterNetworkPerformanceConfig $desiredNetworkPerformanceConfig)
-  {
-    $this->desiredNetworkPerformanceConfig = $desiredNetworkPerformanceConfig;
-  }
-  /**
-   * @return ClusterNetworkPerformanceConfig
-   */
-  public function getDesiredNetworkPerformanceConfig()
-  {
-    return $this->desiredNetworkPerformanceConfig;
-  }
-  /**
    * @param NetworkTags
    */
   public function setDesiredNodePoolAutoConfigNetworkTags(NetworkTags $desiredNodePoolAutoConfigNetworkTags)
@@ -704,20 +670,6 @@ class ClusterUpdate extends \Google\Collection
   public function getDesiredResourceUsageExportConfig()
   {
     return $this->desiredResourceUsageExportConfig;
-  }
-  /**
-   * @param SecurityPostureConfig
-   */
-  public function setDesiredSecurityPostureConfig(SecurityPostureConfig $desiredSecurityPostureConfig)
-  {
-    $this->desiredSecurityPostureConfig = $desiredSecurityPostureConfig;
-  }
-  /**
-   * @return SecurityPostureConfig
-   */
-  public function getDesiredSecurityPostureConfig()
-  {
-    return $this->desiredSecurityPostureConfig;
   }
   /**
    * @param ServiceExternalIPsConfig

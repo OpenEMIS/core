@@ -27,10 +27,6 @@ class SasPortalProvisionDeploymentRequest extends \Google\Model
    * @var string
    */
   public $newOrganizationDisplayName;
-  /**
-   * @var string
-   */
-  public $organizationId;
 
   /**
    * @param string
@@ -59,20 +55,6 @@ class SasPortalProvisionDeploymentRequest extends \Google\Model
   public function getNewOrganizationDisplayName()
   {
     return $this->newOrganizationDisplayName;
-  }
-  /**
-   * @param string
-   */
-  public function setOrganizationId($organizationId)
-  {
-    $this->organizationId = $organizationId;
-  }
-  /**
-   * @return string
-   */
-  public function getOrganizationId()
-  {
-    return $this->organizationId;
   }
 }
 

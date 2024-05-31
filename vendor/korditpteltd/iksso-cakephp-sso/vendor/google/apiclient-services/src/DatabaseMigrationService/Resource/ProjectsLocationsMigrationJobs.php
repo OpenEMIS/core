@@ -18,7 +18,6 @@
 namespace Google\Service\DatabaseMigrationService\Resource;
 
 use Google\Service\DatabaseMigrationService\GenerateSshScriptRequest;
-use Google\Service\DatabaseMigrationService\GenerateTcpProxyScriptRequest;
 use Google\Service\DatabaseMigrationService\ListMigrationJobsResponse;
 use Google\Service\DatabaseMigrationService\MigrationJob;
 use Google\Service\DatabaseMigrationService\Operation;
@@ -30,7 +29,6 @@ use Google\Service\DatabaseMigrationService\SetIamPolicyRequest;
 use Google\Service\DatabaseMigrationService\SshScript;
 use Google\Service\DatabaseMigrationService\StartMigrationJobRequest;
 use Google\Service\DatabaseMigrationService\StopMigrationJobRequest;
-use Google\Service\DatabaseMigrationService\TcpProxyScript;
 use Google\Service\DatabaseMigrationService\TestIamPermissionsRequest;
 use Google\Service\DatabaseMigrationService\TestIamPermissionsResponse;
 use Google\Service\DatabaseMigrationService\VerifyMigrationJobRequest;
@@ -55,11 +53,11 @@ class ProjectsLocationsMigrationJobs extends \Google\Service\Resource
    * @param array $optParams Optional parameters.
    *
    * @opt_param string migrationJobId Required. The ID of the instance to create.
-   * @opt_param string requestId Optional. A unique ID used to identify the
-   * request. If the server receives two requests with the same ID, then the
-   * second request is ignored. It is recommended to always set this value to a
-   * UUID. The ID must contain only letters (a-z, A-Z), numbers (0-9), underscores
-   * (_), and hyphens (-). The maximum length is 40 characters.
+   * @opt_param string requestId A unique ID used to identify the request. If the
+   * server receives two requests with the same ID, then the second request is
+   * ignored. It is recommended to always set this value to a UUID. The ID must
+   * contain only letters (a-z, A-Z), numbers (0-9), underscores (_), and hyphens
+   * (-). The maximum length is 40 characters.
    * @return Operation
    */
   public function create($parent, MigrationJob $postBody, $optParams = [])
@@ -105,22 +103,6 @@ class ProjectsLocationsMigrationJobs extends \Google\Service\Resource
     $params = ['migrationJob' => $migrationJob, 'postBody' => $postBody];
     $params = array_merge($params, $optParams);
     return $this->call('generateSshScript', [$params], SshScript::class);
-  }
-  /**
-   * Generate a TCP Proxy configuration script to configure a cloud-hosted VM
-   * running a TCP Proxy. (migrationJobs.generateTcpProxyScript)
-   *
-   * @param string $migrationJob Name of the migration job resource to generate
-   * the TCP Proxy script.
-   * @param GenerateTcpProxyScriptRequest $postBody
-   * @param array $optParams Optional parameters.
-   * @return TcpProxyScript
-   */
-  public function generateTcpProxyScript($migrationJob, GenerateTcpProxyScriptRequest $postBody, $optParams = [])
-  {
-    $params = ['migrationJob' => $migrationJob, 'postBody' => $postBody];
-    $params = array_merge($params, $optParams);
-    return $this->call('generateTcpProxyScript', [$params], TcpProxyScript::class);
   }
   /**
    * Gets details of a single migration job. (migrationJobs.get)

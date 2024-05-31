@@ -30,10 +30,6 @@ class GeostoreRestrictionProto extends \Google\Collection
   protected $metadataDataType = '';
   protected $restrictionGroupType = GeostoreFeatureIdProto::class;
   protected $restrictionGroupDataType = '';
-  /**
-   * @var string
-   */
-  public $restrictionToken;
   protected $scheduleType = GeostoreTimeScheduleProto::class;
   protected $scheduleDataType = '';
   /**
@@ -114,20 +110,6 @@ class GeostoreRestrictionProto extends \Google\Collection
   public function getRestrictionGroup()
   {
     return $this->restrictionGroup;
-  }
-  /**
-   * @param string
-   */
-  public function setRestrictionToken($restrictionToken)
-  {
-    $this->restrictionToken = $restrictionToken;
-  }
-  /**
-   * @return string
-   */
-  public function getRestrictionToken()
-  {
-    return $this->restrictionToken;
   }
   /**
    * @param GeostoreTimeScheduleProto

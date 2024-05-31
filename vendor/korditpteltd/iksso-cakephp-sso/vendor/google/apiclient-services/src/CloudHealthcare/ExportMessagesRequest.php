@@ -23,14 +23,8 @@ class ExportMessagesRequest extends \Google\Model
    * @var string
    */
   public $endTime;
-  /**
-   * @var string
-   */
-  public $filter;
   protected $gcsDestinationType = GcsDestination::class;
   protected $gcsDestinationDataType = '';
-  protected $pubsubDestinationType = PubsubDestination::class;
-  protected $pubsubDestinationDataType = '';
   /**
    * @var string
    */
@@ -51,20 +45,6 @@ class ExportMessagesRequest extends \Google\Model
     return $this->endTime;
   }
   /**
-   * @param string
-   */
-  public function setFilter($filter)
-  {
-    $this->filter = $filter;
-  }
-  /**
-   * @return string
-   */
-  public function getFilter()
-  {
-    return $this->filter;
-  }
-  /**
    * @param GcsDestination
    */
   public function setGcsDestination(GcsDestination $gcsDestination)
@@ -77,20 +57,6 @@ class ExportMessagesRequest extends \Google\Model
   public function getGcsDestination()
   {
     return $this->gcsDestination;
-  }
-  /**
-   * @param PubsubDestination
-   */
-  public function setPubsubDestination(PubsubDestination $pubsubDestination)
-  {
-    $this->pubsubDestination = $pubsubDestination;
-  }
-  /**
-   * @return PubsubDestination
-   */
-  public function getPubsubDestination()
-  {
-    return $this->pubsubDestination;
   }
   /**
    * @param string

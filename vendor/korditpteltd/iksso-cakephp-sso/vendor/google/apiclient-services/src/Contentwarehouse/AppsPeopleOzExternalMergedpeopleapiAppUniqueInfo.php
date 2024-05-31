@@ -26,10 +26,6 @@ class AppsPeopleOzExternalMergedpeopleapiAppUniqueInfo extends \Google\Model
   /**
    * @var string
    */
-  public $contactInfoSource;
-  /**
-   * @var string
-   */
   public $displayAppUniqueId;
   /**
    * @var string
@@ -53,20 +49,6 @@ class AppsPeopleOzExternalMergedpeopleapiAppUniqueInfo extends \Google\Model
   public function getAppUniqueId()
   {
     return $this->appUniqueId;
-  }
-  /**
-   * @param string
-   */
-  public function setContactInfoSource($contactInfoSource)
-  {
-    $this->contactInfoSource = $contactInfoSource;
-  }
-  /**
-   * @return string
-   */
-  public function getContactInfoSource()
-  {
-    return $this->contactInfoSource;
   }
   /**
    * @param string

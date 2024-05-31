@@ -22,10 +22,6 @@ class VerifyChallengeResponseResult extends \Google\Model
   /**
    * @var string
    */
-  public $attestedDeviceId;
-  /**
-   * @var string
-   */
   public $customerId;
   /**
    * @var string
@@ -44,38 +40,12 @@ class VerifyChallengeResponseResult extends \Google\Model
   /**
    * @var string
    */
-  public $profileCustomerId;
-  /**
-   * @var string
-   */
-  public $profileKeyTrustLevel;
-  /**
-   * @var string
-   */
   public $signedPublicKeyAndChallenge;
   /**
    * @var string
    */
   public $virtualDeviceId;
-  /**
-   * @var string
-   */
-  public $virtualProfileId;
 
-  /**
-   * @param string
-   */
-  public function setAttestedDeviceId($attestedDeviceId)
-  {
-    $this->attestedDeviceId = $attestedDeviceId;
-  }
-  /**
-   * @return string
-   */
-  public function getAttestedDeviceId()
-  {
-    return $this->attestedDeviceId;
-  }
   /**
    * @param string
    */
@@ -149,34 +119,6 @@ class VerifyChallengeResponseResult extends \Google\Model
   /**
    * @param string
    */
-  public function setProfileCustomerId($profileCustomerId)
-  {
-    $this->profileCustomerId = $profileCustomerId;
-  }
-  /**
-   * @return string
-   */
-  public function getProfileCustomerId()
-  {
-    return $this->profileCustomerId;
-  }
-  /**
-   * @param string
-   */
-  public function setProfileKeyTrustLevel($profileKeyTrustLevel)
-  {
-    $this->profileKeyTrustLevel = $profileKeyTrustLevel;
-  }
-  /**
-   * @return string
-   */
-  public function getProfileKeyTrustLevel()
-  {
-    return $this->profileKeyTrustLevel;
-  }
-  /**
-   * @param string
-   */
   public function setSignedPublicKeyAndChallenge($signedPublicKeyAndChallenge)
   {
     $this->signedPublicKeyAndChallenge = $signedPublicKeyAndChallenge;
@@ -201,20 +143,6 @@ class VerifyChallengeResponseResult extends \Google\Model
   public function getVirtualDeviceId()
   {
     return $this->virtualDeviceId;
-  }
-  /**
-   * @param string
-   */
-  public function setVirtualProfileId($virtualProfileId)
-  {
-    $this->virtualProfileId = $virtualProfileId;
-  }
-  /**
-   * @return string
-   */
-  public function getVirtualProfileId()
-  {
-    return $this->virtualProfileId;
   }
 }
 

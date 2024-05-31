@@ -33,10 +33,6 @@ class RuntimeEnvironment extends \Google\Collection
    */
   public $bypassTempDirValidation;
   /**
-   * @var int
-   */
-  public $diskSizeGb;
-  /**
    * @var bool
    */
   public $enableStreamingEngine;
@@ -130,20 +126,6 @@ class RuntimeEnvironment extends \Google\Collection
   public function getBypassTempDirValidation()
   {
     return $this->bypassTempDirValidation;
-  }
-  /**
-   * @param int
-   */
-  public function setDiskSizeGb($diskSizeGb)
-  {
-    $this->diskSizeGb = $diskSizeGb;
-  }
-  /**
-   * @return int
-   */
-  public function getDiskSizeGb()
-  {
-    return $this->diskSizeGb;
   }
   /**
    * @param bool

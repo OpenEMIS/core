@@ -253,15 +253,7 @@ class Reseller extends \Google\Service
                   'type' => 'string',
                   'required' => true,
                 ],
-                'action' => [
-                  'location' => 'query',
-                  'type' => 'string',
-                ],
                 'customerAuthToken' => [
-                  'location' => 'query',
-                  'type' => 'string',
-                ],
-                'sourceSkuId' => [
                   'location' => 'query',
                   'type' => 'string',
                 ],

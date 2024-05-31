@@ -25,8 +25,6 @@ class AssistantGroundingRankerDeviceGroundingProviderFeatures extends \Google\Mo
   protected $deviceTargetingFeaturesDataType = '';
   protected $deviceTargetingLabelsType = AssistantGroundingRankerDeviceTargetingLabels::class;
   protected $deviceTargetingLabelsDataType = '';
-  protected $surfaceIdentityType = AssistantApiCoreTypesGovernedSurfaceIdentity::class;
-  protected $surfaceIdentityDataType = '';
 
   /**
    * @param AssistantApiCoreTypesGovernedDeviceId
@@ -69,20 +67,6 @@ class AssistantGroundingRankerDeviceGroundingProviderFeatures extends \Google\Mo
   public function getDeviceTargetingLabels()
   {
     return $this->deviceTargetingLabels;
-  }
-  /**
-   * @param AssistantApiCoreTypesGovernedSurfaceIdentity
-   */
-  public function setSurfaceIdentity(AssistantApiCoreTypesGovernedSurfaceIdentity $surfaceIdentity)
-  {
-    $this->surfaceIdentity = $surfaceIdentity;
-  }
-  /**
-   * @return AssistantApiCoreTypesGovernedSurfaceIdentity
-   */
-  public function getSurfaceIdentity()
-  {
-    return $this->surfaceIdentity;
   }
 }
 

@@ -85,11 +85,6 @@ class Kmsinventory extends \Google\Service
                   'location' => 'query',
                   'type' => 'string',
                 ],
-                'resourceTypes' => [
-                  'location' => 'query',
-                  'type' => 'string',
-                  'repeated' => true,
-                ],
               ],
             ],
           ]

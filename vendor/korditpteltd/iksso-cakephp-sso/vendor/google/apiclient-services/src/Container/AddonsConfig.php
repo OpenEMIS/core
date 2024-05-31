@@ -29,8 +29,6 @@ class AddonsConfig extends \Google\Model
   protected $gcePersistentDiskCsiDriverConfigDataType = '';
   protected $gcpFilestoreCsiDriverConfigType = GcpFilestoreCsiDriverConfig::class;
   protected $gcpFilestoreCsiDriverConfigDataType = '';
-  protected $gcsFuseCsiDriverConfigType = GcsFuseCsiDriverConfig::class;
-  protected $gcsFuseCsiDriverConfigDataType = '';
   protected $gkeBackupAgentConfigType = GkeBackupAgentConfig::class;
   protected $gkeBackupAgentConfigDataType = '';
   protected $horizontalPodAutoscalingType = HorizontalPodAutoscaling::class;
@@ -111,20 +109,6 @@ class AddonsConfig extends \Google\Model
   public function getGcpFilestoreCsiDriverConfig()
   {
     return $this->gcpFilestoreCsiDriverConfig;
-  }
-  /**
-   * @param GcsFuseCsiDriverConfig
-   */
-  public function setGcsFuseCsiDriverConfig(GcsFuseCsiDriverConfig $gcsFuseCsiDriverConfig)
-  {
-    $this->gcsFuseCsiDriverConfig = $gcsFuseCsiDriverConfig;
-  }
-  /**
-   * @return GcsFuseCsiDriverConfig
-   */
-  public function getGcsFuseCsiDriverConfig()
-  {
-    return $this->gcsFuseCsiDriverConfig;
   }
   /**
    * @param GkeBackupAgentConfig

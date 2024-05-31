@@ -99,7 +99,9 @@ class ServiceAccountJwtAccessCredentials extends CredentialsLoader implements
             'scope' => $scope,
         ]);
 
-        $this->projectId = $jsonKey['project_id'] ?? null;
+        $this->projectId = isset($jsonKey['project_id'])
+            ? $jsonKey['project_id']
+            : null;
     }
 
     /**

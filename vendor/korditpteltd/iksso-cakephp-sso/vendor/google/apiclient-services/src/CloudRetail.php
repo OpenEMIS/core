@@ -393,16 +393,6 @@ class CloudRetail extends \Google\Service
                   'type' => 'string',
                 ],
               ],
-            ],'purge' => [
-              'path' => 'v2/{+parent}/products:purge',
-              'httpMethod' => 'POST',
-              'parameters' => [
-                'parent' => [
-                  'location' => 'path',
-                  'type' => 'string',
-                  'required' => true,
-                ],
-              ],
             ],'removeFulfillmentPlaces' => [
               'path' => 'v2/{+product}:removeFulfillmentPlaces',
               'httpMethod' => 'POST',

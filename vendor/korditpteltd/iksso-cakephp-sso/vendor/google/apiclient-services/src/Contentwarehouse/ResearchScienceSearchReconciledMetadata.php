@@ -92,10 +92,6 @@ class ResearchScienceSearchReconciledMetadata extends \Google\Collection
   /**
    * @var bool
    */
-  public $hasCroissantFormat;
-  /**
-   * @var bool
-   */
   public $hasTableSummaries;
   /**
    * @var string
@@ -213,10 +209,6 @@ class ResearchScienceSearchReconciledMetadata extends \Google\Collection
    * @var float[]
    */
   public $versionEmbeddingVector;
-  /**
-   * @var string
-   */
-  public $versionsSimhash;
 
   /**
    * @param string[]
@@ -533,20 +525,6 @@ class ResearchScienceSearchReconciledMetadata extends \Google\Collection
   public function getFunder()
   {
     return $this->funder;
-  }
-  /**
-   * @param bool
-   */
-  public function setHasCroissantFormat($hasCroissantFormat)
-  {
-    $this->hasCroissantFormat = $hasCroissantFormat;
-  }
-  /**
-   * @return bool
-   */
-  public function getHasCroissantFormat()
-  {
-    return $this->hasCroissantFormat;
   }
   /**
    * @param bool
@@ -1023,20 +1001,6 @@ class ResearchScienceSearchReconciledMetadata extends \Google\Collection
   public function getVersionEmbeddingVector()
   {
     return $this->versionEmbeddingVector;
-  }
-  /**
-   * @param string
-   */
-  public function setVersionsSimhash($versionsSimhash)
-  {
-    $this->versionsSimhash = $versionsSimhash;
-  }
-  /**
-   * @return string
-   */
-  public function getVersionsSimhash()
-  {
-    return $this->versionsSimhash;
   }
 }
 

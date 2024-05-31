@@ -22,10 +22,6 @@ class GoogleAdsSearchads360V0CommonSegments extends \Google\Model
   /**
    * @var string
    */
-  public $adNetworkType;
-  /**
-   * @var string
-   */
   public $conversionAction;
   /**
    * @var string
@@ -66,20 +62,6 @@ class GoogleAdsSearchads360V0CommonSegments extends \Google\Model
    */
   public $year;
 
-  /**
-   * @param string
-   */
-  public function setAdNetworkType($adNetworkType)
-  {
-    $this->adNetworkType = $adNetworkType;
-  }
-  /**
-   * @return string
-   */
-  public function getAdNetworkType()
-  {
-    return $this->adNetworkType;
-  }
   /**
    * @param string
    */

@@ -26,10 +26,6 @@ class TriggerPubsubExecutionRequest extends \Google\Model
    * @var string
    */
   public $gCPCloudEventsMode;
-  /**
-   * @var int
-   */
-  public $deliveryAttempt;
   protected $messageType = PubsubMessage::class;
   protected $messageDataType = '';
   /**
@@ -50,20 +46,6 @@ class TriggerPubsubExecutionRequest extends \Google\Model
   public function getGCPCloudEventsMode()
   {
     return $this->gCPCloudEventsMode;
-  }
-  /**
-   * @param int
-   */
-  public function setDeliveryAttempt($deliveryAttempt)
-  {
-    $this->deliveryAttempt = $deliveryAttempt;
-  }
-  /**
-   * @return int
-   */
-  public function getDeliveryAttempt()
-  {
-    return $this->deliveryAttempt;
   }
   /**
    * @param PubsubMessage

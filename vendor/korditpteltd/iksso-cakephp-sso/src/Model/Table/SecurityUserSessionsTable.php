@@ -15,7 +15,7 @@ class SecurityUserSessionsTable extends Table
             ->find()
             ->select([$this->aliasField('id')])
             ->where([$this->aliasField('username') => $username])
-            ->hydrate(false)
+            //->hydrate(false)
             ->toArray();
     }
 
@@ -30,6 +30,21 @@ class SecurityUserSessionsTable extends Table
         return $this->save($newEntity);
     }
 
+
+    public function deleteEntries($username)
+    {
+
+        $entities = $this->find()
+            ->where([
+                $this->aliasField('username IS') => $username
+            ])
+            ->toArray();
+        foreach($entities as $entity) {
+            $this->delete($entity);
+        }
+
+    }
+
     public function deleteEntry($username, $sessionId)
     {
 
@@ -37,19 +52,6 @@ class SecurityUserSessionsTable extends Table
             ->where([
                 $this->aliasField('username') => $username,
                 $this->aliasField('id') => $sessionId
-            ])
-            ->toArray();
-
-        foreach($entities as $entity) {
-            $this->delete($entity);
-        }
-    }
-
-    public function deleteEntries($username)
-    {
-        $entities = $this->find()
-            ->where([
-                $this->aliasField('username') => $username
             ])
             ->toArray();
 

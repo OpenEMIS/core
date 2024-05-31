@@ -29,10 +29,8 @@ class ConfigManagementConfigSync extends \Google\Model
   public $enabled;
   protected $gitType = ConfigManagementGitConfig::class;
   protected $gitDataType = '';
-  /**
-   * @var string
-   */
-  public $metricsGcpServiceAccountEmail;
+  protected $managedType = ConfigManagementManaged::class;
+  protected $managedDataType = '';
   protected $ociType = ConfigManagementOciConfig::class;
   protected $ociDataType = '';
   /**
@@ -43,10 +41,6 @@ class ConfigManagementConfigSync extends \Google\Model
    * @var string
    */
   public $sourceFormat;
-  /**
-   * @var bool
-   */
-  public $stopSyncing;
 
   /**
    * @param bool
@@ -91,18 +85,18 @@ class ConfigManagementConfigSync extends \Google\Model
     return $this->git;
   }
   /**
-   * @param string
+   * @param ConfigManagementManaged
    */
-  public function setMetricsGcpServiceAccountEmail($metricsGcpServiceAccountEmail)
+  public function setManaged(ConfigManagementManaged $managed)
   {
-    $this->metricsGcpServiceAccountEmail = $metricsGcpServiceAccountEmail;
+    $this->managed = $managed;
   }
   /**
-   * @return string
+   * @return ConfigManagementManaged
    */
-  public function getMetricsGcpServiceAccountEmail()
+  public function getManaged()
   {
-    return $this->metricsGcpServiceAccountEmail;
+    return $this->managed;
   }
   /**
    * @param ConfigManagementOciConfig
@@ -145,20 +139,6 @@ class ConfigManagementConfigSync extends \Google\Model
   public function getSourceFormat()
   {
     return $this->sourceFormat;
-  }
-  /**
-   * @param bool
-   */
-  public function setStopSyncing($stopSyncing)
-  {
-    $this->stopSyncing = $stopSyncing;
-  }
-  /**
-   * @return bool
-   */
-  public function getStopSyncing()
-  {
-    return $this->stopSyncing;
   }
 }
 

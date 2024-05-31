@@ -30,7 +30,7 @@ class GoogleCloudAssuredworkloadsV1ViolationExceptionContext extends \Google\Mod
   /**
    * @var string
    */
-  public $userName;
+  public $principalEmail;
 
   /**
    * @param string
@@ -63,16 +63,16 @@ class GoogleCloudAssuredworkloadsV1ViolationExceptionContext extends \Google\Mod
   /**
    * @param string
    */
-  public function setUserName($userName)
+  public function setPrincipalEmail($principalEmail)
   {
-    $this->userName = $userName;
+    $this->principalEmail = $principalEmail;
   }
   /**
    * @return string
    */
-  public function getUserName()
+  public function getPrincipalEmail()
   {
-    return $this->userName;
+    return $this->principalEmail;
   }
 }
 

@@ -44,10 +44,7 @@ class Scripts extends \Google\Service\Resource
    * as the one used by the script. (scripts.run)
    *
    * @param string $scriptId The script ID of the script to be executed. Find the
-   * script ID on the **Project settings** page under "IDs." As multiple
-   * executable APIs can be deployed in new IDE for same script, this field should
-   * be populated with DeploymentID generated while deploying in new IDE instead
-   * of script ID.
+   * script ID on the **Project settings** page under "IDs."
    * @param ExecutionRequest $postBody
    * @param array $optParams Optional parameters.
    * @return Operation

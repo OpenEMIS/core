@@ -80,6 +80,10 @@ class InventorySource extends \Google\Collection
   protected $readWriteAccessorsDataType = '';
   protected $statusType = InventorySourceStatus::class;
   protected $statusDataType = '';
+  /**
+   * @var string
+   */
+  public $subSitePropertyId;
   protected $timeRangeType = TimeRange::class;
   protected $timeRangeDataType = '';
   /**
@@ -324,6 +328,20 @@ class InventorySource extends \Google\Collection
   public function getStatus()
   {
     return $this->status;
+  }
+  /**
+   * @param string
+   */
+  public function setSubSitePropertyId($subSitePropertyId)
+  {
+    $this->subSitePropertyId = $subSitePropertyId;
+  }
+  /**
+   * @return string
+   */
+  public function getSubSitePropertyId()
+  {
+    return $this->subSitePropertyId;
   }
   /**
    * @param TimeRange

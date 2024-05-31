@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => '6f9f813046435b8f63bc800b7e7fb05bc46ee766',
+    'reference' => '733f7bfeec791cf23267f98c93e48931034f74b4',
     'name' => 'korditpteltd/iksso-cakephp-sso',
   ),
   'versions' => 
@@ -15,17 +15,17 @@
     array (
       'replaced' => 
       array (
-        0 => '4.4.15',
+        0 => '4.4.14',
       ),
     ),
     'cakephp/cakephp' => 
     array (
-      'pretty_version' => '4.4.15',
-      'version' => '4.4.15.0',
+      'pretty_version' => '4.4.14',
+      'version' => '4.4.14.0',
       'aliases' => 
       array (
       ),
-      'reference' => 'fb05c035275cefa7b748136c77002936a0006bc7',
+      'reference' => 'bf3d59639b3cd7cf47e811be6d44c0dd6090a057',
     ),
     'cakephp/chronos' => 
     array (
@@ -40,144 +40,144 @@
     array (
       'replaced' => 
       array (
-        0 => '4.4.15',
+        0 => '4.4.14',
       ),
     ),
     'cakephp/console' => 
     array (
       'replaced' => 
       array (
-        0 => '4.4.15',
+        0 => '4.4.14',
       ),
     ),
     'cakephp/core' => 
     array (
       'replaced' => 
       array (
-        0 => '4.4.15',
+        0 => '4.4.14',
       ),
     ),
     'cakephp/database' => 
     array (
       'replaced' => 
       array (
-        0 => '4.4.15',
+        0 => '4.4.14',
       ),
     ),
     'cakephp/datasource' => 
     array (
       'replaced' => 
       array (
-        0 => '4.4.15',
+        0 => '4.4.14',
       ),
     ),
     'cakephp/event' => 
     array (
       'replaced' => 
       array (
-        0 => '4.4.15',
+        0 => '4.4.14',
       ),
     ),
     'cakephp/filesystem' => 
     array (
       'replaced' => 
       array (
-        0 => '4.4.15',
+        0 => '4.4.14',
       ),
     ),
     'cakephp/form' => 
     array (
       'replaced' => 
       array (
-        0 => '4.4.15',
+        0 => '4.4.14',
       ),
     ),
     'cakephp/http' => 
     array (
       'replaced' => 
       array (
-        0 => '4.4.15',
+        0 => '4.4.14',
       ),
     ),
     'cakephp/i18n' => 
     array (
       'replaced' => 
       array (
-        0 => '4.4.15',
+        0 => '4.4.14',
       ),
     ),
     'cakephp/log' => 
     array (
       'replaced' => 
       array (
-        0 => '4.4.15',
+        0 => '4.4.14',
       ),
     ),
     'cakephp/orm' => 
     array (
       'replaced' => 
       array (
-        0 => '4.4.15',
+        0 => '4.4.14',
       ),
     ),
     'cakephp/utility' => 
     array (
       'replaced' => 
       array (
-        0 => '4.4.15',
+        0 => '4.4.14',
       ),
     ),
     'cakephp/validation' => 
     array (
       'replaced' => 
       array (
-        0 => '4.4.15',
+        0 => '4.4.14',
       ),
     ),
     'composer/ca-bundle' => 
     array (
-      'pretty_version' => '1.3.6',
-      'version' => '1.3.6.0',
+      'pretty_version' => '1.3.5',
+      'version' => '1.3.5.0',
       'aliases' => 
       array (
       ),
-      'reference' => '90d087e988ff194065333d16bc5cf649872d9cdb',
+      'reference' => '74780ccf8c19d6acb8d65c5f39cd72110e132bbd',
     ),
     'firebase/php-jwt' => 
     array (
-      'pretty_version' => 'v6.5.0',
-      'version' => '6.5.0.0',
+      'pretty_version' => 'v5.5.0',
+      'version' => '5.5.0.0',
       'aliases' => 
       array (
       ),
-      'reference' => 'e94e7353302b0c11ec3cfff7180cd0b1743975d2',
+      'reference' => 'cf814442ce0e9eebe5317d61b63ccda4b85de67a',
     ),
     'google/apiclient' => 
     array (
-      'pretty_version' => 'v2.15.0',
-      'version' => '2.15.0.0',
+      'pretty_version' => 'v2.12.3',
+      'version' => '2.12.3.0',
       'aliases' => 
       array (
       ),
-      'reference' => '49787fa30b8d8313146a61efbf77ed1fede723c2',
+      'reference' => '506c488cb22c960022adf515bf0acc1d266e81db',
     ),
     'google/apiclient-services' => 
     array (
-      'pretty_version' => 'v0.311.0',
-      'version' => '0.311.0.0',
+      'pretty_version' => 'v0.303.0',
+      'version' => '0.303.0.0',
       'aliases' => 
       array (
       ),
-      'reference' => 'b29fb9e55b1616c056e349d904ad5e6ff39b5bed',
+      'reference' => 'b9c143453a94d5e6ed7257d065dcc5662619eaf4',
     ),
     'google/auth' => 
     array (
-      'pretty_version' => 'v1.28.0',
-      'version' => '1.28.0.0',
+      'pretty_version' => 'v1.26.0',
+      'version' => '1.26.0.0',
       'aliases' => 
       array (
       ),
-      'reference' => '07f7f6305f1b7df32b2acf6e101c1225c839c7ac',
+      'reference' => 'f1f0d0319e2e7750ebfaa523c78819792a9ed9f7',
     ),
     'guzzlehttp/guzzle' => 
     array (
@@ -213,7 +213,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => '6f9f813046435b8f63bc800b7e7fb05bc46ee766',
+      'reference' => '733f7bfeec791cf23267f98c93e48931034f74b4',
     ),
     'laminas/laminas-diactoros' => 
     array (
@@ -267,32 +267,14 @@
         0 => '~2.0',
       ),
     ),
-    'paragonie/constant_time_encoding' => 
-    array (
-      'pretty_version' => 'v2.6.3',
-      'version' => '2.6.3.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => '58c3f47f650c94ec05a151692652a868995d2938',
-    ),
-    'paragonie/random_compat' => 
-    array (
-      'pretty_version' => 'v9.99.100',
-      'version' => '9.99.100.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => '996434e5492cb4c3edcb9168db6fbb1359ef965a',
-    ),
     'phpseclib/phpseclib' => 
     array (
-      'pretty_version' => '3.0.21',
-      'version' => '3.0.21.0',
+      'pretty_version' => '2.0.42',
+      'version' => '2.0.42.0',
       'aliases' => 
       array (
       ),
-      'reference' => '4580645d3fc05c189024eb3b834c6c1e4f0f30a1',
+      'reference' => '665d289f59e646a259ebf13f29be7f6f54cab24b',
     ),
     'psr/cache' => 
     array (
