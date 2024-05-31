@@ -1178,7 +1178,7 @@ class StudentsTable extends ControllerActionTable
             }
         ]);
 
-        $request = $request->withQueryParams(['academic_period_id' => $selectedAcademicPeriod]);
+        $this->request = $this->request->withQueryParams(['academic_period_id' => $selectedAcademicPeriod]);
 
         // To add the academic_period_id to export
         if (isset($extra['toolbarButtons']['export']['url'])) {
@@ -1248,6 +1248,7 @@ class StudentsTable extends ControllerActionTable
             if (!empty($typesIdentity)) {
                 $query
                     ->select([
+                        'student_id',//POCOR-7485 don't remove
                         $this->aliasField('id'),
                         'Users.id',
                         'Users.openemis_no',
@@ -1291,6 +1292,7 @@ class StudentsTable extends ControllerActionTable
             }
         } else {
             $query->select([
+                'student_id',//POCOR-7485 don't remove
                 $this->aliasField('id'),
                 'Users.id',
                 'Users.openemis_no',
@@ -1698,9 +1700,9 @@ class StudentsTable extends ControllerActionTable
                 'role_name' => ($role == 1) ? 'student' : NULL
             ];
             //POCOR-7078 start
-            $studentCustomFieldValues = TableRegistry::get('student_custom_field_values');
-            $studentCustomFieldOptions = TableRegistry::get('student_custom_field_options');
-            $studentCustomFields = TableRegistry::get('student_custom_fields');
+            $studentCustomFieldValues = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldValues');
+            $studentCustomFieldOptions = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldOptions');
+            $studentCustomFields = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFields');
             $studentCustomData = $studentCustomFieldValues->find()
                 ->select([
                     'id' => $studentCustomFieldValues->aliasField('id'),
@@ -3198,7 +3200,7 @@ class StudentsTable extends ControllerActionTable
             $class_students->aliasField('student_status_id = ') . $this->aliasField('student_status_id'),
             $class_students->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
         ])
-            ->leftJoin([$classes->alias() => $classes->table()], [
+            ->leftJoin([$classes->getAlias() => $classes->getTable()], [
                 $classes->aliasField('id = ') . $class_students->aliasField('institution_class_id')
             ]);
         $query = $query->select([
@@ -3218,16 +3220,16 @@ class StudentsTable extends ControllerActionTable
         $guardian_relations->getAlias('guardian_relations');
         $guardian_contacts->getAlias('guardian_contacts');
         $query
-            ->leftJoin([$student_guardians->getAlias() => $student_guardians->table()], [
+            ->leftJoin([$student_guardians->getAlias() => $student_guardians->getTable()], [
                 $student_guardians->aliasField('student_id = ') . $this->aliasField('student_id')
             ])
-            ->leftJoin([$guardians->getAlias() => $guardians->table()], [
+            ->leftJoin([$guardians->getAlias() => $guardians->getTable()], [
                 $guardians->aliasField('id = ') . $student_guardians->aliasField('guardian_id')
             ])
-            ->leftJoin([$guardian_relations->getAlias() => $guardian_relations->table()], [
+            ->leftJoin([$guardian_relations->getAlias() => $guardian_relations->getTable()], [
                 $guardian_relations->aliasField('id = ') . $student_guardians->aliasField('guardian_relation_id')
             ])
-            ->leftJoin([$guardian_contacts->getAlias() => $guardian_contacts->table()], [
+            ->leftJoin([$guardian_contacts->getAlias() => $guardian_contacts->getTable()], [
                 $guardian_contacts->aliasField('security_user_id = ') . $guardians->aliasField('id'),
             ])
             ->orderAsc($guardian_relations->aliasField('order'))
@@ -3484,7 +3486,7 @@ class StudentsTable extends ControllerActionTable
         $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
         $this->previousStudents = $InstitutionStudents
             ->find('list', ['keyField' => 'id', 'valueField' => 'student_status_id'])
-            ->innerJoin([$this->getAlias() => $this->gettable()],
+            ->innerJoin([$this->getAlias() => $this->getTable()],
                 [$InstitutionStudents->aliasField('id = ')
                     . $this->aliasField('previous_institution_student_id')
                 ])
