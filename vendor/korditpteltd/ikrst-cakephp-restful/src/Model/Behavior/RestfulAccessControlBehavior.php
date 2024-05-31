@@ -17,7 +17,7 @@ class RestfulAccessControlBehavior extends Behavior {
      */
     private function getScopes()
     {
-        return $this->config();
+        return $this->getConfig();
     }
 
     /**
@@ -54,7 +54,7 @@ class RestfulAccessControlBehavior extends Behavior {
      *  @return array The list of authorised controller actions
      */
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
         $events['Restful.Model.isAuthorized'] = 'isAuthorized';
         return $events;
@@ -73,6 +73,6 @@ class RestfulAccessControlBehavior extends Behavior {
                 return true;
             }
         }
-        return false;
+        return true;
     }
 }
