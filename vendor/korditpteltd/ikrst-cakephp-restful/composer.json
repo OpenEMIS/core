@@ -1,0 +1,44 @@
+{
+    "name": "korditpteltd/ikrst-cakephp-restful",
+    "description": "KORDIT CakePHP Restful Plugin",
+    "type": "cakephp-plugin",
+    "keywords": ["kordit", "cakephp", "restful"],
+    "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-restful",
+    "license": "GPL-2.0",
+    "authors": [
+        {
+            "name": "KORDIT PHP DEVELOPERS",
+            "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/commits/all"
+        }
+    ],
+    "support": {
+        "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
+    },
+    "require": {
+        "php": ">=7.2",
+        "cakephp/cakephp": "^4.4",
+        "admad/cakephp-jwt-auth": "^3.0.0",
+        "ikrst-cakephp-restful": "1.1@dev"
+    },
+    "require-dev": {
+        "cakephp/cakephp-codesniffer": "^2.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Restful\\": "src",
+            "Restful\\Test\\Fixture\\": "tests\\Fixture"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Cake\\Test\\": "vendor/cakephp/cakephp/tests",
+            "Restful\\Test\\": "tests"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "master": "1.0.2"
+        }
+    },
+    "minimum-stability": "dev"
+}
