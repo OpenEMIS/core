@@ -484,7 +484,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $ids = isset($paramPass[1]) ? $this->paramsDecode($paramPass[1]) : [];
         $staffBehaviourId = $ids['id'];
         if(isset($ids['id'])) {
-        $queryString = $this->encode(['staff_behaviour_id' => $staffBehaviourId]);
+        $queryString = $this->paramsEncode(['staff_behaviour_id' => $staffBehaviourId,'institution_id'=> $institutionId]);
 
         $tabElements = [
             'StaffBehaviours' => [
@@ -492,7 +492,7 @@ class StaffBehavioursTable extends ControllerActionTable
                 'text' => __('Overview')
             ],
             'StaffBehaviourAttachments' => [
-                'url' => ['plugin' => 'Institution', 'controller' => 'StaffBehaviourAttachments', 'action' => 'index', 'queryString' => $queryString, 'institutionId' => $encodedInstitutionId],
+                'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffBehaviourAttachments', 'index', $queryString],
                 'text' => __('Attachments')
             ]
         ];}
