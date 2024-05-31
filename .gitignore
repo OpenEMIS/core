@@ -23,7 +23,6 @@ webroot/import/*
 webroot/img/themes/*
 webroot/img/product_list_logo/*
 webroot/analytics.txt
-webroot/css/themes/layout.min.css
 /build
 /dist
 /tags
