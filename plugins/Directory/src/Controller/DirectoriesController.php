@@ -80,6 +80,12 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentFees']);
     }
+
+    public function Histories()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserHistories']);
+    }
+    
     public function StaffEmployments()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Employments']);
@@ -796,6 +802,16 @@ class DirectoriesController extends AppController
                 $this->Navigation->addCrumb($model->getHeader($model->getAlias()));
                 $header = __('Users') . ' - ' . $model->getHeader($model->getAlias());
                 $this->set('contentHeader', $header);
+            } else if($model->getAlias() == 'UserHistories') {
+                $userId = $this->getQueryString('security_user_id');
+                $Directories = TableRegistry::getTableLocator()->get('Directory.Directories');
+                $entity = $Directories->get($userId);
+                $header = $entity->name;
+                $pass = $this->ControllerAction->paramsEncode(['id' => $userId]);
+                $this->Navigation->addCrumb($header,  ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories', 'view', $pass]);
+                $this->Navigation->addCrumb('History');
+                $header = $header . ' - History';
+                $this->set('contentHeader', $header);
             } else if ($model->getAlias() != 'Directories') {
                 $this->Alert->warning('general.notExists');
                 $event->stopPropagation();
@@ -843,6 +859,8 @@ class DirectoriesController extends AppController
                         $query->where([$model->aliasField('staff_id') => $userId]);
                     }
                 }
+            } else if ($model->getAlias() == 'UserHistories') {
+
             } else {
                 $this->Alert->warning('general.noData');
                 $event->stopPropagation();

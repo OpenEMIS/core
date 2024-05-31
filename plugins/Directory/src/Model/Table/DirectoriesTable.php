@@ -1017,8 +1017,9 @@ class DirectoriesTable extends ControllerActionTable
                 $icon = '<i class="fa fa-history"></i>';
                 $url = [
                     'plugin' => 'Directory',
-                    'controller' => 'DirectoryHistories',
-                    'action' => 'index'
+                    'controller' => 'Directories',
+                    'action' => 'Histories',
+                    'index'
                 ];
 
                 $buttons['history'] = $buttons['view'];
