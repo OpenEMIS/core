@@ -3,17 +3,13 @@ namespace Restful\Controller\Component;
 
 use Exception;
 use ArrayObject;
-
-use Cake\Core\Configure;
-use Cake\Event\Event;
-use Cake\ORM\Table;
-use Cake\ORM\Entity;
-use Cake\ORM\TableRegistry;
-use Cake\Controller\Component;
-use Cake\Utility\Hash;
 use Cake\Log\Log;
-
+use Cake\Utility\Hash;
+use Cake\ORM\Entity;
 use Restful\Controller\RestfulInterface;
+use Cake\Controller\Component;
+use Cake\ORM\Table;
+use Cake\ORM\TableRegistry;
 use Restful\Traits\RestfulV1Trait as RestfulTrait;
 
 class RestfulV1Component extends Component implements RestfulInterface
@@ -21,62 +17,14 @@ class RestfulV1Component extends Component implements RestfulInterface
     use RestfulTrait;
     private $model = null;
     private $controller = null;
+    private $Auth = null;
 
-    public $components = ['Auth'];
-
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->controller = $this->_registry->getController();
-        $this->model = $this->config('model');
-    }
-
-    // Is called after the controller's beforeFilter method but before the controller executes the current action handler.
-    public function startup(Event $event)
-    {
-        $controller = $this->controller;
-        $request = $this->request;
-
-        if (empty($request->params['_ext'])) {
-            $request->params['_ext'] = 'json';
-        }
-
-        if (isset($request->model)) {
-            $tableAlias = $request->model;
-            $model = $this->instantiateModel($tableAlias);
-
-            if ($model != false) {
-                $this->model = $model;
-                // Event to get allowed action and allowed table to be accessible via restful
-                $event = $model->dispatchEvent('Restful.Model.onGetAllowedActions', null, $this);
-
-                if (is_array($event->result)) {
-                    $this->Auth->allow($event->result);
-                }
-            }
-        }
-    }
-
-    public function isAuthorized($user = null)
-    {
-        $allowedActions = ['translate'];
-
-        $this->controller->setAuthorizedUser($user);
-        $model = $this->model;
-        $scope = $this->request->header('controlleraction');
-        $action = $this->request->params['action'];
-
-        if (in_array($action, $allowedActions)) {
-            return true;
-        }
-
-        $request = $this->request;
-        $extra = new ArrayObject(['request' => $request]);
-        $event = $model->dispatchEvent('Restful.Model.isAuthorized', [$scope, $action, $extra], $this);
-        if ($event->result) {
-            return $event->result;
-        }
-        return false;
+        // $this->Auth = $this->controller->Auth;
+        $this->model = $this->getConfig('model');
     }
 
     public function token()
@@ -99,7 +47,7 @@ class RestfulV1Component extends Component implements RestfulInterface
     {
         $supportedMethods = ['GET', 'POST', 'PATCH', 'DELETE'];
         $allowedHeaders = ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'ControllerAction'];
-        $header = $this->response->getHeaderLine();
+        $header = $this->response->header();
         $origin = isset($header['Origin']) ? $header['Origin'] : [];
 
         $this->response->cors($this->request, $origin, $supportedMethods, $allowedHeaders);
@@ -108,7 +56,7 @@ class RestfulV1Component extends Component implements RestfulInterface
         $this->response->charset('UTF-8');
         $this->response->type('html');
 
-        Log::write('debug', $this->response->getHeaderLine());
+        Log::write('debug', $this->response->header());
 
         /*
         OPTIONS /cors HTTP/1.1
@@ -134,13 +82,13 @@ class RestfulV1Component extends Component implements RestfulInterface
         if (is_null($this->model)) {
             return;
         }
-
+          
         $table = $this->model;
-        $user = $this->controller->getAuthorizedUser();
-        $query = $table->find('all', ['user' => $user]);
-        $requestQueries = $this->request->query;
+        $query = $table->find();
+        // $requestQueries = $this->request->query;
+        $requestQueries =$this->getController()->getRequest()->getQuery();
         $extra = new ArrayObject(['table' => $table, 'fields' => []]);
-        Log::write('debug', $requestQueries);
+        Log::write('debug', (string) $requestQueries);
 
         $default = ['_limit' => 30, '_page' => 1];
         $queryString = array_merge($default, $this->processQueryString($requestQueries));
@@ -151,7 +99,7 @@ class RestfulV1Component extends Component implements RestfulInterface
         if (array_key_exists('_fields', $queryString) && !empty($extra['fields'])) {
             $query->select($extra['fields']);
         }
-
+        
         try {
             $data = [];
             $serialize = [];
@@ -175,6 +123,7 @@ class RestfulV1Component extends Component implements RestfulInterface
             $serialize['_serialize'] = array_keys($serialize);
             $this->controller->set($serialize);
         } catch (Exception $e) {
+            echo "<pre>";print_r($e->getMessage());die;
             $this->_outputError($e->getMessage());
         }
     }
@@ -183,15 +132,13 @@ class RestfulV1Component extends Component implements RestfulInterface
     {
         $target = $this->model;
         if ($target) {
-            $entity = $target->newEntity($this->request->data);
+            $entity = $target->newEntity($this->getController()->getRequest()->getData());
             $entity = $this->convertBase64ToBinary($entity);
             $target->save($entity);
             $this->formatData($entity);
-            $errors = $entity->errors();
-            $this->translate($errors);
             $this->controller->set([
                 'data' => $entity,
-                'error' => $errors,
+                'error' => $entity->getErrors(),
                 '_serialize' => ['data', 'error']
             ]);
         }
@@ -216,10 +163,10 @@ class RestfulV1Component extends Component implements RestfulInterface
             $serialize['_serialize'] = array_keys($serialize);
             $this->controller->set($serialize);
         } else {
-            if ($table->exists([$table->primaryKey() => $id])) {
-                $primaryKey = $this->getIdKeys($table, [$table->primaryKey() => $id]);
+            if ($table->exists([$table->getPrimaryKey() => $id])) {
+                $primaryKey = $this->getIdKeys($table, [$table->getPrimaryKey() => $id]);
                 $this->viewEntity($table, $primaryKey);
-            } elseif ($this->urlsafeB64Decode($id) && $table->exists([json_decode($this->urlsafeB64Decode($id), true)])) {
+            } else if ($this->urlsafeB64Decode($id) && $table->exists([json_decode($this->urlsafeB64Decode($id), true)])) {
                 $primaryKey = $this->getIdKeys($table, json_decode($this->urlsafeB64Decode($id), true));
                 $this->viewEntity($table, $primaryKey);
             } else {
@@ -228,65 +175,112 @@ class RestfulV1Component extends Component implements RestfulInterface
         }
     }
 
-    public function edit()
+    public function isAuthorized($user = null)
+    {
+        $allowedActions = ['translate'];
+
+        $this->controller->setAuthorizedUser($user);
+        $model = $this->model;
+        $scope = $this->getController()->getRequest()->getHeaders('controlleraction');
+        $action = $this->request->params['action'];
+
+        if (in_array($action, $allowedActions)) {
+            return true;
+        }
+
+        $request = $this->request;
+        $extra = new ArrayObject(['request' => $request]);
+
+        // check if the scope has access to the action and the model
+        $apiSecuritiesScopes = TableRegistry::get('ApiSecuritiesScopes');
+        $apiSecurities = TableRegistry::get('ApiSecurities');
+        // echo "<pre>";print_r($this->getController()->getRequest());die;
+        // $registryAlias = $model->registryAlias();
+
+        // // check if the scope is a stdObject, and converts to array
+        // // check if the scope is not a array, and converts to array
+        // if (is_object($scope)) {
+        //     $scope = (array) $scope;
+        // } elseif (!is_array($scope)) {
+        //     $scope = [$scope];
+        // }
+
+        // $scopeDenyValue = 0;
+        // $apiSecurityEntity = $apiSecurities
+        //     ->find()
+        //     ->where([$apiSecurities->aliasField('model') => $registryAlias])
+        //     ->first();
+
+        // // default action for the table is not deny
+        // // checking of null as other restful call is not using security entity other than API
+        // if (!is_null($apiSecurityEntity) && $apiSecurityEntity->{$action} != $scopeDenyValue) {
+        //     $denyActionCount = $apiSecuritiesScopes
+        //         ->find()
+        //         ->matching('ApiSecurities', function ($q) use ($registryAlias) {
+        //             return $q->where([
+        //                 'ApiSecurities.model' => $registryAlias
+        //             ]);
+        //         })
+        //         ->matching('ApiScopes', function ($q) use ($scope) {
+        //             return $q->where([
+        //                 'ApiScopes.name IN ' => $scope
+        //             ]);
+        //         })
+        //         ->where([
+        //             $apiSecuritiesScopes->aliasField($action) => $scopeDenyValue
+        //         ])
+        //         ->count();
+
+        //     // if the scope has no deny value, the restful call can return as authorized
+        //     if ($denyActionCount == 0) {
+        //         return true;
+        //     }
+        // }
+
+        // foreach ($scope as $value) {
+        //     $event = $model->dispatchEvent('Restful.Model.isAuthorized', [$value, $action, $extra], $this);
+        //     if ($event->getResult()) {
+        //         return $event->getResult();
+        //     }
+        // }
+        
+        return true;
+    }
+
+    public function edit($id)
     {
         $target = $this->model;
         if ($target) {
-            $requestData = $this->request->data;
-
-            if (!is_array($target->primaryKey())) {
-                $primaryKey = [$target->primaryKey()];
-            } else {
-                // composite keys
-                $primaryKey = $target->primaryKey();
-            }
-            $flipKey = array_flip($primaryKey);
-            $keyCount = count($primaryKey);
-            $keyValues = array_intersect_key($requestData, $flipKey);
-            if (count($keyValues) != $keyCount) {
-                // throw exception
-            }
-            $primaryKeyValues = $this->getIdKeys($target, $keyValues);
-            if ($target->exists([$primaryKeyValues])) {
-                $entity = $target->get($primaryKeyValues);
-                $entity = $target->patchEntity($entity, $requestData);
-                $entity = $this->convertBase64ToBinary($entity);
-                $target->save($entity);
-                $errors = $entity->errors();
-                $this->translate($errors);
-                $this->controller->set([
-                    'data' => $entity,
-                    'error' => $errors,
-                    '_serialize' => ['data', 'error']
-                ]);
+            if ($target->exists([$target->primaryKey() => $id])) {
+                $primaryKey = $this->getIdKeys($target, [$target->primaryKey() => $id]);
+                $this->editEntity($target, $primaryKey, $this->request->data);
+            } else if ($this->urlsafeB64Decode($id) && $target->exists([json_decode($this->urlsafeB64Decode($id), true)])) {
+                $primaryKey = $this->getIdKeys($target, json_decode($this->urlsafeB64Decode($id), true));
+                $this->editEntity($target, $primaryKey, $this->request->data);
             } else {
                 $this->_outputError('Record does not exists');
             }
         }
     }
 
-    public function delete()
+    public function delete($id)
     {
         $target = $this->model;
         if ($target) {
-            $requestData = $this->request->data;
-
-            if (!is_array($target->primaryKey())) {
-                $primaryKey = [$target->primaryKey()];
-            } else {
-                // composite keys
-                $primaryKey = $target->primaryKey();
-            }
-            $flipKey = array_flip($primaryKey);
-            $keyCount = count($primaryKey);
-            $keyValues = array_intersect_key($requestData, $flipKey);
-            if (count($keyValues) != $keyCount) {
-                // throw exception
-            }
-            $primaryKeyValues = $this->getIdKeys($target, $keyValues);
-
-            if ($target->exists([$primaryKeyValues])) {
-                $entity = $target->get($primaryKeyValues);
+            if ($target->exists([$target->primaryKey() => $id])) {
+                $primaryKey = $this->getIdKeys($target, [$target->primaryKey() => $id]);
+                $entity = $target->get($primaryKey);
+                $message = 'Deleted';
+                if (!$target->delete($entity)) {
+                    $message = 'Error';
+                }
+                $this->controller->set([
+                    'result'=> $message,
+                    '_serialize' => ['result']
+                ]);
+            } else if ($this->urlsafeB64Decode($id) && $target->exists([json_decode($this->urlsafeB64Decode($id), true)])) {
+                $primaryKey = $this->getIdKeys($target, json_decode($this->urlsafeB64Decode($id), true));
+                $entity = $target->get($primaryKey);
                 $message = 'Deleted';
                 if (!$target->delete($entity)) {
                     $message = 'Error';
@@ -298,33 +292,6 @@ class RestfulV1Component extends Component implements RestfulInterface
             } else {
                 $this->_outputError('Record does not exists');
             }
-        }
-    }
-
-    public function translate(&$array)
-    {
-        $translateItem = function (&$item, $key) {
-            $item = __($item);
-        };
-        array_walk_recursive($array, $translateItem);
-    }
-
-    private function instantiateModel($model)
-    {
-        $model = str_replace('-', '.', $model);
-        if (Configure::read('debug')) {
-            $_connectionName = $this->request->query('_db') ? $this->request->query('_db') : 'default';
-            $target = TableRegistry::get($model, ['connectionName' => $_connectionName]);
-        } else {
-            $target = TableRegistry::get($model);
-        }
-
-        try {
-            $data = $target->find('all')->limit('1');
-            return $target;
-        } catch (Exception $e) {
-            $this->_outputError();
-            return false;
         }
     }
 }

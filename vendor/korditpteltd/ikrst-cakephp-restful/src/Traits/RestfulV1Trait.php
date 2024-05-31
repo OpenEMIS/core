@@ -12,10 +12,8 @@ use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use Cake\Utility\Inflector;
 use Cake\Utility\Hash;
-use Cake\Chronos\MutableDate;
-use Cake\Chronos\Chronos;
-use Cake\Chronos\Date;
-use Cake\Chronos\MutableDateTime;
+use DateTime;
+use DateTimeImmutable;
 
 trait RestfulV1Trait {
     private function processQueryString($requestQueries)
@@ -132,7 +130,7 @@ trait RestfulV1Trait {
         if (!empty($value)) {
             $conditions = [];
             $table = $extra['table'];
-            $columns = $table->schema()->columns();
+            $columns = $table->getSchema()->getColumns();
 
             foreach ($value as $field => $val) {
 
@@ -244,9 +242,9 @@ trait RestfulV1Trait {
     private function formatData(Entity $entity)
     {
         $table = $this->model;
-        $schema = $table->schema();
-        foreach ($entity->visibleProperties() as $property) {
-            $method = $schema->columnType($property);
+        $schema = $table->getSchema();
+        foreach ($entity->getVisible() as $property) {
+            $method = $schema->getColumnType($property);
             if (method_exists($this, $method)) {
                 $entity->$property = $this->$method($entity->property);
             }
@@ -260,73 +258,44 @@ trait RestfulV1Trait {
 
     private function convertBinaryToBase64(Table $table, Entity $entity)
     {
-        foreach ($entity->visibleProperties() as $property) {
+        $table = $this->model;
+        $schema = $table->getSchema();
+
+        foreach ($entity->getVisible() as $property) {
+            if (in_array($schema->getColumnType($property), ['datetime', 'date'])) {
+                if (!empty($entity->$property) && ($entity->$property instanceof DateTime || $entity->$property instanceof DateTimeImmutable)) {
+                    $entity->$property = $entity->$property->format('Y-m-d');
+                } else if ($entity->$property == '0000-00-00') {
+                    $entity->$property = '1970-01-01';
+                }
+            }
             if ($entity->$property instanceof Entity) {
                 $source = $entity->$property->source();
                 $entityTable = TableRegistry::get($source);
                 $this->convertBinaryToBase64($entityTable, $entity->$property);
-            } elseif (is_array($entity->$property)) {
-                foreach ($entity->$property as $propertyEntity) {
-                    if ($propertyEntity instanceof Entity) {
-                        $source = $propertyEntity->source();
-                        $entityTable = TableRegistry::get($source);
-                        $this->convertBinaryToBase64($entityTable, $propertyEntity);
-                    }
-                }
+                // $this->convertBinaryToBase64($table, $entity->$property);
+            } else if (is_resource($entity->$property)) {
+                $entity->$property = base64_encode(stream_get_contents($entity->$property));
+            } else if ($property == 'password') { // removing password from entity so that the value will not be exposed
+                $entity->unsetProperty($property);
             } else {
-                if ($property == 'password') {
-                    $entity->unsetProperty($property);
+                $eventKey = 'Restful.Model.onRender' . Inflector::camelize($property);
+                $event = $table->dispatchEvent($eventKey, [$entity], $this);
+                if ($event->getResult()) {
+                    $entity->$property = $event->getResult();
                 }
-                $columnType = $table->schema()->columnType($property);
-                $method = 'format'. ucfirst($columnType);
-                if (method_exists($this, $method)) {
-                    $entity->$property = $this->$method($entity->$property);
-                }
-                $eventKey = 'Restful.Model.onRender'.ucfirst($columnType);
-                $table->dispatchEvent($eventKey, [$entity, $property], $this);
             }
-        }
-    }
-
-    private function formatBinary($attribute)
-    {
-        if (is_resource($attribute)) {
-            return base64_encode(stream_get_contents($attribute));
-        } else {
-            return base64_encode($attribute);
-        }
-    }
-
-    private function formatDatetime($attribute)
-    {
-        return $this->formatDate($attribute);
-    }
-
-    private function formatDate($attribute)
-    {
-        if ($attribute instanceof MutableDate || $attribute instanceof Date) {
-            $attribute = $attribute->format('Y-m-d');
-        } else if ($attribute == '0000-00-00') {
-            $attribute = '1970-01-01';
-        }
-        return $attribute;
-    }
-
-    private function formatTime($attribute)
-    {
-        if ($attribute instanceof MutableDateTime || $attribute instanceof Chronos) {
-            $attribute = $attribute->format('H:i:s');
         }
     }
 
     private function convertBase64ToBinary(Entity $entity)
     {
         $table = $this->model;
-        $schema = $table->schema();
+        $schema = $table->getSchema();
         $columns = $schema->columns();
 
         foreach ($columns as $column) {
-            $attr = $schema->column($column);
+            $attr = $schema->getColumn($column);
             if ($attr['type'] == 'binary' && $entity->has($column)) {
                 $value = urldecode($entity->$column);
                 $entity->$column = base64_decode($value);
@@ -478,7 +447,7 @@ trait RestfulV1Trait {
 
     private function getIdKeys(Table $model, $ids, $addAlias = true)
     {
-        $primaryKey = $model->primaryKey();
+        $primaryKey = $model->getPrimaryKey();
         $idKeys = [];
         if (!empty($ids)) {
             if (is_array($primaryKey)) {
@@ -498,6 +467,19 @@ trait RestfulV1Trait {
             }
         }
         return $idKeys;
+    }
+
+    private function editEntity(Table $table, array $primaryKey, array $data)
+    {
+        $entity = $table->get($primaryKey);
+        $entity = $table->patchEntity($entity, $data);
+        $entity = $this->convertBase64ToBinary($entity);
+        $table->save($entity);
+        $this->controller->set([
+            'data' => $entity,
+            'error' => $entity->errors(),
+            '_serialize' => ['data', 'error']
+        ]);
     }
 
     private function viewEntity(Table $table, array $primaryKey)

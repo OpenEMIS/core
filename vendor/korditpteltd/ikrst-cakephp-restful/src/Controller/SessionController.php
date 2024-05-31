@@ -10,7 +10,7 @@ class SessionController extends AppController
     private $Session = null;
     public $components = ['RequestHandler'];
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
     }
@@ -18,11 +18,10 @@ class SessionController extends AppController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
-
-        if (empty($this->request->params['_ext'])) {
-            $this->request->params['_ext'] = 'json';
+        if (empty($this->request->getAttribute('params')['_ext'])) {
+            $this->request->getAttribute('params')['_ext'] = 'json';
         }
-        $this->Session = $this->request->session();
+        $this->Session = $this->request->getSession();
     }
 
     public function write()

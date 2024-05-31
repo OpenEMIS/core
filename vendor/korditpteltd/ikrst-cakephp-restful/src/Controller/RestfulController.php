@@ -8,12 +8,11 @@ class RestfulController extends AppController
 {
     private $restfulComponent = null;
     private $supportedRestful = [
-        'v1' => 'v1',
         'v2' => 'v2'
     ];
     private $authorizedUser = null;
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
@@ -21,7 +20,7 @@ class RestfulController extends AppController
         $componentName = 'Restful'. ucfirst($version);
         $this->loadComponent('Restful.' . $componentName);
         $this->loadComponent('RequestHandler');
-        $this->loadComponent('Restful.DownloadFile');
+        // $this->loadComponent('Restful.DownloadFile');
         $this->loadComponent('Auth', [
             'authorize' => 'Controller',
             'unauthorizedRedirect' => false
@@ -106,7 +105,7 @@ class RestfulController extends AppController
 
     public function edit()
     {
-        $this->restfulComponent->edit();
+        $this->restfulComponent->edit($id);
     }
 
     public function delete()
@@ -127,8 +126,8 @@ class RestfulController extends AppController
 
     public function translate()
     {
-        $original = $this->request->data;
-        $translated = $this->request->data;
+        $original = $this->request->getData();
+        $translated = $this->request->getData();
         $translateItem = function (&$item, $key) {
             $item = __($item);
         };
