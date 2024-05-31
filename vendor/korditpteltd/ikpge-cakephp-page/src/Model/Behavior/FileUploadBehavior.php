@@ -46,7 +46,7 @@ class FileUploadBehavior extends Behavior
 
     );
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->_config = array_merge($this->_config, $config);
     }

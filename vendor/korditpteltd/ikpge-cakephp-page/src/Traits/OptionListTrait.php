@@ -9,8 +9,8 @@ trait OptionListTrait
     public function findOptionList(Query $query, array $options)
     {
         $options += [
-            'keyField' => $this->primaryKey(),
-            'valueField' => $this->displayField(),
+            'keyField' => $this->getPrimaryKey(),
+            'valueField' => $this->getDisplayField(),
             'groupField' => null
         ];
 
@@ -24,7 +24,7 @@ trait OptionListTrait
                 (array)$options['valueField'],
                 (array)$options['groupField']
             );
-            $columns = $this->schema()->columns();
+            $columns = $this->getSchema()->columns();
             if (count($fields) === count(array_intersect($fields, $columns))) {
                 $query->select($fields);
             }

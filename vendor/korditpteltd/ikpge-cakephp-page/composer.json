@@ -1,5 +1,5 @@
 {
-    "name": "korditpteltd/ikpge-cakephp-page",
+    "name": "korditpteltd/kd-cakephp-page",
     "description": "KORDIT CakePHP Page Plugin",
     "type": "cakephp-plugin",
     "keywords": ["kordit", "cakephp", "page"],
@@ -15,16 +15,16 @@
         "source": "https://bitbucket.org/korditpteltd/kd-cakephp-page/src"
     },
     "require": {
-        "cakephp/cakephp": "^4.4",
-        "ikpge-cakephp-page": "1.1@dev"
+        "cakephp/cakephp": ">=3.3.0"
     },
     "require-dev": {
-        "cakephp/cakephp-codesniffer": "^2.3"
+        "cakephp/cakephp-codesniffer": "^2.3",
+        "phpunit/phpunit": "^5.7"
     },
     "autoload": {
         "psr-4": {
             "Page\\": "src"
         }
     },
-    "minimum-stability": "dev"
+    "minimum-stability": "beta"
 }

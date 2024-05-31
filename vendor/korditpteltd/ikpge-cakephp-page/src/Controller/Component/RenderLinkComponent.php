@@ -23,13 +23,13 @@ class RenderLinkComponent extends Component
         'paging'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->controller = $this->_registry->getController();
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $eventMap = [
             'Controller.Page.onRenderLink' => ['callable' => 'onRenderLink', 'priority' => 5]
@@ -48,7 +48,7 @@ class RenderLinkComponent extends Component
     public function onRenderLink(Event $event, Entity $entity, PageElement $element)
     {
         $request = $this->request;
-        $requestParams = $request->params;
+        $requestParams = $request->getParam();
         foreach ($requestParams as $key => $value) {
             if (is_numeric($key) || in_array($key, $this->reservedKeys)) {
                 unset($requestParams[$key]);

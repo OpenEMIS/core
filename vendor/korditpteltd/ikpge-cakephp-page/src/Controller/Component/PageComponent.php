@@ -46,7 +46,8 @@ class PageComponent extends Component
         'edit' => true,
         'delete' => true,
         'download' => false,
-        'search' => true
+        'search' => true,
+        'reorder' => true
     ];
 
     private $cakephpReservedPassKeys = [
@@ -79,7 +80,7 @@ class PageComponent extends Component
         'labels' => [] // used in add() for setting default labels
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->controller = $this->_registry->getController();
@@ -93,14 +94,22 @@ class PageComponent extends Component
         $this->viewVars = new ArrayObject();
         $this->status = new PageStatus();
 
-        $this->setHeader(Inflector::humanize(Inflector::underscore($this->controller->name)));
+        $this->setHeader(Inflector::humanize(Inflector::underscore($this->controller->getName())));
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Controller.beforeRender'] = ['callable' => 'beforeRender', 'priority' => 7];
         return $events;
+    }
+
+    public function beforeFilter(Event $event)
+    {
+        $action = $this->request->action;
+        if ($action == 'reorder') {
+            $this->enableReorder($action);
+        }
     }
 
     // Is called after the controller's beforeFilter method but before the controller executes the current action handler.
@@ -121,9 +130,12 @@ class PageComponent extends Component
     public function beforeRender(Event $event)
     {
         $controller = $this->controller;
-        $request = $this->request;
-        $requestQueries = $request->query;
-        $session = $request->session();
+        $request = $this->getController()->getRequest();
+        //$request = $this->request;
+        //$requestQueries = $request->query;
+        $requestQueries = $request->getQuery();
+        $session = $request->getSession();
+        //$action = $request->action;
         $action = $request->action;
         $isGet = $request->is(['get']);
         $isAjax = $request->is(['ajax']);
@@ -136,17 +148,33 @@ class PageComponent extends Component
                 $this->loadDataToElements($data, false);
             } elseif ($action == 'index') { // populate entities with action permissions
                 foreach ($data as $entity) {
+                    // disabled actions
                     $disabledActions = [];
                     $event = $controller->dispatchEvent('Controller.Page.getEntityDisabledActions', [$entity], $this);
 
-                    if ($event->result) {
-                        $disabledActions = $event->result;
+                    if ($event->getResult()) {
+                        $disabledActions = $event->getResult();
                     }
                     if ($entity instanceof Entity) {
                         $entity->disabledActions = $disabledActions;
                     } else {
                         $entity['disabledActions'] = $disabledActions;
                     }
+                    // end
+                    // row actions
+                    $rowActionsArray = $this->getRowActions($entity);
+                    $rowActions = new ArrayObject($rowActionsArray);
+                    $event = $controller->dispatchEvent('Controller.Page.getEntityRowActions', [$entity, $rowActions], $this);
+                    $rowActionsArray = $rowActions->getArrayCopy();
+                    if ($event->getResult()) {
+                        $rowActionsArray = $event->getResult();
+                    }
+                    if ($entity instanceof Entity) {
+                        $entity->rowActions = $rowActionsArray;
+                    } else {
+                        $entity['rowActions'] = $rowActionsArray;
+                    }
+                    // end
 
                     foreach ($this->elements as $element) {
                         $key = $element->getKey();
@@ -160,13 +188,13 @@ class PageComponent extends Component
                             $eventName = $prefix . ucfirst($controlType);
                             $eventParams = [$entity, $element];
                             $event = $controller->dispatchEvent($eventName, $eventParams, $this);
-                            if ($event->result) { // trigger render<Format>
-                                $value = $event->result;
+                            if ($event->getResult()) { // trigger render<Format>
+                                $value = $event->getResult();
                             } else {
                                 $eventName = $prefix . Inflector::camelize($key);
                                 $event = $controller->dispatchEvent($eventName, $eventParams, $this);
-                                if ($event->result) { // trigger render<Field>
-                                    $value = $event->result;
+                                if ($event->getResult()) { // trigger render<Field>
+                                    $value = $event->getResult();
                                 }
                             }
                             if (!is_null($value)) {
@@ -228,12 +256,25 @@ class PageComponent extends Component
 
             if ($this->hasMainTable()) {
                 $table = $this->getMainTable();
-                if (array_key_exists('paging', $request->params)) {
-                    $paging = $request->params['paging'][$table->alias()];
+                $columns = $table->getSchema()->columns();
+                if (array_key_exists('paging', $request->getParam('paging'))) {
+                    $paging = $request->getParam('paging')[$table->getAlias()];
                     $paging['limitOptions'] = $this->limitOptions;
                     $this->setVar('paging', $paging);
                 }
             }
+
+            if (!in_array($this->getConfig('sequence'), $columns) || !($this->isActionAllowed('reorder') && $this->isActionAllowed('edit'))) {
+                $this->disable(['reorder']);
+            }
+
+            $disabledActions = [];
+            foreach ($this->actions as $action => $value) {
+                if ($value == false) {
+                    $disabledActions[] = $action;
+                }
+            }
+            $this->setVar('disabledActions', $disabledActions);
         }
 
         if ($session->check('alert')) {
@@ -267,7 +308,7 @@ class PageComponent extends Component
         $table = $this->controller->{$model};
 
         if ($table === false) {
-            $table = TableRegistry::get($model);
+            $table = TableRegistry::getTableLocator()->get($model);
         }
 
         $options = [];
@@ -275,7 +316,7 @@ class PageComponent extends Component
         $finderOptions = ['limit' => 1000, 'querystring' => $querystring];
 
         foreach ($querystring as $key => $value) {
-            if (in_array($key, $table->schema()->columns())) {
+            if (in_array($key, $table->getSchema()->columns())) {
                 $conditions[$key] = $querystring[$key];
             }
         }
@@ -297,11 +338,13 @@ class PageComponent extends Component
 
     public function isDebugMode()
     {
-        $request = $this->request;
+        //$request = $this->request;
+        $request = $this->getController()->getRequest();
         $debugConfig = Configure::read('debug');
-        $debugRequest = $this->request->query('debug') === 'true';
+        $debugRequest = $request->getQuery['debug'] === 'true';
         $httpGET = $request->is('get');
         $httpPOST = $request->is('post');
+
 
         if (($debugConfig && $this->debug && $httpGET)
         ||  ($debugConfig && $debugRequest && $httpPOST)) {
@@ -317,7 +360,7 @@ class PageComponent extends Component
         if (version_compare($cakephpVersion, '3.4.0', '>=')) {
             $ext = $this->request->getParam('_ext');
         } else {
-            $ext = $this->request->param('_ext');
+            $ext = $this->request->getParam('_ext');
         }
 
         return $ext === 'json';
@@ -337,7 +380,8 @@ class PageComponent extends Component
 
     public function setAlert($message, $type = 'success', $reset = false)
     {
-        $session = $this->request->session();
+        //$session = $this->request->getSession();
+        $session = $this->getController()->getRequest()->getSession();
 
         $alert = [];
 
@@ -409,7 +453,7 @@ class PageComponent extends Component
     // to get the action handling the current request
     public function getAction()
     {
-        $action = version_compare(Configure::version(), '3.4.0', '>=') ? $this->request->getParam('action') : $this->request->param('action');
+        $action = version_compare(Configure::version(), '3.4.0', '>=') ? $this->request->getParam('action') : $this->request->getParam('action');
         return $action;
     }
 
@@ -426,11 +470,12 @@ class PageComponent extends Component
     public function throwMissingActionException()
     {
         $request = $this->request;
+        $requestPrefix = $request->getParam('prefix');
         throw new MissingActionException([
-            'controller' => $this->controller->name . "Controller",
-            'action' => $request->params['action'],
-            'prefix' => isset($request->params['prefix']) ? $request->params['prefix'] : '',
-            'plugin' => $request->params['plugin'],
+            'controller' => $this->controller->getName() . "Controller",
+            'action' => $request->getParam('action'),
+            'prefix' => (null !== $requestPrefix) ? $requestPrefix : '',
+            'plugin' => $request->getParam('plugin'),
         ]);
     }
 
@@ -470,7 +515,7 @@ class PageComponent extends Component
     public function autoConditions(Table $table)
     {
         $conditions = [];
-        $columns = $table->schema()->columns();
+        $columns = $table->getSchema()->columns();
         $querystring = $this->getQueryString();
         foreach ($querystring as $key => $value) {
             if (in_array($key, $columns)) {
@@ -488,15 +533,15 @@ class PageComponent extends Component
             $contain = [];
             foreach ($table->associations() as $assoc) {
                 if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                    $columns = $assoc->schema()->columns();
+                    $columns = $assoc->getSchema()->columns();
 
                     if (in_array('name', $columns)) {
-                        $contain[$assoc->name()] = ['fields' => [
+                        $contain[$assoc->getName()] = ['fields' => [
                             $assoc->aliasField('id'),
                             $assoc->aliasField('name')
                         ]];
                     } else {
-                        $contain[] = $assoc->name();
+                        $contain[] = $assoc->getName();
                     }
                 }
             }
@@ -569,7 +614,7 @@ class PageComponent extends Component
 
     public function attachPrimaryKey(Table $table, &$entity)
     {
-        $primaryKey = $table->primaryKey();
+        $primaryKey = $table->getPrimaryKey();
 
         if ($entity instanceof Entity) {
             if (!is_array($primaryKey)) { // primary key is not composite key
@@ -600,7 +645,7 @@ class PageComponent extends Component
     {
         $value = $options['searchText'];
         $types = ['string', 'text'];
-        $schema = $table->schema();
+        $schema = $table->getSchema();
         $columns = $schema->columns();
         $wildcard = $options['wildcard'];
 
@@ -615,7 +660,7 @@ class PageComponent extends Component
 
         $OR = [];
         foreach ($columns as $name) {
-            $columnInfo = $schema->column($name);
+            $columnInfo = $schema->getColumn($name);
             if ($name == 'id' || $name == 'password' || $this->isExcluded($name)) {
                 continue;
             }
@@ -647,7 +692,7 @@ class PageComponent extends Component
 
     public function setQueryString($key, $value, $replace = false /* set value only if the key does not exists */)
     {
-        $querystring = $this->request->query('querystring');
+        $querystring = $this->request->getQuery['querystring'];
         if ($querystring) {
             $querystring = json_decode($this->hexToStr($querystring), true);
             if (is_null($value) && array_key_exists($key, $querystring)) { // if value is null, the key will be removed from querystring
@@ -662,15 +707,16 @@ class PageComponent extends Component
         }
 
         if (!empty($querystring)) {
-            $this->request->query['querystring'] = $this->encode($querystring);
+            $this->request->getQuery['querystring'] = $this->encode($querystring);
         } else {
-            unset($this->request->query['querystring']);
+            unset($this->request->getQuery['querystring']);
         }
     }
 
     public function getQueryString($key = null)
     {
-        $querystring = $this->request->query('querystring');
+        $querystring = $this->request->getQuery['querystring'];
+
         if ($querystring) {
             $querystring = json_decode($this->hexToStr($querystring), true);
             if (!is_null($key)) {
@@ -720,6 +766,61 @@ class PageComponent extends Component
         return $this->queryOptions;
     }
 
+    public function getRowActions($entity)
+    {
+        $url = ['plugin' => $this->request->getParam('plugin'), 'controller' => $this->request->getParam('controller')];
+        $primaryKey = !is_array($entity) ? $entity->getPrimaryKey() : $entity['primaryKey']; // $entity may be Entity or array
+        $view = true;
+        $edit = true;
+        $delete = true;
+        // disabled actions for each row
+        if (!is_array($entity)) {
+            if ($entity->has('disabledActions')) {
+                $view = !in_array('view', $entity->disabledActions);
+                $edit = !in_array('edit', $entity->disabledActions);
+                $delete = !in_array('delete', $entity->disabledActions);
+            }
+        } else {
+            if (array_key_exists('disabledActions', $entity)) {
+                $view = !in_array('view', $entity['disabledActions']);
+                $edit = !in_array('edit', $entity['disabledActions']);
+                $delete = !in_array('delete', $entity['disabledActions']);
+            }
+        }
+        // end
+        // disabled actions for a page
+        $disabledActions = [];
+        foreach ($this->actions as $action => $value) {
+            if ($value == false) {
+                $disabledActions[] = $action;
+            }
+        }
+        // end
+        $rowActions = [];
+        if (!in_array('view', $disabledActions) && $view == true) {
+            $rowActions['view'] = [
+                'url' => $this->getUrl(array_merge($url, ['action' => 'view', $primaryKey])),
+                'icon' => 'fa fa-eye',
+                'title' => __('View')
+            ];
+        }
+        if (!in_array('edit', $disabledActions) && $edit == true) {
+            $rowActions['edit'] = [
+                'url' => $this->getUrl(array_merge($url, ['action' => 'edit', $primaryKey])),
+                'icon' => 'fa fa-pencil',
+                'title' => __('Edit')
+            ];
+        }
+        if (!in_array('delete', $disabledActions) && $delete == true) {
+            $rowActions['delete'] = [
+                'url' => $this->getUrl(array_merge($url, ['action' => 'delete', $primaryKey])),
+                'icon' => 'fa fa-trash',
+                'title' => __('Delete')
+            ];
+        }
+        return $rowActions;
+    }
+
     public function setPaginateOption($key, $value)
     {
         $this->paginateOptions->offsetSet($key, $value);
@@ -762,7 +863,7 @@ class PageComponent extends Component
     public function showElements($show = null)
     {
         if (is_null($show)) {
-            $requestQueries = $this->request->query;
+            $requestQueries = $this->request->getQuery();
             if ($this->showElements == false) {
                 if (array_key_exists('elements', $requestQueries) && $requestQueries['elements'] == 'true') {
                     return true;
@@ -778,30 +879,31 @@ class PageComponent extends Component
     {
         $this->clear();
         $this->mainTable = $table;
-        $schema = $table->schema();
+        $schema = $table->getSchema();
         $columns = $schema->columns();
 
         foreach ($columns as $columnName) {
             if (!in_array($columnName, $this->excludedFields)) {
-                $attributes = $schema->column($columnName);
+                $attributes = $schema->getColumn($columnName);
                 $foreignKey = $this->isForeignKey($table, $columnName);
                 $attributes['foreignKey'] = $foreignKey;
-                $attributes['model'] = $table->alias();
+                $attributes['model'] = $table->getAlias();
                 $element = new PageElement($columnName, $attributes);
                 if (in_array($attributes['type'], ['string', 'text', 'integer', 'date', 'datetime']) && !$foreignKey) {
                     $element->setSortable(true);
                 }
+
                 // setup displayFrom
                 if ($foreignKey) {
                     $belongsTo = $table->{$foreignKey['name']};
-                    $entity = $belongsTo->newEntity();
-
-                    $columns = array_merge($entity->visibleProperties(), $belongsTo->schema()->columns());
-
+                    $entity = $belongsTo->newEntity([]);
+                    //$columns = array_merge($entity->visibleProperties(), $belongsTo->getSchema()->columns());
+                    $columns = array_merge($entity->getVisible(), $belongsTo->getSchema()->columns());
+                    //$columns = $belongsTo->getSchema()->columns();
                     if (in_array('name', $columns)) {
                         $element->setDisplayFrom($foreignKey['property'].'.name');
                     } else {
-                        $element->setDisplayFrom($foreignKey['property'].'.'.$belongsTo->displayField());
+                        $element->setDisplayFrom($foreignKey['property'].'.'.$belongsTo->getDisplayField());
                     }
                 }
 
@@ -809,7 +911,7 @@ class PageComponent extends Component
             }
         }
 
-        $primaryKey = $table->primaryKey();
+        $primaryKey = $table->getPrimaryKey();
         if (!is_array($primaryKey)) {
             $this->get($primaryKey)->setControlType('hidden');
         }
@@ -894,12 +996,12 @@ class PageComponent extends Component
 
     public function attachDefaultValidation(Table $table)
     {
-        $validator = $table->validator();
-        $schema = $table->schema();
+        /*$validator = $table->validator();
+        $schema = $table->getSchema();
         $columns = $schema->columns();
 
         foreach ($columns as $key) {
-            $attr = $schema->column($key);
+            $attr = $schema->getColumn($key);
             if ($validator->hasField($key)) {
                 $set = $validator->field($key);
 
@@ -915,7 +1017,7 @@ class PageComponent extends Component
                 if (array_key_exists('null', $attr)) {
                     if ($attr['null'] === false // not nullable
                         && (array_key_exists('default', $attr) && strlen($attr['default']) == 0) // don't have a default value in database
-                        && $key !== $table->primaryKey() // not a primary key
+                        && $key !== $table->getPrimaryKey() // not a primary key
                         && !in_array($key, $this->excludedFields)) { // fields not excluded
                         $validator->add($key, 'notBlank', ['rule' => 'notBlank']);
                         if ($this->isForeignKey($table, $key)) {
@@ -924,7 +1026,7 @@ class PageComponent extends Component
                     }
                 }
             }
-        }
+        }*/
     }
 
     public function get($key)
@@ -946,7 +1048,7 @@ class PageComponent extends Component
     {
         if (!array_key_exists('model', $attributes)) {
             if ($this->hasMainTable()) {
-                $attributes['model'] = $this->mainTable->alias();
+                $attributes['model'] = $this->mainTable->getAlias();
             }
         }
 
@@ -957,7 +1059,7 @@ class PageComponent extends Component
 
     public function add(PageElement $element)
     {
-        $labels = $this->config('labels');
+        $labels = $this->getConfig('labels');
         $key = $element->getKey();
         if (array_key_exists($key, $labels)) {
             $element->setLabel($labels[$key]);
@@ -1040,7 +1142,7 @@ class PageComponent extends Component
             } elseif ($foreignKey) {
                 $associationName = $foreignKey['name'];
                 $association = $table->{$associationName};
-                $columns = $association->schema()->columns();
+                $columns = $association->getSchema()->columns();
 
                 // if finder OptionList exists, call finder
                 // else call findList and format results
@@ -1184,11 +1286,22 @@ class PageComponent extends Component
     {
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
-                    return ['name' => $assoc->name(), 'property' => $assoc->property()];
+                if ($field === $assoc->getForeignKey()) {
+                    return ['name' => $assoc->getName(), 'property' => $assoc->getProperty()];
                 }
             }
         }
         return false;
+    }
+
+    private function enableReorder($action)
+    {
+        if ($this->request->is('post')) {
+            $token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
+            $this->request->env('HTTP_X_CSRF_TOKEN', $token);
+        }
+        $this->controller->Security->config('unlockedActions', [
+            $action
+        ]);
     }
 }
