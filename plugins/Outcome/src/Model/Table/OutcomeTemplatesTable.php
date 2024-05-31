@@ -238,4 +238,24 @@ class OutcomeTemplatesTable extends ControllerActionTable
             $this->Alert->success('OutcomeTemplates.addSuccess', ['reset' => true]);
         }
     }
+
+    //POCOR-8253 
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        // Check if any associated records exist in any related tables.
+        $associatedRecordsExist = 
+            $this->Periods->exists(['outcome_template_id' => $entity->id]) ||
+            $this->Criterias->exists(['outcome_template_id' => $entity->id]) ||
+            $this->InstitutionOutcomeResults->exists(['outcome_template_id' => $entity->id]) ||
+            $this->InstitutionOutcomeSubjectComments->exists(['outcome_template_id' => $entity->id]);
+        // If associated records exist, show alert message and abort deletion
+        if ($associatedRecordsExist) {
+            $message = __('Delete operation is not allowed as there are other information linked to this record.');
+            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+            
+            $url = $this->controller->request->referer();
+            $event->stopPropagation();
+            return $this->controller->redirect($url);
+        }
+    }
 }

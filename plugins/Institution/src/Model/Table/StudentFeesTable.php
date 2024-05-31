@@ -284,21 +284,39 @@ class StudentFeesTable extends ControllerActionTable
     {
         $this->InstitutionFees = TableRegistry::get('Institution.InstitutionFees');
         $this->InstitutionFeeEntity = $this->InstitutionFees
-                        ->find()
-                        ->contain([ // POCOR-8024 start
-                            'InstitutionFeeTypes' => function ($q) {
-                                return $q
-                                    ->select(['FeeTypes.id', 'FeeTypes.name', 'InstitutionFeeTypes.institution_fee_id'])
-                                    ->contain(['FeeTypes'])
-                                    ->order(['FeeTypes.order ASC']);// POCOR-8024 end
-                            }
-                        ])
-                        ->where([
-                            'InstitutionFees.education_grade_id' => $entity->education_grade_id,
-                            'InstitutionFees.academic_period_id' => $entity->academic_period_id,
-                            'InstitutionFees.institution_id' => $entity->institution_id
-                        ])
-                        ->first();
+        ->find()
+        ->select([
+            'InstitutionFees.id',
+            'InstitutionFees.total',
+            'InstitutionFees.institution_id',
+            'InstitutionFees.academic_period_id',
+            'InstitutionFees.education_grade_id',
+            'InstitutionFees.modified_user_id',
+            'InstitutionFees.modified',
+            'InstitutionFees.created_user_id',
+            'InstitutionFees.created'
+        ])
+        ->contain([
+            'InstitutionFeeTypes' => function ($q) {
+                return $q  //POCOR-8024 and POCOR-8255
+                    ->select([
+                        'InstitutionFeeTypes.id',
+                        'InstitutionFeeTypes.amount',
+                        'InstitutionFeeTypes.institution_fee_id',
+                        'FeeTypes.id',
+                        'FeeTypes.name'
+                    ])
+                    ->contain(['FeeTypes'])
+                    ->where(['InstitutionFeeTypes.amount >' => 0]) // POCOR-8177 fetch only records where amount > 0
+                    ->order(['FeeTypes.order ASC']);
+            }
+        ])
+        ->where([
+            'InstitutionFees.education_grade_id' => $entity->education_grade_id,
+            'InstitutionFees.academic_period_id' => $entity->academic_period_id,
+            'InstitutionFees.institution_id' => $entity->institution_id
+        ])
+        ->first();
         $feeTypes = [];
         foreach ($this->InstitutionFeeEntity->institution_fee_types as $key=>$obj) {
             $feeTypes[] = [
@@ -388,23 +406,39 @@ class StudentFeesTable extends ControllerActionTable
         $this->fields['outstanding_fee']['type'] = 'readonly';
 
         $this->InstitutionFeeEntity = $this->InstitutionFees
-                ->find()
-                ->contain([ // POCOR-8024 start
-                    'InstitutionFeeTypes' => function ($q) {
-                        return $q
-                            ->select(['FeeTypes.id', 'FeeTypes.name', 'InstitutionFeeTypes.institution_fee_id']) // Include institution_fee_id
-                            ->contain(['FeeTypes'])
-                            ->order(['FeeTypes.order ASC']); // POCOR-8024 end
-                    }
-                ])
-                ->where([
-                    'InstitutionFees.education_grade_id' => $entity->education_grade_id,
-                    'InstitutionFees.academic_period_id' => $entity->academic_period_id,
-                    'InstitutionFees.institution_id' => $entity->institution_id
-                ])
-                ->first()
-                ;
-
+        ->find()
+        ->select([
+            'InstitutionFees.id',
+            'InstitutionFees.total',
+            'InstitutionFees.institution_id',
+            'InstitutionFees.academic_period_id',
+            'InstitutionFees.education_grade_id',
+            'InstitutionFees.modified_user_id',
+            'InstitutionFees.modified',
+            'InstitutionFees.created_user_id',
+            'InstitutionFees.created'
+        ])
+        ->contain([
+            'InstitutionFeeTypes' => function ($q) {
+                return $q  //POCOR-8024 and POCOR-8255
+                    ->select([
+                        'InstitutionFeeTypes.id',
+                        'InstitutionFeeTypes.amount',
+                        'InstitutionFeeTypes.institution_fee_id',
+                        'FeeTypes.id',
+                        'FeeTypes.name'
+                    ])
+                    ->contain(['FeeTypes'])
+                    ->where(['InstitutionFeeTypes.amount >' => 0]) // POCOR-8177 fetch only records where amount > 0
+                    ->order(['FeeTypes.order ASC']);
+            }
+        ])
+        ->where([
+            'InstitutionFees.education_grade_id' => $entity->education_grade_id,
+            'InstitutionFees.academic_period_id' => $entity->academic_period_id,
+            'InstitutionFees.institution_id' => $entity->institution_id
+        ])
+        ->first();
         /**
          * Hidden fields value
          */

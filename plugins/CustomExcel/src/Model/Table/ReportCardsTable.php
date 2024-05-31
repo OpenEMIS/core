@@ -293,7 +293,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionStudentsReportCards(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('report_card_id', $params) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra)) {
+        if (isset($params['report_card_id'], $params['student_id'], $params['institution_id'], $params['academic_period_id'], $extra['report_card_education_grade_id'])) {
             $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
             $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
             $dateFormat = $ConfigItems->value('date_format');
