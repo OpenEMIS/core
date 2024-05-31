@@ -65,6 +65,7 @@ class IdentitiesTable extends ControllerActionTable
             ],
             ]);
         $this->addBehavior('User.SetupTab');
+        $this->addBehavior('User.UserTab');
         $this->excludeDefaultValidations(['security_user_id']);
     }
 
