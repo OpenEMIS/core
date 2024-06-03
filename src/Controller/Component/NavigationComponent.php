@@ -881,22 +881,14 @@ class NavigationComponent extends Component
                 'title' => 'Students',
                 'parent' => 'Institution.Behaviour',
                 'selected' => ['Institutions.StudentBehaviours',
-                    'StudentBehaviourAttachments.index',
-                    'StudentBehaviourAttachments.view',
-                    'StudentBehaviourAttachments.add',
-                    'StudentBehaviourAttachments.edit',
-                    'StudentBehaviourAttachments.delete'],
+                    'Institutions.StudentBehaviourAttachments'],
             ],
 
             'Institutions.StaffBehaviours.index' => [
                 'title' => 'Staff',
                 'parent' => 'Institution.Behaviour',
                 'selected' => ['Institutions.StaffBehaviours',
-                    'StaffBehaviourAttachments.index',
-                    'StaffBehaviourAttachments.view',
-                    'StaffBehaviourAttachments.add',
-                    'StaffBehaviourAttachments.edit',
-                    'StaffBehaviourAttachments.delete'],
+                    'Institutions.StaffBehaviourAttachments'],
             ],
 
             'Institution.Performance' => [
@@ -1584,11 +1576,7 @@ class NavigationComponent extends Component
                     'Staff.Guardians',
                     'Staff.Languages',
                     'Staff.Attachments',
-                    'StaffComments.index',
-                    'StaffComments.view',
-                    'StaffComments.add',
-                    'StaffComments.edit',
-                    'StaffComments.delete',
+                    'Staff.Comments',
                     'Staff.History',
                     'Staff.Demographic']
             ],
