@@ -525,7 +525,7 @@ class HtmlFieldHelper extends Helper
                     
                 }
                 $imageDefault = (array_key_exists('imageDefault', $attr) && $attr['imageDefault'])? '<i class='.$attr['imageDefault'].'></i>': '';
-     //            $value= '<div class="table-thumb"
+                    // $value= '<div class="table-thumb"
 					// data-load-image=true
 					// data-image-width='.$maxImageWidth.'
 					// data-image-url='.$imageUrl.'
@@ -559,16 +559,15 @@ class HtmlFieldHelper extends Helper
             $defaultImgViewClass = $this->table->getDefaultImgViewClass();
             $defaultImgMsg = $this->table->getDefaultImgMsg();
             $defaultImgView = $this->table->getDefaultImgView();
-
+            
             $showRemoveButton = false;
-            // if (isset($data[$attr['field']]['tmp_name'])) {
-            // if (!empty($data[$attr['field']]->getStream()->getMetadata('uri'))) {
-            //     $tmp_file = ((is_array($data[$attr['field']]->getStream()->getMetadata('uri'))) && (file_exists($data[$attr['field']]->getStream()->getMetadata('uri')))) ?$data[$attr['field']]->getStream()->getMetadata('uri') : "";
-            //     $tmp_file_read = (!empty($tmp_file)) ? file_get_contents($tmp_file) : "";
-            // } else {
-            //     $tmp_file = true;
-            //     $tmp_file_read = $data[$attr['field']];
-            // }
+            if (isset($data[$attr['field']]['tmp_name'])) {
+                $tmp_file = ((is_array($data[$attr['field']])) && (file_exists($data[$attr['field']]['tmp_name']))) ? $data[$attr['field']]['tmp_name'] : "";
+                $tmp_file_read = (!empty($tmp_file)) ? file_get_contents($tmp_file) : "";
+            } else {
+                $tmp_file = true;
+                $tmp_file_read = $data[$attr['field']];
+            }
 
             if (!is_resource($tmp_file_read)) {
                 $src = (!empty($tmp_file_read)) ? '<img id="existingImage" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode($tmp_file_read).'"/>' : $defaultImgView;

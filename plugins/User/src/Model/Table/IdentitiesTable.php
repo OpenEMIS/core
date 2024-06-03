@@ -19,34 +19,6 @@ class IdentitiesTable extends ControllerActionTable
 {
     const ISPREFERRED = 1;
 
-    public static function validateCustomIdentityType($field, array $globalData)
-    {
-        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
-        $model = $globalData['providers']['table'];
-        $conditions = [];
-        if (!empty($globalData['data']['id'])) {
-            $conditions[$UserIdentities->aliasField('id') . ' NOT IN'] = $globalData['data']['id'];
-        }
-
-        if (!(array_key_exists('security_user_id', $globalData['data']))) {
-            return true;
-        } else if (array_key_exists('identity_type_id', $globalData['data']) && !empty($globalData['data']['identity_type_id'])) {
-            $IdentityTypesData = $UserIdentities
-                ->find()
-                ->where([
-                    $UserIdentities->aliasField('security_user_id') => $globalData['data']['security_user_id'],
-                    $UserIdentities->aliasField('identity_type_id') => $field,
-                    $UserIdentities->aliasField('nationality_id') => $globalData['data']['nationality_id'],
-                    $conditions
-                ])
-                ->first();
-        }
-        if (!empty($IdentityTypesData)) {
-            return $model->getMessage('User.Identities.identity_type_id.custom_validation');
-        }
-        return true;
-    }
-
     public function initialize(array $config): void
     {
         $this->setTable('user_identities');
@@ -126,7 +98,6 @@ class IdentitiesTable extends ControllerActionTable
     {
         $pattern = '';
 
-
         if (array_key_exists('identity_type_id', $options) && !empty($options['identity_type_id'])) {
             $identityTypeId = $options['identity_type_id'];
         } else {
@@ -148,7 +119,6 @@ class IdentitiesTable extends ControllerActionTable
             $pattern = '/' . $IdentityTypesData->validation_pattern . '/';
         }
 
-
         // custom validation is nullable, have to cater for the null pattern.
         if (!empty($pattern) && !preg_match($pattern, $identityNumber)) {
             return __("Please enter a valid Identity Number");
@@ -159,7 +129,6 @@ class IdentitiesTable extends ControllerActionTable
 
     public function beforeAction($event, ArrayObject $extra)
     {
-        $session = $this->request->getSession();
         $UserNationalityTable = TableRegistry::get('User.UserNationalities');
         $users = TableRegistry::get('User.Users');
         $userId = null;
@@ -281,14 +250,12 @@ class IdentitiesTable extends ControllerActionTable
 
         }
         // End POCOR-5188
-
     }
 
     /*POCOR-6267 Starts*/
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $userId = $this->getUserID();
-
         $query->where([$this->aliasField('security_user_id') => $userId]);
     }
 
@@ -309,6 +276,7 @@ class IdentitiesTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('issue_date', 'ruleCompareDate', [
                 'rule' => ['compareDate', 'expiry_date', false]
@@ -341,7 +309,7 @@ class IdentitiesTable extends ControllerActionTable
         return $validator->requirePresence('security_user_id', false);
     }
 
-    public function validationNonMandatory(Validator $validator): Validator
+    public function validationNonMandatory(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
         return $validator->allowEmpty('number');
