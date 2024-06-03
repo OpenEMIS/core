@@ -193,6 +193,9 @@ class IdentitiesTable extends ControllerActionTable
             }
         }
         /*POCOR-6396 starts*/
+        if($this->request->getParam('controller') == 'Staff') {
+            $this->field('security_user_id', ['attr' => ['value' => $userId], 'type' => 'hidden']);
+        }
         $this->fields['identity_type_id']['type'] = 'select';
         $this->fields['nationality_id']['type'] = 'select';
         $this->fields['nationality_id']['options'] = (!empty($NationalityOptions)) ? $NationalityOptions : ['' => $this->getMessage('general.select.noOptions')]; //POCOR-6396

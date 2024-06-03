@@ -68,6 +68,9 @@ class StudentBehavioursTable extends AppTable {
 	    	$session = $this->request->getSession();
 	        $studentId = $session->read('Student.Students.id');
 	    }/*POCOR-6267 ends*/ 
+		if($this->controller->getName()!= null && ($this->controller->getName() == 'Students' || $this->controller->getName() == 'Directories')) {
+			$studentId = $this->getQueryString('student_id');
+		}
 	    if(!empty($studentId)){ //POCOR-7196
 		    $conditions[$this->aliasField('student_id')] = $studentId;
 			$query->where($conditions, [], true); 
