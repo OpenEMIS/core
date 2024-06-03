@@ -313,7 +313,6 @@ class InstitutionRepository extends Controller
         }
     }
 
-
     public function getInstitutionGradeData(int $institutionId, int $gradeId)
     {
         try {
@@ -462,17 +461,23 @@ class InstitutionRepository extends Controller
                 $institutionClasses = $institutionClasses->orderBy($col, $orderBy);
             }
 
-            $limit = config('constantvalues.defaultPaginateLimit');
+            $institutionClasses = $institutionClasses->where('institution_id', $institutionId);
+
+            if(isset($params['education_grade_id'])){
+                $gradeId  = $params['education_grade_id'];
+                $institutionClasses = $institutionClasses->whereHas('grades', function ($query) use ($gradeId){
+                    $query->where('education_grade_id', '=', $gradeId); 
+                });
+            }
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
+                $list = $institutionClasses->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $institutionClasses->get()->toArray();
             }
 
-            //$list = $institutionClasses->where('institution_id', $institutionId)->get();
-            $list = $institutionClasses->where('institution_id', $institutionId)->paginate($limit);
-
             return $list;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch data from DB',
@@ -826,16 +831,19 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constantvalues.defaultPaginateLimit');
+            $institutionShifts = $institutionShifts->where('institution_id', $institutionId);
+
+            if(isset($params['location_institution_id'])){
+                $institutionShifts = $institutionShifts->where('location_institution_id', $params['location_institution_id']);
+            }
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
+                $list = $institutionShifts->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $institutionShifts->get()->toArray();
             }
 
-
-            //$list = $institutionShifts->where('institution_id', $institutionId)->get();
-            $list = $institutionShifts->where('institution_id', $institutionId)->paginate($limit);
-            
             return $list;
 
         } catch (\Exception $e) {
@@ -1720,7 +1728,6 @@ class InstitutionRepository extends Controller
         }
     }
 
-
     public function getInstitutionStaffList($request, int $institutionId)
     {
         try {
@@ -1745,7 +1752,8 @@ class InstitutionRepository extends Controller
                     'institutionPosition:id,staff_position_title_id', 
                     'institutionPosition.staffPositionTitle:id,name', 
                     'staffType:id,name as staff_type_name',
-                    'classes:id,name,staff_id');
+                    'classes:id,name,staff_id',
+                    'user:id,openemis_no,first_name,middle_name,third_name,last_name');
             
 
             //For POCOR-7772 Start
@@ -1761,16 +1769,65 @@ class InstitutionRepository extends Controller
             }
 
 
-            $limit = config('constantvalues.defaultPaginateLimit');
+            $staffs = $staffs->where('institution_staff.institution_id', $institutionId);
+
+            if(isset($params['is_homeroom'])){
+                $currentDate = Carbon::now()->toDateString();
+                $staffs->where('institution_staff.is_homeroom', $params['is_homeroom'])
+                ->where('institution_staff.start_date','<=', $currentDate)
+                ->where(function($query) use ($currentDate) {
+                    $query->where('institution_staff.end_date', '>=', $currentDate)
+                          ->orWhereNull('end_date');
+                });
+            }
+
+            if(isset($params['academic_period_id'])){
+                $academicPeriod = AcademicPeriod::where('id', $params['academic_period_id'])->first()->toArray();
+            }
+            if(isset($params['institution_position_type'])){
+                $positionType = $params['institution_position_type'];
+                $currentDate = Carbon::now()->toDateString();
+                $staffs->whereHas(
+                    'institutionPosition.staffPositionTitle',
+                    function ($q) use($positionType){
+                        $q->where('type', $positionType);
+                    }
+                )
+                ->where(function ($query) use ($academicPeriod) {
+                    $query->whereNotNull('institution_staff.end_date')
+                        ->where('institution_staff.start_date', '<=', $academicPeriod['start_date'])
+                        ->where('institution_staff.end_date', '>=', $academicPeriod['start_date'])
+                        ->orWhere(function ($query) use ($academicPeriod) {
+                            $query->whereNotNull('institution_staff.end_date')
+                                ->where('institution_staff.start_date', '<=', $academicPeriod['end_date'])
+                                ->where('institution_staff.end_date', '>=', $academicPeriod['end_date'])
+                                ->orWhere(function ($query) use ($academicPeriod) {
+                                    $query->whereNotNull('institution_staff.end_date')
+                                        ->where('institution_staff.start_date', '>=', $academicPeriod['start_date'])
+                                        ->where('institution_staff.end_date', '<=', $academicPeriod['end_date']);
+                                });
+                        })
+                        ->orWhere(function ($query) use ($academicPeriod) {
+                            $query->whereNull('institution_staff.end_date')
+                                ->where('institution_staff.start_date', '<=', $academicPeriod['end_date']);
+                        });
+                })
+                ->whereNotNull('institution_staff.institution_position_id')
+                ->where(function ($query) use ($currentDate) {
+                    $query->where('institution_staff.end_date', '>', $currentDate)
+                        ->orWhereNull('institution_staff.end_date');
+                });
+            }
+
 
             if(isset($params['limit'])){
                 $limit = $params['limit'];
+                $list = $staffs->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $staffs->get()->toArray();
             }
 
-            $list = $staffs->where('institution_staff.institution_id', $institutionId)->paginate($limit)->toArray();
-            
             return $list;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -4552,14 +4609,34 @@ class InstitutionRepository extends Controller
     }
 
 
-    public function institutionUnits()
+    public function institutionUnits($params)
     {
-        return InstitutionUnits::select('id', 'name')->get();
+        $list = InstitutionUnits::select('id', 'name');
+
+        $resp = [];
+        if(isset($params['limit'])){
+            $limit = $params['limit'];
+            $resp = $list->paginate($limit)->toArray();
+        } else {
+            $resp['data'] = $list->get();
+        }
+
+        return $resp;
     }
 
-    public function institutionCourses()
+    public function institutionCourses($params)
     {
-        return InstitutionCourses::select('id', 'name')->get();
+        $list =  InstitutionCourses::select('id', 'name');
+
+        $resp = [];
+        if(isset($params['limit'])){
+            $limit = $params['limit'];
+            $resp = $list->paginate($limit)->toArray();
+        } else {
+            $resp['data'] = $list->get()->toArray();
+        }
+
+        return $resp;
     }
 
     public function institutionShifts($institutionId, $academicPeriodId)
@@ -4621,41 +4698,47 @@ class InstitutionRepository extends Controller
         return ConfigItem::where('code', 'max_students_per_subject')->first();
     }
 
-    public function institutionRooms($institutionId, $academicPeriodId)
+    public function institutionRooms($institutionId, $params)
     {
-        $sql = "SELECT
-        `InstitutionRooms`.*,
-        `RoomTypes`.`id` AS `room_types_id`,
-        `RoomTypes`.`name` AS `room_types_name`,
-        `RoomTypes`.`order` AS `room_types_order`,
-        `RoomTypes`.`visible` AS `room_types_visible`,
-        `RoomTypes`.`editable` AS `room_types_editable`,
-        `RoomTypes`.`default` AS `room_types_default`,
-        `RoomTypes`.`classification` AS `room_types_classification`,
-        `RoomTypes`.`international_code` AS `room_types_international_code`,
-        `RoomTypes`.`national_code` AS `room_types_national_code`,
-        `RoomTypes`.`modified_user_id` AS `room_types_modified_user_id`,
-        `RoomTypes`.`modified` AS `room_types_modified`,
-        `RoomTypes`.`created_user_id` AS `room_types_created_user_id`,
-        `RoomTypes`.`created` AS `room_types_created`
-        FROM
-            `institution_rooms` `InstitutionRooms`
-            LEFT JOIN `room_types` `RoomTypes` ON `RoomTypes`.`id` = (
-            `InstitutionRooms`.`room_type_id`
-            )
-        WHERE
-            (
-            `InstitutionRooms`.`institution_id` = $institutionId
-            AND `InstitutionRooms`.`academic_period_id` = $academicPeriodId
-            AND `InstitutionRooms`.`room_status_id` = 1
-            AND `RoomTypes`.`classification` = 1
-            )
-        ORDER BY
-            `RoomTypes`.`order`,
-            `InstitutionRooms`.`code`,
-            `InstitutionRooms`.`name`";
+        $academicPeriodId = $params['academic_period_id'];
+        $rooms = InstitutionRooms::select(
+            'institution_rooms.*',
+            'room_types.id as room_types_id',
+            'room_types.name as room_types_name',
+            'room_types.order as room_types_order',
+            'room_types.visible as room_types_visible',
+            'room_types.editable as room_types_editable',
+            'room_types.default as room_types_default',
+            'room_types.classification as room_types_classification',
+            'room_types.international_code as room_types_international_code',
+            'room_types.national_code as room_types_national_code',
+            'room_types.modified_user_id as room_types_modified_user_id',
+            'room_types.modified as room_types_modified',
+            'room_types.created_user_id as room_types_created_user_id',
+            'room_types.created as room_types_created'
+        )
+        ->leftJoin('room_types', 'room_types.id', '=', 'institution_rooms.room_type_id')
+        ->where('institution_rooms.institution_id', $institutionId)
+        ->where('institution_rooms.academic_period_id', $academicPeriodId);
 
-        return DB::select(DB::raw($sql));
+        if (isset($params['status'])){
+            $rooms = $rooms->where('institution_rooms.room_status_id', $params['status']);
+        }
+
+        if (isset($params['classification'])) {
+            $rooms = $rooms->where('room_types.classification', $params['classification']);
+        }
+
+        $rooms = $rooms->orderBy('room_types.order')
+        ->orderBy('institution_rooms.code')
+        ->orderBy('institution_rooms.name');
+
+        if(isset($params['limit'])) {
+            $list = $rooms->paginate($params['limit']);
+        } else {
+            $list['data'] = $rooms->get();
+        }
+        return $list;
     }
 
     public function getClass($classId)

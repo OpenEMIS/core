@@ -534,7 +534,6 @@ class InstitutionController extends Controller
         }
     }
 
-
     public function getInstitutionStaffList(Request $request, int $institutionId)
     {
         try {
@@ -1898,10 +1897,11 @@ class InstitutionController extends Controller
         }
     }
 
-    public function units()
+    public function units(Request $request)
     {
         try {
-            $data = $this->institutionService->units();
+            $params = $request->all();
+            $data = $this->institutionService->units($params);
 
             return $this->sendSuccessResponse("Successful", $data);
 
@@ -1915,10 +1915,11 @@ class InstitutionController extends Controller
         }
     }
 
-    public function courses()
+    public function courses(Request $request)
     {
         try {
-            $data = $this->institutionService->courses();
+            $params = $request->all();
+            $data = $this->institutionService->courses($params);
 
             return $this->sendSuccessResponse("Successful", $data);
 
@@ -1932,19 +1933,21 @@ class InstitutionController extends Controller
         }
     }
 
-    public function rooms($institutionId, $academicPeriodId)
+    public function rooms($institutionId, Request $request)
     {
         try {
 
+            $params = $request->all();
             $validateInstitution = $this->institutionService->validateInstitution($institutionId);
 
+            $academicPeriodId = $params['academic_period_id'];
             $validateAcademicPeriod = $this->institutionService->validateAcademicPeriod($academicPeriodId);
 
             if (!$validateInstitution || !$validateAcademicPeriod) {
                 return $this->sendErrorResponse('Unsuccessful-Invalid Parameters');
             }
 
-            $data = $this->institutionService->rooms($institutionId, $academicPeriodId);
+            $data = $this->institutionService->rooms($institutionId, $params);
 
             return $this->sendSuccessResponse("Successful", $data);
 

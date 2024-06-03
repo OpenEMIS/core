@@ -775,7 +775,6 @@ class InstitutionService extends Controller
         }
     }
 
-
     public function getInstitutionStaffList($request, int $institutionId)
     {
         try {
@@ -815,6 +814,8 @@ class InstitutionService extends Controller
                     $list[$k]['staff_status_name'] = $d['staff_status']['staff_status_name']??"";
                     $list[$k]['institution_id'] = $d['institution_id'];
                     $list[$k]['institution_position_id'] = $d['institution_position_id'];
+                    $list[$k]['is_homeroom'] = $d['is_homeroom'];
+                    $list[$k]['user'] = $d['user'];
                     
                     // For POCOR-8251 start...
                     $list[$k]['classes'] = $classData;
@@ -832,12 +833,18 @@ class InstitutionService extends Controller
                 }
             }
             
+            if(isset($request['is_homeroom']) || isset($request['institution_position_type'])){
+                $list = collect($list)->sortBy(function ($item) {
+                    return $item['user']['full_name'];
+                }, SORT_REGULAR, false)->values()->all();
+            }
 
             $data['data'] = $list;
 
             return $data;
             
         } catch (\Exception $e) {
+
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -2449,19 +2456,19 @@ class InstitutionService extends Controller
         return  $this->institutionRepository->staffs($institutionId);
     }
 
-    public function units()
+    public function units($params)
     {
-        return $this->institutionRepository->institutionUnits();
+        return $this->institutionRepository->institutionUnits($params);
     }
 
-    public function courses()
+    public function courses($params)
     {
-        return $this->institutionRepository->institutionCourses();
+        return $this->institutionRepository->institutionCourses($params);
     }
 
-    public function rooms($institutionId, $academicPeriodId)
+    public function rooms($institutionId, $params)
     {
-        return  $this->institutionRepository->institutionRooms($institutionId, $academicPeriodId);
+        return  $this->institutionRepository->institutionRooms($institutionId, $params);
     }
 
     public function subjectClasses($institutionId, $academicPeriodId, $educationGradeId)
