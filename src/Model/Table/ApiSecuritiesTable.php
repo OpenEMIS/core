@@ -10,7 +10,7 @@ use App\Model\Table\AppTable;
 
 class ApiSecuritiesTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsToMany('ApiScopes', [

@@ -6,19 +6,20 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
 use Cake\Utility\Hash;
+use Cake\Log\Log;
+use Cake\Http\ServerRequest;
 
 class AreasTable extends ControllerActionTable
 {
     private $fieldsOrder = ['visible', 'code', 'name', 'area_level_id'];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AreaParents', ['className' => 'Area.Areas', 'foreignKey' => 'parent_id']);
@@ -37,9 +38,11 @@ class AreasTable extends ControllerActionTable
         ]);
         $this->addBehavior('Tree');
         if ($this->behaviors()->has('Reorder')) {
-            $this->behaviors()->get('Reorder')->config([
-                'filter' => 'parent_id',
-            ]);
+            // $this->behaviors()->get('Reorder')->config([
+            //     'filter' => 'parent_id',
+            // ]);
+            $reorderBehavior = $this->behaviors()->get('Reorder');
+            $reorderBehavior->setConfig('filter', 'parent_id');
         }
 
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -50,17 +53,26 @@ class AreasTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.synchronize'] = 'synchronize';
         return $events;
     }
 
-    public function validationDefault(Validator $validator)
+    public function isAuthorized(Event $event, $scope, $action, $extra)
+    {
+        if ($action == 'index' || $action == 'view') {
+            // check for the user permission to view here
+            $event->stopPropagation();
+            return true;
+        }
+    }//POCOR-5672 ends
+
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('code', 'ruleUniqueCode', [
                 'rule' => 'validateUnique',
@@ -132,7 +144,7 @@ class AreasTable extends ControllerActionTable
                 }
             } elseif ($this->request->is(['post', 'put'])) {
                 // update the related table
-                $requestData = $this->request->data;
+                $requestData = $this->request->getData();
                 $this->doUpdateAssociatedRecord($requestData);
                 $this->doReplaceAreaTable($missingAreaArray, $jsonArray);
 
@@ -347,6 +359,7 @@ class AreasTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         // Add breadcrumb
+        $serverRequest = $this->request;
         $toolbarElements = [
             ['name' => 'Area.breadcrumb', 'data' => [], 'options' => []]
         ];
@@ -354,7 +367,7 @@ class AreasTable extends ControllerActionTable
 
         $this->field('parent_id', ['visible' => false]);
 
-        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        $parentId = !is_null($serverRequest->getQuery('parent')) ? $serverRequest->getQuery('parent') : null;
         if ($parentId != null) {
             $crumbs = $this
                 ->find('path', ['for' => $parentId])
@@ -374,7 +387,7 @@ class AreasTable extends ControllerActionTable
                     ->id;
 
                 $action = $this->url('index');
-                $action['parent'] = $parentId;
+                $action['?']['parent'] = $parentId;
                 return $this->controller->redirect($action);
             }
         }
@@ -397,7 +410,8 @@ class AreasTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+        $serverRequest = $this->request;
+        $parentId = !is_null($serverRequest->getQuery('parent')) ? $serverRequest->getQuery('parent') : null;
         if ($parentId != null) {
             $query->where([$this->aliasField('parent_id') => $parentId]);
         } else {
@@ -420,7 +434,7 @@ class AreasTable extends ControllerActionTable
                     $this->aliasField('order')
                 ])
                 ->where([$this->aliasField('id') => $selected])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->formatResults(function ($results) use ($selected) {
                     $results = $results->toArray();
                     foreach ($results as &$result) {
@@ -471,7 +485,7 @@ class AreasTable extends ControllerActionTable
                 'AreaLevels.name',
                 $this->aliasField('order')
             ])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->formatResults(function ($results) use ($authorisedAreaIds, $selected, $isSuperAdmin) {
                 $results = $results->toArray();
                 $this->unsetEmptyArr($results, $authorisedAreaIds, $selected, $isSuperAdmin);
@@ -525,7 +539,7 @@ class AreasTable extends ControllerActionTable
         $this->fieldsOrder = ['area_level_id', 'code', 'name'];
 
         $this->fields['parent_id']['type'] = 'hidden';
-        $parentId = $this->request->query('parent');
+        $parentId = $this->request->getQuery('parent');
 
         if (is_null($parentId)) {
             $this->fields['parent_id']['attr']['value'] = null;
@@ -559,22 +573,22 @@ class AreasTable extends ControllerActionTable
 
     public function onGetName(Event $event, Entity $entity)
     {
-        return $event->subject()->HtmlField->link($entity->name, [
-            'plugin' => $this->controller->plugin,
-            'controller' => $this->controller->name,
+        return $event->getSubject()->HtmlField->link($entity->name, [
+            'plugin' => $this->controller->getPlugin(),
+            'controller' => $this->controller->getName(),
             'action' => $this->alias,
             'index',
             'parent' => $entity->id
         ]);
     }
 
-    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request)
-    {
-        $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : null;
+    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request){
+        $serverRequest = $this->request;
+        $parentId = !is_null($serverRequest->getQuery('parent')) ? $serverRequest->getQuery('parent') : null;
         $results = $this
             ->find()
             ->select([$this->aliasField('area_level_id')])
-            ->where([$this->aliasField('id') => $parentId])
+            // ->where([$this->aliasField('id') => $parentId])
             ->all();
 
         $attr['type'] = 'select';
@@ -672,11 +686,11 @@ class AreasTable extends ControllerActionTable
     {
         // get the associated data to be displayed and pass it to Sync page.
         $model = $this;
-        $primaryKey = $model->primaryKey();
+        $primaryKey = $model->getPrimaryKey();
         $idKey = $model->aliasField($primaryKey);
 
         $extra = new ArrayObject([]);
-        $extra['excludedModels'] = [$this->Areas->alias()];
+        $extra['excludedModels'] = [$this->Areas->getAlias()];
 
         $associatedRecords = [];
 
@@ -745,9 +759,9 @@ class AreasTable extends ControllerActionTable
     {
         $securityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
 
-        if (array_key_exists($this->alias(), $requestData)) {
-            if (array_key_exists('transfer_areas', $requestData[$this->alias()])) {
-                foreach ($requestData[$this->alias()]['transfer_areas'] as $key => $obj) {
+        if (array_key_exists($this->getAlias(), $requestData)) {
+            if (array_key_exists('transfer_areas', $requestData[$this->getAlias()])) {
+                foreach ($requestData[$this->getAlias()]['transfer_areas'] as $key => $obj) {
                     // update the association data (institution and securityGroupAreas)
                     $areaId = $obj['area_id'];
                     $newAreaId = $obj['new_area_id'];

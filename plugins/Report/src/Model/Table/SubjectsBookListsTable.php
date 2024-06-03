@@ -21,10 +21,10 @@ class SubjectsBookListsTable extends AppTable
     const NO_STUDENT = 1;
     const NO_STAFF = 2;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         
-        $this->table('institution_subject_students');
+        $this->setTable('institution_subject_students');
         parent::initialize($config);
         $this->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes']);
         $this->belongsTo('InstitutionClassStudents', ['className' => 'Institution.InstitutionClassStudents']);
@@ -44,7 +44,7 @@ class SubjectsBookListsTable extends AppTable
    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
        $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'

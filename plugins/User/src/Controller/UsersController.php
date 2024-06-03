@@ -7,19 +7,25 @@ use DateTime;
 use Exception;
 use InvalidArgumentException;
 use Cake\Core\Configure;
-use Cake\Event\Event;
+//use Cake\Event\Event;
 use Cake\Log\Log;
 use Cake\Mailer\Email;
-use Cake\Network\Exception\ForbiddenException;
+//use Cake\Network\Exception\ForbiddenException;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use Cake\Utility\Security;
 use Firebase\JWT\JWT;
 use Cake\Datasource\ConnectionManager;
+use Cake\Event\EventManager;
+use Cake\Event\EventDispatcherTrait;
+use Cake\Event\EventInterface;
+use Cake\Http\ServerRequest;
+use Cake\Http\Exception\ForbiddenException;
+use Cake\I18n\FrozenTime;
 
 class UsersController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->ControllerAction->model('User.Users');
@@ -28,24 +34,25 @@ class UsersController extends AppController
         $this->loadComponent('SSO.SLO');
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
 
         $this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote', 'patchPasswords', 'forgotPassword', 'forgotUsername', 'resetPassword', 'postForgotPassword', 'postForgotUsername', 'postResetPassword', 'twoFactorAuthentication', 'sendOtp', 'verifyOtp']);
-
-        $action = $this->request->params['action'];
+        $request = $this->request;
+        $action = $this->request->getParam('action');
+        
         if ($action == 'login_remote' || ($action == 'login' && $this->request->is('put'))) {
-            $this->eventManager()->off($this->Csrf);
+            $this->getEventManager()->off($this->Csrf);
             $this->Security->config('unlockedActions', [$action]);
         }
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $localLoginEnabled = $ConfigItems->value('enable_local_login');
 
         // To show local login
         $this->set('enableLocalLogin', $localLoginEnabled);
 
-        $SystemAuthentications = TableRegistry::get('SSO.SystemAuthentications');
+        $SystemAuthentications = TableRegistry::getTableLocator()->get('SSO.SystemAuthentications');
         $authentications = $SystemAuthentications->getActiveAuthentications();
 
         $authenticationOptions = [];
@@ -53,6 +60,7 @@ class UsersController extends AppController
         foreach ($authentications as $auth) {
             $authenticationOptions[$auth['name']] = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', $auth['authentication_type'], $auth['code']]);
         }
+        // echo "<pre>";print_r($authentications);die;
         $authentication = [];
         if ($authenticationOptions) {
             $authentication[] = [
@@ -86,25 +94,32 @@ class UsersController extends AppController
     public function login()
     {
         if ($this->request->is('put')) {
-            $url = $this->request->data('url');
-            $sessionId = $this->request->data('session_id');
-            $username = $this->request->data('username');
+            $url = $this->request->getData('url');
+            $sessionId = $this->request->getData('session_id');
+            $username = $this->request->getData('username');
             if (!empty($url) && !empty($sessionId) && !empty($username)) {
-                TableRegistry::get('SSO.SingleLogout')->addRecord($url, $username, $sessionId);
+                TableRegistry::getTableLocator()->get('SSO.SingleLogout')->addRecord($url, $username, $sessionId);
             }
         } else {
-            $this->viewBuilder()->layout(false);
+            //$this->viewBuilder()->layout(false);
+            //$this->viewBuilder()->setLayout(false);
+            $this->viewBuilder()->disableAutoLayout();
             $username = '';
             $password = '';
-            $session = $this->request->session();
-
+            $session = $this->getRequest()->getSession();
             // SLO Login
             $this->SLO->login();
-
             if ($this->Auth->user()) {
+                //POCOR-7485 Start
+                $rootPath = $_SERVER['REQUEST_URI'];
+                $cookie = new \Cake\Http\Cookie\Cookie(
+                            'my_base_url',
+                            $rootPath
+                        );
+                $this->response = $this->response->withCookie($cookie);
+                //POCOR-7485 End
                 return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
             }
-
             if ($session->check('login.username')) {
                 $username = $session->read('login.username');
             }
@@ -121,9 +136,9 @@ class UsersController extends AppController
     public function login_remote()
     {
         $this->autoRender = false;
-        $session = $this->request->session();
-        $username = $this->request->data('username');
-        $password = $this->request->data('password');
+        $session = $this->request->getSession();
+        $username = $this->request->getData('username');
+        $password = $this->request->getData('password');
         $session->write('login.username', $username);
         $session->write('login.password', $password);
         return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
@@ -134,7 +149,7 @@ class UsersController extends AppController
 
         $this->autoRender = false;
         if ($this->request->is('post')) {
-            $userIdentifier = $this->request->data('username');
+            $userIdentifier = $this->request->getData('username');
 
             if (strlen($userIdentifier) === 0) {
                 $message = __('This field cannot be left empty');
@@ -170,7 +185,7 @@ class UsersController extends AppController
 //                Log::write('debug', "2");
 
                 // remove any request that is passed expiry date
-                $SecurityUserPasswordRequests = TableRegistry::get('User.SecurityUserPasswordRequests');
+                $SecurityUserPasswordRequests = TableRegistry::getTableLocator()->get('User.SecurityUserPasswordRequests');
                 $SecurityUserPasswordRequests->deleteAll([
                     $SecurityUserPasswordRequests->aliasField('expiry_date < ') => $now
                 ]);
@@ -192,8 +207,28 @@ class UsersController extends AppController
 //                Log::write('debug', "5");
 
 
-                $checksum = Security::hash($userId . $expiryFormat, 'sha256');
-                $storedChecksum = Security::hash($checksum, 'sha256');
+                    $saveEntity = $SecurityUserPasswordRequests->newEntity($passwordRequestData);
+                    $SecurityUserPasswordRequests->save($saveEntity);
+
+                    $userEmail = $userEntity->email;
+                    $name = $userEntity->name;
+                    $url = Router::url([
+                        'plugin' => 'User',
+                        'controller' => 'Users',
+                        'action' => 'resetPassword',
+                        'token' => $checksum
+                    ], true);
+
+                    /*POCOR-5284 Starts*/
+                    $Themes = TableRegistry::getTableLocator()->get('Theme.Themes');
+                    $getData = $Themes->find()
+                                ->where([$Themes->aliasField('name') => 'Application Name'])
+                                ->first();
+                    if (!empty($getData) && !is_null($getData->value) && !empty($getData->value)) {
+                        $emailSubject = $getData->value;
+                    } else {
+                        $emailSubject = $getData->default_value;
+                    }
 
                 $passwordRequestData = [
                     'user_id' => $userId,
@@ -226,34 +261,34 @@ class UsersController extends AppController
 
                 try {
                     $email = new Email('openemis');
-                } catch (\Exception $exception) {
-                    Log::write('error', __METHOD__ . ' 1: ' . $exception->getMessage() . ": $userEmail");
-                }
-                try {
-                    $emailSubject = $emailSubject . ' - Password Reset Request';
-                } catch (\Exception $exception) {
-                    Log::write('error', __METHOD__ . ' 2: ' . $exception->getMessage() . ": $userEmail");
-                }
-                //$emailSubject = __('OpenEMIS - Password Reset Request');
-                try {
-                    $emailMessage = "Dear " . $name . ",
-                    \n\nWe received a password reset request for your account.
-                    \n\nIf you didn’t request a password reset, kindly ignore 
-                    this email and your password will not be changed.
-                    \n\nTo reset your password, please click the link below:
-                    \n" . $url . "\n\nThank you.";
-                } catch (\Exception $exception) {
-                    Log::write('error', __METHOD__ . ' 3: ' . $exception->getMessage() . ": $userEmail");
-                }
-                try {
-                    $e = $email
-                        ->to($userEmail)
-                        ->subject($emailSubject)
-                        ->send($emailMessage);
-
-                } catch (\Exception $exception) {
-                    Log::write('error', __METHOD__ . ' 4: ' . $exception->getMessage() . ": $userEmail");
-                }
+                    } catch (\Exception $exception) {
+                        Log::write('error', __METHOD__ . ' 1: ' . $exception->getMessage() . ": $userEmail");
+                    }
+                    try {
+                        $emailSubject = $emailSubject . ' - Password Reset Request';
+                    } catch (\Exception $exception) {
+                        Log::write('error', __METHOD__ . ' 2: ' . $exception->getMessage() . ": $userEmail");
+                    }
+                    //$emailSubject = __('OpenEMIS - Password Reset Request');
+                    try {
+                        $emailMessage = "Dear " . $name . ",
+                        \n\nWe received a password reset request for your account.
+                        \n\nIf you didn’t request a password reset, kindly ignore 
+                        this email and your password will not be changed.
+                        \n\nTo reset your password, please click the link below:
+                        \n" . $url . "\n\nThank you.";
+                    } catch (\Exception $exception) {
+                        Log::write('error', __METHOD__ . ' 3: ' . $exception->getMessage() . ": $userEmail");
+                    }
+                    try {
+                        $e = $email
+                            ->to($userEmail)
+                            ->subject($emailSubject)
+                            ->send($emailMessage);
+            
+                    } catch (\Exception $exception) {
+                        Log::write('error', __METHOD__ . ' 4: ' . $exception->getMessage() . ": $userEmail");
+                    }
 
             }
 
@@ -267,7 +302,7 @@ class UsersController extends AppController
     {
         $this->autoRender = false;
         if ($this->request->is('post')) {
-            $userEmail = $this->request->data('username');
+            $userEmail = $this->request->getData('username');
             $emailPattern = '/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}/i';
 
             // valid email format
@@ -327,8 +362,8 @@ class UsersController extends AppController
                     }
                     try {
                         $email
-                            ->to($userEmail)
-                            ->subject($emailSubject)
+                            ->setTo($userEmail)
+                            ->setSubject($emailSubject)
                             ->send($emailMessage);
                     } catch (\Exception $exception) {
                         Log::write('error', __METHOD__ . ' 4: ' . $exception->getMessage() . ": $userEmail");
@@ -361,7 +396,7 @@ class UsersController extends AppController
             $token = $this->request->query('token');
             if (!is_null($token)) {
                 $checksum = Security::hash($token, 'sha256');
-                $SecurityUserPasswordRequests = TableRegistry::get('User.SecurityUserPasswordRequests');
+                $SecurityUserPasswordRequests = TableRegistry::getTableLocator()->get('User.SecurityUserPasswordRequests');
                 $passwordRequestEntity = $SecurityUserPasswordRequests
                     ->find()
                     ->where([$SecurityUserPasswordRequests->aliasField('id') => $checksum])
@@ -370,7 +405,7 @@ class UsersController extends AppController
                 if (!is_null($passwordRequestEntity)) {
                     $userId = $passwordRequestEntity->user_id;
 
-                    $Passwords = TableRegistry::get('User.Passwords');
+                    $Passwords = TableRegistry::getTableLocator()->get('User.Passwords');
                     $userEntity = $Passwords
                         ->find()
                         ->where([$Passwords->aliasField('id') => $userId])
@@ -416,11 +451,12 @@ class UsersController extends AppController
 
     public function resetPassword()
     {
-        $this->viewBuilder()->layout(false);
-        $token = $this->request->query('token');
+        // $this->viewBuilder()->layout(false);
+        $this->viewBuilder()->disableAutoLayout();
+        $token = $this->request->getQuery('token');
         if (!is_null($token)) {
             $checksum = Security::hash($token, 'sha256');
-            $SecurityUserPasswordRequests = TableRegistry::get('User.SecurityUserPasswordRequests');
+            $SecurityUserPasswordRequests = TableRegistry::getTableLocator()->get('User.SecurityUserPasswordRequests');
             $passwordRequestEntity = $SecurityUserPasswordRequests
                 ->find()
                 ->where([$SecurityUserPasswordRequests->aliasField('id') => $checksum])
@@ -452,13 +488,15 @@ class UsersController extends AppController
 
     public function forgotPassword()
     {
-        $this->viewBuilder()->layout(false);
+        // $this->viewBuilder()->layout(false);
+        $this->viewBuilder()->disableAutoLayout();
     }
 
     public function forgotUsername()
     {
-        $this->viewBuilder()->layout(false);
-        $userEmail = $this->request->query('email');
+        // $this->viewBuilder()->layout(false);
+        $this->viewBuilder()->disableAutoLayout();
+        $userEmail = $this->request->getQuery('email');
 
         if (isset($userEmail)) {
             $this->set('username', $userEmail);
@@ -467,13 +505,110 @@ class UsersController extends AppController
         }
     }
 
+    // public function postLogin($authenticationType = 'Local', $code = null)
+    // {
+    //     $request = new ServerRequest();
+    //     if (($_SERVER['REQUEST_METHOD']=='POST' && $this->getRequest()->getData('submit') == 'reload')) {
+    //         return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+    //     }
+       
+    //     //POCOR-7156 starts
+    //     $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+    //     $ConfigItemsEntity = $ConfigItems
+    //         ->find()
+    //         ->where([$ConfigItems->aliasField('code') => 'two_factor_authentication'])
+    //         ->first();
+    //     if ($_SERVER['REQUEST_METHOD']=='POST' && $this->getRequest()->getData('submit') == 'login' && $ConfigItemsEntity->value == 1) {
+    //         if($this->getRequest()->getData('username') == '' || $this->getRequest()->getData('password') == ''){
+    //             $this->Alert->error('security.login.fail', ['reset' => true]);
+    //             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+    //         }
+    //         $userEntity = $this->Users
+    //             ->find()
+    //             ->select([
+    //                 $this->Users->aliasField('id'),
+    //                 $this->Users->aliasField('username'),
+    //                 $this->Users->aliasField('email'),
+    //                 $this->Users->aliasField('first_name'),
+    //                 $this->Users->aliasField('middle_name'),
+    //                 $this->Users->aliasField('third_name'),
+    //                 $this->Users->aliasField('last_name'),
+    //                 $this->Users->aliasField('preferred_name')
+    //             ])->where([
+    //                 $this->Users->aliasField('username') => $this->getRequest()->getData('username')
+    //             ])->first();
+    //         if ($userEntity->email == "") {
+    //             $message = __('An email address is not registered for this account. Please contact your system administrator.');
+
+    //             //$this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+    //             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+    //         }
+    //     }//POCOR-7156 ends
+    //     $this->autoRender = false;
+    //     $enableLocalLogin = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('enable_local_login');
+    //     $authentications = TableRegistry::getTableLocator()->get('SSO.SystemAuthentications')->getActiveAuthentications();
+    //     if (!$enableLocalLogin && count($authentications) == 1) {
+    //         $authenticationType = $authentications[0]['authentication_type'];
+    //         $code = $authentications[0]['code'];
+    //     } elseif (is_null($code)) {
+    //         $authenticationType = 'Local';
+    //     }
+    //     //POCOR-7156 starts
+    //     //print_r($this->getRequest()->getData('submit'));die;
+    //     if($_SERVER['REQUEST_METHOD']=='POST' && $this->getRequest()->getData('submit') == 'login' && $ConfigItemsEntity->value == 1){
+    //         $six_digit_random_number = random_int(100000, 999999);
+    //         $encrypt_otp = base64_encode($six_digit_random_number);
+    //         $SystemUserOtpTbl = TableRegistry::getTableLocator()->get('User.SecurityUserCodes');
+    //         $SystemUserOtpEntity = $SystemUserOtpTbl
+    //             ->find()
+    //             ->where([$SystemUserOtpTbl->aliasField('security_user_id') => $userEntity->id])
+    //             ->first();
+    //         $now = new DateTime();
+    //         $create_date = $now->format('Y-m-d H:i:s');
+    //         if (!empty($SystemUserOtpEntity)) {
+    //             $SystemUserOtpTbl->updateAll(
+    //                 ['verification_otp' => $encrypt_otp, 'created' => $create_date],
+    //                 ['id' => $SystemUserOtpEntity->id]
+    //             );
+    //         } else {
+    //             $data = [
+    //                 'security_user_id' => $userEntity->id,
+    //                 'verification_otp' => $encrypt_otp,
+    //                 'created' => $create_date
+    //             ];
+    //             $newEntity = $SystemUserOtpTbl->newEntity($data);
+    //             $SystemUserOtpTbl->save($newEntity);
+    //         }
+    //         $userEmail = $userEntity->email;
+    //         $name = $userEntity->name;
+    //         $email = new Email('openemis');
+    //         $emailSubject = __('OpenEMIS - One-time Password (OTP)');
+    //         $emailMessage = "Dear " . $name . ",\n\nOne-time Password (OTP) is " . $six_digit_random_number . " . This OTP expires in 1 hour. \n\nBest regards,\nOpenEMIS Support\n\nThis is a system - generated email. Please do not reply to this email address.";
+    //         $email
+    //             ->setTo($userEmail)
+    //             ->setSubject($emailSubject)
+    //             ->send($emailMessage);
+    //         $message = __('A verification code has been sent to your registered email address.');
+    //         $this->Alert->success($message, ['type' => 'string', 'reset' => true]);
+    //         $userName = $this->encrypt($userEntity->username, Security::getSalt());
+    //         $userEmail = $this->encrypt($userEntity->email, Security::getSalt());
+    //         $userPass = $this->encrypt($this->request->getData('password'), Security::getSalt());
+    //         $encodedUserData = $this->paramsEncode(['username' => $userName, 'email'=>$userEmail, 'password' => $userPass]);
+    //         return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'verifyOtp', $encodedUserData]);
+    //     } else {//POCOR-7156 ends
+    //         $this->SSO->doAuthentication($authenticationType, $code);
+    //     }
+    // }
+
+
     public function postLogin($authenticationType = 'Local', $code = null)
     {
-        if ($this->request->is('post') && $this->request->data('submit') == 'reload') {
+        set_time_limit(3000);
+        if ($this->request->is('post') && $this->request->getData('submit') == 'reload') {
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
         }
         //POCOR-7156 starts
-        $ConfigItems = TableRegistry::get('config_items');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $ConfigItemsEntity = $ConfigItems
             ->find()
             ->where([$ConfigItems->aliasField('code') => 'two_factor_authentication'])
@@ -483,14 +618,18 @@ class UsersController extends AppController
             ->find()
             ->where([$ConfigItems->aliasField('code') => 'login_attempts'])
             ->first();
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $loginAttempts = isset($LoginAttemptsEntity->value) ? $LoginAttemptsEntity->value : $LoginAttemptsEntity->default_value;
         if (!($session->check('login.attempts'))) {
             $session->write('login.attempts', $loginAttempts);
         }
         //POCOR-2976 end
-        if ($this->request->is('post') && $this->request->data('submit') == 'login' && $ConfigItemsEntity->value == 1) {
-            if ($this->request->data['username'] == '' || $this->request->data['password'] == '') {
+        //POCOR-8127 starts write session for API use
+        //$session->write('auth_username', $this->request->getData('username'));
+        //$session->write('auth_password', base64_encode($this->request->getData('password')));
+        //POCOR-8127 ends
+        if ($this->request->is('post') && $this->request->getData('submit') == 'login' && $ConfigItemsEntity->value == 1) {
+            if ($this->request->getData['username'] == '' || $this->request->getData['password'] == '') {
                 $this->Alert->error('security.login.fail', ['reset' => true]);
                 return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
             }
@@ -506,7 +645,7 @@ class UsersController extends AppController
                     $this->Users->aliasField('last_name'),
                     $this->Users->aliasField('preferred_name')
                 ])->where([
-                    $this->Users->aliasField('username') => $this->request->data['username']
+                    $this->Users->aliasField('username') => $this->request->getData['username']
                 ])->first();
             if ($userEntity->email == "") {
                 $message = __('An email address is not registered for this account. Please contact your system administrator.');
@@ -524,10 +663,10 @@ class UsersController extends AppController
             $authenticationType = 'Local';
         }
         //POCOR-7156 starts
-        if ($this->request->is('post') && $this->request->data('submit') == 'login' && $ConfigItemsEntity->value == 1) {
+        if ($this->request->is('post') && $this->request->getData('submit') == 'login' && $ConfigItemsEntity->value == 1) {
             $six_digit_random_number = random_int(100000, 999999);
             $encrypt_otp = base64_encode($six_digit_random_number);
-            $SystemUserOtpTbl = TableRegistry::get('security_user_codes');
+            $SystemUserOtpTbl =  TableRegistry::getTableLocator()->get('User.SecurityUserCodes');
             $SystemUserOtpEntity = $SystemUserOtpTbl
                 ->find()
                 ->where([$SystemUserOtpTbl->aliasField('security_user_id') => $userEntity->id])
@@ -559,14 +698,14 @@ class UsersController extends AppController
                 ->send($emailMessage);
             $message = __('A verification code has been sent to your registered email address.');
             $this->Alert->success($message, ['type' => 'string', 'reset' => true]);
-            $userName = $this->encrypt($userEntity->username, Security::salt());
-            $userEmail = $this->encrypt($userEntity->email, Security::salt());
-            $userPass = $this->encrypt($this->request->data['password'], Security::salt());
-            $encodedUserData = $this->paramsEncode(['username' => $userName, 'email' => $userEmail, 'password' => $userPass]);
+            $userName = $this->encrypt($userEntity->username, Security::getSalt());
+            $userEmail = $this->encrypt($userEntity->email, Security::getSalt());
+            $userPass = $this->encrypt($this->request->getData('password'), Security::getSalt());
+            $encodedUserData = $this->paramsEncode(['username' => $userName, 'email'=>$userEmail, 'password' => $userPass]);
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'verifyOtp', $encodedUserData]);
         } else {//POCOR-7156 ends
             $this->SSO->doAuthentication($authenticationType, $code);
-        }
+        } 
     }
 
     //POCOR-7156 starts
@@ -593,12 +732,12 @@ class UsersController extends AppController
 
     public function verifyOtp()
     {
-        if (isset($this->request->params['pass'][0]) && !empty($this->request->params['pass'][0])) {
-            $userData = $this->paramsDecode($this->request->params['pass'][0]);
+        if(isset($this->request->getParam('pass')[0]) && !empty($this->request->getParam('pass')[0])){
+            $userData = $this->paramsDecode($this->request->getParam('pass')[0]);
 
-            $userData['username'] = $this->decrypt($userData['username'], Security::salt());
-            $userData['email'] = $this->decrypt($userData['email'], Security::salt());
-            $userData['password'] = $this->decrypt($userData['password'], Security::salt());
+            $userData['username'] = $this->decrypt($userData['username'], Security::getSalt());
+            $userData['email'] = $this->decrypt($userData['email'], Security::getSalt());
+            $userData['password'] = $this->decrypt($userData['password'], Security::getSalt());
             $userEntity = $this->Users
                 ->find()
                 ->select([
@@ -621,18 +760,18 @@ class UsersController extends AppController
                 $message = __('An email address is not registered for this account. Please contact your system administrator.');
                 $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
                 return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
-            } else {
-                $this->set('encryptdata', $this->request->params['pass'][0]);
+            }else{
+                $this->set('encryptdata', $this->request->getParam('pass')[0]);
                 $this->set('username', $userData['username']);
                 $this->set('password', $userData['password']);
-                if ($this->request->is('post') && $this->request->data('submit') == 'login') {
-                    $SystemUserOtpTbl = TableRegistry::get('security_user_codes');
+                if ($this->request->is('post') && $this->request->getData('submit') == 'login') {
+                    $SystemUserOtpTbl = TableRegistry::getTableLocator()->get('User.SecurityUserCodes');
                     $SystemUserOtpEntity = $SystemUserOtpTbl
-                        ->find()
-                        ->where([$SystemUserOtpTbl->aliasField('security_user_id') => $userEntity->id])
-                        ->first();
-                    if (!empty($SystemUserOtpEntity) && !empty($SystemUserOtpEntity->verification_otp)) {
-                        if (base64_decode($SystemUserOtpEntity->verification_otp) == trim($this->request->data['otp'])) {
+                                ->find()
+                                ->where([$SystemUserOtpTbl->aliasField('security_user_id') => $userEntity->id])
+                                ->first();
+                    if(!empty($SystemUserOtpEntity) && !empty($SystemUserOtpEntity->verification_otp)){
+                        if(base64_decode($SystemUserOtpEntity->verification_otp) == trim($this->request->getData('otp'))){
                             $authenticationType = 'Local';
                             $code = null;
                             $this->SSO->doAuthentication($authenticationType, $code);
@@ -649,32 +788,35 @@ class UsersController extends AppController
             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
         }
-        $this->viewBuilder()->layout(false);
+        // $this->viewBuilder()->layout(false);
+        $this->viewBuilder()->disableAutoLayout();
     }//POCOR-7156 ends
 
     public function logout($username = null)
     {
-        //if ($this->request->is('get')) {
-        $username = empty($username) ? $this->Auth->user()['username'] : $username;
-        //POCOR-6953 start
-        $body = array();
-        $body = [
-            "username" => $username,
-        ];
-        //POCOR-6953 end
-        $SecurityUserSessions = TableRegistry::get('SSO.SecurityUserSessions');
-        $SecurityUserSessions->deleteEntries($username);
-        $Webhooks = TableRegistry::get('Webhook.Webhooks');
-        if ($this->Auth->user()) {
-            $Webhooks->triggerShell('logout', ['username' => $username], $body);
-        }
-        return $this->redirect($this->Auth->logout());
-        /*} else {
+        if ($this->request->is('get')) {
+            $username = empty($username) ? $this->Auth->user()['username'] : $username;
+            //POCOR-6953 start
+            $body = array();
+            $body = [
+                "username" => $username,
+            ];
+            //POCOR-6953 end
+            $SecurityUserSessions = TableRegistry::getTableLocator()->get('SSO.SecurityUserSessions');
+            $SecurityUserSessions->deleteEntries($username);
+            $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
+
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('logout', ['username' => $username], $body);
+            }
+
+            return $this->redirect($this->Auth->logout());
+        } else {
             throw new ForbiddenException();
-        }*/
+        }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Auth.afterIdentify'] = 'afterIdentify';
@@ -684,71 +826,64 @@ class UsersController extends AppController
         return $events;
     }
 
-    public function isActionIgnored(Event $event, $action)
+    public function isActionIgnored(EventInterface $event, $action)
     {
         if (in_array($action, ['login', 'logout', 'postLogin', 'login_remote'])) {
             return true;
         }
     }
 
-    public function afterCheckLogin(Event $event, $extra)
+    public function afterCheckLogin(EventInterface $event, $extra)
     {
         //POCOR-2976 start
-        $SecurityUser = TableRegistry::get('security_users');
+        $SecurityUser = TableRegistry::getTableLocator()->get('User.Users');
         $userData = $SecurityUser->find()
             ->where(
-                [$SecurityUser->aliasField('username') => $this->request->data['username']]
+                [$SecurityUser->aliasField('username') => $this->request->getData('username')]
             )->first();
-        if (!$extra['loginStatus']) {
-            if (!$extra['status']) {
-                $this->Alert->error('security.login.inactive', ['reset' => true]);
-            } else if ($extra['fallback']) {
-                $url = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', 'submit' => 'retry']);
-                $retryMessage = 'Remote authentication failed. <br>Please try local login or <a href="' . $url . '">Click here</a> to try again';
-                $this->Alert->error($retryMessage, ['type' => 'string', 'reset' => true]);
-            } else {
-                //POCOR-2976 start
-                if ($userData->status == 0) {
-                    if (empty($userData)) {
-                        $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
-                    } else {
-                        $this->Alert->error('security.login.locked_account', ['reset' => true]);
-                    }
-                    return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
-                }
-                // $this->Alert->error('security.login.fail', ['reset' => true]);
-                $session = $this->request->session();
-                $noOfPendingAttempts = $session->read('login.attempts');
-                $noOfPendingAttempts--;
-                $session->write('login.attempts', $noOfPendingAttempts);
-                if ($noOfPendingAttempts <= 0) {
-                    $SecurityUser->updateAll(['status' => 0],
-                        ['username' => $this->request->data['username']]);
-                    if (empty($userData)) {
-                        $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
-                    } else {
-                        $this->Alert->error('security.login.locked_account', ['reset' => true]);
-                    }
-                } else {
-                    if(!empty($userData)){  //POCOR-8257
-                        $userData->failed_logins = ($userData->failed_logins) + 1; //POCOR-7970
-                        $SecurityUser->save($userData);//POCOR-7970
-                    }
-                    $message = "You have {$noOfPendingAttempts} more login attempts before your account will be locked.";
-                    $this->Alert->warning($message, ['type' => 'string', 'reset' => true]);
-                }
-                //POCOR-2976 end
-            }
-            $event->stopPropagation();
-            return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
-        }
-        if(!empty($userData)){ // if condition applied in POCOR-8257
-            $userData->failed_logins = 0;//POCOR-7970
-            $SecurityUser->save($userData);//POCOR-7970
-        }
+        // if (!$extra['loginStatus']) {
+        //     if (!$extra['status']) {
+        //         $this->Alert->error('security.login.inactive', ['reset' => true]);
+        //     } else if ($extra['fallback']) {
+        //         $url = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', 'submit' => 'retry']);
+        //         $retryMessage = 'Remote authentication failed. <br>Please try local login or <a href="' . $url . '">Click here</a> to try again';
+        //         $this->Alert->error($retryMessage, ['type' => 'string', 'reset' => true]);
+        //     } else {
+        //         //POCOR-2976 start
+        //         if ($userData->status == 0) {
+        //             if (empty($userData)) {
+        //                 $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
+        //             } else {
+        //                 $this->Alert->error('security.login.locked_account', ['reset' => true]);
+        //             }
+        //             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+        //         }
+        //         // $this->Alert->error('security.login.fail', ['reset' => true]);
+        //         $session = $this->request->getSession();
+        //         $noOfPendingAttempts = $session->read('login.attempts');
+        //         // echo "<pre>";print_r($noOfPendingAttempts);die;
+        //         $noOfPendingAttempts--;
+        //         $session->write('login.attempts', $noOfPendingAttempts);
+        //         if ($noOfPendingAttempts <= 0) {
+        //             $SecurityUser->updateAll(['status' => 0],
+        //                 ['username' => $this->request->getData('username')]);
+        //             if (empty($userData)) {
+        //                 $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
+        //             } else {
+        //                 $this->Alert->error('security.login.locked_account', ['reset' => true]);
+        //             }
+        //         } else {
+        //             $message = "You have {$noOfPendingAttempts} more login attempts before your account will be locked.";
+        //             $this->Alert->warning($message, ['type' => 'string', 'reset' => true]);
+        //         }
+        //         //POCOR-2976 end
+        //     }
+        //     $event->stopPropagation();
+        //     return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+        // }
     }
 
-    public function afterAuthenticate(Event $event, ArrayObject $extra)
+    public function afterAuthenticate(EventInterface $event, ArrayObject $extra)
     {
         if ($this->Cookie->check('Restful.Call')) {
             $event->stopPropagation();
@@ -762,18 +897,18 @@ class UsersController extends AppController
                 ];
                 $this->Users->dispatchEventToModels('Model.Users.afterLogin', [$user], $this, $listeners);
 
-                $SecurityUserSessions = TableRegistry::get('SSO.SecurityUserSessions');
+                $SecurityUserSessions = TableRegistry::getTableLocator()->get('SSO.SecurityUserSessions');
 
-                $SecurityUserSessions->addEntry($user['username'], $this->request->session()->id());
+                $SecurityUserSessions->addEntry($user['username'], $this->getRequest()->getSession()->id());
 
                 // Labels
-                $labels = TableRegistry::get('Labels');
+                $labels = TableRegistry::getTableLocator()->get('Labels');
                 $labels->storeLabelsInCache();
 
                 // Support Url
-                $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+                $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
                 $supportUrl = $ConfigItems->value('support_url');
-                $this->request->session()->write('System.help', $supportUrl);
+                $this->getRequest()->getSession()->write('System.help', $supportUrl);
             }
         }
     }
@@ -789,7 +924,7 @@ class UsersController extends AppController
         ], Configure::read('Application.private.key'), 'RS256');
     }
 
-    public function afterIdentify(Event $event, $user)
+    public function afterIdentify(EventInterface $event, $user)
     {
         $user = $this->Users->get($user['id']);
 
@@ -797,7 +932,7 @@ class UsersController extends AppController
         $this->log('[' . $user->username . '] Login successfully.', 'debug');
 
         // To remove inactive staff security group users records
-        $InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+        $InstitutionStaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
         $InstitutionStaffTable->removeIndividualStaffSecurityRole($user['id']);
         $this->startInactiveRoleRemoval();
         $this->shellErrorRecovery();
@@ -819,7 +954,7 @@ class UsersController extends AppController
 
     private function shellErrorRecovery()
     {
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $processes = $SystemProcesses->getErrorProcesses();
         foreach ($processes as $process) {
             $id = $process['id'];
@@ -827,7 +962,7 @@ class UsersController extends AppController
             $params = $process['params'];
             $eventName = $process['callable_event'];
             $executedCount = $process['executed_count'];
-            $modelTable = TableRegistry::get($model);
+            $modelTable = TableRegistry::getTableLocator()->get($model);
             if (!empty($eventName)) {
                 $event = $modelTable->dispatchEvent('Shell.' . $eventName, [$id, $executedCount, $params]);
             }
@@ -840,7 +975,7 @@ class UsersController extends AppController
      */
     public function updateUserPassword($userId)
     {
-        $userActivities = TableRegistry::get('user_activities');
+        $userActivities = TableRegistry::getTableLocator()->get('User.UserActivities'); //POCOR-8080 can not save entity to no-class table
         $currentTimeZone = date("Y-m-d H:i:s");
         $data = [
             'model' => 'Users',
@@ -865,7 +1000,7 @@ class UsersController extends AppController
      */
     public function updateUserName($username, $userId)
     {
-        $userActivities = TableRegistry::get('user_activities');
+        $userActivities = TableRegistry::getTableLocator()->get('User.UserActivities');
         $currentTimeZone = date("Y-m-d H:i:s");
         $data = [
             'model' => 'Users',

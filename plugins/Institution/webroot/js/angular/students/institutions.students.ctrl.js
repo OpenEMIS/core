@@ -124,7 +124,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.validateAdditionalDetails = validateAdditionalDetails;
     StudentController.saveStudentDetails = saveStudentDetails;
     StudentController.getStudentCustomFields = getStudentCustomFields;
-    StudentController.createCustomFieldsArray = createCustomFieldsArray;
+    // StudentController.createCustomFieldsArray = createCustomFieldsArray;
     StudentController.filterBySection = filterBySection;
     StudentController.mapBySection = mapBySection;
     StudentController.changeOption = changeOption;
@@ -684,7 +684,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         InstitutionsStudentsSvc.getStudentCustomFields(studentId).then(function (resp) {
             StudentController.customFields = resp.data;
             StudentController.customFieldsArray = [];
-            StudentController.createCustomFieldsArray();
+            // StudentController.createCustomFieldsArray();
             StudentController.getMaxFileSizeConfig(); //POCOR-7993
         }, function (error) {
             console.error(error);
@@ -692,103 +692,103 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         });
     }
 
-    function createCustomFieldsArray() {
-        var selectedCustomField = StudentController.customFields;
-        if (selectedCustomField === "null") return;
-        var filteredSections = Array.from(new Set(StudentController.customFields.map((item) => mapBySection(item))));
-        filteredSections.forEach((section) => {
-            let filteredArray = selectedCustomField.filter((item) => StudentController.filterBySection(item, section));
-            StudentController.customFieldsArray.push({sectionName: section, data: filteredArray});
-        });
-        StudentController.customFieldsArray.forEach((customField) => {
-            customField.data.forEach((fieldData) => {
-                fieldData.answer = '';
-                fieldData.errorMessage = '';
-                if (['TEXT', 'TEXTAREA', 'NOTE', 'FILE'].includes(fieldData.field_type)) { //POCOR-7993
-                    fieldData.answer = fieldData.values ? fieldData.values : '';
-                }
-                if (fieldData.field_type === 'DROPDOWN') {
-                    fieldData.selectedOptionId = '';
-                    try {
-                        fieldData.answer = fieldData.values && fieldData.values.length > 0 && fieldData.values[0].dropdown_val ? fieldData.values[0].dropdown_val.toString() : '';
-                    } catch (e) {
-                        console.error(e);
-                        // console.log(customField);
-                        console.error(fieldData);
-                        fieldData.answer = "";
-                    }
-                    fieldData.option.forEach((option) => {
-                        if (option.option_id === fieldData.answer) {
-                            fieldData.selectedOption = option.option_name;
-                        }
-                    })
-                }
-                if (fieldData.field_type === 'DATE') {
-                    // POCOR-7874 fix
-                    fieldData.isDatepickerOpen = false;
-                    let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
-                    fieldData.params = params;
-                    fieldData.datePickerOptions = {
-                        showWeeks: false
-                    };
-                    const splitDate = fieldData.values.split('-').map((d => parseInt(d)));
-                    fieldData.answer = fieldData.values === "" ? new Date() : new Date(splitDate[0], splitDate[1] - 1, splitDate[2]);
-                }
-                if (fieldData.field_type === 'TIME') {
-                    fieldData.hourStep = 1;
-                    fieldData.minuteStep = 5;
-                    fieldData.isMeridian = true;
-                    let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
-                    fieldData.params = params;
-                    if (fieldData.params && fieldData.params.start_time) {
-                        var startTimeArray = fieldData.params.start_time.split(" ");
-                        var startTimes = startTimeArray[0].split(":");
-                        if (startTimes[0] === 12) {
-                            var startTimeHour = startTimeArray[1] === 'PM' ? Number(startTimes[0]) : Number(startTimes[0]) - 12;
-                        } else {
-                            var startTimeHour = startTimeArray[1] === 'AM' ? Number(startTimes[0]) : Number(startTimes[0]) + 12;
-                        }
-                    }
-                    if (fieldData.params && fieldData.params.end_time) {
-                        var endTimeArray = fieldData.params.end_time.split(" ");
-                        var endTimes = endTimeArray[0].split(":");
-                        if (startTimes[0] === 12) {
-                            var endTimeHour = endTimeArray[1] === 'PM' ? Number(endTimes[0]) : Number(endTimes[0]) - 12;
-                        } else {
-                            var endTimeHour = endTimeArray[1] === 'AM' ? Number(endTimes[0]) : Number(endTimes[0]) + 12;
-                        }
-                    }
-                    if (fieldData.values !== '') {
-                        let timeValuesArray = fieldData.values.split(':');
-                        fieldData.answer = new Date(new Date(new Date().setHours(timeValuesArray[0])).setMinutes(timeValuesArray[1]));
-                    } else {
-                        fieldData.answer = new Date();
-                    }
-                }
-                if (fieldData.field_type === 'CHECKBOX') {
-                    fieldData.answer = [];
-                    fieldData.option.forEach((option) => {
-                        option.selected = false;
-                    });
-                    if (fieldData.values && fieldData.values.length > 0) {
-                        fieldData.values.forEach((value) => {
-                            fieldData.answer.push(value.checkbox_val.toString());
-                            fieldData.option.forEach((option) => {
-                                if (option.option_id === value.checkbox_val.toString()) {
-                                    option.selected = true;
-                                }
-                            })
-                        });
-                    }
-                }
-                if (fieldData.field_type === 'DECIMAL' || fieldData.field_type === 'NUMBER') {
-                    let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
-                    fieldData.params = params;
-                    fieldData.answer = Number(fieldData.values);
-                }
-            });
-        });
-    }
+    // function createCustomFieldsArray() {
+    //     var selectedCustomField = StudentController.customFields;
+    //     if (selectedCustomField === "null") return;
+    //     var filteredSections = Array.from(new Set(StudentController.customFields.map((item) => mapBySection(item))));
+    //     filteredSections.forEach((section) => {
+    //         let filteredArray = selectedCustomField.filter((item) => StudentController.filterBySection(item, section));
+    //         StudentController.customFieldsArray.push({sectionName: section, data: filteredArray});
+    //     });
+    //     StudentController.customFieldsArray.forEach((customField) => {
+    //         customField.data.forEach((fieldData) => {
+    //             fieldData.answer = '';
+    //             fieldData.errorMessage = '';
+    //             if (['TEXT', 'TEXTAREA', 'NOTE', 'FILE'].includes(fieldData.field_type)) { //POCOR-7993
+    //                 fieldData.answer = fieldData.values ? fieldData.values : '';
+    //             }
+    //             if (fieldData.field_type === 'DROPDOWN') {
+    //                 fieldData.selectedOptionId = '';
+    //                 try {
+    //                     fieldData.answer = fieldData.values && fieldData.values.length > 0 && fieldData.values[0].dropdown_val ? fieldData.values[0].dropdown_val.toString() : '';
+    //                 } catch (e) {
+    //                     console.error(e);
+    //                     // console.log(customField);
+    //                     console.error(fieldData);
+    //                     fieldData.answer = "";
+    //                 }
+    //                 fieldData.option.forEach((option) => {
+    //                     if (option.option_id === fieldData.answer) {
+    //                         fieldData.selectedOption = option.option_name;
+    //                     }
+    //                 })
+    //             }
+    //             if (fieldData.field_type === 'DATE') {
+    //                 // POCOR-7874 fix
+    //                 fieldData.isDatepickerOpen = false;
+    //                 let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
+    //                 fieldData.params = params;
+    //                 fieldData.datePickerOptions = {
+    //                     showWeeks: false
+    //                 };
+    //                 const splitDate = fieldData.values.split('-').map((d => parseInt(d)));
+    //                 fieldData.answer = fieldData.values === "" ? new Date() : new Date(splitDate[0], splitDate[1] - 1, splitDate[2]);
+    //             }
+    //             if (fieldData.field_type === 'TIME') {
+    //                 fieldData.hourStep = 1;
+    //                 fieldData.minuteStep = 5;
+    //                 fieldData.isMeridian = true;
+    //                 let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
+    //                 fieldData.params = params;
+    //                 if (fieldData.params && fieldData.params.start_time) {
+    //                     var startTimeArray = fieldData.params.start_time.split(" ");
+    //                     var startTimes = startTimeArray[0].split(":");
+    //                     if (startTimes[0] === 12) {
+    //                         var startTimeHour = startTimeArray[1] === 'PM' ? Number(startTimes[0]) : Number(startTimes[0]) - 12;
+    //                     } else {
+    //                         var startTimeHour = startTimeArray[1] === 'AM' ? Number(startTimes[0]) : Number(startTimes[0]) + 12;
+    //                     }
+    //                 }
+    //                 if (fieldData.params && fieldData.params.end_time) {
+    //                     var endTimeArray = fieldData.params.end_time.split(" ");
+    //                     var endTimes = endTimeArray[0].split(":");
+    //                     if (startTimes[0] === 12) {
+    //                         var endTimeHour = endTimeArray[1] === 'PM' ? Number(endTimes[0]) : Number(endTimes[0]) - 12;
+    //                     } else {
+    //                         var endTimeHour = endTimeArray[1] === 'AM' ? Number(endTimes[0]) : Number(endTimes[0]) + 12;
+    //                     }
+    //                 }
+    //                 if (fieldData.values !== '') {
+    //                     let timeValuesArray = fieldData.values.split(':');
+    //                     fieldData.answer = new Date(new Date(new Date().setHours(timeValuesArray[0])).setMinutes(timeValuesArray[1]));
+    //                 } else {
+    //                     fieldData.answer = new Date();
+    //                 }
+    //             }
+    //             if (fieldData.field_type === 'CHECKBOX') {
+    //                 fieldData.answer = [];
+    //                 fieldData.option.forEach((option) => {
+    //                     option.selected = false;
+    //                 });
+    //                 if (fieldData.values && fieldData.values.length > 0) {
+    //                     fieldData.values.forEach((value) => {
+    //                         fieldData.answer.push(value.checkbox_val.toString());
+    //                         fieldData.option.forEach((option) => {
+    //                             if (option.option_id === value.checkbox_val.toString()) {
+    //                                 option.selected = true;
+    //                             }
+    //                         })
+    //                     });
+    //                 }
+    //             }
+    //             if (fieldData.field_type === 'DECIMAL' || fieldData.field_type === 'NUMBER') {
+    //                 let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
+    //                 fieldData.params = params;
+    //                 fieldData.answer = Number(fieldData.values);
+    //             }
+    //         });
+    //     });
+    // }
 
     function mapBySection(item) {
         return item.section;
@@ -2015,6 +2015,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         if ($window.localStorage.getItem('studentOpenEmisId')) {
             $window.localStorage.removeItem('studentOpenEmisId');
         }
+        console.log("addGuardian");
+        console.log(StudentController);
         let params = {
             student_id: StudentController.selectedStudent,
             user_id: StudentController.selectedStudentData.student_id,

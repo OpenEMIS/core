@@ -6,6 +6,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 use CustomField\Model\Behavior\SetupBehavior;
 
@@ -14,7 +15,7 @@ class SetupTextBehavior extends SetupBehavior
     private $ruleOptions = [];
     private $lengthValidationOptions = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -36,7 +37,7 @@ class SetupTextBehavior extends SetupBehavior
     {
         $model = $this->_table;
         $fieldTypes = $model->getFieldTypes();
-        $selectedFieldType = isset($model->request->data[$model->alias()]['field_type']) ? $model->request->data[$model->alias()]['field_type'] : key($fieldTypes);
+        $selectedFieldType = isset($model->request->data[$model->getAlias()]['field_type']) ? $model->request->data[$model->alias()]['field_type'] : key($fieldTypes);
 
         if ($selectedFieldType == $this->fieldTypeCode) {
             $this->buildTextValidator();
@@ -54,7 +55,7 @@ class SetupTextBehavior extends SetupBehavior
     {
         $max = $this->inputLimits['text_value']['max'];
 
-        $validator = $this->_table->validator();
+        $validator = $this->_table->getValidator();
         $validator
             // LENGTH - Mininum Length
             ->notEmpty('text_minimum_length')
@@ -269,7 +270,7 @@ class SetupTextBehavior extends SetupBehavior
         return $value;
     }
 
-    public function onUpdateFieldTextValidationRule(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTextValidationRule(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
@@ -280,7 +281,7 @@ class SetupTextBehavior extends SetupBehavior
         return $attr;
     }
 
-    public function onUpdateFieldTextLengthValidation(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTextLengthValidation(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';

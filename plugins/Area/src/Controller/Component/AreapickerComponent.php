@@ -12,13 +12,13 @@ class AreapickerComponent extends Component
 {
     private $controller = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->controller = $this->_registry->getController();
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $event = parent::implementedEvents();
         return $event;
@@ -56,7 +56,7 @@ class AreapickerComponent extends Component
     {
 
         $targetTable = TableRegistry::get($targetModel);
-        $levelAssociation = Inflector::singularize($targetTable->alias()).'Levels';
+        $levelAssociation = Inflector::singularize($targetTable->getAlias()).'Levels';
         $path = $targetTable
             ->find('path', ['for' => $areaId])
             ->contain([$levelAssociation])

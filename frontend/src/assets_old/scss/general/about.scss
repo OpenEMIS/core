@@ -1,0 +1,100 @@
+@charset "UTF-8";
+
+/* About v.1.0.0 */
+
+.kdx-tab-wrapper {
+    font-size: $bodyTextSize;
+    border: 1px solid #DDD;
+    background-color: $whiteColor;
+    padding: $padding15;
+
+    .kdx-about-contact {
+        display: flex;
+        flex-flow: row nowrap;
+
+        @media #{$tabletLandscape} {
+            flex-flow: row wrap;
+        }
+
+        .kdx-img-logo {
+            flex: 1 0 auto;
+            padding: $padding15;
+            max-width: 100%;
+
+            @media #{$tabletLandscape} {
+                flex: 0 auto;
+            }
+
+            &>img {
+                width: 100%;
+            }
+        }
+
+        .kdx-about-content {
+            flex: 1 auto;
+            min-width: 50%;
+            padding: $padding15;
+
+            .kdx-about-info {
+                padding: $padding5 $noPadding;
+
+                i {
+                    text-align: center;
+                    width: 20px;
+                }
+            }
+        }
+    }
+
+    .kdx-about-license {
+        &>ol {
+            margin-left: $margin15;
+
+            li {
+                margin-bottom: $margin15;
+
+                ol {
+                    margin-left: $margin15;
+
+                    &>li {
+                        list-style-type: lower-alpha;
+                    }
+                }
+            }
+        }
+
+        .kdx-end-condition {
+            text-align: center;
+        }
+    }
+
+    .kdx-about-partners {
+        img {
+            max-width: 200px;
+            margin-right: $margin20;
+
+            @media #{$mobilePortrait} {
+                max-width: 100%;
+            }
+        }
+    }
+}
+
+.rtl .kdx-tab-wrapper {
+    .kdx-about-license {
+        &>ol {
+            margin-right: $margin15;
+            margin-left: 0;
+
+            li ol {
+                margin-right: $margin15;
+                margin-left: 0;
+            }
+        }
+    }
+
+    .kdx-about-partners img {
+        margin-left: $margin20;
+        margin-right: $noMargin;
+    }
+}

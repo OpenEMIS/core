@@ -3,7 +3,7 @@ namespace Import\Model\Behavior;
 
 use ArrayObject;
 use Cake\Routing\Router;
-use Cake\Network\Session;
+use Cake\Http\Session;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 
@@ -25,15 +25,15 @@ class ImportResultBehavior extends ImportBehavior
         }
 
         //back button
-        if (!empty($this->config('backUrl'))) {
-            $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->config('backUrl'));
+        if (!empty($this->getConfig('backUrl'))) {
+            $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->getConfig('backUrl'));
         } elseif ($this->institutionId && $toolbarButtons['back']['url']['plugin']=='Institution') {
             $back = [];
 
-            if ($this->_table->request->params['pass'][0] == 'add') {
-                $back['action'] = str_replace('Import', '', $this->_table->alias());
-            } elseif ($this->_table->request->params['pass'][0] == 'results') {
-                $back['action'] = $this->_table->alias();
+            if ($this->_table->request->getAttribute('params')['pass'][0] == 'add') {
+                $back['action'] = str_replace('Import', '', $this->_table->getAlias());
+            } elseif ($this->_table->request->getAttribute('params')['pass'][0] == 'results') {
+                $back['action'] = $this->_table->getAlias();
                 $back[0] = 'add';
             };
 
@@ -55,7 +55,7 @@ class ImportResultBehavior extends ImportBehavior
 
     public function results()
     {
-        $session = $this->_table->Session;
+        $session = $this->_table->getRequest()->getSession();
         if ($session->check($this->sessionKey)) {
             $completedData = $session->read($this->sessionKey);
             $this->_table->ControllerAction->field('select_file', ['visible' => false]);
@@ -155,8 +155,8 @@ class ImportResultBehavior extends ImportBehavior
 
         $activeSheet = $objPHPExcel->getActiveSheet();
 
-        $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName,  __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) .' '. $dataSheetName);
-        $this->beginExcelTopTittle($objPHPExcel, __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) .' '. $dataSheetName);
+        $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName,  __(Inflector::humanize(Inflector::tableize($this->_table->getAlias()))) .' '. $dataSheetName);
+        $this->beginExcelTopTittle($objPHPExcel, __(Inflector::humanize(Inflector::tableize($this->_table->getAlias()))) .' '. $dataSheetName);
         foreach ($header as $key => $value) {
             $alpha = $this->getExcelColumnAlpha($key);
             $activeSheet->setCellValue($alpha . 2, $value);
@@ -173,22 +173,20 @@ class ImportResultBehavior extends ImportBehavior
         if (!empty($data)) {
             $downloadFolder = $this->prepareDownload();
             // Do not lcalize file name as certain non-latin characters might cause issue
-            $excelFile = sprintf('OpenEMIS_Core_Import_%s_%s_%s.xlsx', $this->config('model'), ucwords($type), time());
+            $excelFile = sprintf('OpenEMIS_Core_Import_%s_%s_%s.xlsx', $this->getConfig('model'), ucwords($type), time());
             $excelPath = $downloadFolder . DS . $excelFile;
 
             $newHeader = $header;
-
             if ($type == 'failed') {
                 $newHeader[] = $this->getExcelLabel('general', 'errors');
             }
             $dataSheetName = $this->getExcelLabel('general', 'data');
 
-            $objPHPExcel = new \PHPExcel();
+            $objPHPExcel = new Spreadsheet();
 
-            $rowData = 3;
+            ($this->isCustomText()) ? $rowData = 4 : $rowData = 3;
 
-            $this->setResultDataTemplate($objPHPExcel, $dataSheetName, $newHeader, $type);
-
+            $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $newHeader, $type);
             $activeSheet = $objPHPExcel->getActiveSheet();
             foreach ($data as $index => $record) {
                 if ($type == 'failed') {
@@ -199,11 +197,11 @@ class ImportResultBehavior extends ImportBehavior
                 }
                 $activeSheet->getRowDimension(($index + $rowData))->setRowHeight(15);
                 foreach ($values as $key => $value) {
-                    $alpha = $this->getExcelColumnAlpha($key);
+                    $alpha = $this->getExcelColumnAlpha($key + 1); 
                     $activeSheet->setCellValue($alpha . ($index + $rowData), $value);
                     $activeSheet->getColumnDimension($alpha)->setAutoSize(true);
 
-                    if ($key==(count($values)-1) && $type == 'failed') {
+                    if ($key == (count($values)) && $type == 'failed') { 
                         $suggestedRowHeight = $this->suggestRowHeight(strlen($value), 15);
                         $activeSheet->getRowDimension(($index + $rowData))->setRowHeight($suggestedRowHeight);
                         $activeSheet->getStyle($alpha . ($index + $rowData))->getAlignment()->setWrapText(true);
@@ -211,8 +209,12 @@ class ImportResultBehavior extends ImportBehavior
                 }
             }
 
+            if ($type == 'failed') {
+                $this->setCodesDataTemplate($objPHPExcel);
+            }
+
             $objPHPExcel->setActiveSheetIndex(0);
-            $objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
+            $objWriter = new Xlsx($objPHPExcel); // Changed class name //POCOR-8082
             $objWriter->save($excelPath);
 
             $downloadUrl = $this->_table->ControllerAction->url('download' . ucwords($type));
@@ -234,5 +236,7 @@ class ImportResultBehavior extends ImportBehavior
         }
 
         return $header == $cellsValue;
-    }        
+    }     
+
+       
 }

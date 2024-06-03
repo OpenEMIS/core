@@ -21,9 +21,9 @@ class AuditSecuritiesGroupUserRolesTable extends AppTable
 {
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_group_users');
+        $this->setTable('security_group_users');
         parent::initialize($config);
         // $this->belongsTo('CreatedUser', ['className' => 'User.Users', 'foreignKey'=>'created_user_id']);
         

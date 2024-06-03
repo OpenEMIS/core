@@ -60,7 +60,6 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 vm.currentUserName = userData.first_name + ' ' + userData.last_name;
                 vm.currentUserId = userData.id;
             }
-            //console.log(userData);
             //POCOR-6800 starts
             return InstitutionsCommentsSvc.getAllCommentTeacherViewPermissions(userData, $scope.institutionId);
         }, function(error){

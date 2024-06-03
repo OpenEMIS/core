@@ -1,4 +1,5 @@
 <?php
+
 namespace Training\Model\Table;
 
 use ArrayObject;
@@ -15,6 +16,7 @@ use App\Model\Traits\HtmlTrait;
 use Cake\Collection\Collection;
 use Cake\Routing\Router;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
 use Import\Model\Traits\ImportExcelTrait;
 use App\Model\Table\ControllerActionTable;
 
@@ -23,6 +25,10 @@ class TrainingSessionsTable extends ControllerActionTable
     use OptionsTrait;
     use HtmlTrait;
     use ImportExcelTrait;
+    private $id;
+    private $entity;
+    private $trainer_ids;
+    private $trainee_ids;
 
     // Workflow Steps - category
     const TO_DO = 1;
@@ -34,8 +40,9 @@ class TrainingSessionsTable extends ControllerActionTable
 
     const SELECT_ALL_TARGET_POPULATIONS = '-1';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
+
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Courses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'training_course_id']);
@@ -43,13 +50,16 @@ class TrainingSessionsTable extends ControllerActionTable
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         // revert back the association for Trainers to hasMany to handle saving of External Trainers
-        $this->hasMany('Trainers', ['className' => 'Training.TrainingSessionTrainers', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Trainers', ['className' => 'Training.TrainingSessionTrainers',
+            'foreignKey' => 'training_session_id',
+            'dependent' => true,
+            'cascadeCallbacks' => true]);
         $this->hasMany('TrainingApplications', ['className' => 'Training.TrainingApplications', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('SessionResults', ['className' => 'Training.TrainingSessionResults', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('TraineeResults', ['className' => 'Training.TrainingSessionTraineeResults', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsToMany('Trainees', [
             'className' => 'User.Users',
-            'joinTable' => 'training_sessions_trainees',
+            'joinTable' => 'Training.TrainingSessionsTrainees',
             'foreignKey' => 'training_session_id',
             'targetForeignKey' => 'trainee_id',
             'through' => 'Training.TrainingSessionsTrainees',
@@ -58,16 +68,21 @@ class TrainingSessionsTable extends ControllerActionTable
 
         $this->hasMany('Evaluators', ['className' => 'Training.TrainingSessionEvaluators', 'foreignKey' => 'training_session_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->addBehavior('Workflow.Workflow');
+
         $this->addBehavior('User.AdvancedNameSearch');
+
         $this->setDeleteStrategy('restrict');
+
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
         $this->addBehavior('Area.Areapicker');
+
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
+        $validator->setProvider('custom', $this); //POCOR-8074-3 for Validation. It works in edit
         $validator = parent::validationDefault($validator);
 
         return $validator
@@ -84,19 +99,12 @@ class TrainingSessionsTable extends ControllerActionTable
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
-        if (isset($data['trainees']) && is_array($data['trainees'])) {
-            foreach ($data['trainees'] as &$trainee) {
-                $t = $this->paramsDecode($trainee);
-                $trainee = [
-                    'id' => $t['trainee_id'],
-                    '_joinData' => $t
-                ];
-            }
-        }
+        $data = $this->clearTrainerSaveData($data);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+
         $this->setupTabElements();
         // Type / Visible
         $visible = ['index' => false, 'view' => true, 'edit' => true, 'add' => true];
@@ -104,50 +112,22 @@ class TrainingSessionsTable extends ControllerActionTable
         $this->field('comment', ['visible' => $visible]);
         $this->field('training_center', ['visible' => $visible]);
 
-        // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Sessions','Trainings');       
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
-
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
-        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        $userId = $this->Session->read('Auth.User.id');
-
-        if (!$this->AccessControl->isAdmin()) {
-            if ($entity->created_user_id != $userId) {
-                if (!$this->AccessControl->check(['Trainings', 'Sessions', 'edit'])) {
-                    unset($buttons['edit']);
-                }
-
-                if (!$this->AccessControl->check(['Trainings', 'Sessions', 'delete'])) {
-                    unset($buttons['delete']);
-                }
-            }
-        }
-        return $buttons;
+        return $this->hideEditDeleteButtonsForUser($event, $entity, $buttons);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->setFieldOrder([
-            'code', 'name', 'start_date', 'end_date', 'training_course_id', 'training_provider_id'
+            'code',
+            'name',
+            'start_date',
+            'end_date',
+            'training_course_id',
+            'training_provider_id'
         ]);
     }
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -169,12 +149,18 @@ class TrainingSessionsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $class = __CLASS__;
+        $line = __LINE__;
+        $entity = $this->setIdEntityFromQueryString($class, $line, $entity);
         $this->setupFields($event, $entity);
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->setupFields($event, $entity);
+        $class = __CLASS__;
+        $line = __LINE__;
+        $entity = $this->setIdEntityFromQueryString($class, $line, $entity);
+        $this->setupFields($event, $entity); // POCOR-8074-3 entity needed for dependant select field
     }
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
@@ -183,7 +169,6 @@ class TrainingSessionsTable extends ControllerActionTable
         // _joinData is required for 'saveStrategy' => 'replace' to work
         // Trainers and Trainees will not be validated since they are User.Users model and only their id is included so that
         // it will not be treated as a new record.
-        $newOptions = [];
         $newOptions = [
             'associated' => [
                 'Trainers' => ['validate' => false],
@@ -219,99 +204,34 @@ class TrainingSessionsTable extends ControllerActionTable
 
     public function addEditOnChangeCourse(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $request = $this->request;
-        unset($request->query['course']);
-
-        if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('training_course_id', $request->data[$this->alias()])) {
-                    $request->query['course'] = $request->data[$this->alias()]['training_course_id'];
-                }
-            }
+        // POCOR-8074 clear and clean change process
+        $alias = $this->getAlias();
+        $training_course_id = null;
+        if (isset($data[$alias])) {
+            $training_course_id = $data[$alias]['training_course_id'];
         }
+        if (!$training_course_id) {
+            return;
+        }
+        $param = 'training_course_id';
+        $value = $training_course_id;
+        $this->addQueryParam($param, $value); // POCOR-8074 adding query params
     }
 
     public function addEditOnAddTrainer(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $alias = $this->alias();
-        $fieldKey = 'trainers';
 
-        if (empty($data[$this->alias()][$fieldKey])) {
-            $data[$this->alias()][$fieldKey] = [];
-        }
-
-        if ($data->offsetExists($alias)) {
-            if (array_key_exists('trainer_id', $data[$alias]) && !empty($data[$alias]['trainer_id'])) {
-                $id = $data[$alias]['trainer_id'];
-                $trainerType = $data[$alias]['type'];
-
-                try {
-                    $obj = $this->Trainers->Users->get($id);
-
-                    $data[$alias][$fieldKey][] = [
-                        'type' => $trainerType,
-                        'trainer_id' => $obj->id,
-                        'name' => $obj->name,
-                        'trainer_name' => $obj->name_with_id
-                    ];
-
-                    $data[$alias]['trainer_id'] = '';
-                } catch (RecordNotFoundException $ex) {
-                    Log::write('debug', __METHOD__ . ': Record not found for id: ' . $id);
-                }
-            }
-        }
-
-        //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
-        $options['associated'] = [
-            'Trainers' => ['validate' => false]
-        ];
+        $this->addTrainerToDataTrainerArray($data, $options);
     }
 
     public function addEditOnAddTrainee(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $alias = $this->alias();
-        $fieldKey = 'trainees';
-
-        if (empty($data[$this->alias()][$fieldKey])) {
-            $data[$this->alias()][$fieldKey] = [];
-        }
-
-        if ($data->offsetExists($alias)) {
-            if (array_key_exists('trainee_id', $data[$alias]) && !empty($data[$alias]['trainee_id'])) {
-                $id = $data[$alias]['trainee_id'];
-
-                try {
-                    $obj = $this->Trainees->get($id);
-
-                    $data[$alias][$fieldKey][] = $this->paramsEncode(['openemis_no' => $obj->openemis_no, 'trainee_id' => $obj->id, 'name' => $obj->name, 'training_session_id' => $entity->id]);
-                } catch (RecordNotFoundException $ex) {
-                    Log::write('debug', __METHOD__ . ': Record not found for id: ' . $id);
-                }
-            }
-        }
-
-        //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
-        $options['associated'] = [
-            'Trainees' => ['validate' => false]
-        ];
-    }
-
-    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        $this->request->query['course'] = $entity->training_course_id;
+        $this->addTraineeToDataTraineeArray($entity, $data, $options);
     }
 
     public function editBeforeAction(Event $event, ArrayObject $extra)
     {
-        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-
-        $downloadUrl = $toolbarButtonsArray['back']['url'];
-        $downloadUrl[0] = 'template';
-        $this->controller->set('downloadOnClick', "javascript:window.location.href='". Router::url($downloadUrl) ."'");
-        $this->controller->set('importOnClick', "$('#reload').val('massAddTrainees').click();$('#file-input-wrapper').trigger('clear.bs.fileinput');");
-
-        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+        $this->addExportImportButtons($extra);
     }
 
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
@@ -368,9 +288,9 @@ class TrainingSessionsTable extends ControllerActionTable
         $this->autoRender = false;
 
         if ($this->request->is(['ajax'])) {
-            $term = $this->request->query['term'];
-            $extra = $this->request->query['extra'];
-            $data = $this->Trainers->Users->autocomplete($term, ['finder' => [$extra['type']], 'OR' => ['Identities.number LIKE' => $term.'%']]);
+            $term = $this->request->getQuery('term');
+            $extra = $this->request->getQuery('extra');
+            $data = $this->Trainers->Users->autocomplete($term, ['finder' => [$extra['type']], 'OR' => ['Identities.number LIKE' => $term . '%']]);
             echo json_encode($data);
             die;
         }
@@ -382,16 +302,16 @@ class TrainingSessionsTable extends ControllerActionTable
         $this->autoRender = false;
 
         if ($this->request->is(['ajax'])) {
-            $term = $this->request->query['term'];
+            $term = $this->request->getQuery('term');
             // $data = $this->Trainees->autocomplete($term);
 
             // autocomplete
-            $session = $this->request->session();
-            $sessionKey = $this->registryAlias() . '.primaryKey.id';
+            $session = $this->request->getSession();
+            $sessionKey = $this->getRegistryAlias() . '.primaryKey.id';
 
             $data = [];
             if ($session->check($sessionKey)) {
-                $id = !empty($this->request->params['pass'][1]) ? $this->paramsDecode($this->request->params['pass'][1])['id'] : $session->read($sessionKey);
+                $id = !empty($this->request->getAttribute('params')['pass'][1]) ? $this->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'] : $session->read($sessionKey);
                 $entity = $this->get($id);
 
                 $TargetPopulations = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
@@ -450,46 +370,33 @@ class TrainingSessionsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action, ServerRequest $request)
     {
+
+        $entity = $attr['entity'];
         if ($action == 'add') {
             $courseOptions = $this->Training->getCourseList();
-            $courseId = $this->queryString('course', $courseOptions);
-
+            $attr['type'] = 'select';
             $attr['options'] = $courseOptions;
             $attr['onChangeReload'] = 'changeCourse';
         } else if ($action == 'edit') {
-            $courseId = $request->query('course');
+            $courseId = $entity->training_course_id;
             $course = $this->Courses->get($courseId);
-
-            $attr['type'] = 'readonly';
+            $attr['value'] = $courseId;
             $attr['attr']['value'] = $course->code_name;
+            $attr['type'] = 'readonly';
         }
 
         return $attr;
     }
 
-    public function onUpdateFieldTrainingProviderId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTrainingProviderId(Event $event, array $attr, $action, ServerRequest $request)
     {
+        $entity = $attr['entity'];
         if ($action == 'add' || $action == 'edit') {
-            $courseId = $request->query('course');
-
-            $TrainingCoursesProviders = TableRegistry::get('Training.TrainingCoursesProviders');
-            $providers = $TrainingCoursesProviders
-                ->find()
-                ->matching('TrainingProviders')
-                ->where([
-                    $TrainingCoursesProviders->aliasField('training_course_id') => $courseId
-                ])
-                ->all();
-
-            $providerOptions = [];
-            foreach ($providers as $provider) {
-                $providerOptions[$provider->_matchingData['TrainingProviders']->id] = $provider->_matchingData['TrainingProviders']->name;
-            }
+            $providerOptions = $this->getTrainingCourseProvidersOptions($entity);
             $attr['options'] = $providerOptions;
         }
-
         return $attr;
     }
 
@@ -498,165 +405,69 @@ class TrainingSessionsTable extends ControllerActionTable
         $tableHeaders = [$this->getMessage($this->aliasField('trainer_type')), $this->getMessage($this->aliasField('trainer'))];
 
         $tableCells = [];
-        $alias = $this->alias();
+        $alias = $this->getAlias();
         $fieldKey = 'trainers';
         $trainerTypeOptions = $this->getSelectOptions($this->aliasField('trainer_types'));
 
+        $tableHeaders = [$this->getMessage($this->aliasField('trainer_type')), $this->getMessage($this->aliasField('trainer'))];
+
         if ($action == 'view') {
-            $associated = $entity->extractOriginal([$fieldKey]);
-            if (!empty($associated[$fieldKey])) {
-                foreach ($associated[$fieldKey] as $i => $obj) {
-                    $cell = '';
-                    $cell = $obj->user->name_with_id;
+            $tableCells = $this->populateViewTrainerTableCells($entity, $fieldKey, $trainerTypeOptions, $tableCells);
+        }
 
-                    $rowData = [];
-                    $rowData[] = $trainerTypeOptions[$this->getTrainerType($obj)];
-                    $rowData[] = $cell;
-
-                    $tableCells[] = $rowData;
-                }
-            }
-        } elseif ($action == 'add' || $action == 'edit') {
+        if ($action == 'add' || $action == 'edit') {
             $tableHeaders[] = ''; // for delete column
-            $Form = $event->subject()->Form;
+            $Form = $event->getSubject()->Form;
             $Form->unlockField('TrainingSessions.trainers');
+            $this->getTrainersIds($entity, $fieldKey, $alias);
 
             if ($this->request->is(['get'])) {
-                if (!array_key_exists($alias, $this->request->data)) {
-                    $this->request->data[$alias] = [$fieldKey => []];
-                } else {
-                    $this->request->data[$alias][$fieldKey] = [];
-                }
-
-                $associated = $entity->extractOriginal([$fieldKey]);
-                if (!empty($associated[$fieldKey])) {
-                    foreach ($associated[$fieldKey] as $key => $obj) {
-                        $trainerType = $this->getTrainerType($obj);
-                        $trainerId = $obj->trainer_id;
-                        $name = $obj->name;
-                        $trainerName = $obj->user->name_with_id;
-
-                        $this->request->data[$alias][$fieldKey][$key] = [
-                            'id' => $obj->id,
-                            'type' => $trainerType,
-                            'trainer_id' => $trainerId,
-                            'name' => $name,
-                            'trainer_name' => $trainerName
-                        ];
-                    }
-                }
+                $this->clearRequestData($alias, $fieldKey);
+                $this->getTrainersToData($entity, $fieldKey, $alias);
             }
 
-            // refer to addEditOnAddTrainer for http post
-            if ($this->request->data("$alias.$fieldKey")) {
-                $associated = $this->request->data("$alias.$fieldKey");
-
-                foreach ($associated as $key => $obj) {
-                    $trainerType = $obj['type'];
-                    $trainerId = $obj['trainer_id'];
-                    $trainerName = $obj['trainer_name'];
-                    $name = $obj['name'];
-
-                    $rowData = [];
-
-                    $cell = $trainerName;
-                    $cell .= $Form->hidden("$alias.$fieldKey.$key.name", ['value' => $name]);
-                    $cell .= $Form->hidden("$alias.$fieldKey.$key.type", ['value' => $trainerType]);
-                    $cell .= $Form->hidden("$alias.$fieldKey.$key.trainer_id", ['value' => $trainerId]);
-                    $cell .= $Form->hidden("$alias.$fieldKey.$key.trainer_name", ['value' => $trainerName]);
-
-                    $rowData[] = [$trainerTypeOptions[$trainerType], ['autocomplete-exclude' => $trainerId]];
-                    $rowData[] = $cell;
-                    $rowData[] = $this->getDeleteButton();
-                    $tableCells[] = $rowData;
-                }
-            }
+            $tableCells = $this->populateTrainerTableCellsForEdit($alias, $fieldKey, $trainerTypeOptions, $tableCells, $Form);
         }
 
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
         $attr['trainerTypeOptions'] = $trainerTypeOptions;
+        return $event->getSubject()->renderElement('Training.Sessions/' . $fieldKey, ['attr' => $attr, 'entity' => $entity]);
 
-        return $event->subject()->renderElement('Training.Sessions/' . $fieldKey, ['attr' => $attr]);
     }
 
     public function onGetCustomTraineesElement(Event $event, $action, $entity, $attr, $options = [])
     {
-        $tableHeaders = [__('OpenEMIS ID'), __('Name'), __('Action')];
+
         $tableCells = [];
-        $alias = $this->alias();
-        $key = 'trainees';
+        $alias = $this->getAlias();
+        $fieldKey = 'trainees';
+//        die('<pre>' . print_r($entity, true));
+
+        $tableHeaders = [__('OpenEMIS ID'), __('Name'), __('Action')];
 
         if ($action == 'view') {
-            $tableHeaders = [__('OpenEMIS ID'), __('Name'), __('Status')];
-            $associated = $entity->extractOriginal([$key]);
-            if (!empty($associated[$key])) {
-                foreach ($associated[$key] as $i => $obj) {
-                    $traineeStatus = $obj['_joinData']->status;
-                    $rowData = [];
-                    $rowData[] = $obj->openemis_no;
-                    $rowData[] = $obj->name;
-                    if ($traineeStatus == 1) {
-                        $rowData[] = __('Approved');
-                    } else {
-                        $rowData[] = __('Withdrawn');
-                    }
-
-                    $tableCells[] = $rowData;
-                }
-            }
-        } elseif ($action == 'edit') {
-            $Form = $event->subject()->Form;
+            $tableCells = $this->populateViewTraineeTableCells($entity, $fieldKey);
+        }
+        if ($action == 'edit') {
+            $Form = $event->getSubject()->Form;
             $Form->unlockField('TrainingSessions.trainees');
             $Form->unlockField('TrainingSessions.trainees_import');
 
             if ($this->request->is(['get'])) {
-                if (!array_key_exists($alias, $this->request->data)) {
-                    $this->request->data[$alias] = [$key => []];
-                } else {
-                    $this->request->data[$alias][$key] = [];
-                }
-
-                $associated = $entity->extractOriginal([$key]);
-                if (!empty($associated[$key])) {
-                    foreach ($associated[$key] as $i => $obj) {
-                        $this->request->data[$alias][$key][$obj->id] = $this->paramsEncode(['openemis_no' => $obj->openemis_no, 'trainee_id' => $obj->id, 'name' => $obj->name, 'training_session_id' => $obj->_joinData->training_session_id, 'status' => $obj->_joinData->status]);
-                    }
-                }
+                $this->clearTraineeData($alias, $fieldKey);
+                $this->getTraineesToData($entity, $fieldKey, $alias);
             }
 
             // refer to addEditOnAddTrainee for http post
-            if ($this->request->data("$alias.$key")) {
-                $associated = $this->request->data("$alias.$key");
-                $trainingSessionResults = $this->TraineeResults->getTrainingSessionResults($entity->id);
-
-                foreach ($associated as $i => $obj) {
-                    $object = $this->paramsDecode($obj);
-                    $rowData = [];
-                    $name = $object['name'];
-
-                    if (empty($object['status'])) {
-                        $object['status'] = 1;
-                        $obj = $this->paramsEncode($object);
-                    }
-                    $name .= $Form->hidden("$alias.$key.$i", ['value' => $obj]);
-                    $rowData[] = [$object['openemis_no'], ['autocomplete-exclude' => $object['trainee_id']]];
-                    $rowData[] = $name;
-
-                    if (array_key_exists($entity->id, $trainingSessionResults) && array_key_exists($object['trainee_id'], $trainingSessionResults[$entity->id])) {                 
-                        $message = __('There are results for this trainee');
-                        $rowData[] = '<i class="fa fa-info-circle fa-lg icon-blue" data-toggle="tooltip" data-container="body" data-placement="top" data-animation="false" title="" data-html="true" data-original-title="' . $message . '"></i>';  
-                    } else {
-                        $rowData[] = $this->getDeleteButton();
-                    }
-                    $tableCells[] = $rowData;
-                }
-            }
+            $tableCells = $this->populateTraineeTableCellsForEdit($entity, $alias, $fieldKey, $Form, $tableCells);
         }
+
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
-        return $event->subject()->renderElement('Training.Sessions/' . $key, ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Training.Sessions/' . $fieldKey, ['attr' => $attr, 'entity' => $entity]);
+
     }
 
     public function getTrainingSession($id = null)
@@ -699,18 +510,21 @@ class TrainingSessionsTable extends ControllerActionTable
         ];
 
         $this->field('training_course_id', [
-            'type' => 'select'
+            'type' => 'select',
+            'entity' => $entity
         ]);
+
         $this->field('training_provider_id', [
             'type' => 'select',
+            'entity' => $entity,
             'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
         ]);
-        $this->field('area_id', [
+        /*$this->field('area_id', [
             'type' => 'areapicker',
             'source_model' => 'Area.Areas',
             'displayCountry' => false,
             'entity' => $entity
-        ]);
+        ]);*/
         $this->field('trainers', [
             'type' => 'custom_trainers',
             'valueClass' => 'table-full-width'
@@ -724,22 +538,24 @@ class TrainingSessionsTable extends ControllerActionTable
             /**
              * Import field variables
              */
-            $comment = '* '. sprintf(__('Format Supported: %s'), implode(', ', array_keys($this->fileTypesMap)));
+            $comment = '* ' . sprintf(__('Format Supported: %s'), implode(', ', array_keys($this->fileTypesMap)));
             $comment .= '<br/>';
-            $comment .= '* '. sprintf(__('File size should not be larger than %s.'), $this->bytesToReadableFormat($this->MAX_SIZE));
+            $comment .= '* ' . sprintf(__('File size should not be larger than %s.'), $this->bytesToReadableFormat($this->MAX_SIZE));
             $comment .= '<br/>';
-            $comment .= '* '. sprintf(__('Recommended Maximum Records: %s'), $this->MAX_ROWS);
+            $comment .= '* ' . sprintf(__('Recommended Maximum Records: %s'), $this->MAX_ROWS);
             // $data = $event->subject()->request->data;
-            $data = $this->controller->request->data;
+            // $data = $this->controller->request->data;
+            $data = $this->request->getData();
+
             if ((is_object($data) && $data->offsetExists('trainees_import_error')) || (is_array($data) && isset($data['trainees_import_error']))) {
-                $entity->errors('trainees_import', $data['trainees_import_error']);
+                $entity->getErrors('trainees_import', $data['trainees_import_error']);
             }
             /**
              * End Import field variables
              */
 
             // this is a fake field to make the form render with an "enctype"
-            $this->field('trainees_fake_field', ['type' => 'binary', 'visible'=>false]);
+            $this->field('trainees_fake_field', ['type' => 'binary', 'visible' => false]);
 
             $this->field('trainees', [
                 'type' => 'custom_trainees',
@@ -761,12 +577,12 @@ class TrainingSessionsTable extends ControllerActionTable
     }
 
 
-/******************************************************************************************************************
-**
-** Import Functions
-**
-******************************************************************************************************************/
-    public function implementedEvents()
+    /******************************************************************************************************************
+     **
+     ** Import Functions
+     **
+     ******************************************************************************************************************/
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.template'] = 'template';
@@ -792,7 +608,7 @@ class TrainingSessionsTable extends ControllerActionTable
         $autoTitle = false;
         $titleColumn = 'F';
         // setImportDataTemplate() resides in ImportTrait
-        $this->setImportDataTemplate( $objPHPExcel, $dataSheetName, $header, $autoTitle, $titleColumn );
+        $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $header, $autoTitle, $titleColumn);
 
         $objPHPExcel->setActiveSheetIndex(0);
         $objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
@@ -807,7 +623,7 @@ class TrainingSessionsTable extends ControllerActionTable
     {
         $request = $this->controller->request;
         $model = $this;
-        $alias = $model->alias();
+        $alias = $model->getAlias();
         $key = 'trainees';
         $error = '';
         // MAX_SIZE resides in ImportTrait
@@ -830,10 +646,10 @@ class TrainingSessionsTable extends ControllerActionTable
         if (empty($data[$alias]['trainees_import'])) {
             $error = $model->getMessage('Import.not_supported_format');
         }
-        if ($data[$alias]['trainees_import']['error']==4) {
+        if ($data[$alias]['trainees_import']['error'] == 4) {
             $error = $model->getMessage('Import.not_supported_format');
         }
-        if ($data[$alias]['trainees_import']['error']>0) {
+        if ($data[$alias]['trainees_import']['error'] > 0) {
             $error = $model->getMessage('Import.over_max');
         }
 
@@ -858,7 +674,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
         $fileExt = $fileObj['name'];
         $fileExt = explode('.', $fileExt);
-        $fileExt = $fileExt[count($fileExt)-1];
+        $fileExt = $fileExt[count($fileExt) - 1];
         if (!array_key_exists($fileExt, $supportedFormats)) {
             if (!empty($fileFormat)) {
                 $error = $model->getMessage('Import.not_supported_format');
@@ -868,7 +684,7 @@ class TrainingSessionsTable extends ControllerActionTable
         if (!empty($error)) {
             $data['trainees_import_error'] = $error;
         } else {
-            $controller = $model->controller;
+            $controller = $model->getController();
             $controller->loadComponent('PhpExcel');
             $columns = ['trainees_import'];
             $header = ['OpenEMIS ID'];
@@ -931,32 +747,31 @@ class TrainingSessionsTable extends ControllerActionTable
                 }
                 $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
                 $trainee = $Staff
-                            ->find()
-                            ->matching('Users', function ($q) use ($openemis_no) {
-                                return $q
-                                    ->find('all')
-                                    ->where(['Users.openemis_no' => $openemis_no]);
-                            })
-                            ->where([$Staff->aliasField('staff_status_id') => $assignedStatus])
-                            ;
+                    ->find()
+                    ->matching('Users', function ($q) use ($openemis_no) {
+                        return $q
+                            ->find('all')
+                            ->where(['Users.openemis_no' => $openemis_no]);
+                    })
+                    ->where([$Staff->aliasField('staff_status_id') => $assignedStatus]);
 
                 if (!empty($targetPopulationIds)) {
-                    $trainee =  $trainee
-                                ->matching('Positions', function ($q) use ($targetPopulationIds) {
-                                    return $q
-                                        ->find('all')
-                                        ->where([
-                                            'Positions.staff_position_title_id IN' => $targetPopulationIds
-                                        ]);
-                                });
+                    $trainee = $trainee
+                        ->matching('Positions', function ($q) use ($targetPopulationIds) {
+                            return $q
+                                ->find('all')
+                                ->where([
+                                    'Positions.staff_position_title_id IN' => $targetPopulationIds
+                                ]);
+                        });
                 }
 
-                $trainee =  $trainee
-                            ->group([
-                                $Staff->aliasField('staff_id')
-                            ])
-                            ->order([$Users->aliasField('first_name')])
-                            ->first();
+                $trainee = $trainee
+                    ->group([
+                        $Staff->aliasField('staff_id')
+                    ])
+                    ->order([$Users->aliasField('first_name')])
+                    ->first();
 
                 if ($trainee) {
                     $data[$alias][$key][$openemis_no] = [
@@ -969,14 +784,15 @@ class TrainingSessionsTable extends ControllerActionTable
             }
         }
     }
-/******************************************************************************************************************
-** End Import Functions
-******************************************************************************************************************/
+
+    /******************************************************************************************************************
+     ** End Import Functions
+     ******************************************************************************************************************/
 
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->getRequest()->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -998,12 +814,12 @@ class TrainingSessionsTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->CreatedUser->alias(),'Assignees'])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->contain([$this->CreatedUser->getAlias(), 'Assignees'])
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
             ->where([$this->aliasField('assignee_id') => $userId,
-            'Assignees.super_admin IS NOT'=>1]) //POCOR-7102
+                'Assignees.super_admin IS NOT' => 1])//POCOR-7102
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) {
 
@@ -1043,7 +859,7 @@ class TrainingSessionsTable extends ControllerActionTable
      */
     public function getCourses($id)
     {
-        $query =  $this->find('list', ['keyField' => 'id', 'valueField' => 'name']);
+        $query = $this->find('list', ['keyField' => 'id', 'valueField' => 'name']);
         if ($id > 0) {
             $query->where([$this->aliasField('training_course_id =') => $id]);
         }
@@ -1051,34 +867,34 @@ class TrainingSessionsTable extends ControllerActionTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Administration > Training > Sessions';
-            $workflowModelsTable = TableRegistry::get('workflow_models');
-            $workflowStepsTable = TableRegistry::get('workflow_steps');
+            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
             $Workflows = TableRegistry::get('Workflow.Workflows');
             $workModelId = $Workflows
-                            ->find()
-                            ->select(['id'=>$workflowModelsTable->aliasField('id'),
-                            'workflow_id'=>$Workflows->aliasField('id'),
-                            'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
-                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
-                                [
-                                    $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
-                                ])
-                            ->where([$workflowModelsTable->aliasField('name')=>$workflowModel])->first();
+                ->find()
+                ->select(['id' => $workflowModelsTable->aliasField('id'),
+                    'workflow_id' => $Workflows->aliasField('id'),
+                    'is_school_based' => $workflowModelsTable->aliasField('is_school_based')])
+                ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
+                    [
+                        $workflowModelsTable->aliasField('id') . ' = ' . $Workflows->aliasField('workflow_model_id')
+                    ])
+                ->where([$workflowModelsTable->aliasField('name') => $workflowModel])->first();
             $workflowId = $workModelId->workflow_id;
             $isSchoolBased = $workModelId->is_school_based;
             $workflowStepsOptions = $workflowStepsTable
-                            ->find()
-                            ->select([
-                                'stepId'=>$workflowStepsTable->aliasField('id'),
-                            ])
-                            ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
-                            ->first();
+                ->find()
+                ->select([
+                    'stepId' => $workflowStepsTable->aliasField('id'),
+                ])
+                ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
+                ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $request->session();
+            $session = $request->getSession();
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
             }
@@ -1092,7 +908,7 @@ class TrainingSessionsTable extends ControllerActionTable
                     $Areas = TableRegistry::get('Area.Areas');
                     $Institutions = TableRegistry::get('Institution.Institutions');
                     if ($isSchoolBased) {
-                        if (is_null($institutionId)) {                        
+                        if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
                         } else {
                             $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
@@ -1101,19 +917,19 @@ class TrainingSessionsTable extends ControllerActionTable
                             // School based assignee
                             $where = [
                                 'OR' => [[$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId],
-                                        ['Institutions.id' => $institutionId]],
+                                    ['Institutions.id' => $institutionId]],
                                 $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
                             ];
                             $schoolBasedAssigneeQuery = $SecurityGroupUsers
-                                    ->find('userList', ['where' => $where])
-                                    ->leftJoinWith('SecurityGroups.Institutions');
+                                ->find('userList', ['where' => $where])
+                                ->leftJoinWith('SecurityGroups.Institutions');
                             $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
-                            
+
                             // Region based assignee
                             $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                             $regionBasedAssigneeQuery = $SecurityGroupUsers
-                                        ->find('UserList', ['where' => $where, 'area' => $areaObj]);
-                            
+                                ->find('UserList', ['where' => $where, 'area' => $areaObj]);
+
                             $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
                             // End
                             $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
@@ -1121,8 +937,8 @@ class TrainingSessionsTable extends ControllerActionTable
                     } else {
                         $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                         $assigneeQuery = $SecurityGroupUsers
-                                ->find('userList', ['where' => $where])
-                                ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
+                            ->find('userList', ['where' => $where])
+                            ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
                         $assigneeOptions = $assigneeQuery->toArray();
                     }
                 }

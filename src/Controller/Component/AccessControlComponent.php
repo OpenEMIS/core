@@ -6,6 +6,8 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
+use Cake\Http\Session;
 
 class AccessControlComponent extends Component
 {
@@ -22,11 +24,11 @@ class AccessControlComponent extends Component
 
     public $components = ['Auth', 'Page.Page'];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->controller = $this->_registry->getController();
-        $this->action = $this->request->params['action'];
-        $this->Session = $this->request->session();
+        $this->action = $this->getController()->getRequest()->getParam('action');
+        $this->Session = $this->getController()->getRequest()->getSession();
         $this->accessMap = [];
 
         if (!is_null($this->Auth->user()) && $this->Auth->user('super_admin') == 0) {
@@ -44,7 +46,7 @@ class AccessControlComponent extends Component
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         // need to execute before PageComponent::beforeRender
@@ -63,7 +65,7 @@ class AccessControlComponent extends Component
 
             foreach ($actions as $action => $value) {
                 if ($value == true && in_array($action, $allowedActions)) {
-                    $check = $this->check(['controller' => $this->controller->name, 'action' => $action]);
+                    $check = $this->check(['controller' => $this->controller->getName(), 'action' => $action]);
                     if ($check == false) {
                         $disabledActions[] = $action;
                     }
@@ -139,9 +141,10 @@ class AccessControlComponent extends Component
 
     public function buildPermissions()
     {
+        
         $this->Session->delete('Permissions'); // remove all permission first
-        $operations = $this->config('operations');
-        $separator = $this->config('separator');
+        $operations = $this->getConfig('operations');
+        $separator = $this->getConfig('separator');
         $userId = $this->Auth->user('id');
         $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
 
@@ -249,17 +252,16 @@ class AccessControlComponent extends Component
             }
         }
         // Log::write('debug', $url);
-        //POCOR-8087:: Allow all user for survey app
-        if(($this->controller->name == 'Rest') && ($this->action == 'survey')){
+         //POCOR-8087:: Allow all user for survey app
+         if(($this->controller->getName() == 'Rest') && ($this->action == 'survey')){
             return true;
         }
         //POCOR-8087::End
-
         if (empty($url)) {
-            $url = ['controller' => $this->controller->name, 'action' => $this->action];
+            $url = ['controller' => $this->controller->getName(), 'action' => $this->action];
         } else {
             if (!isset($url['controller'])) {
-                $url['controller'] = $this->controller->name;
+                $url['controller'] = $this->controller->getName();
             }
         }
         $url = $this->checkAccessMap($url);
@@ -282,7 +284,7 @@ class AccessControlComponent extends Component
 
         // exclude profile controllers
         /*commenting Profiles, ProfileInsurances and ProfileBodyMasses as per task POCOR-5312 permission requirement*/
-        if($this->request->params['action'] == 'TrainingNeeds'){//POCOR-6292 starts
+        if($this->getController()->getRequest()->getParam('action') == 'TrainingNeeds'){//POCOR-6292 starts
            $excludedController = ['ProfileApplicationAttachments',
                'ProfileApplicationInstitutionChoices'
                /*'ProfileBodyMasses'*/,
@@ -313,9 +315,9 @@ class AccessControlComponent extends Component
         $permissionKey = implode('.', $url);
         // Log::write('debug', $permissionKey);
 
-        if ($controller == $this->controller->name) {
+        if ($controller == $this->controller->getName()) {
             $event = $this->controller->dispatchEvent('Controller.SecurityAuthorize.isActionIgnored', [$action], $this);
-            if ($event->result == true) {
+            if ($event->getResult() == true) {
                 return true;
             }
         }
@@ -342,7 +344,7 @@ class AccessControlComponent extends Component
     // the purpose of this function is to allow multiple actions linked to the same permission
     public function addAccessMap($key)
     {
-        $controller = $this->controller->name;
+        $controller = $this->controller->getName();
         $this->accessMap["$controller.$key"] = "$controller.%s";
     }
 
@@ -351,7 +353,7 @@ class AccessControlComponent extends Component
         $urlValues = array_values($url);
         $key = implode('.', [$urlValues[0], $urlValues[1]]);
 
-        $request = $this->request;
+        $request = $this->getController()->getRequest();
         $accessMap = $this->accessMap;
 
         if (isset($accessMap[$key])) {
@@ -361,7 +363,7 @@ class AccessControlComponent extends Component
                     $action = $urlValues[2];
                 }
             } else {
-                $paramsPass = $request->params['pass'];
+                $paramsPass = $request->getParam('pass');
                 if (count($paramsPass) > 0) {
                     if (!is_numeric($paramsPass[0]) && !$this->isUuid($paramsPass[0])) { // this is an action
                         $action = array_shift($paramsPass);

@@ -12,8 +12,8 @@ use App\Model\Traits\OptionsTrait;
 class InstitutionProgrammesTable extends AppTable  {
 	use OptionsTrait;
 
-	public function initialize(array $config) {
-		$this->table('institution_grades');
+	public function initialize(array $config): void {
+		$this->setTable('institution_grades');
 		parent::initialize($config);
 
 		$this->belongsTo('EducationGrades', 	['className' => 'Education.EducationGrades']);
@@ -57,7 +57,6 @@ class InstitutionProgrammesTable extends AppTable  {
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
 	{
-		// echo "<pre>"; print_r($fields); die();
 		$cloneFields = $fields->getArrayCopy();
 		$newFields = [];
 		foreach ($cloneFields as $key => $value) {

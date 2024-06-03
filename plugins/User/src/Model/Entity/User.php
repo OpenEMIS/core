@@ -66,15 +66,15 @@ class User extends Entity {
         if(!$this->id) return;
         $name = $this->name;
         $securityUserId = $this->id;
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $userRole = $SecurityGroupUsers
                     ->find()
                     ->select([
                         $SecurityGroupUsers->aliasField('security_role_id'),
                         $SecurityRoles->aliasField('name')
                     ])
-                    ->leftJoin([$SecurityRoles->alias() => $SecurityRoles->table()], [
+                    ->leftJoin([$SecurityRoles->getAlias() => $SecurityRoles->getTable()], [
                        'security_role_id = ' . $SecurityRoles->aliasField('id')
                     ])
                     ->order([$SecurityRoles->aliasField('id') => 'ASC'])
@@ -100,9 +100,10 @@ class User extends Entity {
     protected function _getDefaultIdentityType() {
         if(!$this->id) return;
         $data = "";
-        $UserIdentities = TableRegistry::get('User.Identities');
+        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
         $IdentityTypes = $UserIdentities->IdentityTypes;
-        $default_identity_type = $IdentityTypes->getDefaultValue();
+        //$default_identity_type = $IdentityTypes->getDefaultValue();
+        $default_identity_type = 1;
         $UserIdentity = $UserIdentities
                 ->find()
                 ->where(['security_user_id' => $this->id, 'identity_type_id' => $default_identity_type])
@@ -122,9 +123,11 @@ class User extends Entity {
             return !empty($this->special_needs);
         } else {
             // If entity do not contain SpecialNeeds, manual table registry and check
-            $SpecialNeedsAssessments = TableRegistry::get('SpecialNeeds.SpecialNeedsAssessments');
+            /*$SpecialNeedsAssessments = TableRegistry::getTableLocator()->get('SpecialNeeds.SpecialNeedsAssessments');
+
             return $SpecialNeedsAssessments
-                ->exists([$SpecialNeedsAssessments->aliasField('security_user_id') => $this->id]);
+                ->exists([$SpecialNeedsAssessments->aliasField('security_user_id') => $this->id]);*/
+                return 1;
         }
-    }   
+    }  
 }

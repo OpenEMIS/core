@@ -10,7 +10,7 @@ use Cake\Event\Event;
 use App\Model\Table\AppTable;
 
 class ExaminationCentreRoomsExaminationsInvigilatorsTable extends AppTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 		$this->belongsTo('ExaminationCentreRooms', ['className' => 'Examination.ExaminationCentreRooms']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);

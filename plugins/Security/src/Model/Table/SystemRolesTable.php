@@ -5,16 +5,16 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
 
 // Should not be in used anymore, refer to SecurityRolesTable
 class SystemRolesTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_roles');
+        $this->setTable('security_roles');
         parent::initialize($config);
 
         $this->belongsTo('SecurityGroups', ['className' => 'Security.UserGroups']);
@@ -33,17 +33,17 @@ class SystemRolesTable extends AppTable
         $controller = $this->controller;
         $tabElements = [
             'UserRoles' => [
-                'url' => ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => 'UserRoles'],
+                'url' => ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName(), 'action' => 'UserRoles'],
                 'text' => $this->getMessage('UserRoles.tabTitle')
             ],
-            $this->alias() => [
-                'url' => ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => $this->alias()],
+            $this->getAlias() => [
+                'url' => ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName(), 'action' => $this->getAlias()],
                 'text' => $this->getMessage($this->aliasField('tabTitle'))
             ]
         ];
         $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
 
         $this->ControllerAction->field('security_group_id', ['visible' => false]);
         $this->ControllerAction->field('visible');
@@ -58,7 +58,7 @@ class SystemRolesTable extends AppTable
 
     public function onGetPermissions(Event $event, Entity $entity)
     {
-        $subject = $event->subject(); // ControllerActionHelper
+        $subject = $event->getSubject(); // ControllerActionHelper
         return '';
     }
 
@@ -67,7 +67,7 @@ class SystemRolesTable extends AppTable
         $this->ControllerAction->setFieldOrder(['visible', 'name', 'permissions']);
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options)
     {
         // $options['conditions'][$this->aliasField('security_group_id')] = [0, -1];
         $query->where([$this->aliasField('security_group_id') . ' IN ' => [0, -1]]);

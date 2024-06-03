@@ -9,7 +9,7 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use DateTime;
 use PHPExcel_Worksheet;
 
@@ -17,9 +17,9 @@ class ImportOutcomeTemplatesTable extends AppTable {
 
     private $_currentData = null;
 
-    public function initialize(array $config) {
+    public function initialize(array $config): void {
 
-        $this->table('import_mapping');
+        $this->setTable('import_mapping');
 
         parent::initialize($config);
 
@@ -36,7 +36,7 @@ class ImportOutcomeTemplatesTable extends AppTable {
         $this->competencyTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
     }
     
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
         $newEvent = [
             'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
@@ -48,20 +48,22 @@ class ImportOutcomeTemplatesTable extends AppTable {
         return $events;
     }
 
-    public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
+    public function onImportCheckUnique(Event $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
     {
-        $selectedPeriod = $this->getAcademicPeriod($this->request->query('period'));
+        $selectedPeriod = $this->getAcademicPeriod($this->request->getQuery('period'));
         $columns = new Collection($columns);
         $extractedOutcomeTemplateCode = $columns->filter(function ($value, $key, $iterator) {
             return $value == 'outcome_template_code';
         });
+
         $outcomeTemplateCodeIndex = key($extractedOutcomeTemplateCode->toArray());
         $outcomeTemplateCode = $sheet->getCellByColumnAndRow($outcomeTemplateCodeIndex, $row)->getValue();
+        
         $CompetencyTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
         $competencyTemplatesObject = $CompetencyTemplates->find()->where([
             'code' => $outcomeTemplateCode,
             'academic_period_id' => $selectedPeriod
-        ])->first();
+        ])->enableHydration(false)->first();
         if ($competencyTemplatesObject) {
             $tempRow['entity'] = $competencyTemplatesObject;
         } else {
@@ -89,9 +91,9 @@ class ImportOutcomeTemplatesTable extends AppTable {
         ]);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriod($this->request->query('period'), true));
+        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriod($this->request->getQuery('period'), true));
 
         if ($action == 'add') {
             # $attr['default'] = $selectedPeriod;
@@ -106,13 +108,15 @@ class ImportOutcomeTemplatesTable extends AppTable {
         $request = $this->request;
         
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
-                    $request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('academic_period_id', $request->getData()[$this->getAlias()])) {
+                    // Use setParam() to set the value of the query string parameter 'period'
+                    $request = $request->withParam('period', $request->getData()[$this->getAlias()]['academic_period_id']);
                 }
             }
         }
     }
+
 
     public function getAcademicPeriod($querystringPeriod, $withOptions = false)
     {
@@ -129,16 +133,16 @@ class ImportOutcomeTemplatesTable extends AppTable {
         }
     }
 
-    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
 
         if ($action == 'add') {
 			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			if(!empty($this->request->query('period')) && empty($request->data($this->aliasField('academic_period_id')))) {
-				$academicPeriodId = $this->request->query('period');
+			if(!empty($this->request->getQuery('period')) && empty($this->request->getData()($this->aliasField('academic_period_id')))) {
+				$academicPeriodId = $this->request->getQuery('period');
 			} else {
-				$academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();					
+				$academicPeriodId = !is_null($this->request->getData($this->aliasField('academic_period_id'))) ? $this->request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();					
 			}	
 			
 			$programmeOptions = $EducationProgrammes
@@ -157,22 +161,26 @@ class ImportOutcomeTemplatesTable extends AppTable {
     public function addEditOnChangeEducationProgrammeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['programme']);
+        $request = $request->withQueryParams(array_diff_key($request->getQueryParams(), ['programme' => '']));
+        
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('education_programme_id', $request->data[$this->alias()])) {
-                    $request->query['programme'] = $request->data[$this->alias()]['education_programme_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('education_programme_id', $request->getData()[$this->getAlias()])) {
+                    // Use withQueryParams() to set the value of the query string parameter 'programme'
+                    $request = $request->withQueryParams(array_merge($request->getQueryParams(), ['programme' => $request->getData()[$this->getAlias()]['education_programme_id']]));
                 }
             }
         }
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        list($gradeOption, $selectedGrade) = array_values($this->getEducationGrade($this->request->query('grade'), true));
+        list($gradeOption, $selectedGrade) = array_values($this->getEducationGrade($this->request->getQuery('grade'), true));
 
         if ($action == 'add') {
-            $selectedProgramme = $request->query('programme');
+            $selectedProgramme = $this->request->getData('ImportOutcomeTemplates')['education_programme_id'];
+           // echo "<pre>"; print_r($selectedProgramme);die;
             $gradeOptions = [];
             if (!is_null($selectedProgramme)) {
                 $gradeOptions = $this->EducationGrade
@@ -194,14 +202,18 @@ class ImportOutcomeTemplatesTable extends AppTable {
     {
         $request = $this->request;
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('education_grade_id', $request->data[$this->alias()])) {
-                    $request->query['grade'] = $request->data[$this->alias()]['education_grade_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('education_grade_id', $request->getData()[$this->getAlias()])) {
+                    // Create a new Request object with modified query parameters
+                    $request = $request->withQueryParams(array_merge($request->getQueryParams(), ['grade' => $request->getData()[$this->getAlias()]['education_grade_id']]));
+                    
+                    // Update the flag
                     $this->isGradeUpdate = true;
                 }
             }
         }
     }
+
 
     public function getEducationGrade($querystringGrade, $withOptions = false)
     {
@@ -241,7 +253,7 @@ class ImportOutcomeTemplatesTable extends AppTable {
 
     public function onImportPopulateEducationSubjectsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $gradeId = (int) $this->request->query('grade');
+        $gradeId = (int) $this->request->getQuery('grade');
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 2;
@@ -312,8 +324,8 @@ class ImportOutcomeTemplatesTable extends AppTable {
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         $CompetencyTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
-        $selectedPeriod = $this->getAcademicPeriod($this->request->query('period'));
-        $selectedGrade = $this->getEducationGrade($this->request->query('grade'));
+        $selectedPeriod = $this->getAcademicPeriod($this->request->getQuery('period'));
+        $selectedGrade = $this->getEducationGrade($this->request->getQuery('grade'));
         $tempRow['code'] = $tempRow['outcome_template_code'];
         $tempRow['name'] = $tempRow['outcome_template_name'];
 

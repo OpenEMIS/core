@@ -9,15 +9,15 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use DateTime;
 use PHPExcel_Worksheet;
 
 class ImportCompetencyTemplatesTable extends AppTable {
 
-     public function initialize(array $config) {
+     public function initialize(array $config): void {
 
-        $this->table('import_mapping');
+        $this->setTable('import_mapping');
         parent::initialize($config);
          
         $this->addBehavior('Import.Import', [
@@ -33,7 +33,7 @@ class ImportCompetencyTemplatesTable extends AppTable {
         //POCOR-6616 end
     }    
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
         $newEvent = [
             /*'Model.import.onImportPopulateAcademicPeriodsData' => 'onImportPopulateAcademicPeriodsData',*/
@@ -71,7 +71,7 @@ class ImportCompetencyTemplatesTable extends AppTable {
     public function onImportPopulateEducationProgrammesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
         //POCOR-6616 Start
         $request = $this->request;
-        $selectedperiodyear = $request->query('period'); 
+        $selectedperiodyear = $request->getQuery('period'); 
         if(!empty($selectedperiodyear)){
              $selectedperiod = $selectedperiodyear ;
         }else{
@@ -113,7 +113,7 @@ class ImportCompetencyTemplatesTable extends AppTable {
     public function onImportPopulateEducationGradesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
         //POCOR-6616 start
         $request = $this->request;
-        $selectedperiodyear = $request->query('period'); 
+        $selectedperiodyear = $request->getQuery('period'); 
         if(!empty($selectedperiodyear)){
              $selectedperiod = $selectedperiodyear ;
         }else{
@@ -165,11 +165,11 @@ class ImportCompetencyTemplatesTable extends AppTable {
         $CompetencyTemplates = TableRegistry::get('Competency.CompetencyTemplates');
         //POCOR-6616 start
         $request = $this->request;
-        $tempRow['academic_period_id'] = $request->query('period');
+        $tempRow['academic_period_id'] = $request->getQuery('period');
         if($tempRow['academic_period_id']==null){
             $tempRow['academic_period_id'] = $this->AcademicPeriods->getCurrent();
         }else{
-            $tempRow['academic_period_id'] = $request->query('period');
+            $tempRow['academic_period_id'] = $request->getQuery('period');
         }
         //POCOR-6616 end
         $CompetencyTemplates = $CompetencyTemplates->find()
@@ -228,9 +228,9 @@ class ImportCompetencyTemplatesTable extends AppTable {
     /**
     * POCOR-6616 
     */
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriod($this->request->query('period'), true));
+        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriod($this->request->getQuery('period'), true));
 
         if ($action == 'add') {
              $attr['default'] = $selectedPeriod;
@@ -248,13 +248,15 @@ class ImportCompetencyTemplatesTable extends AppTable {
         $request = $this->request;
         
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
-                    $request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('academic_period_id', $request->getData()[$this->getAlias()])) {
+                    $period = $request->getData()[$this->getAlias()]['academic_period_id'];
+                    $request->getQuery('period', $period); // Assign the value to the query string parameter
                 }
             }
         }
     }
+
 
     /**
     * POCOR-6616 
@@ -321,13 +323,13 @@ class ImportCompetencyTemplatesTable extends AppTable {
     /**
     * POCOR-6616 
     */
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        list($gradeOption, $selectedGrade) = array_values($this->getEducationGrade($this->request->query('grade'), true));
+        list($gradeOption, $selectedGrade) = array_values($this->getEducationGrade($this->request->getQuery('grade'), true));
 
         if ($action == 'add') {
             $request = $this->request;
-            $selectedProgramme = $request->query('programme');
+            $selectedProgramme = $request->getQuery('programme');
             $gradeOptions = [];
             if (!is_null($selectedProgramme)) {
                 $gradeOptions = $this->EducationGrade
@@ -352,14 +354,17 @@ class ImportCompetencyTemplatesTable extends AppTable {
     {
         $request = $this->request;
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('education_grade_id', $request->data[$this->alias()])) {
-                    $request->query['grade'] = $request->data[$this->alias()]['education_grade_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('education_grade_id', $request->getData()[$this->getAlias()])) {
+                    $data = $request->getData()[$this->getAlias()];
+                    $data['grade'] = $data['education_grade_id'];
+                    $request = $request->withQueryParams(['grade' => $data['education_grade_id']]);
                     $this->isGradeUpdate = true;
                 }
             }
         }
     }
+
 
     /**
     * POCOR-6616 

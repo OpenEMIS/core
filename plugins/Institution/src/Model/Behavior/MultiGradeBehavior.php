@@ -14,7 +14,7 @@ class MultiGradeBehavior extends Behavior
 {
     use EventTrait;
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.add.afterSave'] = ['callable' => 'addAfterSave', 'priority' => 9];
@@ -48,8 +48,8 @@ class MultiGradeBehavior extends Behavior
         /**
          * PHPOE-2090, check if selected academic_period_id changes
          */
-        if (array_key_exists($model->alias(), $request->data)) {
-            $modelData = $request->data[$model->alias()];
+        if (array_key_exists($model->getAlias(), $request->getData())) {
+            $modelData = $request->getData($model->getAlias());
             $selectedAcademicPeriodId = $modelData['academic_period_id'];
         }
 
@@ -57,13 +57,13 @@ class MultiGradeBehavior extends Behavior
         $model->field('multi_grade_field', [
             'type' => 'element',
             'data' => $gradeOptions,
-            'model' => $model->alias(),
+            'model' => $model->getAlias(),
             'field' => 'multi_grade_field',
             'element' => 'Institution.Classes/multi_grade',
         ]);
 
-        $staffId = is_null($model->request->data($model->aliasField('staff_id'))) ? [] : [$model->request->data($model->aliasField('staff_id'))];
-        $secondaryStaffIds = is_null($model->request->data($model->aliasField('classes_secondary_staff'))['_ids']) ? [] : $model->request->data($model->aliasField('classes_secondary_staff'))['_ids'];
+        $staffId = is_null($model->request->getData($model->aliasField('staff_id'))) ? [] : [$model->request->getData($model->aliasField('staff_id'))];
+        $secondaryStaffIds = is_null($model->request->getData($model->aliasField('classes_secondary_staff'))['_ids']) ? [] : $model->request->getData($model->aliasField('classes_secondary_staff'))['_ids'];
 
         $staffOptions = $model->getStaffOptions($institutionId, 'add', $selectedAcademicPeriodId, $secondaryStaffIds);
         $secondaryStaffOptions = $model->getStaffOptions($institutionId, 'add', $selectedAcademicPeriodId, $staffId);
@@ -97,7 +97,7 @@ class MultiGradeBehavior extends Behavior
         $model = $this->_table;
         $request = $this->_table->request;
 
-        $education_grades = $request->data($model->aliasField('education_grades'));
+        $education_grades = $request->getData($model->aliasField('education_grades'));
 
         $selected = [];
         $hasSelection = false; //to handle submitted value which is different when converted to form helper.
@@ -110,13 +110,13 @@ class MultiGradeBehavior extends Behavior
             }
         }
 
-        $requestData[$model->alias()]['secondary_staff'] = $requestData[$model->alias()]['classes_secondary_staff'];
+        $requestData[$model->getAlias()]['secondary_staff'] = $requestData[$model->getAlias()]['classes_secondary_staff'];
 
         if (!$hasSelection) {
             /*
              * set institution_id to empty to trigger validation error in ControllerActionComponent
              */
-            $requestData[$model->alias()]['education_grades'] = '';
+            $requestData[$model->getAlias()]['education_grades'] = '';
             $errorMessage = 'Institution.'.$model->aliasField('noGrade');
             $requestData['errorMessage'] = $errorMessage;
         }
@@ -126,7 +126,7 @@ class MultiGradeBehavior extends Behavior
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         $model = $this->_table;
-        $errors = $entity->errors();
+        $errors = $entity->getErrors();
         if (!empty($errors)) {
             if (isset($requestData['errorMessage']) && !empty($requestData['errorMessage'])) {
                 $model->Alert->error($requestData['errorMessage'], ['reset'=>true]);

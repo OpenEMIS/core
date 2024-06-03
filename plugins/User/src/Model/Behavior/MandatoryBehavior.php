@@ -16,7 +16,7 @@ class MandatoryBehavior extends Behavior
     protected $_roleFields;
     protected $_currentNationality;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->_userRole = (array_key_exists('userRole', $config))? $config['userRole']: null;
         $this->_roleFields = (array_key_exists('roleFields', $config))? $config['roleFields']: [];
@@ -37,7 +37,7 @@ class MandatoryBehavior extends Behavior
         $this->_table->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -98,7 +98,7 @@ class MandatoryBehavior extends Behavior
             }
 
             if (empty($defaultIdentityType)) {
-                $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+                $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
                 $defaultIdentityTypeEntity = $IdentityTypes->find()
                     ->where([$IdentityTypes->aliasField('default') => 1])
                     ->first();
@@ -237,7 +237,7 @@ class MandatoryBehavior extends Behavior
         $nationality = $Nationalities->findById($nationalityId)->first();
         $defaultIdentityType = (!empty($nationality))? $nationality->identity_type_id: null;
         if (empty($defaultIdentityType)) {
-            $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+            $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
             $defaultIdentityType = $IdentityTypes->find()
                 ->where([$IdentityTypes->aliasField('default') => 1])
                 ->first();
@@ -334,7 +334,7 @@ class MandatoryBehavior extends Behavior
             }
         }
 
-        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $identityTypeOptions = $IdentityTypes->getList();
         $attr['type'] = 'select';
         $attr['fieldName'] = $this->_table->alias().'.identities.0.identity_type_id';

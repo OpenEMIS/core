@@ -6,7 +6,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 
 class AreaBehavior extends Behavior {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 	}
 
 	public function findAreas(Query $query, array $options) {
@@ -80,7 +80,7 @@ class AreaBehavior extends Behavior {
 			
 					$institutionId = !empty($institutionId) ? $institutionId : 0; 
 					$query->LeftJoin([ $tableAlias => $options['table']], [
-						$tableAlias.'.location_institution_id = '. $this->_table->alias().'.id'
+						$tableAlias.'.location_institution_id = '. $this->_table->getAlias().'.id'
 					])
 					->LeftJoin(['ShiftOptions' => 'shift_options'], [
 						'ShiftOptions.id = '. $tableAlias.'.shift_option_id',
@@ -95,7 +95,7 @@ class AreaBehavior extends Behavior {
 				else{
 					$tableAlias = $options['columnName'].'institution_shifts';
 					$query->LeftJoin([ $tableAlias => $options['table']], [
-						$tableAlias.'.institution_id = '. $this->_table->alias().'.id'
+						$tableAlias.'.institution_id = '. $this->_table->getAlias().'.id'
 					])
 					->LeftJoin(['ShiftOptions' => 'shift_options'], [
 						'ShiftOptions.id = '. $tableAlias.'.shift_option_id',
@@ -130,7 +130,7 @@ class AreaBehavior extends Behavior {
 					if (!empty($options['conditionCheck']['shift_type'])) {
 						$conditions[$tableAlias.'.shift_option_id'] = $options['conditionCheck']['shift_type'];
 						$query->LeftJoin([ $tableAlias => $options['table']], [
-							$tableAlias.'.institution_id = '. $this->_table->alias().'.id'
+							$tableAlias.'.institution_id = '. $this->_table->getAlias().'.id'
 						])->where([$conditions])->group($tableAlias.'.institution_id');
 					}
 				}
@@ -167,7 +167,7 @@ class AreaBehavior extends Behavior {
 
 					if (!empty($institutionId)) {
 						$query->LeftJoin([ $tableAlias => $options['table']], [
-							$tableAlias.'.location_institution_id = '. $this->_table->alias().'.id'
+							$tableAlias.'.location_institution_id = '. $this->_table->getAlias().'.id'
 						])//POCOR-6797
 						->where([$tableAlias.'.location_institution_id IN' => $institutionId])
 						->group($tableAlias.'.location_institution_id');

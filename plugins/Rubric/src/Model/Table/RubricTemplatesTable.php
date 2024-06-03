@@ -6,7 +6,6 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
-
 use App\Model\Table\ControllerActionTable;
 
 class RubricTemplatesTable extends ControllerActionTable
@@ -16,7 +15,7 @@ class RubricTemplatesTable extends ControllerActionTable
         2 => ['id' => 2, 'name' => 'Percentage']
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->hasMany('RubricSections', ['className' => 'Rubric.RubricSections', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -25,7 +24,7 @@ class RubricTemplatesTable extends ControllerActionTable
         $this->hasMany('InstitutionRubrics', ['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -43,6 +42,8 @@ class RubricTemplatesTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
         //Auto insert default rubric_template_options when add
         if ($entity->isNew()) {
             $data = [
@@ -83,5 +84,34 @@ class RubricTemplatesTable extends ControllerActionTable
         $selectedWeightingType = key($weightingTypeOptions);
 
         return compact('weightingTypeOptions', 'selectedWeightingType');
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'template') {
+            return __('Template');
+        } elseif ($field == 'description') {
+            return __('Description');
+        } elseif ($field == 'weighting_type') {
+            return __('Weighting type');
+        } elseif ($field == 'pass_mark') {
+            return __('Pass Mark');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
     }
 }

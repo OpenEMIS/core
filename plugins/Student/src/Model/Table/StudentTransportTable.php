@@ -9,9 +9,9 @@ use App\Model\Table\ControllerActionTable;
 
 class StudentTransportTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_trip_passengers');
+        $this->setTable('institution_trip_passengers');
         parent::initialize($config);
 
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -23,6 +23,12 @@ class StudentTransportTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab',
+            ['implementedMethods' =>
+                [
+                    'setUserTabElements' => 'setUserTabElements',
+                ],
+            ]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -67,8 +73,8 @@ class StudentTransportTable extends ControllerActionTable
 
     private function setupTabElements($entity = null)
     {
-        $id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
-        $userId = !is_null($this->request->query('user_id')) ? $this->request->query('user_id') : 0;
+        $id = !is_null($this->request->getQuery('id')) ?$this->request->getQuery('id') : 0;
+        $userId = !is_null($this->request->getQuery('user_id')) ? $this->request->getQuery('user_id') : 0;
 
         $options = [
             'userRole' => 'Student',
@@ -76,26 +82,29 @@ class StudentTransportTable extends ControllerActionTable
             'id' => $id,
             'userId' => $userId
         ];
-
-        $tabElements = $this->controller->getUserTabElements($options);
-
+        
+        //$tabElements = $this->controller->setUserTabElements($options);
+        $tabElements = $this->setUserTabElements($options);
+        
         if (!is_null($entity)) {
             $tabElements['StudentSurveys']['url'][0] = 'view';
             $tabElements['StudentSurveys']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
         }
+        
         $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
+        
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $queryString = $this->getQueryString();
         if (!empty($queryString['security_user_id'])) {
             $userId = $queryString['security_user_id'];
         } else {
-            $userId = $session->read('Student.Students.id');
+            $userId = $this->getStudentID();
         }
         $query
             ->contain(['InstitutionTrips.TripTypes','InstitutionTrips.InstitutionBuses','InstitutionTrips.InstitutionTransportProviders'])

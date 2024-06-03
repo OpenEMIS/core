@@ -11,9 +11,9 @@ use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
 class UserInsurancesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_insurances');
+        $this->setTable('user_insurances');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
@@ -35,7 +35,7 @@ class UserInsurancesTable extends ControllerActionTable
         ]); *///POCOR-6255 end
     }
     //POCOR-6255 start
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
@@ -51,7 +51,7 @@ class UserInsurancesTable extends ControllerActionTable
         }
     }//POCOR-6255 end
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -64,7 +64,6 @@ class UserInsurancesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        //echo $this->alias(); exit;
         $modelAlias = 'UserInsurances';
         $userType = '';
         $this->controller->changeStudentHealthHeader($this, $modelAlias, $userType);

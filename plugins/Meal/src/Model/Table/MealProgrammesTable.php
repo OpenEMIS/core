@@ -7,13 +7,13 @@ use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use ArrayObject;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\ConnectionManager;
 use Cake\Log\Log;
 use App\Model\Traits\MessagesTrait;
+use Cake\Http\ServerRequest;
 
 class MealProgrammesTable extends ControllerActionTable
 {
@@ -24,7 +24,7 @@ class MealProgrammesTable extends ControllerActionTable
      * @param array $config The configuration for the Table.
      * @return void
      */
-    public function initialize(array $config)
+    public function initialize(array $config): void
     { 
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -68,7 +68,6 @@ class MealProgrammesTable extends ControllerActionTable
 
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
-        
 
         $this->field('academic_period_id',['visible' => false]);
         $this->field('area_id',['visible' => false]);
@@ -118,16 +117,16 @@ class MealProgrammesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $InstitutionTable = TableRegistry::get('institutions');
+        $InstitutionTable = TableRegistry::get('Institution.Institutions');
         $Areas = TableRegistry::get('Area.Areas');
-        $MealInstitutionProgrammes = TableRegistry::get('meal_institution_programmes');
+        $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
         $result=$this->find('all',['fields'=>'id'])->last();
 
         //START : POCOR-6608
         $areaIdsData = $entity['area_id']['_ids'];
         $areaIdsData = $areaIdsData[0];//POCOR-6882
         //$record_id=$result->id;
-        $record_id=$entity->id;//POCOR-7652
+        $record_id = $entity->id;//POCOR-7652
         $institutionIds = $entity->institution_id;
         $institutionIdsData = $institutionIds['_ids'];
         $institutionData = $InstitutionTable->find()
@@ -225,8 +224,8 @@ class MealProgrammesTable extends ControllerActionTable
         }
         //END : POCOR-6608
         //POCOR-7363 start
-        $MealFoodRecordsTable = TableRegistry::get('meal_food_records');
-        if($this->request->params['pass'][0] == 'edit'){
+        $MealFoodRecordsTable = TableRegistry::get('Meal.MealFoodRecords');
+        if($this->request->getParam('pass')[0] == 'edit'){
             $MealFoodData = $MealFoodRecordsTable->find()->where(['meal_programmes_id'=>$record_id])->toArray();
             foreach($MealFoodData as $MealFoodDataEntity){
                 $deleteEntity = $MealFoodRecordsTable->delete($MealFoodDataEntity);
@@ -249,7 +248,7 @@ class MealProgrammesTable extends ControllerActionTable
     {
         $typeOptions = $this->MealNutritions->find('list')->toArray();
         $institutionsOptions = $this->Institutions->find('list')->toArray();
-        $foodTable= TableRegistry::get('food_types');//POCOR_7363
+        $foodTable= TableRegistry::get('Meal.Foodtypes');//POCOR_7363
         $foodTypeOptions = $foodTable->find('list')->toArray();//POCOR-7363
         // $AreaLevelsOptions = $this->AreaLevels->find('list')->toArray(); //POCOR-6920
         $this->field('academic_period_id',['select' => false]);
@@ -297,17 +296,16 @@ class MealProgrammesTable extends ControllerActionTable
         
     }
    
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
-    {
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'add') {
-            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('period')));
 
             $attr['options'] = $periodOptions;
            
             $attr['default'] = $selectedPeriod;
         } else if ($action == 'edit') {
 
-            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('period')));
 
             $attr['options'] = $periodOptions;
            
@@ -323,7 +321,8 @@ class MealProgrammesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldType(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldType(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldType(Event $event, array $attr, $action)
     {
         list($levelOptions, $selectedLevel) = array_values($this->getSelectOptions());
         $attr['options'] = $levelOptions;
@@ -336,17 +335,19 @@ class MealProgrammesTable extends ControllerActionTable
 
     public function getSelectOptions()
     {
+        $serverRequest = $this->request;
         $MealTypes = TableRegistry::get('Meal.MealProgrammeTypes');
         $levelOptions = $MealTypes
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->toArray();
            
-         $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
+         $selectedLevel = !is_null($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
 
          return compact('levelOptions', 'selectedLevel');
     }
 
-    public function onUpdateFieldTargeting(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldTargeting(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTargeting(Event $event, array $attr, $action)
     {
         list($levelOptions, $selectedLevel) = array_values($this->getTargetingOptions());
         $attr['options'] = $levelOptions;
@@ -376,17 +377,19 @@ class MealProgrammesTable extends ControllerActionTable
 
     public function getTargetingOptions()
     {
+        $serverRequest = new ServerRequest();
         $MealTrageting = TableRegistry::get('Meal.MealTargetTypes');
         $levelOptions = $MealTrageting
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->toArray();
            
-         $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
+         $selectedLevel = !is_null($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
 
          return compact('levelOptions', 'selectedLevel');
     }
 
-    public function onUpdateFieldMealNutritions(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldMealNutritions(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldMealNutritions(Event $event, array $attr, $action)
     {
         list($levelOptions, $selectedLevel) = array_values($this->getNutritionalOptions());
         $attr['options'] = $levelOptions;
@@ -414,11 +417,11 @@ class MealProgrammesTable extends ControllerActionTable
      
         //POCOR-7363 end
         $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
-        $MealsProgrammeId = $this->paramsDecode($this->request->params['pass'][1]);
+        $MealsProgrammeId = $this->paramsDecode($this->request->getParam('pass')[1]);
         $MealInstitutionProgrammesData = $MealInstitutionProgrammes
                             ->find()
                             ->contain(['Institutions'])
-                            ->where([$MealInstitutionProgrammes->alias('meal_programme_id')=>$MealsProgrammeId['id']])
+                            ->where([$MealInstitutionProgrammes->aliasField('meal_programme_id')=>$MealsProgrammeId['id']])
                             ->toArray();
         if(!empty($MealInstitutionProgrammesData)){
             $query->contain([
@@ -431,7 +434,7 @@ class MealProgrammesTable extends ControllerActionTable
                     $MealInstitutionProgrammesData = $MealInstitutionProgrammes
                                 ->find()
                                 ->contain(['Institutions'])
-                                ->where([$MealInstitutionProgrammes->alias('meal_programme_id')=>$row->id])
+                                ->where([$MealInstitutionProgrammes->aliasField('meal_programme_id')=>$row->id])
                                 ->all();
     
                     $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
@@ -502,14 +505,14 @@ class MealProgrammesTable extends ControllerActionTable
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $extra)
     {
         //START: POCOR-6608
-        $InstitutionTable = TableRegistry::get('institutions');
+        $InstitutionTable = TableRegistry::get('Institution.Institutions');
         $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
         $conditions1 = [
             $MealInstitutionProgrammes->aliasField('meal_programme_id') => $extra['MealProgrammes']['id']
         ];    
 
         $MealInstitutionProgrammes->deleteAll($conditions1);
-        $MealInstitutionProgrammesNew = TableRegistry::get('meal_institution_programmes');
+        $MealInstitutionProgrammesNew = TableRegistry::get('Meal.MealInstitutionProgrammes');
         
         $areaIdsData = $entity['area_id']['_ids'];
         $areaIdsData = $areaIdsData[0];//POCOR-6882
@@ -594,13 +597,13 @@ class MealProgrammesTable extends ControllerActionTable
             }
         }
         //END: POCOR-6608
-        $MealNutritions = TableRegistry::get('meal_nutritional_records');
+        $MealNutritions = TableRegistry::get('Meal.MealNutritionalRecords');
         $conditions = [
             $MealNutritions->aliasField('meal_programmes_id') => $extra['MealProgrammes']['id']
         ];    
         
         $MealNutritions->deleteAll($conditions);
-        $MealNutritions->newEntity();
+       // $MealNutritions->newEntity(); //POCOR-7485
     }
 
     private function setupFields(Entity $entity = null) {
@@ -651,17 +654,19 @@ class MealProgrammesTable extends ControllerActionTable
 
     public function getNutritionalOptions()
     {
+        $serverRequest = new ServerRequest();
         $MealNutritions = TableRegistry::get('Meal.MealNutritions');
         $levelOptions = $MealNutritions
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->toArray();
            
-         $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
+         $selectedLevel = !is_null($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
 
          return compact('levelOptions', 'selectedLevel');
     }
 
-    public function onUpdateFieldImplementer(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldImplementer(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldImplementer(Event $event, array $attr, $action)
     {
         list($levelOptions, $selectedLevel) = array_values($this->getImplementerOptions());
         $attr['options'] = $levelOptions;
@@ -674,12 +679,13 @@ class MealProgrammesTable extends ControllerActionTable
 
     public function getImplementerOptions()
     {
+        $serverRequest = new ServerRequest();
         $MealImplementers = TableRegistry::get('Meal.MealImplementers');
         $levelOptions = $MealImplementers
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->toArray();
            
-         $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
+         $selectedLevel = !is_null($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
 
          return compact('levelOptions', 'selectedLevel');
     }
@@ -721,7 +727,7 @@ class MealProgrammesTable extends ControllerActionTable
         $list = $MealProgramme
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->innerJoin(
-                [$MealInstitutionProgrammes->alias() => $MealInstitutionProgrammes->table()], [
+                [$MealInstitutionProgrammes->getAlias() => $MealInstitutionProgrammes->getTable()], [
                     $MealProgramme->aliasField('id = ') . $MealInstitutionProgrammes->aliasField('meal_programme_id')
                 ]
             )
@@ -771,7 +777,7 @@ class MealProgrammesTable extends ControllerActionTable
             return $areaName;
         }
         return $areaName;
-        // return $entity->area_id;;
+        // return $entity->area_id;
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
@@ -779,6 +785,32 @@ class MealProgrammesTable extends ControllerActionTable
         switch ($field) {
             case 'amount':
                 return __('Cost');
+            case 'name':
+                return __('Name');
+            case 'start_date':
+                return __('Start Date');
+            case 'end_date':
+                return __('End Date');
+            case 'modified_user_id':
+                return __('Modified By');
+             case 'modified':
+                return __('Modified');
+             case 'created_user_id':
+                return __('Created By');
+             case 'created':
+                return __('Created On');
+             case 'code':
+                return __('Code');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'targeting':
+                return __('Target');
+            case 'institution_id':
+                return __('Institutions');
+            case 'implementer':
+                return __('Implementer');
+            case 'type':
+                return __('Meal Programme Types');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -862,7 +894,8 @@ class MealProgrammesTable extends ControllerActionTable
     //     return $attr;
     // }
 
-    public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAreaId(Event $event, array $attr, $action)
     {
         // START: POCOR-6608
         $areaId = isset($request->data) ? $request->data['MealProgrammes']['area_id']['_ids'] : 0;
@@ -923,11 +956,12 @@ class MealProgrammesTable extends ControllerActionTable
 
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
+        $request = $this->request;
             //START: POCOR-6608
             if($action == 'edit'){
-                $MealsProgrammeId = $this->paramsDecode($request->params['pass']['1']);
+                $MealsProgrammeId = $this->paramsDecode($request->getParam('pass')['1']);
 
                 $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
                 $result = $MealInstitutionProgrammes
@@ -947,7 +981,7 @@ class MealProgrammesTable extends ControllerActionTable
                                     ->find('list')
                                     ->toArray();
                     $string_version = implode(',', $areaId);
-                    $AreaT = TableRegistry::get('areas');                    
+                    $AreaT = TableRegistry::get('Area.Areas');                    
                     //Level-1
                     $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $string_version])->toArray();
                     $childArea =[];
@@ -1033,9 +1067,12 @@ class MealProgrammesTable extends ControllerActionTable
                     $areaId = array_unique($AreaDataArr);
                 }
             }elseif($action == 'add'){
-                $areaId = isset($request->data) ? $request->data['MealProgrammes']['area_id']['_ids'] : 0;
+                $areaId = (null !== $request->getData()) ? $request->getData('MealProgrammes')['area_id']['_ids'] : 0;
                 $string_version = implode(',', $areaId);
-                $AreaT = TableRegistry::get('areas');                    
+               if($string_version == null){
+                $string_version = 1;
+               }
+                $AreaT = TableRegistry::get('Area.Areas');                    
                 //Level-1
                 $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $string_version])->toArray();
                 $childArea =[];
@@ -1085,8 +1122,12 @@ class MealProgrammesTable extends ControllerActionTable
                 $AreaLevelsTableResult = $AreaLevelsTable
                                 ->find('list')
                                 ->toArray();
-                $string_version = implode(',', $areaId);
-                $AreaT = TableRegistry::get('areas');                    
+                if($areaId != 0){
+                    $string_version = implode(',', $areaId);
+                }else{
+                    $string_version = $areaId;
+                }
+                $AreaT = TableRegistry::get('Area.Areas');                    
                 //Level-1
                 $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $string_version])->toArray();
                 $childArea =[];
@@ -1343,7 +1384,7 @@ class MealProgrammesTable extends ControllerActionTable
         $list = $MealProgramme
              ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->innerJoin(
-                [$MealInstitutionProgrammes->alias() => $MealInstitutionProgrammes->table()], [
+                [$MealInstitutionProgrammes->getAlias() => $MealInstitutionProgrammes->getTable()], [
                     $MealProgramme->aliasField('id = ') . $MealInstitutionProgrammes->aliasField('meal_programme_id')
                 ]
             )
@@ -1362,7 +1403,7 @@ class MealProgrammesTable extends ControllerActionTable
     */ 
     public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $MealInstitutionProgrammes = TableRegistry::get('institution_meal_programmes');
+        $MealInstitutionProgrammes = TableRegistry::get('Institution.InstitutionMealProgrammes');
         $InstitutionProgrammes = $MealInstitutionProgrammes
                 ->find('all')->select(['id'])
                 ->where([
@@ -1388,7 +1429,7 @@ class MealProgrammesTable extends ControllerActionTable
     }
     public function onGetFoodTypeId(Event $event, Entity $entity)
     {
-        $table=TableRegistry::get('food_types');
+        $table=TableRegistry::get('Meal.FoodTypes');
         $obj = [];
         if ($entity->has('food_type_id')) {
            
@@ -1401,7 +1442,7 @@ class MealProgrammesTable extends ControllerActionTable
         $values = !empty($obj) ? implode(', ', $obj) : __('No Excluded Security Roles ');
         return $values;
        
-    }
-    //POCOR-7363 end
+    }//POCOR-7363 end
 
 }
+

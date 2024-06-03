@@ -6,9 +6,9 @@ use Cake\Log\Log;
 
 class TrainingResultTypesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('training_result_types');
+        $this->setTable('training_result_types');
         parent::initialize($config);
 
         $this->hasMany('TrainingCoursesResultTypes', ['className' => 'Training.TrainingCoursesResultTypes', 'foreignKey' => 'training_result_type_id']);
