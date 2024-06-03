@@ -3,14 +3,15 @@ namespace Infrastructure\Model\Table;
 
 use ArrayObject;
 use CustomField\Model\Table\CustomFormsTable;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 
 class BuildingCustomFormsTable extends CustomFormsTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $config['extra'] = [
+        // comment cakephp4 POCOR-7485
+        /*$config['extra'] = [
             'fieldClass' => [
                 'className' => 'Infrastructure.BuildingCustomFields',
                 'joinTable' => 'infrastructure_custom_forms_fields',
@@ -27,16 +28,37 @@ class BuildingCustomFormsTable extends CustomFormsTable
                 'through' => 'Infrastructure.BuildingCustomFormsFilters',
                 'dependent' => true
             ]
-        ];
-        $this->table('infrastructure_custom_forms');
+        ];*/
+
+        // InfrastructureCustomFormsFields model
+        $this->belongsToMany('InfrastructureCustomFields', [
+            'className' => 'Infrastructure.BuildingCustomFields',
+                        'joinTable' => 'infrastructure_custom_forms_fields',
+                        'foreignKey' => 'infrastructure_custom_form_id',
+                        'targetForeignKey' => 'infrastructure_custom_field_id',
+                        'through' => 'Infrastructure.InfrastructureCustomFormsFields',
+                        'dependent' => true
+        ]);
+
+        // BuildingCustomForms model
+        $this->belongsToMany('BuildingCustomFields', [
+            'className' => 'Infrastructure.BuildingTypes',
+                        'joinTable' => 'infrastructure_custom_forms_filters',
+                        'foreignKey' => 'infrastructure_custom_form_id',
+                        'targetForeignKey' => 'infrastructure_custom_filter_id',
+                        'through' => 'Infrastructure.BuildingCustomFormsFilters',
+                        'dependent' => true
+        ]);
+
+        $this->setTable('infrastructure_custom_forms');
         parent::initialize($config);
         $this->addBehavior('Infrastructure.Pages', ['module' => 'Building']);
         $this->setDeleteStrategy('restrict');
     }
 
-    public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $selectedModule = !is_null($request->query('module')) ? $request->query('module') : '';
+        $selectedModule = !is_null($request->getQuery('module')) ? $request->getQuery('module') : '';
         $module = $this->CustomModules
             ->find()
             ->where([$this->CustomModules->aliasField('id') => $selectedModule])

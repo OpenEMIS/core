@@ -177,7 +177,8 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
 
         // reset to empty
         vm.gridOptions[vm.target].api.setColumnDefs([]);
-
+        console.log("model.cols");
+        console.log(model.cols);
         var columnDefs = DashboardSvc.getWorkbenchColumnDefs(model.cols);
         var textToTranslate = [];
         angular.forEach(columnDefs, function(value, key) {
@@ -186,8 +187,8 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
         textToTranslate.push(vm.workbenchTitle);
         DashboardSvc.translate(textToTranslate)
             .then(function(res) {
-                // console.log('res', res);
-                var maxCount = res.length - 1;
+                console.log('res', res);
+                var maxCount = res;
                 angular.forEach(res, function(value, key) {
                     if (key < maxCount) {
                         columnDefs[key]['headerName'] = value;

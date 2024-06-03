@@ -7,6 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 use CustomField\Model\Behavior\SetupBehavior;
 
@@ -15,7 +16,7 @@ class SetupTableBehavior extends SetupBehavior
     private $ruleOptions = [];
     private $numberValidationOptions = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -37,7 +38,7 @@ class SetupTableBehavior extends SetupBehavior
     {
         $model = $this->_table;
         $fieldTypes = $model->getFieldTypes();
-        $selectedFieldType = isset($model->request->data[$model->alias()]['field_type']) ? $model->request->data[$model->alias()]['field_type'] : key($fieldTypes);
+        $selectedFieldType = isset($model->request->data[$model->getAlias()]['field_type']) ? $model->request->data[$model->alias()]['field_type'] : key($fieldTypes);
 
         if ($selectedFieldType == $this->fieldTypeCode) {
             $this->buildTableValidator();
@@ -304,7 +305,7 @@ class SetupTableBehavior extends SetupBehavior
         return $value;
     }
 
-    public function onUpdateFieldTableValidationRule(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTableValidationRule(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['type'] = 'select';
@@ -323,7 +324,7 @@ class SetupTableBehavior extends SetupBehavior
         return $attr;
     }
 
-    public function onUpdateFieldTableNumberValidation(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTableNumberValidation(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
@@ -335,7 +336,7 @@ class SetupTableBehavior extends SetupBehavior
         return $attr;
     }
 
-    public function onUpdateFieldTableDecimalLength(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTableDecimalLength(Event $event, array $attr, $action, ServerRequest $request)
     {
         $minLength = $this->inputLimits['decimal_value']['length']['min'];
         $maxLength = $this->inputLimits['decimal_value']['length']['max'];
@@ -360,7 +361,7 @@ class SetupTableBehavior extends SetupBehavior
         return $attr;
     }
 
-    public function onUpdateFieldTableDecimalPrecision(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTableDecimalPrecision(Event $event, array $attr, $action, ServerRequest $request)
     {
         $minPrecision = $this->inputLimits['decimal_value']['precision']['min'];
         $maxPrecision = $this->inputLimits['decimal_value']['precision']['max'];
@@ -412,12 +413,12 @@ class SetupTableBehavior extends SetupBehavior
         $model = $this->_table;
         $request = $model->request;
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($model->alias(), $request->data)) {
-                if (array_key_exists('custom_table_columns', $request->data[$model->alias()])) {
-                    unset($data[$model->alias()]['custom_table_columns']);
+            if (array_key_exists($model->getAlias(), $request->getData())) {
+                if (array_key_exists('custom_table_columns', $request->getData()[$model->getAlias()])) {
+                    unset($data[$model->getAlias()]['custom_table_columns']);
                 }
-                if (array_key_exists('custom_table_rows', $request->data[$model->alias()])) {
-                    unset($data[$model->alias()]['custom_table_rows']);
+                if (array_key_exists('custom_table_rows', $request->getData()[$model->getAlias()])) {
+                    unset($data[$model->getAlias()]['custom_table_rows']);
                 }
             }
         }
@@ -426,12 +427,12 @@ class SetupTableBehavior extends SetupBehavior
     public function addEditOnAddColumn(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
-        if ($data[$model->alias()]['field_type'] == $this->fieldTypeCode) {
+        if ($data[$model->getAlias()]['field_type'] == $this->fieldTypeCode) {
             $columnOptions = [
                 'name' => '',
                 'visible' => 1
             ];
-            $data[$this->_table->alias()]['custom_table_columns'][] = $columnOptions;
+            $data[$this->_table->getAlias()]['custom_table_columns'][] = $columnOptions;
 
             //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
             $options['associated'] = [
@@ -444,12 +445,12 @@ class SetupTableBehavior extends SetupBehavior
     public function addEditOnAddRow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
-        if ($data[$model->alias()]['field_type'] == $this->fieldTypeCode) {
+        if ($data[$model->getAlias()]['field_type'] == $this->fieldTypeCode) {
             $rowOptions = [
                 'name' => '',
                 'visible' => 1
             ];
-            $data[$this->_table->alias()]['custom_table_rows'][] = $rowOptions;
+            $data[$this->_table->getAlias()]['custom_table_rows'][] = $rowOptions;
 
             //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
             $options['associated'] = [

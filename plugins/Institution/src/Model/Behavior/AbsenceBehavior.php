@@ -10,11 +10,11 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 
 class AbsenceBehavior extends Behavior {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		$this->_table->addBehavior('User.AdvancedNameSearch');
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.index.beforePaginate'] = ['callable' => 'indexBeforePaginate', 'priority' => 5];
 		return $events;

@@ -8,7 +8,7 @@ use CustomField\Model\Behavior\RenderBehavior;
 
 class RenderCheckboxBehavior extends RenderBehavior
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
@@ -51,7 +51,7 @@ class RenderCheckboxBehavior extends RenderBehavior
                 $value = implode(', ', $answers);
             }
         } elseif ($action == 'edit') {
-            $form = $event->subject()->Form;
+            $form = $event->getSubject()->Form;
             $unlockFields = [];
 
             $html = '';
@@ -75,7 +75,7 @@ class RenderCheckboxBehavior extends RenderBehavior
             $unlockFields[] = $fieldPrefix.".".$attr['attr']['fieldKey'];
 
             $attr['output'] = $html;
-            $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
+            $value = $event->getSubject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
             $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
         }
 

@@ -5,13 +5,13 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 
 class ExpenditureTable extends AppTable  {
-    public function initialize(array $config) {
-        $this->table('institution_expenditures');
+    public function initialize(array $config): void {
+        $this->setTable('institution_expenditures');
         parent::initialize($config);
 
         $this->addBehavior('Excel', [

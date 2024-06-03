@@ -9,7 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 
 class ScholarshipApplicationsTable extends ControllerActionTable
@@ -22,7 +22,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
     private $interestRateOptions = [];
     private $currency = '';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -32,7 +32,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);
         $this->hasMany('ApplicationInstitutionChoices', [
             'className' => 'Scholarship.ApplicationInstitutionChoices',
-            'foreignKey' => ['applicant_id', 'scholarship_id'],
+            'foreignKey' => ['applicant_id', 'scholarship_id', 'assignee_id'],
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
@@ -45,65 +45,50 @@ class ScholarshipApplicationsTable extends ControllerActionTable
 
         $this->addBehavior('Workflow.Workflow', ['model' => 'Scholarship.Applications']);
         $this->addBehavior('CompositeKey');
-
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['ScholarshipApplications' =>
+                ['applicant_id',
+                    'scholarship_id', 'assignee_id']
+            ]
+        ]);
         $this->interestRateOptions = $this->getSelectOptions('Scholarships.interest_rate');
         $this->currency = TableRegistry::get('Configuration.ConfigItems')->value('currency');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
-            ->add('requested_amount', [
-                'validateDecimal' => [
-                    'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
-                    'message' => __('Value cannot be more than two decimal places')
-                ],
-                'ruleCheckRequestedAmount' => [
-                    'rule' => ['checkRequestedAmount'],
-                    'provider' => 'table',
-                    'on' => function ($context) {
-                        //trigger validation only when the application is of type 'LOAN'
-                        return ($context['data']['financial_assistance_type_id'] == self::LOAN);
-                    }
-                ]
-            ]);
+           ->add('requested_amount', [
+               'validateDecimal' => [
+                   'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
+                   'message' => __('Value cannot be more than two decimal places')
+               ],
+               'ruleCheckRequestedAmount' => [
+                   'rule' => ['checkRequestedAmount'],
+                   'provider' => 'table',
+                   'on' => function ($context) {
+                       //trigger validation only when the application is of type 'LOAN'
+                       return ($context['data']['financial_assistance_type_id'] == self::LOAN);
+                   }
+               ]
+           ]);
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
-    {
-        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+   public function beforeAction(Event $event, ArrayObject $extra)
+   {
+       if (in_array($this->action, ['view', 'edit'])) {
+           // set header
+           $scholarshipId = $this->getQueryString('scholarship_id');
+           $scholarshipName = $this->Scholarships->get($scholarshipId)->name;
+           $this->controller->set('contentHeader', $scholarshipName . ' - ' . __('Overview'));
 
-        $params = [
-            'applicant_id' => $entity->applicant_id,
-            'scholarship_id' => $entity->scholarship_id
-        ];
-
-        if (isset($buttons['view']['url'])) {
-            $buttons['view']['url'] = $this->ControllerAction->setQueryString($buttons['view']['url'], $params);
-        }
-
-        if (isset($buttons['edit']['url'])) {
-            $buttons['edit']['url'] = $this->ControllerAction->setQueryString($buttons['edit']['url'], $params);
-        }
-
-        return $buttons;
-    }
-
-    public function beforeAction(Event $event, ArrayObject $extra)
-    {
-        if (in_array($this->action, ['view', 'edit'])) {
-            // set header
-            $scholarshipId = $this->getQueryString('scholarship_id');
-            $scholarshipName = $this->Scholarships->get($scholarshipId)->name;
-            $this->controller->set('contentHeader', $scholarshipName . ' - ' . __('Overview'));
-
-            // set tabs
-            $tabElements = $this->ScholarshipTabs->getScholarshipProfileTabs();
-            $this->controller->set('tabElements', $tabElements);
-            $this->controller->set('selectedAction', $this->alias());
-        }
+           // set tabs
+           $tabElements = $this->ScholarshipTabs->getScholarshipProfileTabs();
+           $this->controller->set('tabElements', $tabElements);
+           $this->controller->set('selectedAction', $this->getAlias());
+       }
 
         // Start POCOR-5188
         $is_manual_exist = $this->getManualUrl('Personal','Scholarship','Scholarships');
@@ -115,8 +100,8 @@ class ScholarshipApplicationsTable extends ControllerActionTable
                 'escape' => false,
                 'target'=>'_blank'
             ];
-    
-    
+
+
             $helpBtn['url'] = $is_manual_exist['url'];
             $helpBtn['type'] = 'button';
             $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -139,15 +124,17 @@ class ScholarshipApplicationsTable extends ControllerActionTable
             if ($extra['toolbarButtons']->offsetExists('add')) {
                 $extra['toolbarButtons']['add']['url'] = [
                     'plugin' => 'Profile',
-                    'controller' => 'ScholarshipsDirectory',
-                    'action' => 'index'
-                ];     
-            }  
+                    'controller' => 'Profiles',
+                    'action' => 'ScholarshipsDirectory'
+                    //'action' => 'add'
+                    // todo add query params
+                ];
+            }
         }
 
 
         // POCOR-7905: start
-        $applicantId = $this->Auth->user('id');
+        $applicantId = $this->getUserID();
         $queryString = $this->paramsEncode(['applicant_id' => $applicantId]); // v4 Encode
         $btnAttr = [
             'class' => 'btn btn-xs btn-default icon-big',
@@ -163,14 +150,14 @@ class ScholarshipApplicationsTable extends ControllerActionTable
                     'url' => [
                         'action' => 'ScholarshipApplications',
                         'add',
-                        'queryString' => $queryString
+                        $queryString  // POCOR-8074-QueryStringProfile
                     ],
                     'label' => '<i class="fa kd-add"></i>',
                     'linkOptions' => ['title' => __('Apply')]
                 ];
         }
         // POCOR-7905: end
-    }
+   }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
@@ -241,10 +228,11 @@ class ScholarshipApplicationsTable extends ControllerActionTable
             $entity->scholarship = $scholarshipEntity;
         }
 
-        // POCOR-4836    
-        $entity->applicant_id = $this->Auth->user('id');
+        // POCOR-4836
+        $userID = $this->getUserID();
+        $entity->applicant_id = $userID;
 
-        $applicantId = $this->ControllerAction->getQueryString('applicant_id');
+    //        $applicantId = $this->getQueryString('applicant_id'); //POCOR-8080
         $applicantEntity = $this->Applicants->get($entity->applicant_id, ['contain' => ['Genders', 'MainIdentityTypes']]);
         $entity->applicant = $applicantEntity;
 
@@ -325,15 +313,24 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
-    {
-        if ($field == 'scholarship_id') {
-            return __('Scholarship Name');
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
-    }
-
+//    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+//    {
+//        switch ($field) {
+//            case 'scholarship_id':
+//                return __('Scholarship Name');
+//            case 'status_id':
+//                return __('Status');
+//            case 'assignee_id':
+//                return __('Assignee');
+//            case 'academic_period_id':
+//                return __('Academic Period');
+//            case 'financial_assistance_type_id':
+//                return __('Financial Assistance Type');
+//            default:
+//                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+//        }
+//    }
+//
     public function onGetAcademicPeriodId(Event $event, Entity $entity)
     {
         return $entity->scholarship->academic_period->name;
@@ -438,19 +435,22 @@ class ScholarshipApplicationsTable extends ControllerActionTable
             $entity = $attr['entity'];
 
             $value = '';
-            if (isset($entity->scholarship->loan->loan_term) && strlen($entity->scholarship->loan->loan_term) > 0) {
-                $value = $entity->scholarship->loan->loan_term . ' ' . __('Years');
-            }
+//            if (isset($entity->scholarship->loan->loan_term) && strlen($entity->scholarship->loan->loan_term) > 0) {
+//                $value = $entity->scholarship->loan->loan_term . ' ' . __('Years');
+//            }
             $attr['attr']['value'] = $value;
         }
         return $attr;
     }
 
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action,  $request)
     {
+//        die('<pre>'.print_r($attr['entity']));
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
-            $displayValue = $entity->applicant->name_with_id;
+            $assignee_id = $entity->assignee_id;
+            $applicant = $this->Assignees->get($assignee_id);
+            $displayValue = $applicant->name_with_id;
             $value = $entity->applicant_id;
 
             $attr['value'] = $value;

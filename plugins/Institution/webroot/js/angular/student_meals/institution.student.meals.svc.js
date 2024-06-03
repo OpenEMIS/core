@@ -178,7 +178,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         };
 
         return AcademicPeriods
-            .find('daysForPeriodWeekMeal', options)
+            .find('daysForPeriodWeekArchive', options)
             .ajax({success: success, defer: true});
     }
 
@@ -387,7 +387,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             direction = 'right';
         }
         columnDefs.push({
-            headerName: translateText.translated.OpenEmisId,
+            headerName: 'OpenEMIS ID',
             field: "user.openemis_no",
             filterParams: filterParams,
             pinned: direction,
@@ -395,7 +395,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
             filter: "text"
         });
         columnDefs.push({
-            headerName: translateText.translated.Name,
+            headerName: 'Name',
             field: "user.name",
             filterParams: filterParams,
             pinned: direction,
@@ -456,7 +456,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         }
 
         const cellDefOpenemisNo = {
-            headerName: translateText.translated.OpenEmisId,
+            headerName: 'OpenEMIS ID',
             field: 'user.openemis_no',
             filterParams: filterParams,
             pinned: direction,
@@ -465,7 +465,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         };
 
         const cellDefUserName = {
-            headerName: translateText.translated.Name,
+            headerName: 'Name',
             field: 'user.name',
             filterParams: filterParams,
             pinned: direction,
@@ -496,7 +496,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         }
 
         const cellDefMealReceived = {
-            headerName: translateText.translated.MealReceived,
+            headerName: 'Meal Received',
             field: "meal_received_id",
             suppressSorting: true,
             menuTabs: [],
@@ -506,7 +506,7 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
         columnDefs.push(cellDefMealReceived);
 
         columnDefs.push({
-            headerName: translateText.translated.BenefitType,
+            headerName: 'Benefit Type',
             field: "meal_benefit_id",
             menuTabs: [],
             suppressSorting: true,

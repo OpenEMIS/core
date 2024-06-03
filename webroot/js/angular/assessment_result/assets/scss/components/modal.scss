@@ -1,0 +1,136 @@
+@charset "UTF-8";
+
+/* Modal V1.1.1 */
+
+.modal-image {
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+
+    .modal-wrapper {
+        background-color: $whiteColor;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: 5px;
+        padding: 60px $padding20 $padding20;
+        height: 600px;
+        width: 600px;
+
+        @media #{$tabletPortrait} {
+            max-width: 500px;
+        }
+
+        @media #{$mobileLandscape} {
+            max-width: 380px;
+        }
+
+        @media #{$mobilePortrait} {
+            max-width: 280px;
+        }
+
+        .kd-close-round {
+            color: #999;
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: $textSizeS;
+            cursor: pointer;
+            z-index: 1;
+
+            &:hover {
+                color: #6B6B6B;
+            }
+
+            .rtl & {
+                right: auto !important;
+                left: 20px;
+            }
+        }
+
+        .modal-content {
+            background-color: $whiteColor;
+            background-repeat: no-repeat;
+            background-position: center center;
+        }
+
+        .modal-title {
+            @extend .ellipsis;
+
+            border-bottom: $lightGreyBorder;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: $padding10 60px $padding10 $padding15;
+
+            .rtl & {
+                padding: $padding15 $padding15 $padding5 60px;
+                left: auto !important;
+                right: 0;
+            }
+        }
+    }
+}
+
+.modal-dialog {
+    @keyframes modalAnimate {
+        from {
+            transform: translate(0, -100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translate(0, 50px);
+            opacity: 1;
+        }
+    }
+
+    animation-name: modalAnimate;
+    animation-duration: 0.5s;
+    animation-fill-mode: forwards;
+    animation-timing-function: ease;
+
+    .modal-content {
+        .kdx-modal-dialog-wrapper {
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+
+            .modal-header {
+                align-items: center;
+                padding: 0;
+
+                .close {
+                    font-size: $textSizeS;
+                    margin: $noMargin;
+
+                    &:focus {
+                        outline: none;
+                    }
+
+                    .rtl & {
+                        float: left;
+                    }
+                }
+
+                .modal-title {
+                    margin: 0;
+                    padding: 1rem;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+            }
+
+            .modal-footer {
+                .rtl & {
+                    text-align: left;
+                }
+            }
+        }
+    }
+}

@@ -30,40 +30,44 @@ class CustomFieldListBehavior extends Behavior {
 	private $_tmpFieldValues = [];
 	private $_customFieldOptionsList = [];
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		$this->CustomFormsFilters = null;
-		$formFilterClass = $this->config('formFilterClass');
+		$formFilterClass = $this->getConfig('formFilterClass');
 		if (!empty($formFilterClass)) {
-			$this->CustomFormsFilters = TableRegistry::get($this->config('formFilterClass.className'));
+			$configClass = $this->getConfig('formFilterClass.className');
+
+			$this->CustomFormsFilters = TableRegistry::getTableLocator()->get($configClass);
 		}
-		$this->CustomFieldValues = TableRegistry::get($this->config('fieldValueClass.className'));
-		$this->CustomTableCells = TableRegistry::get($this->config('tableCellClass.className'));
+		$configVal = $this->getConfig('fieldValueClass.className');
+		$this->CustomFieldValues = TableRegistry::getTableLocator()->get($configVal);
+		$configCell = $this->getConfig('tableCellClass.className');
+		$this->CustomTableCells = TableRegistry::getTableLocator()->get($configCell);
 		$this->CustomForms = $this->CustomFieldValues->CustomFields->CustomForms;
-		$model = $this->config('model');
+		$model = $this->getConfig('model');
 		if (empty($model)) {
-			$this->config('model', $this->_table->registryAlias());
+			$this->getConfig('model', $this->_table->registryAlias());
 		}
-		$this->_condition = $this->config('condition');
+		$this->_condition = $this->getConfig('condition');
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
     	$events = parent::implementedEvents();
-    	$events = array_merge($events, $this->config('events'));
+    	$events = array_merge($events, $this->getConfig('events'));
     	return $events;
 	}
 
 	// Model.excel.onExcelBeforeStart
 	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
-		if (!(is_null($this->config('moduleKey')))) {
-			$filter = $this->getFilter($this->config('model'));
+		if (!(is_null($this->getConfig('moduleKey')))) {
+			$filter = $this->getFilter($this->getConfig('model'));
 			$types = $this->getType($filter);
-			$filterKey = $this->getFilterKey($filter, $this->config('model'));
+			$filterKey = $this->getFilterKey($filter, $this->getConfig('model'));
 			if (!empty($types)) {
 				foreach ($types as $key => $name) {
 					$this->excelContent($sheets, $name, $filterKey, $key);
 				}
 			} else {
-				$name = $this->_table->alias();
+				$name = $this->_table->getAlias();
 				$this->excelContent($sheets, $name);
 			}
 		} else {
@@ -185,10 +189,10 @@ class CustomFieldListBehavior extends Behavior {
 	private function getTableCellValues($tableCustomFieldIds, $recordId) {
 		if (!empty($tableCustomFieldIds)) {
 			$TableCellTable = $this->CustomTableCells;
-			$customFieldsForeignKey = $TableCellTable->CustomFields->foreignKey();
-			$customRecordsForeignKey = $TableCellTable->CustomRecords->foreignKey();
-			$customColumnForeignKey = $TableCellTable->CustomTableColumns->foreignKey();
-			$customRowForeignKey = $TableCellTable->CustomTableRows->foreignKey();
+			$customFieldsForeignKey = $TableCellTable->CustomFields->getForeignKey();
+			$customRecordsForeignKey = $TableCellTable->CustomRecords->getForeignKey();
+			$customColumnForeignKey = $TableCellTable->CustomTableColumns->getForeignKey();
+			$customRowForeignKey = $TableCellTable->CustomTableRows->getForeignKey();
 			$tableCellData = new ArrayObject();
 			$TableCellTable
 					->find()
@@ -279,7 +283,7 @@ class CustomFieldListBehavior extends Behavior {
 	 */
 	public function getForms($formId=null) {
 		$condition = [];
-		$formKeyAlias = $this->_table->aliasField($this->config('formKey'));
+		$formKeyAlias = $this->_table->aliasField($this->getConfig('formKey'));
 		if (!(is_null($formId))) {
 			$condition = [$formKeyAlias => $formId];
 			$configCondition = $this->getCondition();
@@ -311,8 +315,8 @@ class CustomFieldListBehavior extends Behavior {
 		$condition = $this->_condition;
 		$query->where($condition);
 		// If it is a survey
-		if (is_null($this->config('moduleKey'))) {
-			$query->where([$this->_table->aliasField($this->config('formKey')) => $key]);
+		if (is_null($this->getConfig('moduleKey'))) {
+			$query->where([$this->_table->aliasField($this->getConfig('formKey')) => $key]);
 		}
 		
 		// Getting the list of available custom field options
@@ -363,8 +367,8 @@ class CustomFieldListBehavior extends Behavior {
 		$filterKey = '';
 		$associations = TableRegistry::get($filter)->associations();
 		foreach ($associations as $assoc) {
-			if ($assoc->registryAlias() == $model) {
-				$filterKey = $assoc->foreignKey();
+			if ($assoc->getRegistryAlias() == $model) {
+				$filterKey = $assoc->getForeignKey();
 				return $filterKey;
 			}
 		}
@@ -379,7 +383,7 @@ class CustomFieldListBehavior extends Behavior {
 	 */
 	public function getType($filter) {
 		if (!(is_null($filter))) {
-			$types = TableRegistry::get($filter)->getList()->toArray();
+			$types = TableRegistry::getTableLocator()->get($filter)->getList()->toArray();
 			return $types;
 		} else {
 			return null;
@@ -395,7 +399,7 @@ class CustomFieldListBehavior extends Behavior {
 	public function getCustomFields($filterValue=null) {
 		$customFields = [];
 		$customFormFields = [];
-		$customModuleKey = $this->config('moduleKey');
+		$customModuleKey = $this->getConfig('moduleKey');
 		if (is_null($customModuleKey)) {
 			// Use for surveys
 			$SurveyFormsTable = $this->CustomFieldValues->CustomRecords->SurveyForms;
@@ -406,7 +410,7 @@ class CustomFieldListBehavior extends Behavior {
 				->toArray();
 		} elseif (!(empty($filterValue))) {
 			// If there is a filter specified
-			$customFilterKey = $this->CustomFormsFilters->CustomFilters->foreignKey();
+			$customFilterKey = $this->CustomFormsFilters->CustomFilters->getForeignKey();
 			$customFormFields = $this->CustomFormsFilters
 				->find()
 				->where([$this->CustomFormsFilters->aliasField($customFilterKey).' IN' => [$filterValue, 0]])
@@ -452,8 +456,8 @@ class CustomFieldListBehavior extends Behavior {
 	 */
 	public function getFieldValue($recordId) {
 		$customFieldValueTable = $this->CustomFieldValues;
-		$customFieldsForeignKey = $customFieldValueTable->CustomFields->foreignKey();
-		$customRecordsForeignKey = $customFieldValueTable->CustomRecords->foreignKey();
+		$customFieldsForeignKey = $customFieldValueTable->CustomFields->getForeignKey();
+		$customRecordsForeignKey = $customFieldValueTable->CustomRecords->getForeignKey();
 
 		$selectedColumns = [
 			$customFieldValueTable->aliasField($customRecordsForeignKey),
@@ -600,7 +604,7 @@ class CustomFieldListBehavior extends Behavior {
 		return null;
 	}
 
-	private function table($data, $field, $options=[]) {
+	public function table($data, $field, $options=[]): Table {
 		$id = $field['id'];
 		$colId = $field['col_id'];
 		$rowId = $field['row_id'];

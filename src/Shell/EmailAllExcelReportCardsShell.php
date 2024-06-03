@@ -17,7 +17,7 @@ use Cake\Console\Shell;
  */
 class EmailAllExcelReportCardsShell extends Shell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('SystemProcesses');
@@ -257,7 +257,7 @@ class EmailAllExcelReportCardsShell extends Shell
     private function setAttachments(Entity $studentsReportCardEntity, ArrayObject $emailProcessesObj)
     {        
 		$attachments = [];
-        echo "<pre>"; print_r($studentsReportCardEntity); //POCOR-6836 don't remove this print_r because it's helping us for getting correct attachment with respect to user
+        // echo "<pre>"; print_r($studentsReportCardEntity); //POCOR-6836 don't remove this print_r because it's helping us for getting correct attachment with respect to user
         if ($studentsReportCardEntity->has('file_name') && !empty($studentsReportCardEntity->file_name) && $studentsReportCardEntity->has('file_content') && !empty($studentsReportCardEntity->file_content)) {
 			if(!empty($studentsReportCardEntity->student_id)) {
 				$fileNameData = explode(".",$studentsReportCardEntity->file_name);

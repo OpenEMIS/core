@@ -4,7 +4,7 @@ namespace Configuration\Model\Table;
 use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
@@ -17,9 +17,9 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
     public $id;
     public $authenticationType;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('config_items');
+        $this->setTable('config_items');
         parent::initialize($config);
         $this->addBehavior('Configuration.ConfigItems');
         // $this->addBehavior('Configuration.ExternalDataSource');
@@ -34,11 +34,12 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         $this->externalDataSourceType = $externalDataSourceRecord->value;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         //POCOR-6930 Starts
-        if($this->request['data']['ConfigExternalDataSourceExam']['value'] == 'Jordan CSPD'){
+        $validator->setProvider('custom', $this);
+        if($this->request->getData()['ConfigExternalDataSourceExam']['value'] == 'Jordan CSPD'){
             return $validator
                 ->requirePresence('url')
                 ->requirePresence('username')
@@ -48,7 +49,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
                 ->requirePresence('gender_mapping');
         }
         //POCOR-7531 start
-        else if($this->request['data']['ConfigExternalDataSourceExam']['value'] == 'OpenEMIS Exams'){
+        else if($this->request->getData()['ConfigExternalDataSourceExam']['value'] == 'OpenEMIS Exams'){
             return $validator
                 ->requirePresence('url')
                 ->requirePresence('username')
@@ -56,7 +57,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         }
         //POCOR-7531 end
         //POCOR-7533 start
-         else if($this->request['data']['ConfigExternalDataSourceExam']['value'] == 'CXC'){
+         else if($this->request->getData()['ConfigExternalDataSourceExam']['value'] == 'CXC'){
             return $validator
                 ->requirePresence('url')
                 ->requirePresence('username')
@@ -64,7 +65,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         }
         //POCOR-7533 end
         //POCOR-7532 start
-        else if($this->request['data']['ConfigExternalDataSourceExam']['value'] == 'PacSIMS'){
+        else if($this->request->getData()['ConfigExternalDataSourceExam']['value'] == 'PacSIMS'){
             return $validator
                 ->requirePresence('url')
                 ->requirePresence('username')
@@ -180,9 +181,21 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
             // $newAttributes['client_id'] = $attributes['client_id'];  //POCOR-7531 
             $newAttributes['url'] = $attributes['url'];
             $newAttributes['username'] = $attributes['username'];//POCOR-7531
-            $newAttributes['password'] = str_repeat('*',strlen($this->decrypt($attributes['password'],Security::salt())));//POCOR-7531
+            //$newAttributes['password'] = str_repeat('*',strlen($this->decrypt($attributes['password'],Security::salt())));//POCOR-7531
             // $newAttributes['public_key'] = $attributes['public_key']; //POCOR-7531 
-            $attributes = $newAttributes;
+            $encryptionKey = $attributes['public_key'];
+
+            if ($attributes['password'] !== null) {
+    // Decrypting the password attribute using the provided encryption key
+    $decryptedPassword = Security::decrypt($attributes['password'], $encryptionKey);
+
+    // Masking the decrypted password with asterisks
+    $newAttributes['password'] = str_repeat('*', strlen($decryptedPassword));
+} else {
+    // Handle the case where the password attribute is null
+    // For example, you might set a default value for $newAttributes['password']
+    $newAttributes['password'] = ''; // Or any other appropriate default value
+}
         }
 
         if ($action == 'view') {
@@ -196,18 +209,18 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
-        return $event->subject()->renderElement('Configuration.external_data_exam_source', ['attr' => $attr]);
+        return $event->getSubject()->renderElement('Configuration.external_data_exam_source', ['attr' => $attr]);
     }
 
-    public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'add'])) {
             $id = $this->id;
             if (!empty($id)) {
                 $entity = $this->get($id);
                 $value = $entity->value;
-                if (isset($request->data[$this->alias()]['value'])) {
-                    $value = $request->data[$this->alias()]['value'];
+                if (isset($request->getData()[$this->getAlias()]['value'])) {
+                    $value = $request->getData()[$this->getAlias()]['value'];
                 }
                 $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
                 $attributes = $ExternalDataSourceAttributes
@@ -239,7 +252,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
                             $value = '';
                         }
                     }
-                    $request->data[$this->alias()][$key] = $value;
+                    $request->getData()[$this->getAlias()][$key] = $value;
                 }
                 if ($entity->field_type == 'Dropdown') {
                     $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
@@ -259,41 +272,41 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra)
     {
-        if ($requestData[$this->alias()]['value'] == 'OpenEMIS Exams'||$requestData[$this->alias()]['value'] =='CXC'||$requestData[$this->alias()]['value'] =='PacSIMS') {//POCOR-7533
-            $url = rtrim(trim($requestData[$this->alias()]['url']), "/");
-            $requestData[$this->alias()]['url'] = $url;
-            $requestData[$this->alias()]['scope'] = 'Student';
-            $requestData[$this->alias()]['first_name_mapping'] = 'first_name';
-            $requestData[$this->alias()]['middle_name_mapping'] = 'middle_name';
-            $requestData[$this->alias()]['third_name_mapping'] = 'third_name';
-            $requestData[$this->alias()]['last_name_mapping'] = 'last_name';
-            $requestData[$this->alias()]['date_of_birth_mapping'] = 'date_of_birth';
-            $requestData[$this->alias()]['gender_mapping'] = 'gender.name';
-            $requestData[$this->alias()]['identity_type_mapping'] = 'main_identity_type.name';
-            $requestData[$this->alias()]['identity_number_mapping'] = 'identity_number';
-            $requestData[$this->alias()]['nationality_mapping'] = 'main_nationality.name';
-            $requestData[$this->alias()]['address_mapping'] = 'address';
-            $requestData[$this->alias()]['postal_mapping'] = 'postal_code';
-            $requestData[$this->alias()]['external_reference_mapping'] = 'id';
-            $requestData[$this->alias()]['token_uri'] = $url .'/api/oauth/token';
-            $requestData[$this->alias()]['record_uri'] = $url .'/api/restful/Users.json?_finder=Students[first_name:{first_name};last_name:{last_name};date_of_birth:{date_of_birth};identity_number:{identity_number};limit:{limit};page:{page}]&_flatten=1';
-            $requestData[$this->alias()]['user_endpoint_uri'] = $url .'/api/restful/Users/{external_reference}.json?_contain=Genders,MainIdentityType,MainNationality&_flatten=1';
+        if ($requestData[$this->getAlias()]['value'] == 'OpenEMIS Exams'||$requestData[$this->getAlias()]['value'] =='CXC'||$requestData[$this->getAlias()]['value'] =='PacSIMS') {//POCOR-7533
+            $url = rtrim(trim($requestData[$this->getAlias()]['url']), "/");
+            $requestData[$this->getAlias()]['url'] = $url;
+            $requestData[$this->getAlias()]['scope'] = 'Student';
+            $requestData[$this->getAlias()]['first_name_mapping'] = 'first_name';
+            $requestData[$this->getAlias()]['middle_name_mapping'] = 'middle_name';
+            $requestData[$this->getAlias()]['third_name_mapping'] = 'third_name';
+            $requestData[$this->getAlias()]['last_name_mapping'] = 'last_name';
+            $requestData[$this->getAlias()]['date_of_birth_mapping'] = 'date_of_birth';
+            $requestData[$this->getAlias()]['gender_mapping'] = 'gender.name';
+            $requestData[$this->getAlias()]['identity_type_mapping'] = 'main_identity_type.name';
+            $requestData[$this->getAlias()]['identity_number_mapping'] = 'identity_number';
+            $requestData[$this->getAlias()]['nationality_mapping'] = 'main_nationality.name';
+            $requestData[$this->getAlias()]['address_mapping'] = 'address';
+            $requestData[$this->getAlias()]['postal_mapping'] = 'postal_code';
+            $requestData[$this->getAlias()]['external_reference_mapping'] = 'id';
+            $requestData[$this->getAlias()]['token_uri'] = $url .'/api/oauth/token';
+            $requestData[$this->getAlias()]['record_uri'] = $url .'/api/restful/Users.json?_finder=Students[first_name:{first_name};last_name:{last_name};date_of_birth:{date_of_birth};identity_number:{identity_number};limit:{limit};page:{page}]&_flatten=1';
+            $requestData[$this->getAlias()]['user_endpoint_uri'] = $url .'/api/restful/Users/{external_reference}.json?_contain=Genders,MainIdentityType,MainNationality&_flatten=1';
             $patchOption['validate'] = 'OpenEMISIdentity';
              //POCOR-7531 start
-            if (!empty($requestData[$this->alias()]['password'])){
-                $requestData[$this->alias()]['password']=$this->encrypt($requestData[$this->alias()]['password'], Security::salt());
+            if (!empty($requestData[$this->getAlias()]['password'])){
+                $requestData[$this->getAlias()]['password']=$this->encrypt($requestData[$this->getAlias()]['password'], Security::salt());
             }
              //POCOR-7531 end
-        } elseif ($requestData[$this->alias()]['value'] == 'None') {
+        } elseif ($requestData[$this->getAlias()]['value'] == 'None') {
             $patchOption['validate'] = false;
-        } elseif ($requestData[$this->alias()]['value'] == 'Custom') {
+        } elseif ($requestData[$this->getAlias()]['value'] == 'Custom') {
             $patchOption['validate'] = 'Custom';
-        } elseif ($requestData[$this->alias()]['value'] == 'Jordan CSPD') {//POCOR-6930
+        } elseif ($requestData[$this->getAlias()]['value'] == 'Jordan CSPD') {//POCOR-6930
             $patchOption['validate'] = 'JordanCSPD';
         } 
 
-        if($requestData[$this->alias()]['value'] != 'Jordan CSPD'){//POCOR-6930 add if condition
-            if (empty($requestData[$this->alias()]['private_key'])) {
+        if($requestData[$this->getAlias()]['value'] != 'Jordan CSPD'){//POCOR-6930 add if condition
+            if (empty($requestData[$this->getAlias()]['private_key'])) {
                 $newKey = openssl_pkey_new([
                     "digest_alg" => "sha256",
                     "private_key_bits" => 1024,
@@ -310,15 +323,15 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
                 $privateKey = $this->urlsafeB64Encode(Security::encrypt($privKey, $protectedKey));
                 $status = openssl_public_encrypt($protectedKey, $key, Configure::read('Application.public.key'));
                 $protectedKey = $this->urlsafeB64Encode($key);
-                $requestData[$this->alias()]['private_key'] = $privateKey. '.' .$protectedKey;
-                $requestData[$this->alias()]['public_key'] = $pubKey;
+                $requestData[$this->getAlias()]['private_key'] = $privateKey. '.' .$protectedKey;
+                $requestData[$this->getAlias()]['public_key'] = $pubKey;
             } else {
-                $privKey = $requestData[$this->alias()]['private_key'];
+                $privKey = $requestData[$this->getAlias()]['private_key'];
                 $protectedKey = Security::hash(microtime(true), 'sha256', true);
                 $privateKey = $this->urlsafeB64Encode(Security::encrypt($privKey, $protectedKey));
                 $status = openssl_public_encrypt($protectedKey, $key, Configure::read('Application.public.key'));
                 $protectedKey = $this->urlsafeB64Encode($key);
-                $requestData[$this->alias()]['private_key'] = $privateKey. '.' .$protectedKey;
+                $requestData[$this->getAlias()]['private_key'] = $privateKey. '.' .$protectedKey;
             }
         }
     }
@@ -326,7 +339,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $patchOption, ArrayObject $extra)
     {
         //POCOR-6930 Starts
-        $errors = $entity->errors();
+        $errors = $entity->getErrors();
         if (!empty($errors)) {
             $errorMessage = 'Please enter the required details.';
             $this->Alert->error('general.externalSourceDataErr', ['reset'=>true]);

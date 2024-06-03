@@ -10,7 +10,7 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use DateTime;
 use PHPExcel_Worksheet;
 use Cake\Utility\Inflector;
@@ -18,8 +18,8 @@ use Cake\Log\Log;
 class ImportAssessmentItemResultsTable extends AppTable {
     private $institutionId = false;
 
-    public function initialize(array $config) {
-        $this->table('import_mapping');
+    public function initialize(array $config): void {
+        $this->setTable('import_mapping');
         parent::initialize($config);
 
         $this->addBehavior('Import.Import', [
@@ -44,14 +44,14 @@ class ImportAssessmentItemResultsTable extends AppTable {
     }
 
     public function beforeAction($event) {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         if ($session->check('Institution.Institutions.id')) {
             $this->institutionId = $session->read('Institution.Institutions.id');
         }
         $this->systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
     }
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
         $newEvent = [
             'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
@@ -67,14 +67,14 @@ class ImportAssessmentItemResultsTable extends AppTable {
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) {
-        $crumbTitle = $this->getHeader($this->alias());
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona) {
+        $crumbTitle = $this->getHeader($this->getAlias());
         $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'AssessmentItemResults'];
         $Navigation->substituteCrumb($crumbTitle, 'AssessmentItemResults', $url);
         $Navigation->addCrumb($crumbTitle);
     }
 
-    public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
+    public function onImportCheckUnique(Event $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
             $tempRow['entity'] = $this->AssessmentItemResults->newEntity();   
     }
 
@@ -87,7 +87,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
             $buttons[1]['url']['action'] = 'Assessments';
         }
         $request = $this->request;
-        if (empty($request->query('class_name'))) {
+        if (empty($request->getQuery('class_name'))) {
             unset($buttons[0]);
             unset($buttons[1]);
         }
@@ -97,8 +97,11 @@ class ImportAssessmentItemResultsTable extends AppTable {
     public function addOnInitialize(Event $event, Entity $entity)
     {
         $request = $this->request;
-        unset($request->query['class_name']);
+        $query = $request->getQuery(); // Get the query parameters
+        unset($query['class_name']); // Unset the 'class_name' key from the query parameters
+        $this->request = $request->withQueryParams($query); // Set the modified query parameters back to the request
     }
+
 
     public function addAfterAction(Event $event, Entity $entity)
     {
@@ -113,18 +116,22 @@ class ImportAssessmentItemResultsTable extends AppTable {
         //Assumption - onChangeReload must be named in this format: change<field_name>. E.g changeClass
         $currentFieldName = strtolower(str_replace("change", "", $entity->submit));
 
-        if (isset($this->request->data[$this->alias()])) {
+        if (isset($this->request->getData()[$this->getAlias()])) {
 
             $unsetFlag = false;
-            $aryRequestData = $this->request->data[$this->alias()];
+            $aryRequestData = $this->request->getData()[$this->getAlias()];
 
             foreach ($aryRequestData as $requestData => $value) {
                 if (isset($this->dependency[$requestData]) && $value) {
                     $aryDependencies = $this->dependency[$requestData];
+                    $aryDependencies = $this->dependency[$requestData];
+                    $requestDataArray = $this->request->getData()[$this->getAlias()]; // Get request data
+
                     foreach ($aryDependencies as $dependency) {
-                        $this->request->query = $this->request->data[$this->alias()];
+                        $this->request = $this->request->withQueryParams($requestDataArray); // Set modified query parameters
                         $this->ControllerAction->field($dependency, ['visible' => true]);
                     }
+
                 }
             }
         }
@@ -138,24 +145,24 @@ class ImportAssessmentItemResultsTable extends AppTable {
         }
     }
 
-    public function onUpdateFieldClassName(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldClassName(Event $event, array $attr, $action, ServerRequest $request) {
         if ($action == 'add') {
-            $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
+            $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
             
-            $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
+            $academicPeriodId = !is_null($request->getQuery('period')) ? $request->getQuery('period') : $this->AcademicPeriods->getCurrent();
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
             $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
             $classNameOption = $InstitutionClasses->find('list', [
                                     'keyField' => 'id',
                                     'valueField' => 'name'
                                 ])
-                                ->leftJoin([$InstitutionClassGrades->alias() => $InstitutionClassGrades->table()],[
+                                ->leftJoin([$InstitutionClassGrades->getAlias() => $InstitutionClassGrades->getTable()],[
                                     $InstitutionClassGrades->aliasField('institution_class_id = ') . $this->InstitutionClasses->aliasField('id')
                                 ])
-                                ->leftJoin([$this->EducationGrades->alias() => $this->EducationGrades->table()],[
+                                ->leftJoin([$this->EducationGrades->getAlias() => $this->EducationGrades->getTable()],[
                                     $this->EducationGrades->aliasField('id = ') . $this->InstitutionClassGrades->aliasField('education_grade_id')
                                 ])
-                                ->leftJoin([$this->Assessments->alias() => $this->Assessments->table()], [
+                                ->leftJoin([$this->Assessments->getAlias() => $this->Assessments->getTable()], [
                                     $this->Assessments->aliasField('education_grade_id = ') . $this->EducationGrades->aliasField('id')
                                 ])
                                 ->where([
@@ -174,11 +181,13 @@ class ImportAssessmentItemResultsTable extends AppTable {
         return $attr;
     }
 
-    public function onUpdateFieldEducationSubject(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldEducationSubject(Event $event, array $attr, $action, ServerRequest $request) {
         if ($action == 'add') {
-            $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
-            $classId = $request->data['ImportAssessmentItemResults']['class_name'];
-            $academicPeriodId = !is_null($request->query('period')) ? $request->query('period') : $this->AcademicPeriods->getCurrent();
+            $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
+            $classId = isset($request->getData()['ImportAssessmentItemResults']['class_name']) 
+                        ? $request->getData()['ImportAssessmentItemResults']['class_name'] 
+                        : null;
+            $academicPeriodId = !is_null($request->getQuery('period')) ? $request->getQuery('period') : $this->AcademicPeriods->getCurrent();
             $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
             $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
             $superAdmin = $this->Auth->user('super_admin');
@@ -191,17 +200,17 @@ class ImportAssessmentItemResultsTable extends AppTable {
                                         'keyField' => 'id',
                                         'valueField' => 'name'
                                     ])
-                                    ->leftJoin([$this->InstitutionSubjects->alias() => $this->InstitutionSubjects->table()],[
+                                    ->leftJoin([$this->InstitutionSubjects->getAlias() => $this->InstitutionSubjects->getTable()],[
                                          $this->InstitutionSubjects->aliasField('education_subject_id = ') . $this->EducationSubjects->aliasField('id')
                                     ])
-                                    ->leftJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()],[
+                                    ->leftJoin([$InstitutionClassSubjects->getAlias() => $InstitutionClassSubjects->getTable()],[
                                          $InstitutionClassSubjects->aliasField('institution_subject_id = ') . $this->InstitutionSubjects->aliasField('id')
                                     ])
-                                    ->leftJoin([$InstitutionSubjectStaff->alias() => $InstitutionSubjectStaff->table()],[
+                                    ->leftJoin([$InstitutionSubjectStaff->getAlias() => $InstitutionSubjectStaff->getTable()],[
                                          $InstitutionSubjectStaff->aliasField('institution_subject_id = ') . $this->InstitutionSubjects->aliasField('id')
                                     ])
                                     ->where([
-                                       $InstitutionClassSubjects->aliasField('institution_class_id') => $classId,
+                                       $InstitutionClassSubjects->aliasField('institution_class_id IS') => $classId,
                                        $where
                                     ])
                                     ->toArray();
@@ -218,7 +227,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
     {
         $subjectId = $this->request->query['education_subject'];
         $academicPeriodId = $this->AcademicPeriods->getCurrent();
-        $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
+        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
 
         $EducationSubjectsResults = $this->EducationSubjects->find()
                         ->select([
@@ -252,7 +261,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
 
     public function onImportPopulateAssessmentPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $classId = $this->request->query['class_name'];
+        $classId = $this->request->getQuery('class_name');
         $educationData = $this->InstitutionClassGrades->find()
                         ->select([$this->InstitutionClassGrades->aliasField('education_grade_id')])
                         ->where([$this->InstitutionClassGrades->aliasField('institution_class_id') => $classId])
@@ -269,7 +278,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
                             $AssessmentPeriods->aliasField('code'),
                             $AssessmentPeriods->aliasField('name')
                         ])
-                        ->leftJoin([$Assessments->alias() => $Assessments->table()], [
+                        ->leftJoin([$Assessments->getAlias() => $Assessments->getTable()], [
                             $AssessmentPeriods->aliasField('assessment_id = ') . $Assessments->aliasField('id')
                         ])
                         ->where([
@@ -336,7 +345,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
         $Assessments = TableRegistry::get('Assessment.Assessments');
         $dataRecord = $this->AssessmentPeriods->find()
                     ->select([$this->AssessmentPeriods->aliasField('id')])
-                    ->leftJoin([$Assessments->alias() => $Assessments->table()], [
+                    ->leftJoin([$Assessments->getAlias() => $Assessments->getTable()], [
                         $this->AssessmentPeriods->aliasField('assessment_id = ') . $Assessments->aliasField('id')
                     ])
                     ->where([
@@ -382,8 +391,8 @@ class ImportAssessmentItemResultsTable extends AppTable {
     {
         //POCOR-6613 starts
         $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;// for enrolled status //POCOR-6613 ends
-        $classId = $this->request->query['class_name'];
-        $academicPeriodId = !is_null($this->request->query('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent();
+        $classId = $this->request->getQuery['class_name'];
+        $academicPeriodId = !is_null($this->request->getQuery('period')) ? $this->request->getQuery('period') : $this->AcademicPeriods->getCurrent();
         $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $Users = TableRegistry::get('User.Users');
         $studentData = $InstitutionClassStudents->find()
@@ -437,9 +446,9 @@ class ImportAssessmentItemResultsTable extends AppTable {
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
        
-        $educationGradeId = $this->request->query['education_grade'];
+        $educationGradeId = $this->request->getQuery('education_grade');
         $academicPeriodId = $this->AcademicPeriods->getCurrent();
-        $institutionId = $this->request->session()->read('Institution.Institutions.id');
+        $institutionId = $this->request->getSession()->read('Institution.Institutions.id');
         $tempRow['institution_id'] = $institutionId;
 		/*POCOR-6528 starts*/
 		$this->AssessmentItemsGradingTypes = TableRegistry::get('Institution.AssessmentItemsGradingTypes');
@@ -462,27 +471,27 @@ class ImportAssessmentItemResultsTable extends AppTable {
 		/*POCOR-6528 starts*/
 		$maxvalue = $this->Assessments->find()
 		->select(['maximumvalue'=>$this->AssessmentGradingTypes->aliasField('max')])
-		 ->InnerJoin([$this->AssessmentItems->alias() => $this->AssessmentItems->table()],[
+		 ->InnerJoin([$this->AssessmentItems->getAlias() => $this->AssessmentItems->getTable()],[
                                     $this->AssessmentItems->aliasField('assessment_id = ') . $this->Assessments->aliasField('id')
                                 ])
-		->InnerJoin([$this->AssessmentItemsGradingTypes->alias() => $this->AssessmentItemsGradingTypes->table()],[
+		->InnerJoin([$this->AssessmentItemsGradingTypes->getAlias() => $this->AssessmentItemsGradingTypes->getTable()],[
                                     $this->AssessmentItemsGradingTypes->aliasField('assessment_id = ') . $this->AssessmentItems->aliasField('assessment_id'),
 									
                                     $this->AssessmentItemsGradingTypes->aliasField('education_subject_id = ') . $this->AssessmentItems->aliasField('education_subject_id')
                                 ])
         //START:POCOR-6640
-		// ->InnerJoin([$this->AssessmentGradingTypes->alias() => $this->AssessmentGradingTypes->table()],[
+		// ->InnerJoin([$this->AssessmentGradingTypes->getAlias() => $this->AssessmentGradingTypes->getTable()],[
         //                             $this->AssessmentGradingTypes->aliasField('id =') . $this->AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id')
-        ->InnerJoin([$this->AssessmentGradingTypes->alias() => $this->AssessmentGradingTypes->table()],[
+        ->InnerJoin([$this->AssessmentGradingTypes->getAlias() => $this->AssessmentGradingTypes->getTable()],[
                                    $this->AssessmentGradingTypes->aliasField('id =') . $this->AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id')
                                 ])// starts POCOR-6682 i've replace to code to ID because wrong code id pick
         //END:POCOR-6640
-		->InnerJoin([$this->AssessmentPeriods->alias() => $this->AssessmentPeriods->table()],[
+		->InnerJoin([$this->AssessmentPeriods->getAlias() => $this->AssessmentPeriods->getTable()],[
                                     $this->AssessmentPeriods->aliasField('assessment_id =') . $this->Assessments->aliasField('id'),
 
                                     $this->AssessmentPeriods->aliasField('id = ') . $this->AssessmentItemsGradingTypes->aliasField('assessment_period_id')	// starts POCOR-6682
                                 ])									
-		->InnerJoin([$this->InstitutionClassGrades->alias() => $this->InstitutionClassGrades->table()],[
+		->InnerJoin([$this->InstitutionClassGrades->getAlias() => $this->InstitutionClassGrades->getTable()],[
                                     $this->InstitutionClassGrades->aliasField('education_grade_id =') . $this->Assessments->aliasField('education_grade_id')
                                 ])
 		->where([$this->InstitutionClassGrades->aliasField('institution_class_id') => $classId,
@@ -523,4 +532,16 @@ class ImportAssessmentItemResultsTable extends AppTable {
         /*POCOR-6486 ends*/
         return true;
     }
+
+    public function addEditOnChangeClassName(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $alias = $this->getAlias();
+        $classId = $data[$alias]['class_name'];
+        $data['class_id'] = $classId;
+        $this->request = $this->request->withQueryParams(['class_id' => $classId]);
+
+    }
+
+
+
 }

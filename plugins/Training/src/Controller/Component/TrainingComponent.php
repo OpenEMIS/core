@@ -8,7 +8,7 @@ class TrainingComponent extends Component
 {
     private $controller;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->controller = $this->_registry->getController();
     }
@@ -29,7 +29,7 @@ class TrainingComponent extends Component
         // End
 
         // Filter by Approved
-        $steps = $this->controller->Workflow->getStepsByModelCode($Courses->registryAlias(), 'APPROVED');
+        $steps = $this->controller->Workflow->getStepsByModelCode($Courses->getRegistryAlias(), 'APPROVED');
         if (!empty($steps)) {
             $query->where([
                 $Courses->aliasField('status_id IN') => $steps
@@ -53,7 +53,7 @@ class TrainingComponent extends Component
 
         if (!$listAll) {
             // Filter by Approved
-            $steps = $this->controller->Workflow->getStepsByModelCode($Sessions->registryAlias(), 'APPROVED');
+            $steps = $this->controller->Workflow->getStepsByModelCode($Sessions->getRegistryAlias(), 'APPROVED');
             if (!empty($steps)) {
                 $query->where([
                     $Sessions->aliasField('status_id IN') => $steps

@@ -19,6 +19,7 @@ use App\Model\Traits\OptionsTrait;
 use Archive\Controller\AppController;
 use ControllerAction\Model\Traits\UtilityTrait;
 use Cake\Datasource\ConnectionManager;
+use Cake\Http\ServerRequest;
 
 
 /**
@@ -31,50 +32,51 @@ class ArchivesController extends AppController
     use OptionsTrait;
     use UtilityTrait;
 
-    public function initialize(){
+    public function initialize(): void {
 
         parent::initialize();
     }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 
-		/*$header = 'Archive';    
-        $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);*/
+		$header = 'Archive';    
+        $this->Navigation->addCrumb($header, ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $this->request->getParam('action')]);
 
         
         //Customize header because model name created was different and POCOR-5674 requirement was modified.
         // POCOR-6816  change breadcrumb for every url action.
-        if($this->request->action == 'BackupLog'){
+        $serverRequest = new ServerRequest();
+        if($this->request->getParam('action') == 'BackupLog'){
             $headers = 'Data Management';    
-            $this->Navigation->addCrumb($headers, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
+            $this->Navigation->addCrumb($headers, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->getParam('action')]);
             $header = __('Data Management') . ' - ' . __('Backup');
             $this->Navigation->addCrumb('Backup');
-        }elseif($this->request->action == 'Transfer'){
+        }elseif($this->request->getParam('action') == 'Transfer'){
             $headers = 'Data Management';    
-            $this->Navigation->addCrumb($headers, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
+            $this->Navigation->addCrumb($headers, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->getParam('action')]);
             $header = __('Data Management') . ' - ' . __('Archive');
             $this->Navigation->addCrumb('Archive');
-        }elseif($this->request->action == 'Connection'){
+        }elseif($this->request->getParam('action') == 'Connection'){
             $headers = 'Data Management';    
-            $this->Navigation->addCrumb($headers, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
+            $this->Navigation->addCrumb($headers, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->getParam('action')]);
             $header = __('Data Management') . ' - ' . __('Connection');
             $this->Navigation->addCrumb('Connection');
-        }elseif($this->request->action == 'CopyData'){
+        }elseif($this->request->getParam('action') == 'CopyData'){
             $headers = 'Data Management';    
-            $this->Navigation->addCrumb($headers, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
+            $this->Navigation->addCrumb($headers, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->getParam('action')]);
             $header = __('Data Management') . ' - ' . __('Copy');
             $this->Navigation->addCrumb('Copy');
         }
         $this->set('contentHeader', $header); 
 
-        $this->Security->config('unlockedActions', 'add');
+        $this->Security->getConfig('unlockedActions', 'add');
 
         $this->Auth->allow(['index', 'download']);
     }
 
     function downloadSql($archiveId){
-
-        $backupLog = $this->loadModel('BackupLogs');
+        ini_set('memory_limit','-1');
+        $backupLog = $this->loadModel('Archive.BackupLogs');
         $archiveData = $backupLog->findById($archiveId)->first();
         $fileLink = WWW_ROOT .'export/backup' . DS .$archiveData->name . '.sql';
         $filetype=filetype($fileLink);

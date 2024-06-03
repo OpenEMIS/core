@@ -15,7 +15,7 @@ class ReorderBehavior extends Behavior {
 		'filterValues' => null
 	];
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.reorder'] = 'reorder';
 		return $events;
@@ -29,8 +29,8 @@ class ReorderBehavior extends Behavior {
 		$controller->autoRender = false;
 
 		if ($request->is('ajax')) {
-			$primaryKey = $model->primaryKey();
-			$orderField = $this->config('orderField');
+			$primaryKey = $model->getPrimaryKey();
+			$orderField = $this->getConfig('orderField');
 
 			$encodedIds = json_decode($request->data("ids"));
 
@@ -67,7 +67,7 @@ class ReorderBehavior extends Behavior {
 				}
 
 				$event = $model->dispatchEvent('ControllerAction.Model.afterReorder', [$ids], $model);
-				if ($event->isStopped()) { return $event->result; }
+				if ($event->isStopped()) { return $event->getResult(); }
 			}
 		}
 		$mainEvent->stopPropagation();
@@ -78,9 +78,9 @@ class ReorderBehavior extends Behavior {
 		/** POCOR-6677 starts- added AND condition to not do anything when model is SecurityRoles*/
 		$model = $this->_table;
 		if ($entity->isNew() && $model->alias() != 'SecurityRoles') {
-			$orderField = $this->config('orderField');
-			$filter = $this->config('filter');
-			$filterValues = $this->config('filterValues');
+			$orderField = $this->getConfig('orderField');
+			$filter = $this->getConfig('filter');
+			$filterValues = $this->getConfig('filterValues');
 			$order = 0;
 
 			if (is_null($filter)) {
@@ -150,17 +150,17 @@ class ReorderBehavior extends Behavior {
 		/** POCOR-6677 starts- added AND condition to not do anything when model is SecurityRoles*/
 		$model = $this->_table;
 		if ($model->alias() != 'SecurityRoles') {
-			$orderField = $this->config('orderField');
-			$filter = $this->config('filter');
-			$filterValues = $this->config('filterValues');
+			$orderField = $this->getConfig('orderField');
+			$filter = $this->getConfig('filter');
+			$filterValues = $this->getConfig('filterValues');
 			$this->updateOrder($entity, $orderField, $filter, $filterValues);
 		}
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
-		$orderField = $this->config('orderField');
-		$filter = $this->config('filter');
-		$filterValues = $this->config('filterValues');
+		$orderField = $this->getConfig('orderField');
+		$filter = $this->getConfig('filter');
+		$filterValues = $this->getConfig('filterValues');
 		$this->updateOrder($entity, $orderField, $filter, $filterValues);
 	}
 }

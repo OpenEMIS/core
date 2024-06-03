@@ -4,6 +4,7 @@ namespace Profile\Model\Table;
 use Cake\ORM\Query;
 use Scholarship\Model\Table\ScholarshipsTable as BaseTable;
 
+//class ScholarshipsDirectoryTable extends AppTable
 class ScholarshipsDirectoryTable extends BaseTable
 {
     public function findIndex(Query $query, array $options)
@@ -32,4 +33,5 @@ class ScholarshipsDirectoryTable extends BaseTable
             'Loans.PaymentFrequencies'
         ]);
     }
+    
 }

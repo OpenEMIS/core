@@ -21,7 +21,6 @@ DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3058';
 -- staff_training_needs
 DROP TABLE `staff_training_needs`;
 ALTER TABLE `z_2335_staff_training_needs` RENAME `staff_training_needs`;
->>>>>>> origin/POCOR-3048
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3068';

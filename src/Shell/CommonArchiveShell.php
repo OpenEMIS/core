@@ -19,7 +19,7 @@ use phpDocumentor\Reflection\Types\Boolean;
 class CommonArchiveShell extends Shell
 {
 
-    public function initialize()
+    public function initialize(): void
     {
         //POCOR-7339-HINDOL cleaned the code
         parent::initialize();

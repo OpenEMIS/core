@@ -4,7 +4,7 @@ use Cake\Event\Event;
 use App\Model\Table\AppTable;
 
 class InstitutionCommitteeAttachmentsTable extends AppTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 		$this->belongsTo('InstitutionCommittees', ['className' => 'Institution.InstitutionCommittees', 'foreignKey' =>'institution_committee_id']);
 
@@ -14,7 +14,7 @@ class InstitutionCommitteeAttachmentsTable extends AppTable {
         ]);
 	}
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];

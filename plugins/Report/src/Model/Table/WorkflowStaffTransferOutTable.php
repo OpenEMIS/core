@@ -12,9 +12,9 @@ use Institution\Model\Table\InstitutionStaffTransfersTable as TransferType;
 class WorkflowStaffTransferOutTable extends AppTable  
 {
 
-    public function initialize(array $config) 
+    public function initialize(array $config): void 
     {
-        $this->table("institution_staff_transfers");
+        $this->setTable("institution_staff_transfers");
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);

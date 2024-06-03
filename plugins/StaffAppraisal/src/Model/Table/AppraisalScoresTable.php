@@ -3,13 +3,14 @@ namespace StaffAppraisal\Model\Table;
 
 use ArrayObject;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\ResultSet;
+use Cake\View\Helper\FormHelper;
 
 class AppraisalScoresTable extends ControllerActionTable
 {
@@ -26,9 +27,9 @@ class AppraisalScoresTable extends ControllerActionTable
         'AVG' => 'Average'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('appraisal_forms');
+        $this->setTable('appraisal_forms');
         parent::initialize($config);
 
         $this->hasMany('AppraisalPeriods', [
@@ -116,16 +117,14 @@ class AppraisalScoresTable extends ControllerActionTable
 
     public function editOnAddField(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
-        if (!empty($requestData) && isset($requestData[$this->alias()]) && isset($requestData[$this->alias()]['selected_score'])) {
-            $selectedCriteria = $requestData[$this->alias()]['selected_score'];
-
+        if (!empty($requestData) && isset($requestData[$this->getAlias()]) && isset($requestData[$this->getAlias()]['selected_score'])) {
+            $selectedCriteria = $requestData[$this->getAlias()]['selected_score'];
             // Get the critiera type fields based on their ID
             $appraisalCriterias = TableRegistry::get('StaffAppraisal.AppraisalCriterias');
 
-            if (!empty($requestData[$this->alias()]['appraisal_forms_criterias_score'])) {
-                $scoreDependencyArrayField = $requestData[$this->alias()]['appraisal_forms_criterias_score'];
+            if (!empty($requestData[$this->getAlias()]['appraisal_forms_criterias_score'])) {
+                $scoreDependencyArrayField = $requestData[$this->getAlias()]['appraisal_forms_criterias_score'];
             }
-
 
             // Next get the criteria field type out den see if it is score or not
             foreach ($selectedCriteria as $key => $criteriaId) {
@@ -144,7 +143,7 @@ class AppraisalScoresTable extends ControllerActionTable
                         $this->populateScoreDependency($scoreDependencyArrayField, $mainScoreId, $selectedScore);
 
                         if (!$this->validationPass) {
-                            $requestData[$this->alias()]['selected_score'][$key] = null;
+                            $requestData[$this->getAlias()]['selected_score'][$key] = null;
                             $this->Alert->clear();
                             $this->Alert->error('Staff.Appraisal.circular_dependency');
                         }
@@ -158,35 +157,35 @@ class AppraisalScoresTable extends ControllerActionTable
     {
         $appraisalFormId = $entity->id;
         $criteriaScores = $entity->appraisal_forms_criterias;
-        $finalScore = $requestData[$this->alias()]['final_score'];
+        $finalScore = $requestData[$this->getAlias()]['final_score'];
         $criteriaIds = [];
 
-        if (!isset($requestData[$this->alias()]['appraisal_forms_criterias'])) {
-            $requestData[$this->alias()]['appraisal_forms_criterias'] = [];
+        if (!isset($requestData[$this->getAlias()]['appraisal_forms_criterias'])) {
+            $requestData[$this->getAlias()]['appraisal_forms_criterias'] = [];
         }
 
-        if (!isset($requestData[$this->alias()]['appraisal_forms_criterias_score'])) {
-            $requestData[$this->alias()]['appraisal_forms_criterias_score'] = [];
+        if (!isset($requestData[$this->getAlias()]['appraisal_forms_criterias_score'])) {
+            $requestData[$this->getAlias()]['appraisal_forms_criterias_score'] = [];
         }
 
-        if (isset($requestData[$this->alias()]['selected_score'])) {
-            foreach ($requestData[$this->alias()]['selected_score'] as $criteriaId => $value) {
+        if (isset($requestData[$this->getAlias()]['selected_score'])) {
+            foreach ($requestData[$this->getAlias()]['selected_score'] as $criteriaId => $value) {
                 $criteriaIds[] = $criteriaId;
             }
         }
 
         foreach ($criteriaIds as $criteriaId) {
-            if (!isset($requestData[$this->alias()]['appraisal_forms_criterias_score'][$criteriaId])) {
-                $requestData[$this->alias()]['appraisal_forms_criterias_score'][$criteriaId] = [];
+            if (!isset($requestData[$this->getAlias()]['appraisal_forms_criterias_score'][$criteriaId])) {
+                $requestData[$this->getAlias()]['appraisal_forms_criterias_score'][$criteriaId] = [];
             }
 
-            if (!isset($requestData[$this->alias()]['steps'][$criteriaId])) {
-                $requestData[$this->alias()]['steps'][$criteriaId] = [];
+            if (!isset($requestData[$this->getAlias()]['steps'][$criteriaId])) {
+                $requestData[$this->getAlias()]['steps'][$criteriaId] = [];
             }            
         }
 
-        $scoreField = $requestData[$this->alias()]['appraisal_forms_criterias_score'];
-        $stepsList = $requestData[$this->alias()]['steps'];
+        $scoreField = $requestData[$this->getAlias()]['appraisal_forms_criterias_score'];
+        $stepsList = $requestData[$this->getAlias()]['steps'];
 
         foreach ($scoreField as $criteriaId => $data) {
             $stepData = $stepsList[$criteriaId];
@@ -205,7 +204,7 @@ class AppraisalScoresTable extends ControllerActionTable
                 'appraisal_forms_criterias_scores_links' => $data
             ];
             $scoreData['final_score'] = ($criteriaId == $finalScore) ? 1 : 0;
-            $requestData[$this->alias()]['appraisal_forms_criterias'][] = [
+            $requestData[$this->getAlias()]['appraisal_forms_criterias'][] = [
                 'appraisal_form_id' => $appraisalFormId,
                 'appraisal_criteria_id' => $criteriaId,
                 'appraisal_forms_criterias_score' => $scoreData
@@ -267,12 +266,36 @@ class AppraisalScoresTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-        if ($field == 'code') {
-            return __('Form');
+        switch ($field) {
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'visible':
+                return __('Visible');
+            case 'name':
+                return __('Name');
+            case 'code':
+                return __('Form');
+            case 'appraisal_form_id':
+                return __('Appraisal Form');
+            case 'appraisal_types':
+                return __('Appraisal Type');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'date_enabled':
+                return __('Date Enabled');
+            case 'date_disabled':
+                return __('Date  Disable');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
-        return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
 
 
@@ -286,8 +309,9 @@ class AppraisalScoresTable extends ControllerActionTable
             $label = $criteriaCode . ' - ' . $criteriaName;
             $formId = $scoreEntity->appraisal_form_id;
 
-            $form = $event->subject()->Form;
-            $form->unlockField($this->alias() . '.appraisal_forms_criterias_score.' . $criteriaId);
+            $form = $event->getSubject()->Form;
+            $form->create();
+            $form->unlockField($this->getAlias() . '.appraisal_forms_criterias_score.' . $criteriaId);
 
             $arrayFields = [];
             $arrayFields = $this->getSelectedCriteriaList($scoreEntity);
@@ -326,7 +350,7 @@ class AppraisalScoresTable extends ControllerActionTable
 
             // Display the steps
             $attr2 = [];
-            $attr2['model'] = $this->alias();
+            $attr2['model'] = $this->getAlias();
             $attr2['field'] = 'steps.'.$criteriaId;
             $attr2['add_steps_field'] = __('Steps');
 
@@ -354,7 +378,7 @@ class AppraisalScoresTable extends ControllerActionTable
                 }
             }
 
-            return $event->subject()->renderElement('CustomField.form_criterias_score_fields', ['attr' => $attr, 'attr2' => $attr2]);
+            return $event->getSubject()->renderElement('CustomField.form_criterias_score_fields', ['attr' => $attr, 'attr2' => $attr2]);
         } elseif ($action == 'edit') {
 
             $scoreEntity = $attr['entity'];
@@ -366,8 +390,8 @@ class AppraisalScoresTable extends ControllerActionTable
             $formId = $entity->id;
 
 
-            $form = $event->subject()->Form;
-            $form->unlockField($this->alias() . '.appraisal_forms_criterias_score.' . $criteriaId);
+            $form = $event->getSubject()->Form;
+            $form->unlockField($this->getAlias() . '.appraisal_forms_criterias_score.' . $criteriaId);
 
             // Generate the question for the dropdownlist
             $validCriteriaTypes = [self::SCORE_TYPE_CODE, self::SLIDER_TYPE_CODE];
@@ -393,7 +417,7 @@ class AppraisalScoresTable extends ControllerActionTable
                 ])
                 ->toArray();
 
-            $requestData = $this->request->data;
+            $requestData = $this->request->getData();
             $arrayFields = [];
 
             $arrayFields = $this->getSelectedCriteriaList($scoreEntity, $requestData);
@@ -445,7 +469,7 @@ class AppraisalScoresTable extends ControllerActionTable
             // Display the steps
             // To be refactor
             $attr2 = [];
-            $attr2['model'] = $this->alias();
+            $attr2['model'] = $this->getAlias();
             $attr2['field'] = 'steps.'.$criteriaId;
             $attr2['add_steps_field'] = __('Steps');
 
@@ -479,12 +503,11 @@ class AppraisalScoresTable extends ControllerActionTable
                 }
             }
 
-            return $event->subject()->renderElement('CustomField.form_criterias_score_fields', ['attr' => $attr, 'attr2' => $attr2]);
+            return $event->getSubject()->renderElement('CustomField.form_criterias_score_fields', ['attr' => $attr, 'attr2' => $attr2]);
         }
     }
 
-    public function onUpdateFieldFinalScore(Event $event, array $attr, $action, Request $request)
-    {
+    public function onUpdateFieldFinalScore(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'edit') {
             $entity = $attr['attr']['entity'];
             $scoreCriteriasOptions = [];
@@ -515,8 +538,7 @@ class AppraisalScoresTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
-    {
+    public function onUpdateFieldCode(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'edit') {
             if (array_key_exists('attr', $attr) && array_key_exists('entity', $attr['attr'])) {
                 $entity = $attr['attr']['entity'];
@@ -582,7 +604,7 @@ class AppraisalScoresTable extends ControllerActionTable
                 }
             }
         } elseif ($this->request->is(['post', 'put'])) {
-            $requestAlias = $requestData[$this->alias()];
+            $requestAlias = $requestData[$this->getAlias()];
             if (array_key_exists('appraisal_forms_criterias_score', $requestAlias) &&
                 array_key_exists($appraisalCriteriaId, $requestAlias['appraisal_forms_criterias_score'])
             ) {
@@ -601,11 +623,11 @@ class AppraisalScoresTable extends ControllerActionTable
                 }
             }
 
-            if (array_key_exists('selected_score', $requestData[$this->alias()]) &&
-                array_key_exists($appraisalCriteriaId, $requestData[$this->alias()]['selected_score']) &&
-                !is_null($requestData[$this->alias()]['selected_score'][$appraisalCriteriaId])
+            if (array_key_exists('selected_score', $requestData[$this->getAlias()]) &&
+                array_key_exists($appraisalCriteriaId, $requestData[$this->getAlias()]['selected_score']) &&
+                !is_null($requestData[$this->getAlias()]['selected_score'][$appraisalCriteriaId])
                 ) {
-                    $selectedCriteriaId = $requestData[$this->alias()]['selected_score'][$appraisalCriteriaId];
+                    $selectedCriteriaId = $requestData[$this->getAlias()]['selected_score'][$appraisalCriteriaId];
                     $appraisalCriterias = TableRegistry::get('StaffAppraisal.AppraisalCriterias');
 
                     $record = $appraisalCriterias
