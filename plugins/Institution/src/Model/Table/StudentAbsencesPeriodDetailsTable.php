@@ -417,25 +417,27 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                                             $alertRuleMessage = str_replace($searchKeyWebsite, $InsWebsite, $alertRuleMessage);
                                         }
 
+                                        //Comment for V4[START]
                                         //POCOR-7266::End
-                                        if (($alertRuleData1->threshold) == $absenceCount) { //POCOR-7398 just changed <= to == also removed -1 after threshold
-                                            $absenceCount = $absenceCount + 1;
-                                            if (!empty($userData->email)) {
-                                                $email = new Email('openemis');
-                                                $emailSubject = 'OpenEMIS Attendance Alert for ' . $insCode . " - " . $insName;
-                                                $emailMessage = $alertRuleMessage; //POCOR-7266
-                                                // POCOR-8039 start
-                                                try {
-                                                    $email
-                                                        ->to($userData->email)
-                                                        ->subject($emailSubject)
-                                                        ->send($emailMessage);
-                                                } catch (\Exception $exception) {
-                                                    $this->log($exception->getMessage(), 'error');
-                                                }
-                                                // POCOR-8039 end
-                                            }
-                                        }
+                                        // if (($alertRuleData1->threshold) == $absenceCount) { //POCOR-7398 just changed <= to == also removed -1 after threshold
+                                        //     $absenceCount = $absenceCount + 1;
+                                        //     if (!empty($userData->email)) {
+                                        //         $email = new Email('openemis');
+                                        //         $emailSubject = 'OpenEMIS Attendance Alert for ' . $insCode . " - " . $insName;
+                                        //         $emailMessage = $alertRuleMessage; //POCOR-7266
+                                        //         // POCOR-8039 start
+                                        //         try {
+                                        //             $email
+                                        //                 ->to($userData->email)
+                                        //                 ->subject($emailSubject)
+                                        //                 ->send($emailMessage);
+                                        //         } catch (\Exception $exception) {
+                                        //             $this->log($exception->getMessage(), 'error');
+                                        //         }
+                                        //         // POCOR-8039 end
+                                        //     }
+                                        // }
+                                        //Comment for V4[END]
                                     }
                                 }
                             }
