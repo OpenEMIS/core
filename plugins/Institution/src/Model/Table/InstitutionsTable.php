@@ -267,17 +267,37 @@ class InstitutionsTable extends ControllerActionTable
         $validator = $this->LatLongValidation(); //POCOR-6625 incomment <vikas.rathore@mail.valocoders.com>
         $validator
             ->setProvider('custom', $this)
-            // ->add('date_opened', [
-            //     'ruleCompare' => [
-            //         'rule' => ['comparison', 'notequal', '0000-00-00'],
-            //     ]
-            // ])
+            ->add('date_opened', [
+                'ruleCompare' => [
+                    // 'rule' => ['comparison', 'notequal', '0000-00-00'],
+                    'rule' => function ($value, $context) {
+                        try{
+                            $mydate = strtotime($value);
+                            return true;
+                        }catch(\Exception $e){
+                            Log::write('debug', 'Validation Context 1: ' . print_r($context, true));
+                            return false;
+                        }
+                    },
+                    'message' => __('You have entered an invalid date')
+                ]
+            ])
             ->allowEmpty('date_closed')
             ->add('date_opened', 'ruleLessThanToday', [
-                'rule' => ['lessThanToday', true]
+                'rule' => ['lessThanToday', true],
+                'message' => __('Date should not be later than today'),
+                'on' => function ($context) {
+                    Log::write('debug', 'Validation Context 2: ' . print_r($context->data, true));
+                    return true;
+                }
             ])
             ->add('date_closed', 'ruleCompareDateReverse', [
-                'rule' => ['compareDateReverse', 'date_opened', true]
+                'rule' => ['compareDateReverse', 'date_opened', true],
+                'message' => __('Date Closed should not be earlier than Date Opened'),
+                'on' => function ($context) {
+                    Log::write('debug', 'Validation Context 3: ' . print_r($context, true));
+                    return true;
+                }
             ])
             ->add('date_closed', 'ruleCheckPendingWorkbench', [
                 'rule' => 'checkPendingWorkbench',
