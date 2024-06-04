@@ -51,6 +51,7 @@ class InstitutionMapsTable extends ControllerActionTable
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('OpenEmis.Map');
         $this->addBehavior('Institution.LatLong');
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     /*public function validationDefault(Validator $validator): Validator
