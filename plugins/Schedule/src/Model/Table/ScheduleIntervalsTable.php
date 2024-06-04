@@ -10,12 +10,14 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
+use DateTime;
 
 class ScheduleIntervalsTable extends ControllerActionTable
 {
     public function initialize(array $config): void
     {
-        $this->table('institution_schedule_intervals');
+        $this->setTable('institution_schedule_intervals');
         parent::initialize($config);
 
         $this->belongsTo('Institutions', [
@@ -50,6 +52,10 @@ class ScheduleIntervalsTable extends ControllerActionTable
             'ScheduleTimetable' => ['index', 'view', 'edit']
         ]);
         $this->addBehavior('Schedule.Schedule');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['ScheduleIntervals' =>['id']
+            ]
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -383,7 +389,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $academicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $ScheduleIntervals = TableRegistry::get('Schedule.ScheduleIntervals');
         if ($action == 'add') {
-            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery['period']));
             $attr['options'] = $periodOptions;
             $attr['onChangeReload'] = true;
             $attr['default'] = $selectedPeriod;
@@ -412,8 +418,8 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $ScheduleIntervals = TableRegistry::get('Schedule.ScheduleIntervals');
         if ($action == 'add') {
             $requestData = $request->getData();
-            if (isset($requestData) && isset($requestData[$this->alias()]) && array_key_exists('academic_period_id', $requestData[$this->alias()])) {
-                $selectedPeriodId = $requestData[$this->alias()]['academic_period_id'];
+            if (isset($requestData) && isset($requestData[$this->getAlias()]) && array_key_exists('academic_period_id', $requestData[$this->getAlias()])) {
+                $selectedPeriodId = $requestData[$this->getAlias()]['academic_period_id'];
             } else {
                 $selectedPeriodId = $this->AcademicPeriods->getCurrent();
             }
@@ -472,9 +478,9 @@ class ScheduleIntervalsTable extends ControllerActionTable
     // Get Options
     public function getShiftOptions($academicPeriodId, $allShiftOption = false, $institutionId='')
     {
-        if($institutionId == '' && empty($institutionId)){
-            $institutionId = $this->Session->read('Institution.Institutions.id');
-        }
+        if($institutionId == null){
+            $institutionId = $this->getInstitutionID();
+           }
         
         $shiftOptions = $this->Shifts
             ->find('list', [

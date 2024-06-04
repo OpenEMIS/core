@@ -627,6 +627,9 @@ class InstitutionsController extends AppController
 
     public function ExaminationResults()
     {
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+        $session = $this->request->getSession();
+        $session->write('Institution.Institutions.id', $institutionId);
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ExaminationResults']);
     }
 
@@ -1168,6 +1171,9 @@ public function ClassReportCards()
 
     public function InstitutionStatus()
     {
+        // $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+        // $session = $this->request->getSession();
+        // $session->write('Institution.Institutions.id', $institutionId);
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStatus']);
 
         /*$institutionId = $this->request->pass[1];
@@ -2697,6 +2703,10 @@ public function isActionIgnored(Event $event, $action)
             $this->set('contentHeader', $tranlatedInstitutionName);
             $this->set('institutionName', $tranlatedInstitutionName);
         } else {
+            $alias = $model->alias;
+            if($alias == 'InstitutionMaps') {
+                return $this->redirect(['plugin' => 'Institution','controller' => 'Institutions','action' => 'Institutions','index']);
+            }
             $event->stopPropagation();
             die('No Such Institution');
             return;
