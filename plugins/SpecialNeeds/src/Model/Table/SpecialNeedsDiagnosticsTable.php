@@ -51,7 +51,7 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
                 ->add('comment', 'length', [
                 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
@@ -158,6 +158,44 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
         $this->field('file_content', ['null' => true, 'attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]); //Modify for POCOR-7147
 
         $this->setFieldOrder(['date', 'special_needs_diagnostics_type_id','special_needs_diagnostics_degree_id', 'file_name', 'file_content', 'comment']);
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        $sentData = $this->request->getData();
+        $alias = $this->getAlias();
+        $sentData = $sentData[$alias];
+        
+        $fileContent = 'file_content';
+        $uploadedFile = $sentData[$fileContent];
+        $fileName = 'file_name';
+    
+        if ($uploadedFile instanceof UploadedFile) {
+            //$content = (string)$uploadedFile->getStream();
+            $error = $uploadedFile->getError();
+            if ($error === UPLOAD_ERR_OK) {
+                // Accessing the file contents
+                $content = (string)$uploadedFile->getStream();
+            }
+            $name = $uploadedFile->getClientFilename();
+        }
+
+        if (isset($content) && isset($error) && $error == UPLOAD_ERR_OK) {
+            $data[$fileName] = $name;
+            $data[$fileContent] = $content;
+        } elseif (isset($error) && $error == UPLOAD_ERR_NO_FILE) {
+            $data->offsetUnset($fileContent);
+            if ($data->offsetExists($fileName)) {
+                $data->offsetUnset($fileName);
+            }
+        } elseif (isset($data[$fileContent . '_remove']) && $data[$fileContent . '_remove'] == 1) {
+            $data[$fileName] = null;
+            $data[$fileContent] = null;
+        } elseif (!isset($data[$fileName])) {
+            $var = null;
+            $data[$fileName] = null;
+            $data[$fileContent] = null;
+        }
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)

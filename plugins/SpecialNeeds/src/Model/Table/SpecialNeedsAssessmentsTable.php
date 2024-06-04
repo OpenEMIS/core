@@ -55,7 +55,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->notEmpty('assessor_id')
             ->add('comment', 'length', [
@@ -237,8 +237,10 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         foreach ($specialNeedList as $key => $obj) {
             $specialNeedName = $obj->special_needs_type->name;
             $specialNeedDifficulties = $obj->special_need_difficulty->name;
-
-            $referenceDetails[$obj->id] = __($specialNeedName) . ' (' . __($specialNeedDifficulties) . ')';
+            $referenceDetails[$obj->id] =   __($specialNeedDifficulties);
+            if(!empty($specialNeedName)) {
+                $referenceDetails[$obj->id] = __($specialNeedName) . ' (' . __($specialNeedDifficulties) . ')';
+            }
         }
 
         // tooltip only receieved string to be display

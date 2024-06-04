@@ -923,8 +923,11 @@ class HtmlFieldHelper extends Helper
                 if (isset($entity['security_user_id']) && ! empty($entity['security_user_id'])) {
                     $ids['security_user_id'] = $entity['security_user_id'];
                 }
-                if(isset($params['pass'][1]) && isset($this->ControllerAction->paramsDecode($params['pass'][1])['security_user_id'])) {
+                if(empty($ids['security_user_id']) && isset($params['pass'][1]) && isset($this->ControllerAction->paramsDecode($params['pass'][1])['security_user_id'])) {
                     $ids['security_user_id'] =  $this->ControllerAction->paramsDecode($params['pass'][1])['security_user_id'];
+                }
+                if(empty($ids['security_user_id']) && isset($params['pass'][1]) && isset($this->ControllerAction->paramsDecode($params['pass'][1])['user_id'])) {
+                    $ids['security_user_id'] =  $this->ControllerAction->paramsDecode($params['pass'][1])['user_id'];
                 }
             }
             $action = ['action' => $action, 'download', $this->ControllerAction->paramsEncode($ids)];
