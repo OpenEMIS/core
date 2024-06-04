@@ -225,8 +225,8 @@ class SingleGradeBehavior extends Behavior
                 $classes = $model->newEntities($requestData['MultiClasses']);
                 $error = false;
                 foreach ($classes as $key => $class) {
-                    if ($class->getRrrors()) {
-                        $error = $class->getRrrors();
+                    if ($class->getErrors()) {
+                        $error = $class->getErrors();
                         $requestData['MultiClasses'][$key]['errors'] = $error;
                     }
                 }
