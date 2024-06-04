@@ -272,17 +272,17 @@ class InstitutionsTable extends ControllerActionTable
             //         'rule' => ['comparison', 'notequal', '0000-00-00'],
             //     ]
             // ])
-            // ->allowEmpty('date_closed')
-            // ->add('date_opened', 'ruleLessThanToday', [
-            //     'rule' => ['lessThanToday', true]
-            // ])
-            // ->add('date_closed', 'ruleCompareDateReverse', [
-            //     'rule' => ['compareDateReverse', 'date_opened', true]
-            // ])
-            // ->add('date_closed', 'ruleCheckPendingWorkbench', [
-            //     'rule' => 'checkPendingWorkbench',
-            //     'last' => true
-            // ])
+            ->allowEmpty('date_closed')
+            ->add('date_opened', 'ruleLessThanToday', [
+                'rule' => ['lessThanToday', true]
+            ])
+            ->add('date_closed', 'ruleCompareDateReverse', [
+                'rule' => ['compareDateReverse', 'date_opened', true]
+            ])
+            ->add('date_closed', 'ruleCheckPendingWorkbench', [
+                'rule' => 'checkPendingWorkbench',
+                'last' => true
+            ])
             ->add('classification', [
                 'validClassification' => [
                     'rule' => ['range', 1, 2],
@@ -1061,7 +1061,7 @@ class InstitutionsTable extends ControllerActionTable
                 'SurveyFilterAreas.survey_filter_id = SurveyFormsFilters.id'])
             ->where(['SurveyFilterInstitutionTypes.institution_type_id' => $institutionType,
                 'SurveyFilterInstitutionProviders.institution_provider_id' => $institutionProvider,
-                'SurveyFilterAreas.area_education_id' => $areaEducation])
+                /*'SurveyFilterAreas.area_education_id' => $areaEducation*/])
             ->group([$SurveyFormsFilters->aliasField('survey_form_id')])
             ->toArray();
 
@@ -1087,7 +1087,7 @@ class InstitutionsTable extends ControllerActionTable
                     'SurveyFilterAreas.survey_filter_id = SurveyFormsFilters.id'])
                 ->where(['SurveyFilterInstitutionTypes.institution_type_id' => $institutionType,
                     'SurveyFilterInstitutionProviders.institution_provider_id' => $institutionProvider,
-                    'SurveyFilterAreas.area_education_id' => $areaEducation])
+                    /*'SurveyFilterAreas.area_education_id' => $areaEducation*/])
                 ->group([$SurveyFormsFilters->aliasField('survey_form_id')])->toArray();
             if (!empty($SurveyFormsFilterObj)) {
                 foreach ($SurveyFormsFilterObj as $value) {
@@ -1243,7 +1243,7 @@ class InstitutionsTable extends ControllerActionTable
             ];
             //POCOR-6805 start
             $InstitutionCustomFields = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFields');
-            $InstitutionCustomFieldValues = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomField_values');
+            $InstitutionCustomFieldValues = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFieldValues');
             $institutionCustomFieldOptions = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFieldOptions');
             $custom_fieldData = $InstitutionCustomFieldValues
                 ->find()
