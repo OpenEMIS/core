@@ -267,22 +267,22 @@ class InstitutionsTable extends ControllerActionTable
         $validator = $this->LatLongValidation(); //POCOR-6625 incomment <vikas.rathore@mail.valocoders.com>
         $validator
             ->setProvider('custom', $this)
-            ->add('date_opened', [
-                'ruleCompare' => [
-                    'rule' => ['comparison', 'notequal', '0000-00-00'],
-                ]
-            ])
-            ->allowEmpty('date_closed')
-            ->add('date_opened', 'ruleLessThanToday', [
-                'rule' => ['lessThanToday', true]
-            ])
-            ->add('date_closed', 'ruleCompareDateReverse', [
-                'rule' => ['compareDateReverse', 'date_opened', true]
-            ])
-            ->add('date_closed', 'ruleCheckPendingWorkbench', [
-                'rule' => 'checkPendingWorkbench',
-                'last' => true
-            ])
+            // ->add('date_opened', [
+            //     'ruleCompare' => [
+            //         'rule' => ['comparison', 'notequal', '0000-00-00'],
+            //     ]
+            // ])
+            // ->allowEmpty('date_closed')
+            // ->add('date_opened', 'ruleLessThanToday', [
+            //     'rule' => ['lessThanToday', true]
+            // ])
+            // ->add('date_closed', 'ruleCompareDateReverse', [
+            //     'rule' => ['compareDateReverse', 'date_opened', true]
+            // ])
+            // ->add('date_closed', 'ruleCheckPendingWorkbench', [
+            //     'rule' => 'checkPendingWorkbench',
+            //     'last' => true
+            // ])
             ->add('classification', [
                 'validClassification' => [
                     'rule' => ['range', 1, 2],
