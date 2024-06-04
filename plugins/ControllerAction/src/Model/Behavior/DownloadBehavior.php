@@ -85,7 +85,7 @@ class DownloadBehavior extends Behavior
         $model = $this->_table;
         $controllerName = $model->controller->getName();
         $ids = $model->paramsDecode($model->paramsPass(0));
-        if( $model->controller->getName() == 'Directories' ) { 
+        if( $model->controller->getName() == 'Directories' || $model->controller->getName() == 'Profiles') { 
             $ids =[];
             $params = $model->paramsDecode($model->paramsPass(0));
             $ids['id'] = $params['id'];
