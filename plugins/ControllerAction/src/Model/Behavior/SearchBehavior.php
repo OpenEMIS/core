@@ -34,15 +34,15 @@ class SearchBehavior extends Behavior {
 
 		if ($request->is(['post', 'put'])) {
 			if (isset($request->getData()['Search'])) {
-				if (array_key_exists('searchField', $request->data['Search'])) {
-					$search = trim($request->data['Search']['searchField']);
+				if (array_key_exists('searchField', $request->getData()['Search'])) {
+					$search = trim($request->getData()['Search']['searchField']);
 				}
 			}
 		}
-
+		$session->write('search.search_alias', $alias);
 		$session->write($alias.'.search.key', $search);
 		$request->getData()['Search']['searchField'] = $search;
-
+		$request = $request->withData('Search.searchField', $search);
 		$extra['config']['search'] = $search;
 	}
 
@@ -56,7 +56,7 @@ class SearchBehavior extends Behavior {
 			        // Construct the modified search string by inserting the special character "ʻ" at the current position
 			        $modifiedSearchString = substr($search, 0, $i) . 'ʻ' . substr($search, $i);
 			        // Perform a query using the modified search string
-			        $institutionTable = TableRegistry::get('Institution.Institutions');
+			        $institutionTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
 			        $result = $institutionTable->find()
 						    	->andWhere([
 						        'OR' => [

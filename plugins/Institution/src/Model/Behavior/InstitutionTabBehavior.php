@@ -191,6 +191,7 @@ class InstitutionTabBehavior extends Behavior
                         if (isset($url[2])) {
                             unset($url[2]);
                         }
+
                         $queryString = $model->getQueryString();
                         $queryString['id'] = $entity->id;
                         if(empty($institutionID) && ($url['plugin'] == 'Institution' && $url['controller'] == 'Institutions' && $url['action'] == 'Institutions' && $url[0] == 'view')){
