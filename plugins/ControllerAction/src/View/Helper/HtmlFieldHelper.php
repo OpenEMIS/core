@@ -76,7 +76,7 @@ class HtmlFieldHelper extends Helper
             
             $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                $options['value'] = $data->getInvalid($field);
+                $options['value'] = $invalid[$field];
             }
         }
         if (array_key_exists('label', $options)) {
@@ -479,7 +479,7 @@ class HtmlFieldHelper extends Helper
 
             if (isset($attr['options']) && !isset($attr['attr']['value'])) {
                 if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                    $options['value'] = $attr['options'][$data->invalid($field)];
+                    $options['value'] = $attr['options'][$invalid[$field]];
                 } else {
                     $options['value'] = $attr['options'][$data->{$field}];
                 }
@@ -487,7 +487,7 @@ class HtmlFieldHelper extends Helper
                 $options['value'] = $attr['attr']['value'];
             } else {
                 if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                    $options['value'] = $data->getInvalid($field);
+                    $options['value'] = $invalid[$field];
                 } else {
                     $options['value'] = $data->{$field};
                 }
@@ -639,7 +639,7 @@ class HtmlFieldHelper extends Helper
             
             $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                $value = $data->invalid($field);
+                $value = $invalid[$field];
             } else {
                 $value = $data->{$field};
             }
@@ -691,7 +691,7 @@ class HtmlFieldHelper extends Helper
         if (!is_null($data)) {
             $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                $value = $data->getInvalid($field);
+                $value = $invalid[$field];
             } else {
                 $value = $data->{$field};
             }
@@ -767,7 +767,7 @@ class HtmlFieldHelper extends Helper
             
             $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                $value = $data->invalid($field);
+                $value = $invalid[$field];
             } else {
                 $value = $data->{$field};
             }
