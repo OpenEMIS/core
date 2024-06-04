@@ -72,6 +72,11 @@ class InstitutionTabBehavior extends Behavior
             $toolbarButtons['back']['url'][1] = $queryString;
         }
         if (isset($toolbarButtons['list'])) {
+            if($model->getAlias() == 'FeederOutgoingInstitutions'){
+                $queryString = $model->getQueryString();
+                $queryString['institution_id'] = $queryString['feeder_institution_id'];
+                $queryString = $model->paramsEncode($queryString);
+            }
             $toolbarButtons['list']['url'][0] = 'index';
             $toolbarButtons['list']['url'][1] = $queryString;
         }
@@ -88,8 +93,13 @@ class InstitutionTabBehavior extends Behavior
         $model = $this->_table;
         $institutionID = $this->getInstitutionID();
         $params = $model->getQueryString();
+        if($model->getAlias() == 'FeederOutgoingInstitutions'){
+            $params['institution_id'] = $params['feeder_institution_id'];
+        }else{
+            $params['institution_id'] = $institutionID;
+        }
 //        $params['id'] = $institutionID;
-        $params['institution_id'] = $institutionID;
+        
         $queryString = $model->paramsEncode($params);
         if ($toolbarButtons->offsetExists('back')) {
             $toolbarButtons['back']['url'][0] = 'index';
