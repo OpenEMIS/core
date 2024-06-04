@@ -181,7 +181,7 @@ class InstitutionTabBehavior extends Behavior
                 $url_action = $url['action'];
                 $additionalParam = null;
                 if (isset($appliedActions[$url_action])) {
-//                    die($url_action);
+                    //  die($url_action);
                     if ($url_action == 'StudentUser' || $url_action == 'StaffUser') {
                         if (isset($url[2])) {
                             $url[1] = $url[2];
@@ -191,9 +191,14 @@ class InstitutionTabBehavior extends Behavior
                         if (isset($url[2])) {
                             unset($url[2]);
                         }
+
                         $queryString = $model->getQueryString();
                         $queryString['id'] = $entity->id;
-                        $queryString['institution_id'] = $institutionID;
+                        if(empty($institutionID) && ($url['plugin'] == 'Institution' && $url['controller'] == 'Institutions' && $url['action'] == 'Institutions' && $url[0] == 'view')){
+                            $queryString['institution_id'] = $entity->id;
+                        }else{
+                            $queryString['institution_id'] = $institutionID;
+                        }
                         // echo "<pre>"; print_r($url_action);
                         // echo "<pre>"; print_r($appliedActions[$url_action]);
                         // die;
@@ -215,7 +220,12 @@ class InstitutionTabBehavior extends Behavior
                     }
                     $queryString = $model->getQueryString();
                     $queryString['id'] = $entity->id;
-                    $queryString['institution_id'] = $institutionID;
+                    if(empty($institutionID) && ($url['plugin'] == 'Institution' && $url['controller'] == 'Institutions' && $url['action'] == 'Institutions' && $url[0] == 'view')){
+                        $queryString['institution_id'] = $entity->id;
+                    }else{
+                        $queryString['institution_id'] = $institutionID;
+                    }
+                    //$queryString['institution_id'] = $institutionID;
                     foreach ($appliedActions[$url_action] as $additionalParam) {
                         $queryString[$additionalParam] = $entity->{$additionalParam};
                     }
@@ -226,7 +236,7 @@ class InstitutionTabBehavior extends Behavior
             }
         }
 
-    //    die('<pre>' . print_r($appliedActions, true) . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
+//        die('<pre>' . print_r($appliedActions, true) . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
 
         return $buttons;
     }
