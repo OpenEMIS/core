@@ -295,7 +295,8 @@ class NavigationComponent extends Component
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
                     }
                     else {
-                        $securityUserId = $this->controller->paramsDecode($this->request->getQuery('queryString'));
+                        $params = $this->controller->paramsDecode($this->request->getQuery('queryString'));
+                        $securityUserId = $params['security_user_id'];
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);
                     }
                     //POCOR-6202 end
@@ -1382,7 +1383,7 @@ class NavigationComponent extends Component
                     'Students.Extracurriculars',
                     'Institutions.StudentTextbooks',
                     'Institutions.Students',
-                    'Institutions.StudentRisks.index',
+                    'Institutions.StudentRisks',
                     'Students.Outcomes',
                     'Institutions.StudentProgrammes',
                     'Students.Competencies.index',
