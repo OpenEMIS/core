@@ -50,7 +50,6 @@ class InstitutionShiftsTable extends ControllerActionTable
             'appliedAction' => ['Shifts' =>['id']
             ]
         ]);
-
     }
 
     //POCOR-8158
@@ -67,7 +66,6 @@ class InstitutionShiftsTable extends ControllerActionTable
         }
     }
     //POCOR-8158
-
 
     public function validationDefault(Validator $validator): Validator
     {
@@ -86,7 +84,7 @@ class InstitutionShiftsTable extends ControllerActionTable
                         $another_institution_id = isset($context['location_institution_id']) ? $context['location_institution_id'] : 0;
                         $institution_id = isset($context['location_institution_id']) ? $context['location_institution_id'] : 0;
                         $academic_period_id = isset($context['academic_period_id']) ? $context['academic_period_id'] : 0;;
-                        $institution_shifts = TableRegistry::get('institution_shifts');
+                        $institution_shifts = TableRegistry::get('Institution.InstitutionShifts');
                         $where = [
                             'shift_option_id' => $shift_option_id,
                             'academic_period_id' => $academic_period_id,
@@ -285,7 +283,7 @@ class InstitutionShiftsTable extends ControllerActionTable
 
         $institutionId = $this->getInstitutionID();
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-//echo "<pre>"; print_r($currentInstitutionId); die;
+        //echo "<pre>"; print_r($currentInstitutionId); die;
         // if ($this->isOccupier($institutionId, $entity->academic_period_id)) { //if occupier, then remove the 'delete / edit' button
         //     unset($toolbarButtonsArray['edit']);
         //     unset($toolbarButtonsArray['remove']);
@@ -500,7 +498,6 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function onUpdateFieldLocation(Event $event, array $attr, $action, $request)
     {
-
         $attr['options'] = ['CURRENT' => __('This Institution'), 'OTHER' => __('Other Institution')];
         if ($action == 'add') {
             if (!Configure::read('schoolMode')) {
