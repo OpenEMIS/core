@@ -373,7 +373,8 @@ function InstitutionAssociationsController(
         postData.associationStudents = associationStudents;
         // postData.institution_id = postData.institution_id;
         // postData.academic_period_id = postData.academic_period_id;
-        postData.institution_id = Controller.institutionId;
+        // postData.institution_id = Controller.institutionId;
+        postData.institution_id = localStorage.getItem("institution_id");
         postData.academic_period_id = (Controller.academicPeriodOptions.hasOwnProperty('selectedOption')) ? Controller.academicPeriodOptions.selectedOption.id : '';
         ;
         postData.association_staff = [];
