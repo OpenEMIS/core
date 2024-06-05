@@ -220,6 +220,9 @@ class ScheduleIntervalsTable extends ControllerActionTable
             if (array_key_exists('submit', $data) && in_array($data['submit'], ['changeInterval', 'addTimeslot', 'changeShiftId', 'save']) && !empty($data['timeslots'])) {
                 $institutionShiftId = $data['institution_shift_id'];
                 $startTime = $this->Shifts->get($institutionShiftId)->start_time;
+                if (!($startTime instanceof DateTime)) {
+                    $startTime = new DateTime($startTime);
+                }
 
                 $hasEmpty = false;
                 foreach ($data['timeslots'] as $i => $timeslot) {
@@ -252,6 +255,9 @@ class ScheduleIntervalsTable extends ControllerActionTable
                 $institutionShiftId = $data['institution_shift_id'];
                 $shiftEntity = $this->Shifts->get($institutionShiftId);
                 $shiftStartTime = $shiftEntity->start_time;
+                if (!($shiftStartTime instanceof \DateTime)) {
+                    $shiftStartTime = new \DateTime($shiftStartTime);
+                }
                 $shiftEndTime = $shiftEntity->end_time;
 
                 $timeslotList = [];
@@ -274,8 +280,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
                         }
                     }
                 }
-        
-                $timeslotValidator = $this->Timeslots->validator();
+                $timeslotValidator = $this->Timeslots->getValidator();
                 $timeslotValidator
                     ->add('interval', 'checkEndTime', [
                         'rule' => function($value, $context) use ($shiftStartTime, $shiftEndTime, $timeslotList) {
@@ -285,6 +290,9 @@ class ScheduleIntervalsTable extends ControllerActionTable
                                 $intervalStartTime = clone $shiftStartTime;
                                 $modifyString = '+' . $totalInterval . ' minutes';
                                 $intervalEndTime = $intervalStartTime->modify($modifyString);
+                                if (!($shiftEndTime instanceof \DateTime)) {
+                                    $shiftEndTime = new \DateTime($shiftEndTime);
+                                }
                                 return $intervalEndTime <= $shiftEndTime;
                             } 
                             return true;
