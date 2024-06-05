@@ -338,8 +338,8 @@ class UsersTable extends AppTable
     public function findInstitutionStudentsNotInAssociation(Query $query, array $options)
     {
         $academicPeriodId = $options['academic_period_id'];
-        // $institutionId = $options['institution_id'];
-        $institutionId = $_SESSION['Institution']['StudentUser']['primaryKey']['institution_id'];
+        $institutionId = $options['institution_id'];
+        //$institutionId = $_SESSION['Institution']['StudentUser']['primaryKey']['institution_id'];
         $associationId = ($options['institution_association_id']) ? $options['institution_association_id'] : 0;
         $enrolledStatus = TableRegistry::getTableLocator()->get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
         // POCOR-7994 start

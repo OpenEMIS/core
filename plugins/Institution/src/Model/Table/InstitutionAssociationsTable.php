@@ -50,13 +50,12 @@ class InstitutionAssociationsTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'AssociationStudent' => ['index','add','view', 'edit'],
         ]);
-
+        //$this->addBehavior('Institution.InstitutionTab');
     }
     
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-         
-         switch ($field) {
+        switch ($field) {
             case 'association_staff':
                 return __('Staff');
             case 'total_male_students': 
@@ -258,7 +257,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
             if ($entity->has('association_staff') && !empty($entity->association_staff)) {
                 $staffList = [];
                 foreach ($entity->association_staff as $staffVal) {
-                        $staffLink = $event->subject()->Html->link($staffVal->user->name_with_id, [
+                        $staffLink = $event->getSubject()->Html->link($staffVal->user->name_with_id, [
                             'plugin' => 'Institution',
                             'controller' => 'Institutions',
                             'action' => 'StaffUser',
@@ -615,7 +614,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
 
     private function getAcademicPeriodOptions($institutionId)
     {
-        $InstitutionStudentsTable = TableRegistry::get('institution_students');
+        $InstitutionStudentsTable = TableRegistry::get('Institution.InstitutionStudents');
         $InstitutionStudentsYears = $InstitutionStudentsTable
             ->find('all')
             ->where(['institution_id' => $institutionId])

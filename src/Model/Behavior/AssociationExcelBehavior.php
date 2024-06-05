@@ -303,17 +303,22 @@ class AssociationExcelBehavior extends Behavior
                                     ->find()
                                     ->where([$Users->aliasField('openemis_no') => $row->openEMIS_ID])
                                     ->first();
-                        $UserIdentities = TableRegistry::getTableLocator()->get('user_identities');//POCOR-5852 starts
-                        $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types');//POCOR-5852 ends
+                        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');//POCOR-5852 starts
+                        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');//POCOR-5852 ends
                         $conditions = [
                             $UserIdentities->aliasField('security_user_id') => $user_data->id,
                         ];
                         $data = $UserIdentities
                                     ->find()    
                                     ->select([
-                                        'identity_type' => $IdentityTypes->getAlias().'.name',//POCOR-5852 starts
-                                        'identity_number' => $UserIdentities->getAlias().'.number',
-                                        'default' => $IdentityTypes->getAlias().'.default'
+                                        // 'identity_type' => $IdentityTypes->getAlias().'.name',//POCOR-5852 starts
+                                        // 'identity_number' => $UserIdentities->getAlias().'.number',
+                                        // 'default' => $IdentityTypes->getAlias().'.default'
+
+                                        'identity_type' => $IdentityTypes->aliasField('name'),//POCOR-5852 starts
+                                        'identity_number' => $UserIdentities->aliasField('number'),
+                                        'identity_default' => $IdentityTypes->aliasField('default')
+                                        
                                         //POCOR-5852 ends
                                     ])
                                     ->leftJoin(
@@ -329,7 +334,7 @@ class AssociationExcelBehavior extends Behavior
                             $identity_type_name = '';
                             $identity_type_number = '';
                             foreach ($data as $key => $value) {
-                                if($value->default == 1){
+                                if($value->identity_default == 1){
                                    $identity_type_name =  $value->identity_type;    
                                    $identity_type_number =  $value->identity_number;   
                                    break; 
@@ -375,7 +380,7 @@ class AssociationExcelBehavior extends Behavior
             if (array_key_exists('id', $settings)) {
                 $id = $settings['id'];
                 if ($id != 0) {
-                    $primaryKey = $table->primaryKey();
+                    $primaryKey = $table->getPrimaryKey();
                     $query->where([$table->aliasField($primaryKey) => $id]);
                 }
             }
@@ -518,7 +523,7 @@ class AssociationExcelBehavior extends Behavior
                         $sheetRowCount++;
                         $rowCount++;
                         $event = $this->dispatchEvent($table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
-                        if (!$event->result) {
+                        if (!$event->getResult()) {
                             $writer->writeSheetRow($sheetName, $row, $rowStyle);
                         }
                     }
@@ -660,8 +665,8 @@ class AssociationExcelBehavior extends Behavior
             } else {
                 $method = 'onExcelGet' . Inflector::camelize($field);
                 $event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity], true);
-                if ($event->result) {
-                    $returnedResult = $event->result;
+                if ($event->getResult()) {
+                    $returnedResult = $event->getResult();
                     if (is_array($returnedResult)) {
                         $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
                         $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
