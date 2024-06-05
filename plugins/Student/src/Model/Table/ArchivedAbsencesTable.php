@@ -15,10 +15,10 @@ class ArchivedAbsencesTable extends ControllerActionTable
 {
     private $institutionId = null;
     private $studentId = null;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         /*POCOR-6313 changed main table as per client requirement*/
-        $this->table('institution_student_absence_details_archived');
+        $this->setTable('institution_student_absence_details_archived');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -35,7 +35,7 @@ class ArchivedAbsencesTable extends ControllerActionTable
         $this->toggle('edit', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -47,7 +47,7 @@ class ArchivedAbsencesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->controller->request->session();
+        $session = $this->controller->request->getSession();
         if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
         }
@@ -63,7 +63,7 @@ class ArchivedAbsencesTable extends ControllerActionTable
             $userData = $this->Session->read();
             $userId =  $userData['Institution']['StudentUser']['primaryKey']['id'];
             $date = date_format($userData['leave_date'], 'Y-m-d');
-            $academicPeriod = !empty($this->request->query) ? $this->request->query('academic_period') :  $AcademicPeriod->getCurrent();
+            $academicPeriod = !empty($this->request->getQuery()) ? $this->request->getQuery('academic_period') :  $AcademicPeriod->getCurrent();
             
             if ($userData) {
                 $event->stopPropagation();
@@ -75,12 +75,12 @@ class ArchivedAbsencesTable extends ControllerActionTable
                 ]);
                 
                 $this->Alert->success('StudentAbsence.deleteRecord', ['reset'=>true]);
-                return $this->controller->redirect(['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Absences','index']);
+                return $this->controller->redirect(['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'Absences','index']);
             }
         }
 
 		// Start POCOR-5188
-		if($this->request->params['controller'] == 'Students'){
+		if($this->request->getParam('controller') == 'Students'){
 			$is_manual_exist = $this->getManualUrl('Personal','Absences','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -98,7 +98,7 @@ class ArchivedAbsencesTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Absences','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -133,10 +133,10 @@ class ArchivedAbsencesTable extends ControllerActionTable
         $this->field('periods', ['visible' => true]);
         $this->field('subjects', ['visible' => true]);
         $this->setFieldOrder(['Date', 'periods', 'subjects', 'class', 'absence_type_id']);
-        if ($this->controller->name == 'Directories') {
+        if ($this->controller->getName() == 'Directories') {
             unset($settings['indexButtons']['remove']);
         }
-        if ($this->controller->name == 'Profiles') {
+        if ($this->controller->getName() == 'Profiles') {
             unset($settings['indexButtons']['view']);
         }
         $this->addExtraButtons($settings);
@@ -325,7 +325,7 @@ class ArchivedAbsencesTable extends ControllerActionTable
             
             $extra['elements']['controls'] = ['name' => 'Student.Absences/controls', 'data' => [], 'options' => [], 'order' => 1]; 
 
-            if ($this->controller->name == 'Directories') {
+            if ($this->controller->getName() == 'Directories') {
                 $userData = $this->Session->read();
                 $userId =  $userData['Institution']['StudentUser']['primaryKey']['id'];
                 $query
@@ -334,7 +334,7 @@ class ArchivedAbsencesTable extends ControllerActionTable
                         $conditions,
                         $this->aliasField('student_id') => $userId
                     ])->toArray(); 
-            } elseif ($this->controller->name == 'Profiles') {
+            } elseif ($this->controller->getName() == 'Profiles') {
                 $userData = $this->Session->read();
                 /**
                  * Need to add current login id as param when no data found in existing variable
@@ -393,7 +393,7 @@ class ArchivedAbsencesTable extends ControllerActionTable
     public function beforeFind( Event $event, Query $query )
     {
 		$userData = $this->Session->read();
-        $session = $this->request->session();//POCOR-6267
+        $session = $this->request->getSession();//POCOR-6267
         if ($userData['Auth']['User']['is_guardian'] == 1) { 
             /*POCOR-6267 starts*/
             if ($this->request->controller == 'GuardianNavs') {
@@ -461,8 +461,8 @@ class ArchivedAbsencesTable extends ControllerActionTable
         
         $toolbarButtons = $extra['toolbarButtons'];
         if ($toolbarButtons->offsetExists('back')) {
-            $encodedParams = $this->request->params['pass'][1];
-            if ($this->controller->name == 'Directories') {
+            $encodedParams = $this->request->getAttribute('params')['pass'][1];
+            if ($this->controller->getName() == 'Directories') {
                 $backUrl = [
                     'plugin' => 'Directory',
                     'controller' => 'Directories',

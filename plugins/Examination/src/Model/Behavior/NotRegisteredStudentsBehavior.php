@@ -15,7 +15,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
 
     private $identityType;
 
-    public function initialize(array $config) {
+    public function initialize(array $config): void {
 		parent::initialize($config);
 
         $model = $this->_table;
@@ -24,7 +24,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
         $model->toggle('remove', false);
 	}
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
         $events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
@@ -88,7 +88,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
 
         // Academic Period
         $academicPeriodOptions = $model->AcademicPeriods->getYearList();
-        $selectedAcademicPeriod = !is_null($model->request->query('academic_period_id')) ? $model->request->query('academic_period_id') : $model->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($model->request->getQuery('academic_period_id')) ? $model->request->getQuery('academic_period_id') : $model->AcademicPeriods->getCurrent();
         $model->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$model->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         // End
@@ -96,7 +96,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
         // Examination
         $examinationOptions = $this->getExaminationOptions($selectedAcademicPeriod);
         $examinationOptions = ['-1' => '-- '.__('Select Examination').' --'] + $examinationOptions;
-        $selectedExamination = !is_null($model->request->query('examination_id')) ? $model->request->query('examination_id') : -1;
+        $selectedExamination = !is_null($model->request->getQuery('examination_id')) ? $model->request->getQuery('examination_id') : -1;
         $model->controller->set(compact('examinationOptions', 'selectedExamination'));
         if ($selectedExamination == -1) {
             $where[$model->aliasField('student_id')] = '-1';
@@ -109,7 +109,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
             $where[] = $ExaminationCentreStudents->aliasField('id IS NULL');
             $query
                 ->leftJoin(
-                    [$ExaminationCentreStudents->alias() => $ExaminationCentreStudents->table()],
+                    [$ExaminationCentreStudents->getAlias() => $ExaminationCentreStudents->getTable()],
                     [
                         $ExaminationCentreStudents->aliasField('student_id = ') . $model->aliasField('student_id'),
                         $ExaminationCentreStudents->aliasField('academic_period_id = ') . $model->aliasField('academic_period_id'),
@@ -267,7 +267,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
     public function onGetExaminationId(Event $event, Entity $entity) {
         $value = '';
         $model = $this->_table;
-        $examinationId = $model->request->query('examination_id');
+        $examinationId = $model->request->getQuery('examination_id');
 
         if (!is_null($examinationId)) {
             $Examinations = TableRegistry::get('Examination.Examinations');

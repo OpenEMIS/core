@@ -12,7 +12,7 @@ class InstitutionInactiveComponent extends Component
 {
     private $controller = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->controller = $this->_registry->getController();
@@ -20,7 +20,8 @@ class InstitutionInactiveComponent extends Component
 
     public function beforeFilter(Event $event)
     {
-        $institutionId = $this->controller->paramsDecode($this->request->param('institutionId'));
+        $institutionId = $this->controller->paramsDecode($this->getController()->getRequest()->getAttribute('params')['institutionId'])['id'];
+
         $Institutions = TableRegistry::get('Institution.Institutions');
 
         $institution = $Institutions->get($institutionId, ['contain' => 'Statuses']);

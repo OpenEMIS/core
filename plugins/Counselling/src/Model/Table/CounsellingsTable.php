@@ -13,7 +13,7 @@ class CounsellingsTable extends AppTable
 {
     const ASSIGNED = 1;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
        
         $this->table('counsellings');

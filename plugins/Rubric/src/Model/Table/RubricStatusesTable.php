@@ -6,14 +6,14 @@ use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 
 class RubricStatusesTable extends AppTable
 {
     private $_contain = ['RubricTemplates', 'AcademicPeriods', 'SecurityRoles', 'Programmes'];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('RubricTemplates', ['className' => 'Rubric.RubricTemplates']);
@@ -37,7 +37,7 @@ class RubricStatusesTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
@@ -72,11 +72,11 @@ class RubricStatusesTable extends AppTable
         ]);
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(Event $event, $request, Query $query, ArrayObject $options)
     {
         $query->contain($this->_contain);
 
-        $requestData = $request->data;
+        $requestData = $request->getData();
         if (!empty($requestData['Search']['searchField'])) {
             $search = trim($requestData['Search']['searchField']);
 
@@ -104,7 +104,7 @@ class RubricStatusesTable extends AppTable
         $this->fields['programmes']['options'] = $programmeOptions;
     }
 
-    public function onUpdateFieldAcademicPeriodLevel(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodLevel(Event $event, array $attr, $action, ServerRequest $request)
     {
         $AcademicPeriodLevels = TableRegistry::get('AcademicPeriod.AcademicPeriodLevels');
         $levelOptions = $AcademicPeriodLevels->getList()->toArray();
@@ -117,11 +117,11 @@ class RubricStatusesTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriods(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriods(Event $event, array $attr, $action, ServerRequest $request)
     {
         $selectedLevel = key($this->fields['academic_period_level']['options']);
-        if ($request->is('post')) {
-            $selectedLevel = $request->data($this->aliasField('academic_period_level'));
+        if ($this->request->is('post')) {
+            $selectedLevel = $this->request->getData($this->aliasField('academic_period_level'));
         }
 
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -165,7 +165,47 @@ class RubricStatusesTable extends AppTable
 		if(!empty($programmeOptions)) {
 			$selectedProgramme = key($programmeOptions);
 		}
-		
         return compact('securityRoleOptions', 'selectedSecurityRole', 'programmeOptions', 'selectedProgramme');
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'rubric_template_id') {
+            return __('Rubric Template');
+        }elseif ($field == 'date_enabled') {
+            return __('Date Enable');
+        }elseif ($field == 'date_disabled') {
+            return __('Date Disable');
+        }elseif ($field == 'security_roles') {
+            return __('Security Role');
+        }elseif ($field == 'academic_periods') {
+            return __('Academic Period');
+        }elseif ($field == 'programmes') {
+            return __('Programmes');
+        }elseif ($field == 'academic_period_level') {
+            return __('Academic Period Level'); 
+        }elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
     }
 }

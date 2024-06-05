@@ -8,11 +8,11 @@ use Cake\Event\Event;
 
 class InstitutionWorkflowAccessControlBehavior extends Behavior {
 
-    public function initialize(array $config) {
+    public function initialize(array $config): void {
     	$this->Institutions = TableRegistry::get('Institution.Institutions');
     }
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$events['Workflow.onUpdateRoles'] = 'onWorkflowUpdateRoles';
 		return $events;
@@ -22,9 +22,7 @@ class InstitutionWorkflowAccessControlBehavior extends Behavior {
 		$session = $this->_table->Session;
 		$controller = $this->_table->controller;
 		$restrictedController = ['Institutions', 'Students', 'Staff'];
-		if (!$controller->AccessControl->isAdmin()
-            && $session->check('Institution.Institutions.id')
-            && in_array($controller->name, $restrictedController)) {
+		if (!$controller->AccessControl->isAdmin() && $session->check('Institution.Institutions.id') && in_array($controller->getName(), $restrictedController)) {
 			$userId = $controller->Auth->user('id');
 			$institutionId = $session->read('Institution.Institutions.id');
 			return $this->Institutions->getInstitutionRoles($userId, $institutionId);

@@ -21,9 +21,9 @@ class AuditUsersTable extends AppTable
 {
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_activities');
+        $this->setTable('user_activities');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey'=>'security_user_id']);

@@ -5,7 +5,7 @@ use Cake\Console\Shell;
 use Cake\ORM\TableRegistry;
 
 class SurveyShell extends Shell {
-	public function initialize() {
+	public function initialize(): void {
 		parent::initialize();
 	}
 

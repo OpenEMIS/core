@@ -4,11 +4,12 @@ namespace SpecialNeeds\Model\Table;
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Laminas\Diactoros\UploadedFile;
 
 /**
  * Class is to get new tab data in dignosis in Special needs
@@ -20,9 +21,9 @@ use Cake\Validation\Validator;
 class SpecialNeedsDiagnosticsTable extends ControllerActionTable
 {
     const COMMENT_MAX_LENGTH = 350;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_special_needs_diagnostics');
+        $this->setTable('user_special_needs_diagnostics');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
@@ -30,18 +31,24 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
         $this->belongsTo('SpecialNeedsDiagnosticsDegree', ['className' => 'SpecialNeeds.SpecialNeedsDiagnosticsDegree']);
 
         $this->addBehavior('SpecialNeeds.SpecialNeeds');
-        /*$this->addBehavior('ControllerAction.FileUpload', [
+        $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'file_name',
             'content' => 'file_content',
             'size' => '10MB',
             'contentEditable' => true,
             'allowable_file_types' => 'all',
             'useDefaultName' => true
-        ]);*/
+        ]);
         $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['SpecialNeedsDiagnostics' =>
+                ['special_needs_diagnostics_degree_id',
+                    'special_needs_diagnostics_types_id']
+            ]
+        ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -69,17 +76,17 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldSpecialNeedsDiagnosticsTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSpecialNeedsDiagnosticsTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $attr['onChangeReload'] = true;
         return $attr;
     }
 
-    public function onUpdateFieldSpecialNeedsDiagnosticsDegreeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSpecialNeedsDiagnosticsDegreeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if($action == 'add'){
-                $degreeId = $request->data['SpecialNeedsDiagnostics']['special_needs_diagnostics_type_id'];
+                $degreeId = $this->request->getData()['SpecialNeedsDiagnostics']['special_needs_diagnostics_type_id'];
                 $SpecialNeedsDiagnosticsDegree = TableRegistry::get('SpecialNeeds.SpecialNeedsDiagnosticsDegree');
                 $degreeListOptions = $SpecialNeedsDiagnosticsDegree->getDegreeList($degreeId);
                         
@@ -155,12 +162,10 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
-        $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
-
+        $userId = $this->getUserID();
         $query
         ->where([
-            'security_user_id =' .$studentUserId,
+            'security_user_id =' .$userId,
         ]);
     }
 
@@ -210,13 +215,13 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
     {
         $monthOptions = ['1'=> '1', '2'=> '2','3'=> '3','4'=> '4', '5'=> '5', '6'=> '6','7'=> '7','8'=> '8','9'=> '9','10'=> '10', '11'=>'11', '12'=> '12'];
         $monthOptions = ['-1' => '-- ' . __('Select Month') . ' --'] + $monthOptions;    
-        $selectedmonth = !is_null($this->request->query('month')) ? $this->request->query('month') : '-1';
+        $selectedmonth = !is_null($this->request->getQuery('month')) ? $this->request->getQuery('month') : '-1';
         $AcademicPeriods = TableRegistry::get('academic_periods');
         $periodsOptions = $AcademicPeriods
                     ->find('list', ['keyField' => 'start_year', 'valueField' => 'start_year'])
                     ->order([$AcademicPeriods->aliasField('start_year') => 'DESC']);
         $periodsOptions = ['-1' => '-- ' . __('Select Period') . ' --'] + $periodsOptions->toArray();      
-        $selectedPeriods = !is_null($this->request->query('period')) ? $this->request->query('period') : '-1';
+        $selectedPeriods = !is_null($this->request->getQuery('period')) ? $this->request->getQuery('period') : '-1';
 
         if ($selectedPeriods > 0) {
             $compare_start_date = $selectedPeriods .'-01-01';
@@ -235,6 +240,12 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
                 $query->where([$this->aliasField('date >=') => $compare_start_date, $this->aliasField('date <=') => $compare_end_date]); 
             } 
         }
+
+        $userID = $this->getUserID();
+        $query->where([
+            $this->aliasField('security_user_id') => $userID
+        ]);
+
         $this->controller->set(compact('monthOptions', 'selectedmonth','periodsOptions','selectedPeriods'));
         $extra['elements']['controls'] = ['name' => 'SpecialNeeds.Diagnostics/controls', 'data' => [], 'options' => [], 'order' => 1];
     }

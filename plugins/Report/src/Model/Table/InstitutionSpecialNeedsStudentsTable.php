@@ -18,8 +18,8 @@ use App\Model\Traits\OptionsTrait;
 class InstitutionSpecialNeedsStudentsTable extends AppTable  {
     private $_specialNeeds = [];
 
-    public function initialize(array $config) {
-        $this->table('institution_students');
+    public function initialize(array $config): void {
+        $this->setTable('institution_students');
         parent::initialize($config);
 
         $this->belongsTo('Users',           ['className' => 'Security.Users', 'foreignKey' => 'student_id']);

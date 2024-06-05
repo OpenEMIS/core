@@ -24,9 +24,9 @@ class InfrastructureProjectsTable extends ControllerActionTable
         2 => 'Inactive'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('infrastructure_projects');
+        $this->setTable('infrastructure_projects');
         parent::initialize($config);
 
         $this->belongsTo('InfrastructureProjectFundingSources',   ['className' => 'Institution.InfrastructureProjectFundingSources', 'foreign_key' => 'infrastructure_project_funding_source_id']);
@@ -51,7 +51,7 @@ class InfrastructureProjectsTable extends ControllerActionTable
         ]);
         // POCOR-6151
         // setting this up to be overridden in viewAfterAction(), this code is required
-        $this->behaviors()->get('ControllerAction')->config(
+        $this->behaviors()->get('ControllerAction')->getConfig(
             'actions.download.show',
             true
         );
@@ -60,9 +60,12 @@ class InfrastructureProjectsTable extends ControllerActionTable
             'excludes' => ['description', 'funding_source_description', 'contract_amount', 'date_started', 'date_completed', 'file_name', 'file_content', 'comment', 'institution_id'],
             'pages' => ['index'],
         ]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InfrastructureProjects'=>['id']]
+        ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
@@ -78,10 +81,10 @@ class InfrastructureProjectsTable extends ControllerActionTable
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->allowEmpty('file_content')
             ->add('code', 'ruleUnique', [
@@ -148,19 +151,21 @@ class InfrastructureProjectsTable extends ControllerActionTable
         $this->fundingSourceOptions = $this->getFundingSourceOptions();
 
         $fundingSourceOptions = [null => __('All Funding Source')] + $this->fundingSourceOptions;
-        $extra['fundingSource'] = $this->request->query('funding_source'); 
+        $extra['fundingSource'] = $this->request->getQuery('funding_source'); 
         // set funding source filter
 
         // set need priority filter
         $projectStatuses = $this->projectStatuses;
 
         $projectStatusesOptions = [null => __('All Statuses')] + $projectStatuses;
-        $extra['projectStatuses'] = $this->request->query('status'); 
+        $extra['projectStatuses'] = $this->request->getQuery('status'); 
         // set need priority filter
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['control'] = [
             'name' => 'Institution.Projects/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'fundingSourceOptions'=> $fundingSourceOptions,
                 'selectedFundingSource'=> $extra['fundingSource'],
                 'projectStatusesOptions'=> $projectStatusesOptions,
@@ -196,10 +201,11 @@ class InfrastructureProjectsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        $institutionId  = $session->read('Institution.Institutions.id');
-        $fundingSource = ($this->request->query('funding_source')) ? $this->request->query('funding_source') : 0;
-        $projectStatuses = ($this->request->query('status')) ? $this->request->query('status') : 0;
+        $session = $this->request->getSession();
+        //$institutionId  = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
+        $fundingSource = ($this->request->getQuery('funding_source')) ? $this->request->getQuery('funding_source') : 0;
+        $projectStatuses = ($this->request->getQuery('status')) ? $this->request->getQuery('status') : 0;
 
         $query
         ->where([
@@ -236,7 +242,7 @@ class InfrastructureProjectsTable extends ControllerActionTable
             $filename = $entity->file_content;
             return !empty($filename);
         };
-        $this->behaviors()->get('ControllerAction')->config(
+        $this->behaviors()->get('ControllerAction')->getConfig(
             'actions.download.show',
             $showFunc
         );
@@ -247,9 +253,9 @@ class InfrastructureProjectsTable extends ControllerActionTable
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
-
+        $session = $this->request->getSession();
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
         $this->fields['infrastructure_project_funding_source_id']['type'] = 'select';
         $this->field('infrastructure_project_funding_source_id', ['after' => 'description','attr' => ['label' => __('Funding Source')]]);
 
@@ -326,7 +332,8 @@ class InfrastructureProjectsTable extends ControllerActionTable
         if (count($needData)) {
             $institutionId = $entity->institution_id;
             $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-
+            $queryString = $this->getQueryString();
+            $encodedQueryString = $this->paramsEncode($queryString);
             foreach ($needData as $key => $need) {
                 $encodedNeedId = $this->encode(['id' => $need->infrastructure_need_id]);
                 $needName = $need->infrastructure_need->name;
@@ -387,10 +394,11 @@ class InfrastructureProjectsTable extends ControllerActionTable
     // POCOR-6151 Export Functionality
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
-        $institutionId  = $session->read('Institution.Institutions.id');
-        $fundingSource = ($this->request->query('funding_source')) ? $this->request->query('funding_source') : 0;
-        $projectStatuses = ($this->request->query('status')) ? $this->request->query('status') : 0;
+        $session = $this->request->getSession();
+        //$institutionId  = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
+        $fundingSource = ($this->request->getQuery('funding_source')) ? $this->request->getQuery('funding_source') : 0;
+        $projectStatuses = ($this->request->getQuery('status')) ? $this->request->getQuery('status') : 0;
 
         $query
         ->where([
@@ -458,6 +466,41 @@ class InfrastructureProjectsTable extends ControllerActionTable
         ];
 
         $fields->exchangeArray($extraField);
+    }// POCOR-6151 Export Functionality
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        switch ($field) {
+            case 'code':
+                return __('Code');
+            case 'name':
+                return __('Name');
+            case 'date_started':
+                return __('Date Started');
+            case 'status':
+                return __('Status');
+            case 'date_completed':
+                return __('Date Completed');
+            case 'file_content':
+                return __('Attachment');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'description':
+                return __('Description');  
+            case 'funding_source_description':
+                return __('Funding Source Description');   
+            case 'contract_amount':
+                return __('Contract Amount'); 
+            case 'comment':
+                return __('Comment');         
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
-    // POCOR-6151 Export Functionality
 }

@@ -8,9 +8,9 @@ use Cake\Event\Event;
 use App\Model\Table\ControllerActionTable;
 
 class TextbooksTable extends ControllerActionTable {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_textbooks');
+        $this->setTable('institution_textbooks');
         parent::initialize($config);
 
         $this->belongsTo('MainTextbooks',       ['className' => 'Textbook.Textbooks', 'foreignKey' => ['textbook_id', 'academic_period_id']]);
@@ -25,9 +25,10 @@ class TextbooksTable extends ControllerActionTable {
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
        $events = parent::implementedEvents();
         $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
         return $events;
@@ -54,7 +55,7 @@ class TextbooksTable extends ControllerActionTable {
         $this->fields['textbook_id']['sort'] = ['field' => 'MainTextbooks.title'];
 
         // Start POCOR-5188
-		if($this->request->params['controller'] == 'Students'){
+		if($this->request->getParam('controller') == 'Students'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Textbooks','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -72,7 +73,7 @@ class TextbooksTable extends ControllerActionTable {
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Textbooks','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -97,13 +98,13 @@ class TextbooksTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $userData = $this->Session->read(); //# [POCOR-6548] Check if user data not found then add current login user data
 
         // POCOR-1893 Profile using loginId as studentId
-        if ($this->controller->name == 'Profiles') {
-            $session = $this->request->session();
-            $sId = $session->read('Student.Students.id');      
+        if ($this->controller->getName() == 'Profiles') {
+            $session = $this->request->getSession();
+            $sId = $this->getUserID();      
             if (!empty($sId)) {
                 /**
                  * Need to add current login id as param when no data found in existing variable
@@ -139,7 +140,7 @@ class TextbooksTable extends ControllerActionTable {
                 $studentId = $session->read('Auth.User.id');
             }
         } else {
-            $studentId = $session->read('Student.Students.id');
+            $studentId = $this->getStudentID();
         }
         // end POCOR-1893
 
@@ -171,9 +172,13 @@ class TextbooksTable extends ControllerActionTable {
     private function setupTabElements()
     {
         $options['type'] = 'student';
-        $tabElements = $this->controller->getAcademicTabElements($options);
+        //$tabElements = $this->controller->getAcademicTabElements($options);
+        $tabElements = $this->getAcademicTabElements($options);
+        if($this->controller->getName() == 'GuardianNavs'|| $this->controller->getName() == 'Directories') {
+			$tabElements = $this->controller->getAcademicTabElements($options);
+		}
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function onGetTextbookId(Event $event, Entity $entity)
@@ -192,4 +197,38 @@ class TextbooksTable extends ControllerActionTable {
     {
         return $entity->institution->code_name;
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'institution_id') {
+            return __('Institution');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'textbook_id') {
+            return __('Textbook');
+        } elseif ($field == 'education_grade_id') {
+            return __('Education Grade');
+        } elseif ($field == 'education_subject_id') {
+            return __('Education Subject');
+        } elseif ($field == 'textbook_condition_id') {
+            return __('Textbook Condition');
+        } elseif ($field == 'textbook_status_id') {
+            return __('Textbook Status');
+        } elseif ($field == 'security_user_id') {
+            return __('Security User');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

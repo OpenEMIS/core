@@ -8,6 +8,7 @@ use Cake\ORM\Query;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
+use Cake\Http\ServerRequest;
 
 /**
  * Generate the "Trainers Sessions" Report
@@ -17,9 +18,9 @@ use Cake\ORM\TableRegistry;
  */
 class TrainersSessionsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('training_sessions');
+        $this->setTable('training_sessions');
         parent::initialize($config);
         $this->addBehavior('Excel', ['excludes' => []]);
         $this->addBehavior('Report.ReportList');
@@ -28,7 +29,7 @@ class TrainersSessionsTable extends AppTable
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -37,7 +38,7 @@ class TrainersSessionsTable extends AppTable
 
     public function onExcelGetIdentityType(Event $event, Entity $entity)
     {
-        $userIdentities = TableRegistry::get('User.Identities');
+        $userIdentities = TableRegistry::getTableLocator()->get('User.Identities');
         $userIdentitiesResult = $userIdentities->find()
                 ->leftJoin(['IdentityTypes' => 'identity_types'], ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
                 ->select([

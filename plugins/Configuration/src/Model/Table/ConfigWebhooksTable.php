@@ -70,9 +70,9 @@ class ConfigWebhooksTable extends ControllerActionTable
     ];
 
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('webhooks');
+        $this->setTable('webhooks');
         parent::initialize($config);
         $this->hasMany('WebhookEvents', ['className' => 'Webhook.WebhookEvents', 'dependent' => true, 'cascadeCallBack' => true, 'saveStrategy' => 'replace', 'foreignKey' => 'webhook_id', 'joinType' => 'INNER']);
         $this->addBehavior('Configuration.ConfigItems');
@@ -82,10 +82,10 @@ class ConfigWebhooksTable extends ControllerActionTable
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         $validator
             ->add('name', 'ruleUnique', [
                 'rule' => 'validateUnique',
@@ -139,9 +139,9 @@ class ConfigWebhooksTable extends ControllerActionTable
 
     public function editOnInitialize(Event $event, Entity $entity)
     {
-        $this->request->data[$this->alias()]['triggered_event']['_ids'] = [];
+        $this->request->getData($this->getAlias())['triggered_event']['_ids'] = [];
         foreach ($entity->webhook_events as $event) {
-            $this->request->data[$this->alias()]['triggered_event']['_ids'][] = $event->event_key;
+            $this->request->getData($this->getAlias())['triggered_event']['_ids'][] = $event->event_key;
         }
     }
 

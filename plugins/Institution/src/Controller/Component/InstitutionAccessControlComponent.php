@@ -4,15 +4,16 @@ namespace Institution\Controller\Component;
 use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
+use Cake\Http\ServerRequest;
 
 class InstitutionAccessControlComponent extends Component {
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		$this->Institutions = TableRegistry::get('Institution.Institutions');
 		$this->controller = $this->_registry->getController();
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$events['Controller.Navigation.onUpdateRoles'] = 'onNavigationUpdateRoles';
 		$events['Controller.SecurityAuthorize.onUpdateRoles'] = 'onSecurityUpdateRoles';
@@ -21,7 +22,7 @@ class InstitutionAccessControlComponent extends Component {
 	}
 
 	private function onUpdateRole() {
-		$session = $this->request->session();
+		$session = $this->getController()->getRequest()->getSession();
 		if (!$this->controller->AccessControl->isAdmin() && $session->check('Institution.Institutions.id')){
 			$userId = $this->controller->Auth->user('id');
 			$institutionId = $session->read('Institution.Institutions.id');

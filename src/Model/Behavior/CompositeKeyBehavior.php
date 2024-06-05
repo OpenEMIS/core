@@ -13,7 +13,7 @@ class CompositeKeyBehavior extends Behavior
     {
         if ($entity->isNew()) {
             $model = $this->_table;
-            $primaryKey = $model->primaryKey();
+            $primaryKey = $model->getPrimaryKey();
             $hashString = [];
 
             foreach ($primaryKey as $key) {
