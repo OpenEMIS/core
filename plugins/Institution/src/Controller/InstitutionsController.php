@@ -2599,6 +2599,9 @@ public function isActionIgnored(Event $event, $action)
         if ($pass[0] == 'add' && $action == 'ImportInstitutions') {
             return true;
         }
+        if ($pass[0] == 'ajaxInstitutionsAutocomplete' && $action == 'Shifts') {
+            return true;
+        }
 //        $this->log(print_r($request,true), debug);
         return false;
     }
