@@ -24,7 +24,7 @@ InstitutionAssociationsController.$inject = [
     "UtilsSvc",
     "AlertSvc",
     "AggridLocaleSvc",
-    "InstitutionAssociationsSvc",
+    "InstitutionAssociationsSvc"
 ];
 
 function InstitutionAssociationsController(
@@ -371,10 +371,7 @@ function InstitutionAssociationsController(
         }
 
         postData.associationStudents = associationStudents;
-        // postData.institution_id = postData.institution_id;
-        // postData.academic_period_id = postData.academic_period_id;
-        // postData.institution_id = Controller.institutionId;
-        postData.institution_id = localStorage.getItem("institution_id");
+        postData.institution_id = Controller.institutionId;
         postData.academic_period_id = (Controller.academicPeriodOptions.hasOwnProperty('selectedOption')) ? Controller.academicPeriodOptions.selectedOption.id : '';
         ;
         postData.association_staff = [];
@@ -405,10 +402,12 @@ function InstitutionAssociationsController(
                         "general.add.success"
                     );
                     //Controller.redirectUrl = Controller.updateQueryStringParameter(Controller.redirectUrl, 'module', Controller.moduleKey);
+                    var queryString = localStorage.getItem('queryString');
                     $http.get(Controller.alertUrl).then(
                         function (response) {
-                            $window.location.href =
-                                "index?association_added=true";
+                            //$window.location.href = "index?association_added=true";
+                            var successUrl = angular.baseUrl + '/Institution/Institutions/Associations/index/' + queryString + '?association_added=true';
+                            $window.location.href = successUrl;
                         },
                         function (error) {
                             console.error(error);
