@@ -39,9 +39,9 @@ class ProfilesTable extends ControllerActionTable
         'zip'   => 'application/zip'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('staff_report_cards');
+        $this->setTable('staff_report_cards');
 
         parent::initialize($config);
 		
@@ -50,9 +50,10 @@ class ProfilesTable extends ControllerActionTable
         $this->toggle('remove', false);
 		
 		$this->StaffReportCards = TableRegistry::get('Institution.StaffReportCards');
+        $this->addBehavior('Institution.InstitutionTab');
     }
 	
-	public function implementedEvents()
+	public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.downloadExcel'] = 'downloadExcel';
@@ -103,7 +104,7 @@ class ProfilesTable extends ControllerActionTable
 	
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-		$institutionId = $this->Session->read('Institution.Institutions.id');
+		$institutionId = $this->getInstitutionID();
 
 		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$StaffProfileTemplates = TableRegistry::get('ProfileTemplate.StaffProfileTemplates');
@@ -117,17 +118,17 @@ class ProfilesTable extends ControllerActionTable
                 'academic_period' => $AcademicPeriods->aliasField('name'),
                 'profile_name' => $StaffProfileTemplates->aliasField('name'),
             ])
-			->innerJoin([$AcademicPeriods->alias() => $AcademicPeriods->table()],
+			->innerJoin([$AcademicPeriods->getAlias() => $AcademicPeriods->getTable()],
                 [
                     $AcademicPeriods->aliasField('id = ') . $this->aliasField('academic_period_id'),
                 ]
             )
-			->innerJoin([$StaffProfileTemplates->alias() => $StaffProfileTemplates->table()],
+			->innerJoin([$StaffProfileTemplates->getAlias() => $StaffProfileTemplates->getTable()],
                 [
                     $StaffProfileTemplates->aliasField('id = ') . $this->aliasField('staff_profile_template_id'),
                 ]
             )
-            ->autoFields(true)
+            ->enableAutoFields(true)
 			->order([
                 $this->aliasField('file_name'),
             ])
@@ -324,5 +325,33 @@ class ProfilesTable extends ControllerActionTable
 
         return $file;
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period') {
+            return __('Academic Period');
+        } elseif ($field == 'file_name') {
+            return __('File Name');
+        } elseif ($field == 'description') {
+            return __('Description');
+        } elseif ($field == 'apply_to_all') {
+            return __('Apply To All');
+        } elseif ($field == 'is_unique') {
+            return __('Is Unique');
+        } elseif ($field == 'validation_rule') {
+            return __('Validation Rule');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 	
 }

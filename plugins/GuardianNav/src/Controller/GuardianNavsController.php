@@ -19,6 +19,8 @@ use App\Model\Traits\OptionsTrait;
 use GuardianNav\Controller\AppController;
 use ControllerAction\Model\Traits\UtilityTrait;
 use Cake\Datasource\ConnectionManager;
+use Cake\Http\Session;
+use Cake\Http\ServerRequest;
 
 class GuardianNavsController extends AppController
 {
@@ -46,7 +48,7 @@ class GuardianNavsController extends AppController
         'Students'
     ];
 
-    public function initialize(){
+    public function initialize(): void {
         parent::initialize();
         $this->ControllerAction->models = [
             // Student
@@ -90,7 +92,7 @@ class GuardianNavsController extends AppController
     }
     public function StudentSubjects()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
     public function StudentOutcomes()         { 
-        $comment = $this->request->query['comment'];
+        $comment = $this->request->getQuery('comment');
         if(!empty($comment) && $comment == 1){ 
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomeComments']);
 
@@ -109,7 +111,7 @@ class GuardianNavsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'GuardianNav.Absences']);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;
@@ -117,13 +119,13 @@ class GuardianNavsController extends AppController
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		$header = 'Students'; 
-        $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'GuardianNavs']);
+        $this->Navigation->addCrumb($header, ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'GuardianNavs']);
         $viewPermission = $this->AccessControl->check(['StudentUser']);
         if ($viewPermission == 0) {
             $this->redirectedViewFeature = array_merge($this->redirectedViewFeature, $this->studentViewFeature);
         }
         if ($model instanceof \App\Model\Table\ControllerActionTable) { // CAv4
-            $alias = $model->alias();
+            $alias = $model->getAlias();
             // redirected view feature is to cater for the link that redirected to institution
             if (in_array($alias, $this->redirectedViewFeature)) {
                 $model->toggle('view', false);
@@ -133,7 +135,7 @@ class GuardianNavsController extends AppController
                     $model->addBehavior('ControllerAction.HideButton');
         }
         // add Students and student name
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         if ($session->check('Student.Students.name')) {
             if ($this->request->action== 'GuardianNavs') {
                 $studentName = $session->read('Auth.User.name');
@@ -153,12 +155,12 @@ class GuardianNavsController extends AppController
         if (is_object($persona) && get_class($persona)=='User\Model\Entity\User') {
                 $header = $persona->name . ' - ' . $model->getHeader($alias);
                 $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
-            }  elseif ($model->alias() == 'StudentRisks') {
+            }  elseif ($model->getAlias() == 'StudentRisks') {
                 $header .= ' - '. __('Risks');
-            } elseif ($model->alias() == 'InstitutionStudentRisks') {
+            } elseif ($model->getAlias() == 'InstitutionStudentRisks') {
                 $header .= ' - '. __('Institution Student Risks');
                 $this->Navigation->substituteCrumb($model->getHeader($alias), __('Institution Student Risks'));
-            }elseif ($model->alias() == 'InstitutionAssociationStudent') {
+            }elseif ($model->getAlias() == 'InstitutionAssociationStudent') {
                 $header .= ' - '. __('Houses'); //POCOR-7938
             } else {
                 $header .= ' - ' . $model->getHeader($alias);
@@ -169,12 +171,12 @@ class GuardianNavsController extends AppController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $this->Navigation->addCrumb('Guardian', ['plugin' => 'GuardianNav', 'controller' => 'GuardianNavs', 'action' => 'GuardianNavs', 'index']);
-        $action = $this->request->params['action'];
+        $action = $this->request->getAttribute('action');
         $header = __('Student');
 
-        if (($action == 'StudentUser') && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->paramsPass()[0] == 'view' )) {
+        if (($action == 'StudentUser') && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->getParam('Pass')[0] == 'view' )) {
             $session->delete('Guardian.Guardians.id');
             $session->delete('Guardian.Guardians.name');
         }
@@ -190,28 +192,28 @@ class GuardianNavsController extends AppController
         }
         $header = $name .' - '. $sub_header;
         // this is to cater for back links
-        $query = $this->request->query;
+        $query = $this->request->getQuery();
         $this->set('contentHeader', $header);
     }
 
     public function getUserTabElements($options = [])
     { 
-        if (array_key_exists('queryString', $this->request->query)) { //to filter if the URL already contain querystring
+        if (array_key_exists('queryString', $this->request->getQuery())) { //to filter if the URL already contain querystring
             $id = $this->ControllerAction->getQueryString('security_user_id');
         }
 
-        $plugin = $this->plugin;
-        $name = $this->name;
+        $plugin = $this->getPlugin();
+        $name = $this->getName();
 
-        $id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($plugin.'.'.$name.'.id');
+        $id = (array_key_exists('id', $options))? $options['id']: $this->request->getSession()->read($plugin.'.'.$name.'.id');
 
         if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians' && array_key_exists('entity', $options)) {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $session->write('Guardian.Guardians.name', $options['entity']->user->name);
             $session->write('Guardian.Guardians.id', $options['entity']->user->id);
             $session->write('Directory.Directories.studentToGuardian', 'studentToGuardian');
         } elseif (array_key_exists('userRole', $options) && $options['userRole'] == 'Students' && array_key_exists('entity', $options)) {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $session->write('Student.Students.name', $options['entity']->user->name);
             $session->write('Student.Students.id', $options['entity']->user->id);
             $session->write('Directory.Directories.guardianToStudent', 'guardianToStudent');
@@ -225,9 +227,9 @@ class GuardianNavsController extends AppController
             'Guardians' => ['text' => __('Guardians')]
         ];
         $tabElements = array_merge($tabElements, $studentTabElements);
-        $queryString = $this->request->query('queryString');
+        $queryString = $this->request->getQuery('queryString');
         foreach ($tabElements as $key => $value) {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $studentId = $session->read('Student.Students.id');
 
             if($key == 'StudentUser'){
@@ -263,8 +265,31 @@ class GuardianNavsController extends AppController
         $period = (array_key_exists('academic_period', $options))? $options['academic_period']: null;
         $tabElements = [];
         $studentUrl = ['plugin' => 'GuardianNav', 'controller' => 'GuardianNavs'];
-        //$session = $this->request->session();
+        //$session = $this->request->getSession();
         //$studentId = $session->read('Student.Students.id');
+        $action = $this->request->getParam('action');
+        if($action == 'StudentProgrammes' && isset($this->request->getQueryParams()['studentId'])) {
+            $studentId = $this->request->getQueryParams()['studentId'];
+            $studentId = $this->ControllerAction->paramsDecode($studentId);
+            if(!empty($studentId)) {
+                $StudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
+                $Student = $StudentsTable
+                    ->find('all')
+                    ->where([$StudentsTable->aliasField('student_id') => $studentId])
+                    ->first();
+                if (!empty($Student)) {
+                    $institutionId = $Student->institution_id;
+                }
+                $params = [
+                    'student_id' => $studentId,
+                    'user_id' => $studentId,
+                    'institution_id' => $institutionId,
+                    'type' => $type];     
+                $queryString = $this->ControllerAction->paramsEncode($params);
+            }
+        } else {
+            $queryString = $this->request->getQuery('queryString');
+        }
         $studentTabElements = [
             'Programmes' => ['text' => __('Programmes')],
             'Classes' => ['text' => __('Classes')],
@@ -288,9 +313,9 @@ class GuardianNavsController extends AppController
 
         foreach ($studentTabElements as $key => $tab) {
             if(!empty($period) && $key == 'Absences') {
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'academic_period' => $period]);
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key,  'queryString' => $queryString,'academic_period' => $period]);
             } else {
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'queryString' => $queryString, 'type' => $type]);
             }
         }
 
@@ -348,9 +373,9 @@ class GuardianNavsController extends AppController
     // AngularJS
     public function StudentResults()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         //$studentId = $this->Auth->user('id');
-        $sId = $this->request->pass[1];
+        $sId = $this->request->getParam('pass')[1];
 
         // tabs
         $options['type'] = 'student';
@@ -363,7 +388,7 @@ class GuardianNavsController extends AppController
     }
 
     private function attachAngularModules() {
-        $action = $this->request->action;
+        $action = $this->request->getParam('action');
 
         switch ($action) {
             case 'StudentResults':
@@ -403,7 +428,7 @@ class GuardianNavsController extends AppController
 
     public function StudentExaminationResults()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $studentId = $session->read('Student.Students.id');
         $session->write('Student.ExaminationResults.student_id', $studentId);
 

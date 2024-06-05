@@ -23,7 +23,7 @@ class ApiSecuritiesController extends PageController
         $this->loadModel('ApiScopes');
         $this->loadModel('ApiSecurities');
 
-        $this->Page->disable(['add', 'delete']);
+        $this->Page->setDisable(['add', 'delete']);
     }
 
     public function implementedEvents()

@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\Log\Log;
 
@@ -57,13 +57,13 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
         $this->ControllerAction->field('format');
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
 
-        $controllerName = $this->controller->name;
+        $controllerName = $this->controller->getName();
         $institutions_crumb = __('Institutions');
         $parent_crumb       = __('Statistics');
 		$reportName         = __('Standard');
         
         //# START: Crumb
-        $this->Navigation->removeCrumb($this->getHeader($this->alias));
+        $this->Navigation->removeCrumb($this->getHeader($this->getAlias()));
         $this->Navigation->addCrumb($institutions_crumb . ' ' . $parent_crumb);
         //# END: Crumb
         $this->controller->set('contentHeader', __($institutions_crumb) . ' ' . $parent_crumb . ' - ' . $reportName);
@@ -74,12 +74,13 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
     }
 
-    public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institution_id = $session->read('Institution.Institutions.id');
-        $request->data[$this->alias()]['current_institution_id'] = $institution_id;
-        $request->data[$this->alias()]['institution_id'] = $institution_id;
+        $request = $request->getData($this->getAlias());
+        $request['current_institution_id'] = $institution_id;
+        $request['institution_id'] = $institution_id;
         if ($action == 'add') {
             $attr['value'] = 'xlsx';
             $attr['attr']['value'] = 'Excel';
@@ -88,23 +89,25 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         $options = $options = $this->controller->getInstitutionStatisticStandardReportFeature();
         $attr['options'] = $options;
         $attr['onChangeReload'] = true;
-        if (!(isset($this->request->data[$this->alias()]['feature']))) {
+        $request = $request->getData($this->getAlias());
+        if (!(isset($request['feature']))) {
             $option = $attr['options'];
             reset($option);
-            $this->request->data[$this->alias()]['feature'] = key($option);
+            $request['feature'] = key($option);
         }
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->data[$this->alias()]['feature'])) {
-            $feature                = $this->request->data[$this->alias()]['feature'];
+        $request = $request->getData($this->getAlias());
+        if (isset($request['feature'])) {
+            $feature                = $this->request->getData($this->getAlias())['feature'];
             $AcademicPeriodTable    = TableRegistry::get('AcademicPeriod.AcademicPeriods');
             $academicPeriodOptions  = $AcademicPeriodTable->getYearList();
             $currentPeriod          = $AcademicPeriodTable->getCurrent();
@@ -112,8 +115,8 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
             $attr['type']           = 'select';
             $attr['select']         = false;
             $attr['onChangeReload'] = true;
-            if (empty($request->data[$this->alias()]['academic_period_id'])) {
-                $request->data[$this->alias()]['academic_period_id'] = $currentPeriod;
+            if (empty($request['academic_period_id'])) {
+                $request['academic_period_id'] = $currentPeriod;
             }
             return $attr;
         }
@@ -193,19 +196,19 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
                 // 'field_of_study'            => $fieldOfStudy->aliasField('name'),
             ])
             ->innerJoin(
-                [$Users->alias() => $Users->table() ], // Class Object => table_name
+                [$Users->getAlias() => $Users->getTable() ], // Class Object => table_name
                 [$Users->aliasField('id = '). $this->aliasField('staff_id'), // Where
             ])
             ->leftJoin(
-                [$qualificationTitles->alias() => $qualificationTitles->table()],[
+                [$qualificationTitles->getAlias() => $qualificationTitles->getTable()],[
                     $qualificationTitles->aliasField('id = ').$this->aliasField('qualification_title_id')
                 ])
             ->leftJoin(
-                [$fieldOfStudy->alias() => $fieldOfStudy->table()],[
+                [$fieldOfStudy->getAlias() => $fieldOfStudy->getTable()],[
                     $fieldOfStudy->aliasField('id = ').$this->aliasField('education_field_of_study_id')
                 ])
             ->leftJoin(
-                [$qualificationLevel->alias() => $qualificationLevel->table()],[
+                [$qualificationLevel->getAlias() => $qualificationLevel->getTable()],[
                     $qualificationLevel->aliasField('id = ').$qualificationTitles->aliasField('qualification_level_id')
                 ]
             );
@@ -258,15 +261,15 @@ class InstitutionStandardStaffQualificationsTable extends AppTable
                             'field_of_study'            => $fieldOfStudy->aliasField('name'),
                         ])
                         ->leftJoin(
-                        [$qualificationTitles->alias() => $qualificationTitles->table()],[
+                        [$qualificationTitles->getAlias() => $qualificationTitles->getTable()],[
                             $qualificationTitles->aliasField('id = ').$_this->aliasField('qualification_title_id')
                         ])
                         ->leftJoin(
-                        [$fieldOfStudy->alias() => $fieldOfStudy->table()],[
+                        [$fieldOfStudy->getAlias() => $fieldOfStudy->getTable()],[
                             $fieldOfStudy->aliasField('id = ').$this->aliasField('education_field_of_study_id')
                         ])
                         ->leftJoin(
-                        [$qualificationLevel->alias() => $qualificationLevel->table()],[
+                        [$qualificationLevel->getAlias() => $qualificationLevel->getTable()],[
                                 $qualificationLevel->aliasField('id = ').$qualificationTitles->aliasField('qualification_level_id')
                         ])
                         ->where([

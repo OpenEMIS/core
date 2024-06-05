@@ -1,12 +1,13 @@
 <?php
 use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/Workflows', ['plugin' => 'Workflow'], function ($routes) {
-	Router::connect('/Workflows', ['plugin' => 'Workflow', 'controller' => 'Workflows']);
-	Router::connect('/Workflows/:action/*', ['plugin' => 'Workflow', 'controller' => 'Workflows']);
+Router::scope('/', ['plugin' => 'Workflow'], function (RouteBuilder $routes) {
+	$routes->connect('/Workflows', ['plugin' => 'Workflow', 'controller' => 'Workflows']);
+	$routes->connect('/Workflows/:action/*', ['plugin' => 'Workflow', 'controller' => 'Workflows']);
 });
 
-Router::scope('/WorkflowSteps', ['plugin' => 'Workflow'], function ($routes) {
-	Router::connect('/WorkflowSteps', ['plugin' => 'Workflow', 'controller' => 'WorkflowSteps']);
-	Router::connect('/WorkflowSteps/:action/*', ['plugin' => 'Workflow', 'controller' => 'WorkflowSteps']);
+Router::scope('/WorkflowSteps', ['plugin' => 'Workflow'], function (RouteBuilder $routes) {
+	$routes->connect('/WorkflowSteps', ['plugin' => 'Workflow', 'controller' => 'WorkflowSteps']);
+	$routes->connect('/WorkflowSteps/:action/*', ['plugin' => 'Workflow', 'controller' => 'WorkflowSteps']);
 });

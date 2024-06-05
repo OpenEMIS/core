@@ -8,7 +8,7 @@ use Cake\Log\Log;
 
 class PatchMissingStudentReportCardCommentsShell extends Shell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Institution.InstitutionStudentsReportCards');

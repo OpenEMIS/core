@@ -12,9 +12,9 @@ class InstitutionMealStudentsTable extends ControllerActionTable
 {
     private $studentId;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_meal_students');
+        $this->setTable('institution_meal_students');
 
         parent::initialize($config);
         $this->belongsTo('MealBenefit', ['className' => 'Meal.MealBenefits', 'foreignKey' =>'meal_benefit_id']); 
@@ -36,7 +36,7 @@ class InstitutionMealStudentsTable extends ControllerActionTable
         $request = $this->request;
 
         //academic period filter
-        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('period')));
 
         $extra['selectedPeriod'] = $selectedPeriod;
         $data['periodOptions'] = $periodOptions;
@@ -44,15 +44,16 @@ class InstitutionMealStudentsTable extends ControllerActionTable
 
 
         //week
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         if ($selectedPeriod) {
             $programmeOptions = $this->getMealWeekOptions($selectedPeriod);
 
 
             $programmeOptions = array(-1 => __('-- Please Select week --')) + $programmeOptions;
 
-            if ($request->query('programme')) {
-                $selectedProgramme = $request->query('programme');
+            if ($request->getQuery['programme']) {
+                $selectedProgramme = $request->getQuery['programme'];
             } else {
                 $selectedProgramme = -1;
             }
@@ -62,9 +63,8 @@ class InstitutionMealStudentsTable extends ControllerActionTable
             $extra['programmeOptions'] = $programmeOptions;
             $data['programmeOptions'] = $programmeOptions;
             $data['selectedProgramme'] = $selectedProgramme;
+            $data['encodedQueryString' ] = $encodedQueryString;
         }
-
-
         //build up the control filter
         $extra['elements']['control'] = [
             'name' => 'Institution.InstitutionsMealProgramme/controls',
@@ -120,7 +120,7 @@ class InstitutionMealStudentsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     { 
-        $hasSearchKey = $this->request->session()->read($this->registryAlias().'.search.key');
+        $hasSearchKey = $this->request->getSession()->read($this->getRegistryAlias().'.search.key');
 
         $conditions = [];
 

@@ -14,7 +14,7 @@ use PDOException;
 
 class StudentAttendanceShell extends Shell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         

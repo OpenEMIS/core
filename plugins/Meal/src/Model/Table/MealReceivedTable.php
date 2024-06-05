@@ -5,9 +5,9 @@ use App\Model\Table\ControllerActionTable;
 
 class MealReceivedTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('meal_received');
+        $this->setTable('meal_received');
         parent::initialize($config);        
         //$this->addBehavior('FieldOption.FieldOption');
         $this->addBehavior('Restful.RestfulAccessControl', [

@@ -37,14 +37,14 @@ class DefaultValidationBehavior extends Behavior {
 	}
 
 	private function _attachDefaultValidation($validator) {
-		$schema = $this->_table->schema();
+		$schema = $this->_table->getSchema();
 		$columns = $schema->columns();
 
 		// added this temporary, will need to revisit this code
 		$ignoreFields = ['modified_user_id', 'created_user_id', 'modified', 'created', 'order'];
 
 		foreach ($columns as $col) {
-			$columnInfo = $schema->column($col);
+			$columnInfo = $schema->getColumn($col); //POCOR-8082
 			if ($validator->hasField($col)) {
 				$set = $validator->field($col);
 
@@ -73,7 +73,7 @@ class DefaultValidationBehavior extends Behavior {
 		$model = $this->_table;
 		foreach ($model->associations() as $assoc) {
 			if ($assoc->type() == 'manyToOne') { // belongsTo associations
-				if ($field === $assoc->foreignKey()) {
+				if ($field === $assoc->getForeignKey()) {
 					return true;
 				}
 			}

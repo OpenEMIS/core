@@ -12,13 +12,13 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
-use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Collection\Collection;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use App\Model\Table\ControllerActionTable;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
@@ -33,9 +33,9 @@ class StaffLeaveTable extends ControllerActionTable
     private $institutionId = null;
     private $staffId = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff_leave');
+        $this->setTable('institution_staff_leave');
         parent::initialize($config);
 
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
@@ -79,10 +79,11 @@ class StaffLeaveTable extends ControllerActionTable
         $this->fullDayOptions = $this->getSelectOptions('general.yesno');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
+        
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $allowOutAcademicYear = $ConfigItems->value('allow_out_academic_year');
 
@@ -112,7 +113,7 @@ class StaffLeaveTable extends ControllerActionTable
             ->allowEmpty('file_content');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.InstitutionStaff.afterDelete'] = 'institutionStaffAfterDelete';
@@ -135,7 +136,7 @@ class StaffLeaveTable extends ControllerActionTable
             ->select([$StaffStatuses->aliasField('code')])
             ->select($InstitutionStaff)
             ->leftJoin(
-                [$StaffStatuses->alias() => $StaffStatuses->table()],
+                [$StaffStatuses->getAlias() => $StaffStatuses->getTable()],
                 [
                     $StaffStatuses->aliasField('id = ') . $InstitutionStaff->aliasField('staff_status_id')
                 ]
@@ -218,11 +219,14 @@ class StaffLeaveTable extends ControllerActionTable
     {
         $institutionId = $this->institutionId;
         $staffId = $this->staffId;
+        
         //POCOR-5364 starts
+        $requestFilter = $this->request->getQuery('filter');
         if (isset($extra['toolbarButtons']['search']['data']['url']['filter'])) {
             $leaveTypeId = $extra['toolbarButtons']['search']['data']['url']['filter'];
-        } elseif (isset($this->request->query['filter'])) {
-            $leaveTypeId = $this->request->query['filter'];
+        } elseif (isset($requestFilter)) {
+            //$leaveTypeId = $this->request->query['filter'];
+            $leaveTypeId = $requestFilter;
         }
 
         if (!empty($leaveTypeId) && $leaveTypeId != -1) {
@@ -290,7 +294,7 @@ class StaffLeaveTable extends ControllerActionTable
                 $where //POCOR-5364
             ]);
 
-        $HistoricalTable = $historicalQuery->repository();
+        $HistoricalTable = $historicalQuery->getRepository();
         $historicalQuery
             ->select([
                 'id' => $HistoricalTable->aliasField('id'),
@@ -430,7 +434,7 @@ class StaffLeaveTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldFileName(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFileName(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
             $attr['type'] = 'hidden';
@@ -441,7 +445,7 @@ class StaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStaffId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $userId = $this->getStaffId();
@@ -452,7 +456,7 @@ class StaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffLeaveTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStaffLeaveTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
@@ -462,7 +466,7 @@ class StaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -480,7 +484,7 @@ class StaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldFullDay(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFullDay(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             // $attr['type'] = 'select';
@@ -491,11 +495,11 @@ class StaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStartTime(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStartTime(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            if (isset($request->data[$this->alias()]['full_day'])) {
-                if ($request->data[$this->alias()]['full_day']) {
+            if (isset($request->getData()[$this->getAlias()]['full_day'])) {
+                if ($request->getData()[$this->getAlias()]['full_day']) {
                     $attr['type'] = 'hidden';
                 }
             } else {
@@ -510,11 +514,11 @@ class StaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEndTime(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEndTime(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            if (isset($request->data[$this->alias()]['full_day'])) {
-                if ($request->data[$this->alias()]['full_day']) {
+            if (isset($request->getData()[$this->getAlias()]['full_day'])) {
+                if ($request->getData()[$this->getAlias()]['full_day']) {
                     $attr['type'] = 'hidden';
                 }
             } else {
@@ -539,16 +543,16 @@ class StaffLeaveTable extends ControllerActionTable
 
         $tabElements = $this->controller->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function getStaffId()
     {
         $userId = null;
-        if (!is_null($this->request->query('user_id'))) {
-            $userId = $this->request->query('user_id');
+        if (!is_null($this->request->getQuery('user_id'))) {
+            $userId = $this->request->getQuery('user_id');
         } else {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             if ($session->check('Staff.Staff.id')) {
                 $userId = $session->read('Staff.Staff.id');
             }
@@ -574,7 +578,7 @@ class StaffLeaveTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->getRequest()->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -605,8 +609,8 @@ class StaffLeaveTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Users->alias(), $this->StaffLeaveTypes->alias(), $this->Institutions->alias(), $this->CreatedUser->alias(), 'Assignees'])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->contain([$this->Users->getAlias(), $this->StaffLeaveTypes->getAlias(), $this->Institutions->getAlias(), $this->CreatedUser->getAlias(), 'Assignees'])
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
             ->where([$this->aliasField('assignee_id') => $userId,
@@ -788,13 +792,20 @@ class StaffLeaveTable extends ControllerActionTable
                 ]
             ])
             ->where([
-                $CalendarEvents->aliasField('institution_id') => $institutionId])
-            ->orWhere([
-                $CalendarEvents->aliasField('institution_id') => -1
-            ])
-            ->andWhere([
-                $CalendarTypes->aliasField('code') => 'PUBLICHOLIDAY'
-            ])
+                'OR' => [
+                    [$CalendarEvents->aliasField('institution_id') => $institutionId],
+                    [$CalendarEvents->aliasField('institution_id') => -1]
+                ],
+                'AND' => [
+                    $CalendarTypes->aliasField('code') => 'PUBLICHOLIDAY'
+                ]
+            ]) 
+            // ->orWhere([
+            //     $CalendarEvents->aliasField('institution_id') => -1
+            // ])
+            // ->andWhere([
+            //     $CalendarTypes->aliasField('code') => 'PUBLICHOLIDAY'
+            // ])
             ->toArray();
         $collection = new Collection($publicCalendarEvents);
 
@@ -868,7 +879,7 @@ class StaffLeaveTable extends ControllerActionTable
      * @return array
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action != 'add' && $action != 'edit'){
             return $attr;
@@ -889,11 +900,11 @@ class StaffLeaveTable extends ControllerActionTable
      * @return array
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private function getAssigneesOptions(Request $request)
+    private function getAssigneesOptions(ServerRequest $request)
     {
-        $alias = $this->alias();
+        $alias = $this->getAlias();
         $filter_id = isset($request['data'][$alias]['staff_leave_type_id']) ? $request['data'][$alias]['staff_leave_type_id'] : 0;
-        $session = $request->session();
+        $session = $request->getSession();
         if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
         }
@@ -914,7 +925,7 @@ class StaffLeaveTable extends ControllerActionTable
 
         $toolbarButtons = $extra['toolbarButtons'];
         $this->addManualButton($toolbarButtons);
-        $this->addArchiveButton($toolbarButtons);
+        // $this->addArchiveButton($toolbarButtons);
     }
 
     /**
@@ -949,22 +960,25 @@ class StaffLeaveTable extends ControllerActionTable
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      * @param $toolbarButtons
      */
-    private function addArchiveButton($toolbarButtons)
-    {
-        // POCOR-7895: removed unnecessary lines
-            $customButtonName = 'archive';
-            $customButtonUrl = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'ArchivedStaffLeave',
-                0=>'index',
-                'user_id' => $this->staffId,
+    // private function addArchiveButton($toolbarButtons)
+    // {
 
-            ];
-            $customButtonLabel = '<i class="fa fa-folder"></i>';
-            $customButtonTitle = __('Archive');
-            $this->generateButton($toolbarButtons, $customButtonName, $customButtonTitle, $customButtonLabel, $customButtonUrl);
-    }
+    //     $is_archive_exists = $this->isArchiveExists();
+    //     if ($is_archive_exists) {
+    //         $customButtonName = 'archive';
+    //         $customButtonUrl = [
+    //             'plugin' => 'Institution',
+    //             'controller' => 'Institutions',
+    //             'action' => 'ArchivedStaffLeave',
+    //             0=>'index',
+    //             'user_id' => $this->staffId,
+
+    //         ];
+    //         $customButtonLabel = '<i class="fa fa-folder"></i>';
+    //         $customButtonTitle = __('Archive');
+    //         $this->generateButton($toolbarButtons, $customButtonName, $customButtonTitle, $customButtonLabel, $customButtonUrl);
+    //     }
+    // }
 
     /**
      * common proc to check if there is an archive
@@ -1028,15 +1042,15 @@ class StaffLeaveTable extends ControllerActionTable
     {
 
         $institutionId = $staffId = null;
-        $session = $this->controller->request->session();
+        $session = $this->controller->getRequest()->getSession();
         if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
         }
-        if (!is_null($this->request->query('user_id'))) {
-            $staffId = $this->request->query('user_id');
+        if (!is_null($this->request->getQuery('user_id'))) {
+            $staffId = $this->request->getQuery('user_id');
         }
-        if (!$staffId & !is_null($this->request->query('staff_id'))) {
-            $staffId = $this->request->query('staff_id');
+        if (!$staffId & !is_null($this->request->getQuery('staff_id'))) {
+            $staffId = $this->request->getQuery('staff_id');
         }
         if (!$staffId) {
             $staffId = $session->read('Staff.Staff.id');
@@ -1050,90 +1064,44 @@ class StaffLeaveTable extends ControllerActionTable
         $this->staffId = $staffId;
     }
 
-    /**
-     * POCOR-8015
-     * @param $filter_id
-     * @param $institutionId
-     * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
-     */
-    private function findAssigneeOptions($filter_id, $institutionId)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-        $workflowModel = 'Staff > Career > Leave';
-        $workflowModelsTable = TableRegistry::get('workflow_models');
-        $workflowStepsTable = TableRegistry::get('workflow_steps');
-        $workflowFiltersTable = TableRegistry::get('workflows_filters');
-        $Workflows = TableRegistry::get('Workflow.Workflows');
-
-        $workModelId = $Workflows
-            ->find()
-            ->select(['id' => $workflowModelsTable->aliasField('id'),
-                'workflow_id' => $Workflows->aliasField('id'),
-                'is_school_based' => $workflowModelsTable->aliasField('is_school_based')])
-            ->innerJoin([$workflowFiltersTable->alias() => $workflowFiltersTable->table()],
-                [$workflowFiltersTable->aliasField('workflow_id') . ' = ' . $Workflows->aliasField('id'),
-                    $workflowFiltersTable->aliasField('filter_id') . ' = ' . $filter_id])
-            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
-                [
-                    $workflowModelsTable->aliasField('id') . ' = ' . $Workflows->aliasField('workflow_model_id')
-                ])
-            ->where([$workflowModelsTable->aliasField('name') => $workflowModel])->first();
-        $workflowId = $workModelId->workflow_id;
-        $isSchoolBased = $workModelId->is_school_based;
-        $workflowStepsOptions = $workflowStepsTable
-            ->find()
-            ->select([
-                'stepId' => $workflowStepsTable->aliasField('id'),
-            ])
-            ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
-            ->first();
-        $stepId = $workflowStepsOptions->stepId;
-
-        $assigneeOptions = [];
-        if (!is_null($stepId)) {
-            $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
-            $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
-            if (!empty($stepRoles)) {
-                $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                $Areas = TableRegistry::get('Area.Areas');
-                $Institutions = TableRegistry::get('Institution.Institutions');
-                if ($isSchoolBased) {
-                    if (is_null($institutionId)) {
-                        Log::write('debug', 'Institution Id not found.');
-                    } else {
-                        $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
-                        $securityGroupId = $institutionObj->security_group_id;
-                        $areaObj = $institutionObj->area;
-                        // School based assignee
-                        $where = [
-                            'OR' => [[$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId],
-                                ['Institutions.id' => $institutionId]],
-                            $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
-                        ];
-                        $schoolBasedAssigneeQuery = $SecurityGroupUsers
-                            ->find('userList', ['where' => $where])
-                            ->leftJoinWith('SecurityGroups.Institutions');
-                        $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
-
-                        // Region based assignee
-                        $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
-                        $regionBasedAssigneeQuery = $SecurityGroupUsers
-                            ->find('UserList', ['where' => $where, 'area' => $areaObj]);
-
-                        $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
-                        // End
-                        $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
-                    }
-                } else {
-                    $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
-                    $assigneeQuery = $SecurityGroupUsers
-                        ->find('userList', ['where' => $where])
-                        ->order([$SecurityGroupUsers->aliasField('security_role_id') => 'DESC']);
-                    $assigneeOptions = $assigneeQuery->toArray();
-                }
-            }
+        if ($field == 'staff_leave_type_id') {
+            return __('Staff Leave Type');
+        } elseif ($field == 'status_id') {
+            return __('Status');
+        } elseif ($field == 'time') {
+            return __('Time');
+        } elseif ($field == 'start_time') {
+            return __('Start Time');
+        } elseif ($field == 'end_time') {
+            return __('End Time');
+        } elseif ($field == 'number_of_days') {
+            return __('Number Of Days');
+        } elseif ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'date_from') {
+            return __('Date From');
+        } elseif ($field == 'date_to') {
+            return __('Date To');
+        } elseif ($field == 'full_day') {
+            return __('Full Day');
+        } elseif ($field == 'comments') {
+            return __('Comments');
+        }  elseif ($field == 'file_content') {
+            return __('File Content');
+        } elseif ($field == 'assignee_id') {
+            return __('Assignee');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
-        return $assigneeOptions;
     }
-
 }

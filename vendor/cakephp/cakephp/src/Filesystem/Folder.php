@@ -1,16 +1,18 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         0.2.9
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Filesystem;
 
@@ -24,18 +26,18 @@ use RecursiveIteratorIterator;
  * Folder structure browser, lists folders and files.
  * Provides an Object interface for Common directory related tasks.
  *
- * @link http://book.cakephp.org/3.0/en/core-libraries/file-folder.html#folder-api
+ * @deprecated 4.0.0 Will be removed in 5.0.
+ * @link https://book.cakephp.org/4/en/core-libraries/file-folder.html#folder-api
  */
 class Folder
 {
-
     /**
      * Default scheme for Folder::copy
      * Recursively merges subfolders with the same name
      *
      * @var string
      */
-    const MERGE = 'merge';
+    public const MERGE = 'merge';
 
     /**
      * Overwrite scheme for Folder::copy
@@ -43,7 +45,7 @@ class Folder
      *
      * @var string
      */
-    const OVERWRITE = 'overwrite';
+    public const OVERWRITE = 'overwrite';
 
     /**
      * Skip scheme for Folder::copy
@@ -51,31 +53,31 @@ class Folder
      *
      * @var string
      */
-    const SKIP = 'skip';
+    public const SKIP = 'skip';
 
     /**
      * Sort mode by name
      *
      * @var string
      */
-    const SORT_NAME = 'name';
+    public const SORT_NAME = 'name';
 
     /**
      * Sort mode by time
      *
      * @var string
      */
-    const SORT_TIME = 'time';
+    public const SORT_TIME = 'time';
 
     /**
      * Path to Folder.
      *
      * @var string
      */
-    public $path = null;
+    public $path;
 
     /**
-     * Sortedness. Whether or not list results
+     * Sortedness. Whether list results
      * should be sorted by name.
      *
      * @var bool
@@ -86,16 +88,18 @@ class Folder
      * Mode to be used on create. Does nothing on windows platforms.
      *
      * @var int
-     * http://book.cakephp.org/3.0/en/core-libraries/file-folder.html#Cake\Filesystem\Folder::$mode
+     * https://book.cakephp.org/4/en/core-libraries/file-folder.html#Cake\Filesystem\Folder::$mode
      */
     public $mode = 0755;
 
     /**
      * Functions array to be called depending on the sort type chosen.
+     *
+     * @var array<string>
      */
     protected $_fsorts = [
         self::SORT_NAME => 'getPathname',
-        self::SORT_TIME => 'getCTime'
+        self::SORT_TIME => 'getCTime',
     ];
 
     /**
@@ -131,9 +135,9 @@ class Folder
      *
      * @param string|null $path Path to folder
      * @param bool $create Create folder if not found
-     * @param int|bool $mode Mode (CHMOD) to apply to created folder, false to ignore
+     * @param int|null $mode Mode (CHMOD) to apply to created folder, false to ignore
      */
-    public function __construct($path = null, $create = false, $mode = false)
+    public function __construct(?string $path = null, bool $create = false, ?int $mode = null)
     {
         if (empty($path)) {
             $path = TMP;
@@ -156,9 +160,9 @@ class Folder
     /**
      * Return current path.
      *
-     * @return string Current path
+     * @return string|null Current path
      */
-    public function pwd()
+    public function pwd(): ?string
     {
         return $this->path;
     }
@@ -167,12 +171,12 @@ class Folder
      * Change directory to $path.
      *
      * @param string $path Path to the directory to change to
-     * @return string The new path. Returns false on failure
+     * @return string|false The new path. Returns false on failure
      */
-    public function cd($path)
+    public function cd(string $path)
     {
         $path = $this->realpath($path);
-        if (is_dir($path)) {
+        if ($path !== false && is_dir($path)) {
             return $this->path = $path;
         }
 
@@ -189,7 +193,7 @@ class Folder
      * @param bool $fullPath True returns the full path
      * @return array Contents of current directory as an array, an empty array on failure
      */
-    public function read($sort = self::SORT_NAME, $exceptions = false, $fullPath = false)
+    public function read($sort = self::SORT_NAME, $exceptions = false, bool $fullPath = false): array
     {
         $dirs = $files = [];
 
@@ -238,11 +242,11 @@ class Folder
         }
 
         if ($dirs) {
-            $dirs = call_user_func_array('array_merge', $dirs);
+            $dirs = array_merge(...array_values($dirs));
         }
 
         if ($files) {
-            $files = call_user_func_array('array_merge', $files);
+            $files = array_merge(...array_values($files));
         }
 
         return [$dirs, $files];
@@ -252,12 +256,12 @@ class Folder
      * Returns an array of all matching files in current directory.
      *
      * @param string $regexpPattern Preg_match pattern (Defaults to: .*)
-     * @param bool $sort Whether results should be sorted.
-     * @return array Files that match given pattern
+     * @param string|bool $sort Whether results should be sorted.
+     * @return array<string> Files that match given pattern
      */
-    public function find($regexpPattern = '.*', $sort = false)
+    public function find(string $regexpPattern = '.*', $sort = false): array
     {
-        list(, $files) = $this->read($sort);
+        [, $files] = $this->read($sort);
 
         return array_values(preg_grep('/^' . $regexpPattern . '$/i', $files));
     }
@@ -266,10 +270,10 @@ class Folder
      * Returns an array of all matching files in and below current directory.
      *
      * @param string $pattern Preg_match pattern (Defaults to: .*)
-     * @param bool $sort Whether results should be sorted.
+     * @param string|bool $sort Whether results should be sorted.
      * @return array Files matching $pattern
      */
-    public function findRecursive($pattern = '.*', $sort = false)
+    public function findRecursive(string $pattern = '.*', $sort = false): array
     {
         if (!$this->pwd()) {
             return [];
@@ -288,9 +292,9 @@ class Folder
      * @param bool $sort Whether results should be sorted.
      * @return array Files matching pattern
      */
-    protected function _findRecursive($pattern, $sort = false)
+    protected function _findRecursive(string $pattern, bool $sort = false): array
     {
-        list($dirs, $files) = $this->read($sort);
+        [$dirs, $files] = $this->read($sort);
         $found = [];
 
         foreach ($files as $file) {
@@ -314,9 +318,9 @@ class Folder
      * @param string $path Path to check
      * @return bool true if windows path, false otherwise
      */
-    public static function isWindowsPath($path)
+    public static function isWindowsPath(string $path): bool
     {
-        return (preg_match('/^[A-Z]:\\\\/i', $path) || substr($path, 0, 2) === '\\\\');
+        return preg_match('/^[A-Z]:\\\\/i', $path) || substr($path, 0, 2) === '\\\\';
     }
 
     /**
@@ -325,7 +329,7 @@ class Folder
      * @param string $path Path to check
      * @return bool true if path is absolute.
      */
-    public static function isAbsolute($path)
+    public static function isAbsolute(string $path): bool
     {
         if (empty($path)) {
             return false;
@@ -343,10 +347,24 @@ class Folder
      * @param string $path Path to check
      * @return bool True if path is registered stream wrapper.
      */
-    public static function isRegisteredStreamWrapper($path)
+    public static function isRegisteredStreamWrapper(string $path): bool
     {
-        return preg_match('/^[A-Z]+(?=:\/\/)/i', $path, $matches) &&
-            in_array($matches[0], stream_get_wrappers());
+        return preg_match('/^[^:\/]+?(?=:\/\/)/', $path, $matches) &&
+            in_array($matches[0], stream_get_wrappers(), true);
+    }
+
+    /**
+     * Returns a correct set of slashes for given $path. (\\ for Windows paths and / for other paths.)
+     *
+     * @param string $path Path to transform
+     * @return string Path with the correct set of slashes ("\\" or "/")
+     */
+    public static function normalizeFullPath(string $path): string
+    {
+        $to = Folder::correctSlashFor($path);
+        $from = ($to === '/' ? '\\' : '/');
+
+        return str_replace($from, $to, $path);
     }
 
     /**
@@ -355,20 +373,9 @@ class Folder
      * @param string $path Path to check
      * @return string Set of slashes ("\\" or "/")
      */
-    public static function normalizePath($path)
+    public static function correctSlashFor(string $path): string
     {
-        return Folder::correctSlashFor($path);
-    }
-
-    /**
-     * Returns a correct set of slashes for given $path. (\\ for Windows paths and / for other paths.)
-     *
-     * @param string $path Path to check
-     * @return string Set of slashes ("\\" or "/")
-     */
-    public static function correctSlashFor($path)
-    {
-        return (Folder::isWindowsPath($path)) ? '\\' : '/';
+        return Folder::isWindowsPath($path) ? '\\' : '/';
     }
 
     /**
@@ -377,7 +384,7 @@ class Folder
      * @param string $path Path to check
      * @return string Path with ending slash
      */
-    public static function slashTerm($path)
+    public static function slashTerm(string $path): string
     {
         if (Folder::isSlashTerm($path)) {
             return $path;
@@ -390,30 +397,15 @@ class Folder
      * Returns $path with $element added, with correct slash in-between.
      *
      * @param string $path Path
-     * @param string|array $element Element to add at end of path
+     * @param array<string>|string $element Element to add at end of path
      * @return string Combined path
      */
-    public static function addPathElement($path, $element)
+    public static function addPathElement(string $path, $element): string
     {
         $element = (array)$element;
         array_unshift($element, rtrim($path, DIRECTORY_SEPARATOR));
 
         return implode(DIRECTORY_SEPARATOR, $element);
-    }
-
-    /**
-     * Returns true if the Folder is in the given Cake path.
-     *
-     * @param string $path The path to check.
-     * @return bool
-     * @deprecated 3.2.12 This method will be removed in 4.0.0. Use inPath() instead.
-     */
-    public function inCakePath($path = '')
-    {
-        $dir = substr(Folder::slashTerm(ROOT), 0, -1);
-        $newdir = $dir . $path;
-
-        return $this->inPath($newdir);
     }
 
     /**
@@ -424,7 +416,7 @@ class Folder
      * @return bool
      * @throws \InvalidArgumentException When the given `$path` argument is not an absolute path.
      */
-    public function inPath($path, $reverse = false)
+    public function inPath(string $path, bool $reverse = false): bool
     {
         if (!Folder::isAbsolute($path)) {
             throw new InvalidArgumentException('The $path argument is expected to be an absolute path.');
@@ -446,21 +438,21 @@ class Folder
      * Change the mode on a directory structure recursively. This includes changing the mode on files as well.
      *
      * @param string $path The path to chmod.
-     * @param int|bool $mode Octal value, e.g. 0755.
+     * @param int|null $mode Octal value, e.g. 0755.
      * @param bool $recursive Chmod recursively, set to false to only change the current directory.
-     * @param array $exceptions Array of files, directories to skip.
+     * @param array<string> $exceptions Array of files, directories to skip.
      * @return bool Success.
      */
-    public function chmod($path, $mode = false, $recursive = true, array $exceptions = [])
+    public function chmod(string $path, ?int $mode = null, bool $recursive = true, array $exceptions = []): bool
     {
         if (!$mode) {
             $mode = $this->mode;
         }
 
         if ($recursive === false && is_dir($path)) {
-            //@codingStandardsIgnoreStart
+            // phpcs:disable
             if (@chmod($path, intval($mode, 8))) {
-                //@codingStandardsIgnoreEnd
+                // phpcs:enable
                 $this->_messages[] = sprintf('%s changed to %s', $path, $mode);
 
                 return true;
@@ -479,13 +471,13 @@ class Folder
                     $check = explode(DIRECTORY_SEPARATOR, $fullpath);
                     $count = count($check);
 
-                    if (in_array($check[$count - 1], $exceptions)) {
+                    if (in_array($check[$count - 1], $exceptions, true)) {
                         continue;
                     }
 
-                    //@codingStandardsIgnoreStart
+                    // phpcs:disable
                     if (@chmod($fullpath, intval($mode, 8))) {
-                        //@codingStandardsIgnoreEnd
+                        // phpcs:enable
                         $this->_messages[] = sprintf('%s changed to %s', $fullpath, $mode);
                     } else {
                         $this->_errors[] = sprintf('%s NOT changed to %s', $fullpath, $mode);
@@ -508,7 +500,7 @@ class Folder
      * @param bool $fullPath Whether to return the full path or only the directory name.
      * @return array Array of subdirectories for the provided or current path.
      */
-    public function subdirectories($path = null, $fullPath = true)
+    public function subdirectories(?string $path = null, bool $fullPath = true): array
     {
         if (!$path) {
             $path = $this->path;
@@ -540,7 +532,7 @@ class Folder
      * @param string|null $type either 'file' or 'dir'. Null returns both files and directories
      * @return array Array of nested directories and files in each directory
      */
-    public function tree($path = null, $exceptions = false, $type = null)
+    public function tree(?string $path = null, $exceptions = false, ?string $type = null): array
     {
         if (!$path) {
             $path = $this->path;
@@ -560,9 +552,14 @@ class Folder
         }
 
         try {
-            $directory = new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::KEY_AS_PATHNAME | RecursiveDirectoryIterator::CURRENT_AS_SELF);
+            $directory = new RecursiveDirectoryIterator(
+                $path,
+                RecursiveDirectoryIterator::KEY_AS_PATHNAME | RecursiveDirectoryIterator::CURRENT_AS_SELF
+            );
             $iterator = new RecursiveIteratorIterator($directory, RecursiveIteratorIterator::SELF_FIRST);
         } catch (Exception $e) {
+            unset($directory, $iterator);
+
             if ($type === null) {
                 return [[], []];
             }
@@ -570,15 +567,22 @@ class Folder
             return [];
         }
 
+        /**
+         * @var string $itemPath
+         * @var \RecursiveDirectoryIterator $fsIterator
+         */
         foreach ($iterator as $itemPath => $fsIterator) {
             if ($skipHidden) {
                 $subPathName = $fsIterator->getSubPathname();
-                if ($subPathName{0} === '.' || strpos($subPathName, DIRECTORY_SEPARATOR . '.') !== false) {
+                if ($subPathName[0] === '.' || strpos($subPathName, DIRECTORY_SEPARATOR . '.') !== false) {
+                    unset($fsIterator);
                     continue;
                 }
             }
+            /** @var \FilesystemIterator $item */
             $item = $fsIterator->current();
             if (!empty($exceptions) && isset($exceptions[$item->getFilename()])) {
+                unset($fsIterator, $item);
                 continue;
             }
 
@@ -587,7 +591,15 @@ class Folder
             } elseif ($item->isDir() && !$item->isDot()) {
                 $directories[] = $itemPath;
             }
+
+            // inner iterators need to be unset too in order for locks on parents to be released
+            unset($fsIterator, $item);
         }
+
+        // unsetting iterators helps releasing possible locks in certain environments,
+        // which could otherwise make `rmdir()` fail
+        unset($directory, $iterator);
+
         if ($type === null) {
             return [$directories, $files];
         }
@@ -605,11 +617,11 @@ class Folder
      *
      * @param string $pathname The directory structure to create. Either an absolute or relative
      *   path. If the path is relative and exists in the process' cwd it will not be created.
-     *   Otherwise relative paths will be prefixed with the current pwd().
-     * @param int|bool $mode octal value 0755
+     *   Otherwise, relative paths will be prefixed with the current pwd().
+     * @param int|null $mode octal value 0755
      * @return bool Returns TRUE on success, FALSE on failure
      */
-    public function create($pathname, $mode = false)
+    public function create(string $pathname, ?int $mode = null): bool
     {
         if (is_dir($pathname) || empty($pathname)) {
             return true;
@@ -635,13 +647,13 @@ class Folder
             if (!file_exists($pathname)) {
                 $old = umask(0);
                 if (mkdir($pathname, $mode, true)) {
-                    umask($old);
                     $this->_messages[] = sprintf('%s created', $pathname);
+                    umask($old);
 
                     return true;
                 }
-                umask($old);
                 $this->_errors[] = sprintf('%s NOT created', $pathname);
+                umask($old);
 
                 return false;
             }
@@ -655,13 +667,13 @@ class Folder
      *
      * @return int size in bytes of current folder
      */
-    public function dirsize()
+    public function dirsize(): int
     {
         $size = 0;
         $directory = Folder::slashTerm($this->path);
         $stack = [$directory];
         $count = count($stack);
-        for ($i = 0, $j = $count; $i < $j; ++$i) {
+        for ($i = 0, $j = $count; $i < $j; $i++) {
             if (is_file($stack[$i])) {
                 $size += filesize($stack[$i]);
             } elseif (is_dir($stack[$i])) {
@@ -693,7 +705,7 @@ class Folder
      * @param string|null $path Path of directory to delete
      * @return bool Success
      */
-    public function delete($path = null)
+    public function delete(?string $path = null): bool
     {
         if (!$path) {
             $path = $this->pwd();
@@ -707,36 +719,47 @@ class Folder
                 $directory = new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::CURRENT_AS_SELF);
                 $iterator = new RecursiveIteratorIterator($directory, RecursiveIteratorIterator::CHILD_FIRST);
             } catch (Exception $e) {
+                unset($directory, $iterator);
+
                 return false;
             }
 
             foreach ($iterator as $item) {
                 $filePath = $item->getPathname();
                 if ($item->isFile() || $item->isLink()) {
-                    //@codingStandardsIgnoreStart
+                    // phpcs:disable
                     if (@unlink($filePath)) {
-                        //@codingStandardsIgnoreEnd
+                        // phpcs:enable
                         $this->_messages[] = sprintf('%s removed', $filePath);
                     } else {
                         $this->_errors[] = sprintf('%s NOT removed', $filePath);
                     }
                 } elseif ($item->isDir() && !$item->isDot()) {
-                    //@codingStandardsIgnoreStart
+                    // phpcs:disable
                     if (@rmdir($filePath)) {
-                        //@codingStandardsIgnoreEnd
+                        // phpcs:enable
                         $this->_messages[] = sprintf('%s removed', $filePath);
                     } else {
                         $this->_errors[] = sprintf('%s NOT removed', $filePath);
 
+                        unset($directory, $iterator, $item);
+
                         return false;
                     }
                 }
+
+                // inner iterators need to be unset too in order for locks on parents to be released
+                unset($item);
             }
 
+            // unsetting iterators helps releasing possible locks in certain environments,
+            // which could otherwise make `rmdir()` fail
+            unset($directory, $iterator);
+
             $path = rtrim($path, DIRECTORY_SEPARATOR);
-            //@codingStandardsIgnoreStart
+            // phpcs:disable
             if (@rmdir($path)) {
-                //@codingStandardsIgnoreEnd
+                // phpcs:enable
                 $this->_messages[] = sprintf('%s removed', $path);
             } else {
                 $this->_errors[] = sprintf('%s NOT removed', $path);
@@ -753,37 +776,31 @@ class Folder
      *
      * ### Options
      *
-     * - `to` The directory to copy to.
-     * - `from` The directory to copy from, this will cause a cd() to occur, changing the results of pwd().
-     * - `mode` The mode to copy the files/directories with as integer, e.g. 0775.
+     * - `from` The directory to copy from, this will cause a cd() to occur, changing the results of `pwd()`.
+     * - `mode` The mode to copy the files/directories with as integer, e.g. `0770`.
      * - `skip` Files/directories to skip.
      * - `scheme` Folder::MERGE, Folder::OVERWRITE, Folder::SKIP
      * - `recursive` Whether to copy recursively or not (default: true - recursive)
      *
-     * @param array|string $options Either an array of options (see above) or a string of the destination directory.
+     * @param string $to The directory to copy to.
+     * @param array<string, mixed> $options Array of options (see above).
      * @return bool Success.
      */
-    public function copy($options)
+    public function copy(string $to, array $options = []): bool
     {
         if (!$this->pwd()) {
             return false;
         }
-        $to = null;
-        if (is_string($options)) {
-            $to = $options;
-            $options = [];
-        }
         $options += [
-            'to' => $to,
             'from' => $this->path,
             'mode' => $this->mode,
             'skip' => [],
             'scheme' => Folder::MERGE,
-            'recursive' => true
+            'recursive' => true,
         ];
 
         $fromDir = $options['from'];
-        $toDir = $options['to'];
+        $toDir = $to;
         $mode = $options['mode'];
 
         if (!$this->cd($fromDir)) {
@@ -803,14 +820,14 @@ class Folder
         }
 
         $exceptions = array_merge(['.', '..', '.svn'], $options['skip']);
-        //@codingStandardsIgnoreStart
+        // phpcs:disable
         if ($handle = @opendir($fromDir)) {
-            //@codingStandardsIgnoreEnd
+            // phpcs:enable
             while (($item = readdir($handle)) !== false) {
                 $to = Folder::addPathElement($toDir, $item);
-                if (($options['scheme'] != Folder::SKIP || !is_dir($to)) && !in_array($item, $exceptions)) {
+                if (($options['scheme'] !== Folder::SKIP || !is_dir($to)) && !in_array($item, $exceptions, true)) {
                     $from = Folder::addPathElement($fromDir, $item);
-                    if (is_file($from) && (!is_file($to) || $options['scheme'] != Folder::SKIP)) {
+                    if (is_file($from) && (!is_file($to) || $options['scheme'] !== Folder::SKIP)) {
                         if (copy($from, $to)) {
                             chmod($to, intval($mode, 8));
                             touch($to, filemtime($from));
@@ -836,14 +853,14 @@ class Folder
                             chmod($to, $mode);
                             umask($old);
                             $this->_messages[] = sprintf('%s created', $to);
-                            $options = ['to' => $to, 'from' => $from] + $options;
-                            $this->copy($options);
+                            $options = ['from' => $from] + $options;
+                            $this->copy($to, $options);
                         } else {
                             $this->_errors[] = sprintf('%s not created', $to);
                         }
                     } elseif (is_dir($from) && $options['scheme'] === Folder::MERGE) {
-                        $options = ['to' => $to, 'from' => $from] + $options;
-                        $this->copy($options);
+                        $options = ['from' => $from] + $options;
+                        $this->copy($to, $options);
                     }
                 }
             }
@@ -860,29 +877,22 @@ class Folder
      *
      * ### Options
      *
-     * - `to` The directory to copy to.
-     * - `from` The directory to copy from, this will cause a cd() to occur, changing the results of pwd().
-     * - `chmod` The mode to copy the files/directories with.
+     * - `from` The directory to copy from, this will cause a cd() to occur, changing the results of `pwd()`.
+     * - `mode` The mode to copy the files/directories with as integer, e.g. `0770`.
      * - `skip` Files/directories to skip.
      * - `scheme` Folder::MERGE, Folder::OVERWRITE, Folder::SKIP
      * - `recursive` Whether to copy recursively or not (default: true - recursive)
      *
-     * @param array|string $options (to, from, chmod, skip, scheme)
+     * @param string $to The directory to move to.
+     * @param array<string, mixed> $options Array of options (see above).
      * @return bool Success
      */
-    public function move($options)
+    public function move(string $to, array $options = []): bool
     {
-        $to = null;
-        if (is_string($options)) {
-            $to = $options;
-            $options = (array)$options;
-        }
-        $options += ['to' => $to, 'from' => $this->path, 'mode' => $this->mode, 'skip' => [], 'recursive' => true];
+        $options += ['from' => $this->path, 'mode' => $this->mode, 'skip' => [], 'recursive' => true];
 
-        if ($this->copy($options)) {
-            if ($this->delete($options['from'])) {
-                return (bool)$this->cd($options['to']);
-            }
+        if ($this->copy($to, $options) && $this->delete($options['from'])) {
+            return (bool)$this->cd($to);
         }
 
         return false;
@@ -894,7 +904,7 @@ class Folder
      * @param bool $reset Reset message stack after reading
      * @return array
      */
-    public function messages($reset = true)
+    public function messages(bool $reset = true): array
     {
         $messages = $this->_messages;
         if ($reset) {
@@ -910,7 +920,7 @@ class Folder
      * @param bool $reset Reset error stack after reading
      * @return array
      */
-    public function errors($reset = true)
+    public function errors(bool $reset = true): array
     {
         $errors = $this->_errors;
         if ($reset) {
@@ -924,7 +934,7 @@ class Folder
      * Get the real path (taking ".." and such into account)
      *
      * @param string $path Path to resolve
-     * @return string The resolved path
+     * @return string|false The resolved path
      */
     public function realpath($path)
     {
@@ -968,7 +978,7 @@ class Folder
      * @param string $path Path to check
      * @return bool true if path ends with slash, false otherwise
      */
-    public static function isSlashTerm($path)
+    public static function isSlashTerm(string $path): bool
     {
         $lastChar = $path[strlen($path) - 1];
 

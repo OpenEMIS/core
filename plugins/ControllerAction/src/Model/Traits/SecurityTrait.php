@@ -1,4 +1,5 @@
 <?php
+
 namespace ControllerAction\Model\Traits;
 
 use Cake\Utility\Security;
@@ -23,38 +24,122 @@ trait SecurityTrait
         return base64_decode(strtr($input, '-_', '+/'));
     }
 
-    public function getQueryString($queryString = null, $name = 'queryString')
+    // POCOR-8074-QueryStringProfile start
+    public function getDecodedQueryArray($queryString = null)
     {
-        $query = isset($_GET[$name]) ? $_GET[$name] : null;
+        //POCOR-8074-5 start
+        $queryStingParamName = 'queryString';
+        if ($queryString != null) {
+            try { // POCOR-8080 for Institutions Menu
+                $decodedQuery = $this->paramsDecode($queryString);
+                return $decodedQuery;
+            } catch (\Exception $exception) {
+                $queryString = null;
+                $queryStingParamName = $queryString;
+            }
+        } //POCOR-8074-5 end
 
-        if (is_null($query)) {
-            return null;
+        if ($queryString == null) {
+            // POCOR-8080 if getQueryString is called from inside ControllerAction
+            $request = null;
+            if (!property_exists($this, 'request')) {
+                try {
+                    if (property_exists($this, '_table')) {
+                        $request = $this->_table->request;
+                    } else {
+                        // echo "<pre>";print_r($this->request);die;
+                        // $request = $this->getController()->getRequest();
+                        $request = $this->request;
+                    }
+                } catch (\Exception $exception) {
+                    $class = __CLASS__;
+                    $line = __LINE__;
+                    if ($queryString == null) {
+                        $queryString = "";
+                    }
+                    Log::debug('Could not process query {query} in {class}, {line}', ['query' => $queryString, 'class' => $class, 'line' => $line]);
+                    Log::debug($exception->getMessage());
+                }
+            }
+            if (property_exists($this, 'request')) {
+                $request = $this->request;
+            }
+            if ($request) {
+                $params = $request->getAttribute('params');
+                $query = $request->getQuery();
+                if (isset($query[$queryStingParamName])) { //to filter if the URL already contain querystring
+                    $queryString = $query[$queryStingParamName];
+                } elseif (isset($query['querystring'])) { //to filter if the URL already contain querystring
+                    $queryString = $query['querystring'];
+                } elseif (isset($params['pass'])) { //to filter if the URL already contain querystring
+                    // POCOR-8074-6
+                    foreach ($params['pass'] as $queryString) {
+                        try {
+                            $decodedQuery = $this->paramsDecode($queryString);
+                            if ($decodedQuery) {
+                                break; // Exit loop if decoding successful
+                            }
+                        } catch (\Exception $exception) {
+
+                        }
+                    }
+                }
+            } else {
+                $class = __CLASS__;
+                $line = __LINE__;
+                if ($queryString == null) {
+                    $queryString = "";
+                }
+                Log::debug('Could not process query {query} in {class}, {line}', ['query' => $queryString, 'class' => $class, 'line' => $line]);
+                return null;
+            }
         }
+        if ($decodedQuery == null) {
+            try { // POCOR-8080 for Institutions Menu
+                $decodedQuery = $this->paramsDecode($queryString);
+            } catch (\Exception $exception) {
+                return null;
+            }
+        }
+        return $decodedQuery;
+    }
 
-        $query = $this->paramsDecode($query);
-
-        if (is_null($queryString)) {
-            return $query;
-        } elseif (is_array($queryString)) {
-            return array_intersect_key($query, array_flip($queryString));
-        } elseif (!isset($query[$queryString])) {
+    public function getDecodedQueryParam($attribute = null, $decodedQuery = null)
+    {
+        if (empty($decodedQuery)) {
+            return null; //POCOR-8115;
+        }
+        if (is_null($attribute)) {
+            return $decodedQuery;
+        } elseif (is_array($attribute)) {
+            return array_intersect_key($decodedQuery, array_flip($attribute));
+        } elseif (!isset($decodedQuery[$attribute])) {
             return null;
         } else {
-            return $query[$queryString];
+            return $decodedQuery[$attribute];
         }
     }
+
+    public function getQueryString($attribute = null, $queryString = null)
+    {
+        $decodedQuery = $this->getDecodedQueryArray($queryString);
+        $decodedParam = $this->getDecodedQueryParam($attribute, $decodedQuery);
+
+        return $decodedParam;
+    }//POCOR-8074-QueryStringProfile end
 
     public function setQueryString($url, $params, $name = 'queryString')
     {
         if (is_array($url)) {
-            $url[$name] = $this->paramsEncode($params);
+            $url['?'][$name] = $this->paramsEncode($params); //POCOR-8074-QueryStringProfile
         } elseif (is_string($url)) {
             if (strpos($url, '?')) {
-                $url .= '&'.$name.'='.$this->paramsEncode($params);
+                $url .= '&' . $name . '=' . $this->paramsEncode($params);
             } else {
-                $url .= '?'.$name.'='.$this->paramsEncode($params);
+                $url .= '?' . $name . '=' . $this->paramsEncode($params);
             }
         }
+
         return $url;
     }
 
@@ -67,15 +152,14 @@ trait SecurityTrait
         list($payload, $signature) = $paramArr;
         $payload = $this->urlsafeB64Decode($payload);
         $signature = $this->urlsafeB64Decode($signature);
-
         $payload = json_decode($payload, true);
         $sessionId = Security::hash('session_id', 'sha256');
-            $checkPayload = $payload;
-            $checkPayload[$sessionId] = session_id();
-            $checkSignature = Security::hash(json_encode($checkPayload), 'sha256', true);
-            if ($signature !== $checkSignature) {
-                throw new SecurityException('Query String has been tampered');
-            }
+        $checkPayload = $payload;
+        $checkPayload[$sessionId] = session_id();
+        $checkSignature = Security::hash(json_encode($checkPayload), 'sha256', true);
+        if ($signature !== $checkSignature) {
+            throw new SecurityException('Query String has been tampered');
+        }
         return $payload;
     }
 
@@ -93,7 +177,7 @@ trait SecurityTrait
 
     public function getIdKeys(Table $model, $ids, $addAlias = true)
     {
-        $primaryKey = $model->primaryKey();
+        $primaryKey = $model->getPrimaryKey();
         $idKeys = [];
         if (!empty($ids)) {
             if (is_array($primaryKey)) {

@@ -8,7 +8,7 @@ use Cake\ORM\Entity;
 use App\Model\Table\ControllerActionTable;
 
 class ExaminationCentresExaminationsSubjectsStudentsTable extends ControllerActionTable {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
@@ -35,7 +35,7 @@ class ExaminationCentresExaminationsSubjectsStudentsTable extends ControllerActi
         $this->addBehavior('CompositeKey');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.ExaminationResults.afterSave'] = 'examinationResultsAfterSave';

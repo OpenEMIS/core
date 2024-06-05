@@ -1,5 +1,6 @@
 <?php
 namespace App\Controller;
+//use Cake\Controller\Controller;
 
 use Cake\Event\Event;
 use Page\Controller\PageController as BaseController;
@@ -7,15 +8,16 @@ use Cake\ORM\Entity;
 use Page\Model\Entity\PageElement;
 use Cake\Routing\Router;
 use Cake\ORM\TableRegistry;//POCOR-7534
+use Cake\Http\ServerRequest;
 
 class PageController extends BaseController
 {
-    public $helpers = ['Page.Page'];
+    //public $helpers = ['Page.Page'];
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
-
+        
         $labels = [
             'openemis_no' => 'OpenEMIS ID',
             'modified' => 'Modified On',
@@ -23,10 +25,10 @@ class PageController extends BaseController
             'created' => 'Created On',
             'created_user_id' => 'Created By'
         ];
-
-        $this->Page->config('sequence', 'order');
-        $this->Page->config('is_visible', 'visible');
-        $this->Page->config('labels', $labels);
+         $this->loadComponent('Page.Page');
+         $this->Page->getConfig('sequence');
+         $this->Page->getConfig('is_visible', 'visible');
+         $this->Page->getConfig('labels', $labels);
 
         $this->loadComponent('Page.RenderLink');
         $this->loadComponent('RenderDate');
@@ -34,7 +36,7 @@ class PageController extends BaseController
         $this->loadComponent('RenderDatetime');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Controller.beforeRender'] = ['callable' => 'beforeRender', 'priority' => 5];
@@ -46,24 +48,28 @@ class PageController extends BaseController
     {
         parent::beforeFilter($event);
         //POCOR-7534 Starts comment it only for POCOR-7534 ticket's given urls in task
-        $session = $this->request->session();
+        $serverRequest = $this->request;
+        $session = $this->request->getSession();
+
         $superAdmin = $session->read('Auth.User.super_admin');
+
         if($superAdmin == 0){ 
             $UserData = $session->read('Auth.User')['id'];
-            $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
+            $GroupRoles = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
             $userRole = $GroupRoles->find()
                         ->contain('SecurityRoles')
                         ->order(['SecurityRoles.order'])
                         ->where([
-                            $GroupRoles->aliasField('security_user_id') => $UserData
+                            // $GroupRoles->aliasField('security_user_id') => $UserData
+                            $GroupRoles->aliasField('security_user_id') => 2
                         ])
                         ->group([$GroupRoles->aliasField('security_role_id')])
                         ->toArray();
             
-            if(!empty($this->request->params['controller']) && !empty($userRole)){
+            if(!empty($this->request->getParam('controller') && !empty($userRole))){
                 $RoleIds = [];
                 foreach ($userRole as $Role_key => $Role_val) {  $RoleIds[] = $Role_val->security_role_id; }
-                $SecurityFunctionIds = $this->getIdBySecurityFunctionName($this->request->params['action'], $this->request->params['controller']);
+                $SecurityFunctionIds = $this->getIdBySecurityFunctionName($this->request->getParam('action'), $this->request->getParam('controller'));
                 if(!empty($SecurityFunctionIds)){
                     $result = $this->checkAuthrizationForRoles($SecurityFunctionIds, $RoleIds);
                     if($result == 0){
@@ -78,7 +84,7 @@ class PageController extends BaseController
         $page = $this->Page;
         $request = $this->request;
         $action = $request->action;
-        $ext = $this->request->params['_ext'];
+        $ext = $serverRequest->getAttribute('params')['_ext'];
 
         if ($ext != 'json') {
             if ($request->is(['put', 'post'])) {
@@ -86,7 +92,12 @@ class PageController extends BaseController
             }
             $this->set('menuItemSelected', [$this->name]);
 
-            if ($page->isAutoRender() && in_array($action, ['index', 'view', 'add', 'edit', 'delete'])) {
+            // if ($page->isAutoRender() && in_array($action, ['index', 'view', 'add', 'edit', 'delete'])) {
+            //     $viewFile = 'Page.Page/' . $action;
+            //     $this->viewBuilder()->template($viewFile);
+            // }
+
+            if (in_array($action, ['index', 'view', 'add', 'edit', 'delete'])) {
                 $viewFile = 'Page.Page/' . $action;
                 $this->viewBuilder()->template($viewFile);
             }
@@ -405,7 +416,7 @@ class PageController extends BaseController
             }
         }
         $module = 'Administration';
-        $SecurityFunctionsTbl = TableRegistry::get('security_functions');
+        $SecurityFunctionsTbl = TableRegistry::getTableLocator()->get('security_functions');
         $SecurityFunctionsData = $SecurityFunctionsTbl->find()->where([
                                         $SecurityFunctionsTbl->aliasField('name') => $name,
                                         $SecurityFunctionsTbl->aliasField('controller') => $controllerParam,
@@ -420,7 +431,7 @@ class PageController extends BaseController
 
     public function checkAuthrizationForRoles($securityFunctionsId, $roleId)
     {
-        $SecurityRoleFunctionsTbl = TableRegistry::get('security_role_functions');
+        $SecurityRoleFunctionsTbl = TableRegistry::getTableLocator()->get('security_role_functions');
         $SecurityRoleFunctionsTblData = $SecurityRoleFunctionsTbl->find()->where([
                                             $SecurityRoleFunctionsTbl->aliasField('security_role_id IN') => $roleId,
                                             $SecurityRoleFunctionsTbl->aliasField('security_function_id IN') => $securityFunctionsId,
@@ -441,6 +452,8 @@ class PageController extends BaseController
     {
         parent::beforeRender($event);
         $this->initializeToolbars();
+        $this->viewBuilder()->addHelper('Page.Page');
+        
     }
 
     public function onRenderBinary(Event $event, Entity $entity, PageElement $element)
@@ -454,7 +467,7 @@ class PageController extends BaseController
                 $primaryKey = $entity->primaryKey;
                 $source = isset($attributes['source']) ? $attributes['source'] : $entity->source();
                 if (isset($attributes['keyField'])) {
-                    $key = TableRegistry::get($source)->primaryKey();
+                    $key = TableRegistry::getTableLocator()->get($source)->primaryKey();
                     if (!is_array($key)) {
                         $primaryKey = $this->encode([$key => $entity->{$attributes['keyField']}]);
                     }
@@ -474,7 +487,7 @@ class PageController extends BaseController
                     ], true);
                 }
             } else {
-                switch ($this->request->param('action')) {
+                switch ($this->request->getParam('action')) {
                     case 'view':
                         $fileName = $entity->{$fileNameField};
                         $pathInfo = pathinfo($fileName);
@@ -489,7 +502,7 @@ class PageController extends BaseController
                         $primaryKey = $entity->primaryKey;
                         $source = isset($attributes['source']) ? $attributes['source'] : $entity->source();
                         if (isset($attributes['keyField'])) {
-                            $key = TableRegistry::get($source)->primaryKey();
+                            $key = TableRegistry::getTableLocator()->get($source)->getPrimaryKey();
                             if (!is_array($key)) {
                                 $primaryKey = $this->encode([$key => $entity->{$attributes['keyField']}]);
                             }
@@ -533,12 +546,12 @@ class PageController extends BaseController
                 }
             }
         } else {
-            switch ($this->request->param('action')) {
+            switch ($this->request->getParam('action')) {
                 case 'view':
                     $primaryKey = $entity->primaryKey;
                     $source = isset($attributes['source']) ? $attributes['source'] : $entity->source();
                     if (isset($attributes['keyField'])) {
-                        $key = TableRegistry::get($source)->primaryKey();
+                        $key = TableRegistry::getTableLocator()->get($source)->primaryKey();
                         if (!is_array($key)) {
                             $primaryKey = $this->encode([$key => $entity->{$attributes['keyField']}]);
                         }
@@ -563,6 +576,7 @@ class PageController extends BaseController
             }
         }
     }
+    
 
     private function initializeToolbars()
     {

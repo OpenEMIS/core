@@ -20,9 +20,9 @@ class InstitutionIncomesTable extends ControllerActionTable
 {
     use MessagesTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_incomes');
+        $this->setTable('institution_incomes');
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
         $this->belongsTo('IncomeSources', ['className' => 'FieldOption.IncomeSources', 'foreignKey' => 'income_source_id']);
@@ -36,7 +36,10 @@ class InstitutionIncomesTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
 
-            $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Income'=>['id']]
+        ]);
     }
 
     public function beforeAction($event) {
@@ -48,7 +51,7 @@ class InstitutionIncomesTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'income_source_id', 'income_type_id', 'amount', 'file_name','file_content', 'description']);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -56,7 +59,8 @@ class InstitutionIncomesTable extends ControllerActionTable
     }
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		$entity->institution_id = $this->request->session()->read('Institution.Institutions.id');
+		//$entity->institution_id = $this->request->getSession()->read('Institution.Institutions.id');
+        $entity->institution_id = $this->getInstitutionID();
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -88,10 +92,21 @@ class InstitutionIncomesTable extends ControllerActionTable
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-        if ($field == 'income_source_id') {
+        /*if ($field == 'income_source_id') {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }*/ 
+        if ($field == 'income_source_id') {
+            return  __('Source');
+        } else if ($field == 'academic_period_id') {
+            return  __('Academic Period');
+        } else if ($field == 'date') {
+            return  __('Date');
         } else if ($field == 'income_type_id') {
             return  __('Type');
+        } else if ($field == 'file_content') {
+            return  __('Attachment');
+        } else if ($field == 'description') {
+            return  __('Description');
         } else if ($field == 'amount' && $this->action == 'index') {
             if (!empty($module) && $module == 'InstitutionIncomes') {
                 return __('Amount');
@@ -99,6 +114,14 @@ class InstitutionIncomesTable extends ControllerActionTable
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
             }
             //return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        } else if ($field == 'modified_user_id') {
+            return __('Modified By');
+        } else if ($field == 'modified') {
+            return __('Modified On');
+        } else if ($field == 'created_user_id') {
+            return __('Created By');
+        } else if ($field == 'created') {
+            return __('Created On');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -117,19 +140,20 @@ class InstitutionIncomesTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $academyPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 
 
 		$query
 		->select(['date' => 'InstitutionIncomes.date','amount' => 'InstitutionIncomes.amount', 'source' =>'IncomeSources.name', 'type' => 'IncomeTypes.name'])
 
-        ->LeftJoin([$this->IncomeTypes->alias() => $this->IncomeTypes->table()],[
+        ->LeftJoin([$this->IncomeTypes->getAlias() => $this->IncomeTypes->getTable()],[
             $this->IncomeTypes->aliasField('id').' = ' . 'InstitutionIncomes.income_type_id'
         ])
 
-		->LeftJoin([$this->IncomeSources->alias() => $this->IncomeSources->table()],[
+		->LeftJoin([$this->IncomeSources->getAlias() => $this->IncomeSources->getTable()],[
 			$this->IncomeSources->aliasField('id').' = ' . 'InstitutionIncomes.income_source_id'
         ]);
     }

@@ -5,13 +5,13 @@ use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
 class ContactOptionsTable extends AppTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 
 		$this->hasMany('ContactTypes', ['className' => 'User.ContactTypes']);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 		return $validator;
 	}

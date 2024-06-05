@@ -10,7 +10,7 @@ use Cake\Log\Log;
 
 class UpdateIndexesShell extends Shell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Institution.InstitutionStudentRisks');
