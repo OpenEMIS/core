@@ -36,7 +36,8 @@ class InstitutionGradesTable extends ControllerActionTable
         $this->toggle('search', false);
         $this->setDeleteStrategy('restrict');
 
-        $this->addBehavior('ContactExcel', ['excludes' => ['start_date', 'end_date', 'start_year', 'end_year'], 'pages' => ['index']]); //POCOR-6898 change Excel to ContactExcel Behaviour
+        // $this->addBehavior('ContactExcel', ['excludes' => ['start_date', 'end_date', 'start_year', 'end_year'], 'pages' => ['index']]); //POCOR-6898 change Excel to ContactExcel Behaviour //Commented V4
+        $this->addBehavior('Excel', ['pages' => ['index']]);
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['Programmes' =>['id']
             ]
