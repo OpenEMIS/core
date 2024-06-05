@@ -45,7 +45,8 @@ class InstitutionShiftsTable extends ControllerActionTable
         $this->behaviors()->get('ControllerAction')->setConfig('actions.search', false);
         $this->setDeleteStrategy('restrict');
 
-        $this->addBehavior('ContactExcel', ['excludes' => ['start_time', 'end_time', 'academic_period_id', 'previous_shift_id'], 'pages' => ['index']]); //POCOR-6898 change Excel to ContactExcel Behaviour
+        // $this->addBehavior('ContactExcel', ['excludes' => ['start_time', 'end_time', 'academic_period_id', 'previous_shift_id'], 'pages' => ['index']]); //POCOR-6898 change Excel to ContactExcel Behaviour //Commented V4
+        $this->addBehavior('Excel', ['pages' => ['index']]);
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['Shifts' =>['id']
             ]
@@ -558,10 +559,13 @@ class InstitutionShiftsTable extends ControllerActionTable
                 $attr['type'] = 'autocomplete';
                 $attr['target'] = ['key' => 'location_institution_id', 'name' => $this->aliasField('location_institution_id')];
             }
-            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
-            $occupier = $Institutions->findById($attr['entity']->location_institution_id)->first();
-            $attr['attr']['value'] = $occupier->name;
-            $data = $request->getData($this->getAlias());
+            if(isset($this->request->getData()['InstitutionShifts']['location_institution_id'])){
+                $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+                // $occupier = $Institutions->findById($attr['entity']->location_institution_id)->first(); //Commented v4
+                $occupier = $Institutions->findById($this->request->getData()['InstitutionShifts']['location_institution_id'])->first();
+                $attr['attr']['value'] = $occupier->name;
+                $data = $request->getData($this->getAlias());
+            }
 
             if ($event->data[0]['entity']->institution_id != $event->data[0]['entity']->location_institution_id && $event->data[0]['entity']->location != 'CURRENT') {
                 //POCOR-6587 added one more condition to get data
@@ -1024,8 +1028,8 @@ class InstitutionShiftsTable extends ControllerActionTable
             $institutionId = $this->getInstitutionID();
             $Institutions = $this->Institutions;
 
-            $term = trim($this->request->getQuery['term']);
-            $selectedAcademicPeriod = trim($this->request->getQuery['academicperiod']);
+            $term = trim($this->request->getQuery('term'));
+            $selectedAcademicPeriod = trim($this->request->getQuery('academicperiod'));
             $search = $term . '%';
 
             $query = $Institutions->find()
@@ -1085,7 +1089,7 @@ class InstitutionShiftsTable extends ControllerActionTable
         ]);
         $this->field('location_institution_id', [
             'type' => 'hidden',
-            'after' => 'institution_id',
+            'after' => 'location',
             'entity' => $entity
         ]);
         $this->field('previous_shift_id', ['visible' => 'false']);
