@@ -174,7 +174,10 @@ class AssociationExcelBehavior extends Behavior
         $sheetNameArr = [];
         //POCOR-5852 starts
         $session = $this->_table->request->getSession();
-        $institution_id = $session->read('Institution.Institutions.id') ? $session->read('Institution.Institutions.id'): 0;
+        //$institution_id = $session->read('Institution.Institutions.id') ? $session->read('Institution.Institutions.id'): 0;
+        $params = $this->_table->request->getAttribute('params')['pass'][1];
+        $paramsDecodedArray = $this->_table->paramsDecode($params);
+        $institution_id = !empty($paramsDecodedArray) ? $paramsDecodedArray['institution_id'] : 0;
         $condition = [];
         if(!is_null($this->_table->request->getQuery('academic_period_id'))){
             $academic_period_id = $this->_table->request->getQuery('academic_period_id');
@@ -298,27 +301,31 @@ class AssociationExcelBehavior extends Behavior
                 //POCOR-5852 starts
                 $Query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                     return $results->map(function ($row) {
-                        $Users = TableRegistry::getTableLocator()->get('User.Users');
-                        $user_data= $Users
-                                    ->find()
-                                    ->where([$Users->aliasField('openemis_no') => $row->openEMIS_ID])
-                                    ->first();
+                        $user_data = '';
+                        if(!empty($row->openEMIS_ID)){
+                            $Users = TableRegistry::getTableLocator()->get('Security.Users')->setAlias('security_users');
+                            $user_data= $Users
+                                        ->find()
+                                        ->where([$Users->aliasField('openemis_no') => $row->openEMIS_ID])
+                                        ->first();
+                        }
                         $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');//POCOR-5852 starts
                         $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');//POCOR-5852 ends
-                        $conditions = [
-                            $UserIdentities->aliasField('security_user_id') => $user_data->id,
-                        ];
+                        $condition = [];
+                        if(!empty($user_data)){
+                            $conditions = [
+                                $UserIdentities->aliasField('security_user_id') => $user_data->id,
+                            ];
+                        }
                         $data = $UserIdentities
                                     ->find()    
                                     ->select([
                                         // 'identity_type' => $IdentityTypes->getAlias().'.name',//POCOR-5852 starts
                                         // 'identity_number' => $UserIdentities->getAlias().'.number',
                                         // 'default' => $IdentityTypes->getAlias().'.default'
-
                                         'identity_type' => $IdentityTypes->aliasField('name'),//POCOR-5852 starts
                                         'identity_number' => $UserIdentities->aliasField('number'),
                                         'identity_default' => $IdentityTypes->aliasField('default')
-                                        
                                         //POCOR-5852 ends
                                     ])
                                     ->leftJoin(
