@@ -50,7 +50,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'AssociationStudent' => ['index','add','view', 'edit'],
         ]);
-        //$this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Institution.InstitutionTab');
     }
     
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
@@ -140,7 +140,6 @@ class InstitutionAssociationsTable extends ControllerActionTable
 
     public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        
         if(!empty($this->controllerAction) && ($this->controllerAction == 'Associations')) {
             // Delete Students related to associations 
             $existingStudents = $this->AssociationStudent
@@ -153,6 +152,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
                 ])
                 ->toArray();
             if ($existingStudents && !empty($existingStudents)) {
+                $id = $entity->id;//POCOR-7485
                 foreach ($existingStudents as $key => $StudentEntity) {    
                      $this->AssociationStudent->delete($StudentEntity);
                 }
@@ -176,7 +176,6 @@ class InstitutionAssociationsTable extends ControllerActionTable
                      $this->AssociationStaff->delete($StaffEntity);
                 } 
             }
-                
         }
     }
     /******************************************************************************************************************
