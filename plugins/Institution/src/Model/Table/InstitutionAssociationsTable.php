@@ -253,6 +253,9 @@ class InstitutionAssociationsTable extends ControllerActionTable
     public function onGetAssociationStaff(Event $event, Entity $entity)
     {        
         if ($this->action == 'view') {
+            $paramsEncoded = $this->request->getAttribute('params')['pass'][1];
+            $params = $this->ControllerAction->paramsDecode($paramsEncoded);
+            $institutionId = $params['institution_id'];
             if ($entity->has('association_staff') && !empty($entity->association_staff)) {
                 $staffList = [];
                 foreach ($entity->association_staff as $staffVal) {
@@ -261,9 +264,8 @@ class InstitutionAssociationsTable extends ControllerActionTable
                             'controller' => 'Institutions',
                             'action' => 'StaffUser',
                             'view',
-                            $this->paramsEncode(['id' => $staffVal->user->id])
+                            $this->paramsEncode(['id' => $staffVal->user->id, 'institution_id' => $institutionId, 'staff_id'=> $staffVal->user->id])
                         ]);
-
                         $staffList[] = $staffLink;
                 } 
                 return implode(', ', $staffList);
