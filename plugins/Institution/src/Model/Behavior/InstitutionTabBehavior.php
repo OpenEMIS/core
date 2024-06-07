@@ -184,7 +184,12 @@ class InstitutionTabBehavior extends Behavior
 
         $model = $this->_table;
         $institutionID = $this->getInstitutionID();
-        $actions = ['view', 'edit'];
+
+        $actions = ['view', 'edit','remove'];
+        if($appliedAction == 'Textbooks') {
+            $actions = ['view', 'edit','remove'];
+        }
+        
         foreach ($actions as $action) {
             if (isset($buttons[$action])) {
                 $url = $buttons[$action]['url'];
@@ -211,12 +216,15 @@ class InstitutionTabBehavior extends Behavior
                         }
                         // echo "<pre>"; print_r($url_action);
                         // echo "<pre>"; print_r($appliedActions[$url_action]);
+                        // echo "<pre>"; print_r($entity);
                         // die;
                         foreach ($appliedActions[$url_action] as $additionalParam) {
                             if($url_action == 'Classes' && $additionalParam == 'institution_class_id'){
                                 $queryString['id'] = $entity->{$additionalParam};
                             }else if($url_action == 'Subjects' && $additionalParam == 'institution_subject_id'){
                                 $queryString['institution_subject_id'] = $entity->id;
+                            }else if($url_action == 'Textbooks' && $additionalParam == 'academic_period_id'){
+                                $queryString['academic_period_id'] = $entity->academic_period->id;
                             }else{
                                 $queryString[$additionalParam] = $entity->{$additionalParam};
                             }
@@ -246,7 +254,7 @@ class InstitutionTabBehavior extends Behavior
             }
         }
 
-//        die('<pre>' . print_r($appliedActions, true) . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
+        // die('<pre>' . print_r($appliedActions, true) . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
 
         return $buttons;
     }
