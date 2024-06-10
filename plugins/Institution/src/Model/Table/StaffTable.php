@@ -78,7 +78,7 @@ class StaffTable extends ControllerActionTable
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('User.MoodleCreateUser');
 
-        $this->addBehavior('ContactExcel', [  //POCOR-6898 change Excel to ContactExcel Behaviour
+        $this->addBehavior('Excel', [  //POCOR-6898 change Excel to ContactExcel Behaviour
             'excludes' => ['start_year', 'end_year', 'security_group_user_id'],
             'pages' => ['index'],
             'autoFields' => false
@@ -4097,6 +4097,7 @@ public function getIdentityTypeData($value_selection)
         return function (ResultSetInterface $results) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId) {
             return $results->map(function ($row) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId) {
                 $staffId = $row->staff_id;
+                $institution_id = $row->institution_id;
                 $staffRecords = [];
                 $staffLeaveRecords = [];
 
@@ -4128,8 +4129,8 @@ public function getIdentityTypeData($value_selection)
                             $attendanceData = [
                                 'dateStr' => $dateStr,
                                 'date' => $this->formatDate($attendanceRecord['date']),
-                                'time_in' => $this->formatTime($attendanceRecord['time_in']),
-                                'time_out' => $this->formatTime($attendanceRecord['time_out']),
+                                'time_in' => $attendanceRecord['time_in'],//$this->formatTime($attendanceRecord['time_in']),
+                                'time_out' => $attendanceRecord['time_out'],//$this->formatTime($attendanceRecord['time_out']),
                                 'comment' => $attendanceRecord['comment'],
                                 'absence_type_id' => $attendanceRecord['absence_type_id'],
                                 'isNew' => false
@@ -4157,7 +4158,8 @@ public function getIdentityTypeData($value_selection)
                         'controller' => 'Staff',
                         'action' => 'InstitutionStaffAttendanceActivities',
                         'index',
-                        'user_id' => $staffId
+                        '?' => ['user_id' => $staffId, 'institution_id' => $institution_id]
+                       // 'user_id' => $staffId
                     ]);
                     $row->historyUrl = $historyUrl;
                 }
@@ -4180,7 +4182,8 @@ public function getIdentityTypeData($value_selection)
                         'controller' => 'Institutions',
                         'action' => 'StaffLeave',
                         'index',
-                        'user_id' => $staffId
+                        '?' => ['user_id' => $staffId, 'institution_id' => $institution_id]
+                        //'user_id' => $staffId
                     ]);
                     $staffTimeRecords[$key]['leave'] = $leaveRecords;
                     $staffTimeRecords[$key]['url'] = $url;
