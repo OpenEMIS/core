@@ -846,6 +846,10 @@ class InstitutionsController extends AppController
         // POCOR-8115;
         // institution_id should always be in query string, if not, die as an error
         $institution_id = $this->getQueryString('institution_id');
+        
+        if (empty($institution_id) && $this->request->getQuery('institution_id') != null) {
+            $institution_id =  $this->request->getQuery('institution_id');
+        }
         if (!$institution_id) {
             $session = $this->request->getSession();
             $institution_id = $session->read('Institution.Institutions.id');
@@ -2581,7 +2585,7 @@ public function isActionIgnored(Event $event, $action)
         $controller = $request->getParam('controller');
         $plugin = $request->getParam('plugin');
         $furtherAction = $pass[0];
-        if (($furtherAction == 'index' || $furtherAction == 'add' || $furtherAction == 'import')
+        if (($furtherAction == 'index' || $furtherAction == 'add' || $furtherAction == 'import' ||  $furtherAction == 'excel')
             && ($action == 'Institutions')
             && ($plugin == 'Institution')
             && ($controller == 'Institutions')) {
