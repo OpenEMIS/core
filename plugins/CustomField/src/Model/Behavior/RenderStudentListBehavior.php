@@ -17,7 +17,7 @@ class RenderStudentListBehavior extends RenderBehavior
 
     use IdGeneratorTrait;
     use PickerTrait;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }

@@ -16,7 +16,7 @@ class ConfigItemsBehavior extends Behavior
     private $model;
     private $selectedType;
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction'];
@@ -26,7 +26,7 @@ class ConfigItemsBehavior extends Behavior
         return $events;
     }
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->model = $this->_table;
     }
@@ -38,7 +38,6 @@ class ConfigItemsBehavior extends Behavior
 
     public function buildSystemConfigFilters()
     {
-
         $toolbarElements = [
             ['name' => 'Configuration.controls', 'data' => [], 'options' => []]
         ];
@@ -53,48 +52,44 @@ class ConfigItemsBehavior extends Behavior
             ->order('type')
             ->where([$ConfigItem->aliasField('visible') => 1])
             ->toArray();
-            //echo"<pre>";print_r($typeList); die;
-             $typeLists = $ConfigItem
+
+        $typeLists = $ConfigItem
             ->find('all', [
                 // 'fields' => 'label','type'
-
             ])
             ->order('label')
             ->where([$ConfigItem->aliasField('visible') => 1,'type' => 'Coordinates'])
-            ->toArray();
-            //echo"<pre>";print_r($typeLists); die;
+            ->toArray();   
+             
         $typeOptions = array_keys($typeList);
         foreach ($typeOptions as $key => $value) {
-
             $value = $value != 'Authentication' ? $value : 'Sso';
-            // echo"<pre>";print_r($value); die;
             if (in_array($value, (array) Configure::read('School.excludedPlugins'))) {
                 unset($typeOptions[$key]);
             }
         }
         $selectedType = $this->model->queryString('type', $typeOptions);
-
         $this->selectedType = $selectedType;
-        $this->model->request->query['type_value'] = $typeOptions[$selectedType];
+        $typeValue = $typeOptions[$selectedType];
+        $this->model->request = $this->model->request->withQueryParams(['type_value' => $typeValue]);
+
         $this->model->advancedSelectOptions($typeOptions, $selectedType);
         $this->model->controller->set('typeOptions', $typeOptions);
         $controlElement = $toolbarElements[0];
         $controlElement['data'] = ['typeOptions' => $typeOptions];
         $controlElement['order'] = 1;
-
         return $controlElement;
     }
 
     public function checkController()
     {
-        //print_r('hi'); die;
-        $typeValue = $this->model->request->query['type_value'];
-
+        $typeValue = $this->model->request->getQuery('type_value');
+        
         $typeValue = Inflector::camelize($typeValue, ' ');
         $action = '';
         if ($this->isCAv4()) {
             $url = $this->model->url('index');
-            $action = $this->model->request->params['action'];
+            $action = $this->model->request->getParam('action');
         } else {
             $url = $this->model->controller->ControllerAction->url('index');
             $action = $this->model->action;
@@ -105,9 +100,9 @@ class ConfigItemsBehavior extends Behavior
         // print_r($action);
         // echo '<br/>';
         // echo $typeValue;
-
+        
         // die;
-
+ 
         // Start POCOR-7507
         if($typeValue == 'ExternalDataSource-Identity'){
             $typeValue = 'ExternalDataSourceIdentity';
@@ -120,6 +115,7 @@ class ConfigItemsBehavior extends Behavior
          // End POCOR-7507
 
         if (method_exists($this->model->controller, $typeValue) && $action != $typeValue) {
+           
             $url['action'] = $typeValue;
             $url['type_value'] = $typeValue;  // POCOR-7507
             $this->model->controller->redirect($url);

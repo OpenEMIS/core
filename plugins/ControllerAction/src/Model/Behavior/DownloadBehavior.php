@@ -39,7 +39,7 @@ class DownloadBehavior extends Behavior
         'zip'   => 'application/zip'
     ];
 	
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.download'] = 'download';
@@ -83,13 +83,18 @@ class DownloadBehavior extends Behavior
 	 public function download(Event $mainEvent, ArrayObject $extra)
     {
         $model = $this->_table;
+        $controllerName = $model->controller->getName();
         $ids = $model->paramsDecode($model->paramsPass(0));
-		
+        if( $model->controller->getName() == 'Directories' ) { 
+            $ids =[];
+            $params = $model->paramsDecode($model->paramsPass(0));
+            $ids['id'] = $params['id'];
+        } 
         if ($model->exists($ids)) {
             $data = $model->get($ids);
-            $fileName = $data->{$this->config('name')};
+            $fileName = $data->{$this->getConfig('name')};
             $pathInfo = pathinfo($fileName);
-            $file = $this->getFile($data->{$this->config('content')});
+            $file = $this->getFile($data->{$this->getConfig('content')});
             $fileType = 'image/jpg';
             if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
                 $fileType = $this->fileTypes[$pathInfo['extension']];
@@ -110,14 +115,14 @@ class DownloadBehavior extends Behavior
         exit();
     }
 
-    private function getFile($phpResourceFile)
-    {
-        $file = '';
-        while (!feof($phpResourceFile)) {
-            $file .= fread($phpResourceFile, 8192);
-        }
-        fclose($phpResourceFile);
+    // private function getFile($phpResourceFile)
+    // {
+    //     $file = '';
+    //     while (!feof($phpResourceFile)) {
+    //         $file .= fread($phpResourceFile, 8192);
+    //     }
+    //     fclose($phpResourceFile);
 
-        return $file;
-    }
+    //     return $file;
+    // }
 }

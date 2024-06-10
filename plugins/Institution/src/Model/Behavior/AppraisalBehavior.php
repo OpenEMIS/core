@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace Institution\Model\Behavior;
 
 use ArrayObject;
@@ -12,14 +12,15 @@ use Cake\Utility\Inflector;
 use Cake\Utility\Hash;
 use Cake\Chronos\Date;
 use Cake\Chronos\Chronos;
+use Cake\Http\ServerRequest;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use App\Model\Table\ControllerActionTable;
 
-class AppraisalBehavior extends Behavior 
+class AppraisalBehavior extends Behavior
 {
     public $periodList = [];
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
@@ -51,7 +52,7 @@ class AppraisalBehavior extends Behavior
             $filename = $entity->file_content;
             return !empty($filename);
         };
-        $model->behaviors()->get('ControllerAction')->config(
+        $model->behaviors()->get('ControllerAction')->getConfig(
             'actions.download.show',
             $showFunc
         );
@@ -92,8 +93,8 @@ class AppraisalBehavior extends Behavior
         $model->field('file_content', ['attr' => ['label' => __('Attachment')]]);
         $model->field('comment');
 
-        $entity = $model->newEntity();
-        $appraisalFormId = $model->request->data($model->aliasField('appraisal_form_id'));
+        $entity = $model->newEmptyEntity();
+        $appraisalFormId = $model->request->getData($model->aliasField('appraisal_form_id'));
         $model->printAppraisalCustomField($appraisalFormId, $entity);
     }
 
@@ -143,7 +144,7 @@ class AppraisalBehavior extends Behavior
             ->toArray();
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['onChangeReload'] = true;
@@ -152,14 +153,14 @@ class AppraisalBehavior extends Behavior
         }
     }
 
-    public function onUpdateFieldAppraisalTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAppraisalTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $model = $this->_table;
         if ($action == 'add') {
             $attr['onChangeReload'] = true;
-            if ($request->data($model->aliasField('academic_period_id')) && $request->data($model->aliasField('appraisal_type_id'))) {
-                $appraisalTypeId = $request->data($model->aliasField('appraisal_type_id'));
-                $academicPeriodId = $request->data($model->aliasField('academic_period_id'));
+            if ($request->getData($model->aliasField('academic_period_id')) && $request->getData($model->aliasField('appraisal_type_id'))) {
+                $appraisalTypeId = $request->getData($model->aliasField('appraisal_type_id'));
+                $academicPeriodId = $request->getData($model->aliasField('academic_period_id'));
                 $this->periodList = $model->AppraisalPeriods->find('list')
                     ->innerJoinWith('AppraisalTypes')
                     ->where([
@@ -174,19 +175,19 @@ class AppraisalBehavior extends Behavior
         }
     }
 
-    public function onUpdateFieldAppraisalFormId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAppraisalFormId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $model = $this->_table;
         if ($action == 'add') {
-            if ($request->data($model->aliasField('appraisal_period_id'))) {
-                $appraisalPeriodId = $request->data($model->aliasField('appraisal_period_id'));
+            if ($request->getData($model->aliasField('appraisal_period_id'))) {
+                $appraisalPeriodId = $request->getData($model->aliasField('appraisal_period_id'));
                 $appraisalPeriodEntity = $model->AppraisalPeriods->get($appraisalPeriodId, ['contain' => ['AppraisalForms']]);
                 $attr['value'] = $appraisalPeriodEntity->appraisal_form_id;
                 $attr['attr']['value'] = $appraisalPeriodEntity->appraisal_form->code_name;
-                $request->data[$model->alias()]['appraisal_form_id'] = $appraisalPeriodEntity->appraisal_form_id;
+                $request->getData[$model->getAlias()]['appraisal_form_id'] = $appraisalPeriodEntity->appraisal_form_id;
             // This part ensures that the form belonging to the previously selected Appraisal Period will not populate at the bottom when user choose "Select" from the dropdown next. It should be empty.
             }else{
-                   $request->data[$model->alias()]['appraisal_form_id'] = "";
+                   $request->getData[$model->getAlias()]['appraisal_form_id'] = "";
             }
             return $attr;
         }
@@ -195,11 +196,11 @@ class AppraisalBehavior extends Behavior
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         $model = $this->_table;
-        $errors = $entity->errors();
+        $errors = $entity->getErrors();
 
         $fileErrors = [];
-        $session = $model->request->session();
-        $sessionErrors = $model->registryAlias().'.parseFileError';
+        $session = $model->request->getSession();
+        $sessionErrors = $model->getRegistryAlias().'.parseFileError';
 
         if ($session->check($sessionErrors)) {
             $fileErrors = $session->read($sessionErrors);
@@ -254,7 +255,7 @@ class AppraisalBehavior extends Behavior
 
             $action = $model->action;
             $url = $model->url($action);
-           
+
             //section tab
             $formsCriterias = $query->toArray();
             foreach ($formsCriterias as $key => $formCritieria) {
@@ -274,7 +275,7 @@ class AppraisalBehavior extends Behavior
             //end
 
             if (!empty($tabElements)) {
-                $queryTabSection = $model->request->query('tab_section');
+                $queryTabSection = $model->request->getQuery('tab_section');
                 if (!is_null($queryTabSection) && array_key_exists($queryTabSection, $tabElements)) {
                     $selectedAction = $queryTabSection;
                 }
@@ -299,7 +300,7 @@ class AppraisalBehavior extends Behavior
                         'criteria_name' => $formsCriteria->appraisal_criteria->name,
                         'is_mandatory' => $formsCriteria->is_mandatory
                     ]);
-                    
+
                     $this->appraisalCustomFieldExtra($details, $formsCriteria, $criteriaCounter, $entity);
                 }
             }

@@ -14,7 +14,7 @@ class ScholarshipApplicationAttachmentsController extends BaseController
     {
         $page = $this->Page;
 
-        $queryString = $this->request->query['queryString'];
+        $queryString = $this->request->getQuery['queryString'];
         $applicantId = $this->paramsDecode($queryString)['applicant_id'];
         $scholarshipId = $this->paramsDecode($queryString)['scholarship_id']; // v4
         $userName = $this->Users->get($applicantId)->name;

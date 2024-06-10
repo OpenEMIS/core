@@ -17,9 +17,9 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
     const MARKED = 1;
     const PARTIAL_MARKED = 2;
     const DAY_COLUMN_PREFIX = 'day_';
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('student_attendance_marked_records');
+        $this->setTable('student_attendance_marked_records');
         parent::initialize($config);
 
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);

@@ -8,12 +8,12 @@ use Cake\I18n\Time;
 use App\Model\Table\AppTable;
 
 class WorkflowTransitionsTable extends AppTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 		$this->belongsTo('WorkflowModels', ['className' => 'Workflow.WorkflowModels']);
 	}
 
-	public function implementedEvents()
+	public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Workflow.add.afterSave'] = 'onWorkflowAddAfterSave';

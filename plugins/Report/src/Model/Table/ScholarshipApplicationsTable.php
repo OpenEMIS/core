@@ -16,9 +16,9 @@ class ScholarshipApplicationsTable extends AppTable  {
 
     private $interestRateOptions = [];
 
-    public function initialize(array $config) {
+    public function initialize(array $config): void {
         
-        $this->table('scholarship_applications');
+        $this->SetTable('scholarship_applications');
         parent::initialize($config);
 
         $this->belongsTo('Applicants', ['className' => 'User.Users', 'foreignKey' => 'applicant_id']);

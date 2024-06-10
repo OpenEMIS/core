@@ -11,7 +11,7 @@ use App\Model\Table\ControllerActionTable;
 
 class OutcomeGradingTypesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->hasMany('Criterias', [
@@ -35,7 +35,7 @@ class OutcomeGradingTypesTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator)
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -45,7 +45,7 @@ class OutcomeGradingTypesTable extends ControllerActionTable
                 'rule' => 'validateUnique',
                 'provider' => 'table'
             ]);
-    }
+    }*/
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
@@ -84,7 +84,7 @@ class OutcomeGradingTypesTable extends ControllerActionTable
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        if ($this->request->params['action'] == 'GradingTypes') {
+        if ($this->request->getParam('action') == 'GradingTypes') {
             $query->contain(['GradingOptions']);
         } else {
             $query->contain(['GradingOptions.InstitutionOutcomeResults']);
@@ -108,23 +108,23 @@ class OutcomeGradingTypesTable extends ControllerActionTable
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
-        if (!isset($data[$this->alias()]['grading_options']) || empty($data[$this->alias()]['grading_options'])) {
+        if (!isset($data[$this->getAlias()]['grading_options']) || empty($data[$this->getAlias()]['grading_options'])) {
             $this->Alert->warning($this->aliasField('noGradingOptions'));
         }
     }
 
     public function addEditOnAddOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if ($data->offsetExists($this->alias())) {
+        if ($data->offsetExists($this->getAlias())) {
             if (!array_key_exists('grading_options', $data[$this->alias()])) {
-                $data[$this->alias()]['grading_options'] = [];
+                $data[$this->getAlias()]['grading_options'] = [];
             } else {
                 // reindex array keys
-                $gradingOptions = $data[$this->alias()]['grading_options'];
-                $data[$this->alias()]['grading_options'] = array_values($gradingOptions);
+                $gradingOptions = $data[$this->getAlias()]['grading_options'];
+                $data[$this->getAlias()]['grading_options'] = array_values($gradingOptions);
             }
 
-            $data[$this->alias()]['grading_options'][] = [
+            $data[$this->getAlias()]['grading_options'][] = [
                 'outcome_grading_type_id' => '',
                 'code' => '',
                 'name' => '',
@@ -160,7 +160,7 @@ class OutcomeGradingTypesTable extends ControllerActionTable
     
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
-        if (!isset($data[$this->alias()]['grading_options']) || empty($data[$this->alias()]['grading_options'])) {
+        if (!isset($data[$this->getAlias()]['grading_options']) || empty($data[$this->getAlias()]['grading_options'])) {
             $this->Alert->warning($this->aliasField('noGradingOptions'));
         }
     }
@@ -180,5 +180,28 @@ class OutcomeGradingTypesTable extends ControllerActionTable
         $extra['excludedModels'] = [
             $this->GradingOptions->alias()
         ];
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'outcome_template_id') {
+            return __('Outcome Template');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

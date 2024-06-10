@@ -7,7 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\I18n\Date;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
 use Institution\Model\Table\InstitutionStaffReleasesTable;
@@ -17,7 +17,7 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
 {
     CONST INSTITUTION_ACTIVE = 1;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -28,15 +28,35 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
         $this->addBehavior('Institution.StaffProfile');
 
         if ($this->behaviors()->has('Workflow')) {
-            $this->behaviors()->get('Workflow')->config([
-                'institution_key' => 'previous_institution_id'
-            ]);
+            // $this->behaviors()->get('Workflow')->config([
+            //     'institution_key' => 'previous_institution_id'
+            // ]);
+
+            $workflowBehavior = $this->behaviors()->get('Workflow');
+            $workflowBehavior->setConfig('institution_key', 'previous_institution_id');
         }
+
+        $this->addBehavior('Institution.InstitutionTab'
+            , [
+                'appliedAction' => ['StaffRelease' => [
+                        'id',
+                        'assignee_id',
+                        'staff_id',
+                        'previous_institution_id',
+                        'previous_institution_staff_id',
+                        'new_institution_id',
+                        'new_institution_position_id',
+                        'new_staff_type_id'
+                    ]
+                ]
+            ]
+        );
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator->notEmpty(['positions_held','previous_end_date', 'workflow_assignee_id'])
             ->add('previous_end_date', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'position_start_date', false]
@@ -89,8 +109,11 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $requestInstitutionId = $this->request->getParam('institutionId');
+        $institutionId = isset($requestInstitutionId) ? $this->paramsDecode($requestInstitutionId)['id'] : $getInstitutionId;
+        /*$session = $this->request->session();
+        $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');*/
 
         $query->find('InstitutionStaffRelease', ['institution_id' => $institutionId]);
         $extra['auto_contain_fields'] = ['PreviousInstitutions' => ['code'], 'NewInstitutions' => ['code']];
@@ -112,8 +135,11 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $requestInstitutionId = $this->request->getParam('institutionId');
+        $institutionId = isset($requestInstitutionId) ? $this->paramsDecode($requestInstitutionId)['id'] : $getInstitutionId;
+        //$session = $this->request->session();
+        //$institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
         $userId = $this->getQueryString('user_id');
 
         if (empty($userId)) {
@@ -123,8 +149,8 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
             // url to redirect to staffUser page
             $staffUserUrl = $this->url('view');
             $staffUserUrl['action'] = 'StaffUser';
-            $staffUserUrl[1] = $this->paramsEncode(['id' => $userId]);
-
+            $staffUserUrl[1] = $this->paramsEncode(['id' => $userId, 'institution_id'=> $getInstitutionId]);
+            
             //check pending release to be done
             $pendingRelease = $this->find()
                 ->matching('Statuses.WorkflowStepsParams', function ($q) {
@@ -186,8 +212,10 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
 
         // to populate current institution staff fields based on selected positions_held
         $FTE = $staffType = $startDate = $startDateFormatted = '';
-        if (isset($this->request->data[$this->alias()]['positions_held']) && !empty($this->request->data[$this->alias()]['positions_held'])) {
-            $institutionStaffId = $this->request->data[$this->alias()]['positions_held'];
+        $requestData = $this->request->getData();
+        
+        if (isset($requestData[$this->getAlias()]['positions_held']) && !empty($requestData[$this->getAlias()]['positions_held'])) {
+            $institutionStaffId = $requestData[$this->getAlias()]['positions_held'];
             $staffEntity = $this->PreviousInstitutionStaff->get($institutionStaffId, ['contain' => ['StaffTypes']]);
             if (!empty($staffEntity)) {
                 $FTE = $this->fteOptions["$staffEntity->FTE"];
@@ -290,7 +318,7 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
         return $value;
     }
 
-    public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStaffId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -301,7 +329,7 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
         }
     }
 
-    public function onUpdateFieldPreviousInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPreviousInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -319,7 +347,7 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
         }
     }
 
-    public function onUpdateFieldPreviousEndDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPreviousEndDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $attr['null'] = false;
@@ -327,7 +355,7 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
         }
     }
 
-    public function onUpdateFieldPositionsHeld(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPositionsHeld(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
@@ -360,10 +388,12 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
             foreach ($staffEntity as $staff) {
                 $options[$staff->id] = $staff->_matchingData['Positions']->name;
             }
-
-            if (!isset($this->request->data[$this->alias()]['positions_held'])) {
+            $requestData = $this->request->getData();
+            if (!isset($requestData[$this->getAlias()]['positions_held'])) {
                 reset($options);
-                $this->request->data[$this->alias()]['positions_held'] = key($options);
+                $requestData['positions_held'] = key($options);
+                $this->request = $this->request->withData($this->getAlias(), $requestData);
+                //$requestData[$this->getAlias()]['positions_held'] = key($options);
             }
 
             $attr['type'] = 'select';
@@ -374,7 +404,7 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
         }
     }
 
-    public function onUpdateFieldNewInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNewInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -439,8 +469,10 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $requestData = $this->request->getData();
         if (!empty($entity->previous_institution_staff_id)) {
-            $this->request->data[$this->alias()]['positions_held'] = $entity->previous_institution_staff_id;
+            $requestData['positions_held'] = $entity->previous_institution_staff_id;
+            $this->request = $this->request->withData($this->getAlias(), $requestData);
         }
     }
 
@@ -475,7 +507,7 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->getRequest()->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -509,8 +541,8 @@ class StaffReleaseTable extends InstitutionStaffReleasesTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Users->alias(), $this->NewInstitutions->alias(), $this->PreviousInstitutions->alias(), $this->CreatedUser->alias(),'Assignees'])
-            ->matching($Statuses->alias().'.'.$StepsParams->alias(), function ($q) use ($Statuses, $StepsParams, $doneStatus, $outgoingInstitution) {
+            ->contain([$this->Users->getAlias(), $this->NewInstitutions->getAlias(), $this->PreviousInstitutions->getAlias(), $this->CreatedUser->getAlias(),'Assignees'])
+            ->matching($Statuses->getAlias().'.'.$StepsParams->getAlias(), function ($q) use ($Statuses, $StepsParams, $doneStatus, $outgoingInstitution) {
                 return $q->where([
                     $Statuses->aliasField('category <> ') => $doneStatus,
                     $StepsParams->aliasField('name') => 'institution_owner',

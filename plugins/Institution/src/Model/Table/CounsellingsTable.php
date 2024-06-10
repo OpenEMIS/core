@@ -1,21 +1,20 @@
 <?php
 namespace Institution\Model\Table;
 
+use App\Model\Table\ControllerActionTable;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 
-use App\Model\Table\AppTable;
-
-class CounsellingsTable extends AppTable
+class CounsellingsTable extends ControllerActionTable
 {
     const ASSIGNED = 1;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('counsellings');
+        $this->setTable('counsellings');
         parent::initialize($config);
 
         $this->belongsTo('GuidanceTypes', ['className' => 'Student.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
@@ -27,7 +26,7 @@ class CounsellingsTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
@@ -43,7 +42,7 @@ class CounsellingsTable extends AppTable
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -96,7 +95,7 @@ class CounsellingsTable extends AppTable
 
     //POCOR-7054 change dropdown query
     public function getRequesterOptions($institutionId)
-    {        
+    {
         $InstitutionStaff = TableRegistry::get('institution_staff');
         $InstitutionStudents = TableRegistry::get('institution_students');
         $Institutions = TableRegistry::get('Institution.Institutions');

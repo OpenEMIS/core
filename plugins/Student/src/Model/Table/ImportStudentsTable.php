@@ -20,7 +20,7 @@ class ImportStudentsTable extends AppTable {
 	    $this->Students = TableRegistry::get('Student.Students');
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
@@ -33,7 +33,7 @@ class ImportStudentsTable extends AppTable {
 		return $events;
 	}
 
-	public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes) {
+	public function onImportCheckUnique(Event $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes) {
 		$columns = new Collection($columns);
 		$filtered = $columns->filter(function ($value, $key, $iterator) {
 		    return $value == 'openemis_no';

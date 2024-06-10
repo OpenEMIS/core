@@ -1,35 +1,14 @@
 <?php
+
 /**
- * Phinx
- *
- * (The MIT license)
- * Copyright (c) 2015 Rob Morgan
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated * documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- *
- * @package    Phinx
- * @subpackage Phinx\Seed
+ * MIT License
+ * For full license information, please view the LICENSE file that was distributed with this source code.
  */
+
 namespace Phinx\Seed;
 
-use Phinx\Db\Table;
 use Phinx\Db\Adapter\AdapterInterface;
+use Phinx\Db\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -46,170 +25,198 @@ use Symfony\Component\Console\Output\OutputInterface;
 abstract class AbstractSeed implements SeedInterface
 {
     /**
-     * @var AdapterInterface
+     * @var string
+     */
+    protected $environment;
+
+    /**
+     * @var \Phinx\Db\Adapter\AdapterInterface
      */
     protected $adapter;
 
     /**
-     * @var InputInterface
+     * @var \Symfony\Component\Console\Input\InputInterface
      */
     protected $input;
 
     /**
-     * @var OutputInterface
+     * @var \Symfony\Component\Console\Output\OutputInterface
      */
     protected $output;
 
     /**
-     * Class Constructor.
-     *
-     * @param InputInterface $input
-     * @param OutputInterface $output
+     * Override to specify dependencies for dependency injection from the configured PSR-11 container
      */
-    final public function __construct(InputInterface $input = null, OutputInterface $output = null)
-    {
-        if (!is_null($input)){
-            $this->setInput($input);
-        }
-        if (!is_null($output)){
-            $this->setOutput($output);
-        }
-        
-        $this->init();
-    }
-
-    /**
-     * Initialize method.
-     *
-     * @return void
-     */
-    protected function init()
+    public function __construct()
     {
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritDoc
      */
-    public function run()
+    public function run(): void
     {
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritDoc
      */
-    public function setAdapter(AdapterInterface $adapter)
+    public function getDependencies(): array
     {
-        $this->adapter = $adapter;
+        return [];
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setEnvironment(string $environment)
+    {
+        $this->environment = $environment;
+
         return $this;
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritDoc
      */
-    public function getAdapter()
+    public function getEnvironment(): string
+    {
+        return $this->environment;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setAdapter(AdapterInterface $adapter): SeedInterface
+    {
+        $this->adapter = $adapter;
+
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getAdapter(): AdapterInterface
     {
         return $this->adapter;
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritDoc
      */
     public function setInput(InputInterface $input)
     {
         $this->input = $input;
+
         return $this;
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritDoc
      */
-    public function getInput()
+    public function getInput(): InputInterface
     {
         return $this->input;
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritDoc
      */
-    public function setOutput(OutputInterface $output)
+    public function setOutput(OutputInterface $output): SeedInterface
     {
         $this->output = $output;
+
         return $this;
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritDoc
      */
-    public function getOutput()
+    public function getOutput(): OutputInterface
     {
         return $this->output;
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritDoc
      */
-    public function getName()
+    public function getName(): string
     {
-        return get_class($this);
+        return static::class;
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritDoc
      */
-    public function execute($sql)
+    public function execute(string $sql, array $params = [])
     {
-        return $this->getAdapter()->execute($sql);
+        return $this->getAdapter()->execute($sql, $params);
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritDoc
      */
-    public function query($sql)
+    public function query(string $sql, array $params = [])
     {
-        return $this->getAdapter()->query($sql);
+        return $this->getAdapter()->query($sql, $params);
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritDoc
      */
-    public function fetchRow($sql)
+    public function fetchRow(string $sql)
     {
         return $this->getAdapter()->fetchRow($sql);
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritDoc
      */
-    public function fetchAll($sql)
+    public function fetchAll(string $sql): array
     {
         return $this->getAdapter()->fetchAll($sql);
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritDoc
      */
-    public function insert($table, $data)
+    public function insert(string $table, array $data): void
     {
         // convert to table object
         if (is_string($table)) {
-            $table = new Table($table, array(), $this->getAdapter());
+            $table = new Table($table, [], $this->getAdapter());
         }
-        return $table->insert($data)->save();
+        $table->insert($data)->save();
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritDoc
      */
-    public function hasTable($tableName)
+    public function hasTable(string $tableName): bool
     {
         return $this->getAdapter()->hasTable($tableName);
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritDoc
      */
-    public function table($tableName, $options = array())
+    public function table(string $tableName, array $options = []): Table
     {
         return new Table($tableName, $options, $this->getAdapter());
+    }
+
+    /**
+     * Checks to see if the seed should be executed.
+     *
+     * Returns true by default.
+     *
+     * You can use this to prevent a seed from executing.
+     *
+     * @return bool
+     */
+    public function shouldExecute(): bool
+    {
+        return true;
     }
 }

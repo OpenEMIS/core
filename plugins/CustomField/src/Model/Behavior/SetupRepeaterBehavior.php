@@ -15,7 +15,7 @@ class SetupRepeaterBehavior extends SetupBehavior
     private $CustomForms = null;
     private $formOptions = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -25,7 +25,7 @@ class SetupRepeaterBehavior extends SetupBehavior
         $this->formOptions = $this->CustomForms
             ->find('list')
             ->innerJoin(
-                [$this->CustomModules->alias() => $this->CustomModules->table()],
+                [$this->CustomModules->getAlias() => $this->CustomModules->getTable()],
                 [
                     $this->CustomModules->aliasField('id = ') . $this->CustomForms->aliasField('custom_module_id'),
                     $this->CustomModules->aliasField('model') => $this->module

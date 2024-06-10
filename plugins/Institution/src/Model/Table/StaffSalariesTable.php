@@ -423,7 +423,7 @@ class StaffSalariesTable extends ControllerActionTable
 
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
 
-        $selectedStatus = $this->request->query('staff_status_id');
+        $selectedStatus = $this->request->getQuery('staff_status_id');
 
         switch ($selectedStatus) {
             case self::PENDING_PROFILE:
@@ -489,7 +489,7 @@ class StaffSalariesTable extends ControllerActionTable
         }
 
         // Positions
-        $session = $request->session();
+        $session = $request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
 
         $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
@@ -503,7 +503,7 @@ class StaffSalariesTable extends ControllerActionTable
                 ]);
                 return $q;
             })
-            ->group([$StaffPositionTitles->aliasField($StaffPositionTitles->primaryKey())])
+            ->group([$StaffPositionTitles->aliasField($StaffPositionTitles->getPrimaryKey())])
             ->order([$StaffPositionTitles->aliasField('order')])
             ->toArray()
             ;
@@ -511,8 +511,8 @@ class StaffSalariesTable extends ControllerActionTable
         $positionOptions = [0 => __('All Positions')] + $positionData;
 
         // Query Strings
-        $selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
-        $selectedPosition = $this->queryString('position', $positionOptions);
+        $selectedPeriod = $this->getQueryString('academic_period_id', $periodOptions);
+        $selectedPosition = $this->getQueryString('position', $positionOptions);
 
         $Staff = $this;
 
@@ -552,7 +552,7 @@ class StaffSalariesTable extends ControllerActionTable
         $statusOptions = $this->StaffStatuses->find('list')->toArray();
 
         $approvedStatus = $this->Workflow->getStepsByModelCode('Institution.StaffPositionProfiles', 'APPROVED');
-        $closedStatus = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'CLOSED');
+        $closedStatus = $this->Workflow->getStepsByModelCode($this->getRegistryAlias(), 'CLOSED');
         $staffPositionProfileStatuses = array_merge($approvedStatus, $closedStatus);
 
         $StaffPositionProfilesTable = TableRegistry::get('Institution.StaffPositionProfiles');

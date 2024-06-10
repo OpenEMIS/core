@@ -11,7 +11,7 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 // Ends POCOR-6593
 class TrainingSessionsTable extends AppTable  {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
@@ -31,7 +31,7 @@ class TrainingSessionsTable extends AppTable  {
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -44,8 +44,8 @@ class TrainingSessionsTable extends AppTable  {
         $requestData = json_decode($settings['process']['params']);
         //print_r($requestData);die;
         $selectedStatus = $requestData->status;
-        $areas = TableRegistry::get('areas');
-        $TrainingCourses = TableRegistry::get('training_courses');
+        $areas = TableRegistry::get('Area.Areas');
+        $TrainingCourses = TableRegistry::get('Training.TrainingCourses');
          $area_education_id=$requestData->area_education_id->_ids;
           //print_r($area_education_id);die;
          if($area_education_id[0] == -1){
@@ -70,7 +70,7 @@ class TrainingSessionsTable extends AppTable  {
         $res=$query
             
             ->join($join)
-            ->leftJoin([$TrainingCourses->alias() => $TrainingCourses->table()], [
+            ->leftJoin([$TrainingCourses->getAlias() => $TrainingCourses->getTable()], [
                 $TrainingCourses->aliasField('id = ') . 'TrainingSessions.training_course_id'
             ])
             ->select(['course_code' => 'training_courses.code','number' => 'number'])

@@ -7,6 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
+use Cake\Http\ServerRequest;
 
 class PagesBehavior extends Behavior
 {
@@ -16,12 +17,12 @@ class PagesBehavior extends Behavior
         'module' => null
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 10];
@@ -33,17 +34,17 @@ class PagesBehavior extends Behavior
         $model = $this->_table;
 
         if ($model->action == 'index') {
-            $selectedModule = !is_null($model->request->query('module')) ? $model->request->query('module') : '-1';
+            $selectedModule = !is_null($model->request->getQuery('module')) ? $model->request->getQuery('module') : '-1';
             $CustomModules = TableRegistry::get('CustomField.CustomModules');
             $moduleDetails = $CustomModules->find('list', [
                     'keyField' => 'id',
                     'valueField' => 'code'
                 ])
                 ->toArray();
-            $ControllerActionComponent = $event->subject();
+            $ControllerActionComponent = $event->getSubject();
             $request = $ControllerActionComponent->request;
             $redirectAction = isset($moduleDetails[$selectedModule]) ? ucfirst(strtolower($moduleDetails[$selectedModule])).'Pages' : null;
-            if ($redirectAction && ucfirst(strtolower($moduleDetails[$selectedModule])) != $this->config('module')) {
+            if ($redirectAction && ucfirst(strtolower($moduleDetails[$selectedModule])) != $this->getConfig('module')) {
                 // call from general, if room selected, redirect to room types
                 $code = $moduleDetails[$selectedModule];
                 $url = $model->url('index');

@@ -25,7 +25,7 @@ class DatePickerBehavior extends Behavior {
 	use PickerTrait;
 
 	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
-		foreach ($this->config() as $field) {
+		foreach ($this->getConfig() as $field) {
 			if (!empty($data[$field])) {
 				if (is_object($data[$field])) {
 					$data[$field] = $data[$field]->format('Y-m-d');

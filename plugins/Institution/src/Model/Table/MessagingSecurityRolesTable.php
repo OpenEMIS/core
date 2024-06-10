@@ -25,7 +25,7 @@ use Cake\Utility\Security;
  * <author>megha.gupta@mail.valuecoders.com</author>
  */
 class MessagingSecurityRolesTable extends ControllerActionTable{
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('Messaging', ['className' => 'Institution.Messaging','foreignKey'=>"message_id"]);

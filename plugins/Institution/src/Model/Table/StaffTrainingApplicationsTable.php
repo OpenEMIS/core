@@ -17,9 +17,9 @@ use Cake\Datasource\ConnectionManager; // POCOR-7578
 
 class StaffTrainingApplicationsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('staff_training_applications');
+        $this->setTable('staff_training_applications');
         parent::initialize($config);
 
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
@@ -42,6 +42,10 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
             'pages' => ['index'],
         ]);
         $this->toggle('edit', false);
+         $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StaffTrainingApplications' =>['id']
+            ]
+        ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -57,7 +61,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $extra['institutionId'] = $session->read('Institution.Institutions.id');
         */
 
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         if (isset($this->request->url) && $this->request->url == 'Profiles/Profiles/StaffTrainingApplications/index') {
             $session->write('Staff.Staff.id', $this->Auth->user('id'));
             $session->write('Institution.Institutions.id', $this->getInstitutionIdOfLoggedStaff());
@@ -94,7 +98,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
 
     private function getInstitutionIdOfLoggedStaff()
     {
-        $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
         return $InstitutionStaff->find()->where(['InstitutionStaff.staff_id' => $this->Auth->user('id')])->first()->institution_id;
     }
 
@@ -274,7 +278,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
 
             $attr['tableHeaders'] = $tableHeaders;
             $attr['tableCells'] = $tableCells;
-            return $event->subject()->renderElement('Institution.course_sessions', ['attr' => $attr]);
+            return $event->getSubject()->renderElement('Institution.course_sessions', ['attr' => $attr]);
         }
     }
 
@@ -469,7 +473,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         if ($entity->has('session') && $entity->session->has('course')) {
             if (!empty($entity->session->course['file_name'])) {
                 $courseId = $entity->session->course->id;
-                $link = $event->subject()->HtmlField->link($entity->session->course['file_name'], [
+                $link = $event->getSubject()->HtmlField->link($entity->session->course['file_name'], [
                     'plugin' => 'Institution',
                     'controller' => 'Institutions',
                     'action' => 'CourseCatalogue',
@@ -486,7 +490,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     {
         $tabElements = $this->controller->getTrainingTabElements();
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
@@ -536,36 +540,36 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
-        $trainingSession = TableRegistry::get('TrainingSessions');
-        $trainingCourses = TableRegistry::get('TrainingCourses');
-        $trainingLevels = TableRegistry::get('TrainingLevels');
-        $trainingFieldOfStudies = TableRegistry::get('TrainingFieldOfStudies');
-        $workflowSteps = TableRegistry::get('workflow_steps');
-        $staffId = $session->read('Staff.Staff.id');
-        $status = $this->request->query('category');
+        $session = $this->request->getSession();
+        $institutionId = $this->getInstitutionID();
+        $trainingSession = TableRegistry::getTableLocator()->get('Training.TrainingSessions');
+        $trainingCourses = TableRegistry::getTableLocator()->get('Training.TrainingCourses');
+        $trainingLevels = TableRegistry::getTableLocator()->get('Training.TrainingLevels');
+        $trainingFieldOfStudies = TableRegistry::getTableLocator()->get('Training.TrainingFieldStudies');
+        $workflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+        $staffId = $this->getStaffID();
+        $status = $this->request->getQuery('category');
     
         $query
         ->select([
             'course_name' => 'TrainingCourses.name',
             'training_level_name' => 'TrainingLevels.name',
-            'training_study_of_fields' => 'TrainingFieldOfStudies.name',
+            'training_study_of_fields' => 'TrainingFieldStudies.name',
             'credit_hours' => 'TrainingCourses.credit_hours'
         ])
-        ->leftJoin([$trainingSession->alias() => $trainingSession->table()],[
+        ->leftJoin([$trainingSession->getAlias() => $trainingSession->getTable()],[
             $trainingSession->aliasField('id = ').$this->aliasField('training_session_id')
         ])
-        ->leftJoin([$trainingCourses->alias() => $trainingCourses->table()],[
+        ->leftJoin([$trainingCourses->getAlias() => $trainingCourses->getTable()],[
             $trainingCourses->aliasField('id = ').$trainingSession->aliasField('training_course_id')
         ])
-        ->leftJoin([$trainingLevels->alias() => $trainingLevels->table()],[
+        ->leftJoin([$trainingLevels->getAlias() => $trainingLevels->getTable()],[
             $trainingLevels->aliasField('id = ').$trainingCourses->aliasField('training_level_id')
         ])
-        ->leftJoin([$trainingFieldOfStudies->alias() => $trainingFieldOfStudies->table()],[
+        ->leftJoin([$trainingFieldOfStudies->getAlias() => $trainingFieldOfStudies->getTable()],[
             $trainingFieldOfStudies->aliasField('id = ').$trainingCourses->aliasField('training_field_of_study_id')
         ])
-        ->innerJoin([$workflowSteps->alias() => $workflowSteps->table()],[
+        ->innerJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()],[
             $workflowSteps->aliasField('id = ').$this->aliasField('status_id')
         ])
         ->where([
@@ -578,6 +582,83 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
             ->where([
                 $workflowSteps->aliasField('category = ') => $status
             ]); 
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'course') {
+            return __('Course');
+        } elseif ($field == 'training_level') {
+            return __('Training Level');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'applied_session') {
+            return __('Applied Session');
+        } elseif ($field == 'description') {
+            return __('Description');
+        } elseif ($field == 'objective') {
+            return __('Objective');
+        } elseif ($field == 'duration') {
+            return __('Duration');
+        } elseif ($field == 'duration') {
+            return __('Duration');
+        } elseif ($field == 'credit_hours') {
+            return __('Credit Hours');
+        } elseif ($field == 'experiences') {
+            return __('Experiences');
+        } elseif ($field == 'field_of_study') {
+            return __('Field Of Study');
+        } elseif ($field == 'course_type') {
+            return __('Course Type');
+        } elseif ($field == 'mode_of_delivery') {
+            return __('Mode Of Delivery');
+        } elseif ($field == 'training_requirement') {
+            return __('Training Requirement');
+        } elseif ($field == 'training_requirement') {
+            return __('Training Requirement');
+        } elseif ($field == 'target_populations') {
+            return __('Target Populations');
+        } elseif ($field == 'training_requirement_id') {
+            return __('Training Requirement');
+        } elseif ($field == 'training_priority_id') {
+            return __('Training Priority');
+        } elseif ($field == 'training_providers') {
+            return __('Training Providers');
+        } elseif ($field == 'course_prerequisites') {
+            return __('Course Prerequisites');
+        } elseif ($field == 'specialisations') {
+            return __('Specialisations');
+        } elseif ($field == 'result_types') {
+            return __('Result Types');
+        } elseif ($field == 'attachment') {
+            return __('Attachment');
+        } elseif ($field == 'reason') {
+            return __('Reason');
+        } elseif ($field == 'status_id') {
+            return __('Status');
+        } elseif ($field == 'status_id') {
+            return __('Status');
+        } elseif ($field == 'training_need_category_id') {
+            return __('Training Need Category');
+        } elseif ($field == 'assignee_id') {
+            return __('Assignee');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }elseif ($field == 'institution_id') {
+            return __('Institution');
+        }elseif ($field == 'training_session_id') {
+            return __('Training Session');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }

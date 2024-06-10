@@ -11,7 +11,7 @@ use App\Model\Table\ControllerActionTable;
 
 class EducationFieldOfStudiesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->addBehavior('Education.Setup');
@@ -57,7 +57,7 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // POCOR-4079 if no manual sorting, will be sort by order.
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
 
         $sortList = ['name', 'ProgrammeOrientations.name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
@@ -88,5 +88,28 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
         } 
 
         return parent::findOptionList($query, $options);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'visible') {
+            return __('Visible');
+        } elseif ($field == 'education_programme_orientation_id') {
+            return __('Education Programme Orientation');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

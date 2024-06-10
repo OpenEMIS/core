@@ -19,7 +19,7 @@ class InstitutionTripsTable extends ControllerActionTable
 {
     use OptionsTrait;// POCOR-6169 <vikas.rathore@mail.valuecoders.com>
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -36,21 +36,27 @@ class InstitutionTripsTable extends ControllerActionTable
             'excludes' => ['comment', 'institution_id'],
             'pages' => ['index'],
         ]);
+
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionTrips' =>
+                ['institution_id']
+            ]
+        ]);
     }
 
-	public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
-		return $validator
-			->add('name', 'ruleUnique', [
+        return $validator
+            ->add('name', 'ruleUnique', [
                 'rule' => [
                     'validateUnique', [
                         'scope' => 'institution_id'
                     ]
                 ],
-				'provider' => 'table'
-			])
+                'provider' => 'table'
+            ])
             ->add('days', 'ruleNotEmpty', [
                 'rule' => function ($value, $context) {
                     if (empty($value)) {
@@ -191,12 +197,15 @@ class InstitutionTripsTable extends ControllerActionTable
         ->toArray();
 
         $tripTypeOptions = [-1 => __('All Trip Types')] + $tripTypes;
-        $extra['tripTypes'] = $this->request->query('trip_types'); 
+        $extra['tripTypes'] = $this->request->getQuery('trip_types'); 
         // trips filter
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
 
         $extra['elements']['control'] = [
             'name' => 'Institution.Trips/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'periodOptions'=> $academicPeriodOptions,
                 'selectedPeriod'=> $extra['selectedAcademicPeriodOptions'],
                 'tripTypeOptions'=> $tripTypeOptions,
@@ -246,12 +255,13 @@ class InstitutionTripsTable extends ControllerActionTable
     // POCOR-6169 start
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        $institutionId  = $session->read('Institution.Institutions.id');
-        $tripTypes = $this->request->query('trip_types');
+        $session = $this->request->getSession();
+        $institutionId = $this->getInstitutionID();
+        //$institutionId  = $session->read('Institution.Institutions.id');
+        $tripTypes = $this->request->getQuery('trip_types');
 
-        $institutionProvider = TableRegistry::get('institution_transport_providers');
-        $institutionBuses = TableRegistry::get('institution_buses');
+        $institutionProvider = TableRegistry::get('Institution.InstitutionTransportProviders');
+        $institutionBuses = TableRegistry::get('Institution.InstitutionBuses');
 
         if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
             $query->where([
@@ -274,10 +284,10 @@ class InstitutionTripsTable extends ControllerActionTable
             $this->aliasField('created')
         ])
         ->contain(['InstitutionTripDays'])
-        ->innerJoin([$institutionProvider->alias() => $institutionProvider->table()], [
+        ->innerJoin([$institutionProvider->getAlias() => $institutionProvider->getTable()], [
             [$institutionProvider->aliasField('id ='). $this->aliasField('institution_transport_provider_id')],
         ])
-        ->innerJoin([$institutionBuses->alias() => $institutionBuses->table()], [
+        ->innerJoin([$institutionBuses->getAlias() => $institutionBuses->getTable()], [
             [$institutionBuses->aliasField('id ='). $this->aliasField('institution_bus_id')],
         ])
         ->group($this->aliasField('id'))
@@ -320,27 +330,27 @@ class InstitutionTripsTable extends ControllerActionTable
         $selectedAcademicPeriod = '';
 
         if ($this->action == 'index' || $this->action == 'view' || $this->action == 'edit') {
-            if (isset($request->query) && array_key_exists('period', $request->query)) {
-                $selectedAcademicPeriod = $request->query['period'];
+            if (!is_null($request->getQuery()) && array_key_exists('period', $request->getQuery())) {
+                $selectedAcademicPeriod = $request->getQuery('period');
             } else {
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }
         } elseif ($this->action == 'add') {
             $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
         }
-
         return $selectedAcademicPeriod;
     } 
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
-        $institutionId  = $session->read('Institution.Institutions.id');
-        $tripTypes = $this->request->query('trip_types');
-        $academicPeriod = ($this->request->query('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent() ;
+        $session = $this->request->getSession();
+        //$institutionId  = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
+        $tripTypes = $this->request->getQuery('trip_types');
+        $academicPeriod = ($this->request->getQuery('period')) ? $this->request->getQuery('period') : $this->AcademicPeriods->getCurrent() ;
 
-        $institutionProvider = TableRegistry::get('institution_transport_providers');
-        $institutionBuses = TableRegistry::get('institution_buses');
+        $institutionProvider = TableRegistry::get('Institution.InstitutionTransportProviders');
+        $institutionBuses = TableRegistry::get('Institution.InstitutionBuses');
 
         $query->select([
             $this->aliasField('id') , 
@@ -357,10 +367,10 @@ class InstitutionTripsTable extends ControllerActionTable
             $this->aliasField('created')
         ])
         ->contain(['InstitutionTripDays'])
-        ->innerJoin([$institutionProvider->alias() => $institutionProvider->table()], [
+        ->innerJoin([$institutionProvider->getAlias() => $institutionProvider->getTable()], [
             [$institutionProvider->aliasField('id ='). $this->aliasField('institution_transport_provider_id')],
         ])
-        ->innerJoin([$institutionBuses->alias() => $institutionBuses->table()], [
+        ->innerJoin([$institutionBuses->getAlias() => $institutionBuses->getTable()], [
             [$institutionBuses->aliasField('id ='). $this->aliasField('institution_bus_id')],
         ])
         ->group($this->aliasField('id'))
@@ -452,17 +462,17 @@ class InstitutionTripsTable extends ControllerActionTable
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-	{
+    {
         
 
-		if (($entity->toArray())) {
-			if ($entity->has('institution_transport_provider_id')) {
-				$this->fields['institution_transport_provider_id']['default'] = $entity->institution_transport_provider_id;
-			} 
-		}else {
-			// 1st instance of add
-			$entity->institution_transport_provider_id = '';
-		} 
+        if (($entity->toArray())) {
+            if ($entity->has('institution_transport_provider_id')) {
+                $this->fields['institution_transport_provider_id']['default'] = $entity->institution_transport_provider_id;
+            } 
+        }else {
+            // 1st instance of add
+            $entity->institution_transport_provider_id = '';
+        } 
 
         $InstitutionBuses = $this->InstitutionBuses
             ->find('optionList')
@@ -470,7 +480,7 @@ class InstitutionTripsTable extends ControllerActionTable
                 $this->InstitutionBuses->aliasField('institution_transport_provider_id') => $entity->institution_transport_provider_id
             ])
             ->toArray();
-
+            
         unset($InstitutionBuses[0]);
         
         $this->fields['institution_bus_id']['type'] = 'select';
@@ -478,7 +488,7 @@ class InstitutionTripsTable extends ControllerActionTable
 
         // $this->fields['days']['multiple'] = true;
         // $this->fields['days']['options'] = $InstitutionBuses;
-	}
+    }
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -542,7 +552,6 @@ class InstitutionTripsTable extends ControllerActionTable
             });
         });
         //END:POCOR-6169
-
     }
 
     // view page POCOR-6169
@@ -586,39 +595,41 @@ class InstitutionTripsTable extends ControllerActionTable
 
     // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
     private function getProviderOptions()
-	{
-        $session = $this->request->session();
-        $institutionId  = $session->read('Institution.Institutions.id');
+    {
+        $session = $this->request->getSession();
+        //$institutionId  = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
 
-		return $this->InstitutionTransportProviders
+        return $this->InstitutionTransportProviders
         ->find('list', ['keyField' => 'id', 'valueField' => 'name']) 
         ->where([
             $this->InstitutionTransportProviders->aliasField('institution_id') => $institutionId
         ])
         ->toArray();
-	}
+    }
     // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
 
     // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
     public function onUpdateFieldInstitutionBusId(Event $event, array $attr, $action, $request) {
 
-        $parentId = $this->request->data['InstitutionTrips']['institution_transport_provider_id'];
+        $parentId = $this->request->getData('InstitutionTrips')['institution_transport_provider_id'];
+        if(!empty($parentId)){
+            $InstitutionBuses = $this->InstitutionBuses
+                ->find('optionList')
+                ->where([
+                    $this->InstitutionBuses->aliasField('institution_transport_provider_id') => $parentId
+                ])
+                ->toArray();
+           
+                $attr['options'] = $InstitutionBuses;
+                unset($attr['options'][0]);
 
-        $InstitutionBuses = $this->InstitutionBuses
-        ->find('optionList')
-        ->where([
-            $this->InstitutionBuses->aliasField('institution_transport_provider_id') => $parentId
-        ])
-        ->toArray();
-        
-		$attr['options'] = $InstitutionBuses;
-        unset($attr['options'][0]);
-
-		if (empty($InstitutionBuses)) {
-			$attr['empty'] = 'Select';
-		}
-		return $attr;
-	}
+                if (empty($InstitutionBuses)) {
+                    $attr['empty'] = 'Select';
+                }
+                return $attr;
+        }
+    }
     // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -635,8 +646,44 @@ class InstitutionTripsTable extends ControllerActionTable
                 return __('Provider');
             case 'transport_status_id': 
                 return __('Status');
+            case 'academic_period_id': 
+                return __('Academic Period');
+            case 'trip_type_id': 
+                return __('Trip Type'); 
+            case 'repeat': 
+                return __('Repeat');        
+            case 'provider': 
+                return __('Provider');
+            case 'bus': 
+                return __('Bus');
+            case 'days': 
+                return __('Days');
+            case 'name': 
+                return __('Name');
+            case 'comment': 
+                return __('Comment');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
     }
 }

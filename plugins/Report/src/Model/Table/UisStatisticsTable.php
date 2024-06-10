@@ -15,6 +15,7 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Institution\Model\Table\InstitutionsTable as Institutions;
 use Report\Model\Table\InstitutionPositionsTable as InstitutionPositions;
+use Cake\Http\ServerRequest;
 
 class UisStatisticsTable extends AppTable
 {
@@ -26,9 +27,9 @@ class UisStatisticsTable extends AppTable
     const NO_STUDENT = 1;
     const NO_STAFF = 2;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institutions');
+        $this->setTable('institutions');
         parent::initialize($config);
 
         $this->belongsTo('Localities', ['className' => 'Institution.Localities', 'foreignKey' => 'institution_locality_id']);
@@ -38,7 +39,7 @@ class UisStatisticsTable extends AppTable
         $this->belongsTo('Sectors', ['className' => 'Institution.Sectors', 'foreignKey' => 'institution_sector_id']);
         $this->belongsTo('Providers', ['className' => 'Institution.Providers', 'foreignKey' => 'institution_provider_id']);
         $this->belongsTo('Genders', ['className' => 'Institution.Genders', 'foreignKey' => 'institution_gender_id']);
-        $this->belongsTo('AreaLevels', ['className' => 'AreaLevel.AreaLevels']);
+        $this->belongsTo('AreaLevels', ['className' => 'Area.AreaLevels']);
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
 
@@ -61,7 +62,7 @@ class UisStatisticsTable extends AppTable
 
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -76,9 +77,9 @@ class UisStatisticsTable extends AppTable
     public function beforeAction(Event $event)
     {
         $this->fields = [];
-        $controllerName = $this->controller->name;
+        $controllerName = $this->controller->getName();
         $reportName = __('UIS Statistics');
-		$this->controller->Navigation->substituteCrumb($this->alias(), $reportName);
+		$this->controller->Navigation->substituteCrumb($this->getAlias(), $reportName);
 		$this->controller->set('contentHeader', __($controllerName).' - '.$reportName);
 
         $this->ControllerAction->field('feature', ['select' => false]);
@@ -130,28 +131,28 @@ class UisStatisticsTable extends AppTable
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if ($data[$this->alias()]['feature'] == 'Report.InstitutionSubjectsClasses') {
+        if ($data[$this->getAlias()]['feature'] == 'Report.InstitutionSubjectsClasses') {
             $options['validate'] = 'subjectsClasses';
         }
-        if ($data[$this->alias()]['feature'] == 'Report.InstitutionSubjects') {
+        if ($data[$this->getAlias()]['feature'] == 'Report.InstitutionSubjects') {
             $options['validate'] = 'subjects';
-        } elseif ($data[$this->alias()]['feature'] == 'Report.InstitutionStudents') {
+        } elseif ($data[$this->getAlias()]['feature'] == 'Report.InstitutionStudents') {
             $options['validate'] = 'students';
-        } elseif ($data[$this->alias()]['feature'] == 'Report.InstitutionStaff') {
+        } elseif ($data[$this->getAlias()]['feature'] == 'Report.InstitutionStaff') {
             $options['validate'] = 'staff';
-        } elseif ($data[$this->alias()]['feature'] == 'Report.StudentAttendanceSummary') {
+        } elseif ($data[$this->getAlias()]['feature'] == 'Report.StudentAttendanceSummary') {
             $options['validate'] = 'studentAttendanceSummary';
-        } elseif ($data[$this->alias()]['feature'] == 'Report.StaffAttendances') {
+        } elseif ($data[$this->getAlias()]['feature'] == 'Report.StaffAttendances') {
             $options['validate'] = 'staffAttendances';
-        } elseif ($data[$this->alias()]['feature'] == 'Report.BodyMasses') {
+        } elseif ($data[$this->getAlias()]['feature'] == 'Report.BodyMasses') {
             $options['validate'] = 'bodyMasses';
-        } elseif ($data[$this->alias()]['feature'] == 'Report.Guardians') {
+        } elseif ($data[$this->getAlias()]['feature'] == 'Report.Guardians') {
             $options['validate'] = 'guardians';
-        } elseif ($data[$this->alias()]['feature'] == 'Report.InstitutionInfrastructures') {
+        } elseif ($data[$this->getAlias()]['feature'] == 'Report.InstitutionInfrastructures') {
             $options['validate'] = 'institutionInfrastructures';
-        } elseif ($data[$this->alias()]['feature'] == 'Report.InfrastructureNeeds') {
+        } elseif ($data[$this->getAlias()]['feature'] == 'Report.InfrastructureNeeds') {
             $options['validate'] = 'infrastructureNeeds';
-        } elseif ($data[$this->alias()]['feature'] == 'Report.StaffLeave') { 
+        } elseif ($data[$this->getAlias()]['feature'] == 'Report.StaffLeave') { 
             $options['validate'] = 'StaffLeave';
         }
 
@@ -367,7 +368,7 @@ class UisStatisticsTable extends AppTable
         $filter = $requestData->institution_filter;
         if ($feature == 'Report.Institutions' && $filter != self::NO_FILTER) {
             $sheets[] = [
-                'name' => $this->alias(),
+                'name' => $this->getAlias(),
                 'table' => $this,
                 'query' => $this->find(),
             ];
@@ -447,15 +448,17 @@ class UisStatisticsTable extends AppTable
         return __($this->classificationOptions[$entity->classification]);
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $attr['options'] = $this->controller->getFeatureOptions($this->alias());
+            $option = $this->controller->getFeatureOptions($this->getAlias());
+            $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
             $attr['onChangeReload'] = true;
-            if (!(isset($this->request->data[$this->alias()]['feature']))) {
+            if (!(isset($this->request->getData($this->getAlias())['feature']))) {
                 $option = $attr['options'];
                 reset($option);
-                $this->request->data[$this->alias()]['feature'] = key($option);
+                $defaultFeatureValue = key($option);
+                $this->request = $this->request->withData($this->getAlias() . '.feature', $defaultFeatureValue);
             }
             return $attr;
         }
@@ -464,10 +467,10 @@ class UisStatisticsTable extends AppTable
 
   
 
-    public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
             if (in_array($feature,
                         [
                             'Report.InstitutionStudents',
@@ -482,7 +485,7 @@ class UisStatisticsTable extends AppTable
                 switch ($feature) {
                     case 'Report.InstitutionStudents':
                     case 'Report.InstitutionStudentEnrollments':
-                        $Statuses = TableRegistry::get('Student.StudentStatuses');
+                        $Statuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
                         $statusData = $Statuses->find()->select(['id', 'name'])->toArray();
                         foreach ($statusData as $key => $value) {
                             $statusOptions[$value->id] = $value->name;
@@ -490,7 +493,7 @@ class UisStatisticsTable extends AppTable
                         break;
 
                     case 'Report.InstitutionStaff':
-                        $Statuses = TableRegistry::get('Staff.StaffStatuses');
+                        $Statuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
                         $statusData = $Statuses->getList();
                         foreach ($statusData as $key => $value) {
                             $statusOptions[$key] = $value;
@@ -499,8 +502,8 @@ class UisStatisticsTable extends AppTable
 
                     
                     case 'Report.InstitutionPositions':
-                        $Workflows = TableRegistry::get('Workflow.Workflows');
-                        $Statuses = TableRegistry::get('Workflow.WorkflowSteps');
+                        $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+                        $Statuses = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
                         $workflowData = $Workflows->find()->select(['id', 'name'])
                                         ->where([$Workflows->aliasField('name LIKE') => 'Positions'])
                                         ->first();
@@ -528,11 +531,11 @@ class UisStatisticsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
 
-        if (isset($request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
 
             if ((in_array($feature,
                          [
@@ -547,17 +550,17 @@ class UisStatisticsTable extends AppTable
                              'Report.Uis13',
                              
                          ]
-                    )) ||((in_array($feature, ['Report.Institutions']) && !empty($request->data[$this->alias()]['institution_filter']) && $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT))) {
+                    )) ||((in_array($feature, ['Report.Institutions']) && !empty($request->getData($this->getAlias())['institution_filter']) && $request->getData($this->getAlias())['institution_filter'] == self::NO_STUDENT))) {
 
-                $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
                 $currentPeriod = $AcademicPeriodTable->getCurrent();
                 $attr['options'] = $academicPeriodOptions;
                 $attr['type'] = 'select';
                 $attr['select'] = false;
                 $attr['onChangeReload'] = true;
-                if (empty($request->data[$this->alias()]['academic_period_id'])) {
-                    $request->data[$this->alias()]['academic_period_id'] = $currentPeriod;
+                if (empty($request->getData($this->getAlias())['academic_period_id'])) {
+                    $request->getData($this->getAlias())['academic_period_id'] = $currentPeriod;
                 }
                 return $attr;
             }
@@ -565,10 +568,10 @@ class UisStatisticsTable extends AppTable
     }
     
    
-    public function onUpdateFieldFromDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFromDate(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
+        if (isset($request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
 
             if ((in_array($feature, ['Report.Income']))) {
                 $attr['type'] = 'date';
@@ -582,10 +585,10 @@ class UisStatisticsTable extends AppTable
     }
 
 
-    public function onUpdateFieldToDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldToDate(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
+        if (isset($request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
 
             if ((in_array($feature, ['Report.Income']))) {
                 $attr['type'] = 'date';
@@ -595,6 +598,20 @@ class UisStatisticsTable extends AppTable
                 $attr['type'] = 'date';
                 return $attr;
             }
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            case 'format':
+                return __('Format');
+            case 'academic_period_id':
+                return __('Academic Period');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }

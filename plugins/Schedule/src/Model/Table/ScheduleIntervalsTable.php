@@ -13,7 +13,7 @@ use Cake\Validation\Validator;
 
 class ScheduleIntervalsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->table('institution_schedule_intervals');
         parent::initialize($config);
@@ -52,7 +52,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $this->addBehavior('Schedule.Schedule');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -67,6 +67,22 @@ class ScheduleIntervalsTable extends ControllerActionTable
         switch ($field) {
             case 'institution_shift_id':
                 return __('Shift');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'name':
+                return __('Name');
+            case 'institution_shift_id':
+                return __('Shift');
+            case 'intervals':
+                return __('Intervals');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -100,9 +116,9 @@ class ScheduleIntervalsTable extends ControllerActionTable
         // filter options
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
 
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         if (isset($requestQuery) && array_key_exists('period', $requestQuery)) {
-            $selectedPeriodId = $requestQuery['period'];
+            $selectedPeriodId = $requestQuery('period');
         } else {
             $selectedPeriodId = $this->AcademicPeriods->getCurrent();
         }
@@ -110,7 +126,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $shiftOptions = $this->getShiftOptions($selectedPeriodId, true);
 
         if (isset($requestQuery) && array_key_exists('shift', $requestQuery)) {
-            $selectedShiftId = $requestQuery['shift'];
+            $selectedShiftId = $requestQuery('shift');
         } else {
             $selectedShiftId = -1;
         }
@@ -118,9 +134,12 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $extra['selectedShiftOptions'] = $selectedShiftId;
         $extra['selectedAcademicPeriodOptions'] = $selectedPeriodId;
 
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['control'] = [
             'name' => 'Schedule.Intervals/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'periodOptions'=> $academicPeriodOptions,
                 'selectedPeriodOption'=> $extra['selectedAcademicPeriodOptions'],
                 'shiftOptions' => $shiftOptions,
@@ -359,7 +378,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
     }
 
     // OnUpdate Events
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $academicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $ScheduleIntervals = TableRegistry::get('Schedule.ScheduleIntervals');
@@ -386,13 +405,13 @@ class ScheduleIntervalsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionShiftId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionShiftId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
         $ShiftOptions = TableRegistry::get('Institution.ShiftOptions');
         $ScheduleIntervals = TableRegistry::get('Schedule.ScheduleIntervals');
         if ($action == 'add') {
-            $requestData = $request->data;
+            $requestData = $request->getData();
             if (isset($requestData) && isset($requestData[$this->alias()]) && array_key_exists('academic_period_id', $requestData[$this->alias()])) {
                 $selectedPeriodId = $requestData[$this->alias()]['academic_period_id'];
             } else {
@@ -429,12 +448,12 @@ class ScheduleIntervalsTable extends ControllerActionTable
     {
         $fieldKey = 'timeslots';
 
-        if (empty($data[$this->alias()][$fieldKey])) {
-            $data[$this->alias()][$fieldKey] = [];
+        if (empty($data[$this->getAlias()][$fieldKey])) {
+            $data[$this->getAlias()][$fieldKey] = [];
         }
 
-        if ($data->offsetExists($this->alias())) {
-            $data[$this->alias()][$fieldKey][] = [
+        if ($data->offsetExists($this->getAlias())) {
+            $data[$this->getAlias()][$fieldKey][] = [
                 'intervals' => '',
             ];
         }
@@ -446,8 +465,8 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
     public function addOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $data[$this->alias()]['institution_shift_id'] = '';
-        unset($data[$this->alias()]['timeslots']);
+        $data[$this->getAlias()]['institution_shift_id'] = '';
+        unset($data[$this->getAlias()]['timeslots']);
     }
 
     // Get Options
@@ -546,6 +565,18 @@ class ScheduleIntervalsTable extends ControllerActionTable
             return false;
         }
 
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
     }
 
 }
