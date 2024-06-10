@@ -281,20 +281,19 @@ class NavigationComponent extends Component
                     } // End POCOR-7384
                     elseif ($this->request->getParam('controller') == 'Directories' && in_array($action, $directoryActions)) {
 
-                        if($action == 'Directories' || $action == 'Accounts') {
+                        if ($action == 'Directories' || $action == 'Accounts') {
                             $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
                         } else {
                             $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][1])['staff_id'];
                         }
-                        if(empty($userId)) {
+                        if (empty($userId)) {
                             $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][1])['security_user_id'];
                         }
-                        if(empty($userId)) {
+                        if (empty($userId)) {
                             $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][1])['student_id'];
                         }
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
-                    }
-                    else {
+                    } else {
                         $securityUserId = $this->controller->paramsDecode($this->request->getQuery('queryString'));
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);
                     }
@@ -1317,7 +1316,7 @@ class NavigationComponent extends Component
         $studentID = $this->getStudentID($debugString);
         $institutionID = $this->getInstitutionIDForStudent($debugString);
         $institutionStudentId = $this->controller->getQueryString('institution_student_id');
-        if(empty($institutionStudentId)){
+        if (empty($institutionStudentId)) {
             $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
             $institutionStudentId = $InstitutionStudentsTable->find()
                 ->where([
@@ -1327,7 +1326,7 @@ class NavigationComponent extends Component
                 ->order([$InstitutionStudentsTable->aliasField('created') => 'DESC'])
                 ->extract('id')
                 ->first();
-            if(empty($institutionStudentId)){
+            if (empty($institutionStudentId)) {
                 $institutionStudentId = null;
             }
 
@@ -1342,10 +1341,11 @@ class NavigationComponent extends Component
         //echo "<pre>"; print_r($queryString);die;
         $navigation = [
             // POCOR-8039-start
-            'Institutions.StudentDashboard.view' => [
+            'Institution.Institutions.StudentDashboard.view' => [
                 'title' => 'Dashboard',
                 'parent' => 'Institutions.Students.index',
-                'selected' => ['Institutions.StudentDashboard.view'],
+                'selected' => ['Institutions.StudentDashboard',
+                    'Institutions.StudentDashboard.view'],
             ],
             // POCOR-8039-end
             'Institution.Institutions.StudentUser.view' => [
@@ -1580,6 +1580,14 @@ class NavigationComponent extends Component
             'user_id' => $staffID]);
 
         $navigation = [
+            // POCOR-8039-start
+            'Institution.Institutions.StaffDashboard.view' => [
+                'title' => 'Dashboard',
+                'parent' => 'Institutions.Staff.index',
+                'selected' => ['Institutions.StaffDashboard',
+                    'Institutions.StaffDashboard.view'],
+            ],
+            // POCOR-8039-end
             'Institution.Institutions.StaffUser.view' => [
                 'title' => 'General',
                 'parent' => 'Institutions.Staff.index',
@@ -1874,7 +1882,7 @@ class NavigationComponent extends Component
             'Directories.SpecialNeedsReferrals.index' => [
                 'title' => 'Special Needs',
                 'parent' => 'Directories.Directories.index',
-                'params' => ['plugin' => 'Directory',  0 => $directorStaffId],
+                'params' => ['plugin' => 'Directory', 0 => $directorStaffId],
                 'selected' => ['Directories.SpecialNeedsReferrals',
                     'Directories.SpecialNeedsAssessments',
                     'Directories.SpecialNeedsServices',
@@ -1997,7 +2005,7 @@ class NavigationComponent extends Component
         //$id = $session->read('Guardian.Guardians.id');
 
         $pass = $this->controller->getQueryString();
-        $id = isset($pass['security_user_id']) ? $pass['security_user_id']: (isset($pass['student_id']) ? $pass['student_id']:(isset($pass['id']) ? $pass['id']:''));
+        $id = isset($pass['security_user_id']) ? $pass['security_user_id'] : (isset($pass['student_id']) ? $pass['student_id'] : (isset($pass['id']) ? $pass['id'] : ''));
         if ($id) {
             $StudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
             $Student = $StudentsTable
@@ -2008,8 +2016,8 @@ class NavigationComponent extends Component
                 $institution_id = $Student->institution_id;
             }
         }
-        $directorUserId = $this->controller->paramsEncode(['id' => $id, 'security_user_id'=> $id]);
-        $directorStudentId = $this->controller->paramsEncode(['student_id' => $id,'institution_id'=>$institution_id,'security_user_id'=> $id]);
+        $directorUserId = $this->controller->paramsEncode(['id' => $id, 'security_user_id' => $id]);
+        $directorStudentId = $this->controller->paramsEncode(['student_id' => $id, 'institution_id' => $institution_id, 'security_user_id' => $id]);
         $navigation = [
             'Directories.Student' => [
                 'title' => 'Student',
@@ -2027,7 +2035,7 @@ class NavigationComponent extends Component
             'Directories.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'Directories.Student',
-                'params' => ['plugin' => 'Directory','queryString' => $directorStudentId],
+                'params' => ['plugin' => 'Directory', 'queryString' => $directorStudentId],
                 'selected' => ['Directories.StudentProgrammes.index',
                     'Directories.StudentSubjects',
                     'Directories.StudentClasses',
@@ -2046,7 +2054,7 @@ class NavigationComponent extends Component
             'Directories.StudentBankAccounts.index' => [
                 'title' => 'Finance',
                 'parent' => 'Directories.Student',
-                'params' => ['plugin' => 'Directory',$directorStudentId,
+                'params' => ['plugin' => 'Directory', $directorStudentId,
                     'type' => 'student'],
                 'selected' => ['Directories.StudentBankAccounts',
                     'Directories.StudentFees']
@@ -2054,7 +2062,7 @@ class NavigationComponent extends Component
             'Directories.StudentProfiles' => [
                 'title' => 'Profiles',
                 'parent' => 'Directories.Student',
-                'params' => ['plugin' => 'Directory','queryString' => $directorStudentId],
+                'params' => ['plugin' => 'Directory', 'queryString' => $directorStudentId],
                 'selected' => ['Directories.StudentProfile']
             ],
 
@@ -2086,8 +2094,8 @@ class NavigationComponent extends Component
     public function getDirectoryGuardianNavigation()
     {
         $pass = $this->controller->getQueryString();
-        $id = isset($pass['security_user_id']) ? $pass['security_user_id']: (isset($pass['student_id']) ? $pass['student_id']:(isset($pass['id']) ? $pass['id']:''));
-        $directorUserId = $this->controller->paramsEncode(['id' => $id, 'security_user_id'=> $id]);
+        $id = isset($pass['security_user_id']) ? $pass['security_user_id'] : (isset($pass['student_id']) ? $pass['student_id'] : (isset($pass['id']) ? $pass['id'] : ''));
+        $directorUserId = $this->controller->paramsEncode(['id' => $id, 'security_user_id' => $id]);
         $navigation = [
             'Directories.Guardian' => [
                 'title' => 'Guardian',
@@ -2097,7 +2105,7 @@ class NavigationComponent extends Component
             'Directories.GuardianStudents' => [
                 'title' => 'Students',
                 'parent' => 'Directories.Guardian',
-                'params' => ['plugin' => 'Directory','queryString' =>$directorUserId],
+                'params' => ['plugin' => 'Directory', 'queryString' => $directorUserId],
                 'selected' => ['Directories.GuardianStudents']
             ],
         ];
@@ -2136,6 +2144,28 @@ class NavigationComponent extends Component
 
         //POCOR-5886 ends
         $navigation = [
+            // POCOR-8039-start
+
+            'Profiles.PersonalDashboard.view' => [
+                'title' => 'Dashboard',
+                'parent' => 'Profiles.Personal',
+                'params' => [
+                    'plugin' =>
+                    'Profile',
+                    'action' => 'PersonalDashboard',
+                    'selected' => ['Profiles.PersonalDashboard.view']
+                ],
+            ],
+//            => [
+////                'title' => 'Dashboard',
+////                'parent' => 'Profiles.Personal',
+////                'params' => ['plugin' =>
+////                    'Profile',
+////                    'action' => 'PersonalDashboard',
+////                    'selected' => ['Profiles.PersonalDashboard.view']
+////                ],
+//            ],
+            // POCOR-8039-end
             'Profiles.Profiles.view' => [
                 'title' => 'General',
                 'parent' => 'Profiles.Personal',
@@ -4302,60 +4332,6 @@ class NavigationComponent extends Component
         }
     }
 
-    public function checkPermissionsOld(array &$navigations)
-    {
-        $linkOnly = [];
-        //$ignoredPlugin = ['Profile']; // Plugin that will be excluded from checking //POCOR-5312
-        $roles = [];
-        $restrictedTo = [];
-        $event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', null, $this);
-        if ($event->getResult()) {
-            $roles = $event->getResult('roles');
-            $restrictedTo = $event->getResult('restrictedTo');
-        }
-
-        // Unset the children
-        foreach ($navigations as $key => $value) {
-            $rolesRestrictedTo = $roles;
-            //print_r($roles);die;
-            if (isset($value['link']) && !$value['link']) {
-                $linkOnly[] = $key;
-            } else {
-                $params = [];
-                if (isset($value['params'])) {
-                    $params = $value['params'];
-                }
-                $url = $this->getLink($key, $params);
-//                Log::debug(print_r($url, true));
-
-                // Check if the role is only restricted to a certain page
-                foreach ($restrictedTo as $restrictedURL) {
-                    if (count(array_intersect($restrictedURL, $url)) > 0) {
-                        $rolesRestrictedTo = $roles;
-                        break;
-                    } else {
-                        $rolesRestrictedTo = [];
-                    }
-                }
-
-                // $ignoredAction will be excluded from permission checking
-                if (array_key_exists('controller', $url) && !in_array($url['plugin'])) {
-                    //   print_r($url);die();
-                    if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
-                        unset($navigations[$key]);
-                    }
-                }
-            }
-        }
-        // unset the parents if there is no children
-//        $linkOnly = array_reverse($linkOnly);
-//            foreach ($linkOnly as $link) {
-//                if (!array_search($link, $this->array_column($navigations, 'parent'))) {
-//                    unset($navigations[$link]);
-//                }
-//            }
-    }
-
     private function getLink($controllerActionModelLink, $params = [])
     {
         $url = ['plugin' => null, 'controller' => null, 'action' => null];
@@ -4412,6 +4388,60 @@ class NavigationComponent extends Component
             $url = array_merge($url, $params);
         }
         return $url;
+    }
+
+    public function checkPermissionsOld(array &$navigations)
+    {
+        $linkOnly = [];
+        //$ignoredPlugin = ['Profile']; // Plugin that will be excluded from checking //POCOR-5312
+        $roles = [];
+        $restrictedTo = [];
+        $event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', null, $this);
+        if ($event->getResult()) {
+            $roles = $event->getResult('roles');
+            $restrictedTo = $event->getResult('restrictedTo');
+        }
+
+        // Unset the children
+        foreach ($navigations as $key => $value) {
+            $rolesRestrictedTo = $roles;
+            //print_r($roles);die;
+            if (isset($value['link']) && !$value['link']) {
+                $linkOnly[] = $key;
+            } else {
+                $params = [];
+                if (isset($value['params'])) {
+                    $params = $value['params'];
+                }
+                $url = $this->getLink($key, $params);
+//                Log::debug(print_r($url, true));
+
+                // Check if the role is only restricted to a certain page
+                foreach ($restrictedTo as $restrictedURL) {
+                    if (count(array_intersect($restrictedURL, $url)) > 0) {
+                        $rolesRestrictedTo = $roles;
+                        break;
+                    } else {
+                        $rolesRestrictedTo = [];
+                    }
+                }
+
+                // $ignoredAction will be excluded from permission checking
+                if (array_key_exists('controller', $url) && !in_array($url['plugin'])) {
+                    //   print_r($url);die();
+                    if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
+                        unset($navigations[$key]);
+                    }
+                }
+            }
+        }
+        // unset the parents if there is no children
+//        $linkOnly = array_reverse($linkOnly);
+//            foreach ($linkOnly as $link) {
+//                if (!array_search($link, $this->array_column($navigations, 'parent'))) {
+//                    unset($navigations[$link]);
+//                }
+//            }
     }
 
     public function getProfileGuardianStudentNavigation()

@@ -8887,7 +8887,7 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']);
     }
 
-    public function StudentDashboard($encodedParam)
+    public function StudentDashboard($action, $encodedParam)
     {
         $action = 'view';
         $params = $this->paramsDecode($encodedParam);
@@ -8913,6 +8913,30 @@ class InstitutionsController extends AppController
     }
 
     //POCOR-8039-START
+
+    public function StaffDashboard($action, $encodedParam)
+    {
+        $params = $this->paramsDecode($encodedParam);
+        $userID = $params['user_id'];
+        $institutionID = $params['institution_id'];
+        if (!$this->AccessControl->isAdmin()) {
+            $userId = $this->Auth->user('id');
+            $Institutions = TableRegistry::get('Institution.Institutions');
+            $roles =$Institutions->getInstitutionRoles($userId, $institutionID);
+            $isActive = $Institutions->isActive($institutionID);
+            if ($isActive) {
+                $hasPermission = $this->AccessControl->check(['Institutions', 'StaffDashboard', 'view'], $roles);
+            } else {
+                $hasPermission = false;
+            }
+        } else {
+            $hasPermission = true;
+        }
+
+        $userRole = "Staff";
+        $this->PersonalDashboard($action, $userRole, $userID, $institutionID, $hasPermission);
+    }
+
 
     public function PersonalDashboard($action, $userRole, $userID, $institutionID, $hasPermission)
     {
