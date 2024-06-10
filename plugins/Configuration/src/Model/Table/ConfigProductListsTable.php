@@ -13,9 +13,9 @@ use ArrayObject;
 
 class ConfigProductListsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('config_product_lists');
+        $this->setTable('config_product_lists');
         parent::initialize($config);
         $this->addBehavior('Configuration.ConfigItems');
         $this->addBehavior('ControllerAction.FileUpload', [
@@ -27,7 +27,7 @@ class ConfigProductListsTable extends ControllerActionTable
             ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

@@ -15,7 +15,7 @@ use App\Model\Table\ControllerActionTable;
 
 class RiskCriteriasTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('Risks', ['className' => 'Risk.Risks', 'foreignKey' =>'risk_id']);
@@ -25,7 +25,7 @@ class RiskCriteriasTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -66,12 +66,13 @@ class RiskCriteriasTable extends ControllerActionTable
             $activeRiskId [] = $activeRisks->risk_id;
         }
 
-        return $query->contain('Risks')
+        $query->contain('Risks')
             ->where([
                 'criteria' => $options['criteria_key'],
                 $this->Risks->aliasField('id') . ' IN ' => $activeRiskId
             ])
             ->all();
+        return $query;
     }
 
     public function getTotalRisk($riskId)

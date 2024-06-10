@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\Log\Log;
 
@@ -16,9 +16,9 @@ use Cake\Log\Log;
  */
 class StudentHealthsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_users');
+        $this->setTable('security_users');
         parent::initialize($config);
 
         // Behaviours
@@ -42,7 +42,7 @@ class StudentHealthsTable extends AppTable
 		$reportName         = __('Standard');
 
         //# START: Crumb
-        $this->Navigation->removeCrumb($this->getHeader($this->alias));
+        $this->Navigation->removeCrumb($this->getHeader($this->getAlias()));
         $this->Navigation->addCrumb($institutions_crumb . ' ' . $parent_crumb);
         //# END: Crumb
         $this->controller->set('contentHeader', __($institutions_crumb) . ' ' . $parent_crumb . ' - ' . $reportName);
@@ -53,12 +53,13 @@ class StudentHealthsTable extends AppTable
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
     }
 
-    public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institution_id = $session->read('Institution.Institutions.id');
-        $request->data[$this->alias()]['current_institution_id'] = $institution_id;
-        $request->data[$this->alias()]['institution_id'] = $institution_id;
+        $requestData = $request->getData($this->getAlias());
+        $requestData['current_institution_id'] = $institution_id;
+        $requestData['institution_id'] = $institution_id;
         if ($action == 'add') {
             $attr['value'] = 'xlsx';
             $attr['attr']['value'] = 'Excel';
@@ -67,23 +68,25 @@ class StudentHealthsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         $options = $this->controller->getInstitutionStatisticStandardReportFeature();
         $attr['options'] = $options;
         $attr['onChangeReload'] = true;
-        if (!(isset($this->request->data[$this->alias()]['feature']))) {
+        $requestData = $request->getData($this->getAlias());
+        if (!(isset($requestData['feature']))) {
             $option = $attr['options'];
             reset($option);
-            $this->request->data[$this->alias()]['feature'] = key($option);
+            $requestData['feature'] = key($option);
         }
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->data[$this->alias()]['feature'])) {
-            $feature                = $this->request->data[$this->alias()]['feature'];
+        $requestData = $request->getData($this->getAlias());
+        if (isset($requestData['feature'])) {
+            $feature                = $this->request->getData($this->getAlias())['feature'];
             $AcademicPeriodTable    = TableRegistry::get('AcademicPeriod.AcademicPeriods');
             $academicPeriodOptions  = $AcademicPeriodTable->getYearList();
             $currentPeriod          = $AcademicPeriodTable->getCurrent();
@@ -91,8 +94,8 @@ class StudentHealthsTable extends AppTable
             $attr['type']           = 'select';
             $attr['select']         = false;
             $attr['onChangeReload'] = true;
-            if (empty($request->data[$this->alias()]['academic_period_id'])) {
-                $request->data[$this->alias()]['academic_period_id'] = $currentPeriod;
+            if (empty($requestData['academic_period_id'])) {
+                $requestData['academic_period_id'] = $currentPeriod;
             }
             return $attr;
         }
@@ -351,7 +354,7 @@ class StudentHealthsTable extends AppTable
         $query->join($join);
 
         // START:POCOR-6819
-        $query->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+        $query->leftJoin([$ClassStudents->getAlias() => $ClassStudents->getTable()], [
             $ClassStudents->aliasField('student_id = ') . 'InstitutionStudent.student_id',
             $ClassStudents->aliasField('institution_id = ') . 'InstitutionStudent.institution_id',
             $ClassStudents->aliasField('education_grade_id = ') . 'InstitutionStudent.education_grade_id',
@@ -359,7 +362,7 @@ class StudentHealthsTable extends AppTable
             $ClassStudents->aliasField('academic_period_id = ') . 'InstitutionStudent.academic_period_id'
         ]);
 
-        $query->leftJoin([$Classes->alias() => $Classes->table()], [
+        $query->leftJoin([$Classes->getAlias() => $Classes->getTable()], [
             $Classes->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
         ]);
         // End:POCOR-6819

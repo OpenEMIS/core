@@ -6,19 +6,26 @@ use ArrayObject;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\ORM\Query;
+use Cake\ORM\Entity;
 use App\Model\Table\ControllerActionTable;
 
 use Cake\Datasource\ConnectionManager;
 
 class UserLanguagesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
-        $this->behaviors()->get('ControllerAction')->config('actions.search', false);
+        $this->behaviors()->get('ControllerAction')->setConfig('actions.search', false);
+        $this->addBehavior('Institution.InstitutionTab',
+            ['implementedMethods' =>
+                [
+                    'setUserTabElements' => 'setUserTabElements',
+                ],
+            ]);
         $this->addBehavior('User.SetupTab');
-
+        $this->addBehavior('User.UserTab');
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('Languages', ['className' => 'Languages']);
     }
@@ -58,10 +65,7 @@ class UserLanguagesTable extends ControllerActionTable
             'attr' => ['required' => true]]);
         $this->field('writing', ['visible' => true,
             'attr' => ['required' => true]]);
-
-
     }
-
 
     public function getGradeOptions()
     {
@@ -91,11 +95,11 @@ class UserLanguagesTable extends ControllerActionTable
      * @return Validator
      * @author Dr.Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
-        return $validator
+        return $validator->setProvider('custom', $this)
 			->add('listening', 'notBlank', ['rule' => 'notBlank'])
 			->add('speaking', 'notBlank', ['rule' => 'notBlank'])
 			->add('reading', 'notBlank', ['rule' => 'notBlank'])
@@ -106,17 +110,12 @@ class UserLanguagesTable extends ControllerActionTable
     /*POCOR-6267 Starts*/
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        $queryString = $this->getQueryString();
-        if (!empty($queryString['security_user_id'])) {
-            $userId = $queryString['security_user_id'];
-        } else {
-            $userId = $session->read('Student.Students.id');
-        }
+        $userId = $this->getUserID();
 
         $query->where([$this->aliasField('security_user_id') => $userId]);
+
         // Start POCOR-5188
-        if ($this->request->params['controller'] == 'Staff') {
+        if ($this->request->getParam('controller') == 'Staff') {
             $is_manual_exist = $this->getManualUrl('Institutions', 'Languages', 'Staff - General');
             if (!empty($is_manual_exist)) {
                 $btnAttr = [
@@ -134,7 +133,7 @@ class UserLanguagesTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        } elseif ($this->request->params['controller'] == 'Students') {
+        } elseif ($this->request->getParam('controller') == 'Students') {
             $is_manual_exist = $this->getManualUrl('Institutions', 'Languages', 'Students - General');
             if (!empty($is_manual_exist)) {
                 $btnAttr = [
@@ -153,7 +152,7 @@ class UserLanguagesTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        } elseif ($this->request->params['controller'] == 'Directories') {
+        } elseif ($this->request->getParam('controller') == 'Directories') {
             $is_manual_exist = $this->getManualUrl('Directory', 'Languages', 'General');
             if (!empty($is_manual_exist)) {
                 $btnAttr = [
@@ -172,7 +171,7 @@ class UserLanguagesTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        } elseif ($this->request->params['controller'] == 'Profiles') {
+        } elseif ($this->request->getParam('controller') == 'Profiles') {
             $is_manual_exist = $this->getManualUrl('Personal', 'Languages', 'General');
             if (!empty($is_manual_exist)) {
                 $btnAttr = [
@@ -195,4 +194,12 @@ class UserLanguagesTable extends ControllerActionTable
         // End POCOR-5188
     }
     /*POCOR-6267 Ends*/
+
+    public
+    function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+    }
+
+
 }

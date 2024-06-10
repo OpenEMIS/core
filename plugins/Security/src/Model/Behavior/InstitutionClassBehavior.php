@@ -11,7 +11,7 @@ use Cake\I18n\Date;
 
 class InstitutionClassBehavior extends Behavior
 {
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         // priority has to be set at 100 so that Institutions->indexBeforePaginate will be triggered first
@@ -224,8 +224,8 @@ class InstitutionClassBehavior extends Behavior
             if (isset($options['controller'])) {
                 $controller = $options['controller'];
                 $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
-                if (is_array($event->result)) {
-                    $roles = $event->result;
+                if (is_array($event->getResult())) {
+                    $roles = $event->getResult();
                 }
             }
             if (!$AccessControl->check(['Institutions', 'AllClasses', $permission], $roles)) {
@@ -265,8 +265,8 @@ class InstitutionClassBehavior extends Behavior
         $controller = $this->_table->controller;
         $roles = [];
         $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
-        if ($event->result) {
-            $roles = $event->result;
+        if ($event->getResult()) {
+            $roles = $event->getResult();
         }
         $myClassesPermission = $AccessControl->check(['Institutions', 'Classes', $action], $roles);
         if ($myClassesPermission) {
@@ -283,8 +283,8 @@ class InstitutionClassBehavior extends Behavior
         $controller = $this->_table->controller;
         $roles = [];
         $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
-        if ($event->result) {
-            $roles = $event->result;
+        if ($event->getResult()) {
+            $roles = $event->getResult();
         }
         $allClassesPermission = $AccessControl->check(['Institutions', 'AllClasses', $action], $roles);
         if ($allClassesPermission) {

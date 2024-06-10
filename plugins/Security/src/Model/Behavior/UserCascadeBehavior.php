@@ -12,7 +12,7 @@ use Cake\Event\Event;
 use Cake\Datasource\ConnectionManager;
 
 class UserCascadeBehavior extends Behavior {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		// $this->showSQL();
 	}
 

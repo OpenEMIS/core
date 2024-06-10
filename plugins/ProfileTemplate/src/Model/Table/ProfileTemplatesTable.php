@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
+use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
 
 class ProfileTemplatesTable extends ControllerActionTable
@@ -21,7 +22,7 @@ class ProfileTemplatesTable extends ControllerActionTable
     CONST ALL_SUBJECTS = 2;
     CONST SELECT_SUBJECTS = 1;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -34,15 +35,15 @@ class ProfileTemplatesTable extends ControllerActionTable
             'allowable_file_types' => 'document',
             'useDefaultName' => true
         ]);
-        $this->behaviors()->get('Download')->config(
+        $this->behaviors()->get('Download')->setConfig(
             'name',
             'excel_template_name'
         );
-        $this->behaviors()->get('Download')->config(
+        $this->behaviors()->get('Download')->setConfig(
             'content',
             'excel_template'
         );
-        $this->behaviors()->get('ControllerAction')->config(
+        $this->behaviors()->get('ControllerAction')->setConfig(
             'actions.download.show',
             true
         );
@@ -53,14 +54,14 @@ class ProfileTemplatesTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.downloadTemplate'] = 'downloadTemplate';
         return $events;
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
 
         return $validator
@@ -111,13 +112,14 @@ class ProfileTemplatesTable extends ControllerActionTable
         $alreadyAssignedStaffs = $StaffTable->find()->select([
             'institution_position_id' => $StaffTable->aliasField('institution_position_id'),
             'status_id' => $institutionPositionsTable->aliasField('status_id')
-        ])->innerJoin([$institutionPositionsTable->alias() => $institutionPositionsTable->table()], [
+        ])->innerJoin([$institutionPositionsTable->getAlias() => $institutionPositionsTable->getTable()], [
             $institutionPositionsTable->aliasField('id = ') . $StaffTable->aliasField('institution_position_id'),
         ])->where([
             $StaffTable->aliasField('institution_id') => 6,
             $StaffTable->aliasField('staff_id') => 8810,
         ])
-        ->hydrate(false)->toArray();
+        // ->hydrate(false)->toArray();
+        ->toArray();
         $expectedStaffStatuses = [];
         foreach ($alreadyAssignedStaffs AS $staff) {
             $expectedStaffStatuses[$staff['status_id']] = $staff['status_id'];
@@ -125,7 +127,7 @@ class ProfileTemplatesTable extends ControllerActionTable
         return $expectedStaffStatuses;
 
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($this->request->getQuery['academic_period_id']) ? $this->request->getQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
@@ -149,7 +151,7 @@ class ProfileTemplatesTable extends ControllerActionTable
             $filename = $entity->excel_template;
             return !empty($filename);
         };
-        $this->behaviors()->get('ControllerAction')->config(
+        $this->behaviors()->get('ControllerAction')->getConfig(
             'actions.download.show',
             $showFunc
         );
@@ -192,7 +194,8 @@ class ProfileTemplatesTable extends ControllerActionTable
         $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'generate_start_date', 'generate_end_date', 'excel_template']);
     }
 
-    public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action)
     {
         if ($action == 'index' || $action == 'view') {
             $attr['type'] = 'string';
@@ -205,7 +208,7 @@ class ProfileTemplatesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -222,7 +225,7 @@ class ProfileTemplatesTable extends ControllerActionTable
 
     public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        if (empty($entity->errors())) {
+        if (empty($entity->getErrors())) {
             if ($entity->teacher_comments_required == self::ALL_SUBJECTS) {
                 $entity->teacher_comments_required = 1;
             }
@@ -297,6 +300,35 @@ class ProfileTemplatesTable extends ControllerActionTable
         $tabElements['Templates']['url'] = array_merge($tabUrl, ['action' => 'Institutions']);
 
 		return $tabElements;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'description') {
+            return __('Description');
+        } elseif ($field == 'generate_start_date') {
+            return __('Generate Start Date');
+        } elseif ($field == 'generate_end_date') {
+            return __('Generate End Date');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'excel_template') {
+            return __('Excel Template');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
 }

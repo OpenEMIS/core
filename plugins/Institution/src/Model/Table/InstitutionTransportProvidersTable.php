@@ -10,7 +10,7 @@ use App\Model\Table\ControllerActionTable;
 
 class InstitutionTransportProvidersTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -21,9 +21,14 @@ class InstitutionTransportProvidersTable extends ControllerActionTable
             'autoFields' => false
         ]);
 
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionTransportProviders' =>
+                ['institution_id']
+            ]
+        ]);
     }
 
-	public function validationDefault(Validator $validator)
+	public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -86,17 +91,17 @@ class InstitutionTransportProvidersTable extends ControllerActionTable
     }
     public function changeUtilitiesHeader($model, $modelAlias, $userType)
     {
-        echo $model->alias();die;
-        $session = $this->request->session();
-        $institutionId = 0;
-        if ($session->check('Institution.Institutions.id')) {
+        $session = $this->request->getSession();
+        //$institutionId = 0;
+        /*if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
-        }
+        }*/
+        $institutionId = $this->getInstitutionID();
         if (!empty($institutionId)) {
-            if($this->request->param('action') == 'InstitutionTransportProviders') {
+            if($this->request->getParam('action') == 'InstitutionTransportProviders') {
                 $institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Providers');
-                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Providers'));
                 $this->set('contentHeader', $header);
 
@@ -106,7 +111,36 @@ class InstitutionTransportProvidersTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        //$institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $query->where(['InstitutionTransportProviders.institution_id' =>  $institutionId]);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'name':
+                return __('Name');
+            case 'address':
+                return __('Address');
+            case 'email':
+                return __('Email');
+            case 'comment':
+                return __('Comment');
+            case 'contact_number':
+                return __('Contact Number');
+            case 'registration_number':
+                return __('Registration Number');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

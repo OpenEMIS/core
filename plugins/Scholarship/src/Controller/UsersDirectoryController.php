@@ -7,15 +7,16 @@ use App\Controller\PageController;
 
 class UsersDirectoryController extends PageController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Scholarship.UsersDirectory');
         $this->loadComponent('User.User');
+        $this->loadComponent('Page.Page');
         $this->Page->loadElementsFromTable($this->UsersDirectory);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $event = parent::implementedEvents();
         $event['Controller.Page.getEntityRowActions'] = 'getEntityRowActions';

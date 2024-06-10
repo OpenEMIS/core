@@ -19,7 +19,7 @@ class InstitutionStaffShiftsTable extends ControllerActionTable
 {
     use MessagesTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         
         parent::initialize($config);

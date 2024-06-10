@@ -2,17 +2,16 @@
 namespace Security\Model\Behavior;
 
 use ArrayObject;
-
 use Cake\Core\Configure;
 use Cake\ORM\Query;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 class InstitutionBehavior extends Behavior
 {
-	public function implementedEvents()
+	public function implementedEvents(): array
 	{
 		$events = parent::implementedEvents();
 
@@ -38,8 +37,8 @@ class InstitutionBehavior extends Behavior
 
 	public function findByAccess(Query $query, array $options)
 	{
-		$apiSecuritiesScopes = TableRegistry::get('AcademicPeriod.ApiSecuritiesScopes');
-        $apiSecurities = TableRegistry::get('AcademicPeriod.ApiSecurities');
+		$apiSecuritiesScopes = TableRegistry::get('ApiSecuritiesScopes');
+		$apiSecurities = TableRegistry::get('ApiSecurities');
         $apiSecuritiesData = $apiSecurities->find('all')
         ->select([
             'ApiSecurities.id','ApiSecurities.name','ApiSecurities.execute'
@@ -55,16 +54,18 @@ class InstitutionBehavior extends Behavior
         ])
         ->first();
 
-	$userId = (!empty($options['userId']))?$options['userId']:$options['user']['id'];
+		$userId = (!empty($options['userId']))?$options['userId']:$options['user']['id'];
 		
-	if ((isset($options["super_admin"]) && $options["super_admin"] && $apiSecuritiesScopesData->view == 1 && $apiSecuritiesScopesData->index == 1)
-        ||
-       (isset($options['user']["super_admin"]) && $options['user']["super_admin"] && $apiSecuritiesScopesData->view == 1 && $apiSecuritiesScopesData->index == 1)
-       ) {
-       		$Types = TableRegistry::get('Institution.Types');
+		if ((isset($options["super_admin"]) && $options["super_admin"] && $apiSecuritiesScopesData->view == 1 && $apiSecuritiesScopesData->index == 1)
+			||
+		(isset($options['user']["super_admin"]) && $options['user']["super_admin"] && $apiSecuritiesScopesData->view == 1 && $apiSecuritiesScopesData->index == 1)
+		) {
+			$Types = TableRegistry::get('Institution.Types');
        		$Areas = TableRegistry::get('Area.Areas');
        		$Institutions = TableRegistry::get('Institution.Institutions');
-       		if (isset($options['_controller']->request->query['_order'])) {
+			   
+					   
+       		if (isset($options['_controller']->request->getQuery['_order'])) {
             	return $query;
        		}
        		else{
@@ -79,17 +80,18 @@ class InstitutionBehavior extends Behavior
 						$Institutions->aliasField('institution_gender_id'),$Institutions->aliasField('security_group_id'),$Institutions->aliasField('modified_user_id'),$Institutions->aliasField('modified'),
 						$Institutions->aliasField('created_user_id'),$Institutions->aliasField('created')
 				])
-				->innerJoin([$Areas->alias() => $Areas->table()], [
+				->innerJoin([$Areas->getAlias() => $Areas->getTable()], [
 					$Institutions->aliasField('area_id = ') . $Areas->aliasField('id'),
 				])
-				->innerJoin([$Types->alias() => $Types->table()], [
+				->innerJoin([$Types->getAlias() => $Types->getTable()], [
 					$Institutions->aliasField('institution_type_id = ') . $Types->aliasField('id'),
 				]);
        		}                
         }
 
 		$institutionTableClone1 = clone $this->_table;
-		$institutionTableClone1->alias('InstitutionSecurityArea');
+		$institutionTableClone1->setAlias('InstitutionSecurityArea');
+		
 		// find from security areas
 		$institutionsSecurityArea = $institutionTableClone1->find()
 			->innerJoin(['Areas' => 'areas'], [
@@ -109,7 +111,7 @@ class InstitutionBehavior extends Behavior
 			->select(['id' => $institutionTableClone1->aliasField('id')]);
 
 		$institutionTableClone2 = clone $this->_table;
-		$institutionTableClone2->alias('InstitutionSecurity');
+		$institutionTableClone2->setAlias('InstitutionSecurity');
 
 		// find from security group institutions
 		$institutionSecurity = $institutionTableClone2->find()

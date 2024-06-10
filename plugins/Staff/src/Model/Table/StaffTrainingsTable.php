@@ -13,7 +13,7 @@ use App\Model\Table\ControllerActionTable;
 
 class StaffTrainingsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -34,9 +34,10 @@ class StaffTrainingsTable extends ControllerActionTable
             'excludes' => ['description','file_name','staff_id'],
             'pages' => ['index'],
         ]);
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -55,7 +56,32 @@ class StaffTrainingsTable extends ControllerActionTable
     {
         if ($field == 'training_field_of_study_id') {
             return __('Field of Study');
-        } else {
+        }elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'completed_date') {
+            return __('Completed Date');
+        } elseif ($field == 'staff_training_category_id') {
+            return __('Staff Training Categories');
+        } elseif ($field == 'credit_hours') {
+            return __('Credit Hours');
+        }elseif ($field == 'description') {
+            return __('Description');
+        }elseif ($field == 'credit_hours') {
+            return __('Credit Hours'); 
+        }elseif ($field == 'file_content') {
+            return __('Attachment');
+        }elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }else {
+
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
@@ -67,7 +93,7 @@ class StaffTrainingsTable extends ControllerActionTable
         $this->field('file_content', ['visible' => false]);
 
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Staff'){ 
+        if($this->request->getParam('controller') == 'Staff'){ 
             $is_manual_exist = $this->getManualUrl('Institutions','Courses','Staff - Training');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -85,7 +111,7 @@ class StaffTrainingsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Directories'){ 
+        }elseif($this->request->getParam('controller') == 'Directories'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Courses','Staff - Training');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -120,7 +146,7 @@ class StaffTrainingsTable extends ControllerActionTable
 
     private function setupTabElements()
     {
-        if ($this->controller->name == 'Staff') {
+        if ($this->controller->getName() == 'Staff') {
             $tabElements = $this->controller->getInstitutionTrainingTabElements(); // Staff controller
         } else {
             $tabElements = $this->controller->getTrainingTabElements(); // Directories controller
@@ -252,13 +278,17 @@ class StaffTrainingsTable extends ControllerActionTable
     // POCOR-6137 start
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
-        $staffId = $session->read('Staff.Staff.id');
+        $session = $this->request->getSession();
+        $staffId = $this->getStaffID();
 
         $query
         ->where([
             $this->aliasField('staff_id') => $staffId
         ]);
     }
-    // POCOR-6137 end
+
+    
+
+
+    
 }

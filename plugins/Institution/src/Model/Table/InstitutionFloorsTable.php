@@ -15,6 +15,7 @@ use Cake\ORM\ResultSet;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Routing\Router;
+use Cake\Http\ServerRequest;
 class InstitutionFloorsTable extends ControllerActionTable
 {
     use OptionsTrait;
@@ -30,7 +31,7 @@ class InstitutionFloorsTable extends ControllerActionTable
     private $canUpdateDetails = true;
     private $currentAcademicPeriod = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -45,7 +46,7 @@ class InstitutionFloorsTable extends ControllerActionTable
 
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
-        $this->addBehavior('CustomField.Record', [
+        /*$this->addBehavior('CustomField.Record', [
             'fieldKey' => 'infrastructure_custom_field_id',
             'tableColumnKey' => null,
             'tableRowKey' => null,
@@ -57,7 +58,7 @@ class InstitutionFloorsTable extends ControllerActionTable
             'recordKey' => 'institution_floor_id',
             'fieldValueClass' => ['className' => 'Infrastructure.FloorCustomFieldValues', 'foreignKey' => 'institution_floor_id', 'dependent' => true],
             'tableCellClass' => null
-        ]);
+        ]);*/
         $this->addBehavior('Institution.InfrastructureShift');
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
@@ -65,9 +66,12 @@ class InstitutionFloorsTable extends ControllerActionTable
         $this->accessibilityOptions = $this->getSelectOptions('InstitutionAssets.accessibility');
         $this->accessibilityTooltip = $this->getMessage('InstitutionInfrastructures.accessibilityOption');
         $this->setDeleteStrategy('restrict');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionFloors'=>['id','institution_building_id']]
+        ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -129,7 +133,7 @@ class InstitutionFloorsTable extends ControllerActionTable
         return $validator;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.AcademicPeriods.afterSave'] = 'academicPeriodAfterSave';
@@ -152,7 +156,7 @@ class InstitutionFloorsTable extends ControllerActionTable
             $InstitutionBuilding = $InstitutionBuildings->get($entity['institution_building_id']);
         }
         if($entity['area'] >= $InstitutionBuilding['area']){
-            if (Router::getRequest()->params['action'] == "CopyData") {
+            if (Router::getRequest()->getParam('action') == "CopyData") {
             } else {//POCOR_7657
             $this->Alert->warning('InstitutionFloors.sizeGreater', ['reset' => true]);
             return false;
@@ -206,6 +210,30 @@ class InstitutionFloorsTable extends ControllerActionTable
     {
         if ($field == 'institution_id') {
             return __('Owner');
+        } else if ($field == 'floor_status_id'){
+            return __('Floor Status');
+        } else if($field == 'start_date'){
+            return __('Start Date');
+        } else if($field == 'end_date'){
+            return __('End Date');
+        } else if($field == 'comment'){
+            return __('Comment');
+        } elseif ($field == 'to_be_deleted') {
+            return __('To be Deleted ');
+        } elseif ($field == 'associated_records') {
+            return __('Associated Records');
+        } else if ($field == 'new_floor_type'){
+            return __('New Floor Type');
+        } else if ($field == 'new_start_date'){
+            return __('New Start Date');
+        } else if ($field == 'modified'){
+            return __('Modified');
+        } else if ($field == 'modified_user_id'){
+            return __('Modified By');
+        } else if ($field == 'created'){
+            return __('Created');
+        } else if ($field == 'created_user_id'){
+            return __('Created By');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -313,9 +341,9 @@ class InstitutionFloorsTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
-        $sessionKey = $this->registryAlias() . '.warning';
+        $sessionKey = $this->getRegistryAlias() . '.warning';
         if ($session->check($sessionKey)) {
             $warningKey = $session->read($sessionKey);
             $this->Alert->warning($warningKey);
@@ -330,9 +358,9 @@ class InstitutionFloorsTable extends ControllerActionTable
 
     public function editBeforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
-        $sessionKey = $this->registryAlias() . '.warning';
+        $sessionKey = $this->getRegistryAlias() . '.warning';
         if ($session->check($sessionKey)) {
             $warningKey = $session->read($sessionKey);
             $this->Alert->warning($warningKey);
@@ -344,16 +372,16 @@ class InstitutionFloorsTable extends ControllerActionTable
     {
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
-        $session = $this->request->session();
-        $sessionKey = $this->registryAlias() . '.warning';
+        $session = $this->request->getSession();
+        $sessionKey = $this->getRegistryAlias() . '.warning';
         if (!$isEditable) {
             $inUseId = $this->FloorStatuses->getIdByCode('IN_USE');
             $endOfUsageId = $this->FloorStatuses->getIdByCode('END_OF_USAGE');
 
             if ($entity->floor_status_id == $inUseId) {
-                $session->write($sessionKey, $this->alias().'.in_use.restrictEdit');
+                $session->write($sessionKey, $this->getAlias().'.in_use.restrictEdit');
             } elseif ($entity->floor_status_id == $endOfUsageId) {
-                $session->write($sessionKey, $this->alias().'.end_of_usage.restrictEdit');
+                $session->write($sessionKey, $this->getAlias().'.end_of_usage.restrictEdit');
             }
 
             $url = $this->url('index', 'QUERY');

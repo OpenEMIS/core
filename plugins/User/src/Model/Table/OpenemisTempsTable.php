@@ -19,12 +19,12 @@ use Cake\Datasource\ConnectionManager;
 class OpenemisTempsTable extends AppTable
 {
     
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('openemis_temps');
+        $this->setTable('openemis_temps');
         parent::initialize($config);     
 
-        $this->displayField('openemis_no');
+        $this->getDisplayField('openemis_no');
     }
 
 }

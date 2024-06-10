@@ -20,7 +20,7 @@ class AssessmentItemResultsTable extends AppTable
 {
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -42,7 +42,7 @@ class AssessmentItemResultsTable extends AppTable
         $this->addBehavior('Import.ImportLink');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -280,7 +280,7 @@ class AssessmentItemResultsTable extends AppTable
                 $this->aliasField('assessment_id'),//POCOR-6479 
             ])
             ->contain(['AssessmentGradingOptions'])
-            ->innerJoin([$SubjectStudents->alias() => $SubjectStudents->table()], [
+            ->innerJoin([$SubjectStudents->getAlias() => $SubjectStudents->getTable()], [
                 $SubjectStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                 $SubjectStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                 $SubjectStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),

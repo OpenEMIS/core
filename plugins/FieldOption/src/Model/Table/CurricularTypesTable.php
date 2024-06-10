@@ -7,15 +7,15 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\ORM\ResultSet;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
 
 //POCOR-6673
 class CurricularTypesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('curricular_types');
+        $this->setTable('curricular_types');
         parent::initialize($config);
         
         $this->addBehavior('FieldOption.FieldOption');
@@ -27,7 +27,7 @@ class CurricularTypesTable extends ControllerActionTable
 
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $curricularStudent = TableRegistry::get('institution_curriculars'); 
+        $curricularStudent = TableRegistry::get('Institution.InstitutionCurriculars'); 
         $checktype =  $curricularStudent->find()->where([$curricularStudent->aliasField('curricular_type_id')=>$entity->id])->first();     
              
         if(!empty($checktype)){
@@ -44,7 +44,7 @@ class CurricularTypesTable extends ControllerActionTable
             'name','default','category', 'international_code','national_code']);
     }
 
-    public function onUpdateFieldCategory(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCategory(Event $event, array $attr, $action, ServerRequest $request)
     {
         $categories = array(1 =>'Co-Curricular', 0=>'Extracurricular'); //POCOR-7751
         $entity = $attr['entity'];
@@ -67,5 +67,47 @@ class CurricularTypesTable extends ControllerActionTable
     public function onGetCategory(Event $event, Entity $entity)
     {
         return $entity->category ? __('Co-Curricular') : __('Extracurricular'); //POCOR-7751
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'visible':
+                return __('Visible');
+            case 'name':
+                return __('Name');
+            case 'international_code':
+                return __('International Code');
+            case 'national_code':
+                return __('National Code');
+            case 'editable':
+                return __('Editable');
+            case 'default':
+                return __('Default');
+            case 'category':
+                return __('Category');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }
