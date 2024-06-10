@@ -15,6 +15,7 @@ use Cake\I18n\Date;
 use Cake\I18n\Time;
 use Cake\Log\Log;
 use Cake\ORM\Entity;
+use Cake\ORM\Locator\TableLocator;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
@@ -24,16 +25,12 @@ use Cake\Validation\Validator;
 use DateInterval;
 use DatePeriod;
 use DateTime;
-use Cake\Http\ServerRequest;
-use Cake\Utility\Text;
-use Cake\ORM\Locator\TableLocator;
 
 class StaffTable extends ControllerActionTable
 {
 
     use OptionsTrait;
-    private $assigned;
-    private $endOfAssignment;
+
     const PENDING = 0;
     const APPROVED = 1;
     const REJECTED = 2;
@@ -43,6 +40,8 @@ class StaffTable extends ControllerActionTable
     const PENDING_TRANSFEROUT = -3;
     const PENDING_RELEASEIN = -4;
     const PENDING_RELEASEOUT = -5;
+    private $assigned;
+    private $endOfAssignment;
     private $dashboardQuery = null;
     private $institution_id;
     private $academic_period_id;
@@ -209,7 +208,7 @@ class StaffTable extends ControllerActionTable
                     [
                         'staff_status_id',
                         'academic_period_id',
-                        ]
+                    ]
             ]
             ]
         );
@@ -1043,7 +1042,7 @@ class StaffTable extends ControllerActionTable
         //print_r($this->fields);die;
     }
 
-public function getIdentityTypeData($value_selection)
+    public function getIdentityTypeData($value_selection)
     {
         $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
         $typesIdentity = $IdentityTypes
@@ -1191,7 +1190,7 @@ public function getIdentityTypeData($value_selection)
         $queryParams = $this->request->getQueryParams();
         $queryParams['staff_status_id'] = $selectedStatus;
         $this->request = $this->request->withQueryParams($queryParams);
-        
+
         $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
 
         // POCOR-2547 sort list of staff and student by name
@@ -1826,15 +1825,18 @@ public function getIdentityTypeData($value_selection)
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $queryString = $this->getQueryString();
-        $institutionId = $queryString['institution_id'];
+        $institutionId = $this->getInstitutionID();
         $session = $this->request->getSession();
-        $institutionId = !empty($this->request->getparam('institutionId')) ? $this->paramsDecode($this->request->getparam('institutionId'))['id'] : $institutionId;
-        $assignedStudentToInstitution = $this->find()->where(['institution_id' => $institutionId])->count();
-        $session->write('is_any_student', $assignedStudentToInstitution);
+        try {
+            $assignedStudentToInstitution = $this->find()->where(['institution_id' => $institutionId])->count();
+            $session->write('is_any_student', $assignedStudentToInstitution);
+        } catch (\Exception $ex) {
+            Log::debug($ex->getMessage());
+        }
     }
 
     // Functions that are migrated over
+
     /******************************************************************************************************************
      **
      ** finders functions to be used with query
@@ -1975,9 +1977,9 @@ public function getIdentityTypeData($value_selection)
         if ($institutionId && $staffId) {
             $InstitutionStaffTransfers = TableRegistry::get('Institution.InstitutionStaffTransfers');
             $doneStatus = $InstitutionStaffTransfers::DONE;
-            
+
             $transferOutRecordsCount = $InstitutionStaffTransfers->find()
-                    ->matching('Statuses', function ($q) use ($doneStatus) {
+                ->matching('Statuses', function ($q) use ($doneStatus) {
                     return $q->where(['category <> ' => $doneStatus]);
                 })
                 ->where([
@@ -1985,10 +1987,10 @@ public function getIdentityTypeData($value_selection)
                     $InstitutionStaffTransfers->aliasField('previous_institution_id') => $entity->institution_id
                 ])
                 ->count();
- 
+
             $checkAllRecords['associatedRecords'][] = ['model' => 'StaffTransferOut', 'count' => $transferOutRecordsCount];
             $InstitutionStaffReleases = TableRegistry::get('Institution.InstitutionStaffReleases');
- 
+
             $releaseDoneStatus = $InstitutionStaffReleases::DONE;
             $releaseOutRecordsCount = $InstitutionStaffReleases->find()
                 ->matching('Statuses', function ($q) use ($releaseDoneStatus) {
@@ -1999,16 +2001,16 @@ public function getIdentityTypeData($value_selection)
                     $InstitutionStaffReleases->aliasField('previous_institution_id') => $entity->institution_id
                 ])
                 ->count();
- 
+
             $checkAllRecords['associatedRecords'][] = ['model' => 'StaffRelease', 'count' => $releaseOutRecordsCount];
- 
+
             $associationArray = [
                 'Institution.StaffPositionProfiles' => 'StaffChangeInAssignment',
                 'Institution.StaffLeave' => 'StaffLeave',
                 'Institution.InstitutionClasses' => 'InstitutionClasses',
                 'Institution.InstitutionSubjectStaff' => 'InstitutionSubjects'
             ];
-  
+
             if (!Configure::read('schoolMode')) {
                 $coreAssociationArray = [
                     'Institution.InstitutionRubrics' => 'InstitutionRubrics',
@@ -2016,7 +2018,7 @@ public function getIdentityTypeData($value_selection)
                 ];
                 $associationArray = array_merge($associationArray, $coreAssociationArray);
             }
-  
+
             foreach ($associationArray as $tableName => $model) {
                 $Table = TableRegistry::get($tableName);
                 $recordsCount = $Table->find()
@@ -2024,9 +2026,9 @@ public function getIdentityTypeData($value_selection)
                         $Table->aliasField('staff_id') => $entity->staff_id,
                         $Table->aliasField('institution_id') => $entity->institution_id
                     ])->count();
-                 $checkAllRecords['associatedRecords'][] = ['model' => $model, 'count' => $recordsCount];
+                $checkAllRecords['associatedRecords'][] = ['model' => $model, 'count' => $recordsCount];
             }
- 
+
             if (!empty($checkAllRecords)) {
                 foreach ($checkAllRecords['associatedRecords'] as $record) {
                     echo $record['count'];
@@ -2036,7 +2038,7 @@ public function getIdentityTypeData($value_selection)
                 }
             }
         }
- 
+
         return $result;
     }
 
@@ -3125,7 +3127,7 @@ public function getIdentityTypeData($value_selection)
         $SecurityGroupInsTbl = TableRegistry::get('Security.SecurityGroupInstitutions');
         // $SecurityGroupsTbl = TableRegistry::get('Security.SecurityGroups');
         $SecurityGroupsLocator = new TableLocator();
-        $SecurityGroupsTbl = $SecurityGroupsLocator ->get('security_groups');
+        $SecurityGroupsTbl = $SecurityGroupsLocator->get('security_groups');
         $SecurityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
         $SecurityGroupIns = $SecurityGroupInsTbl->find()
             ->innerJoin([$SecurityGroupsTbl->getAlias() => $SecurityGroupsTbl->getTable()], [
@@ -3217,7 +3219,7 @@ public function getIdentityTypeData($value_selection)
         $SecurityGroupInsTbl = TableRegistry::get('Security.SecurityGroupInstitutions');
         // $SecurityGroupsTbl = TableRegistry::get('security_groups');
         $SecurityGroupsLocator = new TableLocator();
-        $SecurityGroupsTbl = $SecurityGroupsLocator ->get('security_groups');
+        $SecurityGroupsTbl = $SecurityGroupsLocator->get('security_groups');
         $SecurityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
         $SecurityGroupIns = $SecurityGroupInsTbl->find()
             ->innerJoin([$SecurityGroupsTbl->getAlias() => $SecurityGroupsTbl->getTable()], [
@@ -3780,12 +3782,12 @@ public function getIdentityTypeData($value_selection)
         //if $dayId != -1 then $weekStartDate = $weekEndDate
         list($weekStartDate, $weekEndDate) =
             $this->resetWeekStartEndForOneDaySearch($dayId, $dayDate, $weekStartDate, $weekEndDate);
-        if(empty($dayId)){
+        if (empty($dayId)) {
             $weekStartDate = self::getFromArray($options, 'week_start_day');
             $weekEndDate = self::getFromArray($options, 'week_end_day');
         }
         // echo "<pre>";print_r($weekStartDate);die;
-            
+
         $attendanceByStaffIdRecords = $this->getAttendanceByStaffIdRecordsArray(
             $institutionId,
             $academicPeriodId,
@@ -3866,7 +3868,7 @@ public function getIdentityTypeData($value_selection)
             $weekStartDate = $dayDate;
             $weekEndDate = $dayDate;
         }
-        if(empty($dayId)){
+        if (empty($dayId)) {
             $weekStartDate = $weekStartDate;
             $weekEndDate = $weekEndDate;
         }
@@ -4208,7 +4210,7 @@ public function getIdentityTypeData($value_selection)
             $this->aliasField('institution_id') => $institutionId,
 //            $this->aliasField('staff_status_id') => 1,
         ];
-        
+
         if ($superAdmin == 0) {
             $conditionQuery = $this->setConditionQueryForUser($ownAttendanceView, $otherAttendanceView, $user_id, $conditionQuery);
             if ($conditionQuery == null) {
@@ -4216,7 +4218,7 @@ public function getIdentityTypeData($value_selection)
                 return $query;
             }
         }
-        
+
         //if $dayId != -1 then $weekStartDate = $weekEndDate
         list($weekStartDate, $weekEndDate) =
             $this->resetWeekStartEndForOneDaySearch($dayId, $dayDate, $weekStartDate, $weekEndDate);
