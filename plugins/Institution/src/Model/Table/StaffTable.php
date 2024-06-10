@@ -15,7 +15,6 @@ use Cake\I18n\Date;
 use Cake\I18n\Time;
 use Cake\Log\Log;
 use Cake\ORM\Entity;
-use Cake\ORM\Locator\TableLocator;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
@@ -25,12 +24,16 @@ use Cake\Validation\Validator;
 use DateInterval;
 use DatePeriod;
 use DateTime;
+use Cake\Http\ServerRequest;
+use Cake\Utility\Text;
+use Cake\ORM\Locator\TableLocator;
 
 class StaffTable extends ControllerActionTable
 {
 
     use OptionsTrait;
-
+    private $assigned;
+    private $endOfAssignment;
     const PENDING = 0;
     const APPROVED = 1;
     const REJECTED = 2;
@@ -40,8 +43,6 @@ class StaffTable extends ControllerActionTable
     const PENDING_TRANSFEROUT = -3;
     const PENDING_RELEASEIN = -4;
     const PENDING_RELEASEOUT = -5;
-    private $assigned;
-    private $endOfAssignment;
     private $dashboardQuery = null;
     private $institution_id;
     private $academic_period_id;
@@ -1825,6 +1826,7 @@ class StaffTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        //POCOR-8334-START
         $institutionId = $this->getInstitutionID();
         $session = $this->request->getSession();
         try {
@@ -1833,6 +1835,7 @@ class StaffTable extends ControllerActionTable
         } catch (\Exception $ex) {
             Log::debug($ex->getMessage());
         }
+        //POCOR-8334-START
     }
 
     // Functions that are migrated over

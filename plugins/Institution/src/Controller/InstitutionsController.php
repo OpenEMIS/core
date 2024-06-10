@@ -6693,7 +6693,9 @@ class InstitutionsController extends AppController
             //$institutionId = $this->request->session()->read('Institution.Institutions.id');
             $institutionId = (array_key_exists('institution_id', $requestData)) ? $requestData['institution_id'] : null;
             $staffTypeId = (array_key_exists('staff_type_id', $requestData)) ? $requestData['staff_type_id'] : null;
+            // POCOR-8334 start
             $userId = !empty($this->getRequest()->getSession()->read('Auth.User.id')) ? $this->getRequest()->getSession()->read('Auth.User.id') : 1;
+            // POCOR-8334 start
             $photoContent = (array_key_exists('photo_base_64', $requestData)) ? $requestData['photo_base_64'] : null;
             $photoName = (array_key_exists('photo_name', $requestData)) ? $requestData['photo_name'] : null;
             $custom = (array_key_exists('custom', $requestData)) ? $requestData['custom'] : "";
@@ -8887,66 +8889,127 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']);
     }
 
-    public function StudentDashboard($action, $encodedParam)
+    // POCOR-8334 start
+
+    /**
+     * Displays the student dashboard.
+     *
+     * @param string $action
+     * @param string $encodedParam
+     * @return void
+     */
+    public function StudentDashboard(string $action, string $encodedParam): void
     {
-        $action = 'view';
         $params = $this->paramsDecode($encodedParam);
-        $Institutions = TableRegistry::get('Institution.Institutions');
+        $Institutions = $this->getDynamicTableInstance('Institution.Institutions');
 
         $userID = $params['user_id'];
         $userRole = "Student";
         $institutionID = $params['institution_id'];
+
+        $hasPermission = $this->hasPermission($userID, $institutionID, 'StudentDashboard', 'view');
+
+        $this->personalDashboard($action, $userRole, $userID, $institutionID, $hasPermission);
+    }
+
+    /**
+     * @param string $tableName
+     * @return Table
+     */
+
+    /**
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    public function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+
+        // Create a TableLocator instance
+        $locator = TableRegistry::getTableLocator();
+        if($tableName == 'AcademicPeriod.AcademicPeriods'){
+//        echo "<pre>";
+//        print($className);
+//        print_r(class_exists($className));
+//        die;
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
+    /**
+     * Check if the user has permission to access the specified dashboard.
+     *
+     * @param int $userID
+     * @param int $institutionID
+     * @param string $action
+     * @param string $view
+     * @return bool
+     */
+    private function hasPermission(int $userID, int $institutionID, string $action, string $view): bool
+    {
         if (!$this->AccessControl->isAdmin()) {
             $userId = $this->Auth->user('id');
+            $Institutions = $this->getDynamicTableInstance('Institution.Institutions');
             $roles = $Institutions->getInstitutionRoles($userId, $institutionID);
             $isActive = $Institutions->isActive($institutionID);
             if ($isActive) {
-                $hasPermission = $this->AccessControl->check(['Institutions', 'StudentDashboard', 'view'], $roles);
-            } else {
-                $hasPermission = false;
+                return $this->AccessControl->check(['Institutions', $action, $view], $roles);
             }
-        } else {
-            $hasPermission = true;
+            return false;
         }
-
-        $this->PersonalDashboard($action, $userRole, $userID, $institutionID, $hasPermission);
+        return true;
     }
 
-    //POCOR-8039-START
-
-    public function StaffDashboard($action, $encodedParam)
+    /**
+     * Displays the personal dashboard.
+     *
+     * @param string $action
+     * @param string $userRole
+     * @param int $userID
+     * @param int $institutionID
+     * @param bool $hasPermission
+     * @return void
+     */
+    public function personalDashboard(string $action, string $userRole, int $userID, int $institutionID, bool $hasPermission): void
     {
-        $params = $this->paramsDecode($encodedParam);
-        $userID = $params['user_id'];
-        $institutionID = $params['institution_id'];
-        if (!$this->AccessControl->isAdmin()) {
-            $userId = $this->Auth->user('id');
-            $Institutions = TableRegistry::get('Institution.Institutions');
-            $roles =$Institutions->getInstitutionRoles($userId, $institutionID);
-            $isActive = $Institutions->isActive($institutionID);
-            if ($isActive) {
-                $hasPermission = $this->AccessControl->check(['Institutions', 'StaffDashboard', 'view'], $roles);
-            } else {
-                $hasPermission = false;
-            }
-        } else {
-            $hasPermission = true;
-        }
-
-        $userRole = "Staff";
-        $this->PersonalDashboard($action, $userRole, $userID, $institutionID, $hasPermission);
-    }
-
-
-    public function PersonalDashboard($action, $userRole, $userID, $institutionID, $hasPermission)
-    {
-
         if (!$action) {
             return;
         }
 
         $this->set('haveProfilePermission', $hasPermission);
-        $UsersTable = TableRegistry::get('User.Users');
+        $UsersTable = $this->getDynamicTableInstance('User.Users');
 
         $user = $UsersTable->get($userID);
         $userName = $user->name;
@@ -8954,60 +9017,62 @@ class InstitutionsController extends AppController
         $this->set('contentHeader', $header);
         $this->set('userName', $userName);
 
-
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = $this->getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
         $currentPeriod = $AcademicPeriods->getCurrent();
-        //POCOR-7733 start
+        // POCOR-7733 start
         $session = $this->request->getSession();
         $session->write('AcademicPeriod.currentAcademicPeriod', $currentPeriod);
         $session->write('AcademicPeriod.currentAcademicPeriodName', $AcademicPeriods->get($currentPeriod)->name);
-        //POCOR-7733 end
+        // POCOR-7733 end
+
         if (empty($currentPeriod)) {
             $this->Alert->warning('Institution.Institutions.academicPeriod');
         }
 
-//         $highChartDatas = ['{"chart":{"type":"column","borderWidth":1},"xAxis":{"title":{"text":"Position Type"},"categories":["Non-Teaching","Teaching"]},"yAxis":{"title":{"text":"Total"}},"title":{"text":"Number Of Staff"},"subtitle":{"text":"For Year 2015-2016"},"series":[{"name":"Male","data":[0,2]},{"name":"Female","data":[0,1]}]}'];
         $highChartDatas = $this->getPersonalHighchartData($userID, $institutionID, $userRole);
-
-
         $profileData = $this->getPersonalProfileCompletenessData($userID, $userRole);
-//        echo "<pre>"; print_r($profileData);
-//        die;
 
         $this->set('personalProfileCompletness', $profileData);
         $this->set('highChartDatas', $highChartDatas);
+
         $indexDashboard = 'dashboard';
         $this->set('mini_dashboard', [
             'name' => $indexDashboard,
             'data' => [
                 'model' => 'staff',
                 'modelCount' => 25,
-                'modelArray' => []]
+                'modelArray' => []
+            ]
         ]);
-
-        //        $this->log('dashboard', 'debug');
     }
 
     /**
-     * Get personal profile completeness data
+     * Get personal profile completeness highchart data.
+     *
+     * @param int $userID
+     * @param int $institutionID
+     * @param string $userRole
      * @return array
      */
-    public
-    function getPersonalHighchartData($userID, $institutionID, $userRole)
+    public function getPersonalHighchartData(int $userID, int $institutionID, string $userRole): array
     {
-        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+        $StaffStatuses = $this->getDynamicTableInstance('Staff.StaffStatuses');
         $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $InstitutionStaff = $this->getDynamicTableInstance('Institution.Staff');
 
         // only show student charts if institution is academic
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $InstitutionStudents = $this->getDynamicTableInstance('Institution.Students');
+        $StudentStatuses = $this->getDynamicTableInstance('Student.StudentStatuses');
         $statuses = $StudentStatuses->findCodeList();
-        if ($userRole == 'Student' || $userRole == 'Students') {
+        $highChartDatas = [];
+
+        if ($userRole === 'Student' || $userRole === 'Students') {
             $params = [
-                'conditions' => ['institution_id' => $institutionID,
+                'conditions' => [
+                    'institution_id' => $institutionID,
                     'student_id' => $userID,
-                    'student_status_id NOT IN ' => [$statuses['TRANSFERRED'],
+                    'student_status_id NOT IN ' => [
+                        $statuses['TRANSFERRED'],
                         $statuses['WITHDRAWN'],
                         $statuses['PROMOTED'],
                         $statuses['REPEATED']
@@ -9017,144 +9082,138 @@ class InstitutionsController extends AppController
 
             $highChartDatas[] = $InstitutionStudents->getHighChart('student_attendance', $params);
         }
-        if ($userRole == 'Staff') {
+
+        if ($userRole === 'Staff') {
             $params = [
                 'conditions' => [
                     'institution_id' => $institutionID,
                     'staff_status_id' => $assignedStatus,
-                    'staff_id' => $userID]
+                    'staff_id' => $userID
+                ]
             ];
             $highChartDatas[] = $InstitutionStaff->getHighChart('staff_attendance', $params);
         }
-        //Students By Grade for current year, excludes transferred ,withdrawn, promoted, repeated students
+
+        // Students By Grade for current year, excludes transferred, withdrawn, promoted, repeated students
         $params = [
-            'conditions' => ['institution_id' => $institutionID, 'student_status_id NOT IN ' => [$statuses['TRANSFERRED'], $statuses['WITHDRAWN'],
-                $statuses['PROMOTED'], $statuses['REPEATED']]]
+            'conditions' => [
+                'institution_id' => $institutionID,
+                'student_status_id NOT IN ' => [
+                    $statuses['TRANSFERRED'],
+                    $statuses['WITHDRAWN'],
+                    $statuses['PROMOTED'],
+                    $statuses['REPEATED']
+                ]
+            ]
         ];
 
         return $highChartDatas;
     }
 
-    public
-    function getPersonalProfileCompletenessData($userID, $userRole)
+    /**
+     * Get personal profile completeness data.
+     *
+     * @param int $userID
+     * @param string $userRole
+     * @return array
+     */
+    public function getPersonalProfileCompletenessData(int $userID, string $userRole): array
     {
-        if ($userRole == 'Students') {
+        if ($userRole === 'Students') {
             $userRole = 'Student';
         }
 
-        $data = array();
+        $data = [];
         $profileComplete = 0;
-        //Overview
-        $usersData['Overview'] = $this->getLastData(
-            $userID,
-            'security_users', 'id'
-        );
+        $usersData = [
+            'Overview' => $this->getLastData($userID, 'security_users', 'id'),
+            'Nationalities' => $this->getLastData($userID, 'user_nationalities', 'security_user_id'),
+            'Identities' => $this->getLastData($userID, 'user_identities', 'security_user_id')
+        ];
 
-        $usersData['Nationalities'] = $this->getLastData(
-            $userID,
-            'user_nationalities',
-            'security_user_id');
-
-        $usersData['Identities'] = $this->getLastData(
-            $userID,
-            'user_identities',
-            'security_user_id');
-
-        if ($userRole == 'Staff') {
-            $usersData['Contacts'] = $this->getLastData(
-                $userID,
-                'user_contacts',
-                'security_user_id');
-            $usersData['Qualifications'] = $this->getLastData(
-                $userID,
-                'staff_qualifications',
-                'staff_id');
+        if ($userRole === 'Staff') {
+            $usersData['Contacts'] = $this->getLastData($userID, 'user_contacts', 'security_user_id');
+            $usersData['Qualifications'] = $this->getLastData($userID, 'staff_qualifications', 'staff_id');
         }
-        if ($userRole == 'Student') {
-            $usersData['Guardians'] = $this->getLastData(
-                $userID,
-                'student_guardians',
-                'student_id');
-            $usersData['Absence'] = $this->getLastData(
-                $userID,
-                'institution_student_absences',
-                'student_id');
+
+        if ($userRole === 'Student') {
+            $usersData['Guardians'] = $this->getLastData($userID, 'student_guardians', 'student_id');
+            $usersData['Absence'] = $this->getLastData($userID, 'institution_student_absences', 'student_id');
         }
-        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
-        $enabledTypeList = $ConfigItem
-            ->find()
+
+        $ConfigItem = $this->getDynamicTableInstance('Configuration.ConfigItems');
+        $enabledTypeList = $ConfigItem->find()
             ->select(['name' => $ConfigItem->aliasField('name')])
             ->order('label')
             ->where([
                 $ConfigItem->aliasField('visible') => 1,
                 $ConfigItem->aliasField('value') => 1,
-                $ConfigItem->aliasField('type') => $userRole . ' Data Completeness'])//POCOR-6022
-            ->toArray();
+                $ConfigItem->aliasField('type') => $userRole . ' Data Completeness'
+            ])->toArray();
 
         foreach ($enabledTypeList as $key => $enabled) {
             $data[$key]['feature'] = $enabled->name;
-            $singleData = $usersData[$enabled->name];
+            $singleData = $usersData[$enabled->name] ?? null;
             if (!empty($singleData)) {
-                $profileComplete = $profileComplete + 1;
+                $profileComplete++;
                 $data[$key]['complete'] = 'yes';
-                $data[$key]['modifiedDate'] = ($singleData->modified) ? date("F j,Y", strtotime($singleData->modified)) : date("F j,Y", strtotime($singleData->created));
+                $data[$key]['modifiedDate'] = $singleData->modified ? date("F j, Y", strtotime($singleData->modified)) : date("F j, Y", strtotime($singleData->created));
             } else {
                 $data[$key]['complete'] = 'no';
                 $data[$key]['modifiedDate'] = 'Not updated';
             }
         }
+
         $totalProfileComplete = count($data);
-        $profilePercentage = 100 / $totalProfileComplete * $profileComplete;
-        $profilePercentage = round($profilePercentage);
+        $profilePercentage = $totalProfileComplete > 0 ? round((100 / $totalProfileComplete) * $profileComplete) : 0;
         $data['percentage'] = $profilePercentage;
-//        echo "<pre>"; print_r($data);
-//        die;
 
         return $data;
     }
 
-    public function getLastData($userID, $tableName, $fieldName)
+    /**
+     * Get the last data entry for a given user from a specified table.
+     *
+     * @param int $userID
+     * @param string $tableName
+     * @param string $fieldName
+     * @return \Cake\Datasource\EntityInterface|null
+     */
+    public function getLastData(int $userID, string $tableName, string $fieldName): ?\Cake\Datasource\EntityInterface
     {
         $table = $this->getDynamicTableInstance($tableName);
-        $usersData = $table->find()
+        return $table->find()
             ->select([
                 'created' => $table->aliasField('created'),
-                'modified' => $table->aliasField('modified'),
+                'modified' => $table->aliasField('modified')
             ])
             ->where([$table->aliasField($fieldName) => $userID])
             ->orderDesc($table->aliasField('modified'))
             ->limit(1)
             ->first();
-
-        return $usersData;
     }
 
-    // Function to dynamically get table instance without predefined class
-    public
-    function getDynamicTableInstance($tableName)
+    /**
+     * Displays the staff dashboard.
+     *
+     * @param string $action
+     * @param string $encodedParam
+     * @return void
+     */
+    public function StaffDashboard(string $action, string $encodedParam): void
     {
+        $params = $this->paramsDecode($encodedParam);
+        $userID = $params['user_id'];
+        $institutionID = $params['institution_id'];
+        $userRole = "Staff";
 
-        // Convert the table name to camel case as expected by CakePHP conventions
-        $tableAlias = \Cake\Utility\Inflector::camelize($tableName);
+        $hasPermission = $this->hasPermission($userID, $institutionID, 'StaffDashboard', 'view');
 
-        // Create a TableLocator instance
-        $locator = TableRegistry::getTableLocator();
-
-        // Check if the table instance already exists
-        if (!$locator->exists($tableAlias)) {
-            // Configure a new table instance
-            $locator->setConfig($tableAlias, [
-                'table' => $tableName,
-                'alias' => $tableAlias,
-                'className' => 'Cake\ORM\Table', // Use the generic Table class
-            ]);
-        }
-
-
-        // Return the table instance
-        return $locator->get($tableAlias);
+        $this->personalDashboard($action, $userRole, $userID, $institutionID, $hasPermission);
     }
 
+
+// POCOR-8334 END
 
     private
     function hasPermissionToViewStudentAttendanceArchive($institutionId)
@@ -9205,8 +9264,6 @@ class InstitutionsController extends AppController
         }
         return $has_permission_to_view_archive;
     }
-
-    //POCOR-8039-END
 
 
 }
