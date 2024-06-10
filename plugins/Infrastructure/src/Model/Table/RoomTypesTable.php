@@ -17,9 +17,9 @@ class RoomTypesTable extends ControllerActionTable
     private $roomLevel = null;
     private $classificationOptions = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('room_types');
+        $this->setTable('room_types');
         parent::initialize($config);
 
         $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true, 'cascadeCallbacks' => true]);

@@ -18,9 +18,9 @@ class ReorderBehavior extends Behavior
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
-            $orderField = $this->config('orderField');
-            $filter = $this->config('filter');
-            $filterValues = $this->config('filterValues');
+            $orderField = $this->getConfig('orderField');
+            $filter = $this->getConfig('filter');
+            $filterValues = $this->getConfig('filterValues');
             $order = 0;
 
             if (is_null($filter)) {
@@ -74,24 +74,24 @@ class ReorderBehavior extends Behavior
         }
         $counter = 1;
         foreach ($reorderItems as $key => $item) {
-            $table->updateAll([$orderField => $counter++], [$table->primaryKey() => $key]);
+            $table->updateAll([$orderField => $counter++], [$table->getPrimaryKey() => $key]);
         }
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $orderField = $this->config('orderField');
-        $filter = $this->config('filter');
-        $filterValues = $this->config('filterValues');
+        $orderField = $this->getConfig('orderField');
+        $filter = $this->getConfig('filter');
+        $filterValues = $this->getConfig('filterValues');
         $this->updateOrder($entity, $orderField, $filter, $filterValues);
     }
 
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
-        $orderField = $this->config('orderField');
-        $filter = $this->config('filter');
-        $filterValues = $this->config('filterValues');
+        $orderField = $this->getConfig('orderField');
+        $filter = $this->getConfig('filter');
+        $filterValues = $this->getConfig('filterValues');
         $this->updateOrder($entity, $orderField, $filter, $filterValues);
     }
 }

@@ -10,7 +10,7 @@ use Cake\Utility\Text;
 use Cake\Filesystem\File;
 
 class UpdateSubjectStudentTotalMarkShell extends Shell {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Institution.InstitutionSubjectStudents');

@@ -17,14 +17,14 @@ class AppraisalScoreAnswersTable extends AppraisalAnswersTable
     const FORMULA_SUM = "SUM";
     const FORMULA_AVG = "AVG";
 
-    public function implementedEvents()
+    public function implementedEvents(): array
    	{
         $events = parent::implementedEvents();
         $events['Model.Appraisal.edit.beforePatch'] = 'appraisalEditBeforePatch';
         return $events;
    	}
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }

@@ -10,8 +10,8 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 
 class StaffContactsTable extends AppTable  {
-	public function initialize(array $config) {
-		$this->table('user_contacts');
+	public function initialize(array $config): void {
+		$this->setTable('user_contacts');
 		parent::initialize($config);
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
@@ -27,8 +27,8 @@ class StaffContactsTable extends AppTable  {
 		$this->ControllerAction->field('format');
 	}
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
-		$attr['options'] = $this->controller->getFeatureOptions($this->alias());
+	public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request) {
+		$attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
 		return $attr;
 	}
 
@@ -107,10 +107,10 @@ class StaffContactsTable extends AppTable  {
                     ->select([
                     'type' => $type,
                         ])
-                    ->leftJoin([$securityRoles->alias() => $securityRoles->table()], [
+                    ->leftJoin([$securityRoles->getAlias() => $securityRoles->getTable()], [
                         $securityRoles->aliasField('id = ') . $Status->aliasField('security_role_id')
                     ])
-                    ->leftJoin([$staffPositionTitles->alias() => $staffPositionTitles->table()], [
+                    ->leftJoin([$staffPositionTitles->getAlias() => $staffPositionTitles->getTable()], [
                         $staffPositionTitles->aliasField('security_role_id = ') . $securityRoles->aliasField('id')
                     ])
                     ->group([
@@ -190,7 +190,7 @@ class StaffContactsTable extends AppTable  {
             ->leftJoin(['InstitutionStaff' => 'institution_staff'], [
                 'InstitutionStaff.staff_id = ' . $this->aliasField('security_user_id')
             ])
-            ->leftJoin([$InstitutionsTable->alias() => $InstitutionsTable->table()], [
+            ->leftJoin([$InstitutionsTable->getAlias() => $InstitutionsTable->getTable()], [
                 $InstitutionsTable->aliasField('id = ') . 'InstitutionStaff.institution_id'
             ])
             ->order([$this->aliasField('security_user_id')])

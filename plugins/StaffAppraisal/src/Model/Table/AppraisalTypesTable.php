@@ -10,7 +10,7 @@ use App\Model\Table\ControllerActionTable;
 
 class AppraisalTypesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsToMany('AppraisalPeriods', [
@@ -53,6 +53,26 @@ class AppraisalTypesTable extends ControllerActionTable
             $helpBtn['attr']['title'] = __('Help');
             $extra['toolbarButtons']['help'] = $helpBtn;
         }
+    }// End POCOR-5188
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'code') {
+            return __('Code');
+        }else if ($field == 'name') {
+            return __('Name');
+        }else if ($field == 'field_type_id') {
+            return __('Field Typeles');
+        }else if ($field == 'modified_user_id') {
+            return __('Modified By');
+        }else if ($field == 'modified') {
+            return __('Modified On');
+        }else if ($field == 'created_user_id') {
+            return __('Created By');
+        }else if ($field == 'created') {
+            return __('Created On');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
-    // End POCOR-5188
 }

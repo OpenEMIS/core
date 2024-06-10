@@ -20,9 +20,9 @@ class CurrentAssessmentsTable extends ControllerActionTable
     private $institutionId = null;
     private $studentId = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('assessment_item_results');
+        $this->setTable('assessment_item_results');
         parent::initialize($config);
 
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
@@ -41,21 +41,26 @@ class CurrentAssessmentsTable extends ControllerActionTable
         $this->toggle('search', false);
 
         $this->addBehavior('Restful.RestfulAccessControl');
+
+        $this->addBehavior('Institution.InstitutionTab');
+        //$this->addBehavior('Student.StudentTab');
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $contentHeader = $this->controller->viewVars['contentHeader'];
+        //$contentHeader = $this->controller->viewVars['contentHeader'];
+        $contentHeader = $this->controller->viewBuilder()->getVars()['contentHeader'];
         list($studentName, $module) = explode(' - ', $contentHeader);
         $module = __('Assessments');
         $contentHeader = $studentName . ' - ' . $module;
         $this->controller->set('contentHeader', $contentHeader);
         $this->controller->Navigation->substituteCrumb(__('Student Assessment'), $module);
-        $session = $this->controller->request->session();
-        if ($session->check('Institution.Institutions.id')) {
+       // $session = $this->controller->request->getSession();
+        $institutionId = $this->getInstitutionID();
+       /* if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
-        }
-        $studentId = $this->Session->read('Student.Students.id');
+        }*/
+        $studentId = $this->getStudentID();
         $this->institutionId = $institutionId;
         $this->studentId = $studentId;
     }
@@ -77,11 +82,12 @@ class CurrentAssessmentsTable extends ControllerActionTable
 
         $this->setFieldOrder(['assessment_period_name', 'assessments_name', 'education_subject_name', 'marks', 'total_mark']);
 
-        //add controls with ctp
-
+        //add controls with php
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['controls'] = [
             'name' => 'Student.Assessments/controls',
-            'data' => [],
+            'data' => ['encodedQueryString' => $encodedQueryString],
             'options' => [],
             'order' => 1];
 
@@ -98,7 +104,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
     {
         //POCOR-7201[START]
         $session = $this->Session;
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $studentId = $this->studentId;
         //POCOR-7201[END]
         $query->contain('Assessments');
@@ -138,8 +144,8 @@ class CurrentAssessmentsTable extends ControllerActionTable
         // Academic Periods filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $selectedAcademicPeriod =
-            !is_null($this->request->query('academic_period_id'))
-                ? $this->request->query('academic_period_id')
+            !is_null($this->request->getQuery('academic_period_id'))
+                ? $this->request->getQuery('academic_period_id')
                 : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
@@ -247,7 +253,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
                 'institution_id' => $institutionId,
             ];
 
-            if ($this->controller->name == 'Directories') {
+            if ($this->controller->getName() == 'Directories') {
                 $url = [
                     'plugin' => 'Directory',
                     'controller' => 'Directories',
@@ -274,7 +280,8 @@ class CurrentAssessmentsTable extends ControllerActionTable
     {
         //POCOR-7474-HINDOL
         $options['type'] = 'student';
-        $tabElements = $this->controller->getAcademicTabElements($options);
+        //$tabElements = $this->controller->getAcademicTabElements($options);
+        $tabElements = $this->getAcademicTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Assessments');
     }
@@ -375,7 +382,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
                 'student_id =' . $studentId],
         ];
         $table_name = 'assessment_item_results';
-        $is_archive_exists = ArchiveConnections::hasArchiveRecords($table_name, $where);
+        $is_archive_exists = ArchiveConnections::getArchiveAssessments($table_name, $where);
         return $is_archive_exists;
         //POCOR-7526::End
         return $is_archive_exists;
@@ -391,7 +398,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
     private function setAcademicPeriodOptions($institutionId, $studentId, $selectedAcademicPeriod)
     {
     // Academic Periods filter
-        $ItemResults = TableRegistry::get('assessment_item_results');
+        $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
         $years_arr = $ItemResults->find()
             ->select('academic_period_id')
             ->distinct('academic_period_id')
@@ -420,7 +427,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
      */
     private function setAssessmentOptions($selectedAcademicPeriod, $selectedAssessment = -1)
     {
-        $ItemResults = TableRegistry::get('assessment_item_results');
+        $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
         $assessments_arr = $ItemResults->find()
             ->select('assessment_id')
             ->distinct('assessment_id')
@@ -451,7 +458,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
      */
     private function setAssessmentPeriodOptions($selectedAssessment = -1, $selectedAssessmentPeriod = -1)
     {
-        $ItemResults = TableRegistry::get('assessment_item_results');
+        $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
         $assessment_periods_arr = $ItemResults->find()
             ->select('assessment_id')
             ->distinct('assessment_id')

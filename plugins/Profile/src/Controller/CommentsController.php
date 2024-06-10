@@ -10,12 +10,13 @@ use App\Controller\PageController;
 
 class CommentsController extends PageController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
         $this->loadModel('Security.Users');
         $this->loadModel('User.Comments');
+        $this->loadComponent('Page.Page');
         $this->Page->loadElementsFromTable($this->Comments);
     }
 
@@ -87,7 +88,7 @@ class CommentsController extends PageController
     public function setBreadCrumb($options)
     {
         $page = $this->Page;
-        $plugin = $this->plugin;
+        $plugin = $this->getPlugin();
 
         $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
         $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
@@ -143,7 +144,7 @@ class CommentsController extends PageController
                 'controller' => 'Directories',
                 'action' => 'Directories'
             ]);
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $guardianId = $session->read('Guardian.Guardians.id');
             $studentId = $session->read('Student.Students.id');
             $isStudent = $session->read('Directory.Directories.is_student');
@@ -184,7 +185,7 @@ class CommentsController extends PageController
             }
         } else if ($plugin == 'Guardian') {
             $User = TableRegistry::get('User.Users');
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             $institutionName = $session->read('Institution.Institutions.name');
             $institutionId = $this->getInstitutionId();
             $studentId = $session->read('Student.Students.id');
@@ -222,10 +223,10 @@ class CommentsController extends PageController
     }
 
     // for Directories and Profiles
-    public function setupTabElements($options)
+    public function setupUserTabElements($options)
     {
         $page = $this->Page;
-        $plugin = $this->plugin;
+        $plugin = $this->getPlugin();
         $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
         $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
 
@@ -262,7 +263,7 @@ class CommentsController extends PageController
                     'plugin' => $plugin,
                     'controller' => $plugin . 'Comments',
                     'action' => 'index',
-                    'queryString' => $encodedUserId
+                    '?' => ['queryString' => $encodedUserId] // POCOR-8074-QueryStringProfile
                 ];
             } else {
                 $url = [
@@ -270,12 +271,12 @@ class CommentsController extends PageController
                     'controller' => $pluralPlugin,
                     'action' => $action,
                     'index',
-                    'queryString' => $encodedUserId
+                    '?' => ['queryString' => $encodedUserId] // POCOR-8074-QueryStringProfile
                 ];
                 // exceptions
                 if ($action == 'UserNationalities') {
                     $url['action'] = 'Nationalities';
-                    $url['queryString'] = $encodedUserAndNationalityId;
+                    $url['?']['queryString'] = $encodedUserAndNationalityId; // POCOR-8074-QueryStringProfile
                 }
             }
             $tabElements[$action]['url'] = $url;
@@ -303,7 +304,7 @@ class CommentsController extends PageController
     public function setupInstitutionTabElements($options)
     {
         $page = $this->Page;
-        $plugin = $this->plugin;
+        $plugin = $this->getPlugin();
         $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
         $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
         $userRole = array_key_exists('userRole', $options) ? $options['userRole'] : '';
@@ -352,7 +353,7 @@ class CommentsController extends PageController
                     'institutionId' => $encodedInstitutionId,
                     'controller' => $userRole . 'Comments',
                     'action' => 'index',
-                    'queryString' => $encodedUserId
+                    '?' => ['queryString' => $encodedUserId] // POCOR-8074-QueryStringProfile
                 ];
             } else {
                 $url = [
@@ -360,14 +361,14 @@ class CommentsController extends PageController
                     'controller' => $pluralUserRole,
                     'action' => $action,
                     'index',
-                    'queryString' => $encodedUserId,
-                    'institutionId' => $encodedInstitutionId,
+                    '?' => ['queryString' => $encodedUserId,
+                    'institutionId' => $encodedInstitutionId], // POCOR-8074-QueryStringProfile
                 ];
 
                 // exceptions
                 if ($action == 'UserNationalities') {
                     $url['action'] = 'Nationalities';
-                    $url['queryString'] = $encodedUserAndNationalityId;
+                    $url['?']['queryString'] = $encodedUserAndNationalityId; // POCOR-8074-QueryStringProfile
                 }
             }
             $tabElements[$action]['url'] = $url;
@@ -397,11 +398,12 @@ class CommentsController extends PageController
      */
     private function getInstitutionID()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $insitutionIDFromSession = $session->read('Institution.Institutions.id');
         $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
-        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
-            $this->request->params['institutionId'] :
+        $institutionRequestParam = $this->request->getParam('institutionId');
+        $encodedInstitutionID = isset($institutionRequestParam) ?
+            $institutionRequestParam :
             $encodedInstitutionIDFromSession;
         try {
             $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];

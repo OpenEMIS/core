@@ -16,9 +16,9 @@ class StudentStatusUpdatesTable extends ControllerActionTable
     const MAX_PROCESSES = 1;
     const NOT_EXECUTED = 1;
     const EXECUTED = 2;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('student_status_updates');
+        $this->setTable('student_status_updates');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -29,9 +29,10 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Students.afterDelete'] = 'studentsAfterDelete';
@@ -90,15 +91,16 @@ class StudentStatusUpdatesTable extends ControllerActionTable
 
     public function getStudentWithdrawalRecords($first = false)
     {
-        $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
-        $academicPeriodDetail = $this->AcademicPeriods->get($currentAcademicPeriod);
+
+        $academicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $currentAcademicPeriod = $academicPeriod->getCurrent();
+        $academicPeriodDetail = $academicPeriod->get($currentAcademicPeriod);
         $academicPeriodEffectiveDate = $academicPeriodDetail->start_date->format('Y-m-d');
         $academicPeriodEndDate = $academicPeriodDetail->end_date->format('Y-m-d');
-       
         $studentWithdrawRecords = [];
         $today = Time::now();
         $today = $today->format('Y-m-d');
-        
+      
         if($academicPeriodEndDate >= $today && $academicPeriodEffectiveDate <= $today){
 //             Log::write('debug', 'End date');
 //             Log::write('debug', $academicPeriodEndDate);
@@ -117,20 +119,21 @@ class StudentStatusUpdatesTable extends ControllerActionTable
                 $studentWithdrawRecords = $query->first();
             } else {
                 $studentWithdrawRecords = $query->toArray();
-            }        
+            }
+           
         }
-        
         return $studentWithdrawRecords;
+        
     }
 
     public function triggerUpdateStudentStatusShell()
     {
         // model - StudentStatusUpdates
-        $model = $this->registryAlias();
+        $model = $this->getRegistryAlias();
         $SystemProcesses = TableRegistry::get('SystemProcesses');
         $runningProcess = $SystemProcesses->getRunningProcesses($model);
-        Log::write('debug', 'runningProcess >>>>>>>>>>>>>>>>> ');
-        Log::write('debug', $runningProcess);
+        //Log::write('debug', 'runningProcess >>>>>>>>>>>>>>>>> ');
+        //Log::write('debug', $runningProcess);
 
         foreach ($runningProcess as $key => $processData) {
             $systemProcessId = $processData['id'];
@@ -172,6 +175,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
 
     public function checkRequireUpdate()
     {
+
         $today = date('Y-m-d');
         $lastExectuedDate = null;
         $dir = new Folder(ROOT . DS . 'logs');
@@ -183,12 +187,12 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         if (is_null($lastExectuedDate) || $today > $lastExectuedDate) {
             $recordsToUpdate = count($this->getStudentWithdrawalRecords());
             if ($recordsToUpdate > 0) {
-                $this->triggerUpdateStudentStatusShell();
+                //$this->triggerUpdateStudentStatusShell();
             } else {
-                Log::write('debug', 'No records to update');
+                //Log::write('debug', 'No records to update');
             }
         } else {
-            Log::write('debug', 'UpdateStudentStatusShell last executed on '.$lastExectuedDate);
+            //Log::write('debug', 'UpdateStudentStatusShell last executed on '.$lastExectuedDate);
         }
     }
 
@@ -196,7 +200,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
     {
         $today = date('Y-m-d');
         $passArray = [];
-        $passArray = ['Last executed in '.$this->registryAlias(), $today];
+        $passArray = ['Last executed in '.$this->getRegistryAlias(), $today];
         $message = json_encode($passArray);
 
         Log::write('debug', 'Writing last exceuted date ' .$today.' into tmp/UpdateStudentStatus');
@@ -204,5 +208,28 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         $file = new File($dir->path . DS . 'UpdateStudentStatus', true);
         $file->write($message);
         $file->close();
+    }
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        if ($action == 'reconfirm') {
+            $toolbarButtons['back'] = $buttons['back'];
+            $toolbarButtons['back']['type'] = 'button';
+            $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+            $toolbarButtons['back']['attr'] = $attr;
+            $toolbarButtons['back']['attr']['title'] = __('Back');
+            $toolbarButtons['back']['url'][0] = 'add';
+
+        } else if ($action == 'add') {
+            $toolbarButtons['back'] = $buttons['back'];
+            $toolbarButtons['back']['type'] = 'button';
+            $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+            $toolbarButtons['back']['attr'] = $attr;
+            $toolbarButtons['back']['attr']['title'] = __('Back');
+            $toolbarButtons['back']['url']['action'] = 'Students';
+            $toolbarButtons['back']['url']['0'] = 'index';
+            $toolbarButtons['back']['url']['1'] = $encodedQueryString;
+        }
     }
 }

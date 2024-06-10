@@ -25,9 +25,9 @@ class InfrastructureNeedsTable extends ControllerActionTable
         3 => 'Low'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('infrastructure_needs');
+        $this->setTable('infrastructure_needs');
         parent::initialize($config);
 
         $this->belongsTo('InfrastructureNeedTypes', ['className' => 'Institution.InfrastructureNeedTypes', 'foreign_key' => 'infrastructure_need_type_id']);
@@ -49,18 +49,20 @@ class InfrastructureNeedsTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
         // setting this up to be overridden in viewAfterAction(), this code is required
-        $this->behaviors()->get('ControllerAction')->config(
-            'actions.download.show',
-            true
-        );
+        $this->behaviors()->get('ControllerAction')->setConfig(['actions.download.show',
+            true]);
 
         $this->addBehavior('Excel',[
             'excludes' => ['academic_period_id', 'institution_id'],
             'pages' => ['index'],
         ]);
+
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InfrastructureNeeds'=>['id']]
+        ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1];
@@ -76,10 +78,10 @@ class InfrastructureNeedsTable extends ControllerActionTable
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->allowEmpty('file_content')
             ->add('code', 'ruleUnique', [
@@ -146,14 +148,14 @@ class InfrastructureNeedsTable extends ControllerActionTable
         ->toArray();
 
         $needTypeOptions = [null => __('All Need Types')] + $needTypes;
-        $extra['needTypes'] = $this->request->query('need_types'); 
+        $extra['needTypes'] = $this->request->getQuery('need_types'); 
         // set need type filter
 
         // set need priority filter
         $needPriorities = $this->needPriorities;
 
         $needPrioritiesOptions = [null => __('All Priorities')] + $needPriorities;
-        $extra['needPriorities'] = $this->request->query('priority'); 
+        $extra['needPriorities'] = $this->request->getQuery('priority'); 
         // set need priority filter
 
         $extra['elements']['control'] = [
@@ -202,6 +204,28 @@ class InfrastructureNeedsTable extends ControllerActionTable
                 return __('Need Type');
             case 'priority':
                 return __('Priority');
+            case 'date_determined':
+                return __('Date Determined');
+            case 'date_started':
+                return __('Date Started');
+            case 'date_completed':
+                return __('Date Completed');
+            case 'file_content':
+                return __('Priority');
+            case 'description':
+                return __('Description');
+            case 'comment':
+                return __('Comment');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'associated_projects':
+                return __('Associated Projects');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -214,7 +238,7 @@ class InfrastructureNeedsTable extends ControllerActionTable
             $filename = $entity->file_content;
             return !empty($filename);
         };
-        $this->behaviors()->get('ControllerAction')->config(
+        $this->behaviors()->get('ControllerAction')->getConfig(
             'actions.download.show',
             $showFunc
         );
@@ -288,10 +312,11 @@ class InfrastructureNeedsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        $institutionId  = $session->read('Institution.Institutions.id');
-        $NeedType = ($this->request->query('need_types')) ? $this->request->query('need_types') : 0;
-        $NeedPriority = ($this->request->query('priority')) ? $this->request->query('priority') : 0;
+        $session = $this->request->getSession();
+        //$institutionId  = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
+        $NeedType = ($this->request->getQuery('need_types')) ? $this->request->getQuery('need_types') : 0;
+        $NeedPriority = ($this->request->getQuery('priority')) ? $this->request->getQuery('priority') : 0;
 
         $query
         ->where([
@@ -363,10 +388,11 @@ class InfrastructureNeedsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
-        $institutionId  = $session->read('Institution.Institutions.id');
-        $NeedType = ($this->request->query('need_types')) ? $this->request->query('need_types') : 0;
-        $NeedPriority = ($this->request->query('priority')) ? $this->request->query('priority') : 0;
+        $session = $this->request->getSession();
+        //$institutionId  = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
+        $NeedType = ($this->request->getQuery('need_types')) ? $this->request->getQuery('need_types') : 0;
+        $NeedPriority = ($this->request->getQuery('priority')) ? $this->request->getQuery('priority') : 0;
         
         $query
         ->where([

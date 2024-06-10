@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
 
 use CustomField\Model\Behavior\SetupBehavior;
 
@@ -14,7 +15,7 @@ class SetupDecimalBehavior extends SetupBehavior
 {
     private $validationOptions = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
@@ -24,7 +25,7 @@ class SetupDecimalBehavior extends SetupBehavior
         $model = $this->_table;
         $fieldTypes = $model->getFieldTypes();
 
-        $selectedFieldType = isset($model->request->data[$model->alias()]['field_type']) ? $model->request->data[$model->alias()]['field_type'] : key($fieldTypes);
+        $selectedFieldType = isset($model->request->data[$model->getAlias()]['field_type']) ? $model->request->data[$model->alias()]['field_type'] : key($fieldTypes);
 
         if ($selectedFieldType == $this->fieldTypeCode) {
             $this->buildDecimalValidator();
@@ -46,7 +47,7 @@ class SetupDecimalBehavior extends SetupBehavior
         $minPrecision = $this->inputLimits['decimal_value']['precision']['min'];
         $maxPrecision = $this->inputLimits['decimal_value']['precision']['max'];
 
-        $validator = $this->_table->validator();
+        $validator = $this->_table->getValidator();
         $validator
             ->notEmpty('decimal_length')
             ->add('decimal_length', [
@@ -88,7 +89,7 @@ class SetupDecimalBehavior extends SetupBehavior
         $model->field('decimal_precision');
     }
 
-    public function onUpdateFieldDecimalLength(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldDecimalLength(Event $event, array $attr, $action, ServerRequest $request)
     {
         $minLength = $this->inputLimits['decimal_value']['length']['min'];
         $maxLength = $this->inputLimits['decimal_value']['length']['max'];
@@ -113,7 +114,7 @@ class SetupDecimalBehavior extends SetupBehavior
         return $attr;
     }
 
-    public function onUpdateFieldDecimalPrecision(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldDecimalPrecision(Event $event, array $attr, $action, ServerRequest $request)
     {
         $minPrecision = $this->inputLimits['decimal_value']['precision']['min'];
         $maxPrecision = $this->inputLimits['decimal_value']['precision']['max'];

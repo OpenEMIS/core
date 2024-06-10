@@ -14,7 +14,7 @@ use App\Model\Table\AppTable;
 
 class ExaminationStudentSubjectResultsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -55,7 +55,7 @@ class ExaminationStudentSubjectResultsTable extends AppTable
     public function findResults(Query $query, array $options) {
         $academicPeriodId = $options['academic_period_id'];
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->getRequest()->getSession();
 
         $studentId = -1;
         if ($session->check('Student.ExaminationResults.student_id')) {

@@ -1,16 +1,18 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link      http://cakephp.org CakePHP(tm) Project
- * @since    0.2.9
- * @license   http://www.opensource.org/licenses/mit-license.php MIT License
+ * @copyright Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link      https://cakephp.org CakePHP(tm) Project
+ * @since     0.2.9
+ * @license   https://opensource.org/licenses/mit-license.php MIT License
  */
 
 namespace App\Controller;
@@ -26,6 +28,8 @@ use Cake\Utility\Inflector;
 use Cake\Cache\Cache;
 use Cake\Filesystem\File;
 use Cake\Filesystem\Folder;
+use Cake\ORM\Table;
+use Cake\Http\ServerRequest;
 
 /**
  * Application Controller
@@ -33,7 +37,7 @@ use Cake\Filesystem\Folder;
  * Add your application-wide methods in the class below, your controllers
  * will inherit them.
  *
- * @link http://book.cakephp.org/3.0/en/controllers.html#the-app-controller
+ * @link https://book.cakephp.org/4/en/controllers.html#the-app-controller
  */
 class AppController extends Controller
 {
@@ -41,29 +45,30 @@ class AppController extends Controller
     use SecurityTrait;
 
     private $productName = 'OpenEMIS Core';
-    public $helpers = [
+    /*public $helpers = [
         'Text',
 
         // Custom Helper
         'ControllerAction.ControllerAction',
         'OpenEmis.Navigation',
         'OpenEmis.Resource'
-    ];
+    ];*/
 
     private $webhookListUrl = [
         'plugin' => 'Webhook',
         'controller' => 'Webhooks',
         'action' => 'listWebhooks'
     ];
-
     /**
      * Initialization hook method.
      *
      * Use this method to add common initialization code like loading components.
      *
+     * e.g. `$this->loadComponent('FormProtection');`
+     *
      * @return void
      */
-    public function initialize()
+    public function initialize(): void
     {
         if (!file_exists(CONFIG . 'datasource.php')) {
             $url = Router::url(['plugin' => 'Installer', 'controller' => 'Installer', 'action' => 'index'], true);
@@ -97,7 +102,8 @@ class AppController extends Controller
                     'finder' => 'auth',
                     'passwordHasher' => [
                         'className' => 'Fallback',
-                        'hashers' => ['Default', 'Legacy']
+                        //'hashers' => ['Default', 'Legacy']
+                        'hashers' => ['Default']
                     ]
                 ],
             ],
@@ -115,14 +121,15 @@ class AppController extends Controller
 
         $this->loadComponent('Paginator');
 
-        $this->Auth->config('authorize', ['Security']);
+         $this->Auth->SetConfig('authorize', ['Security']);
 
         // Custom Components
         $this->loadComponent('Navigation');
-        $this->productName = $this->getTheme()['application_name'];
+        $this->productName = 'OpenEMIS Core';
         $this->loadComponent('Localization.Localization', [
             'productName' => $this->productName
         ]);
+
         $this->loadComponent('OpenEmis.OpenEmis', [
             'homeUrl' => ['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index'],
             'headerMenu' => [
@@ -133,7 +140,7 @@ class AppController extends Controller
                     'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'logout']
                 ]
             ],
-            'productName' => $this->productName,
+            'productName' => $this->getTheme()['application_name'],
             'productLogo' => $this->getTheme()['logo'],
             'footerText' => $this->getTheme()['copyright_notice_in_footer'],
             'theme' => $theme,
@@ -143,6 +150,8 @@ class AppController extends Controller
         $this->loadComponent('OpenEmis.ApplicationSwitcher', [
             'productName' => $this->productName
         ]);
+        //
+
 
         // Angular initialization
         $this->loadComponent('Angular.Angular', [
@@ -176,12 +185,12 @@ class AppController extends Controller
         ]);
 
         $this->loadComponent('Csrf');
-        if ($this->request->action == 'postLogin') {
-            $this->eventManager()->off($this->Csrf);
+        if ($this->getRequest()->getParam('action') == 'postLogin') {
+            $this->getEventManager()->off($this->Csrf);
         }
         $this->loadComponent('TabPermission');
         // START: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
-        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $ConfigItem = $ConfigItemTable
             ->find()
             ->select(['zonevalue' => 'ConfigItems.value'])
@@ -221,7 +230,8 @@ class AppController extends Controller
         if (!$themes) {
             $folder = new Folder();
             $folder->delete(WWW_ROOT . 'img' . DS . 'themes');
-            $themes = TableRegistry::get('Themes')->find()
+            $theme = TableRegistry::getTableLocator()->get('Theme.Themes');
+            $themes =  $theme->find()
                 ->formatResults(function ($results) {
                     $res = [];
                     foreach ($results as $r) {
@@ -245,8 +255,10 @@ class AppController extends Controller
             $colour = $themes['colour'];
             $secondaryColour = $this->darkenColour($colour);
             $customPath = ROOT . DS . 'plugins' . DS . 'OpenEmis' . DS . 'webroot' . DS . 'css' . DS . 'themes' . DS . 'custom' . DS;
-            $basePath = Router::url(['controller' => false, 'action' => 'index', 'plugin' => false]) === '/' ? '/' : Router::url(['controller' => false, 'action' => 'index', 'plugin' => false]) . '/';
+            $basePath = Router::url(['controller' => '', 'action' => 'index', 'plugin' => false]) === '/' ? '/' : Router::url(['controller' => 'false', 'action' => 'index', 'plugin' => false]) . '/';
+
             $loginBackground = $basePath . Configure::read('App.imageBaseUrl') . $themes['login_page_image'];
+            // echo "<pre>";print_r($loginBackground);die;
             $file = new File($customPath . 'layout.core.template.css');
             $template = $file->read();
             $file->close();
@@ -257,7 +269,7 @@ class AppController extends Controller
             $file = new File($customPath . 'layout.min.css', true);
             $file->write($template);
             $file->close();
-            $themes['timestamp'] = TableRegistry::get('Configuration.ConfigItems')->value('themes');
+            $themes['timestamp'] = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('themes');
             Cache::write('themes', $themes);
         }
         return $themes;
@@ -271,22 +283,31 @@ class AppController extends Controller
      */
     public function beforeRender(Event $event)
     {
-        if (!array_key_exists('_serialize', $this->viewVars) &&
-            in_array($this->response->type(), ['application/json', 'application/xml'])
-        ) {
-            $this->set('_serialize', true);
-        }
+        // if (!array_key_exists('_serialize', $this->viewVars) &&
+        //     in_array($this->response->type(), ['application/json', 'application/xml'])
+        // ) {
+        //     $this->set('_serialize', true);
+        // }
+        $this->set('_serialize', true);
+        $this->viewBuilder()->addHelper('Label');
+        $this->viewBuilder()->addHelper('Text');
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+        $this->viewBuilder()->addHelper('ControllerAction.HtmlField');
+        $this->viewBuilder()->addHelper('OpenEmis.Navigation');
+        $this->viewBuilder()->addHelper('OpenEmis.Resource');
+        $this->viewBuilder()->addHelpers(['Html', 'Form', 'Paginator', 'Label', 'Url']);
+        
     }
 
     // Triggered from LocalizationComponent
     // Controller.Localization.getLanguageOptions
     public function getLanguageOptions(Event $event)
     {
-        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItemsTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $languageArr = $ConfigItemsTable->getSystemLanguageOptions();
         $systemLanguage = $languageArr['language'];
         $showLanguage = $languageArr['language_menu'];
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         if (!$session->check('System.language_menu')) {
             $session->write('System.language', $systemLanguage);
             $session->write('System.language_menu', $showLanguage);
@@ -298,21 +319,29 @@ class AppController extends Controller
     // Controller.Localization.updateLoginLanguage
     public function updateLoginLanguage(Event $event, $user, $lang)
     {
-        $UsersTable = TableRegistry::get('User.Users');
+        $UsersTable = TableRegistry::getTableLocator()->get('User.Users');
         $UsersTable->dispatchEvent('Model.Users.updateLoginLanguage', [$user, $lang], $this);
     }
 
     //POCOR-7534 Starts
     public function beforeFilter(Event $event)
     {
+        try{
+        if ($this->getPlugin() == $this->getPlugin()) { // POCOR-8080-1
+            $this->Security->setConfig('validatePost', false);
+        }
+        }catch (\Exception $exception){
+            // if no plugin, skip it
+        }
         parent::beforeFilter($event);
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $superAdmin = $session->read('Auth.User.super_admin');
         if ($superAdmin == 0) {
 
 
             $UserData = $session->read('Auth.User')['id'];
-            $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
+            $UserData = '';
+            $GroupRoles = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
             $userRole = $GroupRoles->find()
                 ->contain('SecurityRoles')
                 ->order(['SecurityRoles.order'])
@@ -322,13 +351,13 @@ class AppController extends Controller
                 ->group([$GroupRoles->aliasField('security_role_id')])
                 ->toArray();
 
-            if (!empty($this->request->params['controller']) && !empty($userRole)) {
+            if (!empty($this->request->getParam('controller')) && !empty($userRole)) {
                 $RoleIds = [];
                 foreach ($userRole as $Role_key => $Role_val) {
                     $RoleIds[] = $Role_val->security_role_id;
                 }
-                $SecurityFunctionIds = $this->getIdBySecurityFunctionName($this->request->params['action'],
-                    $this->request->params['controller']);
+                $SecurityFunctionIds = $this->getIdBySecurityFunctionName($this->request->getParam('action'),
+                    $this->request->getParam('controller'));
                 if (!empty($SecurityFunctionIds)) {
                     $result = $this->checkAuthrizationForRoles($SecurityFunctionIds, $RoleIds);
                     if ($result == 0) {
@@ -345,7 +374,7 @@ class AppController extends Controller
     public function getIdBySecurityFunctionName($actionParam, $controllerParam)
     {
         //POCOR-7562 start
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $superAdmin = $session->read('Auth.User.super_admin');
         //POCOR-7562 end
         $name = '';
@@ -355,7 +384,7 @@ class AppController extends Controller
             } else if (($actionParam == 'UserGroups' || $actionParam == 'SystemGroups')) {
                 $name = 'Groups';
             } else if ($actionParam == 'Roles') {
-                $name = ($this->request->query['type'] == 'system') ? 'System Roles' : 'User Roles';
+                $name = ($this->request->getQuery['type'] == 'system') ? 'System Roles' : 'User Roles';
             } else if ($actionParam == 'Accounts') {
                 $name = 'Accounts';
             } else if ($actionParam == 'UserGroupsList') {
@@ -396,7 +425,7 @@ class AppController extends Controller
                 $name = 'Attendances';
             }
         } else if ($controllerParam == 'FieldOptions') {
-            $actionParam = $this->request->params['pass'][0];
+            $actionParam = $this->request->getParam('pass')[0];
             if (($actionParam == '' || $actionParam == 'index') || $actionParam == 'view' || $actionParam == 'edit' || $actionParam == 'add' || $actionParam == 'remove' || $actionParam == 'transfer') {
                 $name = 'Setup';
             }
@@ -672,7 +701,7 @@ class AppController extends Controller
             }
         }
         $module = 'Administration';
-        $SecurityFunctionsTbl = TableRegistry::get('security_functions');
+        $SecurityFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
         $SecurityFunctionsData = $SecurityFunctionsTbl->find()->where([
             $SecurityFunctionsTbl->aliasField('name') => $name,
             $SecurityFunctionsTbl->aliasField('controller') => $controllerParam,
@@ -689,7 +718,7 @@ class AppController extends Controller
 
     public function checkAuthrizationForRoles($securityFunctionsId, $roleId)
     {
-        $SecurityRoleFunctionsTbl = TableRegistry::get('security_role_functions');
+        $SecurityRoleFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $SecurityRoleFunctionsTblData = $SecurityRoleFunctionsTbl->find()->where([
             $SecurityRoleFunctionsTbl->aliasField('security_role_id IN') => $roleId,
             $SecurityRoleFunctionsTbl->aliasField('security_function_id IN') => $securityFunctionsId,
@@ -779,7 +808,7 @@ class AppController extends Controller
         }
 
 // POCOR-7841 IF NO USER, EXIT
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $user_id = $session->read('Auth.User')['id'];
         if(empty($user_id)){
             $skip = false;
@@ -818,7 +847,6 @@ class AppController extends Controller
                 'saveGuardianData',
                 'getEducationGrade',
                 'getClassOptions',
-                'getClassCapacity',
                 'getPositionType',
                 'getFTE',
                 'getShifts',
@@ -871,12 +899,7 @@ class AppController extends Controller
     private function checkAccessControl()
     {
 
-        $params = $this->request->params;
-
-// POCOR-7833 REMOVE UNNECESSARY LOGGING
-//        $this->log($params, 'debug');
-// END
-
+        $params = $this->request->getParam('params');
         // POCOR-7833 MOVE ALL SKIP ACCESS TO ONE FUNCTION
         if ($this->skipCheckAccessControl($params)) {
             return;
@@ -903,23 +926,13 @@ class AppController extends Controller
         //POCOR-7731 end
 
         $check = $this->AccessControl->check($params);
-
-// POCOR-7833 REMOVE UNNECESSARY LOGGING
-//        $this->log($check, 'debug');
-// POCOR-7833 END
-
         if (!$check) {
-
-// POCOR-7833 ADD CHECKING LOGGING
             $this->log(__FUNCTION__, 'debug');
-            $this->log($params, 'debug');
-// POCOR-7833 END
-
-// POCOR-7833 REDIRECT TO DASHBOARD
+            if ($params !== null) {
+                $this->log($params, 'debug');
+            }
             $this->Alert->warning('general.notAccess');
             return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
-// POCOR-7833 END
-//            throw new \Exception("No Rights for $class!");
         }
     }
 }

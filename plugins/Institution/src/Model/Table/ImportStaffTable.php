@@ -13,6 +13,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use DateTimeInterface;
 use PHPExcel_Worksheet;
 
@@ -22,9 +23,9 @@ class ImportStaffTable extends AppTable
 
     private $_institution;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('import_mapping');
+        $this->setTable('import_mapping');
         parent::initialize($config);
 
         $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'Staff']);
@@ -58,7 +59,7 @@ class ImportStaffTable extends AppTable
 
     public function beforeAction($event)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
             $this->_institution = $this->Institutions->get($institutionId);
@@ -67,7 +68,7 @@ class ImportStaffTable extends AppTable
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -80,13 +81,13 @@ class ImportStaffTable extends AppTable
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
     {
-        $crumbTitle = $this->getHeader($this->alias());
+        $crumbTitle = $this->getHeader($this->getAlias());
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
 
-    public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
+    public function onImportCheckUnique(Event $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
     {
         $columns = new Collection($columns);
         $filtered = $columns->filter(function ($value, $key, $iterator) {

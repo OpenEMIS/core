@@ -8,10 +8,10 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 
 class EducationProgrammesNextProgrammesTable extends AppTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 		$this->belongsTo('EducationProgrammes', ['className' => 'Education.EducationProgrammes', 'foreignKey' => 'education_programme_id']);
-		$this->belongsTo('EducationnNextProgrammes', ['className' => 'Education.EducationnNextProgrammes', 'foreignKey' => 'next_programme_id']);
+		//$this->belongsTo('EducationnNextProgrammes', ['className' => 'Education.EducationnNextProgrammes', 'foreignKey' => 'next_programme_id']);
 	}
 
     /**
@@ -36,7 +36,7 @@ class EducationProgrammesNextProgrammesTable extends AppTable {
      * @return array List of next education grades id
      */
 	public function getNextGradeList($id) {
-		$EducationGrades = TableRegistry::get('Education.EducationGrades');
+		$EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
 
 		$nextProgrammeList = $this->getNextProgrammeList($id);
 		if (!empty($nextProgrammeList)) {
@@ -61,7 +61,7 @@ class EducationProgrammesNextProgrammesTable extends AppTable {
      * @return array List of next education grades id
      */
 	public function getNextProgrammeFirstGradeList($id) {
-		$EducationGrades = TableRegistry::get('Education.EducationGrades');
+		$EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
 
 		$nextProgrammeList = $this->getNextProgrammeList($id);
 		if (!empty($nextProgrammeList)) {
@@ -88,7 +88,7 @@ class EducationProgrammesNextProgrammesTable extends AppTable {
 
 	/*POCOR-6498 starts*/
 	public function getNextProgrammeGradeList($id, $periodId) {
-		$EducationGrades = TableRegistry::get('Education.EducationGrades');
+		$EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
 
 		$nextProgrammeList = $this->getNextProgrammeList($id);
 

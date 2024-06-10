@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
 use Workflow\Model\Behavior\RuleBehavior;
@@ -32,7 +32,7 @@ class RuleStudentUnmarkedAttendancesBehavior extends RuleBehavior
         ]
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }

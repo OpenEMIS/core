@@ -10,8 +10,8 @@ use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 
 class InstitutionSubjectsTable extends AppTable  {
-    public function initialize(array $config) {
-        $this->table('institution_subjects');
+    public function initialize(array $config): void {
+        $this->setTable('institution_subjects');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -269,7 +269,7 @@ class InstitutionSubjectsTable extends AppTable  {
                 ];
                 /**POCOR-6726 starts - uncommented area column*/
                 $AreaLevelTbl = TableRegistry::get('area_levels');
-                $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->hydrate(false)->toArray();
+                $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->enableHydration(false)->toArray();
                 
                 $newFields[] = [
                     'key' => '',

@@ -57,8 +57,8 @@ class StudentReportCardEmailTable extends ControllerActionTable
             $encodedParam = $this->request->params['pass'][1];
 
             $backUrl = [
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
                 'action' => 'Templates',
                 'view',
                 $encodedParam

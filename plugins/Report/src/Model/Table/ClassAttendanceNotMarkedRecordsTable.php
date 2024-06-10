@@ -19,9 +19,9 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
     private $workingDays = [];
     private $schoolClosedDays = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_classes');
+        $this->setTable('institution_classes');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -296,11 +296,11 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
             ->join([$join])
 
             ->innerJoin(
-                [$EducationGrades->alias() => $EducationGrades->table()],
+                [$EducationGrades->getAlias() => $EducationGrades->getTable()],
                 [$EducationGrades->aliasField('id = ') . 'InstitutionClassGrades.education_grade_id']
             )
             ->innerJoin(
-                [$EducationStages->alias() => $EducationStages->table()],
+                [$EducationStages->getAlias() => $EducationStages->getTable()],
                 [$EducationStages->aliasField('id = ') . 'EducationGrades.education_stage_id']
             );
 
@@ -402,10 +402,11 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
             ]);
         }
             
-        $institutionList = $query
-            ->group('institution_id')
-            ->extract('institution_id')
-            ->toArray();
+        $institutionListData = $query
+                    ->select(['institution_id'])
+                    ->distinct(['institution_id']);
+
+        $institutionList =  $institutionListData->all()->toList();
 
         return $this->getInstitutionClosedDates($startDate, $endDate, $institutionList);
     }
