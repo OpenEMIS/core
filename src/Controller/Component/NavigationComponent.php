@@ -166,7 +166,7 @@ class NavigationComponent extends Component
             $directoryControllers = ['DirectoryBodyMasses',
                 'DirectoryComments',
                 'DirectoryInsurances'];
-            $guardianNavsControllers = [];            
+            $guardianNavsControllers = [];
             $directoryActions = ['StaffEmploymentStatuses',
                 'StaffPositions',
                 'StaffClasses',
@@ -214,7 +214,7 @@ class NavigationComponent extends Component
                 'StudentFees',
                 'StudentLicenses',
                 'ImportSalaries'
-                
+
             ];
             if (in_array($controller->getName(), $institutionControllers) || (
                     $controller->getName() == 'Institutions'
@@ -272,7 +272,7 @@ class NavigationComponent extends Component
                     elseif ($action == 'StudentReportCards' || $action == 'StudentAwards') {
                         $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][1])['student_id'];
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
-                    }//End POCOR-7055             
+                    }//End POCOR-7055
                     /*POCOR-6286 ends*/
                     // Start POCOR-7384
                     elseif ($this->request->getParam('plugin') == 'Directory' && $this->request->getParam('controller') == 'Directories' && $this->request->getAttribute('params')['pass'][0] == 'download' && $action == 'Attachments') {
@@ -280,7 +280,7 @@ class NavigationComponent extends Component
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
                     } // End POCOR-7384
                     elseif ($this->request->getParam('controller') == 'Directories' && in_array($action, $directoryActions)) {
-                        
+
                         if($action == 'Directories' || $action == 'Accounts') {
                             $userId = $this->controller->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
                         } else {
@@ -1341,6 +1341,13 @@ class NavigationComponent extends Component
             'user_id' => $studentID]);
         //echo "<pre>"; print_r($queryString);die;
         $navigation = [
+            // POCOR-8039-start
+            'Institutions.StudentDashboard.view' => [
+                'title' => 'Dashboard',
+                'parent' => 'Institutions.Students.index',
+                'selected' => ['Institutions.StudentDashboard.view'],
+            ],
+            // POCOR-8039-end
             'Institution.Institutions.StudentUser.view' => [
                 'title' => 'General',
                 'parent' => 'Institutions.Students.index',
@@ -1877,7 +1884,7 @@ class NavigationComponent extends Component
             ]
         ];
         //POCOR-7366 start
-        
+
         if ($session->read('Directory.Directories.is_student') == 1) {
             $newNavigation = ['Directories.Counsellings.index' => [
                 'title' => 'Counsellings',
@@ -1920,7 +1927,7 @@ class NavigationComponent extends Component
                 $institutionID = $Staff->institution_id;
             }
         }
-        
+
         $queryStringWithID = $this->controller->paramsEncode([
             'institution_id' => $institutionID,
             'staff_id' => $id,
@@ -1934,7 +1941,7 @@ class NavigationComponent extends Component
             'Directories.StaffEmploymentStatuses.index' => [
                 'title' => 'Career',
                 'parent' => 'Directories.Staff',
-                'params' => ['plugin' => 'Directory'],    
+                'params' => ['plugin' => 'Directory'],
                 'selected' => ['Directories.StaffEmploymentStatuses',
                     'Directories.StaffPositions',
                     'Directories.HistoricalStaffPositions',
@@ -1956,7 +1963,7 @@ class NavigationComponent extends Component
                     'type' => 'staff'],
                 'selected' => ['Directories.StaffBankAccounts',
                     'Directories.StaffSalaries',
-                    'Directories.ImportSalaries', 
+                    'Directories.ImportSalaries',
                     'Directories.StaffPayslips',
                     'Directories.StaffPayslips',]
             ],
@@ -1980,7 +1987,7 @@ class NavigationComponent extends Component
                 $n['params']['1'] = $queryStringWithID;
             }
         }
-        
+
         return $navigation;
     }
 
@@ -4285,7 +4292,7 @@ class NavigationComponent extends Component
                 }
             }
         }
-        
+
         // unset empty links in reverse order
         $linkOnly = array_reverse($linkOnly);
         foreach ($linkOnly as $link) {
