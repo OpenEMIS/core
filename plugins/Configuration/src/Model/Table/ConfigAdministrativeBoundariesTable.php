@@ -11,16 +11,16 @@ use Cake\ORM\Query;
 use ArrayObject;
 
 class ConfigAdministrativeBoundariesTable extends ControllerActionTable {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('config_items');
+        $this->setTable('config_items');
         parent::initialize($config);
         $this->addBehavior('Configuration.ConfigItems');
         $this->toggle('remove', false);
         $this->toggle('add', false);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

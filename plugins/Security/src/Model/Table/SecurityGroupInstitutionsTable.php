@@ -6,7 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
@@ -16,14 +16,14 @@ use Cake\I18n\Time;
 
 
 class SecurityGroupInstitutionsTable extends AppTable {
-	public function initialize(array $config) {
-		$this->table('security_group_institutions');
+	public function initialize(array $config): void {
+		$this->setTable('security_group_institutions');
 		parent::initialize($config);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('SecurityGroups', ['className' => 'Security.UserGroups']);
 	}
 
-	public function implementedEvents()
+	public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [

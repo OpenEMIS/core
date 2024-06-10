@@ -7,23 +7,23 @@ use App\Controller\PageController;
 
 class StudentBehaviourAttachmentsController extends PageController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->Page->disable(['search']);
         $this->Page->enable(['download']);
+        $this->viewBuilder()->setTemplatePath('Page'); //POCOR-8074-6
+        $this->viewBuilder()->disableAutoLayout(); //POCOR-8074-6
     }
 
     public function beforeFilter(Event $event)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID();
         $institutionName = $session->read('Institution.Institutions.name');
 
         parent::beforeFilter($event);
-
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-
         $page = $this->Page;
 
         // set Breadcrumb
@@ -35,9 +35,10 @@ class StudentBehaviourAttachmentsController extends PageController
         // // set header
         $page->setHeader($institutionName . ' - ' . __('Attachments'));
 
-        $query = $this->request->query['querystring'];
+        $query = $this->request->getQueryParams()['queryString'];
 
         $this->setupTabElements($encodedInstitutionId, $query);
+        $this->viewBuilder()->setLayout(false);
     }
 
     public function index()
@@ -51,8 +52,8 @@ class StudentBehaviourAttachmentsController extends PageController
     public function view($id)
     {
         parent::view($id);
-
         $page = $this->Page;
+
         $page->exclude(['student_behaviour_id']);
         $page->exclude(['file_name']);
         $page->get('file_name')
@@ -64,7 +65,7 @@ class StudentBehaviourAttachmentsController extends PageController
         parent::add();
         $page = $this->Page;
         $this->addEdit();
-        $studentBehaviourId = $page->decode($this->request->query['querystring']);
+        $studentBehaviourId = $page->decode($this->request->getQuery['querystring']);
         $page->get('student_behaviour_id')
              ->setValue($studentBehaviourId['student_behaviour_id']);
     }
@@ -125,12 +126,13 @@ class StudentBehaviourAttachmentsController extends PageController
 
     private function getInstitutionID()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $insitutionIDFromSession = $session->read('Institution.Institutions.id');
         $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
-        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
-            $this->request->params['institutionId'] :
-            $encodedInstitutionIDFromSession;
+        $encodedInstitutionID = null !== $this->request->getParam('institutionId') ?
+                $this->request->getParam('institutionId') :
+                $encodedInstitutionIDFromSession;
+
         try {
             $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
         } catch (\Exception $exception) {

@@ -21,7 +21,7 @@ class StaffBehavioursTable extends AppTable  {
     const NO_FILTER = 0;
     const NO_STUDENT = 1;
     const NO_STAFF = 2;
-    public function initialize(array $config) {
+    public function initialize(array $config): void {
     
         parent::initialize($config);
         $this->addBehavior('Excel');
@@ -35,7 +35,7 @@ class StaffBehavioursTable extends AppTable  {
         $this->addBehavior('Report.AreaList');//POCOR-7794
       
     }
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;
@@ -72,7 +72,7 @@ class StaffBehavioursTable extends AppTable  {
             $where['Institutions.area_id IN'] = $areaList;
         }
         //POCOR-7794 end
-        $Statuses1=TableRegistry::get('workflow_steps');
+        $Statuses1 = TableRegistry::get('Workflow.WorkflowSteps');
         $query->select([
              "academic_period_name"=>'AcademicPeriods.name',
              "institution_code"=>'Institutions.code',
@@ -92,14 +92,16 @@ class StaffBehavioursTable extends AppTable  {
              "behaviour_classification"=>"BehaviourClassifications.name"
             ]);
         $query->contain(['Institutions','Institutions.Areas','AcademicPeriods','Staff','StaffBehaviourCategories','BehaviourClassifications'])
-        ->InnerJoin([$Statuses1->alias()=>$Statuses1->table()],[
+        ->InnerJoin([$Statuses1->getAlias()=>$Statuses1->getTable()],[
                 $Statuses1->aliasField('id')."=(`StaffBehaviours`.`status_id`)"
         ])      
         -> where([$where]);
      
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                $row->time_of_behaviour= $row->time_of_behaviour->i18nFormat('HH:mm:ss');
+                //$row->time_of_behaviour= $row->time_of_behaviour->i18nFormat('HH:mm:ss');
+                $time = new Time($row->time_of_behaviour);
+                $row->time_of_behaviour = $time->i18nFormat('HH:mm:ss');
                 $row->behaviour_classification=$row->behaviour_classification->name;
              
                 return $row;
@@ -114,7 +116,7 @@ class StaffBehavioursTable extends AppTable  {
 
                 $query
                     ->leftJoin(
-                        [$StudentsTable->alias() => $StudentsTable->table()],
+                        [$StudentsTable->getAlias() => $StudentsTable->getTable()],
                         [
                             $StudentsTable->aliasField('institution_id') . ' = '. $this->aliasField('institution_id'),
                             $StudentsTable->aliasField('academic_period_id') => $academicPeriodId
@@ -128,7 +130,7 @@ class StaffBehavioursTable extends AppTable  {
             case self::NO_STAFF:
                 $StaffTable = TableRegistry::get('institution_staff');
                 $query->leftJoin(
-                    [$StaffTable->alias() => $StaffTable->table()],
+                    [$StaffTable->getAlias() => $StaffTable->getTable()],
                     [
                         $StaffTable->aliasField('institution_id') . ' = '. $this->aliasField('institution_id'),
                     ]

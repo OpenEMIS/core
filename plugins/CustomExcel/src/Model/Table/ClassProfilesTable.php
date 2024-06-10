@@ -22,7 +22,7 @@ class ClassProfilesTable extends AppTable
     private $fileType = 'xlsx';
     //private $fileType = 'pdf';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->table('institutions');
         parent::initialize($config);
@@ -49,7 +49,7 @@ class ClassProfilesTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onExcelTemplateBeforeGenerate'] = 'onExcelTemplateBeforeGenerate';

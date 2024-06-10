@@ -31,7 +31,7 @@ trait UtilityTrait
         if ($camelizedString) {
             $header = Inflector::humanize(Inflector::underscore($camelizedString));
         } else {
-            $header = Inflector::humanize(Inflector::underscore($this->alias()));
+            $header = Inflector::humanize(Inflector::underscore($this->getAlias()));
         }
         return __($header);
     }
@@ -57,7 +57,7 @@ trait UtilityTrait
         }
 
         if (!is_null($request)) {
-            $query = $request->query;
+            $query = $request->getQuery();
 
             if (isset($query[$key])) {
                 $value = $query[$key];
@@ -101,7 +101,7 @@ trait UtilityTrait
                     $value = $defaultValue;
                 }
             }
-            $request->query[$key] = $value;
+            $request->getQuery[$key] = $value;
         }
         return $value;
     }
@@ -161,7 +161,7 @@ trait UtilityTrait
                     }
                 }
             } else { // normal array
-                $label = __($val);
+                $label = __((string)$val);
                 if (strlen($id) > 0) {
                     $options[$id] = ['value' => $id, 'text' => $label];
                 }

@@ -1,16 +1,18 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\View;
 
@@ -24,21 +26,49 @@ namespace Cake\View;
  */
 trait StringTemplateTrait
 {
-
     /**
      * StringTemplate instance.
      *
-     * @var \Cake\View\StringTemplate
+     * @var \Cake\View\StringTemplate|null
      */
     protected $_templater;
 
     /**
-     * Get/set templates to use.
+     * Sets templates to use.
      *
-     * @param string|null|array $templates null or string allow reading templates. An array
-     *   allows templates to be added.
-     * @return $this|string|array
+     * @param array<string> $templates Templates to be added.
+     * @return $this
      */
+    public function setTemplates(array $templates)
+    {
+        $this->templater()->add($templates);
+
+        return $this;
+    }
+
+    /**
+     * Gets templates to use or a specific template.
+     *
+     * @param string|null $template String for reading a specific template, null for all.
+     * @return array|string
+     */
+    public function getTemplates(?string $template = null)
+    {
+        return $this->templater()->get($template);
+    }
+
+    /**
+     * Formats a template string with $data
+     *
+     * @param string $name The template name.
+     * @param array<string, mixed> $data The data to insert.
+     * @return string
+     */
+    public function formatTemplate(string $name, array $data): string
+    {
+        return $this->templater()->format($name, $data);
+    }
+
     public function templates($templates = null)
     {
         if ($templates === null || is_string($templates)) {
@@ -51,29 +81,18 @@ trait StringTemplateTrait
     }
 
     /**
-     * Format a template string with $data
-     *
-     * @param string $name The template name.
-     * @param array $data The data to insert.
-     * @return string
-     */
-    public function formatTemplate($name, $data)
-    {
-        return $this->templater()->format($name, $data);
-    }
-
-    /**
-     * templater
+     * Returns the templater instance.
      *
      * @return \Cake\View\StringTemplate
      */
-    public function templater()
+    public function templater(): StringTemplate
     {
-        if (empty($this->_templater)) {
-            $class = $this->config('templateClass') ?: 'Cake\View\StringTemplate';
+        if ($this->_templater === null) {
+            /** @var class-string<\Cake\View\StringTemplate> $class */
+            $class = $this->getConfig('templateClass') ?: StringTemplate::class;
             $this->_templater = new $class();
 
-            $templates = $this->config('templates');
+            $templates = $this->getConfig('templates');
             if ($templates) {
                 if (is_string($templates)) {
                     $this->_templater->add($this->_defaultConfig['templates']);

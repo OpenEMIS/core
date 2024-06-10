@@ -6,7 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
@@ -21,9 +21,9 @@ class SystemGroupsListTable extends ControllerActionTable
     use MessagesTrait;
     use HtmlTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_group_users');
+        $this->setTable('security_group_users');
         parent::initialize($config);
 
         // $this->belongsToMany('Users', [
@@ -48,7 +48,6 @@ class SystemGroupsListTable extends ControllerActionTable
     
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-       // echo "<pre>"; print_r($extra['indexButtons']['remove']); die();
         unset($extra['indexButtons']['remove']);
         $this->field('security_group_id', [
             'visible' => false]);
@@ -88,13 +87,13 @@ class SystemGroupsListTable extends ControllerActionTable
     }
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $userGroupId = $this->request->query['userGroupId']; 
+        $userGroupId = $this->request->getQuery('userGroupId'); 
         $query->contain(['Users','SecurityRoles'])
         ->where([$this->aliasField('security_group_id')=>$userGroupId])
         ->order([$this->aliasField('created DESC')]);
 
         //POCOR-7175 start
-        $queryParams = $this->request->query;
+        $queryParams = $this->request->getQuery();
         $search = $this->getSearchKey();
 
         // CUSTOM SEACH - 

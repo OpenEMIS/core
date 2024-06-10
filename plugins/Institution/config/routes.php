@@ -1,8 +1,9 @@
 <?php
 use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/Institution', ['plugin' => 'Institution'], function ($routes) {
-    $routes->scope('/Institutions', ['controller' => 'Institutions'], function ($route) {
+$routes->scope('/Institution', ['plugin' => 'Institution'], function (RouteBuilder $routes) {
+    $routes->scope('/Institutions', ['controller' => 'Institutions'], function (RouteBuilder $route) {
         $route->connect(
             '/',
             ['action' => 'Institutions', ]
@@ -29,7 +30,7 @@ Router::scope('/Institution', ['plugin' => 'Institution'], function ($routes) {
         );
     });
 
-    $routes->scope('/:institutionId/:controller', [], function ($route) {
+    $routes->scope('/:institutionId/:controller', [], function (RouteBuilder $route) {
         $route->connect(
             '/:action',
             [],
@@ -46,7 +47,7 @@ Router::scope('/Institution', ['plugin' => 'Institution'], function ($routes) {
 
 
 // Fall back route, to be deleted after the URL is fixed. (affected staffTransferRequest, staffTransferApproval)
-Router::scope('/Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions'], function ($route) {
+$routes->scope('/Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions'], function (RouteBuilder $route) {
     $route->connect(
         '/',
         ['action' => 'Institutions', ]
@@ -69,10 +70,19 @@ Router::scope('/Institutions', ['plugin' => 'Institution', 'controller' => 'Inst
         ['institutionId' => '([\w]+[\.][\w]+)', 'action' => '[a-zA-Z]+']
     );
 
-    // For controller action version 3
+    // For controller action version
     $route->connect(
         '/:action/*',
         [],
         ['action' => '[a-zA-Z]+']
     );
+});
+
+$routes->scope('/Institutions', ['plugin' => 'Institution'], function ($routes) {
+    $routes->scope('/', ['controller' => 'InstitutionHistories'], function ($routes) {
+        // $routes->extensions(['json']);
+        $routes->connect('/InstitutionHistories/:action/:key/*', ['action' => 'index', '_method' => 'GET'], ['pass' => ['key']]);
+    });
+
+    
 });

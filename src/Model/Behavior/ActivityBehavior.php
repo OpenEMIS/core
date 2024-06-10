@@ -15,7 +15,7 @@ class ActivityBehavior extends Behavior {
 		'datetime'=>'Y-m-d H:i:s'
 	];
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		$this->_table->dateTypes = $this->_dateTypes;
 	}
 	
@@ -25,7 +25,7 @@ class ActivityBehavior extends Behavior {
 ** Link/Map ControllerActionComponent events
 **
 ******************************************************************************************************************/
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$newEvent = [
 			'ControllerAction.Model.beforeAction' => 'beforeAction'

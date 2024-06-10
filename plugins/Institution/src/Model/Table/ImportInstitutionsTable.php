@@ -14,18 +14,19 @@ class ImportInstitutionsTable extends AppTable
 {
     use OptionsTrait;
     
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('import_mapping');
+        $this->setTable('import_mapping');
         parent::initialize($config);
 
         $this->addBehavior('Import.Import');
 
         // register the target table once
         $this->Institutions = TableRegistry::get('Institution.Institutions');
+        $this->addBehavior('ControllerAction.FileUpload');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -48,7 +49,7 @@ class ImportInstitutionsTable extends AppTable
         $toolbarButtons['back']['url']['action'] = 'Institutions';
     }
 
-    public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
+    public function onImportCheckUnique(Event $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
     {
         $columns = new Collection($columns);
         $filtered = $columns->filter(function ($value, $key, $iterator) {
@@ -64,7 +65,7 @@ class ImportInstitutionsTable extends AppTable
 
         $institution = $this->Institutions->find()->where(['code'=>$code])->first();
         if (!$institution) {
-            $tempRow['entity'] = $this->Institutions->newEntity();
+            $tempRow['entity'] = $this->Institutions->newEmptyEntity();
         } else {
             $tempRow['entity'] = $institution;
         }
@@ -153,4 +154,15 @@ class ImportInstitutionsTable extends AppTable
     {
         return true;
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'select_file':
+                return __('Select File To Import');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

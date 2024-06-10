@@ -6,7 +6,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;
@@ -19,9 +19,9 @@ class InstitutionRubricsTable extends AppTable
     private $_fieldOrder = [];
     private $_contain = ['EducationGrades.EducationProgrammes'];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_quality_rubrics');
+        $this->setTable('institution_quality_rubrics');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -37,6 +37,8 @@ class InstitutionRubricsTable extends AppTable
         if (!Configure::read('schoolMode')) {    
             $this->addBehavior('Report.RubricsReport');
         }
+
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
     public function beforeAction(Event $event)
@@ -55,7 +57,7 @@ class InstitutionRubricsTable extends AppTable
     {
         $templateId = $this->get($settings['id'])->rubric_template_id;
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'portrait',
@@ -69,7 +71,7 @@ class InstitutionRubricsTable extends AppTable
         $value = '';
 
         if ($action == 'view') {
-            $Form = $event->subject()->Form;
+            $Form = $event->getSubject()->Form;
             $status = $this->get($entity->id)->status;
 
             $tableHeaders = [];
@@ -99,13 +101,13 @@ class InstitutionRubricsTable extends AppTable
                     $rowData = [];
                     $rubricSectionId = $obj->id;
                     $rubricSectionName = $obj->name;
-                    if ($this->AccessControl->check([$this->controller->name, 'RubricAnswers', 'edit'])) {
+                    if ($this->AccessControl->check([$this->controller->getName(), 'RubricAnswers', 'edit'])) {
                         $editable = $this->AcademicPeriods->getEditable($entity->academic_period_id);
                         $status = $this->get($entity->id)->status;
                         if ($editable || $status == 2) {
-                            $rubricSectionName = $event->subject()->Html->link($obj->name, [
-                                'plugin' => $this->controller->plugin,
-                                'controller' => $this->controller->name,
+                            $rubricSectionName = $event->getSubject()->Html->link($obj->name, [
+                                'plugin' => $this->controller->getPlugin(),
+                                'controller' => $this->controller->getName(),
                                 'action' => 'RubricAnswers',
                                 'edit',
                                 $this->paramsEncode(['id' => $entity->id]),
@@ -148,7 +150,7 @@ class InstitutionRubricsTable extends AppTable
             $attr['tableHeaders'] = $tableHeaders;
             $attr['tableCells'] = $tableCells;
 
-            $value = $event->subject()->renderElement('Institution.Rubrics/sections', ['attr' => $attr]);
+            $value = $event->getSubject()->renderElement('Institution.Rubrics/sections', ['attr' => $attr]);
         }
 
         return $value;
@@ -220,25 +222,28 @@ class InstitutionRubricsTable extends AppTable
     {
         list($statusOptions, $selectedStatus) = array_values($this->_getSelectOptions());
 
-        $plugin = $this->controller->plugin;
-        $controller = $this->controller->name;
+        $plugin = $this->controller->getPlugin();
+        $controller = $this->controller->getName();
         $action = $this->alias;
-
+        $queryString = $this->request->getQuery('queryString');
+        if(empty($queryString)){
+            $queryString = $this->request->getParam('pass')[1];
+        }
         $tabElements = [];
-        if ($this->AccessControl->check([$this->controller->name, 'NewRubrics', 'view'])) {
+        if ($this->AccessControl->check([$this->controller->getName(), 'NewRubrics', 'view'])) {
             $tabElements[__('New')] = [
-                'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action, 'status' => 0],
+                'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action, 'status' => 0,'queryString' => $queryString],
                 'text' => __('New')
             ];
             $tabElements[__('Draft')] = [
-                'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action, 'status' => 1],
+                'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action, 'status' => 1,'queryString' => $queryString],
                 'text' => __('Draft')
             ];
         }
 
-        if ($this->AccessControl->check([$this->controller->name, 'CompletedRubrics', 'view'])) {
+        if ($this->AccessControl->check([$this->controller->getName(), 'CompletedRubrics', 'view'])) {
             $tabElements[__('Completed')] = [
-                'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action, 'status' => 2],
+                'url' => ['plugin' => $plugin, 'controller' => $controller, 'action' => $action, 'status' => 2,'queryString' => $queryString],
                 'text' => __('Completed')
             ];
         }
@@ -262,7 +267,7 @@ class InstitutionRubricsTable extends AppTable
         }
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(Event $event, $request, Query $query, ArrayObject $options)
     {
         list(, $selectedStatus) = array_values($this->_getSelectOptions());
 
@@ -311,7 +316,7 @@ class InstitutionRubricsTable extends AppTable
                 $this->Alert->success('InstitutionRubricAnswers.reject.success');
             } else {
                 $this->Alert->success('InstitutionRubricAnswers.reject.failed');
-                $this->log($entity->errors(), 'debug');
+                $this->log($entity->getErrors(), 'debug');
             }
 
             $event->stopPropagation();
@@ -337,7 +342,7 @@ class InstitutionRubricsTable extends AppTable
 
     public function _buildRecords()
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         // Update all New Rubric to Expired by Institution Id
         $this->updateAll(['status' => -1],
@@ -398,7 +403,7 @@ class InstitutionRubricsTable extends AppTable
                                 ])
                                 ->join([
                                     'table' => $ClassGrades->_table,
-                                    'alias' => $ClassGrades->alias(),
+                                    'alias' => $ClassGrades->getAlias(),
                                     'conditions' => [
                                         $ClassGrades->aliasField('institution_class_id =') . $Classes->aliasField('id'),
                                         $ClassGrades->aliasField('education_grade_id IN') => $gradeIds
@@ -406,14 +411,14 @@ class InstitutionRubricsTable extends AppTable
                                 ])
                                 ->join([
                                     'table' => $ClassSubjects->_table,
-                                    'alias' => $ClassSubjects->alias(),
+                                    'alias' => $ClassSubjects->getAlias(),
                                     'conditions' => [
                                         $ClassSubjects->aliasField('institution_class_id =') . $Classes->aliasField('id')
                                     ]
                                 ])
                                 ->join([
                                     'table' => $Subjects->_table,
-                                    'alias' => $Subjects->alias(),
+                                    'alias' => $Subjects->getAlias(),
                                     'conditions' => [
                                         $Subjects->aliasField('id =') . $ClassSubjects->aliasField('institution_subject_id'),
                                         $Subjects->aliasField('institution_id') => $institutionId,
@@ -467,7 +472,7 @@ class InstitutionRubricsTable extends AppTable
 
                                                 if ($this->save($entity)) {
                                                 } else {
-                                                    $this->log($entity->errors(), 'debug');
+                                                    $this->log($entity->getErrors(), 'debug');
                                                 }
                                             } else {
                                                 // Update Expired Rubric back to New
@@ -502,8 +507,8 @@ class InstitutionRubricsTable extends AppTable
         $selectedStatus = $this->queryString('status', $statusOptions);
 
         // If do not have access to Rubric - New but have access to Rubric - Completed, then set selectedStatus to 2
-        if (!$this->AccessControl->check([$this->controller->name, 'NewRubrics', 'view'])) {
-            if ($this->AccessControl->check([$this->controller->name, 'CompletedRubrics', 'view'])) {
+        if (!$this->AccessControl->check([$this->controller->getName(), 'NewRubrics', 'view'])) {
+            if ($this->AccessControl->check([$this->controller->getName(), 'CompletedRubrics', 'view'])) {
                 $selectedStatus = 2;
             }
         }

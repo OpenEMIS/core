@@ -20,9 +20,9 @@ class WashReportsTable extends AppTable
     const NONFUNCTIONAL = 0;
 
     private $infrastructureTabsData = [0 => "Water", 1 => "Sanitation", 2 => "Hygiene", 3 => "Waste", 4 => "Sewage"];
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institutions');
+        $this->setTable('institutions');
         
         parent::initialize($config);
         
@@ -116,7 +116,7 @@ class WashReportsTable extends AppTable
         //start POCOR-6732
         
         $AreaLevelTbl = TableRegistry::get('area_levels');
-        $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->hydrate(false)->toArray();
+        $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->enableHydration(false)->toArray();
 
         $extraFields[] = [
             'key' => 'region_name',

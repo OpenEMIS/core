@@ -4,17 +4,17 @@ namespace Student\Model\Table;
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
+use Cake\Http\ServerRequest;
 
 class StudentVisitRequestsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_visit_requests');
+        $this->setTable('institution_student_visit_requests');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -36,12 +36,14 @@ class StudentVisitRequestsTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
+
+        $this->addBehavior('Institution.InstitutionTab');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('date', [
                 'ruleInAcademicPeriod' => [
@@ -65,27 +67,31 @@ class StudentVisitRequestsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
         // Academic Periods Filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
 
         $query->where([
             $this->aliasField('academic_period_id') => $selectedAcademicPeriod
         ]);
-        
+
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
-        $extra['elements']['controls'] = ['name' => 'Student.Visits/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $extra['elements']['controls'] = ['name' => 'Student.Visits/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
         // Academic Periods Filter - END
     }
 
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        if (is_null($this->request->query('academic_period_id'))) {
+        /*if (is_null($this->request->getQuery('academic_period_id'))) {
             $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
-            $url = $this->ControllerAction->url($this->alias());
+            $url = $this->ControllerAction->url($this->getAlias());
             $url['academic_period_id'] = $currentAcademicPeriod;
             $this->controller->redirect($url);
-        }
+        }*/
 
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
@@ -95,7 +101,7 @@ class StudentVisitRequestsTable extends ControllerActionTable
         $this->setFieldOrder(['referrer_id', 'referrer_type_id', 'date', 'reason_type_id']);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Visit Requests','Students - Visits');  
+		$is_manual_exist = $this->getManualUrl('Institutions','Visit Requests','Students - Visits');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -130,7 +136,7 @@ class StudentVisitRequestsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -138,7 +144,7 @@ class StudentVisitRequestsTable extends ControllerActionTable
             if ($entity->has('academic_period_id')) {
                 $selectedAcademicPeriodId = $entity->academic_period_id;
             } else {
-                $academicPeriodQueryString = $this->request->query('academic_period_id');
+                $academicPeriodQueryString = $this->request->getQuery('academic_period_id');
                 if (!is_null($academicPeriodQueryString) && $this->AcademicPeriods->exists($academicPeriodQueryString)) {
                     $selectedAcademicPeriodId = $academicPeriodQueryString;
                 } else {
@@ -158,12 +164,11 @@ class StudentVisitRequestsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldEvaluatorId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEvaluatorId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $userId = $this->Session->read('Auth.User.id');
             $userName = $this->Session->read('Auth.User.name');
-
             if (!is_null($userId) && !is_null($userName)) {
                 $attr['type'] = 'readonly';
                 $attr['value'] = $userId;
@@ -174,10 +179,10 @@ class StudentVisitRequestsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            $institutionId = $this->Session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionID();
 
             if (!is_null($institutionId)) {
                 $attr['type'] = 'hidden';
@@ -194,7 +199,7 @@ class StudentVisitRequestsTable extends ControllerActionTable
             if ($entity->has('evaluator_id')) {
                 return $entity->evaluator->name_with_id;
             }
-        } 
+        }
     }
 
     private function setupFields($entity = null)
@@ -208,24 +213,25 @@ class StudentVisitRequestsTable extends ControllerActionTable
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('institution_id', ['type' => 'hidden']);
+        $this->field('student_id', ['type' => 'hidden', 'value' => $this->getStudentID()]);
 
         $this->setFieldOrder(['academic_period_id', 'date', 'evaluator_id', 'student_visit_type_id', 'student_visit_purpose_type_id', 'comment', 'file_name', 'file_content', 'assignee_id']);
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($this->action == 'edit' || $this->action == 'add') {
             $workflowModel = 'Students > Visits > Requests';
-            $workflowModelsTable = TableRegistry::get('workflow_models');
-            $workflowStepsTable = TableRegistry::get('workflow_steps');
+            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
             $Workflows = TableRegistry::get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
                             'workflow_id'=>$Workflows->aliasField('id'),
                             'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
-                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                            ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                                 [
                                     $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
                                 ])
@@ -240,10 +246,8 @@ class StudentVisitRequestsTable extends ControllerActionTable
                             ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $request->session();
-            if ($session->check('Institution.Institutions.id')) {
-                $institutionId = $session->read('Institution.Institutions.id');
-            }
+            $session = $request->getSession();
+            $institutionId = $this->getInstitutionID();
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {
@@ -254,7 +258,7 @@ class StudentVisitRequestsTable extends ControllerActionTable
                     $Areas = TableRegistry::get('Area.Areas');
                     $Institutions = TableRegistry::get('Institution.Institutions');
                     if ($isSchoolBased) {
-                        if (is_null($institutionId)) {                        
+                        if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
                         } else {
                             $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
@@ -270,12 +274,12 @@ class StudentVisitRequestsTable extends ControllerActionTable
                                     ->find('userList', ['where' => $where])
                                     ->leftJoinWith('SecurityGroups.Institutions');
                             $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
-                            
+
                             // Region based assignee
                             $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                             $regionBasedAssigneeQuery = $SecurityGroupUsers
                                         ->find('UserList', ['where' => $where, 'area' => $areaObj]);
-                            
+
                             $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
                             // End
                             $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
@@ -297,7 +301,5 @@ class StudentVisitRequestsTable extends ControllerActionTable
             return $attr;
         }
     }
-    
-
 
 }

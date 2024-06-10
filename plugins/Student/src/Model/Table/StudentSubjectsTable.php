@@ -14,9 +14,9 @@ use App\Model\Table\ControllerActionTable;
 class StudentSubjectsTable extends ControllerActionTable
 {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_subject_students');
+        $this->setTable('institution_subject_students');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -33,11 +33,20 @@ class StudentSubjectsTable extends ControllerActionTable
         $this->toggle('search', false);
 
         $this->addBehavior('Restful.RestfulAccessControl');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StudentSubjects' =>['id']
+            ]
+        ]);
+        // $this->addBehavior('Student.StudentTab', [
+        //     'appliedAction' => ['StudentSubjects' =>['id']
+        //     ]
+        // ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $contentHeader = $this->controller->viewVars['contentHeader'];
+        //$contentHeader = $this->controller->viewVars['contentHeader'];
+        $contentHeader = $this->controller->viewBuilder()->getVars()['contentHeader'];
         list($studentName, $module) = explode(' - ', $contentHeader);
         $module = __('Subjects');
         $contentHeader = $studentName . ' - ' . $module;
@@ -52,10 +61,11 @@ class StudentSubjectsTable extends ControllerActionTable
         $this->field('academic_period_id', ['type' => 'integer', 'order' => 0]);
         $this->field('institution_id', ['type' => 'integer', 'after' => 'academic_period_id']);
         $this->field('total_mark', ['after' => 'institution_subject_id']);
-
-        $extra['elements']['controls'] = ['name' => 'Student.Subjects/controls', 'data' => [], 'options' => [], 'order' => 1];
-
-        if (!empty($this->request->query['institution_subject_id'])) {
+        $queryString = $this->getQueryString();;
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $extra['elements']['controls'] = ['name' => 'Student.Subjects/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
+        
+        if (!empty($this->request->getQuery('institution_subject_id'))) {
             $action = 'view';
             $hasAllSubjectsPermission = $this->AccessControl->check(['Institutions', 'AllSubjects', $action]);
    
@@ -65,8 +75,8 @@ class StudentSubjectsTable extends ControllerActionTable
                 'controller' => 'Institutions',
                 'action' => 'Subjects',
                 'view',
-                $this->paramsEncode(['id' => $this->request->query['institution_subject_id']]),
-                'institution_id' => $this->request->query['institution_id'],
+                $this->paramsEncode(['id' => $this->request->getQuery('institution_subject_id')]),
+                 $encodedQueryString,
             ];
 
             if ($hasAllSubjectsPermission) {
@@ -86,7 +96,7 @@ class StudentSubjectsTable extends ControllerActionTable
                     ])
                     ->toArray();
 
-                if (!empty($subjectsTeaching) && array_key_exists($this->request->query['institution_subject_id'],$subjectsTeaching)) {
+                if (!empty($subjectsTeaching) && array_key_exists($this->request->getQuery('institution_subject_id'),$subjectsTeaching)) {
                     return $this->controller->redirect($url);
                 }
             }
@@ -95,7 +105,7 @@ class StudentSubjectsTable extends ControllerActionTable
 
 
    		// Start POCOR-5188
-		if($this->request->params['controller'] == 'Students'){
+		if($this->request->getParam('controller') == 'Students'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Subjects','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -113,7 +123,7 @@ class StudentSubjectsTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Subjects','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -141,13 +151,15 @@ class StudentSubjectsTable extends ControllerActionTable
     {
         // Academic Periods filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
+        $queryString = $this->getQueryString();
 
+        $studentId = $queryString['student_id'];
+        $encodedQueryString = $this->paramsEncode($queryString);
         // Institution and Grade filter
-        $studentId = $this->Session->read('Student.Students.id');
         $InstitutionStudents = TableRegistry::get('Institution.Students');
         $institutionQuery = $InstitutionStudents->find()
             ->contain(['Institutions', 'StudentStatuses', 'EducationGrades'])
@@ -174,7 +186,7 @@ class StudentSubjectsTable extends ControllerActionTable
         }
 
         $institutionOptions = ['-1' => __('All Institutions')] + $institutionOptions;
-        $selectedInstitution = !is_null($this->request->query('institution_id')) ? $this->request->query('institution_id') : -1;
+        $selectedInstitution = !is_null($this->request->getQuery('institution_id')) ? $this->request->getQuery('institution_id') : -1;
         $this->controller->set(compact('institutionOptions', 'selectedInstitution'));
 
         if ($selectedInstitution != -1) {
@@ -196,7 +208,7 @@ class StudentSubjectsTable extends ControllerActionTable
         }
 
         $gradeOptions = ['-1' => __('All Grades')] + $gradeOptions;
-        $selectedGrade = !is_null($this->request->query('education_grade_id')) ? $this->request->query('education_grade_id') : -1;
+        $selectedGrade = !is_null($this->request->getQuery('education_grade_id')) ? $this->request->getQuery('education_grade_id') : -1;
         $this->controller->set(compact('gradeOptions', 'selectedGrade'));
 
         if ($selectedGrade != -1) {
@@ -206,11 +218,10 @@ class StudentSubjectsTable extends ControllerActionTable
         
         
         $userData = $this->Session->read();
-        $session = $this->request->session();//POCOR-6267
+        $session = $this->request->getSession();//POCOR-6267
         if ($userData['Auth']['User']['is_guardian'] == 1) {
-            //$sId = $userData['Student']['ExaminationResults']['student_id'];//POCOR-6267
-            //$studentId = $this->ControllerAction->paramsDecode($sId)['id'];//POCOR-6267
-            $studentId = $session->read('Student.Students.id');
+            $sId = $userData['Student']['ExaminationResults']['student_id'];//POCOR-6267
+            $studentId = $this->ControllerAction->paramsDecode($sId)['id'];//POCOR-6267
         } else {
             $studentId = $userData['Auth']['User']['id'];
         }
@@ -232,7 +243,7 @@ class StudentSubjectsTable extends ControllerActionTable
         //POCOR-6468
         if(isset($userData['Institution']['StudentUser']['primaryKey']['id'])){
             $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');//POCOR-6468 starts
-            $InstitutionClassStudents = TableRegistry::get('institution_class_students');
+            $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
             $InstitutionClassStudentsQuery = $InstitutionClassStudents->find()
                                 ->where([
                                     $InstitutionClassStudents->aliasField('student_id') => $userData['Institution']['StudentUser']['primaryKey']['id'],
@@ -245,14 +256,14 @@ class StudentSubjectsTable extends ControllerActionTable
                 $where[$this->aliasField('institution_class_id')] = $InstitutionClassStudentsQuery->institution_class_id;
             }
         }
-        $InstitutionClassStudents = TableRegistry::get('institution_class_students');
+        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         //POCOR-6468
       //  $where[$this->aliasField('student_status_id')] = $enrolledStatus; //POCOR-7111
         
         $query
             ->matching('InstitutionClasses.ClassGrades')
             ->innerJoin(//POCOR-6468
-                [$InstitutionClassStudents->alias() => $InstitutionClassStudents->table()],
+                [$InstitutionClassStudents->getAlias() => $InstitutionClassStudents->getTable()],
                 [
                     $InstitutionClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                     $InstitutionClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
@@ -290,6 +301,9 @@ class StudentSubjectsTable extends ControllerActionTable
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (array_key_exists('view', $buttons)) {
             $institutionId = $entity->institution_class->institution_id;
@@ -297,12 +311,15 @@ class StudentSubjectsTable extends ControllerActionTable
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'Subjects',
-                'view',
-                $this->paramsEncode(['id' => $entity->institution_subject->id]),
-                'institution_id' => $institutionId,
+                0 => 'view',
+                1 =>$encodedQueryString,
+                2 =>$this->paramsEncode(['id' => $entity->id]),
+                //3 =>$this->paramsEncode(['id' => $entity->institution_class]),
+               3 => $this->paramsEncode(['id' => $entity->institution_subject->id]),
+                
             ];
 
-            if ($this->controller->name == 'Directories') {
+            if ($this->controller->getName() == 'Directories') {
                 $url = [
                     'plugin' => 'Directory',
                     'controller' => 'Directories',
@@ -310,7 +327,7 @@ class StudentSubjectsTable extends ControllerActionTable
                     'index',
                     'type' => 'student',
                     'institution_subject_id' => $entity->institution_subject->id,
-                    'institution_id' => $institutionId,
+                     $encodedQueryString,
                 ];
             }
 
@@ -322,9 +339,31 @@ class StudentSubjectsTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $options = ['type' => 'student'];
-        $tabElements = $this->controller->getAcademicTabElements($options);
+        //$tabElements = $this->controller->getAcademicTabElements($options);
+        $tabElements = $this->getAcademicTabElements($options);
 
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Subjects');
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'institution_id') {
+            return __('Institution');
+        } elseif ($field == 'total_mark') {
+            return __('	Total Mark');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

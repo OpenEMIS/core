@@ -2,7 +2,7 @@
 namespace Training\Model\Table;
 
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use ArrayObject;
@@ -11,7 +11,7 @@ use App\Model\Table\ControllerActionTable;
 
 class TrainingNeedSubStandardsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -40,7 +40,7 @@ class TrainingNeedSubStandardsTable extends ControllerActionTable
         $this->field('training_need_standard_id', ['type' => 'select']);
     }
 
-    public function onUpdateFieldTrainingNeedStandardId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTrainingNeedStandardId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $query = $this->TrainingNeedStandards
                 ->find('list')
@@ -52,5 +52,47 @@ class TrainingNeedSubStandardsTable extends ControllerActionTable
         $attr['type'] = 'select';
 
         return $attr;
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'visible':
+                return __('Visible');
+            case 'name':
+                return __('Name');
+            case 'international_code':
+                return __('International Code');
+            case 'national_code':
+                return __('National Code');
+            case 'editable':
+                return __('Editable');  
+            case 'default':
+                return __('Default');
+            case 'training_need_standard_id':
+                return __('Training Need Standard');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

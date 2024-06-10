@@ -2,6 +2,8 @@
 namespace OpenEmis\View\Helper;
 
 use Cake\View\Helper;
+use Cake\Http\ServerRequest;
+use Cake\Log\Log;
 
 class NavigationHelper extends Helper
 {
@@ -14,7 +16,7 @@ class NavigationHelper extends Helper
 
     public function printNavigation($navigations)
     {
-        // Processing variables
+        //$serverRequest = $this->request;
         $parentStack = [];
         $html = '';
         $index = 1;
@@ -27,10 +29,10 @@ class NavigationHelper extends Helper
         $ul = '<ul id="nav-menu-%s" class="nav %s" role="tabpanel" data-level="%s">';
         $class = 'nav-level-' . $level . ' collapse';
         $html .= sprintf($ul, $index++, ($class.' in'), $level);
-        $controller = $this->request->params['controller'];
-        $action = $this->request->params['action'];
+        $controller = $this->_View->getRequest()->getParam('controller');
+        $action = $this->_View->getRequest()->getParam('action');
         $pass = [];
-
+        
         // Build all the parent nodes
         foreach ($navigations as $navigation) {
             if (isset($navigation['parent'])) {
@@ -40,9 +42,8 @@ class NavigationHelper extends Helper
             }
         }
 
-        // Set the pass variable
-        if (!empty($this->request->pass)) {
-            $pass = $this->request->pass;
+        if (!empty($this->_View->getRequest()->getParam('pass'))) {
+            $pass = $this->_View->getRequest()->getParam('pass');
         } else {
             $pass[0] = '';
         }
@@ -60,7 +61,7 @@ class NavigationHelper extends Helper
         if (empty($path)) {
             $this->getPath($controllerActionLink, $navigations, $path);
         }
-
+        
         // Print each of the navigation
         foreach ($navigations as $key => $value) {
             // Root Node
@@ -208,7 +209,13 @@ class NavigationHelper extends Helper
                     unset($id['plugin']);
                 }
                 $aOptions['id'] = implode('-', $id);
-                $html .= $this->Html->link($name, $url, $aOptions);
+                if(!isset($url['action'])){//POCOR-7485 add for test
+                    Log::debug(print_r($url, true));
+                    $url['action'] = 'index';
+                }
+                //$html .= $this->Html->link($name, $url, $aOptions);
+                $link = $this->Html->link($name, $url, $aOptions);//POCOR-7485 add for test
+                $html .= $link;//POCOR-7485 add for test
             }
         }
         $html .= $this->closeUlTag($closeUl, true);
@@ -263,15 +270,48 @@ class NavigationHelper extends Helper
         }
 
         $link = explode('.', $controllerActionModelLink);
+        if (sizeof($link) <= 3) {
+            if (isset($params['controller'])) {
+                $url['controller'] = $params['controller'];
+                unset($params['controller']);
+            } else if (isset($link[0])) {
+                $url['controller'] = $link[0];
+            }
 
-        if (isset($link[0])) {
-            $url['controller'] = $link[0];
-        }
-        if (isset($link[1])) {
-            $url['action'] = $link[1];
-        }
-        if (isset($link[2])) {
-            $url['0'] = $link[2];
+            if (isset($params['action'])) {
+                $url['action'] = $params['action'];
+                unset($params['action']);
+            } else if (isset($link[1])) {
+                $url['action'] = $link[1];
+            }
+
+            if (isset($link[2])) {
+                $url['0'] = $link[2];
+            }
+        }else{
+            if (isset($params['plugin'])) {
+                $url['plugin'] = $params['plugin'];
+                unset($params['plugin']);
+            } else if (isset($link[0])) {
+                $url['plugin'] = $link[0];
+            }
+            if (isset($params['controller'])) {
+                $url['controller'] = $params['controller'];
+                unset($params['controller']);
+            } else if (isset($link[1])) {
+                $url['controller'] = $link[1];
+            }
+
+            if (isset($params['action'])) {
+                $url['action'] = $params['action'];
+                unset($params['action']);
+            } else if (isset($link[2])) {
+                $url['action'] = $link[2];
+            }
+
+            if (isset($link[3])) {
+                $url['0'] = $link[3];
+            }
         }
         if (!empty($params)) {
             $url = array_merge($url, $params);

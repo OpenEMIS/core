@@ -13,7 +13,7 @@ use App\Shell\AlertShell;
 
 class AlertScholarshipDisbursementShell extends AlertShell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 

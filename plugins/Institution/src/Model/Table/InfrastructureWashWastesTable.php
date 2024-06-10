@@ -12,9 +12,9 @@ use App\Model\Table\ControllerActionTable;
 
 class InfrastructureWashWastesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('infrastructure_wash_wastes');
+        $this->setTable('infrastructure_wash_wastes');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods',   ['className' => 'AcademicPeriod.AcademicPeriods', 'foreign_key' => 'academic_period_id']);
@@ -26,6 +26,10 @@ class InfrastructureWashWastesTable extends ControllerActionTable
         $this->addBehavior('Excel',[
             'excludes' => ['academic_period_id', 'institution_id'],
             'pages' => ['index'],
+        ]);
+
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InfrastructureWashWastes'=>['id']]
         ]);
     }
 
@@ -46,15 +50,17 @@ class InfrastructureWashWastesTable extends ControllerActionTable
 
         // element control
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
 
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
 
         $extra['elements']['control'] = [
             'name' => 'Risks/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'academicPeriodOptions'=>$academicPeriodOptions,
                 'selectedAcademicPeriod'=>$selectedAcademicPeriodId
             ],
@@ -117,9 +123,10 @@ class InfrastructureWashWastesTable extends ControllerActionTable
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
-        $academicPeriodId = !empty($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $session = $this->request->getSession();
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
+        $academicPeriodId = !empty($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
 
         $query
         ->where([

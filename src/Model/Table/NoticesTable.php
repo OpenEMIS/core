@@ -7,7 +7,7 @@ use ArrayObject;
 
 class NoticesTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->addBehavior('Restful.RestfulAccessControl', [

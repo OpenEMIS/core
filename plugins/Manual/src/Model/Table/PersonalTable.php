@@ -15,9 +15,9 @@ class PersonalTable extends ControllerActionTable
 {
     // private $defaultMarkType;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('manuals');
+        $this->setTable('manuals');
         parent::initialize($config);
         $this->toggle('add', false);
         // $this->toggle('search', false);
@@ -101,7 +101,7 @@ class PersonalTable extends ControllerActionTable
     {
         $link  = $entity['url'];
         if(!empty($link)){
-            return $event->subject()->Html->tag(__('a href='. $link .' target="_blank">'.$link.'</a'));
+            return $event->getSubject()->Html->tag(__('a href='. $link .' target="_blank">'.$link.'</a'));
         }else{
             return '';
         }
