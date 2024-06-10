@@ -1340,14 +1340,14 @@ class NavigationComponent extends Component
             'user_id' => $studentID]);
         //echo "<pre>"; print_r($queryString);die;
         $navigation = [
-            // POCOR-8039-start
+            // POCOR-8344 start
             'Institution.Institutions.StudentDashboard.view' => [
                 'title' => 'Dashboard',
                 'parent' => 'Institutions.Students.index',
                 'selected' => ['Institutions.StudentDashboard',
                     'Institutions.StudentDashboard.view'],
             ],
-            // POCOR-8039-end
+            // POCOR-8344 end
             'Institution.Institutions.StudentUser.view' => [
                 'title' => 'General',
                 'parent' => 'Institutions.Students.index',
@@ -1580,14 +1580,14 @@ class NavigationComponent extends Component
             'user_id' => $staffID]);
 
         $navigation = [
-            // POCOR-8039-start
+            // POCOR-8344 start
             'Institution.Institutions.StaffDashboard.view' => [
                 'title' => 'Dashboard',
                 'parent' => 'Institutions.Staff.index',
                 'selected' => ['Institutions.StaffDashboard',
                     'Institutions.StaffDashboard.view'],
             ],
-            // POCOR-8039-end
+            // POCOR-8344 end
             'Institution.Institutions.StaffUser.view' => [
                 'title' => 'General',
                 'parent' => 'Institutions.Staff.index',
@@ -2144,7 +2144,7 @@ class NavigationComponent extends Component
 
         //POCOR-5886 ends
         $navigation = [
-            // POCOR-8039-start
+            // POCOR-8344 start
 
             'Profiles.PersonalDashboard.view' => [
                 'title' => 'Dashboard',
@@ -2156,16 +2156,7 @@ class NavigationComponent extends Component
                     'selected' => ['Profiles.PersonalDashboard.view']
                 ],
             ],
-//            => [
-////                'title' => 'Dashboard',
-////                'parent' => 'Profiles.Personal',
-////                'params' => ['plugin' =>
-////                    'Profile',
-////                    'action' => 'PersonalDashboard',
-////                    'selected' => ['Profiles.PersonalDashboard.view']
-////                ],
-//            ],
-            // POCOR-8039-end
+            // POCOR-8344 end
             'Profiles.Profiles.view' => [
                 'title' => 'General',
                 'parent' => 'Profiles.Personal',
@@ -4332,6 +4323,60 @@ class NavigationComponent extends Component
         }
     }
 
+    public function checkPermissionsOld(array &$navigations)
+    {
+        $linkOnly = [];
+        //$ignoredPlugin = ['Profile']; // Plugin that will be excluded from checking //POCOR-5312
+        $roles = [];
+        $restrictedTo = [];
+        $event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', null, $this);
+        if ($event->getResult()) {
+            $roles = $event->getResult('roles');
+            $restrictedTo = $event->getResult('restrictedTo');
+        }
+
+        // Unset the children
+        foreach ($navigations as $key => $value) {
+            $rolesRestrictedTo = $roles;
+            //print_r($roles);die;
+            if (isset($value['link']) && !$value['link']) {
+                $linkOnly[] = $key;
+            } else {
+                $params = [];
+                if (isset($value['params'])) {
+                    $params = $value['params'];
+                }
+                $url = $this->getLink($key, $params);
+//                Log::debug(print_r($url, true));
+
+                // Check if the role is only restricted to a certain page
+                foreach ($restrictedTo as $restrictedURL) {
+                    if (count(array_intersect($restrictedURL, $url)) > 0) {
+                        $rolesRestrictedTo = $roles;
+                        break;
+                    } else {
+                        $rolesRestrictedTo = [];
+                    }
+                }
+
+                // $ignoredAction will be excluded from permission checking
+                if (array_key_exists('controller', $url) && !in_array($url['plugin'])) {
+                    //   print_r($url);die();
+                    if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
+                        unset($navigations[$key]);
+                    }
+                }
+            }
+        }
+        // unset the parents if there is no children
+//        $linkOnly = array_reverse($linkOnly);
+//            foreach ($linkOnly as $link) {
+//                if (!array_search($link, $this->array_column($navigations, 'parent'))) {
+//                    unset($navigations[$link]);
+//                }
+//            }
+    }
+
     private function getLink($controllerActionModelLink, $params = [])
     {
         $url = ['plugin' => null, 'controller' => null, 'action' => null];
@@ -4388,60 +4433,6 @@ class NavigationComponent extends Component
             $url = array_merge($url, $params);
         }
         return $url;
-    }
-
-    public function checkPermissionsOld(array &$navigations)
-    {
-        $linkOnly = [];
-        //$ignoredPlugin = ['Profile']; // Plugin that will be excluded from checking //POCOR-5312
-        $roles = [];
-        $restrictedTo = [];
-        $event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', null, $this);
-        if ($event->getResult()) {
-            $roles = $event->getResult('roles');
-            $restrictedTo = $event->getResult('restrictedTo');
-        }
-
-        // Unset the children
-        foreach ($navigations as $key => $value) {
-            $rolesRestrictedTo = $roles;
-            //print_r($roles);die;
-            if (isset($value['link']) && !$value['link']) {
-                $linkOnly[] = $key;
-            } else {
-                $params = [];
-                if (isset($value['params'])) {
-                    $params = $value['params'];
-                }
-                $url = $this->getLink($key, $params);
-//                Log::debug(print_r($url, true));
-
-                // Check if the role is only restricted to a certain page
-                foreach ($restrictedTo as $restrictedURL) {
-                    if (count(array_intersect($restrictedURL, $url)) > 0) {
-                        $rolesRestrictedTo = $roles;
-                        break;
-                    } else {
-                        $rolesRestrictedTo = [];
-                    }
-                }
-
-                // $ignoredAction will be excluded from permission checking
-                if (array_key_exists('controller', $url) && !in_array($url['plugin'])) {
-                    //   print_r($url);die();
-                    if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
-                        unset($navigations[$key]);
-                    }
-                }
-            }
-        }
-        // unset the parents if there is no children
-//        $linkOnly = array_reverse($linkOnly);
-//            foreach ($linkOnly as $link) {
-//                if (!array_search($link, $this->array_column($navigations, 'parent'))) {
-//                    unset($navigations[$link]);
-//                }
-//            }
     }
 
     public function getProfileGuardianStudentNavigation()

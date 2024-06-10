@@ -52,6 +52,7 @@ class StaffUserTable extends ControllerActionTable
                 '_function' => 'getNumberOfStaffByGender'
             ]
         ]);
+//        POCOR-8334 @todo further
 //        $this->addBehavior('Configuration.Pull'); // POCOR-8039
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Staff.Staff.id']);
         $this->addBehavior('Restful.RestfulAccessControl', [

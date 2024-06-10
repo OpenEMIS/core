@@ -913,7 +913,7 @@ class ProfilesController extends AppController
         $this->ControllerAction->autoRender = false;
         $this->Image->getUserImage($id);
     }
-    // POCOR-8039-start
+    // POCOR-8334 start
     public function PersonalDashboard($action, $encodedParam)
     {
         if (!$action) {
@@ -929,9 +929,12 @@ class ProfilesController extends AppController
         $params = $this->paramsDecode($encodedParam);
         $header = 'Profile Dashboard';
         $this->set('haveProfilePermission', $hasPermission);
+        //POCOR-8334-START
+
         $session = $this->request->getSession();
         $userName = $session->read('Auth.User.name');
         $this->set('userName', $userName);
+        //POCOR-8334-END
         $userID = $params['id'];
         // $this->ControllerAction->model->action = $this->request->action;
         $Institutions = TableRegistry::get('Institution.Institutions');
@@ -961,7 +964,7 @@ class ProfilesController extends AppController
 
         //        $this->log('dashboard', 'debug');
     }
-    // POCOR-8039-end
+    // POCOR-8334 end
     public
     function getUserTabElements($options = [])
     {
