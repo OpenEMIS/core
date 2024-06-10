@@ -11,6 +11,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
+use Cake\ORM\Locator\TableLocator;
 use DateTime;
 
 class ScheduleIntervalsTable extends ControllerActionTable
@@ -328,9 +329,11 @@ class ScheduleIntervalsTable extends ControllerActionTable
                     }
                 }
             }
-            $scheduleId = $this->request['data']['ScheduleIntervals']['id'];
-            $timeslotList = $this->request['data']['ScheduleIntervals']['timeslots'];
-            $institutionSchedule =  TableRegistry::get('institution_schedule_timeslots');
+            $scheduleId = $this->request->getData()['ScheduleIntervals']['id'];
+            $timeslotList = $this->request->getData()['ScheduleIntervals']['timeslots'];
+            $tableLocator = new TableLocator();
+            $institutionSchedule = $tableLocator->get('institution_schedule_timeslots');
+            // $institutionSchedule =  TableRegistry::get('institution_schedule_timeslots');
             $findRecord = $institutionSchedule->find()
                         ->where(['institution_schedule_interval_id'=>$intervalId])->toArray();
                        
@@ -403,7 +406,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
             $attr['default'] = $selectedPeriod;
         } else if ($action == 'edit') {
             //POCOR-8254 start
-            $scheduleId = $this->paramsDecode($request->params['pass'][1])['id'];
+            $scheduleId = $this->paramsDecode($request->getAttribute('params')['pass'][1])['id'];
             $academicPeriodId= $ScheduleIntervals->find()
                                     ->where(['id' => $scheduleId])
                                     ->first()->academic_period_id;
@@ -438,7 +441,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
             return $attr;
         } elseif ($action == 'edit') {
             //POCOR-8254 start
-            $scheduleId = $this->paramsDecode($request->params['pass'][1])['id'];
+            $scheduleId = $this->paramsDecode($request->getAttribute('params')['pass'][1])['id'];
             $InstitutionShiftId = $ScheduleIntervals->find()
                                     ->where(['id' => $scheduleId])
                                     ->first()->institution_shift_id;
@@ -560,12 +563,13 @@ class ScheduleIntervalsTable extends ControllerActionTable
     //POCOR-8254
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
-        $timeslotList = $this->request['data']['ScheduleIntervals']['timeslots'];
-        $institutionSchedule = TableRegistry::get('institution_schedule_timeslots');
+        $timeslotList = $this->request->getData()['ScheduleIntervals']['timeslots'];
+        // $institutionSchedule = TableRegistry::get('institution_schedule_timeslots');
+        $tableLocator = new TableLocator();
+        $institutionSchedule = $tableLocator->get('institution_schedule_timeslots');
         $findRecord = $institutionSchedule->find()
             ->where(['institution_schedule_interval_id' => $entity->id])
             ->toArray();
-
         // Check if the number of records matches the number of timeslots
         if (count($findRecord) === count($timeslotList)) {
             foreach ($findRecord as $key => $value) {
