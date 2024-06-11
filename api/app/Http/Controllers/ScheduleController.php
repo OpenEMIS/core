@@ -174,4 +174,56 @@ class ScheduleController extends Controller
 
     }
 
+
+
+    //POCOR-8295 start...
+    public function getScheduleTimetables(Request $request)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->scheduleService->getScheduleTimetables($params);
+
+            if (!empty($data)) {
+                return $this->sendSuccessResponse("Schedule timetables found.", $data);
+            } else {
+                return $this->sendErrorResponse("Schedule timetables not found.");
+            }
+            
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch schedule timetables.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to fetch schedule timetables.',[], 500);
+        }
+
+    }
+
+
+    public function getScheduleTimetablesViaInstitutionId(Request $request, $institutionId)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->scheduleService->getScheduleTimetablesViaInstitutionId($params, $institutionId);
+
+            if (!empty($data)) {
+                return $this->sendSuccessResponse("Schedule timetables found.", $data);
+            } else {
+                return $this->sendErrorResponse("Schedule timetables not found.");
+            }
+            
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch schedule timetables.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to fetch schedule timetables.',[], 500);
+        }
+
+    }
+
+    //POCOR-8295 end...
+
 }
