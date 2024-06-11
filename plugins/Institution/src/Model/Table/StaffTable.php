@@ -2846,10 +2846,11 @@ public function getIdentityTypeData($value_selection)
 
     public function findClassStaffOptions(Query $query, array $options)
     {
-        $institutionId = $options['institution_id'];
+        // $institutionId = $options['institution_id'];
+        $institutionId = $_SESSION['Institution']['StudentUser']['primaryKey']['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
         $todayDate = Time::now();
-
+        // echo "<pre>";print_r($_SESSION['Institution']['StudentUser']['primaryKey']['institution_id']);die;
         return $query
             ->select([
                 $this->Users->aliasField('id'),
@@ -2880,8 +2881,9 @@ public function getIdentityTypeData($value_selection)
             ->formatResults(function ($results) {
                 $returnArr = [];
                 foreach ($results as $result) {
-                    if ($result->has('Users')) {
-                        $returnArr[] = ['id' => $result->Users->id, 'name' => $result->Users->name_with_id];
+                    if ($result->has('user')) {
+                        // echo "<pre>";print_r($result);die;
+                        $returnArr[] = ['id' => $result->user->id, 'name' => $result->user->name_with_id];
                     }
                 }
                 return $returnArr;

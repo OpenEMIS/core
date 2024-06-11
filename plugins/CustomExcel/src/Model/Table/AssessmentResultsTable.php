@@ -761,9 +761,9 @@ class AssessmentResultsTable extends AppTable
             $assessment_period_id = $mark['assessment_period_id'];
             $where = ['education_subject_id' => $education_subject_id,
                 'assessment_id' => $assessment_id];
-            $assessment_item = self::getRecordByOptions('assessment_items', $where);
-            $education_subject = self::getRelatedRecord('education_subjects', $education_subject_id);
-            $assessment_period = self::getRelatedRecord('assessment_periods', $assessment_period_id);
+            $assessment_item = self::getRecordByOptions('Assessment.AssessmentItems', $where);
+            $education_subject = self::getRelatedRecord('Education.EducationSubjects', $education_subject_id);
+            $assessment_period = self::getRelatedRecord('Assessment.AssessmentPeriods', $assessment_period_id);
             $weight = floatval($assessment_period['weight']);
             $simple_mark = floatval($mark['marks']);
             $weighted_mark = $simple_mark * $weight;

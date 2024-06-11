@@ -87,7 +87,7 @@ class StudentClassesTable extends ControllerActionTable
                 'controller' => 'Institutions',
                 'action' => 'Classes',
                 'view',
-                $this->paramsEncode(['id' => $this->request->getQuery('institution_class_id')]),
+                $this->paramsEncode(['id' => $this->request->getQuery('institution_class_id'),'institution_id' => $this->request->getQuery('institution_id')]),
                 'institution_id' => $this->request->getQuery('institution_id'),
             ];
 
@@ -217,6 +217,7 @@ class StudentClassesTable extends ControllerActionTable
                     'staff_id' => $entity->institution_class->staff_id,
                     'secondary_staff_id' => $entity->institution_class->secondary_staff_id,
                     'institution_class_id' => $entity->institution_class->id,
+                    'institution_id' => $queryString['institution_id'],
                     $encodedQueryString,
                 ];
             }
@@ -230,6 +231,9 @@ class StudentClassesTable extends ControllerActionTable
         $options = ['type' => 'student'];
         //$tabElements = $this->controller->getAcademicTabElements($options);
         $tabElements = $this->getAcademicTabElements($options);
+        if($this->controller->getName() == 'Directories') {
+            $tabElements = $this->controller->getAcademicTabElements($options);
+        }
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Classes');
     }

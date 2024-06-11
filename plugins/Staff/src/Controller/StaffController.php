@@ -249,7 +249,7 @@ class StaffController extends AppController
     
     public function StaffLeave()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Leave']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffLeave']);
     }
 
     // health

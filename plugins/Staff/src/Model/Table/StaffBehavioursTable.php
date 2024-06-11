@@ -48,9 +48,6 @@ class StaffBehavioursTable extends ControllerActionTable
         $tabElements = $this->getCareerTabElements($options);
         $controllerName = $this->controller->getName();
         $selectedAction = 'Behaviours';
-        if($controllerName == 'Directories') {
-            $selectedAction = 'StaffBehaviours';
-        }
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $selectedAction);
 

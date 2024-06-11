@@ -408,6 +408,11 @@ class ProfilesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Insurances']);
     }
+
+    public function HealthBodyMasses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.BodyMasses']);
+    }
     // End Health
 
     // Special Needs
@@ -569,7 +574,6 @@ class ProfilesController extends AppController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
-
         $session = $this->request->getSession();
         $action = $this->request->getParam('action');
 
@@ -778,8 +782,8 @@ class ProfilesController extends AppController
 
             $model->fields['security_user_id']['type'] = 'hidden';
             $model->fields['security_user_id']['value'] = $userId;
-
-            if (count($this->request->getParam('pass')) > 1) {
+            
+            if (count($this->request->getParam('pass')) > 2) {
                 $modelId = $this->request->getParam('pass')[1]; // id of the sub model
                 $ids = $this->ControllerAction->paramsDecode($modelId);
                 $idKey = $this->ControllerAction->getIdKeys($model, $ids);
@@ -847,6 +851,11 @@ class ProfilesController extends AppController
         $loginUserId = $this->Auth->user('id'); // login user
         $action = $this->request->getParam('action');
         $session = $this->request->getSession();
+        //POCOR-7485 this code resolve the issue when login user not able to see his nationalities record
+        if($this->request->getAttribute('params')['controller'] == 'Profiles' && $this->request->getAttribute('params')['action'] == 'Nationalities' && $model->hasField('security_user_id')){
+            $query->where([$model->aliasField('security_user_id') => $loginUserId]);
+            return $query;
+        }//POCOR-7485 ends
         if ($model->hasField('security_user_id')) {
             $studentId = $session->read('Student.Students.id');
             if (!empty($studentId)) {
