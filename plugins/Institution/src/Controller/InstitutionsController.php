@@ -627,6 +627,9 @@ class InstitutionsController extends AppController
 
     public function ExaminationResults()
     {
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+        $session = $this->request->getSession();
+        $session->write('Institution.Institutions.id', $institutionId);
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ExaminationResults']);
     }
 
@@ -709,9 +712,19 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffBehaviours']);
     }
 
+    public function StaffBehaviourAttachments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffBehaviourAttachments']);
+    }
+
     public function StudentBehaviours()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentBehaviours']);
+    }
+
+    public function StudentBehaviourAttachments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentBehaviourAttachments']);
     }
 
     public function Textbooks()
@@ -1168,6 +1181,9 @@ public function ClassReportCards()
 
     public function InstitutionStatus()
     {
+        // $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+        // $session = $this->request->getSession();
+        // $session->write('Institution.Institutions.id', $institutionId);
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStatus']);
 
         /*$institutionId = $this->request->pass[1];
@@ -1554,10 +1570,10 @@ public function ClassReportCards()
 
     public function Results()
     {
-        $classId = $this->ControllerAction->getQueryString('class_id');
-        $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
-        $institutionId = $this->ControllerAction->getQueryString('institution_id');
-        $academicPeriodId = $this->ControllerAction->getQueryString('academic_period_id');
+        $classId = $this->getQueryString('class_id');
+        $assessmentId = $this->getQueryString('assessment_id');
+        $institutionId = $this->getQueryString('institution_id');
+        $academicPeriodId = $this->getQueryString('academic_period_id');
         $roles = [];
 
         if (!$this->AccessControl->isAdmin()) {
@@ -1576,26 +1592,28 @@ public function ClassReportCards()
             $_edit = false;
         }
         // end POCOR-3983
-
+        $queryString = $this->request->getQuery('queryString');
         $this->set('_edit', $_edit);
+        $this->set('queryString', $queryString);
         $this->set('_excel', $this->AccessControl->check(['Institutions', 'Assessments', 'excel'], $roles));
         $url = $this->ControllerAction->url('index');
         $url['plugin'] = 'Institution';
         $url['controller'] = 'Institutions';
         $url['action'] = 'resultsExport';
+        $url['1'] = $queryString;
 
         $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
         if ($hasTemplate) {
-            $queryString = $this->request->getQuery('queryString');
+            
             $customUrl = Router::url([
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'reportCardGenerate',
                 'add',
-                'queryString' => $queryString
+                $queryString
             ]);
-
+            
             $this->set('reportCardGenerate', $customUrl);
 
             $exportPDF_Url = $this->ControllerAction->url('index');
@@ -1603,13 +1621,14 @@ public function ClassReportCards()
             $exportPDF_Url['controller'] = 'CustomExcels';
             $exportPDF_Url['action'] = 'exportPDF';
             $exportPDF_Url[0] = 'AssessmentResults';
+            $exportPDF_Url[1] = $queryString;
             $this->set('exportPDF', Router::url($exportPDF_Url));
         }
         $this->set('excelUrl', Router::url($url));
         $this->set('ngController', 'InstitutionsResultsCtrl');
     }
 
-    public function ReportCardGenerate()
+    public function reportCardGenerate()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardGenerate']);
     }
@@ -2580,6 +2599,9 @@ public function isActionIgnored(Event $event, $action)
         if ($pass[0] == 'add' && $action == 'ImportInstitutions') {
             return true;
         }
+        if ($pass[0] == 'ajaxInstitutionsAutocomplete' && $action == 'Shifts') {
+            return true;
+        }
 //        $this->log(print_r($request,true), debug);
         return false;
     }
@@ -2697,6 +2719,10 @@ public function isActionIgnored(Event $event, $action)
             $this->set('contentHeader', $tranlatedInstitutionName);
             $this->set('institutionName', $tranlatedInstitutionName);
         } else {
+            $alias = $model->alias;
+            if($alias == 'InstitutionMaps') {
+                return $this->redirect(['plugin' => 'Institution','controller' => 'Institutions','action' => 'Institutions','index']);
+            }
             $event->stopPropagation();
             die('No Such Institution');
             return;

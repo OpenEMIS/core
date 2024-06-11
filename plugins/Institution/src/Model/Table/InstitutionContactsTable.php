@@ -32,17 +32,20 @@ class InstitutionContactsTable extends ControllerActionTable {
 
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
-        $this->belongsTo('SecurityGroups', ['className' => 'Security.SystemGroups']);
+        // $this->belongsTo('SecurityGroups', ['className' => 'Security.SystemGroups']);
 
         $this->excludeDefaultValidations(['area_id', 'institution_provider_id', 'institution_locality_id', 'institution_type_id', 'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_gender_id','area_administrative_id']); //POCOR-6826
 
         $this->toggle('add', false);
         $this->toggle('remove', false);
-        $this->addBehavior('Excel', ['excludes' => ['name','alternative_name','code','address','postal_code','contact_person','date_opened','year_opened','date_closed','year_closed','longitude','latitude','logo_name','logo_content','shift_type','classification','area_id','area_administrative_id','institution_locality_id','institution_type_id','institution_ownership_id','institution_status_id','institution_sector_id','institution_provider_id','institution_gender_id','security_group_id'], 'pages' => ['view']]);    }
+        $this->addBehavior('Excel', ['excludes' => ['name','alternative_name','code','address','postal_code','contact_person','date_opened','year_opened','date_closed','year_closed','longitude','latitude','logo_name','logo_content','shift_type','classification','area_id','area_administrative_id','institution_locality_id','institution_type_id','institution_ownership_id','institution_status_id','institution_sector_id','institution_provider_id','institution_gender_id','security_group_id'], 'pages' => ['view']]); 
+        $this->addBehavior('Institution.InstitutionTab');     
+    
+    }
 
     public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         $validator
             ->allowEmpty('email')
             ->add('email', [

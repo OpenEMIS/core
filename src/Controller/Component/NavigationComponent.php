@@ -295,7 +295,8 @@ class NavigationComponent extends Component
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($userId);
                     }
                     else {
-                        $securityUserId = $this->controller->paramsDecode($this->request->getQuery('queryString'));
+                        $params = $this->controller->paramsDecode($this->request->getQuery('queryString'));
+                        $securityUserId = $params['security_user_id'];
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);
                     }
                     //POCOR-6202 end
@@ -881,22 +882,14 @@ class NavigationComponent extends Component
                 'title' => 'Students',
                 'parent' => 'Institution.Behaviour',
                 'selected' => ['Institutions.StudentBehaviours',
-                    'StudentBehaviourAttachments.index',
-                    'StudentBehaviourAttachments.view',
-                    'StudentBehaviourAttachments.add',
-                    'StudentBehaviourAttachments.edit',
-                    'StudentBehaviourAttachments.delete'],
+                    'Institutions.StudentBehaviourAttachments'],
             ],
 
             'Institutions.StaffBehaviours.index' => [
                 'title' => 'Staff',
                 'parent' => 'Institution.Behaviour',
                 'selected' => ['Institutions.StaffBehaviours',
-                    'StaffBehaviourAttachments.index',
-                    'StaffBehaviourAttachments.view',
-                    'StaffBehaviourAttachments.add',
-                    'StaffBehaviourAttachments.edit',
-                    'StaffBehaviourAttachments.delete'],
+                    'Institutions.StaffBehaviourAttachments'],
             ],
 
             'Institution.Performance' => [
@@ -1390,7 +1383,7 @@ class NavigationComponent extends Component
                     'Students.Extracurriculars',
                     'Institutions.StudentTextbooks',
                     'Institutions.Students',
-                    'Institutions.StudentRisks.index',
+                    'Institutions.StudentRisks',
                     'Students.Outcomes',
                     'Institutions.StudentProgrammes',
                     'Students.Competencies.index',
@@ -1584,11 +1577,7 @@ class NavigationComponent extends Component
                     'Staff.Guardians',
                     'Staff.Languages',
                     'Staff.Attachments',
-                    'StaffComments.index',
-                    'StaffComments.view',
-                    'StaffComments.add',
-                    'StaffComments.edit',
-                    'StaffComments.delete',
+                    'Staff.Comments',
                     'Staff.History',
                     'Staff.Demographic']
             ],
