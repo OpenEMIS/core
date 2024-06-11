@@ -187,4 +187,61 @@ class ScheduleRepository extends Controller
             return $query;
     }
 
+
+
+    //POCOR-8295 start...
+    public function getScheduleTimetables($params)
+    {
+        try {
+            $scheduleTimetables = InstitutionScheduleTimetables::with(
+                'academicPeriod:id,name',
+                'institutionClass:id,name',
+                'institution:id,name',
+                'institution:id,name,code',
+                'scheduleInterval:id,name',
+                'scheduleTerm:id,name'
+            );
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $scheduleTimetables = $scheduleTimetables->orderBy($col, $orderBy);
+            }
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $scheduleTimetables->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $scheduleTimetables->get()->toArray();
+            }
+
+            return $list;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch schedule timetables.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to fetch schedule timetables.',[], 500);
+        }
+
+    }
+
+
+    public function getScheduleTimetablesViaInstitutionId($params, $institutionId)
+    {
+        try {
+            dd($params, $institutionId);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch schedule timetables.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to fetch schedule timetables.',[], 500);
+        }
+
+    }
+
+    //POCOR-8295 end...
+
 }

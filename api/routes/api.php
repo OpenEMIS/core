@@ -473,5 +473,12 @@ Route::group(
         Route::get('/security-roles/{roleId}', 'ReportCardController@getSecurityRoleData');
         Route::get('/reportcards/{reportcardId}', 'ReportCardController@getReportCardData');
         //POCOR-8270 end...
+
+
+
+        //POCOR-8295 start...
+        Route::get('/institution/schedule-timetables', 'ScheduleController@getScheduleTimetables');
+        Route::get('/institution/{institutionId}/schedule-timetables', 'ScheduleController@getScheduleTimetablesViaInstitutionId');
+        //POCOR-8295 end...
     }
 );
