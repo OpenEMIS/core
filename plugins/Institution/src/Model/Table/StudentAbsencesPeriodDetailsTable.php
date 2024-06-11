@@ -10,6 +10,7 @@ use Cake\Mailer\Email;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\ORM\Locator\TableLocator;
 
 class StudentAbsencesPeriodDetailsTable extends AppTable
 {
@@ -198,7 +199,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
             }
             if ($status == 1) {
                 if ($absenceTypeId == 1 || $absenceTypeId == 2) {
-                    $institutionTable = TableRegistry::get('institutions');
+                    $institutionTable = TableRegistry::get('Institution.Institutions');
                     $institutionData = $institutionTable->get($entity->institution_id);
                     $institutionSecurityGroupId = $institutionData->security_group_id;
 
@@ -206,7 +207,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                     $alertRuleData = $alertRulesTable->find('all', ['conditions' => ['feature' => 'StudentAttendance', 'enabled' => 1]])->toArray(); //POCOR-7397
                     if (!empty($alertRuleData)) {
                         foreach ($alertRuleData as $alertRuleData1) {
-                            $alertRolesTable = TableRegistry::get('alerts_roles');
+                            $alertRolesTable = TableRegistry::get('Alert.AlertsRoles');
                             $alertRolesData = $alertRolesTable->find('all', ['conditions' => ['alert_rule_id' => $alertRuleData1->id], 'fields' => ['security_role_id']])->toArray();
                             $securityRoleIds = [];
                             if (!empty($alertRolesData)) {
@@ -231,9 +232,15 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                                         // $nationalyTable = TableRegistry::get('nationalities');
                                         $genderTable = TableRegistry::get('User.Genders');
                                         $idTypeTable = TableRegistry::get('FieldOption.IdentityTypes');
-                                        $nationalData = $nationalyTable->find('all', ['conditions' => ['id' => $studentData->nationality_id]])->first();
-                                        $genderData = $genderTable->find('all', ['conditions' => ['id' => $studentData->gender_id]])->first();
-                                        $idtypeData = $idTypeTable->find('all', ['conditions' => ['id' => $studentData->identity_type_id]])->first();
+                                        if(isset($studentData->nationality_id)){
+                                            $nationalData = $nationalyTable->find('all',['conditions'=>['id'=>$studentData->nationality_id ]])->first();
+                                        }
+                                        if(isset($studentData->gender_id)){
+                                            $genderData = $genderTable->find('all',['conditions'=>['id'=>$studentData->gender_id ]])->first();
+                                        }
+                                        if(isset($studentData->identity_type_id)){
+                                            $idtypeData = $idTypeTable->find('all',['conditions'=>['id'=>$studentData->identity_type_id ]])->first();
+                                        }
                                         //POCOR-7266::End
 
                                         $insCode = $institutionData->code;
