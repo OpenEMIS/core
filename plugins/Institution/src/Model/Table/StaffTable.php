@@ -2846,8 +2846,8 @@ public function getIdentityTypeData($value_selection)
 
     public function findClassStaffOptions(Query $query, array $options)
     {
-        // $institutionId = $options['institution_id'];
-        $institutionId = $_SESSION['Institution']['StudentUser']['primaryKey']['institution_id'];
+        $institutionId = $options['institution_id'];
+        //$institutionId = $_SESSION['Institution']['StudentUser']['primaryKey']['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
         $todayDate = Time::now();
         // echo "<pre>";print_r($_SESSION['Institution']['StudentUser']['primaryKey']['institution_id']);die;
