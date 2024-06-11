@@ -2346,6 +2346,8 @@ public function ClassReportCards()
             $archiveUrl['plugin'] = 'Institution';
             $archiveUrl['controller'] = 'Institutions';
             $archiveUrl['action'] = 'StaffAttendancesArchived';
+            $archiveUrl['0'] = 'index';
+            $archiveUrl['1'] =  $this->ControllerAction->paramsEncode(['institution_id' =>  $institutionId]);
         }
         $this->set('_archive', $_archive);
         $this->set('archiveUrl', Router::url($archiveUrl));
@@ -8793,7 +8795,7 @@ function checkUserAge()
     public
     function StaffAttendancesArchived($pass = '')
     {
-
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         if ($pass == 'excel') {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendancesArchived']);
         }
@@ -8815,8 +8817,8 @@ function checkUserAge()
 
             $this->setInstitutionStaffAttendancesPermissionStaffId();
 
-            $this->setStaffAttendancesArchivedExcel($institutionId);
-
+            // $this->setStaffAttendancesArchivedExcel($institutionId);
+            // dd('jkbj');
             $this->set('institution_id', $institutionId);
             $this->set('ngController', 'StaffAttendancesArchivedCtrl as $ctrl');
         }
@@ -8825,38 +8827,38 @@ function checkUserAge()
     /**
      * @param $institutionId
      */
-    private
-    function setStaffAttendancesArchivedExcel($institutionId)
-    {
-        $_excel = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'excel']);
-        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__); // POCOR-7895
+    // private
+    // function setStaffAttendancesArchivedExcel($institutionId)
+    // {
+    //     $_excel = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'excel']);
+    //     $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__); // POCOR-7895
 
-        $excelUrl = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => 'StaffAttendancesArchived',
-            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-            'excel'
-        ];
-        // POCOR-7895: start
-        $where = ['institution_id' => $institutionId];
-        $table_name = 'institution_staff_attendances';
-        $_archive_1 = ArchiveConnections::hasArchiveRecords($table_name, $where);
-        $table_name = 'institution_staff_leave';
-        $_archive_2 = ArchiveConnections::hasArchiveRecords($table_name, $where);
-        if ($_excel) {
-            if ($_archive_1 or $_archive_2) {
-                $_excel = $_archive_1;
-            } else {
-                $_excel = false;
-                $excelUrl = null;
-            }
-        }
+    //     $excelUrl = [
+    //         'plugin' => 'Institution',
+    //         'controller' => 'Institutions',
+    //         'action' => 'StaffAttendancesArchived',
+    //         'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+    //         'excel'
+    //     ];
+    //     // POCOR-7895: start
+    //     $where = ['institution_id' => $institutionId];
+    //     $table_name = 'institution_staff_attendances';
+    //     $_archive_1 = ArchiveConnections::hasArchiveRecords($table_name, $where);
+    //     $table_name = 'institution_staff_leave';
+    //     $_archive_2 = ArchiveConnections::hasArchiveRecords($table_name, $where);
+    //     if ($_excel) {
+    //         if ($_archive_1 or $_archive_2) {
+    //             $_excel = $_archive_1;
+    //         } else {
+    //             $_excel = false;
+    //             $excelUrl = null;
+    //         }
+    //     }
 
-        $this->set('_excel', $_excel);
-        // POCOR-7895: end
-        $this->set('excelUrl', Router::url($excelUrl));
-    }
+    //     $this->set('_excel', $_excel);
+    //     // POCOR-7895: end
+    //     $this->set('excelUrl', Router::url($excelUrl));
+    // }
 
 //POCOR-7716 start
 
