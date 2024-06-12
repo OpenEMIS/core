@@ -828,7 +828,8 @@ class StudentAttendancesTable extends ControllerActionTable
                 ->select(
                     [
                         'openemis_no' => 'Users.openemis_no',
-                        'name' => 'Users.first_name'
+                        'name' => 'Users.first_name',
+                        'class' => 'InstitutionClasses.name',
                     ]),
             'institutionId' => $institutionId,
             'classId' => $classId,
