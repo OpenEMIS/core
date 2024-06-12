@@ -224,6 +224,28 @@ class ScheduleController extends Controller
 
     }
 
+
+    public function getScheduleTimetableData($scheduleTimetableId)
+    {
+        try {
+            $data = $this->scheduleService->getScheduleTimetableData($scheduleTimetableId);
+
+            if (!empty($data)) {
+                return $this->sendSuccessResponse("Schedule timetable data found.", $data);
+            } else {
+                return $this->sendErrorResponse("Schedule timetable data not found.");
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch schedule timetable data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to fetch schedule timetables data',[], 500);
+        }
+
+    }
+
     //POCOR-8295 end...
 
 }
