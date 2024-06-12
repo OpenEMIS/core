@@ -43,7 +43,7 @@ class StudentAttendancesTable extends ControllerActionTable
         $this->belongsTo('NextInstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'next_institution_class_id']);
         $this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
         //$this->hasOne('StudentAbsencesPeriodDetails', ['className' => 'Institution.StudentAbsencesPeriodDetails']);institution_class_id
-        $this->addBehavior('ContactExcel', [ //POCOR-6898 change Excel to ContactExcel Behaviour
+        $this->addBehavior('Excel', [ //POCOR-6898 change Excel to ContactExcel Behaviour
             'excludes' => [
                 'start_date',
                 'end_date',
@@ -58,6 +58,13 @@ class StudentAttendancesTable extends ControllerActionTable
             ],
             'pages' => ['index']
         ]);
+
+        $this->addBehavior('Institution.InstitutionTab',
+            ['appliedAction' => ['Students'=>
+                ['student_status_id', 'academic_period_id',],
+        'StudentUser'=>
+            ['student_status_id',
+                'academic_period_id',]]]);
 
         $AbsenceTypesTable = TableRegistry::get('Institution.AbsenceTypes');
         $this->absenceList = $AbsenceTypesTable->getAbsenceTypeList();
@@ -785,13 +792,12 @@ class StudentAttendancesTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $Users = TableRegistry::get('Security.Users');
+        $Users = TableRegistry::get('User.Users');
         $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
-        $institution_id = !empty($this->request->query['institution_id']) ? $this->request->query['institution_id'] : 0;
-
+        $institution_id = !empty($this->request->getQuery()['institution_id']) ? $this->request->getQuery()['institution_id'] : 0;
         $query
             ->leftJoin(
-                [$Users->alias() => $Users->table()],
+                [$Users->getAlias() => $Users->getTable()],
                 [
                     $Users->aliasField('id = ') . $this->aliasField('student_id')
                 ]
@@ -804,14 +810,14 @@ class StudentAttendancesTable extends ControllerActionTable
         ini_set("memory_limit", "-1");
 
         $institutionId = $this->getInstitutionID();
-        $classId = !empty($this->request->query['institution_class_id']) ? $this->request->query['institution_class_id'] : 0;
-        $attendancePeriodId = $this->request->query['attendance_period_id'];
-        $weekId = $this->request->query['week_id'];
-        $weekStartDay = $this->request->query['week_start_day'];
-        $weekEndDay = $this->request->query['week_end_day'];
-        $dayId = $this->request->query['day_id'];
-        $educationGradeId = $this->request->query['education_grade_id'];
-        $subjectId = $this->request->query['subject_id'];
+        $classId = !empty($this->request->getQuery()['institution_class_id']) ? $this->request->getQuery()['institution_class_id'] : 0;
+        $attendancePeriodId = $this->request->getQuery()['attendance_period_id'];
+        $weekId = $this->request->getQuery()['week_id'];
+        $weekStartDay = $this->request->getQuery()['week_start_day'];
+        $weekEndDay = $this->request->getQuery()['week_end_day'];
+        $dayId = $this->request->getQuery()['day_id'];
+        $educationGradeId = $this->request->getQuery()['education_grade_id'];
+        $subjectId = $this->request->getQuery()['subject_id'];
 
         $sheetName = 'StudentAttendances';
         $sheets[] = [
@@ -819,12 +825,15 @@ class StudentAttendancesTable extends ControllerActionTable
             'table' => $this,
             'query' => $this
                 ->find()
-                ->select(['openemis_no' => 'Users.openemis_no'
-                ]),
+                ->select(
+                    [
+                        'openemis_no' => 'Users.openemis_no',
+                        'name' => 'Users.first_name'
+                    ]),
             'institutionId' => $institutionId,
             'classId' => $classId,
             'educationGradeId' => $educationGradeId,
-            'academicPeriodId' => $this->request->query['academic_period_id'],
+            'academicPeriodId' => $this->request->getQuery()['academic_period_id'],
             'attendancePeriodId' => $attendancePeriodId,
             'weekId' => $weekId,
             'weekStartDay' => $weekStartDay,
@@ -838,10 +847,9 @@ class StudentAttendancesTable extends ControllerActionTable
     // To select another one more field from the containable data
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
-        // echo "<pre>"; print_r($settings); die();
-        $weekStartDay = $this->request->query['week_start_day'];
-        $weekEndDay = $this->request->query['week_end_day'];
-        $day_id = $this->request->query('day_id');
+        $weekStartDay = $this->request->getQuery()['week_start_day'];
+        $weekEndDay = $this->request->getQuery()['week_end_day'];
+        $day_id = $this->request->getQuery()['day_id'];
         $newArray[] = [
             'key' => 'StudentAttendances.openemis_no',
             'field' => 'openemis_no',
@@ -855,7 +863,6 @@ class StudentAttendancesTable extends ControllerActionTable
             'type' => 'string',
             'label' => 'Name'
         ];
-
         if ($day_id == -1) {
 
 
@@ -875,10 +882,10 @@ class StudentAttendancesTable extends ControllerActionTable
             $AcademicPeriodsTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
             $periodList = $StudentAttendanceMarkTypesTable
                 ->find('PeriodByClass', [
-                    'institution_class_id' => $this->request->query['institution_class_id'],
-                    'academic_period_id' => $this->request->query['academic_period_id'],
+                    'institution_class_id' => $this->request->getQuery()['institution_class_id'],
+                    'academic_period_id' => $this->request->getQuery()['academic_period_id'],
                     'day_id' => $day_id,
-                    'education_grade_id' => $this->request->query['education_grade_id'],
+                    'education_grade_id' => $this->request->getQuery()['education_grade_id'],
                     'week_start_day' => $weekStartDay, //POCOR-7183
                     'week_end_day' => $weekEndDay //POCOR-7183
                 ])->toArray();
@@ -1097,25 +1104,25 @@ class StudentAttendancesTable extends ControllerActionTable
                 $Users->aliasField('preferred_name')
             ])
             ->innerJoin(
-                [$Users->alias() => $Users->table()],
+                [$Users->getAlias() => $Users->getTable()],
                 [
                     $Users->aliasField('id = ') . $this->aliasField('student_id'),
                 ]
             )
             ->innerJoin(
-                [$Classes->alias() => $Classes->table()],
+                [$Classes->getAlias() => $Classes->getTable()],
                 [
                     $Classes->aliasField('id = ') . $this->aliasField('institution_class_id'),
                 ]
             )
             ->leftJoin(
-                [$InstitutionStudents->alias() => $InstitutionStudents->table()],
+                [$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()],
                 [
                     $InstitutionStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                     $InstitutionStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                 ]
             )->leftJoin(
-                [$Statuses->alias() => $Statuses->table()],
+                [$Statuses->getAlias() => $Statuses->getTable()],
                 [$Statuses->aliasField('id = ') . $InstitutionStudents->aliasField('student_status_id'),]
             )
             //POCOR-5900 end
