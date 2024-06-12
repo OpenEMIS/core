@@ -52,7 +52,8 @@ class StaffUserTable extends ControllerActionTable
                 '_function' => 'getNumberOfStaffByGender'
             ]
         ]);
-        // $this->addBehavior('Configuration.Pull');
+//        POCOR-8334 @todo further
+//        $this->addBehavior('Configuration.Pull'); // POCOR-8039
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Staff.Staff.id']);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Staff' => ['index', 'add', 'edit'],
@@ -147,7 +148,7 @@ class StaffUserTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $id = $this->getQueryString('id');
-       
+
         $this->field('username', ['visible' => false]);
         $toolbarButtons = $extra['toolbarButtons'];
         if ($this->action == 'view') {
@@ -510,7 +511,7 @@ class StaffUserTable extends ControllerActionTable
                 $releaseButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
                 $releaseButton['attr']['title'] = __('Release');
                 $releaseButton['url'] = $this->setQueryString($url, ['user_id' => $userId, 'institution_id' => $getInstitutionId, 'staff_id' => $userId]);
-               
+
                 $toolbarButtons['release'] = $releaseButton;
             }
         }

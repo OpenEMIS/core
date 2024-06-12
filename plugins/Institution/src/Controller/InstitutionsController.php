@@ -184,7 +184,7 @@ class InstitutionsController extends AppController
             'StudentAccount' => ['className' => 'Institution.StudentAccount', 'actions' => ['view', 'edit']],
             'AttendanceExport' => ['className' => 'Institution.AttendanceExport', 'actions' => ['excel']],
             'StudentBehaviours' => ['className' => 'Institution.StudentBehaviours'],
-            'Promotion' => ['className' => 'Institution.StudentPromotion', 'actions' => ['reconfirm','add']],
+            'Promotion' => ['className' => 'Institution.StudentPromotion', 'actions' => ['reconfirm', 'add']],
             'Undo' => ['className' => 'Institution.UndoStudentStatus', 'actions' => ['reconfirm', 'view', 'add']],
             'ClassStudents' => ['className' => 'Institution.InstitutionClassStudents', 'actions' => ['excel']],
 
@@ -849,7 +849,7 @@ class InstitutionsController extends AppController
         if (!$institution_id) {
             $session = $this->request->getSession();
             $institution_id = $session->read('Institution.Institutions.id');
-            if(!$institution_id){
+            if (!$institution_id) {
                 if ($debugString != "") {
                     die($debugString . 'For Developer: You should put institution_id into query string first');
                 }
@@ -1020,7 +1020,7 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionReportCards']);
     }
 
-public function ClassReportCards()
+    public function ClassReportCards()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ClassProfiles']);
     }
@@ -1898,20 +1898,20 @@ public function ClassReportCards()
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'Classes';
             $viewUrl[0] = 'view';
-            $viewUrl[1] =  $this->ControllerAction->paramsEncode(['id' =>  $classId['id'] , 'institution_id' =>  $institutionId]);
+            $viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $classId['id'], 'institution_id' => $institutionId]);
 
             //POCOR-8107
             $configItems = TableRegistry::get('Configuration.ConfigItems');
-            $configItemsData = $configItems->find()->where(['type'=>'Fields for Institutions Classes Details Page'])->toArray();
-            foreach($configItemsData as $configItemsData1){
-                if(($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 0)){
+            $configItemsData = $configItems->find()->where(['type' => 'Fields for Institutions Classes Details Page'])->toArray();
+            foreach ($configItemsData as $configItemsData1) {
+                if (($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 0)) {
                     $unitEnable = 0;
-                }elseif(($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 1)){
+                } elseif (($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 1)) {
                     $unitEnable = 1;
                 }
-                if(($configItemsData1['code'] == 'class_ins_course') && ($configItemsData1['value'] == 0)){
+                if (($configItemsData1['code'] == 'class_ins_course') && ($configItemsData1['value'] == 0)) {
                     $courseEnable = 0;
-                }elseif(($configItemsData1['code'] == 'class_ins_course') && ($configItemsData1['value'] == 1)){
+                } elseif (($configItemsData1['code'] == 'class_ins_course') && ($configItemsData1['value'] == 1)) {
                     $courseEnable = 1;
                 }
             }
@@ -1971,7 +1971,7 @@ public function ClassReportCards()
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'Subjects';
             $viewUrl[0] = 'view';
-            $viewUrl[1] =  $this->ControllerAction->paramsEncode(['id' =>  $institutionSubjectId , 'institution_id' =>  $institutionId]);
+            $viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $institutionSubjectId, 'institution_id' => $institutionId]);
             $indexUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -2012,7 +2012,7 @@ public function ClassReportCards()
             $this->set('institutionId', $institutionId);
             $this->set('institutionName', $institutionName);
             $this->set('loginUserId', $userId);
-            //POCOR-7485 ends    
+            //POCOR-7485 ends
             $this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
             $this->set('_createNewStudent', $this->AccessControl->check(['Institutions', 'getUniqueOpenemisId'], $roles));
             $externalDataSource = false;
@@ -2049,8 +2049,8 @@ public function ClassReportCards()
             $this->set('institutionId', $institutionId);
             $this->set('institutionName', $institutionName);
             $this->set('loginUserId', $userId);
-            //POCOR-7485 ends    
-            
+            //POCOR-7485 ends
+
             $this->set('ngController', 'InstitutionsStaffCtrl as InstitutionStaffController');
             $this->set('_createNewStaff', $this->AccessControl->check(['Institutions', 'getUniqueOpenemisId'], $roles));
             $externalDataSource = false;
@@ -2442,7 +2442,7 @@ public function ClassReportCards()
         return $events;
     }
 
-public function isActionIgnored(Event $event, $action)
+    public function isActionIgnored(Event $event, $action)
     {
         $pass = $this->request->getParam('pass');
         if (isset($pass[0]) && $pass[0] == 'downloadFile') {
@@ -2575,7 +2575,7 @@ public function isActionIgnored(Event $event, $action)
     function isInstitutionIDSkipped(): bool
     {
         $request = $this->request;
-        
+
         $pass = $request->getParam('pass');
         $action = $request->getParam('action');
         $controller = $request->getParam('controller');
@@ -2756,11 +2756,11 @@ public function isActionIgnored(Event $event, $action)
             'StudentAssociations' => __('Houses'), //POCOR-7938
             'StudentCurriculars' => __('Curriculars') //POCOR-6673 in student tab breadcrumb
         ];
-        
+
         if (array_key_exists($alias, $studentModels)) {
             $studentID = $this->getStudentID(__FUNCTION__ . __LINE__);
             $Students = TableRegistry::getTableLocator()->get('Security.Users');
-            
+
             if ($Students->exists([$Students->getPrimaryKey() => $studentID])) {
                 $activeStudent = $Students->get($studentID);
                 $studentName = $activeStudent->name;
@@ -2822,15 +2822,15 @@ public function isActionIgnored(Event $event, $action)
                     '1' => $encodedQueryString]);
             $this->set('contentHeader', $tranlatedInstitutionName);
         }
-        
+
         $modelsWithChangedName = ['CommitteeAttachments',
             'InstitutionMaps',
             'InstitutionAssociations'];
-        if (!in_array($alias, $modelsWithChangedName)) { 
+        if (!in_array($alias, $modelsWithChangedName)) {
             $this->Navigation->addCrumb($humanTitle, $crumbOptions);
             $header = $tranlatedInstitutionName;
         }
-        
+
 
         $persona = null;
         $requestQuery = $this->request->getQuery();
@@ -2862,8 +2862,8 @@ public function isActionIgnored(Event $event, $action)
             }
         }
         $subHeader = $model->getHeader($alias);
-        
-            
+
+
         if (is_object($persona) && get_class($persona) == 'User\Model\Entity\User') {
             $header = $persona->name . ' - ' . $humanTitle;
             $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
@@ -2896,7 +2896,7 @@ public function isActionIgnored(Event $event, $action)
             $subHeader = __('Houses');
         } // END POCOR-7466
         $header .= ' - ' . $subHeader;
-        
+
         $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
         $event = $model->getEventManager()->dispatch($event);
         $params = [];
@@ -2965,14 +2965,14 @@ public function isActionIgnored(Event $event, $action)
                     //                        return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
                 }
             }
-            
+
             $this->set('contentHeader', $header);
         } else {
             if ($alias == 'ImportInstitutions') {
                 $this->Navigation->addCrumb($model->getHeader($alias));
                 $header = __('Institutions') . ' - ' . $model->getHeader($alias);
                 $this->set('contentHeader', $header);
-            } elseif($this->request->getParam('action') == 'Institutions') { // cakephp4
+            } elseif ($this->request->getParam('action') == 'Institutions') { // cakephp4
                 $this->Alert->warning('general.notExists');
                 //die('Entity of ' . $alias . ' has no Institution action');
                 $event->stopPropagation();
@@ -4829,7 +4829,7 @@ public function isActionIgnored(Event $event, $action)
             ->where(['code !=' => 'All', 'visible' => 1])
             ->order([$academic_periods->aliasField('id DESC')])
             ->toArray();
-        foreach ($academic_periods_result AS $result) {
+        foreach ($academic_periods_result as $result) {
             $result_array[] = array("id" => $result['id'], "name" => $result['name']);
         }
         echo json_encode($result_array);
@@ -4840,143 +4840,143 @@ public function isActionIgnored(Event $event, $action)
 //POCOR-7123 starts
 
     public function getEducationGrade()
-        {
-            $requestData = $this->request->input('json_decode', true);
-            $requestData = $requestData['params'];
-            $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
-            if (!empty($institutionId)) {
-                $activeInstitution = $this->Institutions->get($institutionId);
-                $institution_name = $activeInstitution->name;
-            }
-            if (!isset($requestData['institution_id'])) {
-                /*$inst = 'eyJpZCI6NiwiNWMzYTA5YmYyMmUxMjQxMWI2YWY0OGRmZTBiODVjMmQ5ZDExODFjZDM5MWUwODk1NzRjOGNmM2NhMWU1ZTRhZCI6InVtcWxsdHNiZmZmN2E4bWNlcXA5aGduYTltIn0.ZjhkNmI0ZmFkYjFhNDQ2YjMwM2FmODQwNWQxYWRjZTBjNzFmYzRiMjViNmY0NmRkZDNiZjI5YTM2MmYyZWYyOA';
-                echo "<pre>"; print_r($this->paramsDecode($inst)); die;*/
-                $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
-                $institution = $institutions
-                    ->find()
-                    ->select(['id', 'name'])
-                    ->where(['name' => $institution_name])
-                    ->first();
-                //get instituiton
-                // $institution_id = 0;
-                if (!empty($institution)) {
-                    $institution_id = $institution->id;
-                }
-            }
-            $academic_period_id = $requestData['academic_periods'];
-            $academic_periods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-            $academic_periods_result = $academic_periods
+    {
+        $requestData = $this->request->input('json_decode', true);
+        $requestData = $requestData['params'];
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+        if (!empty($institutionId)) {
+            $activeInstitution = $this->Institutions->get($institutionId);
+            $institution_name = $activeInstitution->name;
+        }
+        if (!isset($requestData['institution_id'])) {
+            /*$inst = 'eyJpZCI6NiwiNWMzYTA5YmYyMmUxMjQxMWI2YWY0OGRmZTBiODVjMmQ5ZDExODFjZDM5MWUwODk1NzRjOGNmM2NhMWU1ZTRhZCI6InVtcWxsdHNiZmZmN2E4bWNlcXA5aGduYTltIn0.ZjhkNmI0ZmFkYjFhNDQ2YjMwM2FmODQwNWQxYWRjZTBjNzFmYzRiMjViNmY0NmRkZDNiZjI5YTM2MmYyZWYyOA';
+            echo "<pre>"; print_r($this->paramsDecode($inst)); die;*/
+            $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+            $institution = $institutions
                 ->find()
-                ->select(['id', 'name', 'start_date', 'end_date'])
-                ->where(['id' => $academic_period_id])
+                ->select(['id', 'name'])
+                ->where(['name' => $institution_name])
                 ->first();
+            //get instituiton
+            // $institution_id = 0;
+            if (!empty($institution)) {
+                $institution_id = $institution->id;
+            }
+        }
+        $academic_period_id = $requestData['academic_periods'];
+        $academic_periods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $academic_periods_result = $academic_periods
+            ->find()
+            ->select(['id', 'name', 'start_date', 'end_date'])
+            ->where(['id' => $academic_period_id])
+            ->first();
 
-            $startDate = date('Y-m-d', strtotime($academic_periods_result->start_date));
-            $endDate = date('Y-m-d', strtotime($academic_periods_result->end_date));
+        $startDate = date('Y-m-d', strtotime($academic_periods_result->start_date));
+        $endDate = date('Y-m-d', strtotime($academic_periods_result->end_date));
 
-            $institution_grades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
-            $institution_grades_result = $institution_grades
-                ->find()
-                ->select([
-                    $institution_grades->aliasField('id'),
-                    $institution_grades->aliasField('academic_period_id'),
-                    'EducationGrades.id',
-                    'EducationGrades.name',
-                    $institution_grades->aliasField('end_date'),
-                    $institution_grades->aliasField('start_date'),
+        $institution_grades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+        $institution_grades_result = $institution_grades
+            ->find()
+            ->select([
+                $institution_grades->aliasField('id'),
+                $institution_grades->aliasField('academic_period_id'),
+                'EducationGrades.id',
+                'EducationGrades.name',
+                $institution_grades->aliasField('end_date'),
+                $institution_grades->aliasField('start_date'),
 
-                ])
-                ->InnerJoin(['EducationGrades' => 'education_grades'], [
-                    'EducationGrades.id = ' . $institution_grades->aliasField('education_grade_id')
-                ])
-                ->InnerJoin(['EducationProgrammes' => 'education_programmes'], [
-                    'EducationProgrammes.id = EducationGrades.education_programme_id'
-                ])
-                ->InnerJoin(['EducationCycles' => 'education_cycles'], [
-                    'EducationCycles.id = EducationProgrammes.education_cycle_id'
-                ])
-                ->InnerJoin(['EducationLevels' => 'education_levels'], [
-                    'EducationLevels.id = EducationCycles.education_level_id'
-                ])
-                ->InnerJoin(['EducationSystems' => 'education_systems'], [
-                    'EducationSystems.id = EducationLevels.education_system_id'
-                ])
-                ->where([
-                    $institution_grades->aliasField('institution_id') => $institutionId,
-                    $institution_grades->aliasField('academic_period_id') => $academic_period_id,
-                    'EducationSystems.academic_period_id' => $academic_period_id,
+            ])
+            ->InnerJoin(['EducationGrades' => 'education_grades'], [
+                'EducationGrades.id = ' . $institution_grades->aliasField('education_grade_id')
+            ])
+            ->InnerJoin(['EducationProgrammes' => 'education_programmes'], [
+                'EducationProgrammes.id = EducationGrades.education_programme_id'
+            ])
+            ->InnerJoin(['EducationCycles' => 'education_cycles'], [
+                'EducationCycles.id = EducationProgrammes.education_cycle_id'
+            ])
+            ->InnerJoin(['EducationLevels' => 'education_levels'], [
+                'EducationLevels.id = EducationCycles.education_level_id'
+            ])
+            ->InnerJoin(['EducationSystems' => 'education_systems'], [
+                'EducationSystems.id = EducationLevels.education_system_id'
+            ])
+            ->where([
+                $institution_grades->aliasField('institution_id') => $institutionId,
+                $institution_grades->aliasField('academic_period_id') => $academic_period_id,
+                'EducationSystems.academic_period_id' => $academic_period_id,
+                'OR' => [
                     'OR' => [
-                        'OR' => [
-                            [
-                                $institution_grades->aliasField('end_date') . ' IS NOT NULL',
-                                $institution_grades->aliasField('start_date') . ' <=' => $startDate,
-                                $institution_grades->aliasField('end_date') . ' >=' => $startDate
-                            ],
-                            [
-                                $institution_grades->aliasField('end_date') . ' IS NOT NULL',
-                                $institution_grades->aliasField('start_date') . ' <=' => $endDate,
-                                $institution_grades->aliasField('end_date') . ' >=' => $endDate
-                            ],
-                            [
-                                $institution_grades->aliasField('end_date') . ' IS NOT NULL',
-                                $institution_grades->aliasField('start_date') . ' >=' => $startDate,
-                                $institution_grades->aliasField('end_date') . ' <=' => $endDate
-                            ]
+                        [
+                            $institution_grades->aliasField('end_date') . ' IS NOT NULL',
+                            $institution_grades->aliasField('start_date') . ' <=' => $startDate,
+                            $institution_grades->aliasField('end_date') . ' >=' => $startDate
                         ],
                         [
-                            $institution_grades->aliasField('end_date') . ' IS NULL',
-                            $institution_grades->aliasField('start_date') . ' <=' => $endDate
+                            $institution_grades->aliasField('end_date') . ' IS NOT NULL',
+                            $institution_grades->aliasField('start_date') . ' <=' => $endDate,
+                            $institution_grades->aliasField('end_date') . ' >=' => $endDate
+                        ],
+                        [
+                            $institution_grades->aliasField('end_date') . ' IS NOT NULL',
+                            $institution_grades->aliasField('start_date') . ' >=' => $startDate,
+                            $institution_grades->aliasField('end_date') . ' <=' => $endDate
                         ]
+                    ],
+                    [
+                        $institution_grades->aliasField('end_date') . ' IS NULL',
+                        $institution_grades->aliasField('start_date') . ' <=' => $endDate
                     ]
-                ])
-                ->group([$institution_grades->aliasField('education_grade_id')])
-                ->toArray();
-            foreach ($institution_grades_result AS $result) {
-                $result_array[] = array("id" => $result['id'],
-                    "education_grade_id" => $result->EducationGrades['id'],
-                    "name" => $result->EducationGrades['name'],
-                    "start_date" => $result['start_date'],
-                    "endDate" => $result['end_date'],
-                    "academic_period_id" => $result['academic_period_id']
-                );
-            }
-            echo json_encode($result_array);
-            die;
-        }//POCOR-7123 ends
-
-        public
-        function getClassOptions()
-        {
-            $requestData = $this->request->input('json_decode', true);
-            $requestData = $requestData['params'];
-            $academic_period = $requestData['academic_period'];
-            $grade_id = $requestData['grade_id'];
-            $institution_id = $this->getInstitutionID();
-    
-            $institution_classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
-            $institution_classes_result = $institution_classes
-                ->find()
-                ->select([
-                    $institution_classes->aliasField('id'),
-                    $institution_classes->aliasField('name')
-                ])
-                ->InnerJoin(['InstitutionClassGrades' => 'institution_class_grades'], [
-                    'InstitutionClassGrades.institution_class_id = ' . $institution_classes->aliasField('id'),
-                    'InstitutionClassGrades.education_grade_id = ' . $grade_id,
-                ])
-                ->where([
-                    $institution_classes->aliasField('academic_period_id') => $academic_period,
-                    $institution_classes->aliasField('institution_id') => $institution_id
-                ])
-                ->group([$institution_classes->aliasField('id')])
-                ->toArray();
-    
-            foreach ($institution_classes_result AS $result) {
-                $result_array[] = array("id" => $result['id'], "name" => $result['name']);
-            }
-            echo json_encode($result_array);
-            die;
+                ]
+            ])
+            ->group([$institution_grades->aliasField('education_grade_id')])
+            ->toArray();
+        foreach ($institution_grades_result as $result) {
+            $result_array[] = array("id" => $result['id'],
+                "education_grade_id" => $result->EducationGrades['id'],
+                "name" => $result->EducationGrades['name'],
+                "start_date" => $result['start_date'],
+                "endDate" => $result['end_date'],
+                "academic_period_id" => $result['academic_period_id']
+            );
         }
+        echo json_encode($result_array);
+        die;
+    }//POCOR-7123 ends
+
+    public
+    function getClassOptions()
+    {
+        $requestData = $this->request->input('json_decode', true);
+        $requestData = $requestData['params'];
+        $academic_period = $requestData['academic_period'];
+        $grade_id = $requestData['grade_id'];
+        $institution_id = $this->getInstitutionID();
+
+        $institution_classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $institution_classes_result = $institution_classes
+            ->find()
+            ->select([
+                $institution_classes->aliasField('id'),
+                $institution_classes->aliasField('name')
+            ])
+            ->InnerJoin(['InstitutionClassGrades' => 'institution_class_grades'], [
+                'InstitutionClassGrades.institution_class_id = ' . $institution_classes->aliasField('id'),
+                'InstitutionClassGrades.education_grade_id = ' . $grade_id,
+            ])
+            ->where([
+                $institution_classes->aliasField('academic_period_id') => $academic_period,
+                $institution_classes->aliasField('institution_id') => $institution_id
+            ])
+            ->group([$institution_classes->aliasField('id')])
+            ->toArray();
+
+        foreach ($institution_classes_result as $result) {
+            $result_array[] = array("id" => $result['id'], "name" => $result['name']);
+        }
+        echo json_encode($result_array);
+        die;
+    }
 
     /*POCOR-6264 starts*/
 
@@ -5015,7 +5015,7 @@ public function isActionIgnored(Event $event, $action)
         die;
     }
 
-public
+    public
     function getStaffPosititonGrades()
     {
         $staff_position_grades = TableRegistry::getTableLocator()->get('Institution.StaffPositionGrades');
@@ -5417,7 +5417,7 @@ public
         $remove_field_type = ['COORDINATES', 'TABLE']; //POCOR-7993
         $i = 0;
         $fieldsArr = [];
-        foreach ($SectionData AS $sectionKey => $sectionValue) {
+        foreach ($SectionData as $sectionKey => $sectionValue) {
             //$SectionArr[$skey][$sval->section] = $sval->section;
             $CustomFieldsData = $studentCustomFormsFields->find()
                 ->select([
@@ -5442,7 +5442,7 @@ public
                 ->order([$studentCustomFormsFields->aliasField('`order`') => 'ASC'])
                 ->toArray();
 
-            foreach ($customFieldsData AS $customFieldKey => $customFieldValue) {
+            foreach ($customFieldsData as $customFieldKey => $customFieldValue) {
                 $fieldsArr[$i]['student_custom_form_id'] = $customFieldValue->student_custom_form_id;
                 $fieldsArr[$i]['student_custom_field_id'] = $customFieldValue->student_custom_field_id;
                 $fieldsArr[$i]['section'] = $customFieldValue->section;
@@ -5509,13 +5509,13 @@ public
                             $fieldsArr[$i]['values'] = date('H:i:s', strtotime($studentCustomFieldValuesData[0]->time_value));
                         } else if ($cval->field_type == 'DROPDOWN') {
                             $DropdownValDataArr = [];
-                            foreach ($studentCustomFieldValuesData AS $SV_key => $SV_value) {
+                            foreach ($studentCustomFieldValuesData as $SV_key => $SV_value) {
                                 $DropdownValDataArr[$SV_key]['dropdown_val'] = $SV_value->number_value;
                             }
                             $fieldsArr[$i]['values'] = $DropdownValDataArr;
                         } else if ($cval->field_type == 'CHECKBOX') {
                             $CheckboxValDataArr = [];
-                            foreach ($studentCustomFieldValuesData AS $SV_key => $SV_value) {
+                            foreach ($studentCustomFieldValuesData as $SV_key => $SV_value) {
                                 $CheckboxValDataArr[$SV_key]['checkbox_val'] = $SV_value->number_value;
                             }
                             $fieldsArr[$i]['values'] = $CheckboxValDataArr;
@@ -5934,7 +5934,7 @@ public
                             if (empty($checkexistingNationalities)) {
                                 $primaryKey = $UserNationalities->primaryKey();
                                 $hashString = [];
-                                foreach ($primaryKey AS $key) {
+                                foreach ($primaryKey as $key) {
                                     if ($key == 'nationality_id') {
                                         $hashString[] = $nationalities->id;
                                     }
@@ -6103,10 +6103,10 @@ public
 
                         if (!empty($SubjectsResult)) {
                             $institutionSubjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
-                            foreach ($SubjectsResult AS $skey => $sval) {
+                            foreach ($SubjectsResult as $skey => $sval) {
                                 $primaryKey = $institutionSubjectStudents->getPrimaryKey();
                                 $hashString = [];
-                                foreach ($primaryKey AS $key) {
+                                foreach ($primaryKey as $key) {
                                     if ($key == 'student_id') {
                                         $hashString[] = $user_record_id;
                                     }
@@ -6161,7 +6161,7 @@ public
                             $studentCustomFieldValues->deleteAll(['student_id' => $user_record_id]);
                         }
 
-                        foreach ($custom AS $skey => $sval) {
+                        foreach ($custom as $skey => $sval) {
                             $entityCustomData = [
                                 'id' => Text::uuid(),
                                 'text_value' => $sval['text_value'],
@@ -6207,7 +6207,7 @@ public
                             ]);
 
                             if (!empty($bodyData)) {
-                                foreach ($bodyData AS $key => $value) {
+                                foreach ($bodyData as $key => $value) {
                                     $user_id = $value->user->id;
                                     $openemis_no = $value->user->openemis_no;
                                     $first_name = $value->user->first_name;
@@ -6227,7 +6227,7 @@ public
 
                                     $contactValue = $contactType = [];
                                     if (!empty($value->user['contacts'])) {
-                                        foreach ($value->user['contacts'] AS $key => $contact) {
+                                        foreach ($value->user['contacts'] as $key => $contact) {
                                             $contactValue[] = $contact->value;
                                             $contactType[] = $contact->contact_type->name;
                                         }
@@ -6235,7 +6235,7 @@ public
 
                                     $identityNumber = $identityType = [];
                                     if (!empty($value->user['identities'])) {
-                                        foreach ($value->user['identities'] AS $key => $identity) {
+                                        foreach ($value->user['identities'] as $key => $identity) {
                                             $identityNumber[] = $identity->number;
                                             $identityType[] = $identity->identity_type->name;
                                         }
@@ -6324,7 +6324,7 @@ public
                             $custom_field = array();
                             $count = 0;
                             if (!empty($studentCustomData)) {
-                                foreach ($studentCustomData AS $val) {
+                                foreach ($studentCustomData as $val) {
                                     $custom_field['custom_field'][$count]["id"] = (!empty($val['custom_id']) ? $val['custom_id'] : '');
                                     $custom_field['custom_field'][$count]["name"] = (!empty($val['name']) ? $val['name'] : '');
                                     $fieldTypes[$count] = (!empty($val['field_type']) ? $val['field_type'] : '');
@@ -6719,7 +6719,9 @@ public
             //$institutionId = $this->request->session()->read('Institution.Institutions.id');
             $institutionId = (array_key_exists('institution_id', $requestData)) ? $requestData['institution_id'] : null;
             $staffTypeId = (array_key_exists('staff_type_id', $requestData)) ? $requestData['staff_type_id'] : null;
-            $userId = !empty($this->request->session()->read('Auth.User.id')) ? $this->request->session()->read('Auth.User.id') : 1;
+            // POCOR-8334 start
+            $userId = !empty($this->getRequest()->getSession()->read('Auth.User.id')) ? $this->getRequest()->getSession()->read('Auth.User.id') : 1;
+            // POCOR-8334 start
             $photoContent = (array_key_exists('photo_base_64', $requestData)) ? $requestData['photo_base_64'] : null;
             $photoName = (array_key_exists('photo_name', $requestData)) ? $requestData['photo_name'] : null;
             $custom = (array_key_exists('custom', $requestData)) ? $requestData['custom'] : "";
@@ -7613,7 +7615,7 @@ public
                         if (empty($checkexistingNationalities)) {
                             $primaryKey = $UserNationalities->primaryKey();
                             $hashString = [];
-                            foreach ($primaryKey AS $key) {
+                            foreach ($primaryKey as $key) {
                                 if ($key == 'nationality_id') {
                                     $hashString[] = $nationalities->id;
                                 }
@@ -8149,91 +8151,91 @@ public
         return "";
     }
 
-public
-function checkConfigurationForExternalSearch()
-{
-    $this->autoRender = false;
-    $configItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-    $configItemsResult = $configItems
-        ->find()
-        ->select(['id', 'value'])
-        ->where(['code' => 'external_data_source_type',
-            'type' => 'External Data Source - Identity',
-            'name' => 'Type'])
-        ->toArray();
+    public
+    function checkConfigurationForExternalSearch()
+    {
+        $this->autoRender = false;
+        $configItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $configItemsResult = $configItems
+            ->find()
+            ->select(['id', 'value'])
+            ->where(['code' => 'external_data_source_type',
+                'type' => 'External Data Source - Identity',
+                'name' => 'Type'])
+            ->toArray();
 //        $this->log('checkConfigurationForExternalSearch', 'debug');
 //        $this->log($configItemsResult, 'debug');
-    foreach ($configItemsResult AS $result) {
-        if ($result['value'] == "None") {
-            $result_array[] = array("value" => $result['value'], "showExternalSearch" => false);
-        } else {
-            $result_array[] = array("value" => $result['value'], "showExternalSearch" => true);
-        }
-    }
-    echo json_encode($result_array);
-    die;
-}
-
-public
-function checkUserAge()
-{
-    $this->autoRender = false;
-    $requestData = $this->request->input('json_decode', true);
-    $requestData = $requestData['params'];
-    $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-
-    //POCOR-8209 -- Start
-    $configItemResult = $ConfigItems->find()
-    ->select(['code', 'value', 'default_value'])
-    ->where([
-        $ConfigItems->aliasField('code') . ' IN' => ['StaffMinimumAge', 'StaffMaximumAge'],
-        $ConfigItems->aliasField('visible') => 1
-    ])
-    ->toArray();
-
-    $minStaffDefault =  $minStaffValue = $maxStaffDefault = $maxStaffValue = null;
-
-    foreach ($configItemResult as $item) {
-        if ($item->code === 'StaffMinimumAge') {
-            $minStaffDefault = $item->default_value;
-            $minStaffValue = $item->value;
-        } elseif ($item->code === 'StaffMaximumAge') {
-            $maxStaffDefault = $item->default_value;
-            $maxStaffValue = $item->value;
-        }
-    }
-
-    try {
-        if (empty($requestData['date_of_birth'])) {
-            echo json_encode(['user_exist' => 0, 'status_code' => 400, 'message' => __('Date of birth is not set')]);
-            die;
-        } else {
-            $minValuePattern = ($minStaffValue == null || $minStaffValue == 0) ? $minStaffDefault : $minStaffValue;
-            $maxValuePattern = ($maxStaffValue == null || $maxStaffValue == 0) ? $maxStaffDefault : $maxStaffValue;
-        
-
-            $from = date('Y', strtotime($requestData['date_of_birth']));
-            $to = date('Y');
-            $dateDiff = ($to - $from);
-
-            $minValuePattern = ($minValuePattern == 0) ? '' : $minValuePattern;
-            $maxValuePattern = ($maxValuePattern == 0) ? '' : $maxValuePattern;
-
-            if ($dateDiff < $minValuePattern) {
-                echo json_encode(['user_exist' => 0, 'status_code' => 400, 'message' => __('Minimum staff age:'.$minValuePattern)]);
-            } else if ($dateDiff > $maxValuePattern) {
-                echo json_encode(['user_exist' => 0, 'status_code' => 400, 'message' => __('Maximum staff age:'.$maxValuePattern)]);
+        foreach ($configItemsResult as $result) {
+            if ($result['value'] == "None") {
+                $result_array[] = array("value" => $result['value'], "showExternalSearch" => false);
             } else {
-                echo json_encode(['user_exist' => 0, 'status_code' => 200, 'message' => __('valid Age')]);
+                $result_array[] = array("value" => $result['value'], "showExternalSearch" => true);
             }
-            die;
         }
-    } catch (Exception $e) {
-        echo json_encode(['user_exist' => 0, 'status_code' => 500, 'message' => __('Error fetching configuration values')]);
+        echo json_encode($result_array);
         die;
     }
-    //POCOR-8209 -- end
-}
+
+    public
+    function checkUserAge()
+    {
+        $this->autoRender = false;
+        $requestData = $this->request->input('json_decode', true);
+        $requestData = $requestData['params'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+
+        //POCOR-8209 -- Start
+        $configItemResult = $ConfigItems->find()
+            ->select(['code', 'value', 'default_value'])
+            ->where([
+                $ConfigItems->aliasField('code') . ' IN' => ['StaffMinimumAge', 'StaffMaximumAge'],
+                $ConfigItems->aliasField('visible') => 1
+            ])
+            ->toArray();
+
+        $minStaffDefault = $minStaffValue = $maxStaffDefault = $maxStaffValue = null;
+
+        foreach ($configItemResult as $item) {
+            if ($item->code === 'StaffMinimumAge') {
+                $minStaffDefault = $item->default_value;
+                $minStaffValue = $item->value;
+            } elseif ($item->code === 'StaffMaximumAge') {
+                $maxStaffDefault = $item->default_value;
+                $maxStaffValue = $item->value;
+            }
+        }
+
+        try {
+            if (empty($requestData['date_of_birth'])) {
+                echo json_encode(['user_exist' => 0, 'status_code' => 400, 'message' => __('Date of birth is not set')]);
+                die;
+            } else {
+                $minValuePattern = ($minStaffValue == null || $minStaffValue == 0) ? $minStaffDefault : $minStaffValue;
+                $maxValuePattern = ($maxStaffValue == null || $maxStaffValue == 0) ? $maxStaffDefault : $maxStaffValue;
+
+
+                $from = date('Y', strtotime($requestData['date_of_birth']));
+                $to = date('Y');
+                $dateDiff = ($to - $from);
+
+                $minValuePattern = ($minValuePattern == 0) ? '' : $minValuePattern;
+                $maxValuePattern = ($maxValuePattern == 0) ? '' : $maxValuePattern;
+
+                if ($dateDiff < $minValuePattern) {
+                    echo json_encode(['user_exist' => 0, 'status_code' => 400, 'message' => __('Minimum staff age:' . $minValuePattern)]);
+                } else if ($dateDiff > $maxValuePattern) {
+                    echo json_encode(['user_exist' => 0, 'status_code' => 400, 'message' => __('Maximum staff age:' . $maxValuePattern)]);
+                } else {
+                    echo json_encode(['user_exist' => 0, 'status_code' => 200, 'message' => __('valid Age')]);
+                }
+                die;
+            }
+        } catch (Exception $e) {
+            echo json_encode(['user_exist' => 0, 'status_code' => 500, 'message' => __('Error fetching configuration values')]);
+            die;
+        }
+        //POCOR-8209 -- end
+    }
 
     public
     function customFieldsUseJustForExample()
@@ -8288,7 +8290,7 @@ function checkUserAge()
         $this->set('institutionName', $institutionName);
         $this->set('loginUserId', $userId);
         $this->set('studentId', $UserData->id);
-        //POCOR-7485 ends 
+        //POCOR-7485 ends
 
         $this->Navigation->addCrumb(__('Students'), ['plugin' => 'Institution',
             'controller' => 'Institutions',
@@ -8912,6 +8914,332 @@ function checkUserAge()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']);
     }
+
+    // POCOR-8334 start
+
+    /**
+     * Displays the student dashboard.
+     *
+     * @param string $action
+     * @param string $encodedParam
+     * @return void
+     */
+    public function StudentDashboard(string $action, string $encodedParam): void
+    {
+        $params = $this->paramsDecode($encodedParam);
+        $Institutions = $this->getDynamicTableInstance('Institution.Institutions');
+
+        $userID = $params['user_id'];
+        $userRole = "Student";
+        $institutionID = $params['institution_id'];
+
+        $hasPermission = $this->hasPermission($userID, $institutionID, 'StudentDashboard', 'view');
+
+        $this->personalDashboard($action, $userRole, $userID, $institutionID, $hasPermission);
+    }
+
+    /**
+     * @param string $tableName
+     * @return Table
+     */
+
+    /**
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    public function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+
+        // Create a TableLocator instance
+        $locator = TableRegistry::getTableLocator();
+        if($tableName == 'AcademicPeriod.AcademicPeriods'){
+//        echo "<pre>";
+//        print($className);
+//        print_r(class_exists($className));
+//        die;
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
+    /**
+     * Check if the user has permission to access the specified dashboard.
+     *
+     * @param int $userID
+     * @param int $institutionID
+     * @param string $action
+     * @param string $view
+     * @return bool
+     */
+    private function hasPermission(int $userID, int $institutionID, string $action, string $view): bool
+    {
+        if (!$this->AccessControl->isAdmin()) {
+            $userId = $this->Auth->user('id');
+            $Institutions = $this->getDynamicTableInstance('Institution.Institutions');
+            $roles = $Institutions->getInstitutionRoles($userId, $institutionID);
+            $isActive = $Institutions->isActive($institutionID);
+            if ($isActive) {
+                return $this->AccessControl->check(['Institutions', $action, $view], $roles);
+            }
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Displays the personal dashboard.
+     *
+     * @param string $action
+     * @param string $userRole
+     * @param int $userID
+     * @param int $institutionID
+     * @param bool $hasPermission
+     * @return void
+     */
+    public function personalDashboard(string $action, string $userRole, int $userID, int $institutionID, bool $hasPermission): void
+    {
+        if (!$action) {
+            return;
+        }
+
+        $this->set('haveProfilePermission', $hasPermission);
+        $UsersTable = $this->getDynamicTableInstance('User.Users');
+
+        $user = $UsersTable->get($userID);
+        $userName = $user->name;
+        $header = $userName . ' - ' . $userRole . ' Dashboard';
+        $this->set('contentHeader', $header);
+        $this->set('userName', $userName);
+
+        $AcademicPeriods = $this->getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
+        $currentPeriod = $AcademicPeriods->getCurrent();
+        // POCOR-7733 start
+        $session = $this->request->getSession();
+        $session->write('AcademicPeriod.currentAcademicPeriod', $currentPeriod);
+        $session->write('AcademicPeriod.currentAcademicPeriodName', $AcademicPeriods->get($currentPeriod)->name);
+        // POCOR-7733 end
+
+        if (empty($currentPeriod)) {
+            $this->Alert->warning('Institution.Institutions.academicPeriod');
+        }
+
+        $highChartDatas = $this->getPersonalHighchartData($userID, $institutionID, $userRole);
+        $profileData = $this->getPersonalProfileCompletenessData($userID, $userRole);
+
+        $this->set('personalProfileCompletness', $profileData);
+        $this->set('highChartDatas', $highChartDatas);
+
+        $indexDashboard = 'dashboard';
+        $this->set('mini_dashboard', [
+            'name' => $indexDashboard,
+            'data' => [
+                'model' => 'staff',
+                'modelCount' => 25,
+                'modelArray' => []
+            ]
+        ]);
+    }
+
+    /**
+     * Get personal profile completeness highchart data.
+     *
+     * @param int $userID
+     * @param int $institutionID
+     * @param string $userRole
+     * @return array
+     */
+    public function getPersonalHighchartData(int $userID, int $institutionID, string $userRole): array
+    {
+        $StaffStatuses = $this->getDynamicTableInstance('Staff.StaffStatuses');
+        $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+        $InstitutionStaff = $this->getDynamicTableInstance('Institution.Staff');
+
+        // only show student charts if institution is academic
+        $InstitutionStudents = $this->getDynamicTableInstance('Institution.Students');
+        $StudentStatuses = $this->getDynamicTableInstance('Student.StudentStatuses');
+        $statuses = $StudentStatuses->findCodeList();
+        $highChartDatas = [];
+
+        if ($userRole === 'Student' || $userRole === 'Students') {
+            $params = [
+                'conditions' => [
+                    'institution_id' => $institutionID,
+                    'student_id' => $userID,
+                    'student_status_id NOT IN ' => [
+                        $statuses['TRANSFERRED'],
+                        $statuses['WITHDRAWN'],
+                        $statuses['PROMOTED'],
+                        $statuses['REPEATED']
+                    ]
+                ]
+            ];
+
+            $highChartDatas[] = $InstitutionStudents->getHighChart('student_attendance', $params);
+        }
+
+        if ($userRole === 'Staff') {
+            $params = [
+                'conditions' => [
+                    'institution_id' => $institutionID,
+                    'staff_status_id' => $assignedStatus,
+                    'staff_id' => $userID
+                ]
+            ];
+            $highChartDatas[] = $InstitutionStaff->getHighChart('staff_attendance', $params);
+        }
+
+        // Students By Grade for current year, excludes transferred, withdrawn, promoted, repeated students
+        $params = [
+            'conditions' => [
+                'institution_id' => $institutionID,
+                'student_status_id NOT IN ' => [
+                    $statuses['TRANSFERRED'],
+                    $statuses['WITHDRAWN'],
+                    $statuses['PROMOTED'],
+                    $statuses['REPEATED']
+                ]
+            ]
+        ];
+
+        return $highChartDatas;
+    }
+
+    /**
+     * Get personal profile completeness data.
+     *
+     * @param int $userID
+     * @param string $userRole
+     * @return array
+     */
+    public function getPersonalProfileCompletenessData(int $userID, string $userRole): array
+    {
+        if ($userRole === 'Students') {
+            $userRole = 'Student';
+        }
+
+        $data = [];
+        $profileComplete = 0;
+        $usersData = [
+            'Overview' => $this->getLastData($userID, 'security_users', 'id'),
+            'Nationalities' => $this->getLastData($userID, 'user_nationalities', 'security_user_id'),
+            'Identities' => $this->getLastData($userID, 'user_identities', 'security_user_id')
+        ];
+
+        if ($userRole === 'Staff') {
+            $usersData['Contacts'] = $this->getLastData($userID, 'user_contacts', 'security_user_id');
+            $usersData['Qualifications'] = $this->getLastData($userID, 'staff_qualifications', 'staff_id');
+        }
+
+        if ($userRole === 'Student') {
+            $usersData['Guardians'] = $this->getLastData($userID, 'student_guardians', 'student_id');
+            $usersData['Absence'] = $this->getLastData($userID, 'institution_student_absences', 'student_id');
+        }
+
+        $ConfigItem = $this->getDynamicTableInstance('Configuration.ConfigItems');
+        $enabledTypeList = $ConfigItem->find()
+            ->select(['name' => $ConfigItem->aliasField('name')])
+            ->order('label')
+            ->where([
+                $ConfigItem->aliasField('visible') => 1,
+                $ConfigItem->aliasField('value') => 1,
+                $ConfigItem->aliasField('type') => $userRole . ' Data Completeness'
+            ])->toArray();
+
+        foreach ($enabledTypeList as $key => $enabled) {
+            $data[$key]['feature'] = $enabled->name;
+            $singleData = $usersData[$enabled->name] ?? null;
+            if (!empty($singleData)) {
+                $profileComplete++;
+                $data[$key]['complete'] = 'yes';
+                $data[$key]['modifiedDate'] = $singleData->modified ? date("F j, Y", strtotime($singleData->modified)) : date("F j, Y", strtotime($singleData->created));
+            } else {
+                $data[$key]['complete'] = 'no';
+                $data[$key]['modifiedDate'] = 'Not updated';
+            }
+        }
+
+        $totalProfileComplete = count($data);
+        $profilePercentage = $totalProfileComplete > 0 ? round((100 / $totalProfileComplete) * $profileComplete) : 0;
+        $data['percentage'] = $profilePercentage;
+
+        return $data;
+    }
+
+    /**
+     * Get the last data entry for a given user from a specified table.
+     *
+     * @param int $userID
+     * @param string $tableName
+     * @param string $fieldName
+     * @return \Cake\Datasource\EntityInterface|null
+     */
+    public function getLastData(int $userID, string $tableName, string $fieldName): ?\Cake\Datasource\EntityInterface
+    {
+        $table = $this->getDynamicTableInstance($tableName);
+        return $table->find()
+            ->select([
+                'created' => $table->aliasField('created'),
+                'modified' => $table->aliasField('modified')
+            ])
+            ->where([$table->aliasField($fieldName) => $userID])
+            ->orderDesc($table->aliasField('modified'))
+            ->limit(1)
+            ->first();
+    }
+
+    /**
+     * Displays the staff dashboard.
+     *
+     * @param string $action
+     * @param string $encodedParam
+     * @return void
+     */
+    public function StaffDashboard(string $action, string $encodedParam): void
+    {
+        $params = $this->paramsDecode($encodedParam);
+        $userID = $params['user_id'];
+        $institutionID = $params['institution_id'];
+        $userRole = "Staff";
+
+        $hasPermission = $this->hasPermission($userID, $institutionID, 'StaffDashboard', 'view');
+
+        $this->personalDashboard($action, $userRole, $userID, $institutionID, $hasPermission);
+    }
+
+
+// POCOR-8334 END
 
     private
     function hasPermissionToViewStudentAttendanceArchive($institutionId)
