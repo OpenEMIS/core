@@ -1427,7 +1427,8 @@ public function ClassReportCards()
                 'controller' => 'Institutions',
                 'action' => 'StudentAttendances',
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-                'excel'
+                'excel',
+                $this->ControllerAction->paramsEncode(['institution_id' => $institutionId])
             ];
 
             $importUrl = [

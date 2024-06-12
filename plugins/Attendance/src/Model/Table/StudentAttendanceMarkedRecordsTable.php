@@ -327,8 +327,6 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $institutionClassId = $options['institution_class_id'];
         $educationGradeId = $options['education_grade_id'];        
         $day = $options['day_id'];
-
-
         $row = [];
         
         return $query
@@ -364,17 +362,42 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                                                     ->execute();
                                                 
                                     } else {
-                                        $newRecord = $this->newEntity([
-                                                'institution_class_id' => $institutionClassId,
-                                                'education_grade_id' => $educationGradeId,
-                                                'institution_id' => $institutionId,
-                                                'academic_period_id' => $academicPeriodId,
-                                                'date' => $day,
-                                                'period' => 0,
-                                                'subject_id' => 0,
-                                                'no_scheduled_class' => 1
-                                            ]);
-                                        $this->save($newRecord);
+                                        try{
+                                            $connection = ConnectionManager::get('default');
+                                            $sql = "INSERT INTO student_attendance_marked_records (
+                                                institution_class_id,
+                                                education_grade_id,
+                                                institution_id,
+                                                academic_period_id,
+                                                date,
+                                                period,
+                                                subject_id,
+                                                no_scheduled_class
+                                            ) VALUES (
+                                                $institutionClassId,
+                                                $educationGradeId,
+                                                $institutionId,
+                                                $academicPeriodId,
+                                                '$day', -- Make sure the date is formatted correctly and enclosed in quotes
+                                                0,
+                                                0,
+                                                1
+                                            )";
+                                            $result = $connection->execute($sql);
+                                            // $newRecord = $this->newEntity([
+                                            //     'institution_class_id' => $institutionClassId,
+                                            //     'education_grade_id' => $educationGradeId,
+                                            //     'institution_id' => $institutionId,
+                                            //     'academic_period_id' => $academicPeriodId,
+                                            //     'date' => $day,
+                                            //     'period' => 0,
+                                            //     'subject_id' => 0,
+                                            //     'no_scheduled_class' => 1
+                                            // ]);
+                                            // $this->save($newRecord);
+                                        } catch (\Exception $e) {
+                                            echo "<pre>";print_r($e);die;
+                                        }
                                     }
 
 
