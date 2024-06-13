@@ -4186,8 +4186,8 @@ class StaffTable extends ControllerActionTable
                         'plugin' => 'Institution',
                         'controller' => 'Institutions',
                         'action' => 'StaffLeave',
-                        'index',
-                        '?' => ['user_id' => $staffId, 'institution_id' => $institution_id]
+                        '0' => 'index',
+                        '1' => $this->paramsEncode(['user_id' => $staffId, 'institution_id' => $institution_id])
                         //'user_id' => $staffId
                     ]);
                     $staffTimeRecords[$key]['leave'] = $leaveRecords;
