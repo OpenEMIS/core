@@ -846,6 +846,10 @@ class InstitutionsController extends AppController
         // POCOR-8115;
         // institution_id should always be in query string, if not, die as an error
         $institution_id = $this->getQueryString('institution_id');
+        
+        if (empty($institution_id) && $this->request->getQuery('institution_id') != null) {
+            $institution_id =  $this->request->getQuery('institution_id');
+        }
         if (!$institution_id) {
             $session = $this->request->getSession();
             $institution_id = $session->read('Institution.Institutions.id');
@@ -2342,6 +2346,8 @@ class InstitutionsController extends AppController
             $archiveUrl['plugin'] = 'Institution';
             $archiveUrl['controller'] = 'Institutions';
             $archiveUrl['action'] = 'StaffAttendancesArchived';
+            $archiveUrl['0'] = 'index';
+            $archiveUrl['1'] =  $this->ControllerAction->paramsEncode(['institution_id' =>  $institutionId]);
         }
         $this->set('_archive', $_archive);
         $this->set('archiveUrl', Router::url($archiveUrl));
@@ -2581,7 +2587,7 @@ class InstitutionsController extends AppController
         $controller = $request->getParam('controller');
         $plugin = $request->getParam('plugin');
         $furtherAction = $pass[0];
-        if (($furtherAction == 'index' || $furtherAction == 'add' || $furtherAction == 'import')
+        if (($furtherAction == 'index' || $furtherAction == 'add' || $furtherAction == 'import' ||  $furtherAction == 'excel')
             && ($action == 'Institutions')
             && ($plugin == 'Institution')
             && ($controller == 'Institutions')) {
@@ -8794,7 +8800,7 @@ class InstitutionsController extends AppController
     public
     function StaffAttendancesArchived($pass = '')
     {
-
+        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         if ($pass == 'excel') {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendancesArchived']);
         }
@@ -8816,8 +8822,8 @@ class InstitutionsController extends AppController
 
             $this->setInstitutionStaffAttendancesPermissionStaffId();
 
-            $this->setStaffAttendancesArchivedExcel($institutionId);
-
+            // $this->setStaffAttendancesArchivedExcel($institutionId);
+            // dd('jkbj');
             $this->set('institution_id', $institutionId);
             $this->set('ngController', 'StaffAttendancesArchivedCtrl as $ctrl');
         }
@@ -8826,38 +8832,38 @@ class InstitutionsController extends AppController
     /**
      * @param $institutionId
      */
-    private
-    function setStaffAttendancesArchivedExcel($institutionId)
-    {
-        $_excel = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'excel']);
-        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__); // POCOR-7895
+    // private
+    // function setStaffAttendancesArchivedExcel($institutionId)
+    // {
+    //     $_excel = $this->AccessControl->check(['Institutions', 'InstitutionStaffAttendances', 'excel']);
+    //     $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__); // POCOR-7895
 
-        $excelUrl = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => 'StaffAttendancesArchived',
-            'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-            'excel'
-        ];
-        // POCOR-7895: start
-        $where = ['institution_id' => $institutionId];
-        $table_name = 'institution_staff_attendances';
-        $_archive_1 = ArchiveConnections::hasArchiveRecords($table_name, $where);
-        $table_name = 'institution_staff_leave';
-        $_archive_2 = ArchiveConnections::hasArchiveRecords($table_name, $where);
-        if ($_excel) {
-            if ($_archive_1 or $_archive_2) {
-                $_excel = $_archive_1;
-            } else {
-                $_excel = false;
-                $excelUrl = null;
-            }
-        }
+    //     $excelUrl = [
+    //         'plugin' => 'Institution',
+    //         'controller' => 'Institutions',
+    //         'action' => 'StaffAttendancesArchived',
+    //         'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
+    //         'excel'
+    //     ];
+    //     // POCOR-7895: start
+    //     $where = ['institution_id' => $institutionId];
+    //     $table_name = 'institution_staff_attendances';
+    //     $_archive_1 = ArchiveConnections::hasArchiveRecords($table_name, $where);
+    //     $table_name = 'institution_staff_leave';
+    //     $_archive_2 = ArchiveConnections::hasArchiveRecords($table_name, $where);
+    //     if ($_excel) {
+    //         if ($_archive_1 or $_archive_2) {
+    //             $_excel = $_archive_1;
+    //         } else {
+    //             $_excel = false;
+    //             $excelUrl = null;
+    //         }
+    //     }
 
-        $this->set('_excel', $_excel);
-        // POCOR-7895: end
-        $this->set('excelUrl', Router::url($excelUrl));
-    }
+    //     $this->set('_excel', $_excel);
+    //     // POCOR-7895: end
+    //     $this->set('excelUrl', Router::url($excelUrl));
+    // }
 
 //POCOR-7716 start
 

@@ -43,7 +43,7 @@ class ExcelBehavior extends Behavior
 
     public function initialize(array $config): void
     {
-        $this->setConfig('excludes', array_merge($this->setConfig('default_excludes'), $this->setConfig('excludes')));
+        $this->setConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
         if (!array_key_exists('filename', $config)) {
             $this->setConfig('filename', $this->_table->getAlias());
         }
@@ -405,7 +405,7 @@ class ExcelBehavior extends Behavior
         if (!is_array($table->getPrimaryKey())) { //if not composite key
             $excludes[] = $table->getPrimaryKey();
         }
-
+        
         $fields = new ArrayObject();
         $module = $table->getAlias();
         $language = I18n::getLocale();
