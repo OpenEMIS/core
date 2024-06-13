@@ -26,7 +26,10 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);     
-        $this->addBehavior('Institution.InstitutionTab');   
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['FeederIncomingInstitutions' =>['academic_period_id','education_grade_id','feeder_institution_id', 'institution_id']
+            ]
+        ]);   
     }
 
     public function onGetCode(Event $event, Entity $entity)
