@@ -631,8 +631,21 @@ class AttendanceRepository extends Controller
                 $resp[$k]['attendance'] = $staffTimeRecords;
             }
 
-            $list['list'] = $resp;
 
+            //For POCOR-8291 start...
+            $insId = '{"id":'.$institutionId.'}';
+            $encodedInstitutionID = base64_encode($insId);
+            $encodedInstitutionID = rtrim($encodedInstitutionID, "=");
+
+            $url = [
+                'import' => '/Institution/Institutions/'.$encodedInstitutionID.'.cake_session_id/ImportStaffAttendances/add',
+                'archive' => '/Institution/Institutions/'.$encodedInstitutionID.'.cake_session_id/StaffAttendancesArchived/index'
+            ];
+            $list['url'] = $url;
+            //For POCOR-8291 end...
+
+            $list['list'] = $resp;
+            
             $list['total'] = $total;
 
             return $list;
@@ -1842,6 +1855,7 @@ class AttendanceRepository extends Controller
             $resp['url'] = $urlData;
             $resp['total'] = $total;
             
+
             return $resp;
            
             

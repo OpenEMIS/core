@@ -55,7 +55,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->notEmpty('assessor_id')
             ->add('comment', 'length', [
@@ -237,8 +237,10 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         foreach ($specialNeedList as $key => $obj) {
             $specialNeedName = $obj->special_needs_type->name;
             $specialNeedDifficulties = $obj->special_need_difficulty->name;
-
-            $referenceDetails[$obj->id] = __($specialNeedName) . ' (' . __($specialNeedDifficulties) . ')';
+            $referenceDetails[$obj->id] =   __($specialNeedDifficulties);
+            if(!empty($specialNeedName)) {
+                $referenceDetails[$obj->id] = __($specialNeedName) . ' (' . __($specialNeedDifficulties) . ')';
+            }
         }
 
         // tooltip only receieved string to be display
@@ -452,7 +454,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $monthOptions = ['1'=> '1', '2'=> '2','3'=> '3','4'=> '4', '5'=> '5', '6'=> '6','7'=> '7','8'=> '8','9'=> '9','10'=> '10', '11'=>'11', '12'=> '12'];
         $monthOptions = ['-1' => '-- ' . __('Select Month') . ' --'] + $monthOptions;    
         $selectedmonth = !is_null($this->request->getQuery('month')) ? $this->request->getQuery('month') : '-1';
-        $AcademicPeriods = TableRegistry::get('academic_periods');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $periodsOptions = $AcademicPeriods
                     ->find('list', ['keyField' => 'start_year', 'valueField' => 'start_year'])
                     ->order([$AcademicPeriods->aliasField('start_year') => 'DESC']);

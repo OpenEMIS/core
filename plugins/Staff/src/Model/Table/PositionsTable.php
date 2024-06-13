@@ -418,6 +418,7 @@ class PositionsTable extends ControllerActionTable {
        $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
        $staffId=$institutionStaff->find()->select(['staff_id'])->where(['id' =>$entity->id])->first();
        $staff_id = $this->paramsDecode($this->request->getAttribute('params')['pass'][1])['staff_id'];
+       $staff_id = !empty($staff_id) ? $staff_id : $staffId['staff_id'];
        $institutaionStaffid = $entity->id; //POCOR-7185
        $institutionShifts = TableRegistry::get('Institution.InstitutionShifts');
        $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');

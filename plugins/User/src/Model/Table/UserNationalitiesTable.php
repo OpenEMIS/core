@@ -879,9 +879,7 @@ class UserNationalitiesTable extends ControllerActionTable {
             // $userId = $session->read('Student.Students.id');
             $userId = $this->request->getSession()->read('Auth.User.id');
         }
-
         $query->where([$this->aliasField('security_user_id') => $userId]);
-
         // Start POCOR-5188
         if($this->request->getParam('controller') == 'Staff'){
             $is_manual_exist = $this->getManualUrl('Institutions','Nationalities','Staff - General');
