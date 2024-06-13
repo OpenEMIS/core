@@ -1829,7 +1829,7 @@ class AttendanceRepository extends Controller
             $array = '{"id":'.$institutionId.'}';
             $encodedArray = base64_encode($array);
             $encodedArray = rtrim($encodedArray, "=");
-            $list['url'] = [
+            $urlData = [
                 'export' => 'Institution/Institutions/'.$encodedArray.'.cake_session_id/StudentAttendances/excel?institution_id='.$institutionId.'&institution_class_id='.$institutionClassId.'&education_grade_id='.$educationGradeId.'&academic_period_id='.$academicPeriodId.'&day_id='.$day.'&attendance_period_id='.$attendancePeriodId.'&week_start_day='.$weekStartDay.'&week_end_day='.$weekEndDay.'&subject_id='.$subjectId.'&week_id='.$weekId,
                 'importAbsences' => 'Institution/Institutions/'.$encodedArray.'.cake_session_id/ImportStudentAttendances/add',
                 'archive' => 'Institution/Institutions/'.$encodedArray.'.cake_session_id/InstitutionStudentAbsencesArchived/index'
@@ -1839,6 +1839,7 @@ class AttendanceRepository extends Controller
             
             $total = count($list);
             $resp['list'] = $list;
+            $resp['url'] = $urlData;
             $resp['total'] = $total;
             
             return $resp;
