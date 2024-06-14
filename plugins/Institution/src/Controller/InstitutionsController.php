@@ -2564,6 +2564,32 @@ public function isActionIgnored(Event $event, $action)
             }
 
         }
+        //POCOR-8333 starts
+        if ($action == 'StudentHistories') {
+            $queryString = $this->getQueryString();
+            $studentId = $queryString['security_user_id'];
+            $Students = TableRegistry::getTableLocator()->get('Security.Users');
+            $activeStudent = $Students->get($studentId);
+            $studentName = $activeStudent->name;
+            $queryString = $this->getQueryString();
+            $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
+            $this->Navigation->addCrumb('Students',
+                ['plugin' => $this->getPlugin(),
+                'controller' => 'Institutions',
+                'action' => 'Students',
+                '0' => 'index',
+                '1' => $encodedQueryString]);
+
+            $queryString['id'] = $studentId;
+            $queryString['student_id'] = $studentId;
+            $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
+            $this->Navigation->addCrumb($studentName,
+                ['plugin' => $this->getPlugin(),
+                    'controller' => 'Institutions',
+                    'action' => 'StudentUser',
+                    '0' => 'view',
+                    '1' => $encodedQueryString]);
+        }//POCOR-8333 ends
         $this->set('contentHeader', $header);
     }
 
@@ -2735,6 +2761,11 @@ public function isActionIgnored(Event $event, $action)
 
         $alias = $model->alias;
         $humanTitle = __(Inflector::humanize(Inflector::underscore($alias)));
+        //POCOR-8333 starts
+        if($alias == 'StudentHistories'){
+            $humanTitle = __(Inflector::humanize(Inflector::underscore('History')));
+        }//POCOR-8333 ends
+        
         $crumbOptions = [];
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
@@ -2972,12 +3003,18 @@ public function isActionIgnored(Event $event, $action)
                 $this->Navigation->addCrumb($model->getHeader($alias));
                 $header = __('Institutions') . ' - ' . $model->getHeader($alias);
                 $this->set('contentHeader', $header);
+            } else if ($alias == 'StudentHistories') {//POCOR-8333 starts
+                $Students = TableRegistry::getTableLocator()->get('Security.Users');
+                $user_id = $this->getUserID();
+                $activeStudent = $Students->get($user_id);
+                $studentName = $activeStudent->name;
+                $header = __($studentName) . ' - ' . __('History');
+                $this->set('contentHeader', $header);//POCOR-8333 ends
             } elseif($this->request->getParam('action') == 'Institutions') { // cakephp4
                 $this->Alert->warning('general.notExists');
                 //die('Entity of ' . $alias . ' has no Institution action');
                 $event->stopPropagation();
                 return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-
             }
         }
     }
@@ -5771,7 +5808,7 @@ public
             //get nationality data
             $nationalities = '';
             if (!empty($nationalityName)) {
-                $nationalitiesTbl = TableRegistry::getTableLocator()->get('nationalities');
+                $nationalitiesTbl = TableRegistry::getTableLocator()->get('FieldOption.Nationalities');
                 $nationalities = $nationalitiesTbl->find()
                     ->where([
                         $nationalitiesTbl->aliasField('name') => $nationalityName,
@@ -5925,14 +5962,14 @@ public
                     $user_record_id = $SecurityUserResult->id;
                     if (!empty($nationalityId) || !empty($nationalityName)) {
                         if (!empty($nationalities->id)) {
-                            $UserNationalities = TableRegistry::getTableLocator()->get('user_nationalities');
+                            $UserNationalities = TableRegistry::getTableLocator()->get('User.UserNationalities');
                             $checkexistingNationalities = $UserNationalities->find()
                                 ->where([
                                     $UserNationalities->aliasField('nationality_id') => $nationalities->id,
                                     $UserNationalities->aliasField('security_user_id') => $user_record_id,
                                 ])->first();
                             if (empty($checkexistingNationalities)) {
-                                $primaryKey = $UserNationalities->primaryKey();
+                                $primaryKey = $UserNationalities->getPrimaryKey();
                                 $hashString = [];
                                 foreach ($primaryKey AS $key) {
                                     if ($key == 'nationality_id') {
@@ -5959,7 +5996,7 @@ public
                     }
 
                     if (!empty($nationalities->id) && !empty($identityTypeId) && !empty($identityNumber)) {
-                        $identityTypesTbl = TableRegistry::getTableLocator()->get('identity_types');
+                        $identityTypesTbl = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
                         $identityTypes = $identityTypesTbl->find()
                             ->where([
                                 $identityTypesTbl->aliasField('name') => $identityTypeName,
@@ -6320,7 +6357,7 @@ public
                                     ])
                                 ->where([
                                     $studentCustomFieldValues->aliasField('student_id') => $user_id,
-                                ])->hydrate(false)->toArray();
+                                ])->enableHydration(false)->toArray();
                             $custom_field = array();
                             $count = 0;
                             if (!empty($studentCustomData)) {
@@ -6842,14 +6879,14 @@ public
                         $user_record_id = $SecurityUserResult->id;
                         if (!empty($nationalityId) || !empty($nationalityName)) {
                             if (!empty($nationalities->id)) {
-                                $UserNationalities = TableRegistry::getTableLocator()->get('user_nationalities');
+                                $UserNationalities = TableRegistry::getTableLocator()->get('User.UserNationalities');
                                 $checkexistingNationalities = $UserNationalities->find()
                                     ->where([
                                         $UserNationalities->aliasField('nationality_id') => $nationalities->id,
                                         $UserNationalities->aliasField('security_user_id') => $user_record_id,
                                     ])->first();
                                 if (empty($checkexistingNationalities)) {
-                                    $primaryKey = $UserNationalities->primaryKey();
+                                    $primaryKey = $UserNationalities->getPrimaryKey();
                                     $hashString = [];
                                     foreach ($primaryKey as $key) {
                                         if ($key == 'nationality_id') {
@@ -7204,14 +7241,14 @@ public
                     $user_record_id = $SecurityUserResult->id;
                     if (!empty($nationalityId) || !empty($nationalityName)) {
                         if (!empty($nationalities->id)) {
-                            $UserNationalities = TableRegistry::getTableLocator()->get('user_nationalities');
+                            $UserNationalities = TableRegistry::getTableLocator()->get('User.UserNationalities');
                             $checkexistingNationalities = $UserNationalities->find()
                                 ->where([
                                     $UserNationalities->aliasField('nationality_id') => $nationalities->id,
                                     $UserNationalities->aliasField('security_user_id') => $user_record_id,
                                 ])->first();
                             if (empty($checkexistingNationalities)) {
-                                $primaryKey = $UserNationalities->primaryKey();
+                                $primaryKey = $UserNationalities->getPrimaryKey();
                                 $hashString = [];
                                 foreach ($primaryKey as $key) {
                                     if ($key == 'nationality_id') {
@@ -7611,7 +7648,7 @@ public
                                 $UserNationalities->aliasField('security_user_id') => $user_record_id,
                             ])->first();
                         if (empty($checkexistingNationalities)) {
-                            $primaryKey = $UserNationalities->primaryKey();
+                            $primaryKey = $UserNationalities->getPrimaryKey();
                             $hashString = [];
                             foreach ($primaryKey AS $key) {
                                 if ($key == 'nationality_id') {
@@ -7867,14 +7904,14 @@ public
                 if (!empty($nationalityId) || !empty($nationalityName)) {
                     if (!empty($nationalities->id)) {
                         if (!empty($nationalities->id)) {
-                            $UserNationalities = TableRegistry::getTableLocator()->get('user_nationalities');
+                            $UserNationalities = TableRegistry::getTableLocator()->get('User.UserNationalities');
                             $checkexistingNationalities = $UserNationalities->find()
                                 ->where([
                                     $UserNationalities->aliasField('nationality_id') => $nationalities->id,
                                     $UserNationalities->aliasField('security_user_id') => $user_record_id,
                                 ])->first();
                             if (empty($checkexistingNationalities)) {
-                                $primaryKey = $UserNationalities->primaryKey();
+                                $primaryKey = $UserNationalities->getPrimaryKey();
                                 $hashString = [];
                                 foreach ($primaryKey as $key) {
                                     if ($key == 'nationality_id') {
@@ -8523,7 +8560,7 @@ function checkUserAge()
                 ->select(['id', 'external_data_source_type', 'attribute_field', 'attribute_name', 'value'])
                 ->where([
                     $externalDataSourceAttributesTbl->aliasField('external_data_source_type') => 'Jordan CSPD'
-                ])->hydrate(false)->toArray();
+                ])->enableHydration(false)->toArray();
             $config_Array = [];
             foreach ($externalDataSourceAttributesData as $ex_key => $ex_val) {
                 $config_Array[$ex_val['attribute_field']] = trim($ex_val['value']);
@@ -8669,7 +8706,7 @@ function checkUserAge()
                     $guardian_relations_result = $guardian_relations
                         ->find()
                         ->where([$guardian_relations->aliasField('international_code !=') => ''])
-                        ->hydrate(false)
+                        ->enableHydration(false)
                         ->toArray();
                     if (!empty($guardian_relations_result)) {
                         foreach ($guardian_relations_result as $gkey => $gval) {
@@ -8709,7 +8746,7 @@ function checkUserAge()
         $configItemsResult = $configItemsTbl
             ->find()
             ->where(['visible' => 1, 'code' => 'external_data_source_type', 'type' => 'External Data Source Identity'])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->toArray();
 
         if (!empty($configItemsResult)) {
@@ -8963,7 +9000,12 @@ function checkUserAge()
         return $has_permission_to_view_archive;
     }
 
-
+    //POCOR -8333 starts
+    public
+    function StudentHistories()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserHistories']);
+    }//POCOR -8333 ends
 }
 
 

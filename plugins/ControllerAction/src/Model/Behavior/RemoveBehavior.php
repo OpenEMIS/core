@@ -172,7 +172,11 @@ class RemoveBehavior extends Behavior
             // Logic for restrict delete
             $entity = $model->newEntity([]);
             $controller = $model->controller;
-            $ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
+            if($model->getTable() == 'institution_students'){//POCOR-8333 starts
+                $ids = empty($model->paramsPass(1)) ? [] : $model->paramsDecode($model->paramsPass(1));
+            }else{ // POCOR-8333 ends
+                $ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
+            }
             $sessionKey = $model->getRegistryAlias() . '.primaryKey';
             if (empty($ids)) {
                 if ($model->Session->check($sessionKey)) {
