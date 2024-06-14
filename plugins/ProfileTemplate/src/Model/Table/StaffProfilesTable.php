@@ -276,7 +276,7 @@ class StaffProfilesTable extends ControllerActionTable
         ];
 		
         $tabElements['Profiles']['url'] = array_merge($tabUrl, ['action' => 'StaffProfiles']);
-        $tabElements['Templates']['url'] = array_merge($tabUrl, ['action' => 'Staffs']);
+        $tabElements['Templates']['url'] = array_merge($tabUrl, ['action' => 'Staff']);
 
 		return $tabElements;
     }
