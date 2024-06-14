@@ -1604,7 +1604,7 @@ class InstitutionsController extends AppController
         $url['plugin'] = 'Institution';
         $url['controller'] = 'Institutions';
         $url['action'] = 'resultsExport';
-        $url['1'] = $queryString;
+        $url['?'] = ['queryString' => $queryString];
 
         $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
@@ -1615,7 +1615,7 @@ class InstitutionsController extends AppController
                 'controller' => 'Institutions',
                 'action' => 'reportCardGenerate',
                 'add',
-                $queryString
+                '?' => ['queryString' => $queryString]
             ]);
             
             $this->set('reportCardGenerate', $customUrl);
@@ -1625,7 +1625,7 @@ class InstitutionsController extends AppController
             $exportPDF_Url['controller'] = 'CustomExcels';
             $exportPDF_Url['action'] = 'exportPDF';
             $exportPDF_Url[0] = 'AssessmentResults';
-            $exportPDF_Url[1] = $queryString;
+            $exportPDF_Url['?'] = ['queryString' => $queryString];
             $this->set('exportPDF', Router::url($exportPDF_Url));
         }
         $this->set('excelUrl', Router::url($url));
@@ -1658,9 +1658,9 @@ class InstitutionsController extends AppController
 
     public function resultsExport()
     {
-        $classId = $this->ControllerAction->getQueryString('class_id');
-        $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
-        $institutionId = $this->ControllerAction->getQueryString('institution_id');
+        $classId = $this->getQueryString('class_id');
+        $assessmentId = $this->getQueryString('assessment_id');
+        $institutionId = $this->getQueryString('institution_id');
         $userId = $this->Auth->user('id');
 
         $settings = [
@@ -1672,7 +1672,7 @@ class InstitutionsController extends AppController
             'download' => false,
             'purge' => false
         ];
-
+        
         $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
 
         $results = $ClassStudents->generateXLXS($settings);
@@ -1680,7 +1680,7 @@ class InstitutionsController extends AppController
         $filePath = $results['path'] . $fileName;
 
         $response = $this->response;
-        $response->body(function () use ($filePath) {
+        $response->getBody(function () use ($filePath) {
             $content = file_get_contents($filePath);
             if (file_exists($filePath)) {
                 unlink($filePath);
@@ -1690,7 +1690,7 @@ class InstitutionsController extends AppController
 
         // Syntax will change in v3.4.x
         $pathInfo = pathinfo($fileName);
-        $response->type($pathInfo['extension']);
+        $response->getType($pathInfo['extension']);
         $response->withDownload($fileName);
 
         return $response;

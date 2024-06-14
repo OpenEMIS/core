@@ -61,7 +61,7 @@ class ExcelReportBehavior extends Behavior
         $folder = WWW_ROOT . $this->getConfig('folder');
         $subfolder = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder');
         if (!isset($config['filename'])) {
-            $this->getConfig('filename', $model->getAlias());
+            $this->setConfig('filename', $model->getAlias());
         }
 
         new Folder($folder, true, 0777);
@@ -107,7 +107,7 @@ class ExcelReportBehavior extends Behavior
             $params = $model->getQueryString();
             $paramVal = $params['assessment_id']; //POCOR-6908
         }
-
+                
 
         $extra['params'] = $params;
         $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateBeforeGenerate', [$params, $extra], $this); // POCOR-7443

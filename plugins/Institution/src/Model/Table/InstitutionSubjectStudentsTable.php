@@ -180,7 +180,7 @@ class InstitutionSubjectStudentsTable extends AppTable
 
         if (!empty($totalMark)) {
             // update all records of student regardless of institution
-            $modifiedUserId = (isset($event->data()[0]->modified_user_id) && $event->data()[0]->modified_user_id) ? $event->data()[0]->modified_user_id : $event->data()[0]->created_user_id;
+            $modifiedUserId = (isset($event->getData()[0]->modified_user_id) && $event->getData()[0]->modified_user_id) ? $event->getData()[0]->modified_user_id : $event->getData()[0]->created_user_id;
 
             $this->query()
                 ->update()

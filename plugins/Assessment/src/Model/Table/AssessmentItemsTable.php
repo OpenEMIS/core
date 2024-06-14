@@ -380,7 +380,7 @@ class AssessmentItemsTable extends AppTable
                 'subject_weight' => $this->aliasField('weight'),
             ])
             ->order(['EducationSubjects.order'])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->toArray();
         return $subjectList;
     }
