@@ -1883,7 +1883,7 @@ public function getIdentityTypeData($value_selection)
         $staff = $this->Users->get($entity->staff_id);
         $entity->showDeletedValueAs = $staff->name_with_id;
 
-        $extra['excludedModels'] = [$this->StaffPositionProfiles->alias(), $this->StaffTransferOut->alias(), $this->StaffRelease->alias()];
+        $extra['excludedModels'] = [$this->StaffPositionProfiles->getAlias(), $this->StaffTransferOut->getAlias(), $this->StaffRelease->getAlias()];
 
         // staff transfer out
         $InstitutionStaffTransfers = TableRegistry::get('Institution.InstitutionStaffTransfers');
@@ -2246,7 +2246,7 @@ public function getIdentityTypeData($value_selection)
             $securityGroupId = $this->Institutions->get($institutionId)->security_group_id;
             $this->removeStaffRole($entity);
         } catch (InvalidPrimaryKeyException $ex) {
-            Log::write('error', __METHOD__ . ': ' . $this->Institutions->alias() . ' primary key not found (' . $institutionId . ')');
+            Log::write('error', __METHOD__ . ': ' . $this->Institutions->getAlias() . ' primary key not found (' . $institutionId . ')');
         }
 
         $body = array();
@@ -2398,7 +2398,7 @@ public function getIdentityTypeData($value_selection)
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
         foreach ($conditions as $key => $value) {
-            $_conditions[$this->alias() . '.' . $key] = $value;
+            $_conditions[$this->getAlias() . '.' . $key] = $value;
         }
 
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -3299,7 +3299,7 @@ public function getIdentityTypeData($value_selection)
         } else {
             $permissionModule = ['All Subjects', 'Comments'];
             $categories = ['Academic', 'Report Cards'];
-            $SecurityFunctionsTbl = TableRegistry::get('security_functions');
+            $SecurityFunctionsTbl = TableRegistry::get('Security.SecurityFunctions');
             $SecurityFunctions = $SecurityFunctionsTbl->find()
                 ->select([$SecurityFunctionsTbl->aliasField('id')])
                 ->where([
@@ -3313,9 +3313,9 @@ public function getIdentityTypeData($value_selection)
                 }
             }
             //get staff id roles POCOR-6814 Starts
-            $SecurityGroupInstitutions = TableRegistry::get('security_group_institutions');
+            $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
             $SecurityGroupTbl = TableRegistry::get('security_groups');
-            $SecurityGroupUserTbl = TableRegistry::get('security_group_users');
+            $SecurityGroupUserTbl = TableRegistry::get('Security.SecurityGroupUsers');
             $SecurityGroup = $SecurityGroupTbl->find()
                 ->select([
                     $SecurityGroupUserTbl->aliasField('security_group_id'),
@@ -3323,13 +3323,13 @@ public function getIdentityTypeData($value_selection)
                     $SecurityGroupUserTbl->aliasField('security_role_id'),
                 ])
                 ->leftJoin(
-                    [$SecurityGroupInstitutions->alias() => $SecurityGroupInstitutions->table()],
+                    [$SecurityGroupInstitutions->getAlias() => $SecurityGroupInstitutions->getTable()],
                     [
                         $SecurityGroupInstitutions->aliasField('institution_id = ') . $SecurityGroupTbl->aliasField('id')
                     ]
                 )
                 ->leftJoin(
-                    [$SecurityGroupUserTbl->alias() => $SecurityGroupUserTbl->table()],
+                    [$SecurityGroupUserTbl->getAlias() => $SecurityGroupUserTbl->getTable()],
                     [
                         $SecurityGroupUserTbl->aliasField('security_group_id = ') . $SecurityGroupInstitutions->aliasField('security_group_id')
                     ]
@@ -3344,7 +3344,7 @@ public function getIdentityTypeData($value_selection)
                     $RoleArr[] = $SecurityGroup_v['security_group_users']['security_role_id'];
                 }
             } //POCOR-6814 Ends
-            $SecurityRoleFunctionsTbl = TableRegistry::get('security_role_functions');
+            $SecurityRoleFunctionsTbl = TableRegistry::get('Security.SecurityRoleFunctions');
             if (!empty($funArr) && !empty($RoleArr)) { //POCOR-7068
                 $SecurityRoleFunctions = $SecurityRoleFunctionsTbl->find()
                     ->where([
@@ -3595,7 +3595,7 @@ public function getIdentityTypeData($value_selection)
         $staffId = $options['staff_id'];
         $institutionId = $options['institution_id'];
         //POCOR-7020
-        $institutionStaff = TableRegistry::get('institution_staff');
+        $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
         $staffRecord = $institutionStaff->find('all', ['conditions' => ['staff_id' => $staffId]])
             ->first();
         $staffStatusId = $staffRecord['staff_status_id'];
@@ -3675,7 +3675,7 @@ public function getIdentityTypeData($value_selection)
                 $InstitutionStaffAttendances->aliasField('date'),
             ])
             ->leftJoin(
-                [$InstitutionStaffAttendances->alias() => $InstitutionStaffAttendances->table()],
+                [$InstitutionStaffAttendances->getAlias() => $InstitutionStaffAttendances->getTable()],
                 [
                     $InstitutionStaffAttendances->aliasField('staff_id = ') . $this->aliasField('staff_id'),
                     $InstitutionStaffAttendances->aliasField('institution_id = ') . $this->aliasField('institution_id'),
@@ -4438,13 +4438,13 @@ public function getIdentityTypeData($value_selection)
     public function findStaffShiftsAttendance(Query $query, array $options)
     {
         $staffId = $options['staff_id'];
-        $institutionStaff = TableRegistry::get('institution_staff');
+        $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
         $positions = TableRegistry::get('Institution.InstitutionPositions');
-        $shiftOption = TableRegistry::get('shift_options');
+        $shiftOption = TableRegistry::get('Institution.ShiftOptions');
         $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
         $staffShiftsData = $query
             ->leftJoin(
-                [$InstitutionStaffAttendances->alias() => $InstitutionStaffAttendances->table()],
+                [$InstitutionStaffAttendances->getAlias() => $InstitutionStaffAttendances->getTable()],
                 [
                     $InstitutionStaffAttendances->aliasField('staff_id = ') . $this->aliasField('id')
                 ])
