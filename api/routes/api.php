@@ -350,7 +350,7 @@ Route::group(
         Route::post('schedules/timetables/lessons', 'ScheduleController@addLesson');
         Route::delete('institutions/{institutionId}/schedules/timetables/lessons/{id}', 'ScheduleController@deleteTimeTableLessonById');
         Route::get('schedules/timetables/statuses', 'ScheduleController@getTimeTableStatus');
-        Route::get('schedules/timetables/{id}', 'ScheduleController@getTimeTableById');
+        //Route::get('schedules/timetables/{id}', 'ScheduleController@getTimeTableById');
         Route::get('schedules/timetables/{id}/lessons', 'ScheduleController@getLessonsByTimeTableId');
         Route::get('schedules/lessons/types', 'ScheduleController@getLessonType');
         Route::get('schedules/timeslots/{intervalId}', 'ScheduleController@getTimeSlotsByIntervalId');
@@ -473,5 +473,12 @@ Route::group(
         Route::get('/security-roles/{roleId}', 'ReportCardController@getSecurityRoleData');
         Route::get('/reportcards/{reportcardId}', 'ReportCardController@getReportCardData');
         //POCOR-8270 end...
+
+
+        //POCOR-8295 start...
+        Route::get('/institutions/schedule-timetables', 'ScheduleController@getScheduleTimetables');
+        Route::get('/institutions/{institutionId}/schedule-timetables', 'ScheduleController@getScheduleTimetablesViaInstitutionId');
+        Route::get('/institutions/schedule-timetables/{scheduleTimetableId}', 'ScheduleController@getScheduleTimetableData');
+        //POCOR-8295 end...
     }
 );

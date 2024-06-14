@@ -1,3 +1,10 @@
+### [3.107.1] - 2024-06-14
+- Bug Fixed: OpenEMIS Core Training v4 APIs is not working due to changes in table structure
+- Bug Fixed: Institutions > Infrastructure > Overview > Floor > Add: When adding buildings, they face a 404 error.
+- Bug Fixed: Institutions > Performance > Report Cards: The GPA for Student 1602270826 is not showing despite regenerating
+- Bug Fixed: API: When retrieving the institution schedule timetable using API v4, it gives a 404 error status
+- Bug Fixed: Institutions > Performance > Report Cards > Merge and Download PDF: When merging and downloading PDF for students report card, the page gives a 404 error.
+
 ### [3.107.0] - 2024-05-20
 - Implemented: Develop changes to OpenEMIS Core Training feature
 - Implemented: Develop a migration script to remove edit account permission

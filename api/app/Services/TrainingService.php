@@ -225,7 +225,12 @@ class TrainingService extends Controller
                 }
             }
 
-            return $resp;
+            if(isset($params['limit'])){
+                $data['data'] = $resp;
+                return $data;
+            } else {
+                return $resp;
+            }
 
         } catch (\Exception $e) {
             Log::error(
