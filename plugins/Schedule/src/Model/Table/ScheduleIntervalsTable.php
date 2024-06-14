@@ -580,7 +580,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
                 );
             }
         } else {
-            return false;
+            //return false;
         }
 
     }
