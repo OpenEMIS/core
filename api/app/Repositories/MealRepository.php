@@ -20,6 +20,9 @@ use App\Models\FoodType;
 use App\Models\Manual;
 use Carbon\Carbon;
 use JWTAuth;
+use File;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\StudentMealImport;
 
 
 class MealRepository extends Controller
@@ -447,5 +450,46 @@ class MealRepository extends Controller
         }
     }
     //For POCOR-8210 End...
+
+
+
+    //For POCOR-8348 Start...
+    public function getStudentMealImport($params)
+    {
+        try {
+            $validExtension = ['xlsx', 'xls', 'csv'];
+            $extension = File::extension($params['file']->getClientOriginalName());
+
+            if (!in_array($extension, $validExtension)) {
+                return 1; //Invalid file extension...
+            }
+
+            $header = ['Date ( DD/MM/YYYY )', 'OpenEMIS ID', 'Meal Programme Code', 'Meal Received Code', 'Meal Benefit Name', 'Comment'];
+            $results = Excel::toArray(new StudentMealImport(), $params['file']);
+            dd($results[0][1][0]);
+            if (empty($results[0][1])) {
+                return 2; //Header is not present...
+            }
+
+            if (empty($results[0][2])) {
+                return 3; //imported file is empty...
+            }
+
+
+            if (!in_array($results[0][1][0], $header)) {
+                return $this->sendErrorResponse("Not a valid header");
+            }
+
+        } catch (\Exception $e) {
+            dd($e);
+            Log::error(
+                'Failed to import students meals in DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to import students meals in DB.');
+        }
+    }
+    //For POCOR-8348 End...
 
 }

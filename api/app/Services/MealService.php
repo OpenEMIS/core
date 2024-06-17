@@ -216,4 +216,25 @@ class MealService extends Controller
     }
 
     //For POCOR-8078 End...
+
+
+
+    //For POCOR-8348 Start...
+    public function getStudentMealImport($params)
+    {
+        try {
+            $data = $this->mealRepository->getStudentMealImport($params);
+
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to import students meals in DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to import students meals in DB.');
+        }
+    }
+    //For POCOR-8348 End...
 }

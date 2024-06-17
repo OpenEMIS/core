@@ -473,5 +473,11 @@ Route::group(
         Route::get('/security-roles/{roleId}', 'ReportCardController@getSecurityRoleData');
         Route::get('/reportcards/{reportcardId}', 'ReportCardController@getReportCardData');
         //POCOR-8270 end...
+
+
+
+        //POCOR-8438 start...
+        Route::post('/institutions/students/meals/import', 'MealController@getStudentMealImport');
+        //POCOR-8438 end...
     }
 );
