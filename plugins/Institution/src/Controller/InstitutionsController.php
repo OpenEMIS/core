@@ -1690,9 +1690,13 @@ class InstitutionsController extends AppController
 
         // Syntax will change in v3.4.x
         $pathInfo = pathinfo($fileName);
-        $response->getType($pathInfo['extension']);
+        $response->withType($pathInfo['extension']);
         $response->withDownload($fileName);
 
+        $response = $response->withFile($filePath, [
+            'download' => true,
+            'name' => $fileName,
+        ]);
         return $response;
     }
 

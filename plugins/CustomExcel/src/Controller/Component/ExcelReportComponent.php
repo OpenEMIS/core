@@ -30,12 +30,7 @@ class ExcelReportComponent extends Component
 		}
 
 		$extra = new ArrayObject($params);
-		if(!isset($extra['requestQuery'])) {
-			$queryString = $this->controller->getRequest()->getQuery('queryString');
-			$decodeQueryString = $model->paramsDecode($queryString);
-			$extra['requestQuery'] = $decodeQueryString;
-		}
-
+		
 		$event = $model->dispatchEvent('ExcelTemplates.Model.onRenderExcelTemplate', [$extra], $this->controller);
 		if ($event->isStopped()) { return $event->getResult(); }
 
