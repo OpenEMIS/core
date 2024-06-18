@@ -22,7 +22,7 @@ class StudentBehavioursTable extends AppTable {
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);//POCOR-7488
 		$this->belongsTo('StudentBehaviourClassifications', ['className' => 'Student.StudentBehaviourClassifications']);//POCOR-7557
 		$this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['Behaviours' =>['id', 'institution_id']
+            'appliedAction' => ['StudentBehaviours' =>['id', 'institution_id']
             ]
         ]);
 	}
@@ -68,6 +68,9 @@ class StudentBehavioursTable extends AppTable {
 	    	$session = $this->request->getSession();
 	        $studentId = $session->read('Student.Students.id');
 	    }/*POCOR-6267 ends*/ 
+		if($this->controller->getName()!= null && ($this->controller->getName() == 'Students' || $this->controller->getName() == 'Directories')) {
+			$studentId = $this->getQueryString('student_id');
+		}
 	    if(!empty($studentId)){ //POCOR-7196
 		    $conditions[$this->aliasField('student_id')] = $studentId;
 			$query->where($conditions, [], true); 

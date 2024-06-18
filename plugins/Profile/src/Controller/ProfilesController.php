@@ -408,6 +408,11 @@ class ProfilesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Insurances']);
     }
+
+    public function HealthBodyMasses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.BodyMasses']);
+    }
     // End Health
 
     // Special Needs
@@ -569,7 +574,6 @@ class ProfilesController extends AppController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
-
         $session = $this->request->getSession();
         $action = $this->request->getParam('action');
 
@@ -778,8 +782,8 @@ class ProfilesController extends AppController
 
             $model->fields['security_user_id']['type'] = 'hidden';
             $model->fields['security_user_id']['value'] = $userId;
-
-            if (count($this->request->getParam('pass')) > 1) {
+            
+            if (count($this->request->getParam('pass')) > 2) {
                 $modelId = $this->request->getParam('pass')[1]; // id of the sub model
                 $ids = $this->ControllerAction->paramsDecode($modelId);
                 $idKey = $this->ControllerAction->getIdKeys($model, $ids);
@@ -847,6 +851,11 @@ class ProfilesController extends AppController
         $loginUserId = $this->Auth->user('id'); // login user
         $action = $this->request->getParam('action');
         $session = $this->request->getSession();
+        //POCOR-7485 this code resolve the issue when login user not able to see his nationalities record
+        if($this->request->getAttribute('params')['controller'] == 'Profiles' && $this->request->getAttribute('params')['action'] == 'Nationalities' && $model->hasField('security_user_id')){
+            $query->where([$model->aliasField('security_user_id') => $loginUserId]);
+            return $query;
+        }//POCOR-7485 ends
         if ($model->hasField('security_user_id')) {
             $studentId = $session->read('Student.Students.id');
             if (!empty($studentId)) {
@@ -913,7 +922,7 @@ class ProfilesController extends AppController
         $this->ControllerAction->autoRender = false;
         $this->Image->getUserImage($id);
     }
-    // POCOR-8039-start
+    // POCOR-8334 start
     public function PersonalDashboard($action, $encodedParam)
     {
         if (!$action) {
@@ -929,14 +938,18 @@ class ProfilesController extends AppController
         $params = $this->paramsDecode($encodedParam);
         $header = 'Profile Dashboard';
         $this->set('haveProfilePermission', $hasPermission);
-        $this->set('contentHeader', $header);
+        //POCOR-8334-START
+
+        $session = $this->request->getSession();
+        $userName = $session->read('Auth.User.name');
+        $this->set('userName', $userName);
+        //POCOR-8334-END
         $userID = $params['id'];
         // $this->ControllerAction->model->action = $this->request->action;
         $Institutions = TableRegistry::get('Institution.Institutions');
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $currentPeriod = $AcademicPeriods->getCurrent();
         //POCOR-7733 start
-        $session = $this->request->session();
         $session->write('AcademicPeriod.currentAcademicPeriod', $currentPeriod);
         $session->write('AcademicPeriod.currentAcademicPeriodName', $AcademicPeriods->get($currentPeriod)->name);
         //POCOR-7733 end
@@ -946,8 +959,6 @@ class ProfilesController extends AppController
 
 //         $highChartDatas = ['{"chart":{"type":"column","borderWidth":1},"xAxis":{"title":{"text":"Position Type"},"categories":["Non-Teaching","Teaching"]},"yAxis":{"title":{"text":"Total"}},"title":{"text":"Number Of Staff"},"subtitle":{"text":"For Year 2015-2016"},"series":[{"name":"Male","data":[0,2]},{"name":"Female","data":[0,1]}]}'];
         $highChartDatas = [];
-
-
         $profileData = $this->getPersonalProfileCompletenessData($userID);
         $this->set('personalProfileCompletness', $profileData);
         $this->set('highChartDatas', $highChartDatas);
@@ -962,7 +973,7 @@ class ProfilesController extends AppController
 
         //        $this->log('dashboard', 'debug');
     }
-    // POCOR-8039-end
+    // POCOR-8334 end
     public
     function getUserTabElements($options = [])
     {
@@ -1136,7 +1147,7 @@ class ProfilesController extends AppController
 
     public function getLastData($userID, $tableName, $fieldName)
     {
-        $table = TableRegistry::get($tableName);
+        $table = $this->getDynamicTableInstance($tableName);
         $usersData = $table->find()
             ->select([
                 'created' => $table->aliasField('created'),
@@ -1149,6 +1160,31 @@ class ProfilesController extends AppController
 
         return $usersData;
     }
+    public
+    function getDynamicTableInstance($tableName)
+    {
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableAlias = \Cake\Utility\Inflector::camelize($tableName);
+
+        // Create a TableLocator instance
+        $locator = TableRegistry::getTableLocator();
+
+        // Check if the table instance already exists
+        if (!$locator->exists($tableAlias)) {
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'table' => $tableName,
+                'alias' => $tableAlias,
+                'className' => 'Cake\ORM\Table', // Use the generic Table class
+            ]);
+        }
+
+
+        // Return the table instance
+        return $locator->get($tableAlias);
+    }
+
     // POCOR-8039-end
     public
     function getFinanceTabElements($options = [])
@@ -1414,7 +1450,7 @@ class ProfilesController extends AppController
             ])
             ->enableHydration(false)
             ->first();
-        }       
+        }
         $this->set('userId', $userId);
         $timetable_id = (isset($ScheduleTimetables['id'])) ? $ScheduleTimetables['id'] : 0;
         $this->set('timetable_id', $timetable_id);

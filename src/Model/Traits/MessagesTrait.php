@@ -1565,7 +1565,7 @@ trait MessagesTrait
                     'ruleValidatePreferred' => 'There must be one Preferred Contact for each Contact Type'
                 ],
             ],
-            'Identities' => [
+            'IdentitiesPersonal' => [
                 'identity_type_id' => [
                     'ruleNotBlank' => 'Please select a Type',
                     'custom_validation' => 'Identity Type exists for this Nationality'
