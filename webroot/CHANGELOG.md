@@ -1,3 +1,20 @@
+### [4.0.0] - 2024-06-18
+- Bug Fixed: Update existing APIv4 for Student attendance Toolbar functions
+- Bug Fixed: Update existing APIv4 for Student Assessment Toolbar functions
+- Bug Fixed: Institutions>Contacts>Institutions: User is unable to open the page
+- Bug Fixed: Institutions>Contacts>People>View: Page is empty
+- Bug Fixed: Administration>Profile>Institution: Cannot download report
+- Bug Fixed: Institutions>Attendance>Staff: Day is not appearing and buttons are not working
+- Bug Fixed: Institutions>General>Shift: When adding for other institution, owner is not filtering for other institution
+- Bug Fixed: Institutions>Academic>Programmes>Export: Report is empty
+- Bug Fixed: Institutions>Schedules>Interval>Add: Getting blank page when adding intervals
+- Bug Fixed: Institutions>Academic>Textbook: Showing blank page
+- Bug Fixed: Institutions>Academic>Houses>Add: User and staff are empty
+- Bug Fixed: Institutions>Students/Staff>Dashboard: Dashboard module is missing
+- Bug Fixed: Institutions>Students>Account>Edit: User should be able to edit and success message should return
+- Bug Fixed: Institutions>Students>Academic: Academic module is not working and giving blank page
+- Bug Fixed: Institutions>Staff>General>Nationalities: User is unable to add Nationalities
+
 ### [3.107.0] - 2024-05-20
 - Implemented: Develop changes to OpenEMIS Core Training feature
 - Implemented: Develop a migration script to remove edit account permission
