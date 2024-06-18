@@ -1661,7 +1661,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         });
     }
 
-    public function findDaysForPeriodWeek(Query $query, array $options)
+    public function findDaysForPeriodWeek_old(Query $query, array $options)
     {
         $academicPeriodId = $options['academic_period_id'];
         $current_week_number_selected = $options['current_week_number_selected']; // POCOR-6723
@@ -1823,6 +1823,112 @@ class AcademicPeriodsTable extends ControllerActionTable
                 return $dayOptions;
             });
     }
+    
+    public function findDaysForPeriodWeek(Query $query, array $options)
+    {
+        $academicPeriodId = $options['academic_period_id'];
+        $currentWeekNumberSelected = $options['current_week_number_selected'];
+        $weekId = $options['week_id'];
+        $institutionId = $options['institution_id'];
+        $schoolClosedRequired = $options['school_closed_required'] ?? false;
+
+        $model = $this;
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $firstDayOfWeek = (int)$ConfigItems->value('first_day_of_week');
+        $daysPerWeek = (int)$ConfigItems->value('days_per_week');
+        $weeks = $model->getAttendanceWeeks($academicPeriodId);
+        $week = $weeks[$weekId];
+
+        $dayOptions = isset($options['exclude_all']) && $options['exclude_all'] ? [] : [
+            [
+                'id' => -1,
+                'name' => __('All Days'),
+                'date' => -1
+            ]
+        ];
+
+        $schooldays = array_map(function($i) use ($firstDayOfWeek) {
+            return 1 + ($firstDayOfWeek + 6 + $i) % 7;
+        }, range(0, $daysPerWeek - 1));
+
+        $firstDayOfWeekDate = $week[0];
+        $today = null;
+        $i = 0;
+        
+        $connection = ConnectionManager::get('default');
+        $schoolClosedDates = [];
+        if ($schoolClosedRequired) {
+            $sql = "SELECT calendar_event_dates.date, institution_shift_periods.period_id
+                    FROM calendar_event_dates
+                    INNER JOIN calendar_events ON calendar_events.id = calendar_event_dates.calendar_event_id 
+                    INNER JOIN institution_shifts ON calendar_events.academic_period_id = institution_shifts.academic_period_id 
+                            AND calendar_events.institution_id = institution_shifts.institution_id 
+                            AND calendar_events.institution_shift_id = institution_shifts.shift_option_id 
+                    INNER JOIN calendar_types ON calendar_types.id = calendar_events.calendar_type_id
+                    INNER JOIN institution_shift_periods ON institution_shift_periods.institution_shift_period_id = institution_shifts.id 
+                    WHERE calendar_event_dates.date BETWEEN ? AND ?
+                    AND calendar_types.is_attendance_required = 0";
+            $stmt = $connection->execute($sql, [$week[0]->format('Y-m-d'), $week[1]->format('Y-m-d')]);
+            $schoolClosedDates = $stmt->fetchAll('assoc');
+        }
+
+        do {
+            if (in_array($firstDayOfWeekDate->dayOfWeek, $schooldays)) {
+                $schoolClosed = false;
+                $closedPeriods = [];
+                if ($schoolClosedRequired) {
+                    foreach ($schoolClosedDates as $data) {
+                        if ($data['date'] == $firstDayOfWeekDate->format('Y-m-d')) {
+                            $schoolClosed = true;
+                            $closedPeriods[] = $data['period_id'];
+                        }
+                    }
+                }
+
+                $suffix = $schoolClosed ? __('School Closed') : '';
+
+                $data = [
+                    'id' => $firstDayOfWeekDate->dayOfWeek,
+                    'day' => __($firstDayOfWeekDate->format('l')),
+                    'name' => __($firstDayOfWeekDate->format('l')) . ' (' . $this->formatDate($firstDayOfWeekDate) . ') ' . $suffix,
+                    'date' => $firstDayOfWeekDate->format('Y-m-d'),
+                    'current_week_number_selected' => $currentWeekNumberSelected,
+                    'day_number' => $firstDayOfWeekDate->isToday()
+                ];
+
+                if ($schoolClosed) {
+                    $data['closed'] = true;
+                    $data['periods'] = $closedPeriods;
+                }
+
+                $dayOptions[] = $data;
+
+                if (is_null($today) || $firstDayOfWeekDate->isToday()) {
+                    end($dayOptions);
+                    $today = key($dayOptions);
+                }
+
+                if ($i++ == 7) {
+                    break;
+                }
+            }
+
+            $firstDayOfWeekDate = $firstDayOfWeekDate->addDay();
+        } while ($firstDayOfWeekDate <= $week[1]);
+
+        if (!is_null($today)) {
+            $dayOptions[$today]['selected'] = true;
+            $dayOptions[$today]['current_week_number_selected'] = $currentWeekNumberSelected;
+            $dayOptions[$today]['day_number'] = __($firstDayOfWeekDate->format('N'));
+        }
+
+        return $query
+            ->where([$this->aliasField('id') => $academicPeriodId])
+            ->formatResults(function (ResultSetInterface $results) use ($dayOptions) {
+                return $dayOptions;
+            });
+    }
+
 
     /**
      * POCOR-7908

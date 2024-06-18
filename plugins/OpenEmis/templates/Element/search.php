@@ -2,6 +2,10 @@
 	<div class="input-group">
 	<?php
 		$session = $this->getRequest()->getSession();
+		// show value in search input
+		$alias = $this->request->getParam('plugin'). '.' .$this->request->getParam('action');
+		$alias = $session->check('search.search_alias') ? $session->read('search.search_alias') : $alias;
+		$search = $session->check($alias.'.search.key') ? $session->read($alias.'.search.key') : '';
 		$howManyStudents = $session->check('is_any_student') ? $session->read('is_any_student') : 1;
 		if ($howManyStudents >= 0) {
 	?>
@@ -11,7 +15,8 @@
 			'class' => 'form-control search-input focus',
 			'data-input-name' => 'Search[searchField]',
 			'placeholder' => __('Search'),
-			'onkeypress' => 'if (event.keyCode == 13) jsForm.submit()'
+			'onkeypress' => 'if (event.keyCode == 13) jsForm.submit()',
+			'value' => $search
 		]);
 		
 		$this->Form->create();

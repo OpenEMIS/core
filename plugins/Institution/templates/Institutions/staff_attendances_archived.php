@@ -1,6 +1,6 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
-<?= $this->Html->script('Institution.angular/staff/institution.staff.attendances.archive.svc', ['block' => true]); ?>
-<?= $this->Html->script('Institution.angular/staff/institution.staff.attendances.archive.ctrl', ['block' => true]); ?>
+<?= $this->Html->script('Institution.angular/staff/staff.attendances.archived.svc', ['block' => true]); ?>
+<?= $this->Html->script('Institution.angular/staff/staff.attendances.archived.ctrl', ['block' => true]); ?>
 <?= $this->Html->script('ControllerAction.../plugins/timepicker/js/bootstrap-timepicker.min', ['block' => true]);?>
 <?= $this->Html->css('ControllerAction.../plugins/timepicker/css/bootstrap-timepicker.min', ['block' => true]); ?>
 <?php
@@ -11,10 +11,10 @@ $this->start('toolbar');
         <i class="fa kd-export" ></i>
     </button>
 <?php endif; ?>
-<?php 
-$session = $this->Session;
-$superAdmin = $session->read('Auth.User.super_admin');
-$is_connection_is_online = $session->read('is_connection_stablished');
+<?php
+// $session = $this->Session;
+// $superAdmin = $session->read('Auth.User.super_admin');
+$is_connection_is_online =$_SESSION['is_connection_stablished'];
 ?>
 <?php
 $this->end();

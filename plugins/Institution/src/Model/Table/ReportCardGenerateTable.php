@@ -178,25 +178,28 @@ class ReportCardGenerateTable extends ControllerActionTable
 
     public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, $request)
     {
-        $classId = $this->ControllerAction->getQueryString('class_id');
-        $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
-        $institutionId = $this->ControllerAction->getQueryString('institution_id');
-        $academicPeriodId = $this->ControllerAction->getQueryString('academic_period_id');
+        $classId = $this->getQueryString('class_id');
+        $assessmentId = $this->getQueryString('assessment_id');
+        $institutionId = $this->getQueryString('institution_id');
+        $academicPeriodId = $this->getQueryString('academic_period_id');
 
         if ($action == 'add') {
             if (!$academicPeriodId) {
-                $academicPeriodId = $request->data['ReportCardGenerate']['academic_period_id'];
+                $academicPeriodId = $request->getData()['ReportCardGenerate']['academic_period_id'];
             }
             if (!$institutionId) {
-                $institutionId = $request->data['ReportCardGenerate']['institution_id'];
+                $institutionId = $request->getData()['ReportCardGenerate']['institution_id'];
             }
             if ($classId) {
                 $grades = TableRegistry::get('Institution.InstitutionClassGrades');
             }
-            $where = [
-                'EducationSystems.academic_period_id' => $academicPeriodId,
-            ];
-            if (!$classId) {
+            if(!empty( $academicPeriodId)) {
+                $where = [
+                    'EducationSystems.academic_period_id' => $academicPeriodId,
+                ];
+            }
+            
+            if (!empty($classId)) {
                 $where[$grades->aliasField('institution_id')] = $institutionId;
             }
             if ($classId) {

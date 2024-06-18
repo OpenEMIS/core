@@ -19,6 +19,7 @@ use Cake\Auth\DefaultPasswordHasher;
 use Cake\Core\Configure;
 use Cake\Utility\Security;
 use Cake\ORM\Locator\TableLocator;
+use Cake\Database\Schema\TableSchema;
 
 /**
  * DeletedLogs Model
@@ -385,17 +386,17 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $sourceTableSchema = $defaultSchemaCollection->describe($sourceTableName);
 
         // Create a new table schema for the target table
-        $targetTableSchema = new \Cake\Database\Schema\Table($targetTableName);
+        $targetTableSchema = new TableSchema($targetTableName);
 
         // Copy the columns from the source table to the target table
         foreach ($sourceTableSchema->columns() as $column) {
-            $columnDefinition = $sourceTableSchema->column($column);
+            $columnDefinition = $sourceTableSchema->getColumn($column);
             $targetTableSchema->addColumn($column, $columnDefinition);
         }
         $randomString = self::generateRandomString();
         // Copy the indexes from the source table to the target table
         foreach ($sourceTableSchema->indexes() as $index) {
-            $indexDefinition = $sourceTableSchema->index($index);
+            $indexDefinition = $sourceTableSchema->getIndex($index);
             $targetTableSchema->addIndex($index . $randomString, $indexDefinition);
         }
 
@@ -403,8 +404,8 @@ class DataManagementConnectionsTable extends ControllerActionTable
         // FIX for random FK name
 
         foreach ($sourceTableSchema->constraints() as $constraint) {
-            $constraintDefinition = $sourceTableSchema->constraint($constraint);
-            if ($constraintDefinition['type'] !== \Cake\Database\Schema\Table::CONSTRAINT_FOREIGN) {
+            $constraintDefinition = $sourceTableSchema->getConstraint($constraint);
+            if ($constraintDefinition['type'] !== TableSchema::CONSTRAINT_FOREIGN) {
                 // If it's not a foreign key constraint, proceed with adding it to the destination table
                 $constraintname = $constraint != 'primary' ? $constraint . $randomString : $constraint;
                 $targetTableSchema->addConstraint($constraintname, $constraintDefinition);
@@ -441,35 +442,68 @@ class DataManagementConnectionsTable extends ControllerActionTable
      * @throws \Exception
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-//     public static function hasArchiveRecords(string $table_name, array $where = [])
-//     {
-//         $is_archive_exists = false;
-//         $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
-//         $targetTableName = $targetTableNameAndConnection[0];
-//         $targetTableConnection = $targetTableNameAndConnection[1];
-//         $archiveConnection = ConnectionManager::get($targetTableConnection);
-//         if($targetTableName == 'assessment_item_results_archived'){
-//             $targetTableName = 'AssessmentItemResultsArchived';
-//         }        
-//         /*echo "<pre>"; print_r($targetTableName);
-//         echo "<pre>"; print_r($archiveConnection);
-// die;*/
-//         $tableArchived = TableRegistry::getTableLocator()->get('Institution.'.$targetTableName, [
-//             'connection' => $archiveConnection,
-//         ]);
-//         $count = $tableArchived->find('all')
-// //            ->select('*')// POCOR-7339-HINDOL
-//             ->where($where)->first();
-// //        Log::write('debug', 'hasArchiveRecords');
-// //        Log::write('debug', $count);
-//         if ($count) {
-//             $is_archive_exists = true;
-//         }
-//         if (!$count) {
-//             $is_archive_exists = false;
-//         }
-//         return $is_archive_exists;
-//     }
+    public static function hasArchiveRecords(string $table_name, array $where = [])
+    {
+        $is_archive_exists = false;
+        $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
+        $targetTableName = $targetTableNameAndConnection[0];
+        $targetTableConnection = $targetTableNameAndConnection[1];
+        $archiveConnection = ConnectionManager::get($targetTableConnection);
+        // if($targetTableName == 'assessment_item_results_archived'){
+        //     $targetTableName = 'AssessmentItemResultsArchived';
+        // }  
+        
+        
+        if($targetTableName == 'assessment_item_results_archived'){
+            $tableLocator = new TableLocator();
+            $tableArchived = $tableLocator->get('AssessmentItemResultsArchived', [
+            'connection' => $archiveConnection]); 
+        }else if($targetTableName == 'institution_staff_attendances_archived'){
+            $tableLocator = new TableLocator();
+            $tableArchived = $tableLocator->get('institution_staff_attendances_archived', [
+            'connection' => $archiveConnection]); 
+        }else{
+            $tableLocator = new TableLocator();
+            $tableArchived =$tableLocator->get($targetTableName, [
+            'connection' => $archiveConnection]); 
+        }
+
+
+        /*echo "<pre>"; print_r($targetTableName);
+        echo "<pre>"; print_r($archiveConnection);
+die;*/
+        // $tableArchived = TableRegistry::getTableLocator()->get('Institution.'.$targetTableName, [
+        //     'connection' => $archiveConnection,
+        // ]);
+        $count = $tableArchived->find('all')
+//            ->select('*')// POCOR-7339-HINDOL
+            ->where($where)->first();
+//        Log::write('debug', 'hasArchiveRecords');
+//        Log::write('debug', $count);
+        if ($count) {
+            $is_archive_exists = true;
+        }
+        if (!$count) {
+            $is_archive_exists = false;
+        }
+        return $is_archive_exists;
+    }
+
+    function snakeToCamel($string) {
+        // Split the string by underscores
+        $words = explode('_', $string);
+    
+        // Convert the first word to lowercase
+        $camelCaseString = strtolower(array_shift($words));
+    
+        // Capitalize the first letter of each remaining word and concatenate
+        foreach ($words as $word) {
+            $camelCaseString .= ucfirst(strtolower($word));
+        }
+    
+        return $camelCaseString;
+    }
+    
 
     /**
      * common function to get archive table name and connection
@@ -527,7 +561,8 @@ class DataManagementConnectionsTable extends ControllerActionTable
             $tableArchived = $tableLocator->get('AssessmentItemResultsArchived', [
             'connection' => $remoteConnection]); 
         }else{
-            $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
+            $tableLocator = new TableLocator();
+            $tableArchived = $tableLocator->get($targetTableName, [
             'connection' => $remoteConnection]); 
         }
         
