@@ -27,6 +27,7 @@ use JWTAuth;
 use File;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\StudentMealImport;
+use App\Exports\StudentMealExport;
 
 
 class MealRepository extends Controller
@@ -726,30 +727,13 @@ class MealRepository extends Controller
                     'rows' => $validation,
                 ],
             ];
-
-            
+  
             DB::commit();
             return $importResponse;
 
         } catch (\Exception $e){
             DB::rollBack();
             return false;
-        }
-    }
-
-
-    public function getStudentMealExport($params)
-    {
-        try {
-            dd("getStudentMealExport: ", $params);
-            
-        } catch (\Exception $e) {
-            Log::error(
-                'Failed to exported students meals from DB.',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
-
-            return $this->sendErrorResponse('Failed to exported students meals from DB.');
         }
     }
     //For POCOR-8348 End...

@@ -236,22 +236,5 @@ class MealService extends Controller
             return $this->sendErrorResponse('Failed to import students meals in DB.');
         }
     }
-
-
-    public function getStudentMealExport($params)
-    {
-        try {
-            $data = $this->mealRepository->getStudentMealExport($params);
-            return $data;
-            
-        } catch (\Exception $e) {
-            Log::error(
-                'Failed to exported students meals from DB.',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
-
-            return $this->sendErrorResponse('Failed to exported students meals from DB.');
-        }
-    }
     //For POCOR-8348 End...
 }

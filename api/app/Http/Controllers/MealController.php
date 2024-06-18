@@ -8,6 +8,8 @@ use App\Services\MealService;
 use App\Http\Requests\MealStudentListRequest;
 use App\Http\Requests\StudentMealImportRequest;
 use App\Http\Requests\StudentMealExportRequest;
+use App\Exports\StudentMealExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MealController extends Controller
 {
@@ -264,8 +266,9 @@ class MealController extends Controller
     {
         try {
             $params = $request->all();
-            $data = $this->mealService->getStudentMealExport($params);
-            return $this->sendSuccessResponse("Student meals exported.", $data);
+            $str = strtotime(date('Y-m-d'));
+            $fileName = 'StudentMeals_'.$str.'.xlsx';
+            return Excel::download(new StudentMealExport($params), $fileName);
             
         } catch (\Exception $e) {
             Log::error(
