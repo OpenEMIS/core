@@ -960,4 +960,11 @@ class UserNationalitiesTable extends ControllerActionTable {
         // End POCOR-5188
     }
     /*POCOR-6267 Ends*/
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        if(isset($data['security_user_id']) && empty($data['security_user_id'])) {
+            $userId = $this->getUserID();
+            $data['security_user_id'] = $userId;
+        }
+    }
 }
