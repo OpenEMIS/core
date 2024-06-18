@@ -2010,7 +2010,7 @@ class ValidationBehavior extends Behavior
 
         // custom validation is nullable, have to cater for the null pattern.
         if (!empty($pattern) && !preg_match($pattern, $subject)) {
-            return $model->getMessage('User.Identities.number.custom_validation');
+            return $model->getMessage('User.IdentitiesPersonal.number.custom_validation');
         }
 
         return true;
@@ -2024,7 +2024,7 @@ class ValidationBehavior extends Behavior
         if (!empty($globalData['data']['id'])) {
             $conditions[$UserIdentities->aliasField('id'). ' NOT IN']=  $globalData['data']['id'];
         }
-
+        
         if (!(array_key_exists('security_user_id', $globalData['data']))) {
             return true;
         } else if (array_key_exists('identity_type_id', $globalData['data']) && !empty($globalData['data']['identity_type_id'])) {
@@ -2039,14 +2039,13 @@ class ValidationBehavior extends Behavior
                 ->first();
         }
         if (!empty($IdentityTypesData)) {
-            return $model->getMessage('User.Identities.identity_type_id.custom_validation');
+            return $model->getMessage('User.IdentitiesPersonal.identity_type_id.custom_validation');
         }
         return true;
     }
 
     public static function validateCustomPattern($field, $code, array $globalData)
     {
-
         $pattern = '';
         $model = $globalData['providers']['table'];
 
@@ -3426,7 +3425,7 @@ class ValidationBehavior extends Behavior
     {
         $model = $globalData['providers']['table'];
         $data = $globalData['data'];
-        $userIdentities = TableRegistry::getTableLocator()->get('user_identities');
+        $userIdentities = TableRegistry::getTableLocator()->get('User.Identities');
         $IdentitiesEntity = $userIdentities->find()
             ->where([
                 $userIdentities->aliasField('number') => $data['identity_number'],
