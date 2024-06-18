@@ -76,7 +76,7 @@ class HtmlFieldHelper extends Helper
             
             $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                $options['value'] = $data->getInvalid($field);
+                $options['value'] = $invalid[$field];
             }
         }
         if (array_key_exists('label', $options)) {
@@ -479,7 +479,7 @@ class HtmlFieldHelper extends Helper
 
             if (isset($attr['options']) && !isset($attr['attr']['value'])) {
                 if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                    $options['value'] = $attr['options'][$data->invalid($field)];
+                    $options['value'] = $attr['options'][$invalid[$field]];
                 } else {
                     $options['value'] = $attr['options'][$data->{$field}];
                 }
@@ -487,7 +487,7 @@ class HtmlFieldHelper extends Helper
                 $options['value'] = $attr['attr']['value'];
             } else {
                 if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                    $options['value'] = $data->getInvalid($field);
+                    $options['value'] = $invalid[$field];
                 } else {
                     $options['value'] = $data->{$field};
                 }
@@ -525,7 +525,7 @@ class HtmlFieldHelper extends Helper
                     
                 }
                 $imageDefault = (array_key_exists('imageDefault', $attr) && $attr['imageDefault'])? '<i class='.$attr['imageDefault'].'></i>': '';
-     //            $value= '<div class="table-thumb"
+                    // $value= '<div class="table-thumb"
 					// data-load-image=true
 					// data-image-width='.$maxImageWidth.'
 					// data-image-url='.$imageUrl.'
@@ -559,11 +559,10 @@ class HtmlFieldHelper extends Helper
             $defaultImgViewClass = $this->table->getDefaultImgViewClass();
             $defaultImgMsg = $this->table->getDefaultImgMsg();
             $defaultImgView = $this->table->getDefaultImgView();
-
+            
             $showRemoveButton = false;
             // if (isset($data[$attr['field']]['tmp_name'])) {
-            // if (!empty($data[$attr['field']]->getStream()->getMetadata('uri'))) {
-            //     $tmp_file = ((is_array($data[$attr['field']]->getStream()->getMetadata('uri'))) && (file_exists($data[$attr['field']]->getStream()->getMetadata('uri')))) ?$data[$attr['field']]->getStream()->getMetadata('uri') : "";
+            //     $tmp_file = ((is_array($data[$attr['field']])) && (file_exists($data[$attr['field']]['tmp_name']))) ? $data[$attr['field']]['tmp_name'] : "";
             //     $tmp_file_read = (!empty($tmp_file)) ? file_get_contents($tmp_file) : "";
             // } else {
             //     $tmp_file = true;
@@ -640,7 +639,7 @@ class HtmlFieldHelper extends Helper
             
             $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                $value = $data->invalid($field);
+                $value = $invalid[$field];
             } else {
                 $value = $data->{$field};
             }
@@ -692,7 +691,7 @@ class HtmlFieldHelper extends Helper
         if (!is_null($data)) {
             $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                $value = $data->getInvalid($field);
+                $value = $invalid[$field];
             } else {
                 $value = $data->{$field};
             }
@@ -768,7 +767,7 @@ class HtmlFieldHelper extends Helper
             
             $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                $value = $data->invalid($field);
+                $value = $invalid[$field];
             } else {
                 $value = $data->{$field};
             }
@@ -924,8 +923,11 @@ class HtmlFieldHelper extends Helper
                 if (isset($entity['security_user_id']) && ! empty($entity['security_user_id'])) {
                     $ids['security_user_id'] = $entity['security_user_id'];
                 }
-                if(isset($params['pass'][1]) && isset($this->ControllerAction->paramsDecode($params['pass'][1])['security_user_id'])) {
+                if(empty($ids['security_user_id']) && isset($params['pass'][1]) && isset($this->ControllerAction->paramsDecode($params['pass'][1])['security_user_id'])) {
                     $ids['security_user_id'] =  $this->ControllerAction->paramsDecode($params['pass'][1])['security_user_id'];
+                }
+                if(empty($ids['security_user_id']) && isset($params['pass'][1]) && isset($this->ControllerAction->paramsDecode($params['pass'][1])['user_id'])) {
+                    $ids['security_user_id'] =  $this->ControllerAction->paramsDecode($params['pass'][1])['user_id'];
                 }
             }
             $action = ['action' => $action, 'download', $this->ControllerAction->paramsEncode($ids)];

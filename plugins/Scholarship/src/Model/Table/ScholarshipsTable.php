@@ -466,7 +466,7 @@ class ScholarshipsTable extends ControllerActionTable
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
-            $this->AttachmentTypes->alias(), $this->FieldOfStudies->alias()
+            $this->AttachmentTypes->getAlias(), $this->FieldOfStudies->getAlias()
         ];
     }
 
