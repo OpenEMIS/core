@@ -1159,7 +1159,7 @@ class StudentsTable extends ControllerActionTable
             //->contain(['EducationGrades'])
             ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
             ->where(['institution_id' => $institutionId])
-            ->where(['EducationSystems.academic_period_id' => $selectedAcademicPeriod])
+            ->where(['EducationSystems.academic_period_id IS' => $selectedAcademicPeriod])
             ->order(['EducationGrades.name' => 'ASC'])//POCOR-7247
             ->group('education_grade_id')
             ->toArray();
