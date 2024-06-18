@@ -184,7 +184,12 @@ class InstitutionTabBehavior extends Behavior
 
         $model = $this->_table;
         $institutionID = $this->getInstitutionID();
-        $actions = ['view', 'edit'];
+
+        $actions = ['view', 'edit','remove'];
+        if($appliedAction == 'Textbooks') {
+            $actions = ['view', 'edit','remove'];
+        }
+        
         foreach ($actions as $action) {
             if (isset($buttons[$action])) {
                 $url = $buttons[$action]['url'];
@@ -249,7 +254,7 @@ class InstitutionTabBehavior extends Behavior
             }
         }
 
-//        die('<pre>' . print_r($appliedActions, true) . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
+        // die('<pre>' . print_r($appliedActions, true) . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
 
         return $buttons;
     }
