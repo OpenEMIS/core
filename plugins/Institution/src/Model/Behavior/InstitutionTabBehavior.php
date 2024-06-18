@@ -310,7 +310,7 @@ class InstitutionTabBehavior extends Behavior
             'Languages' => ['text' => __('Languages')],
             'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')],
-            'History' => ['text' => __('History')]
+            // 'History' => ['text' => __('History')]
         ];
         if ($userRule == 'Student') {
             $userID = $this->getStudentID();
