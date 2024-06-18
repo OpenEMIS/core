@@ -154,7 +154,13 @@ class UserTabBehavior extends Behavior
                     }
                 }
             }
-            $url['1'] = $model->paramsEncode($queryString);
+            // $url['1'] = $model->paramsEncode($queryString);
+            if($controllerName == 'Students'){
+                $id = $queryString['id'];
+                $url['1'] = $model->paramsEncode(['id' => $id]);
+            } else {
+                $url['1'] = $model->paramsEncode($queryString);
+            }
             if(isset($url['?'])) {
                 unset($url['?']);
             }
@@ -282,7 +288,10 @@ class UserTabBehavior extends Behavior
                     }
                     $queryString = $model->getQueryString();
                     $queryString['id'] = $entity->id;
-                    $queryString['institution_id'] = $institutionID;
+                    // $queryString['institution_id'] = $institutionID;
+                    if(isset($institutionID)){
+                        $queryString['institution_id'] = $institutionID;
+                    } 
                     foreach ($appliedActions[$url_action] as $additionalParam) {
                         $queryString[$additionalParam] = $entity->{$additionalParam};
                     }
