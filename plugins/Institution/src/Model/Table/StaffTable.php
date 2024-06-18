@@ -4183,8 +4183,8 @@ class StaffTable extends ControllerActionTable
                         }
                     }
                     $url = Router::url([
-                        'plugin' => 'Institution',
-                        'controller' => 'Institutions',
+                        'plugin' => 'Staff',
+                        'controller' => 'Staff',
                         'action' => 'StaffLeave',
                         '0' => 'index',
                         '1' => $this->paramsEncode(['user_id' => $staffId, 'institution_id' => $institution_id])
