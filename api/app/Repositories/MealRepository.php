@@ -477,7 +477,7 @@ class MealRepository extends Controller
 
 
             if (!in_array($results[0][1][0], $header)) {
-                return $this->sendErrorResponse("Not a valid header");
+                return 4; //Not a valid header...
             }
 
         } catch (\Exception $e) {
