@@ -2168,7 +2168,7 @@ class InstitutionsTable extends ControllerActionTable
     public function findMap(Query $query, array $options)
     {
         // [POCOR-6379] - Anand Malvi
-        $institutionStatus = TableRegistry::getTableLocator()->get('Institution.InstitutionStatuses');
+        $institutionStatus = TableRegistry::getTableLocator()->get('Institution.Statuses');
         $activeInstitutionStatus = $institutionStatus->find()
             ->select(['id' => $institutionStatus->aliasField('id')])
             ->where([$institutionStatus->aliasField('code') => 'ACTIVE'])->first();
@@ -2249,7 +2249,6 @@ class InstitutionsTable extends ControllerActionTable
                 $this->aliasField('institution_status_id') => $activeInstitutionStatus->id
             ]);
         // [POCOR-6379] - Anand Malvi
-        echo "<pre>";print_r($query);die;
         return $query;
     }
 
