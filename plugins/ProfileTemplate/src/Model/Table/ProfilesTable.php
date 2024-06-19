@@ -682,7 +682,6 @@ class ProfilesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
-        
         if ($hasTemplate) {
             $this->addReportCardsToProcesses($params['academic_period_id'], $params['report_card_id'], $params['institution_id']);
             $this->triggerGenerateAllReportCardsShell($params['academic_period_id'], $params['report_card_id'], $params['institution_id']);
@@ -700,7 +699,6 @@ class ProfilesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
-        
         if ($hasTemplate) {
             $InstitutionReportCardProcesses = TableRegistry::get('ReportCard.InstitutionReportCardProcesses');
             $inProgress = $InstitutionReportCardProcesses->find()
@@ -743,8 +741,7 @@ class ProfilesTable extends ControllerActionTable
                 $this->InstitutionReportCards->aliasField('file_name IS NOT NULL'),
                 $this->InstitutionReportCards->aliasField('file_content IS NOT NULL')
             ])
-            ->toArray();
-            
+            ->toArray();      
         if (!empty($files)) {
             $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
             $zipName = 'InstitutionReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
@@ -774,6 +771,7 @@ class ProfilesTable extends ControllerActionTable
 
             // delete file after download
             unlink($filepath);
+            exit();
         } else {
             $event->stopPropagation();
             $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
@@ -822,6 +820,7 @@ class ProfilesTable extends ControllerActionTable
 
             // delete file after download
             unlink($filepath);
+            exit();
         } else {
             $event->stopPropagation();
             $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
@@ -891,7 +890,7 @@ class ProfilesTable extends ControllerActionTable
         Log::write('debug', 'Initialize Add All Institution Report Cards '.$reportCardId.' for Institution '.$institutionId.' to processes ('.Time::now().')');
 		
         $InstitutionReportCardProcesses = TableRegistry::get('ReportCard.InstitutionReportCardProcesses');
-        $InstitutionTable = TableRegistry::get('institutions');
+        $InstitutionTable = TableRegistry::get('Institution.Institutions');
         $where = [];
         if (!is_null($institutionId)) {
             $where[$InstitutionTable->aliasField('id')] = $institutionId;
@@ -956,7 +955,7 @@ class ProfilesTable extends ControllerActionTable
     private function triggerGenerateAllReportCardsShell($academicPeriodId, $reportCardId, $institutionId = null)
     {
         $SystemProcesses = TableRegistry::get('SystemProcesses');
-        $runningProcess = $SystemProcesses->getRunningProcesses($this->registryAlias());
+        $runningProcess = $SystemProcesses->getRunningProcesses($this->getRegistryAlias());
 
         foreach ($runningProcess as $key => $processData) {
             $systemProcessId = $processData['id'];
@@ -974,7 +973,7 @@ class ProfilesTable extends ControllerActionTable
         }
 
         if (count($runningProcess) <= self::MAX_PROCESSES) {
-            $processModel = $this->registryAlias();
+            $processModel = $this->getRegistryAlias();
             $passArray = [
                 'institution_id' => $institutionId,
                 'report_card_id' => $reportCardId
@@ -987,6 +986,7 @@ class ProfilesTable extends ControllerActionTable
             $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllInstitutionReportCards '.$args;
             $logs = ROOT . DS . 'logs' . DS . 'GenerateAllInstitutionReportCards.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
+            // echo "<pre>";print_r($shellCmd);die;
             try {
                 $pid = exec($shellCmd);
                 Log::write('debug', $shellCmd);
