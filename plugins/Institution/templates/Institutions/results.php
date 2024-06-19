@@ -25,7 +25,8 @@ $this->start('toolbar');
             'plugin' => $this->request->getAttribute('params')['plugin'],
             'controller' => $this->request->getAttribute('params')['controller'],
             'action' => 'Assessments',
-            'index'
+            'index',
+            $queryString
         ];
         echo $this->Html->link('<i class="fa kd-back"></i>', $backUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escape' => false, 'ng-show' => 'action == \'view\'']);
     ?>

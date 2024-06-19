@@ -412,6 +412,9 @@ class ApplicationsTable extends ControllerActionTable
             $entity->unsetProperty('scholarship');
 
             $applicantId = $this->ControllerAction->getQueryString('applicant_id');
+            if(empty($applicantId)){
+                $applicantId = $this->getQueryString('applicant_id');
+            }
             $applicantEntity = $this->Applicants->get($applicantId, ['contain' => ['Genders', 'MainIdentityTypes']]);
 
             $entity->applicant_id = $applicantEntity->id;

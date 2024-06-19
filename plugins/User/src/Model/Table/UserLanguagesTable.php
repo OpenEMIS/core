@@ -46,6 +46,10 @@ class UserLanguagesTable extends ControllerActionTable
         $this->fields['writing']['type'] = 'select';
         $this->fields['writing']['options'] = $gradeOptions;
         $this->fields['writing']['translate'] = false;
+        if($this->request->getParam('controller') == 'Staff') {
+            $userId = $this->getUserID();
+            $this->field('security_user_id', ['attr' => ['value' => $userId], 'type' => 'hidden']);
+        }
     }
 
     /**
