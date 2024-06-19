@@ -20,12 +20,12 @@ class StudentTemplatesTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
-		$this->setTable('student_profile_templates');
+        $this->setTable('student_profile_templates');
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 
-		$this->addBehavior('User.AdvancedNameSearch');
-		
+        $this->addBehavior('User.AdvancedNameSearch');
+        
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'excel_template_name',
             'content' => 'excel_template',
@@ -101,33 +101,33 @@ class StudentTemplatesTable extends ControllerActionTable
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['description']['visible'] = false;
         $this->setFieldOrder(['code', 'name', 'generate_start_date', 'generate_end_date', 'excel_template']);
-		$this->setupTabElements();
+        $this->setupTabElements();
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Personal','Generate Students Profile','Profiles');       
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
+        $is_manual_exist = $this->getManualUrl('Personal','Generate Students Profile','Profiles');       
+        if(!empty($is_manual_exist)){
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target'=>'_blank'
+            ];
 
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
-	}
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
+    }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // Academic Period filter
-        $serverRequest = new ServerRequest();
+        $serverRequest = $this->request;
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $serverRequest->getAttribute('query')['academic_period_id'] : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
@@ -173,14 +173,14 @@ class StudentTemplatesTable extends ControllerActionTable
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         //POCOR-5191 :: Strat
-        $Roles = TableRegistry::get('Security.SecurityRoles');	
-        $roles = $Roles->find('list',['keyField' => 'id', 'valueField' => 'name'])->toArray();	
-        $this->field('student_profile_template_id', [	
-            'type' => 'chosenSelect',	
-            'attr' => [	
-                'label' => __('Security Roles')	
-            ]	
-        ]);	
+        $Roles = TableRegistry::get('Security.SecurityRoles');  
+        $roles = $Roles->find('list',['keyField' => 'id', 'valueField' => 'name'])->toArray();  
+        $this->field('student_profile_template_id', [   
+            'type' => 'chosenSelect',   
+            'attr' => [ 
+                'label' => __('Security Roles') 
+            ]   
+        ]); 
         $this->fields['student_profile_template_id']['options'] = $roles;
         //POCOR-5191 :: End
         // to set template download button
@@ -199,7 +199,7 @@ class StudentTemplatesTable extends ControllerActionTable
     {
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                $ProfileSecurityRoles = TableRegistry::get('Student.StudentProfileSecurityRoles');	
+                $ProfileSecurityRoles = TableRegistry::get('Student.StudentProfileSecurityRoles');  
                 $ProfileSecurityRolesData = $ProfileSecurityRoles->find()->where(['student_profile_template_id'=>$row->id])->toArray();
                
                 $arr =[];
@@ -212,23 +212,23 @@ class StudentTemplatesTable extends ControllerActionTable
         });
     }
     
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)	
-    {	
-        $ProfileSecurityRoles = TableRegistry::get('Student.StudentProfileSecurityRoles');	
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)   
+    {   
+        $ProfileSecurityRoles = TableRegistry::get('Student.StudentProfileSecurityRoles');  
         //Delete all Records for this student_profile_template
         $AlreadyRecord = $ProfileSecurityRoles->find('all',['conditions'=>['student_profile_template_id' => $entity->id]])->toArray();
         foreach($AlreadyRecord as $k=> $del){
             $ProfileSecurityRoles->delete($del);
         }
-        if(!empty($entity['student_profile_template_id']['_ids'])){	
-            foreach($entity['student_profile_template_id']['_ids'] as $profile){	
+        if(!empty($entity['student_profile_template_id']['_ids'])){ 
+            foreach($entity['student_profile_template_id']['_ids'] as $profile){    
                 $ProfileSecurityRolesEntity = $ProfileSecurityRoles->newEntity([
                     'security_role_id' => $profile,
                     'student_profile_template_id' => $entity->id
                 ]);
                 $ProfileSecurityRoles->save($ProfileSecurityRolesEntity);
-            }	
-        }	
+            }   
+        }   
     }
     //POCOR-5191 :: End
 
@@ -297,29 +297,16 @@ class StudentTemplatesTable extends ControllerActionTable
         $fileType = 'xlsx';
         $filepath = WWW_ROOT . 'export' . DS . 'customexcel'. DS . 'default_templates'. DS . $filename . '.' . $fileType;
 
-        // header("Pragma: public", true);
-        // header("Expires: 0"); // set expiration time
-        // header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-        // header("Content-Type: application/force-download");
-        // header("Content-Type: application/octet-stream");
-        // header("Content-Type: application/download");
-        // header("Content-Disposition: attachment; filename=".basename($filepath));
-        // header("Content-Transfer-Encoding: binary");
-        // header("Content-Length: ".filesize($filepath));
-        // echo file_get_contents($filepath);
-
-        if (file_exists($filepath)) {
-            header('Content-Description: File Transfer');
-            header('Content-Type: application/octet-stream');
-            header('Content-Disposition: attachment; filename="' . basename($filepath) . '"');
-            header('Content-Length: ' . filesize($filepath));
-            header('Cache-Control: must-revalidate');
-            header('Pragma: public');
-            header('Expires: 0');
-
-            readfile($filepath);
-            exit;
-        } 
+        header("Pragma: public", true);
+        header("Expires: 0"); // set expiration time
+        header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+        header("Content-Type: application/force-download");
+        header("Content-Type: application/octet-stream");
+        header("Content-Type: application/download");
+        header("Content-Disposition: attachment; filename=".basename($filepath));
+        header("Content-Transfer-Encoding: binary");
+        header("Content-Length: ".filesize($filepath));
+        echo file_get_contents($filepath);
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -333,26 +320,15 @@ class StudentTemplatesTable extends ControllerActionTable
         }        
 
     } 
-
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
-    {
-        if (!empty($data['generate_start_date'])) {
-            $data['generate_start_date'] = (new Date($data['generate_start_date']))->format('Y-m-d H:i:s');
-        }
-
-        if (!empty($data['generate_end_date'])) {
-            $data['generate_end_date'] = (new Date($data['generate_end_date']))->format('Y-m-d H:i:s');
-        }
+    
+    private function setupTabElements() {
+        $options['type'] = 'StaffTemplates';
+        $tabElements = $this->getStudentTabElements($options);
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', 'Templates');
     }
-	
-	private function setupTabElements() {
-		$options['type'] = 'StaffTemplates';
-		$tabElements = $this->getStudentTabElements($options);
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', 'Templates');
-	}
 
-	public function getStudentTabElements($options = [])
+    public function getStudentTabElements($options = [])
     {
         $tabElements = [];
         $tabUrl = ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates'];
@@ -361,11 +337,11 @@ class StudentTemplatesTable extends ControllerActionTable
             'Profiles' => ['text' => __('Profile')],
             'Templates' => ['text' => __('Templates')]
         ];
-		
+        
         $tabElements['Profiles']['url'] = array_merge($tabUrl, ['action' => 'StudentProfiles']);
         $tabElements['Templates']['url'] = array_merge($tabUrl, ['action' => 'Students']);
 
-		return $tabElements;
+        return $tabElements;
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
@@ -398,5 +374,5 @@ class StudentTemplatesTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-	
+    
 }

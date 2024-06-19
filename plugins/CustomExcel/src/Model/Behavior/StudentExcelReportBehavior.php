@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
@@ -20,6 +20,7 @@ use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use Cake\ORM\Table;
 
 class StudentExcelReportBehavior extends Behavior
 {
@@ -53,7 +54,7 @@ class StudentExcelReportBehavior extends Behavior
         'pdf' => 'Mpdf'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $model = $this->_table;
@@ -67,7 +68,7 @@ class StudentExcelReportBehavior extends Behavior
         new Folder($subfolder, true, 0777);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onRenderExcelTemplate'] = 'onRenderExcelTemplate';
@@ -99,8 +100,9 @@ class StudentExcelReportBehavior extends Behavior
 
     public function renderExcelTemplate(ArrayObject $extra)
     {
+
         $model = $this->_table;
-        $format = $this->config('format');
+        $format = $this->getConfig('format');
 
         if (array_key_exists('requestQuery', $extra)) {
             $params = $extra['requestQuery'];
@@ -113,11 +115,10 @@ class StudentExcelReportBehavior extends Behavior
 
         $extra['vars'] = $this->getVars($params, $extra);
 
+        $extra['file'] = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $format;
+        $extra['path'] = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS;
 
-        $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $format;
-        $extra['path'] = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
-
-        $temppath = tempnam($extra['path'], $this->config('filename') . '_');
+        $temppath = tempnam($extra['path'], $this->getConfig('filename') . '_');
         $extra['file_path'] = $temppath;
 
 
@@ -125,10 +126,10 @@ class StudentExcelReportBehavior extends Behavior
         $this->generateExcel($objSpreadsheet, $extra);
 
         Log::write('debug', 'StudentExcelReportBehavior >>> renderExcelTemplate');
-		
-		
+        
+        
         $this->saveFile($objSpreadsheet, $temppath, $format, $params['student_id']);
-		
+        
         if ($extra->offsetExists('temp_logo')) {
             // delete temporary logo
             $this->deleteFile($extra['temp_logo']);
@@ -142,23 +143,23 @@ class StudentExcelReportBehavior extends Behavior
             // delete temporary excel template file after save
             $this->deleteFile($extra['tmp_file_path']);
         }
-		
+        
         $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateAfterGenerate', [$params, $extra], $this);
-	
+    
         if (!empty($params['student_id'])) {
-			$pdfFilePath = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS . $this->config('filename') . '_' . $params['student_id'].'.txt';
+            $pdfFilePath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $this->getConfig('filename') . '_' . $params['student_id'].'.txt';
             $pdfFileContent = file_get_contents($pdfFilePath);
-			
-			$InstitutionStudentsProfileTemplates = TableRegistry::get('Institution.InstitutionStudentsProfileTemplates');
-			// save Pdf file
-			$InstitutionStudentsProfileTemplates->updateAll([
-				'file_content_pdf' => $pdfFileContent
-			], $params);
-			
-			$this->deleteFile($pdfFilePath);
+            
+            $InstitutionStudentsProfileTemplates = TableRegistry::get('Institution.InstitutionStudentsProfileTemplates');
+            // save Pdf file
+            $InstitutionStudentsProfileTemplates->updateAll([
+                'file_content_pdf' => $pdfFileContent
+            ], $params);
+            
+            $this->deleteFile($pdfFilePath);
         }
-		
-		if ($this->config('download')) {
+        
+        if ($this->getConfig('download')) {
             $tempfile = new File($temppath);
             $tempinfo = $tempfile->info();
             $tempcontent = $tempfile->read();
@@ -167,7 +168,7 @@ class StudentExcelReportBehavior extends Behavior
             $this->downloadFile($tempcontent, $extra['file'], $tempinfo['filesize']);
         }
 
-        if ($this->config('purge')) {
+        if ($this->getConfig('purge')) {
             // delete excel file after download
             $this->deleteFile($temppath);
         }
@@ -179,13 +180,13 @@ class StudentExcelReportBehavior extends Behavior
     {
         $model = $this->_table;
 
-        if (array_key_exists('requestQuery', $extra) && array_key_exists($this->config('templateTableKey'), $extra['requestQuery'])) {
-            $recordId = $extra['requestQuery'][$this->config('templateTableKey')];
+        if (array_key_exists('requestQuery', $extra) && array_key_exists($this->getConfig('templateTableKey'), $extra['requestQuery'])) {
+            $recordId = $extra['requestQuery'][$this->getConfig('templateTableKey')];
         } else {
-            $recordId = $model->getQueryString($this->config('templateTableKey'));
+            $recordId = $model->getQueryString($this->getConfig('templateTableKey'));
         }
 
-        $Table = TableRegistry::get($this->config('templateTable'));
+        $Table = TableRegistry::get($this->getConfig('templateTable'));
 
         if (empty($recordId)) {
             $objSpreadsheet = new Spreadsheet();
@@ -197,7 +198,7 @@ class StudentExcelReportBehavior extends Behavior
                 $file = $this->getFile($entity->excel_template);
 
                 // Create a temporary file
-                $filepath = tempnam($extra['path'], $this->config('filename') . '_Template_');
+                $filepath = tempnam($extra['path'], $this->getConfig('filename') . '_Template_');
                 $extra['tmp_file_path'] = $filepath;
 
                 $excelTemplate = new File($filepath, true, 0777);
@@ -224,7 +225,7 @@ class StudentExcelReportBehavior extends Behavior
             $this->processWorksheet($objSpreadsheet, $objWorksheet, $extra);
 
             // lock all sheets
-            if ($this->config('lockSheets')) {
+            if ($this->getConfig('lockSheets')) {
                 $objWorksheet->getProtection()->setSheet(true);
             }
         }
@@ -271,7 +272,7 @@ class StudentExcelReportBehavior extends Behavior
                 break;
         }
 
-        if ($this->config('wrapText')) {
+        if ($this->getConfig('wrapText')) {
             $cellStyle->getAlignment()->setWrapText(true);
         }
 
@@ -383,10 +384,10 @@ class StudentExcelReportBehavior extends Behavior
         if ($format == 'pdf') {
             $this->savePDF($objSpreadsheet, $filepath, $student_id);
         } else {
-			// pdf
-			if(!empty($student_id)) {
-				$this->savePDF($objSpreadsheet, $filepath, $student_id);
-			}
+            // pdf
+            if(!empty($student_id)) {
+                $this->savePDF($objSpreadsheet, $filepath, $student_id);
+            }
             // xlsx
             $objWriter->save($filepath);
         }
@@ -429,28 +430,28 @@ class StudentExcelReportBehavior extends Behavior
     public function getVars($params, ArrayObject $extra)
     {
         $model = $this->_table;
-
         $variableValues = new ArrayObject([]);
-        if ($this->config('variableSource') == 'database') {
+        if ($this->getConfig('variableSource') == 'database') {
             $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialiseQueryVariables', [$params, $extra], $this);
             if ($event->isStopped()) { return $event->getResult(); }
             if ($event->getResult()) {
                 $variableValues = $event->getResult();
             }
 
-        } else if ($this->config('variableSource') == 'file') {
-            $variables = $this->config('variables');
-
+        } else if ($this->getConfig('variableSource') == 'file') {
+            $variables = $this->getConfig('variables');
             foreach ($variables as $var) {
                 $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialise'.$var, [$params, $extra], $this);
+                
                 if ($event->isStopped()) { return $event->getResult(); }
                 if ($event->getResult()) {
                     $variableValues[$var] = $event->getResult();
                 }
             }
-        }
 
+        }
         $variableValues = $variableValues->getArrayCopy();
+        //echo "<pre>"; print_r($variableValues);die;
         return $variableValues;
     }
 
@@ -781,7 +782,7 @@ class StudentExcelReportBehavior extends Behavior
             $cellCoordinate = $objCell->getCoordinate();
             $cellStyle = $objCell->getStyle($cellCoordinate);
 
-            if ($this->config('wrapText')) {
+            if ($this->getConfig('wrapText')) {
                 $cellStyle->getAlignment()->setWrapText(true);
             }
 
@@ -1019,7 +1020,7 @@ class StudentExcelReportBehavior extends Behavior
         }
     }
 
-    private function table($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
+    public function table($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra): Table
     {
         $rowValue = $attr['rowValue'];
         $columnIndex = $attr['columnIndex'];
@@ -1346,7 +1347,7 @@ class StudentExcelReportBehavior extends Behavior
         $attr['imageWidth'] = array_key_exists('imageWidth', $attr) ? $attr['imageWidth'] : 50;
         $attr['imageMarginLeft'] = array_key_exists('imageMarginLeft', $attr) ? $attr['imageMarginLeft'] : 0;
         $attr['imageMarginTop'] = array_key_exists('imageMarginTop', $attr) ? $attr['imageMarginTop'] : 0;
-		
+        
         $data = Hash::extract($extra['vars'], $attr['displayValue']);
         $imageContent = current($data);
         //for staff photo
@@ -1354,7 +1355,7 @@ class StudentExcelReportBehavior extends Behavior
             if (is_resource($imageContent)) {
                 $institutionId = Hash::extract($extra['vars'], 'Institutions.id');
                 $institutionId = current($institutionId);
-				
+                
                 $mimeType = mime_content_type($imageContent);
                 $exp = explode('/', $mimeType);
                 $logoExt = end($exp);
@@ -1362,7 +1363,7 @@ class StudentExcelReportBehavior extends Behavior
                 $attr['mime_type'] = $mimeType;
 
                 $tempImagePath = TMP . "temp_logo_$institutionId.$logoExt";
-				
+                
                 if (!file_exists($tempImagePath)) {
                     file_put_contents($tempImagePath, stream_get_contents($imageContent));
                     $extra['temp_logo'] = $tempImagePath;
