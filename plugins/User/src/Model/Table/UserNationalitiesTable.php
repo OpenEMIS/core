@@ -879,9 +879,7 @@ class UserNationalitiesTable extends ControllerActionTable {
             // $userId = $session->read('Student.Students.id');
             $userId = $this->request->getSession()->read('Auth.User.id');
         }
-
         $query->where([$this->aliasField('security_user_id') => $userId]);
-
         // Start POCOR-5188
         if($this->request->getParam('controller') == 'Staff'){
             $is_manual_exist = $this->getManualUrl('Institutions','Nationalities','Staff - General');
@@ -962,4 +960,11 @@ class UserNationalitiesTable extends ControllerActionTable {
         // End POCOR-5188
     }
     /*POCOR-6267 Ends*/
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        if(isset($data['security_user_id']) && empty($data['security_user_id'])) {
+            $userId = $this->getUserID();
+            $data['security_user_id'] = $userId;
+        }
+    }
 }

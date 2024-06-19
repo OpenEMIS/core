@@ -10,12 +10,15 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
+use Cake\ORM\Locator\TableLocator;
+use DateTime;
 
 class ScheduleIntervalsTable extends ControllerActionTable
 {
     public function initialize(array $config): void
     {
-        $this->table('institution_schedule_intervals');
+        $this->setTable('institution_schedule_intervals');
         parent::initialize($config);
 
         $this->belongsTo('Institutions', [
@@ -50,6 +53,10 @@ class ScheduleIntervalsTable extends ControllerActionTable
             'ScheduleTimetable' => ['index', 'view', 'edit']
         ]);
         $this->addBehavior('Schedule.Schedule');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['ScheduleIntervals' =>['id']
+            ]
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -214,6 +221,9 @@ class ScheduleIntervalsTable extends ControllerActionTable
             if (array_key_exists('submit', $data) && in_array($data['submit'], ['changeInterval', 'addTimeslot', 'changeShiftId', 'save']) && !empty($data['timeslots'])) {
                 $institutionShiftId = $data['institution_shift_id'];
                 $startTime = $this->Shifts->get($institutionShiftId)->start_time;
+                if (!($startTime instanceof DateTime)) {
+                    $startTime = new DateTime($startTime);
+                }
 
                 $hasEmpty = false;
                 foreach ($data['timeslots'] as $i => $timeslot) {
@@ -246,6 +256,9 @@ class ScheduleIntervalsTable extends ControllerActionTable
                 $institutionShiftId = $data['institution_shift_id'];
                 $shiftEntity = $this->Shifts->get($institutionShiftId);
                 $shiftStartTime = $shiftEntity->start_time;
+                if (!($shiftStartTime instanceof \DateTime)) {
+                    $shiftStartTime = new \DateTime($shiftStartTime);
+                }
                 $shiftEndTime = $shiftEntity->end_time;
 
                 $timeslotList = [];
@@ -268,8 +281,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
                         }
                     }
                 }
-        
-                $timeslotValidator = $this->Timeslots->validator();
+                $timeslotValidator = $this->Timeslots->getValidator();
                 $timeslotValidator
                     ->add('interval', 'checkEndTime', [
                         'rule' => function($value, $context) use ($shiftStartTime, $shiftEndTime, $timeslotList) {
@@ -279,6 +291,9 @@ class ScheduleIntervalsTable extends ControllerActionTable
                                 $intervalStartTime = clone $shiftStartTime;
                                 $modifyString = '+' . $totalInterval . ' minutes';
                                 $intervalEndTime = $intervalStartTime->modify($modifyString);
+                                if (!($shiftEndTime instanceof \DateTime)) {
+                                    $shiftEndTime = new \DateTime($shiftEndTime);
+                                }
                                 return $intervalEndTime <= $shiftEndTime;
                             } 
                             return true;
@@ -314,9 +329,11 @@ class ScheduleIntervalsTable extends ControllerActionTable
                     }
                 }
             }
-            $scheduleId = $this->request['data']['ScheduleIntervals']['id'];
-            $timeslotList = $this->request['data']['ScheduleIntervals']['timeslots'];
-            $institutionSchedule =  TableRegistry::get('institution_schedule_timeslots');
+            $scheduleId = $this->request->getData()['ScheduleIntervals']['id'];
+            $timeslotList = $this->request->getData()['ScheduleIntervals']['timeslots'];
+            $tableLocator = new TableLocator();
+            $institutionSchedule = $tableLocator->get('institution_schedule_timeslots');
+            // $institutionSchedule =  TableRegistry::get('institution_schedule_timeslots');
             $findRecord = $institutionSchedule->find()
                         ->where(['institution_schedule_interval_id'=>$intervalId])->toArray();
                        
@@ -383,13 +400,13 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $academicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $ScheduleIntervals = TableRegistry::get('Schedule.ScheduleIntervals');
         if ($action == 'add') {
-            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery['period']));
             $attr['options'] = $periodOptions;
             $attr['onChangeReload'] = true;
             $attr['default'] = $selectedPeriod;
         } else if ($action == 'edit') {
             //POCOR-8254 start
-            $scheduleId = $this->paramsDecode($request->params['pass'][1])['id'];
+            $scheduleId = $this->paramsDecode($request->getAttribute('params')['pass'][1])['id'];
             $academicPeriodId= $ScheduleIntervals->find()
                                     ->where(['id' => $scheduleId])
                                     ->first()->academic_period_id;
@@ -412,8 +429,8 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $ScheduleIntervals = TableRegistry::get('Schedule.ScheduleIntervals');
         if ($action == 'add') {
             $requestData = $request->getData();
-            if (isset($requestData) && isset($requestData[$this->alias()]) && array_key_exists('academic_period_id', $requestData[$this->alias()])) {
-                $selectedPeriodId = $requestData[$this->alias()]['academic_period_id'];
+            if (isset($requestData) && isset($requestData[$this->getAlias()]) && array_key_exists('academic_period_id', $requestData[$this->getAlias()])) {
+                $selectedPeriodId = $requestData[$this->getAlias()]['academic_period_id'];
             } else {
                 $selectedPeriodId = $this->AcademicPeriods->getCurrent();
             }
@@ -424,7 +441,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
             return $attr;
         } elseif ($action == 'edit') {
             //POCOR-8254 start
-            $scheduleId = $this->paramsDecode($request->params['pass'][1])['id'];
+            $scheduleId = $this->paramsDecode($request->getAttribute('params')['pass'][1])['id'];
             $InstitutionShiftId = $ScheduleIntervals->find()
                                     ->where(['id' => $scheduleId])
                                     ->first()->institution_shift_id;
@@ -472,9 +489,9 @@ class ScheduleIntervalsTable extends ControllerActionTable
     // Get Options
     public function getShiftOptions($academicPeriodId, $allShiftOption = false, $institutionId='')
     {
-        if($institutionId == '' && empty($institutionId)){
-            $institutionId = $this->Session->read('Institution.Institutions.id');
-        }
+        if($institutionId == null){
+            $institutionId = $this->getInstitutionID();
+           }
         
         $shiftOptions = $this->Shifts
             ->find('list', [
@@ -546,12 +563,13 @@ class ScheduleIntervalsTable extends ControllerActionTable
     //POCOR-8254
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
-        $timeslotList = $this->request['data']['ScheduleIntervals']['timeslots'];
-        $institutionSchedule = TableRegistry::get('institution_schedule_timeslots');
+        $timeslotList = $this->request->getData()['ScheduleIntervals']['timeslots'];
+        // $institutionSchedule = TableRegistry::get('institution_schedule_timeslots');
+        $tableLocator = new TableLocator();
+        $institutionSchedule = $tableLocator->get('institution_schedule_timeslots');
         $findRecord = $institutionSchedule->find()
             ->where(['institution_schedule_interval_id' => $entity->id])
             ->toArray();
-
         // Check if the number of records matches the number of timeslots
         if (count($findRecord) === count($timeslotList)) {
             foreach ($findRecord as $key => $value) {
@@ -562,7 +580,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
                 );
             }
         } else {
-            return false;
+            //return false;
         }
 
     }

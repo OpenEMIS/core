@@ -124,6 +124,9 @@ class StaffTabBehavior extends Behavior
                     $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString]);
                 }
         }
+        if($controllerName == "Directories") {
+            unset($tabElements['StaffCurriculars']);
+        }
         return $tabElements;
     }
 
@@ -210,6 +213,7 @@ class StaffTabBehavior extends Behavior
             $user = $Users->get($userID);
             $isStaff = $user->is_staff;
             $isStudent = $user->is_student;
+            $tabElements = [];
             if ($isStaff) {
                 $directoriesTabElements = [
                     'Employments' => ['text' => __('Employments')],
@@ -222,7 +226,7 @@ class StaffTabBehavior extends Behavior
                 $directoriesTabElements = [
                     'Employments' => ['text' => __('Employments')],
                     'Qualifications' => ['text' => __('Qualifications')],
-                    'Licenses' => ['text' => __('Licenses')],
+                    'StudentLicenses' => ['text' => __('Licenses')],
                 ];
             } else {
                 $directoriesTabElements = [
@@ -233,6 +237,10 @@ class StaffTabBehavior extends Behavior
             }
             $tabElements = array_merge($tabElements, $directoriesTabElements);
             foreach ($directoriesTabElements as $key => $tab) {
+                if($key == 'StudentLicenses'){
+                    $url = array_merge($staffUrl, ['action' => $key, '0' => 'index']);
+
+                } else 
                 if ($key != 'Employments') {
                     $url = array_merge($staffUrl, ['action' => 'Staff' . $key, '0' => 'index']);
 

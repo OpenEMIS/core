@@ -156,10 +156,7 @@ class LeaveTable extends ControllerActionTable
         //$tabElements = $this->controller->getCareerTabElements($options);
         $tabElements = $this->getCareerTabElements($options);
         $controllerName = $this->controller->getName();
-        $selectedAction = $this->getAlias();
-        if($controllerName == 'Profiles') {
-            $selectedAction = 'Staff'.$this->getAlias();
-        }
+        $selectedAction = 'Staff'.$this->getAlias();
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $selectedAction);
     }
@@ -510,6 +507,16 @@ class LeaveTable extends ControllerActionTable
         }
     }
 
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action != 'add' && $action != 'edit'){
+            return $attr;
+        }
+        $attr['value'] = 0;
+        $attr['type'] = 'hidden';
+        return $attr;
+    }
+
     public function onGetInstitutionId(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
@@ -663,7 +670,7 @@ class LeaveTable extends ControllerActionTable
             }
             $StaffTable = TableRegistry::get('Institution.Staff');
             $institutionOptions = $StaffTable
-                ->find('list', ['keyField' => 'Institutions.id', 'valueField' => 'Institutions.name'])
+                ->find('list', ['keyField' => 'institution.id', 'valueField' => 'institution.name'])
                 ->select([
                     $this->Institutions->aliasField('id'),
                     $this->Institutions->aliasField('name')

@@ -249,7 +249,7 @@ class StaffController extends AppController
     
     public function StaffLeave()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Leave']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffLeave']);
     }
 
     // health
@@ -385,6 +385,9 @@ class StaffController extends AppController
         // POCOR-8115;
         // institution_id should always be in query string, if not, die as an error
         $institution_id = $this->getQueryString('institution_id');
+        if(empty($institution_id)) {
+            $institution_id = $this->request->getQuery('institution_id');
+        }
         if (!$institution_id) {
             $session = $this->request->getSession();
             return $_SESSION;
@@ -450,7 +453,10 @@ class StaffController extends AppController
      */
     private function getStaffId()
     {
-        $userId = $this->getQueryString('staff_id');
+        $userId = $this->getQueryString('staff_id'); 
+        if(empty($userId)) {
+            $userId = $this->request->getQuery('user_id');
+        }
         if (!$userId) {
             $userId = $this->getQueryString('user_id');
         }
@@ -591,8 +597,8 @@ class StaffController extends AppController
                 $encodedInstitutionId]);
         $action = $this->request->getAttribute('params')['action'];
         $header = __('Staff');
-
-        if ($action == 'index') {
+ 
+        if ($action == 'index') {   
         } else if ($this->getStaffId() || $action == 'view' || $action == 'edit') {
             // add the staff name to the header
             $id = $this->getQueryString('id');
@@ -643,7 +649,7 @@ class StaffController extends AppController
             //POCOR-5890 ends
             $this->Navigation->addCrumb($model->getHeader($alias));
             $header = $header . ' - ' . $model->getHeader($alias);
-
+            
             // $params = $this->request->params;
             $this->set('contentHeader', $header);
 
