@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
@@ -36,6 +36,7 @@ class StudentPromotionTable extends AppTable
 
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
         $this->addBehavior('Institution.ClassStudents');
+        $this->addBehavior('ControllerAction.QueryString');
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -462,7 +463,7 @@ class StudentPromotionTable extends AppTable
                                                     $InstitutionClassesTable->aliasField('id'),
                                                     $InstitutionClassesTable->aliasField('name')
                                                 ])
-                                                ->leftJoin([$InstitutionClassGrades->alias() => $InstitutionClassGrades->table()],[
+                                                ->leftJoin([$InstitutionClassGrades->getAlias() => $InstitutionClassGrades->getTable()],[
                                                   $InstitutionClassGrades->aliasField('institution_class_id = ') . $InstitutionClassesTable->aliasField('id')
                                                 ])
                                                 ->where([
@@ -508,7 +509,7 @@ class StudentPromotionTable extends AppTable
                             foreach ($students as &$student) {
                                 $student['next_institution_class_id'] = (!empty($selectedNextClass)) ? $selectedNextClass : '';
                             }
-                            $this->request->data[$this->alias()]['students'] = $students;
+                            $this->request->getData()[$this->getAlias()]['students'] = $students;
                         }
                     }
                 }
@@ -624,13 +625,13 @@ class StudentPromotionTable extends AppTable
             $EducationProgrammeResult = $EducationGrades->find()
                 ->select(["same_grade_promotion"=>'EducationProgrammes.same_grade_promotion'])
                 ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
-                ->LeftJoin([$InstitutionGrades->alias() => $InstitutionGrades->table()], [
+                ->LeftJoin([$InstitutionGrades->getAlias() => $InstitutionGrades->getTable()], [
                     $EducationGrades->aliasField('id') . ' = ' . $InstitutionGrades->aliasField('education_grade_id')
                 ])
                 ->where([
-                    'EducationSystems.academic_period_id' => $entity->from_academic_period_id,
+                    'EducationSystems.academic_period_id IS' => $entity->from_academic_period_id,
                     $InstitutionGrades->aliasField('institution_id') => $institutionId,
-                    $EducationGrades->aliasField('id')=> $educationGradeId
+                    $EducationGrades->aliasField('id IS')=> $educationGradeId
                     
                 ])->first();
             //POCOR-7715 end
@@ -835,6 +836,10 @@ class StudentPromotionTable extends AppTable
     public function onUpdateFieldStudents(Event $event, array $attr, $action, ServerRequest $request)
     {
         $institutionId = $this->getInstitutionID();
+        if(empty($institutionId)) {
+            $encodedQueryParams = $this->request->getParam('pass')[1];
+            $institutionId = $this->paramsDecode($encodedQueryParams)['institution_id'];
+        }
         $currentData = null;
         $showNextClass = false;
 
@@ -966,7 +971,7 @@ class StudentPromotionTable extends AppTable
                                                     $InstitutionClassesTable->aliasField('id'),
                                                     $InstitutionClassesTable->aliasField('name')
                                                 ])
-                                                ->leftJoin([$InstitutionClassGrades->alias() => $InstitutionClassGrades->table()],[
+                                                ->leftJoin([$InstitutionClassGrades->getAlias() => $InstitutionClassGrades->getTable()],[
                                                   $InstitutionClassGrades->aliasField('institution_class_id = ') . $InstitutionClassesTable->aliasField('id')
                                                 ])
                                                 ->where([
@@ -1039,7 +1044,6 @@ class StudentPromotionTable extends AppTable
                 $this->Alert->warning($this->aliasField('noData'));
             }*/
         }
-
         if (empty($nextClasses)) {
             $nextClassOptions = ['' => $this->getMessage('general.select.noOptions')];
         } else {
@@ -1052,13 +1056,12 @@ class StudentPromotionTable extends AppTable
         $attr['classOptions'] = $this->institutionClasses;
         $attr['nextClassOptions'] = $nextClassOptions;
         $attr['displayNextClassColumn'] = $showNextClass;
-
         return $attr;
     }
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
-        $params = $this->ControllerAction->getQueryString();
+        $params = $this->getQueryString();
         $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
         switch ($action) {
             case 'add':
@@ -1108,7 +1111,7 @@ class StudentPromotionTable extends AppTable
                 if (array_key_exists($this->getAlias(), $data)) {
                     $selectedStudent = false;
                     if (array_key_exists('students', $data[$this->getAlias()])) {
-                        foreach ($data[$this->alias()]['students'] as $key => $value) {
+                        foreach ($data[$this->getAlias()]['students'] as $key => $value) {
                             if ($value['selected'] != 0) {
                                 $selectedStudent = true;
                                 break;
@@ -1179,21 +1182,21 @@ class StudentPromotionTable extends AppTable
         $institutionId = $this->institutionId;
         $saveAsDraft = !is_null($this->request->getData('submit')) && $this->request->getData('submit') == 'draft' ? true : false;
 
-        if (array_key_exists('from_academic_period_id', $data[$this-getAlias()])) {
-            $fromAcademicPeriod = $data[$this-getAlias()]['from_academic_period_id'];
+        if (array_key_exists('from_academic_period_id', $data[$this->getAlias()])) {
+            $fromAcademicPeriod = $data[$this->getAlias()]['from_academic_period_id'];
         }
-        if (array_key_exists('grade_to_promote', $data[$this-getAlias()])) {
-            $currentGrade = $data[$this-getAlias()]['grade_to_promote'];
+        if (array_key_exists('grade_to_promote', $data[$this->getAlias()])) {
+            $currentGrade = $data[$this->getAlias()]['grade_to_promote'];
         }
 
-        if (array_key_exists('next_academic_period_id', $data[$this-getAlias()])) {
-            $nextAcademicPeriodId = $data[$this-getAlias()]['next_academic_period_id'];
+        if (array_key_exists('next_academic_period_id', $data[$this->getAlias()])) {
+            $nextAcademicPeriodId = $data[$this->getAlias()]['next_academic_period_id'];
         }
-        if (array_key_exists('education_grade_id', $data[$this-getAlias()])) {
-            $nextEducationGradeId = $data[$this-getAlias()]['education_grade_id'];
+        if (array_key_exists('education_grade_id', $data[$this->getAlias()])) {
+            $nextEducationGradeId = $data[$this->getAlias()]['education_grade_id'];
         }
-        if (array_key_exists('student_status_id', $data[$this-getAlias()])) {
-            $statusToUpdate = $data[$this-getAlias()]['student_status_id'];
+        if (array_key_exists('student_status_id', $data[$this->getAlias()])) {
+            $statusToUpdate = $data[$this->getAlias()]['student_status_id'];
         }
         if ($statusToUpdate == $studentStatuses['REPEATED']) {
             $gradeId = $this->Session->read('grade_id');
@@ -1272,7 +1275,6 @@ class StudentPromotionTable extends AppTable
                                     //registry the Institution.Students so it will call the afterSave in it.
                                     $InstitutionStudents = TableRegistry::get('Institution.Students');
                                     if ($InstitutionStudents->save($entity)) {
-
                                         $this->Alert->success($successMessage, ['reset' => true]);
                                     } else {
                                         $this->log($entity->getErrors(), 'debug');
@@ -1386,7 +1388,6 @@ class StudentPromotionTable extends AppTable
                     $currentData = $currentData->getArrayCopy();
                 }
                 $currentEntity = $this->patchEntity($currentEntity, $currentData, []);
-               // echo "<pre>";print_r($currentEntity);die('ppkk');
                 return $this->savePromotion($currentEntity, new ArrayObject($currentData));
             }
             /*POCOR-6566 starts*/
@@ -1403,15 +1404,14 @@ class StudentPromotionTable extends AppTable
 
         $this->ControllerAction->renderView('/ControllerAction/edit');
     }
-
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
         $params = $this->ControllerAction->getQueryString();
         $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
-        $url = [];
         switch ($this->action) {
             case 'add':
                 $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Next');
+                $cancelButton = $buttons[1];
                 break;
 
             case 'reconfirm':
@@ -1421,37 +1421,32 @@ class StudentPromotionTable extends AppTable
 
                 $saveAsDraftButton['attr']['value'] = 'draft';
                 $saveAsDraftButton['name'] = '<i class="fa fa-check"></i> ' . __('Save as Draft');
-
                 $confirmButton['name'] = '<i class="fa fa-check"></i> ' . __('Confirm');
-                // Construct URL parameters for the cancel button
-                $url = [
+                $urlCancel = [
                     'plugin' => 'Institution',
                     'controller' => 'Institutions',
-                    'action' => 'add',
-                    '0' => $encodedQueryParams
+                    'action' => 'Promotion',
+                    '0' => 'add',
+                    '1' => $encodedQueryParams
                 ];
+                // $cancelUrl = $this->ControllerAction->url($urlCancel);
+                // $cancelUrl = array_diff_key($cancelUrl, $this->request->getQuery());
+                $cancelButton['url'] = $urlCancel;
 
-                $cancelUrl = $this->ControllerAction->url($url);
-                $cancelUrl = array_diff_key($cancelUrl, $this->request->getQuery());
-                $cancelButton['url'] = $cancelUrl;
                 $sessionKey = $this->getRegistryAlias() . '.confirm';
                 if ($this->Session->check($sessionKey)) {
                     $currentData = $this->Session->read($sessionKey);
                     $studentStatusId = $currentData->student_status_id;
 
                     if (in_array($studentStatusId, [$this->statuses['PROMOTED'], $this->statuses['REPEATED'], $this->statuses['GRADUATED']])) {
-
                         $buttons[0] = $saveAsDraftButton;
                         $buttons[1] = $confirmButton;
                         $buttons[2] = $cancelButton;
                     } else {
                         $buttons[0] = $confirmButton;
-                       // $buttons[0]['url']['1'] = $encodedQueryParams;
                         $buttons[1] = $cancelButton;
-                        $buttons[1]['url']['1'] = $encodedQueryParams;
                     }
                 }
-
                 break;
 
             default:
@@ -1624,5 +1619,6 @@ class StudentPromotionTable extends AppTable
                     $Webhooks = TableRegistry::get('Webhook.Webhooks');
                     $Webhooks->triggerShell('class_update', ['username' => $username], $body);
     }
+
     
 }
