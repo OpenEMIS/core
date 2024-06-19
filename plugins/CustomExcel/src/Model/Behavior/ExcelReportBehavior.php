@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
@@ -132,7 +132,7 @@ class ExcelReportBehavior extends Behavior
             Log::write('debug', 'ExcelReportBehavior1 >>> filepath2: ');
             $this->saveFile($objSpreadsheet, $temppath, $format, $params['student_id'],$params['report_card_id']);
         }
-		
+        
         if ($extra->offsetExists('temp_logo')) {
             // delete temporary logo
             $this->deleteFile($extra['temp_logo']);
@@ -150,20 +150,20 @@ class ExcelReportBehavior extends Behavior
         $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateAfterGenerate', [$params, $extra], $this);
 
         if (!empty($params['student_id'])) {
-			$pdfFilePath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $this->getConfig('filename') . '_' . $params['student_id'].'.txt';
+            $pdfFilePath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $this->getConfig('filename') . '_' . $params['student_id'].'.txt';
             $pdfFileContent = file_get_contents($pdfFilePath);
-			
-			$StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
-			// save Pdf file
-			$StudentsReportCards->updateAll([
-				'file_content_pdf' => $pdfFileContent,
+            
+            $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+            // save Pdf file
+            $StudentsReportCards->updateAll([
+                'file_content_pdf' => $pdfFileContent,
                 'status'=>3//POCOR-7530
-			], $params);
-			
-			$this->deleteFile($pdfFilePath);
+            ], $params);
+            
+            $this->deleteFile($pdfFilePath);
         }
-		
-		if ($this->getConfig('download')) {
+        
+        if ($this->getConfig('download')) {
             $tempfile = new File($temppath);
             $tempinfo = $tempfile->info();
             $tempcontent = $tempfile->read();
@@ -387,10 +387,10 @@ class ExcelReportBehavior extends Behavior
         if ($format == 'pdf') {
             $this->savePDF($objSpreadsheet, $filepath, $student_id, $report_card_id);
         } else {
-			// pdf
-			if(!empty($student_id)) {
-				$this->savePDF($objSpreadsheet, $filepath, $student_id, $report_card_id);
-			}
+            // pdf
+            if(!empty($student_id)) {
+                $this->savePDF($objSpreadsheet, $filepath, $student_id, $report_card_id);
+            }
             // xlsx
             $objWriter->save($filepath);
         }
@@ -1045,7 +1045,7 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    public function table($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra): table
+    public function table($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra): Table
     {
         $rowValue = $attr['rowValue'];
         $columnIndex = $attr['columnIndex'];

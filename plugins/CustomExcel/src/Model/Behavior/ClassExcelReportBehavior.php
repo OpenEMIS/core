@@ -57,7 +57,7 @@ class ClassExcelReportBehavior extends Behavior
         'pdf' => 'Mpdf'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $model = $this->_table;
@@ -71,7 +71,7 @@ class ClassExcelReportBehavior extends Behavior
         new Folder($subfolder, true, 0777);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onRenderExcelTemplate'] = 'onRenderExcelTemplate';
@@ -127,9 +127,9 @@ class ClassExcelReportBehavior extends Behavior
         $this->generateExcel($objSpreadsheet, $extra);
 
         Log::write('debug', 'ClassExcelReportBehavior >>> renderExcelTemplate');
-		
-	    $this->saveFile($objSpreadsheet, $temppath, $format, $params['institution_id']);
-		
+        
+        $this->saveFile($objSpreadsheet, $temppath, $format, $params['institution_id']);
+        
         if ($extra->offsetExists('temp_logo')) {
             // delete temporary logo
             $this->deleteFile($extra['temp_logo']);
@@ -148,19 +148,19 @@ class ClassExcelReportBehavior extends Behavior
 
         if (!empty($params['institution_id'])) {
             unset($params['area_id']);// POCOR-7838
-			$pdfFilePath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $this->getConfig('filename') . '_' . $params['institution_id'].'.txt';
+            $pdfFilePath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $this->getConfig('filename') . '_' . $params['institution_id'].'.txt';
             $pdfFileContent = file_get_contents($pdfFilePath);
-			
-			$ClassProfiles = TableRegistry::get('Institution.ClassProfiles');
+            
+            $ClassProfiles = TableRegistry::get('Institution.ClassProfiles');
             // save Pdf file
-			$ClassProfiles->updateAll([
-				'file_content_pdf' => $pdfFileContent
-			], $params);
-			
-			$this->deleteFile($pdfFilePath);
+            $ClassProfiles->updateAll([
+                'file_content_pdf' => $pdfFileContent
+            ], $params);
+            
+            $this->deleteFile($pdfFilePath);
         }
-		
-		if ($this->getConfig('download')) {
+        
+        if ($this->getConfig('download')) {
             $tempfile = new File($temppath);
             $tempinfo = $tempfile->info();
             $tempcontent = $tempfile->read();
@@ -385,10 +385,10 @@ class ClassExcelReportBehavior extends Behavior
         if ($format == 'pdf') {
             $this->savePDF($objSpreadsheet, $filepath, $institution_id);
         } else {
-			// pdf
-			if(!empty($institution_id)) {
-				$this->savePDF($objSpreadsheet, $filepath, $institution_id);
-			}
+            // pdf
+            if(!empty($institution_id)) {
+                $this->savePDF($objSpreadsheet, $filepath, $institution_id);
+            }
             // xlsx
             $objWriter->save($filepath);
         }
