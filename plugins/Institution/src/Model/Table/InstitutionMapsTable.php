@@ -67,7 +67,7 @@ class InstitutionMapsTable extends ControllerActionTable
                     'message' => __('Latitude length is incomplete')
                 ]
             ])
-			->add('longitude', [
+            ->add('longitude', [
                 'ruleForLongitudeLength' => [
                     'rule' => ['forLongitudeLength'],
                     'message' => __('Longitude length is incomplete')
@@ -144,24 +144,24 @@ class InstitutionMapsTable extends ControllerActionTable
         }
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Map','General');
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
+        $is_manual_exist = $this->getManualUrl('Institutions','Map','General');
+        if(!empty($is_manual_exist)){
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target'=>'_blank'
+            ];
 
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
@@ -208,8 +208,13 @@ class InstitutionMapsTable extends ControllerActionTable
         }
     }
     //POCOR-8314
-    public function beforeDelete(Event $event, Entity $entity)
+    public function onBeforeDelete(Event $event, $entity, $options)
     {
+        $encodedQueryParams = $this->ControllerAction->getQueryString();
+        if(empty($params)){
+            $encodedQueryParams = $this->getQueryString();
+        }
+       $encodedQueryString = $this->paramsEncode($encodedQueryParams);
         $institutionId = $entity->id;
         $latitude = $entity->latitude;
         $longitude = $entity->longitude;
@@ -223,22 +228,27 @@ class InstitutionMapsTable extends ControllerActionTable
         if ($checkRecord) {
             $message = __('Delete operation For Map is Successfully Recorded');
             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-            
             // Use Router to get the referer
-            $url = Router::getRequest()->referer();
+            $url = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'InstitutionMaps',
+                '0' => 'view',
+                '1' => $encodedQueryString];
             $event->stopPropagation();
             return $this->controller->redirect($url);
         }else{
             $message = __('No Map Added for this Institution');
             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-            
-            // Use Router to get the referer
-            $url = Router::getRequest()->referer();
+            $url = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'InstitutionMaps',
+                '0' => 'view',
+                '1' => $encodedQueryString];
             $event->stopPropagation();
             return $this->controller->redirect($url);
         }
     }
-
-
 }
 
