@@ -8,6 +8,7 @@ use App\Services\MealService;
 use App\Http\Requests\MealStudentListRequest;
 use App\Http\Requests\StudentMealImportRequest;
 use App\Http\Requests\StudentMealExportRequest;
+use App\Http\Requests\StudentMealImportTemplateRequest;
 use App\Exports\StudentMealExport;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -244,6 +245,8 @@ class MealController extends Controller
                     return $this->sendErrorResponse('Not a valid heading.');
                 } elseif(isset($data) && $data == 5){
                     return $this->sendErrorResponse('Institution is not linked with Institution Class.');
+                } elseif(isset($data) && $data == 6){
+                    return $this->sendErrorResponse('No current Academic Period is set in DB.');
                 } else {
                     return $this->sendErrorResponse('Student meals not imported.');
                 }
@@ -266,7 +269,7 @@ class MealController extends Controller
     {
         try {
             $params = $request->all();
-            $str = strtotime(date('Y-m-d'));
+            $str = time();
             $fileName = 'StudentMeals_'.$str.'.xlsx';
             return Excel::download(new StudentMealExport($params), $fileName);
             
@@ -277,6 +280,25 @@ class MealController extends Controller
             );
 
             return $this->sendErrorResponse('Failed to exported students meals from DB.');
+        }
+    }
+
+
+    public function getStudentMealImportTemplate(StudentMealImportTemplateRequest $request)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->mealService->getStudentMealImportTemplate($params);
+
+            return $this->sendSuccessResponse("Student meal import template data found.", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch student meals import template data from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch student meals import template data from DB.');
         }
     }
 

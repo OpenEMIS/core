@@ -479,6 +479,7 @@ Route::group(
         //POCOR-8438 start...
         Route::post('/institutions/students/meals/import', 'MealController@getStudentMealImport');
         Route::get('/institutions/students/meals/export', 'MealController@getStudentMealExport');
+        Route::get('/institutions/students/meals/import/template', 'MealController@getStudentMealImportTemplate');
         //POCOR-8438 end...
     }
 );
