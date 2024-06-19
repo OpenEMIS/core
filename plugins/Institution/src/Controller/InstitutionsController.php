@@ -1353,12 +1353,12 @@ public function ClassReportCards()
             $institutionClassIds = $this->getInstitutionClasses($institutionId);
             $where = ['institution_id' => $institutionId];
             $whereClasses = ['institution_class_id IN' => $institutionClassIds];
-            $table_name = 'institution_class_attendance_records';
-            $_archive_1 = ArchiveConnections::hasArchiveRecords($table_name, $whereClasses);
-            $table_name = 'institution_student_absences';
-            $_archive_2 = ArchiveConnections::hasArchiveRecords($table_name, $where);
-            $table_name = 'institution_student_absence_details';
-            $_archive_3 = ArchiveConnections::hasArchiveRecords($table_name, $where);
+            // $table_name = 'institution_class_attendance_records';
+            // $_archive_1 = ArchiveConnections::hasArchiveRecords($table_name, $whereClasses);
+            // $table_name = 'institution_student_absences';
+            // $_archive_2 = ArchiveConnections::hasArchiveRecords($table_name, $where);
+            // $table_name = 'institution_student_absence_details';
+            // $_archive_3 = ArchiveConnections::hasArchiveRecords($table_name, $where);
             // POCOR-7895: end
             $excelUrl = [
                 'plugin' => 'Institution',
@@ -1443,6 +1443,7 @@ public function ClassReportCards()
             $archiveUrl['plugin'] = 'Institution';
             $archiveUrl['controller'] = 'Institutions';
             $archiveUrl['action'] = 'InstitutionStudentAbsencesArchived';
+            $archiveUrl[] = $this->ControllerAction->paramsEncode(['institution_id' => $institutionId]);
             $_archive = $_excel = 1;
 
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
