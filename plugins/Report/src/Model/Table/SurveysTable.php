@@ -106,7 +106,7 @@ class SurveysTable extends AppTable
         }
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
@@ -541,7 +541,7 @@ class SurveysTable extends AppTable
         ];
     }
 
-    public function onUpdateFieldSurveyForm(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSurveyForm(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             if (isset($this->request->getData($this->getAlias())['feature'])) {
@@ -587,7 +587,7 @@ class SurveysTable extends AppTable
         }
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $feature = $this->request->getData($this->getAlias())['feature'];
