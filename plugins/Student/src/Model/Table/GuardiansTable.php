@@ -256,7 +256,7 @@ class GuardiansTable extends ControllerActionTable
             }else{
                 $queryString = base64_encode(json_encode($dataArray));
                 $event->stopPropagation();
-                return $this->controller->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Addguardian', 'queryString'=> trim($queryString)]);
+                return $this->controller->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Addguardian', $queryString]);
             }
             
             /*

@@ -30,21 +30,14 @@ trait TypeConverterTrait
      * @return array list containing converted value and internal type
      * @pslam-return array{mixed, int}
      */
-    public function cast($value, $type = 'string'): array
+    public function cast($value, $type)
     {
         if (is_string($type)) {
-            $type = TypeFactory::build($type);
+            $type = Type::build($type);
         }
         if ($type instanceof TypeInterface) {
-            $server_url = $_SERVER['REQUEST_URI'];
-            $server_url = explode("/", $server_url);
-            if($server_url[1] == 'Securities' && $server_url[2] == 'Permissions'){
-                $value = $type->toDatabase((string)$value, $this->_driver);
-                $type = $type->toStatement($value, $this->_driver);
-            }else{
-                $value = $type->toDatabase($value, $this->_driver);
-                $type = $type->toStatement($value, $this->_driver);
-            }
+            $value = $type->toDatabase($value, $this->_driver);
+            $type = $type->toStatement($value, $this->_driver);
         }
 
         return [$value, $type];
