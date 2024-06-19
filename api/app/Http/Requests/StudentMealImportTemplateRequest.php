@@ -8,7 +8,7 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 
-class StudentMealImportRequest extends FormRequest
+class StudentMealImportTemplateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -29,8 +29,7 @@ class StudentMealImportRequest extends FormRequest
     {
         return [
             'institution_class_id' => 'required|int',
-            'institution_id' => 'required|int',
-            'file' => 'required|file'
+            'institution_id' => 'required|int'
         ];
     }
 

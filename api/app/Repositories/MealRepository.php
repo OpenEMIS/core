@@ -22,6 +22,7 @@ use App\Models\SecurityUsers;
 use App\Models\InstitutionStudent;
 use App\Models\InstitutionMealStudents;
 use App\Models\InstitutionClasses;
+use App\Models\AcademicPeriod;
 use Carbon\Carbon;
 use JWTAuth;
 use File;
@@ -493,6 +494,10 @@ class MealRepository extends Controller
                 return 5; //Institution is not linked with Institution Class...
             }
 
+            $currentAcademicPeriod = AcademicPeriod::where('current', 1)->first();
+            if(!$currentAcademicPeriod){
+                return 6; //No current Academic Period is set in DB...
+            }
 
             $rowsCount = count($results[0]) - 2;
             
@@ -500,7 +505,7 @@ class MealRepository extends Controller
                 return 5; //File can not have more than 2000 records.
             }
 
-            $import = $this->importStudentMeals($results,  $params);
+            $import = $this->importStudentMeals($results,  $params, $currentAcademicPeriod);
             return $import;
 
         } catch (\Exception $e) {
@@ -514,7 +519,7 @@ class MealRepository extends Controller
     }
 
 
-    public function importStudentMeals($results,  $params)
+    public function importStudentMeals($results,  $params, $currentAcademicPeriod)
     {   
         DB::beginTransaction();
         try {
@@ -539,6 +544,14 @@ class MealRepository extends Controller
                     if(!preg_match('/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/', $row[0])){
                         $label = $results[0][1][0];
                         $errors[$label] = 'Invalid date format.';
+                    } else {
+                        $date = str_replace('/', '-', $row[0]);
+                        $date = date('Y-m-d', strtotime($date));
+                        
+                        if($date < $currentAcademicPeriod->start_date || $date > $currentAcademicPeriod->end_date){
+                            $label = $results[0][1][0];
+                            $errors[$label] = 'Invalid date value. Date should be between '.$currentAcademicPeriod->start_date.' and '.$currentAcademicPeriod->end_date.' for current academic period.';
+                        }
                     }
                 }
 
@@ -734,6 +747,54 @@ class MealRepository extends Controller
         } catch (\Exception $e){
             DB::rollBack();
             return false;
+        }
+    }
+
+
+    public function getStudentMealImportTemplate($params)
+    {
+        try {
+            $institution_class_id = $params['institution_class_id'];
+            $institution_id = $params['institution_id'];
+
+            $outputData['Data']['header'] = [
+                "Date ( DD/MM/YYYY )",
+                "OpenEMIS ID",
+                "Meal Programme Code",
+                "Meal Received Code",
+                "Meal Benefit Name",
+                "Comment",
+            ];
+
+            $outputData['References'] = [];
+
+            $outputData['References']['OpenEMIS ID']['header'] = ['Name', 'OpenEMIS ID'];
+            $getClassStudents = getClassStudents($institution_id, $institution_class_id);
+            $outputData['References']['OpenEMIS ID']['data'] = $getClassStudents;
+
+
+            $outputData['References']['Meal Programmes']['header'] = ['Name', 'Code'];
+            $getMealProgrammes = getMealProgrammes();
+            $outputData['References']['Meal Programmes']['data'] = $getMealProgrammes;
+
+
+            $outputData['References']['Meal Received']['header'] = ['Name', 'Code'];
+            $getMealReceived = getMealReceived();
+            $outputData['References']['Meal Received']['data'] = $getMealReceived;
+
+
+            $outputData['References']['Meal Benefit']['header'] = ['Name', 'Id'];
+            $getMealBenefits = getMealBenefits();
+            $outputData['References']['Meal Benefit']['data'] = $getMealBenefits;
+
+            return $outputData;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch student meals import template data from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to fetch student meals import template data from DB.');
         }
     }
     //For POCOR-8348 End...
