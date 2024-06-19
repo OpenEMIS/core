@@ -21,14 +21,17 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
         parent::initialize($config);
 	
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->addBehavior('ContactExcel', [ //POCOR-6889
-            'pages' => ['index']
-        ]);
+        // $this->addBehavior('ContactExcel', [ //POCOR-6889
+        //     'pages' => ['index']
+        // ]);
+        $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('Institution.InstitutionTab');       
     }
 
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
 
         return $validator
             ->allowEmpty('telephone')

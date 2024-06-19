@@ -663,6 +663,18 @@ class AttendanceRepository extends Controller
 
             //$list['total'] = $total;
 
+            //For POCOR-8291 start...
+            $insId = '{"id":'.$institutionId.'}';
+            $encodedInstitutionID = base64_encode($insId);
+            $encodedInstitutionID = rtrim($encodedInstitutionID, "=");
+
+            $url = [
+                'import' => '/Institution/Institutions/'.$encodedInstitutionID.'.cake_session_id/ImportStaffAttendances/add',
+                'archive' => '/Institution/Institutions/'.$encodedInstitutionID.'.cake_session_id/StaffAttendancesArchived/index'
+            ];
+            $data['url'] = $url;
+            //For POCOR-8291 end...
+
             return $data;
             
         } catch (\Exception $e) {
@@ -1896,7 +1908,23 @@ class AttendanceRepository extends Controller
             }
 
             $resp['data'] = $list;
+
+            //For POCOR-8290 start...
+            $array = '{"id":'.$institutionId.'}';
+            $encodedArray = base64_encode($array);
+            $encodedArray = rtrim($encodedArray, "=");
+            $urlData = [
+                'export' => 'Institution/Institutions/'.$encodedArray.'.cake_session_id/StudentAttendances/excel?institution_id='.$institutionId.'&institution_class_id='.$institutionClassId.'&education_grade_id='.$educationGradeId.'&academic_period_id='.$academicPeriodId.'&day_id='.$day.'&attendance_period_id='.$attendancePeriodId.'&week_start_day='.$weekStartDay.'&week_end_day='.$weekEndDay.'&subject_id='.$subjectId.'&week_id='.$weekId,
+                'importAbsences' => 'Institution/Institutions/'.$encodedArray.'.cake_session_id/ImportStudentAttendances/add',
+                'archive' => 'Institution/Institutions/'.$encodedArray.'.cake_session_id/InstitutionStudentAbsencesArchived/index'
+            ];
+
+            //For POCOR-8290 end...
             
+            $total = count($list);
+            $resp['url'] = $urlData;
+            
+
             return $resp;
             
         } catch (\Exception $e) {

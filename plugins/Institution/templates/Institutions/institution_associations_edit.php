@@ -7,6 +7,9 @@
 <?php
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
+$paramsQueryStringFirst = $this->request->getAttribute('params')['pass'][1];
+$paramsQueryStringSecond = $this->request->getAttribute('params')['pass'][2];
+$institutionId = $this->ControllerAction->paramsDecode($paramsQueryStringFirst)['institution_id'];
 ?>
 <style type='text/css'>
     .ag-grid-duration {
@@ -78,5 +81,11 @@ $this->start('panelBody');
     </div>
 </form>
 <?php
+echo "<script>
+
+// Set values in local storage
+localStorage.setItem('queryString1', '" . $paramsQueryStringFirst . "');
+localStorage.setItem('queryString2', '" . $paramsQueryStringSecond . "');
+</script>";
 $this->end();
 ?>
