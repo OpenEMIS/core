@@ -478,18 +478,22 @@ class StaffController extends AppController
     public function getCareerTabElements($options = [])
     {
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-        $userId = $this->getStaffId();
-        $institutionId = $this->getInstitutionId();
-        if ($userId) {
-            $options['user_id'] = $userId;
-        }
-        if ($institutionId) {
-            $options['institution_id'] = $institutionId;
-        }
-        
-        $tabElements = TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
-        
+        $this->loadModel('Staff.Staff');
+        $tabElements = $this->Staff->getCareerTabElements($options, $this);
         return $this->TabPermission->checkTabPermission($tabElements);
+        // $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+        // $userId = $this->getStaffId();
+        // $institutionId = $this->getInstitutionId();
+        // if ($userId) {
+        //     $options['user_id'] = $userId;
+        // }
+        // if ($institutionId) {
+        //     $options['institution_id'] = $institutionId;
+        // }
+        
+        // $tabElements = TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
+        
+        // return $this->TabPermission->checkTabPermission($tabElements);
     }
     // Special Needs - End
     // End
@@ -863,7 +867,7 @@ class StaffController extends AppController
                 $staffName = $staff->first_name; // Accessing the first_name property of the retrieved staff record
 
                 $header = $staffName . ' - ' .$curricular_label_Data->name;
-                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__($curricular_label_Data->name));
                 $this->set('contentHeader', $header);
             }
