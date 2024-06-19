@@ -1888,7 +1888,7 @@ class StaffTable extends ControllerActionTable
         $staff = $this->Users->get($entity->staff_id);
         $entity->showDeletedValueAs = $staff->name_with_id;
 
-        $extra['excludedModels'] = [$this->StaffPositionProfiles->alias(), $this->StaffTransferOut->alias(), $this->StaffRelease->alias()];
+        $extra['excludedModels'] = [$this->StaffPositionProfiles->getAlias(), $this->StaffTransferOut->getAlias(), $this->StaffRelease->getAlias()];
 
         // staff transfer out
         $InstitutionStaffTransfers = TableRegistry::get('Institution.InstitutionStaffTransfers');
@@ -2251,7 +2251,7 @@ class StaffTable extends ControllerActionTable
             $securityGroupId = $this->Institutions->get($institutionId)->security_group_id;
             $this->removeStaffRole($entity);
         } catch (InvalidPrimaryKeyException $ex) {
-            Log::write('error', __METHOD__ . ': ' . $this->Institutions->alias() . ' primary key not found (' . $institutionId . ')');
+            Log::write('error', __METHOD__ . ': ' . $this->Institutions->getAlias() . ' primary key not found (' . $institutionId . ')');
         }
 
         $body = array();
@@ -2403,7 +2403,7 @@ class StaffTable extends ControllerActionTable
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
         foreach ($conditions as $key => $value) {
-            $_conditions[$this->alias() . '.' . $key] = $value;
+            $_conditions[$this->getAlias() . '.' . $key] = $value;
         }
 
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -3328,13 +3328,13 @@ class StaffTable extends ControllerActionTable
                     $SecurityGroupUserTbl->aliasField('security_role_id'),
                 ])
                 ->leftJoin(
-                    [$SecurityGroupInstitutions->alias() => $SecurityGroupInstitutions->table()],
+                    [$SecurityGroupInstitutions->getAlias() => $SecurityGroupInstitutions->getTable()],
                     [
                         $SecurityGroupInstitutions->aliasField('institution_id = ') . $SecurityGroupTbl->aliasField('id')
                     ]
                 )
                 ->leftJoin(
-                    [$SecurityGroupUserTbl->alias() => $SecurityGroupUserTbl->table()],
+                    [$SecurityGroupUserTbl->getAlias() => $SecurityGroupUserTbl->getTable()],
                     [
                         $SecurityGroupUserTbl->aliasField('security_group_id = ') . $SecurityGroupInstitutions->aliasField('security_group_id')
                     ]
@@ -3600,7 +3600,7 @@ class StaffTable extends ControllerActionTable
         $staffId = $options['staff_id'];
         $institutionId = $options['institution_id'];
         //POCOR-7020
-        $institutionStaff = TableRegistry::get('institution_staff');
+        $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
         $staffRecord = $institutionStaff->find('all', ['conditions' => ['staff_id' => $staffId]])
             ->first();
         $staffStatusId = $staffRecord['staff_status_id'];
@@ -3680,7 +3680,7 @@ class StaffTable extends ControllerActionTable
                 $InstitutionStaffAttendances->aliasField('date'),
             ])
             ->leftJoin(
-                [$InstitutionStaffAttendances->alias() => $InstitutionStaffAttendances->table()],
+                [$InstitutionStaffAttendances->getAlias() => $InstitutionStaffAttendances->getTable()],
                 [
                     $InstitutionStaffAttendances->aliasField('staff_id = ') . $this->aliasField('staff_id'),
                     $InstitutionStaffAttendances->aliasField('institution_id = ') . $this->aliasField('institution_id'),
@@ -4452,7 +4452,7 @@ class StaffTable extends ControllerActionTable
         $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
         $staffShiftsData = $query
             ->leftJoin(
-                [$InstitutionStaffAttendances->alias() => $InstitutionStaffAttendances->table()],
+                [$InstitutionStaffAttendances->getAlias() => $InstitutionStaffAttendances->getTable()],
                 [
                     $InstitutionStaffAttendances->aliasField('staff_id = ') . $this->aliasField('id')
                 ])
