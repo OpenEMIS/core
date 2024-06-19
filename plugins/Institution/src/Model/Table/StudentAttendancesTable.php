@@ -43,7 +43,7 @@ class StudentAttendancesTable extends ControllerActionTable
         $this->belongsTo('NextInstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'next_institution_class_id']);
         $this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
         //$this->hasOne('StudentAbsencesPeriodDetails', ['className' => 'Institution.StudentAbsencesPeriodDetails']);institution_class_id
-        $this->addBehavior('Excel', [ //POCOR-6898 change Excel to ContactExcel Behaviour
+        $this->addBehavior('ContactExcel', [ //POCOR-6898 change Excel to ContactExcel Behaviour
             'excludes' => [
                 'start_date',
                 'end_date',
@@ -266,35 +266,34 @@ class StudentAttendancesTable extends ControllerActionTable
                                 'absence_type_id' => $entity->absence_type_id,
                                 'student_absence_reason_id' => $entity->student_absence_reason_id,
                                 'absence_type_code' => $entity->absence_type->code
-                            ];
-
-                            if (isset($this->request) && ('excel' === $this->request->pass[0])) {
-
+                            ];       
+                            if (isset($this->request) && ('excel' === $this->request->getAttribute('params')['pass'][0])) {   
                                 $StudentAbsenceReasons = TableRegistry::get('Institution.StudentAbsenceReasons');
-                                $studentAbsenceReason = $StudentAbsenceReasons
-                                    ->find()
-                                    ->select([
-                                        'name' => $StudentAbsenceReasons->aliasField('name')
-                                    ])
-                                    ->where(
-                                        [$StudentAbsenceReasons->aliasField('id = ') => $entity->student_absence_reason_id])->first();
-
-                                if (!empty($studentAbsenceReason)) {
-                                    $absenceReason['name'] = $studentAbsenceReason->name;
+                                if(isset($entity->student_absence_reason_id)){
+                                    $studentAbsenceReason = $StudentAbsenceReasons
+                                        ->find()
+                                        ->select([
+                                            'name' => $StudentAbsenceReasons->aliasField('name')
+                                        ])
+                                        ->where(
+                                            [$StudentAbsenceReasons->aliasField('id = ') => $entity->student_absence_reason_id])->first();
+                                    if (!empty($studentAbsenceReason)) {
+                                        $absenceReason['name'] = $studentAbsenceReason->name;
+                                    }
                                 }
-
                                 $AbsenceTypes = TableRegistry::get('Institution.AbsenceTypes');
-                                $absenceType = $AbsenceTypes
-                                    ->find()
-                                    ->select([
-                                        'name' => $AbsenceTypes->aliasField('name'),
-                                        'code' => $AbsenceTypes->aliasField('code')
-                                    ])
-                                    ->where([$AbsenceTypes->aliasField('id = ') => $entity->absence_type_id])->first();
-
-                                if (!empty($absenceType)) {
-                                    $absenceType['name'] = $absenceType->name;
-                                    $absenceType['code'] = $absenceType->code;
+                                if(isset($entity->absence_type_id)){
+                                    $absenceType = $AbsenceTypes
+                                        ->find()
+                                        ->select([
+                                            'name' => $AbsenceTypes->aliasField('name'),
+                                            'code' => $AbsenceTypes->aliasField('code')
+                                        ])
+                                        ->where([$AbsenceTypes->aliasField('id = ') => $entity->absence_type_id])->first();
+                                    if (!empty($absenceType)) {
+                                        $absenceType['name'] = $absenceType->name;
+                                        $absenceType['code'] = $absenceType->code;
+                                    }
                                 }
                             }
                         } else {
@@ -360,32 +359,30 @@ class StudentAttendancesTable extends ControllerActionTable
                         } else {
                             $row->is_NoClassScheduled = 0;
                         }
-                        // if (isset($this->request) && ('excel' === $this->request->pass[0])) {
+                        if (isset($this->request) && ('excel' === $this->request->getAttribute('params')['pass'][0])) {
 
-                        //     $row->attendance = '';
+                            $row->attendance = '';
 
-                        //     if ($row->is_NoClassScheduled == 1) {//POCOR-7929
-                        //         $row->attendance = 'No scheduled class';
-                        //     } else if (isset($data['absence_type_id']) && ($data['absence_type_id'] == $PRESENT)) {
-                        //         $row->attendance = 'Present';
-                        //     } else if (isset($data['absence_type_code']) && ($data['absence_type_code'] == 'EXCUSED' || $data['absence_type_code'] == 'UNEXCUSED')) {
-                        //         $row->attendance = 'Absent - ' . (isset($absenceType['name'])) ? $absenceType['name'] : '';
-                        //     } else if (isset($data['absence_type_code']) && $data['absence_type_code'] == 'LATE') {
-                        //         $row->attendance = 'Late';
-                        //     } else {
-                        //         $row->attendance = 'NOTMARKED';
-                        //     }
-
-                        //     $row->comment = $data['comment'];
-                        //     $row->student_absence_reasons = (isset($absenceReason['name'])) ? $absenceReason['name'] : NULL;
-                        //     $row->name = $row['user']['first_name'] . ' ' . $row['user']['last_name'];
-                        //     $row->class = $row['institution_class']['name'];
-                        //     $row->date = date("d/m/Y", strtotime($findDay));
-                        //     $row->StudentStatuses = $row['_matchingData']['StudentStatuses']['name'];
-                        //     $row->studentId = $row['student_id'];
-                        //     $row->test = 1;
-                        // }
-                        // echo "<pre>";print_r($row);die;
+                            if ($row->is_NoClassScheduled == 1) {//POCOR-7929
+                                $row->attendance = 'No scheduled class';
+                            } else if (isset($data['absence_type_id']) && ($data['absence_type_id'] == $PRESENT)) {
+                                $row->attendance = 'Present';
+                            } else if (isset($data['absence_type_code']) && ($data['absence_type_code'] == 'EXCUSED' || $data['absence_type_code'] == 'UNEXCUSED')) {
+                                $row->attendance = 'Absent - ' . (isset($absenceType['name'])) ? $absenceType['name'] : '';
+                            } else if (isset($data['absence_type_code']) && $data['absence_type_code'] == 'LATE') {
+                                $row->attendance = 'Late';
+                            } else {
+                                $row->attendance = 'NOTMARKED';
+                            }
+                            $row->comment = $data['comment'];
+                            $row->student_absence_reasons = (isset($absenceReason['name'])) ? $absenceReason['name'] : NULL;
+                            $row->name = $row['user']['first_name'] . ' ' . $row['user']['last_name'];
+                            $row->class = $row['institution_class']['name'];
+                            $row->date = date("d/m/Y", strtotime($findDay));
+                            $row->StudentStatuses = $row['_matchingData']['StudentStatuses']['name'];
+                            $row->studentId = $row['student_id'];
+                            $row->test = 1;
+                        }
                         return $row;
                     });
                 }
@@ -827,9 +824,7 @@ class StudentAttendancesTable extends ControllerActionTable
                 ->find()
                 ->select(
                     [
-                        'openemis_no' => 'Users.openemis_no',
-                        'name' => 'Users.first_name',
-                        'class' => 'InstitutionClasses.name',
+                        'openemis_no' => 'Users.openemis_no'
                     ]),
             'institutionId' => $institutionId,
             'classId' => $classId,
