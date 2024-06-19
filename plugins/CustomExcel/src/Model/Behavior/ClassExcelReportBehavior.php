@@ -57,7 +57,7 @@ class ClassExcelReportBehavior extends Behavior
         'pdf' => 'Mpdf'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $model = $this->_table;
@@ -71,7 +71,7 @@ class ClassExcelReportBehavior extends Behavior
         new Folder($subfolder, true, 0777);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onRenderExcelTemplate'] = 'onRenderExcelTemplate';
