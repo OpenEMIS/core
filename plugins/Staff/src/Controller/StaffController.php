@@ -1008,6 +1008,9 @@ class StaffController extends AppController
         $archiveUrl['plugin'] = 'Staff';
         $archiveUrl['controller'] = 'Staff';
         $archiveUrl['action'] = 'ArchivedAttendances';
+        $archiveUrl['0'] = 'index';
+        $queryString = $this->request->getAttribute('params')['pass'][1];
+        $archiveUrl['1'] = $queryString;
         $this->set('_archive', $_archive);
         $this->set('archiveUrl', Router::url($archiveUrl));
     }
