@@ -550,7 +550,8 @@ class SurveysTable extends AppTable
                 $todayDate = date('Y-m-d');
                 $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
                 if ($feature == $this->getRegistryAlias() || $feature == 'Report.SurveysReport') {
-                    $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
+                    // $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
+                    $SurveyStatusTable = TableRegistry::getTableLocator()->get('Survey.SurveyStatuses');
                     $surveyFormOptions = $this->SurveyForms
                                         ->find('list')
                                         ->leftJoin([$SurveyStatusTable->getAlias() => $SurveyStatusTable->getTable()], [
