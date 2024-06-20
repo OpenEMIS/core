@@ -30,7 +30,7 @@ class LocaleContentsLanguageTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $header = __(Inflector::humanize(Inflector::underscore($this->getAlias())));
-        $this->controller->set('contentHeader', $header);
+        $this->controller->set('contentHeader', 'Translations');
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
