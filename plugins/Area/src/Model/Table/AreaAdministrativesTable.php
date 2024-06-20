@@ -59,6 +59,7 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('code', 'ruleUniqueCode', [
                 'rule' => 'validateUnique',
@@ -533,7 +534,7 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if ($entity->dirty('is_main_country')) {
+        if ($entity->getDirty('is_main_country')) {
             if ($entity->is_main_country == 1) { //if set as main country
 
                 // update the rest of areas to non main country
@@ -557,5 +558,18 @@ class AreaAdministrativesTable extends ControllerActionTable
 
         $this->dispatchEventToModels('Model.AreaAdministrative.afterDelete', [$entity], $this, $listeners);    
     }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
 
 }
