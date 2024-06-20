@@ -2164,7 +2164,8 @@ class NavigationComponent extends Component
                     'Profiles.Comments',
                     'Profiles.Attachments',
                     'Profiles.UserActivities',
-                    'Profiles.Contacts'] // POCOR-6683
+                    'Profiles.Contacts',
+                    'Profiles.History'] // POCOR-6683
             ],
             'Profiles.Healths.index' => [
                 'title' => 'Health',
