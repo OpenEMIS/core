@@ -813,7 +813,8 @@ class StudentPromotionTable extends AppTable
                 }
             
                 $attr['type'] = 'select';
-                $attr['options'] = $options;
+                $attr['options'] = ['0' => '-- '.__('Select').' --'] + $options;
+
                 $attr['onChangeReload'] = 'changeToNextGrade';
             } else {
                 /*POCOR-6319 starts Repeated status than To Grade will be*/

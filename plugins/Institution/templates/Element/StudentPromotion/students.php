@@ -71,7 +71,7 @@
 														echo $this->Form->input("$fieldPrefix.next_institution_class_id", [
 															'options' => $nextClassOptions,
 															//'value' => [$obj->next_institution_class_id]//POCOR-8332
-															'value' => [$nextClassId]
+															'value' => [$getNextclassId]
 														]);
 
 													}
@@ -101,3 +101,16 @@
 		</div>
 	</div>
 <?php endif ?>
+
+<script>
+$(document).ready(function() {
+    $('#studentpromotion-education-grade-id option').each(function() {
+        if($(this).val() === '') {
+            $(this).hide();
+        }
+        if($(this).css('display') === 'none') {
+            $(this).remove();
+        }
+    });
+});
+</script>
