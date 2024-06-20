@@ -511,6 +511,19 @@ class StaffController extends AppController
         $historyUrl['plugin'] = 'Staff';
         $historyUrl['controller'] = 'Staff';
         $historyUrl['action'] = 'InstitutionStaffAttendanceActivities';
+        $historyUrl['0'] = 'index';
+        $queryString = $this->request->getAttribute('params')['pass'][1];
+        $historyUrl['1'] = $queryString;
+        //echo "<pre>"; print_r($queryString);
+        //die;
+        // $userId = $this->getStaffId();
+        // $institutionId = $this->getInstitutionId();
+        // if ($userId) {
+        //     $options['user_id'] = $userId;
+        // }
+        // if ($institutionId) {
+        //     $options['institution_id'] = $institutionId;
+        // }
         $this->set('historyUrl', Router::url($historyUrl));
         $this->set('_history', $_history);
     }
