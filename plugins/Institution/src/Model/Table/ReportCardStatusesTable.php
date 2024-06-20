@@ -125,12 +125,12 @@ class ReportCardStatusesTable extends ControllerActionTable
         if (!$reportExists) {
             return $buttons;
         }
-
         $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
         $params = [
             'report_card_id' => $reportCardId,
             'student_id' => $entity->student_id,
-            'institution_id' => $entity->institution_id,
+            // 'institution_id' => $entity->institution_id, V4
+            'institution_id' => $entity['institution']['id'],
             'academic_period_id' => $entity->academic_period_id,
             'education_grade_id' => $entity->education_grade_id,
         ];
@@ -1061,7 +1061,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         if ($filenames) {
             $filesTotal = sizeof($filenames);
-            $mpdf->SetImportUse();
+            // $mpdf->SetImportUse();
 
             for ($i = 0; $i < count($filenames); $i++) {
                 $curFile = $filenames[$i];
@@ -1487,6 +1487,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
             // delete file after download
             unlink($filepath);
+            exit();
         } else {
             $event->stopPropagation();
             $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
@@ -1546,6 +1547,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
             // delete file after download
             unlink($filepath);
+            exit();
         } else {
             $event->stopPropagation();
             $this->Alert->warning('ReportCardStatuses.noFilesToDownload');

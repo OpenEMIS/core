@@ -11,6 +11,7 @@ use Cake\Log\Log;
 use Cake\Utility\Security;
 use App\Model\Table\AppTable;
 use Cake\I18n\Time;//POCOR-7319
+use Cake\Http\Session;
 use Cake\Datasource\ConnectionManager;
 
 class ReportCardsTable extends AppTable
@@ -2281,36 +2282,36 @@ class ReportCardsTable extends AppTable
         if (array_key_exists('student_id', $params) && array_key_exists('institution_class_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra)) {
 
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-
             $nextAcademicPeriodId = $AcademicPeriods->getNextAcademicPeriodId($params['academic_period_id']);
             $studentId = $params['student_id'];
             $institutionId = $params['institution_id'];
 
-            $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+            if(isset($nextAcademicPeriodId)){
+                $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
 
-            $institutionSubjectStudentsEntities = $InstitutionSubjectStudents->find()
-                ->select([
-                    $InstitutionSubjectStudents->InstitutionSubjects->aliasField('name')
-                ])
-                ->where([
-                    $InstitutionSubjectStudents->aliasField('student_id') => $studentId,
-                    $InstitutionSubjectStudents->aliasField('academic_period_id') => $nextAcademicPeriodId,
-                    $InstitutionSubjectStudents->aliasField('institution_id') => $institutionId,
-                ])
-                ->contain('InstitutionSubjects')
-                ->enableHydration(false)
-                ->all();
-
-            if (!$institutionSubjectStudentsEntities->isEmpty()) {
-                foreach ($institutionSubjectStudentsEntities->toArray() as $key => $value) {
-                    $result[$key] = [
-                        'name' => $value['InstitutionSubjects']['name']
-                    ];
+                $institutionSubjectStudentsEntities = $InstitutionSubjectStudents->find()
+                    ->select([
+                        $InstitutionSubjectStudents->InstitutionSubjects->aliasField('name')
+                    ])
+                    ->where([
+                        $InstitutionSubjectStudents->aliasField('student_id') => $studentId,
+                        $InstitutionSubjectStudents->aliasField('academic_period_id') => $nextAcademicPeriodId,
+                        $InstitutionSubjectStudents->aliasField('institution_id') => $institutionId,
+                    ])
+                    ->contain('InstitutionSubjects')
+                    ->enableHydration(false)
+                    ->all();
+    
+                if (!$institutionSubjectStudentsEntities->isEmpty()) {
+                    foreach ($institutionSubjectStudentsEntities->toArray() as $key => $value) {
+                        $result[$key] = [
+                            'name' => $value['InstitutionSubjects']['name']
+                        ];
+                    }
+    
+                    return $result;
                 }
-
-                return $result;
             }
-
             return null;
         }
     }
