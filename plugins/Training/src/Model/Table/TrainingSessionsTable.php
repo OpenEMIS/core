@@ -119,6 +119,31 @@ class TrainingSessionsTable extends ControllerActionTable
         return $this->hideEditDeleteButtonsForUser($event, $entity, $buttons);
     }
 
+       /**
+     * @param Event $event
+     * @param Entity $entity
+     * @param array $buttons
+     * @return array
+     */
+    private function hideEditDeleteButtonsForUser(Event $event, Entity $entity, array $buttons): array
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $userId = $this->Session->read('Auth.User.id');
+
+        if (!$this->AccessControl->isAdmin()) {
+            if ($entity->created_user_id != $userId) {
+                if (!$this->AccessControl->check(['Trainings', 'Sessions', 'edit'])) {
+                    unset($buttons['edit']);
+                }
+
+                if (!$this->AccessControl->check(['Trainings', 'Sessions', 'delete'])) {
+                    unset($buttons['delete']);
+                }
+            }
+        }
+        return $buttons;
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->setFieldOrder([

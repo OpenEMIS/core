@@ -10,10 +10,11 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 
 use App\Model\Traits\OptionsTrait;
 
-class UsersTable extends AppTable
+class UsersTable extends ControllerActionTable
 {
     use OptionsTrait;
     //PCOOR-6922 Starts
@@ -30,9 +31,9 @@ class UsersTable extends AppTable
         parent::initialize($config);
         $this->setEntityClass('User.User');
 
-        $this->belongsTo('Students', [
-            'foreignKey' => 'student_id', // Replace with your actual foreign key field
-        ]);
+        // $this->belongsTo('Students', [
+        //     'foreignKey' => 'student_id', // Replace with your actual foreign key field
+        // ]);
         $this->belongsTo('Genders', ['className' => 'User.Genders']);
         $this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
         $this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
@@ -64,7 +65,7 @@ class UsersTable extends AppTable
         $this->hasMany('BodyMasses', ['className' => 'User.UserBodyMasses', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('Insurances', ['className' => 'User.UserInsurances', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-        $this->hasMany('ScholarshipApplications', ['className' => 'Scholarship.ScholarshipApplications', 'foreignKey' => 'applicant_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ScholarshipApplications', ['className' => 'Report.ScholarshipApplications', 'foreignKey' => 'applicant_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ApplicationAttachments', ['className' => 'Scholarship.ApplicationAttachments', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ScholarshipHistories', ['className' => 'Scholarship.Histories', 'foreignKey' => 'applicant_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ApplicationInstitutionChoices', ['className' => 'Scholarship.ApplicationInstitutionChoices', 'foreignKey' => 'applicant_id', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -250,14 +251,14 @@ class UsersTable extends AppTable
         $this->fields['address_area_id']['visible'] = false;
         $this->fields['birthplace_area_id']['visible'] = false;
         $this->fields['nationality_id']['type'] = 'readonly';
-        $this->fields['identity_type_id']['type'] = 'readonly';
-
+        $this->fields['identity_type_id']['visible'] = 'readonly';
+        $this->fields['status']['visible'] = true;
         if ($this->action == 'edit') {
             $this->fields['last_login']['visible'] = false;
         }
 
-        $this->ControllerAction->field('status', ['visible' => true, 'options' => $this->getSelectOptions('general.active')]);
-        $this->ControllerAction->setFieldOrder([
+        $this->field('status', ['visible' => true, 'options' => $this->getSelectOptions('general.active')]);
+        $this->setFieldOrder([
             'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'gender_id', 'date_of_birth', 'status', 'username', 'password'
         ]);
     }
@@ -272,7 +273,7 @@ class UsersTable extends AppTable
         $this->fields['gender_id']['visible'] = false;
         $this->fields['date_of_birth']['visible'] = false;
         $this->fields['username']['visible'] = true;
-        $this->ControllerAction->field('name');
+        $this->fields['name']['visible'] = true;
     }
 
     public function indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options)
@@ -398,7 +399,7 @@ class UsersTable extends AppTable
 
     public function viewBeforeAction(Event $event)
     {
-        $this->ControllerAction->field('roles', [
+        $this->field('roles', [
             'type' => 'role_table',
             'order' => 69,
             'valueClass' => 'table-full-width',
@@ -439,20 +440,22 @@ class UsersTable extends AppTable
 
     public function onGetModifiedUserId(Event $event, Entity $entity)
     {
-        $Users = TableRegistry::get('User.Users');
-        $result = $Users
-            ->find()
-            ->select(['first_name','last_name'])
-            ->where(['id' => $entity->modified_user_id])
-            ->first();
-
-        return $entity->modified_user_id = $result->first_name.' '.$result->last_name;
+        if(!empty($entity->modified_user_id)) {
+            $Users = TableRegistry::get('User.Users');
+            $result = $Users
+                ->find()
+                ->select(['first_name','last_name'])
+                ->where(['id' => $entity->modified_user_id])
+                ->first();
+    
+            return $entity->modified_user_id = $result->first_name.' '.$result->last_name;
+        }
     }
     //POCOR-7736::End
     
     public function onGetNationalityId(Event $event, Entity $entity){     
         if (!empty($entity->nationality_id)) {
-           $nationalities = TableRegistry::get('Nationalities')->get($entity->nationality_id);
+           $nationalities = TableRegistry::get('User.Nationalities')->get($entity->nationality_id);
            $entity->nationality_name = $nationalities->name;
            return $entity->nationality_name;
         }
