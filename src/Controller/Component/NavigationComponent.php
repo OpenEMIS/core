@@ -3951,7 +3951,7 @@ class NavigationComponent extends Component
                     //         'ScholarshipRecipientAcademicStandings.delete']
                     // ],
                     'Scholarships.ScholarshipRecipients' => [
-                        'title' => 'ScholarshipRecipients',
+                        'title' => 'Recipients',
                         'parent' => 'Administration',
                         'selected' => ['Scholarships.ScholarshipRecipients']
                     ],
@@ -4026,8 +4026,8 @@ class NavigationComponent extends Component
                 //         'ScholarshipRecipientAcademicStandings.delete']
                 // ],
                 'Scholarships.ScholarshipRecipients' => [
-                    'title' => 'ScholarshipRecipients',
-                    'parent' => 'Administration',
+                    'title' => 'Recipients',
+                    'parent' => 'Administration.Scholarships',
                     'selected' => ['Scholarships.ScholarshipRecipients']
                 ],
             ];
