@@ -15,6 +15,7 @@ class TranslationsTable extends AppTable {
 
 	// Initialisation
 	public function initialize(array $config): void {
+		$this->setTable('locale_content_translations');
 		parent::initialize($config);
 	}
 
