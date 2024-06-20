@@ -279,7 +279,6 @@ class ArchivedAttendancesTable extends ControllerActionTable
         // $selectedPeriod = $this->request->getQuery()['academic_period_id'];
         //new way V4
         $queryParams = $this->request->getQueryParams();
-        $selectedYear = 33;
         // Check if 'academic_period_id' is empty
         if (empty($queryParams['academic_period_id'])) {
             // Merge the new value into the query parameters
