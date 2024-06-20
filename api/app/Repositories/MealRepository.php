@@ -483,7 +483,9 @@ class MealRepository extends Controller
 
 
             foreach($headers as $k => $header){
-                if(!in_array($header, $results[0][1])){
+                $trimmedArray = array_map('trim', $results[0][1]); //Removing whitespace...
+                
+                if(!in_array($header, $trimmedArray)){
                     return 4; //Not a valid header...
                 }
             }
@@ -656,19 +658,17 @@ class MealRepository extends Controller
 
                         $check = InstitutionMealStudents::where([
                             'student_id' => $user->id,
-                            'academic_period_id' => $params['academic_period_id'],
+                            'academic_period_id' => $currentAcademicPeriod->id,
                             'institution_class_id' => $params['institution_class_id'],
                             'institution_id' => $params['institution_id'],
                             'meal_programmes_id' => $mealProgramme->id,
-                            'date' => $date,
-                            'meal_benefit_id' => $row[4],
-                            'meal_received_id' => $mealReceived->id,
+                            'date' => $date
                         ])->first();
 
 
                         if(!$check){
                             $insert['student_id'] = $user->id; 
-                            $insert['academic_period_id'] = $params['academic_period_id']; 
+                            $insert['academic_period_id'] = $currentAcademicPeriod->id; 
                             $insert['institution_class_id'] = $params['institution_class_id']; 
                             $insert['institution_id'] = $params['institution_id']; 
                             $insert['meal_programmes_id'] = $mealProgramme->id; 
@@ -689,7 +689,7 @@ class MealRepository extends Controller
                             ];
                         } else {
                             $update['student_id'] = $user->id; 
-                            $update['academic_period_id'] = $params['academic_period_id']; 
+                            $update['academic_period_id'] = $currentAcademicPeriod->id; 
                             $update['institution_class_id'] = $params['institution_class_id']; 
                             $update['institution_id'] = $params['institution_id']; 
                             $update['meal_programmes_id'] = $mealProgramme->id; 
@@ -703,13 +703,11 @@ class MealRepository extends Controller
 
                             $updateData = InstitutionMealStudents::where([
                                     'student_id' => $user->id,
-                                    'academic_period_id' => $params['academic_period_id'],
+                                    'academic_period_id' => $currentAcademicPeriod->id,
                                     'institution_class_id' => $params['institution_class_id'],
                                     'institution_id' => $params['institution_id'],
                                     'meal_programmes_id' => $mealProgramme->id,
-                                    'date' => $date,
-                                    'meal_benefit_id' => $row[4],
-                                    'meal_received_id' => $mealReceived->id,
+                                    'date' => $date
                                 ])->update($update);
 
                             $updated_data[] = [
@@ -746,6 +744,11 @@ class MealRepository extends Controller
 
         } catch (\Exception $e){
             DB::rollBack();
+
+            Log::error(
+                'Failed in importStudentMeals method.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
             return false;
         }
     }
