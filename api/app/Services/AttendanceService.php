@@ -210,4 +210,42 @@ class AttendanceService extends Controller
 
     //For POCOR-7854 End...
 
+
+    //For POCOR-8363 Starts...
+    public function getStudentAttendancesExport($params)
+    {
+        try {
+            $data = $this->attendanceRepository->getStudentAttendancesExport($params);
+            
+            $resp = [];
+            if(isset($data['list'])){
+                foreach ($data['list'] as $key => $d) {
+                    $resp[$key]['Openemis ID'] = $d['user']['openemis_no'];
+                    $resp[$key]['Name'] = $d['user']['full_name'];
+                    if($d['institution_student_absences']['absence_type_name'] != ""){
+                        $resp[$key]['Attendance'] = $d['institution_student_absences']['absence_type_name'];
+                    } else {
+                        $resp[$key]['Attendance'] = "Present";
+                    }
+                    
+                    $resp[$key]['Date'] = $d['institution_student_absences']['date'];
+                    $resp[$key]['Student Statuses'] = "";
+                    $resp[$key]['Class'] = $d['institution_class_name'];
+                    $resp[$key]['Absent Reasons'] = $d['institution_student_absences']['student_absence_reason_name'];
+                    $resp[$key]['Comment'] = $d['institution_student_absences']['comment'];
+                }
+            }
+            
+            return $resp;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to export students attendances from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to export students attendances from DB.');
+        }
+    }
+    //For POCOR-8363 Ends...
+
 }

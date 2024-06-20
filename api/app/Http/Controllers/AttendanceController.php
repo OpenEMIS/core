@@ -12,7 +12,10 @@ use App\Http\Requests\StudentAttendanceMarkedRecordListRequest;
 use App\Http\Requests\StudentAttendanceTypeListRequest;
 use App\Http\Requests\SubjectsByClassPerAcademicPeriodRequest;
 use App\Http\Requests\StudentAttendanceMarkTypeListRequest;
+use App\Http\Requests\StudentAttendancesExportRequest;
 use Illuminate\Support\Facades\Log;
+use App\Exports\StudentAttendancesExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AttendanceController extends Controller
 {
@@ -231,4 +234,29 @@ class AttendanceController extends Controller
         }
     }
     //For POCOR-7854 Ends...
+
+
+    //For POCOR-8363 Starts...
+    public function getStudentAttendancesExport(StudentAttendancesExportRequest $request)
+    {
+        try {
+            $params = $request->all();
+
+            $data = $this->attendanceService->getStudentAttendancesExport($params);
+            
+
+            $str = time();
+            $fileName = 'StudentAttendances_'.$str.'.xlsx';
+            return Excel::download(new StudentAttendancesExport($data), $fileName);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to export students attendances from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            dd($e);
+            return $this->sendErrorResponse('Failed to export students attendances from DB.');
+        }
+    }
+    //For POCOR-8363 Ends...
 }

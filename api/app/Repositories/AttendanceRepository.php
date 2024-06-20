@@ -1429,6 +1429,7 @@ class AttendanceRepository extends Controller
                             'institution_class_students.institution_id',
                             'institution_class_students.student_id',
                             'institution_class_students.student_status_id',
+                            'institution_classes.name as class_name',
                             'security_users.id',
                             'security_users.openemis_no',
                             'security_users.first_name',
@@ -1486,6 +1487,7 @@ class AttendanceRepository extends Controller
                             'institution_class_students.institution_id',
                             'institution_class_students.student_id',
                             'institution_class_students.student_status_id',
+                            'institution_classes.name as class_name',
                             'security_users.id',
                             'security_users.openemis_no',
                             'security_users.first_name',
@@ -1537,6 +1539,7 @@ class AttendanceRepository extends Controller
             foreach($query as $k => $q){
                 $list[$k]['academic_period_id'] = $q['academic_period_id'];
                 $list[$k]['institution_class_id'] = $q['institution_class_id'];
+                $list[$k]['institution_class_name'] = $q['class_name'];
                 $list[$k]['institution_id'] = $q['institution_id'];
                 $list[$k]['student_id'] = $q['student_id'];
                 $list[$k]['academic_period_id'] = $q['academic_period_id'];
@@ -1561,9 +1564,12 @@ class AttendanceRepository extends Controller
                             'comment',
                             'absence_type_id',
                             'student_absence_reason_id',
+                            'student_absence_reasons.name as student_absence_reason_name',
                             'absence_types.code',
+                            'absence_types.name as absence_type_name',
                         )
                         ->join('absence_types', 'absence_types.id', '=', 'institution_student_absence_details.absence_type_id')
+                        ->leftjoin('student_absence_reasons', 'student_absence_reasons.id', '=', 'institution_student_absence_details.student_absence_reason_id')
                         ->where('academic_period_id', $academicPeriodId)
                         ->where('institution_class_id', $institutionClassId)
                         ->where('education_grade_id', $educationGradeId)
@@ -1586,7 +1592,9 @@ class AttendanceRepository extends Controller
                             'comment' => $result->comment,
                             'absence_type_id' => $result->absence_type_id,
                             'student_absence_reason_id' => $result->student_absence_reason_id,
-                            'absence_type_code' => $result->absenceType->code
+                            'student_absence_reason_name' => $result->student_absence_reason_name,
+                            'absence_type_code' => $result->absenceType->code,
+                            'absence_type_name' => $result->absenceType->name
                         ];
 
                         if(isset($options['excel'])){
@@ -1625,7 +1633,9 @@ class AttendanceRepository extends Controller
                                 'comment' => null,
                                 'absence_type_id' => $PRESENT,
                                 'student_absence_reason_id' => null,
-                                'absence_type_code' => null
+                                'student_absence_reason_name' => null,
+                                'absence_type_code' => null,
+                                'absence_type_name' => null
                             ];
                         } else {
                             $data = [
@@ -1634,7 +1644,9 @@ class AttendanceRepository extends Controller
                                 'comment' => null,
                                 'absence_type_id' => null,
                                 'student_absence_reason_id' => null,
-                                'absence_type_code' => null
+                                'student_absence_reason_name' => null,
+                                'absence_type_code' => null,
+                                'absence_type_name' => null
                             ];
                         }
                     }
@@ -2061,6 +2073,30 @@ class AttendanceRepository extends Controller
         }
     }
     //For POCOR-7854 End...
+
+
+    //For POCOR-8363 Starts...
+    public function getStudentAttendancesExport($params)
+    {
+        try {
+            $institutionId = $params['institution_id'];
+            $gradeId = $params['education_grade_id'];
+            $classId = $params['institution_class_id'];
+
+            $data = $this->getStudentAttendanceList($params, $institutionId, $gradeId, $classId);
+
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to export students attendances from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            dd($e);
+            return $this->sendErrorResponse('Failed to export students attendances from DB.');
+        }
+    }
+    //For POCOR-8363 Ends...
 
 }
 
