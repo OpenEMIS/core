@@ -516,7 +516,8 @@ if(!function_exists('checkAccess')){
 	if(!function_exists('getMealProgrammes')){
 		function getMealProgrammes()
 		{	
-		    $getMealProgrammes = MealProgrammes::get()->toArray();
+			$currentAcademicYear = AcademicPeriod::where('current', 1)->first();
+		    $getMealProgrammes = MealProgrammes::where('academic_period_id', $currentAcademicYear->id??0)->get()->toArray();
 	    	
 	    	$resp = [];
 		    foreach($getMealProgrammes as $k => $mealProgramme){
