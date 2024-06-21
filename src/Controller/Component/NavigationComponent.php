@@ -1448,7 +1448,9 @@ class NavigationComponent extends Component
                     'Students.StudentInsurances.view',
                     'Students.StudentInsurances.edit',
                     'Students.StudentInsurances.delete',
-                    'Students.StudentInsurances']
+                    'Students.StudentInsurances',
+                    'Students.HealthBodyMasses',
+                    'Students.HealthInsurances']
                 // 'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete', 'StudentInsurances.add', 'StudentInsurances.view', 'StudentInsurances.edit', 'StudentInsurances.delete', 'StudentInsurances.index']
             ],
             'Student.Students.SpecialNeedsReferrals.index' => [
@@ -2164,7 +2166,8 @@ class NavigationComponent extends Component
                     'Profiles.Comments',
                     'Profiles.Attachments',
                     'Profiles.UserActivities',
-                    'Profiles.Contacts'] // POCOR-6683
+                    'Profiles.Contacts',
+                    'Profiles.History'] // POCOR-6683
             ],
             'Profiles.Healths.index' => [
                 'title' => 'Health',
