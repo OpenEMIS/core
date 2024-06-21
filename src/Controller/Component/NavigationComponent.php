@@ -825,7 +825,8 @@ class NavigationComponent extends Component
                     'Institutions.WithdrawRequests',
                     'Institutions.StudentUser.add',
                     'Institutions.ImportStudentAdmission',
-                    'Institutions.Students', 'StudentHistories.index',
+                    'Institutions.Students', 
+                    'Institutions.StudentHistories.index',//POCOR-8333
                     'Institutions.BulkStudentAdmission',
                     'Institutions.ImportStudentBodyMasses',
                     'Institutions.ImportStudentGuardians',
