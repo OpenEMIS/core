@@ -470,11 +470,11 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                         $InstitutionStudentAbsences->aliasField('student_id') => $studentId
                     ])
                     ->all();
-
+                
                 if (!$fullDayRecordResult->isEmpty()) {
                     $absenceEntity = $fullDayRecordResult->first();
                 } else {
-                    $absenceEntity = $InstitutionStudentAbsences->newEntity();
+                    $absenceEntity = $InstitutionStudentAbsences->newEmptyEntity();
                 }
 
                 $data = [
