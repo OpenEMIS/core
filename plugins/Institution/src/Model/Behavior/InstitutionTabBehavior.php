@@ -185,11 +185,11 @@ class InstitutionTabBehavior extends Behavior
         $model = $this->_table;
         $institutionID = $this->getInstitutionID();
 
-        $actions = ['view', 'edit','remove'];
-        if($appliedAction == 'Textbooks') {
-            $actions = ['view', 'edit','remove'];
-        }
-        
+        // $actions = ['view', 'edit','remove'];
+        // if($appliedAction == 'Textbooks') {
+        //     $actions = ['view', 'edit','remove'];
+        // }
+        $actions = ['view', 'edit'];
         foreach ($actions as $action) {
             if (isset($buttons[$action])) {
                 $url = $buttons[$action]['url'];
