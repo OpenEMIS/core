@@ -63,10 +63,10 @@ class InstitutionsTable extends AppTable
 
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         // validation for attendance marked record feature
         $validator
             ->add('report_start_date', [
@@ -123,7 +123,7 @@ class InstitutionsTable extends AppTable
 
 
         return $validator;
-    }*/
+    }
 
     public function validationSubjectsClasses(Validator $validator)
     {

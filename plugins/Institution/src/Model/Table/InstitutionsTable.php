@@ -269,15 +269,35 @@ class InstitutionsTable extends ControllerActionTable
             ->setProvider('custom', $this)
             ->add('date_opened', [
                 'ruleCompare' => [
-                    'rule' => ['comparison', 'notequal', '0000-00-00'],
+                    // 'rule' => ['comparison', 'notequal', '0000-00-00'],
+                    'rule' => function ($value, $context) {
+                        try{
+                            $mydate = strtotime($value);
+                            return true;
+                        }catch(\Exception $e){
+                            Log::write('debug', 'Validation Context 1: ' . print_r($context, true));
+                            return false;
+                        }
+                    },
+                    'message' => __('You have entered an invalid date')
                 ]
             ])
             ->allowEmpty('date_closed')
             ->add('date_opened', 'ruleLessThanToday', [
-                'rule' => ['lessThanToday', true]
+                'rule' => ['lessThanToday', true],
+                'message' => __('Date should not be later than today'),
+                'on' => function ($context) {
+                    Log::write('debug', 'Validation Context 2: ' . print_r($context->data, true));
+                    return true;
+                }
             ])
             ->add('date_closed', 'ruleCompareDateReverse', [
-                'rule' => ['compareDateReverse', 'date_opened', true]
+                'rule' => ['compareDateReverse', 'date_opened', true],
+                'message' => __('Date Closed should not be earlier than Date Opened'),
+                'on' => function ($context) {
+                    Log::write('debug', 'Validation Context 3: ' . print_r($context, true));
+                    return true;
+                }
             ])
             ->add('date_closed', 'ruleCheckPendingWorkbench', [
                 'rule' => 'checkPendingWorkbench',
@@ -1061,7 +1081,7 @@ class InstitutionsTable extends ControllerActionTable
                 'SurveyFilterAreas.survey_filter_id = SurveyFormsFilters.id'])
             ->where(['SurveyFilterInstitutionTypes.institution_type_id' => $institutionType,
                 'SurveyFilterInstitutionProviders.institution_provider_id' => $institutionProvider,
-                'SurveyFilterAreas.area_education_id' => $areaEducation])
+                /*'SurveyFilterAreas.area_education_id' => $areaEducation*/])
             ->group([$SurveyFormsFilters->aliasField('survey_form_id')])
             ->toArray();
 
@@ -1087,7 +1107,7 @@ class InstitutionsTable extends ControllerActionTable
                     'SurveyFilterAreas.survey_filter_id = SurveyFormsFilters.id'])
                 ->where(['SurveyFilterInstitutionTypes.institution_type_id' => $institutionType,
                     'SurveyFilterInstitutionProviders.institution_provider_id' => $institutionProvider,
-                    'SurveyFilterAreas.area_education_id' => $areaEducation])
+                    /*'SurveyFilterAreas.area_education_id' => $areaEducation*/])
                 ->group([$SurveyFormsFilters->aliasField('survey_form_id')])->toArray();
             if (!empty($SurveyFormsFilterObj)) {
                 foreach ($SurveyFormsFilterObj as $value) {
@@ -1243,7 +1263,7 @@ class InstitutionsTable extends ControllerActionTable
             ];
             //POCOR-6805 start
             $InstitutionCustomFields = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFields');
-            $InstitutionCustomFieldValues = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomField_values');
+            $InstitutionCustomFieldValues = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFieldValues');
             $institutionCustomFieldOptions = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFieldOptions');
             $custom_fieldData = $InstitutionCustomFieldValues
                 ->find()
@@ -2148,7 +2168,7 @@ class InstitutionsTable extends ControllerActionTable
     public function findMap(Query $query, array $options)
     {
         // [POCOR-6379] - Anand Malvi
-        $institutionStatus = TableRegistry::getTableLocator()->get('Institution.InstitutionStatuses');
+        $institutionStatus = TableRegistry::getTableLocator()->get('Institution.Statuses');
         $activeInstitutionStatus = $institutionStatus->find()
             ->select(['id' => $institutionStatus->aliasField('id')])
             ->where([$institutionStatus->aliasField('code') => 'ACTIVE'])->first();
@@ -2229,7 +2249,6 @@ class InstitutionsTable extends ControllerActionTable
                 $this->aliasField('institution_status_id') => $activeInstitutionStatus->id
             ]);
         // [POCOR-6379] - Anand Malvi
-        echo "<pre>";print_r($query);die;
         return $query;
     }
 

@@ -113,10 +113,10 @@ class DataQualityTable extends AppTable {
         }	
     }
 
-    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
+        if (isset($request->getData()[$this->getAlias()]['feature'])) {
+            $feature = $this->request->getData()[$this->getAlias()]['feature'];
 
             if ((in_array($feature, ['Report.ValidationReport',
                 
@@ -143,11 +143,11 @@ class DataQualityTable extends AppTable {
         return $attr;
     }
 
-    public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
-            $areaLevelId = $this->request->data[$this->alias()]['area_level_id'];//POCOR-6333
+        if (isset($request->getData()[$this->getAlias()]['feature'])) {
+            $feature = $this->request->getData()[$this->getAlias()]['feature'];
+            $areaLevelId = $this->request->getData()[$this->getAlias()]['area_level_id'];//POCOR-6333
             if ((in_array($feature,
                 [
                     'Report.ValidationReport',
@@ -184,18 +184,18 @@ class DataQualityTable extends AppTable {
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $areaId = $request->data[$this->alias()]['area_education_id'];
+        $areaId = $request->getData()[$this->getAlias()]['area_education_id'];
         $InstitutionsTable = TableRegistry::get('Institution.Institutions');
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
+        if (isset($this->request->getData()[$this->getAlias()]['feature'])) {
+            $feature = $this->request->getData()[$this->getAlias()]['feature'];
 
             if (in_array($feature, ['Report.ValidationReport',
                   ])) {
                 $institutionList = [];
-                if (array_key_exists('institution_type_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['institution_type_id'])) {
-                    $institutionTypeId = $request->data[$this->alias()]['institution_type_id'];
+                if (array_key_exists('institution_type_id', $request->getData()[$this->getAlias()]) && !empty($request->getData()[$this->getAlias()]['institution_type_id'])) {
+                    $institutionTypeId = $request->getData()[$this->getAlias()]['institution_type_id'];
                     $institutionQuery = $InstitutionsTable
                         ->find('list', [
                             'keyField' => 'id',
@@ -217,7 +217,7 @@ class DataQualityTable extends AppTable {
                     }
 
                     $institutionList = $institutionQuery->toArray();
-                } elseif (!$institutionTypeId && array_key_exists('area_education_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['area_education_id']) && $areaId != -1) {
+                } elseif (!$institutionTypeId && array_key_exists('area_education_id', $request->getData()[$this->getAlias()]) && !empty($request->getData()[$this->getAlias()]['area_education_id']) && $areaId != -1) {
                     //Start:POCOR-6818 Modified this for POCOR-6859
                     $AreaT = TableRegistry::get('areas');                    
                     //Level-1

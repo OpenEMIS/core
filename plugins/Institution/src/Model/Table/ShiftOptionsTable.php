@@ -79,7 +79,7 @@ class ShiftOptionsTable extends ControllerActionTable
                 $this->Shifts->aliasField('academic_period_id') => $options['academic_period_id']
             ];
             $query->leftJoin(
-                [$this->Shifts->alias() => $this->Shifts->table()],
+                [$this->Shifts->getAlias() => $this->Shifts->getTable()],
                 $conditions
             )
             ->where(

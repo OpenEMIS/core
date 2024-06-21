@@ -50,13 +50,12 @@ class InstitutionAssociationsTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'AssociationStudent' => ['index','add','view', 'edit'],
         ]);
-
+        $this->addBehavior('Institution.InstitutionTab');
     }
     
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-         
-         switch ($field) {
+        switch ($field) {
             case 'association_staff':
                 return __('Staff');
             case 'total_male_students': 
@@ -141,7 +140,6 @@ class InstitutionAssociationsTable extends ControllerActionTable
 
     public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        
         if(!empty($this->controllerAction) && ($this->controllerAction == 'Associations')) {
             // Delete Students related to associations 
             $existingStudents = $this->AssociationStudent
@@ -154,6 +152,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
                 ])
                 ->toArray();
             if ($existingStudents && !empty($existingStudents)) {
+                $id = $entity->id;//POCOR-7485
                 foreach ($existingStudents as $key => $StudentEntity) {    
                      $this->AssociationStudent->delete($StudentEntity);
                 }
@@ -177,7 +176,6 @@ class InstitutionAssociationsTable extends ControllerActionTable
                      $this->AssociationStaff->delete($StaffEntity);
                 } 
             }
-                
         }
     }
     /******************************************************************************************************************
@@ -255,17 +253,19 @@ class InstitutionAssociationsTable extends ControllerActionTable
     public function onGetAssociationStaff(Event $event, Entity $entity)
     {        
         if ($this->action == 'view') {
+            $paramsEncoded = $this->request->getAttribute('params')['pass'][1];
+            $params = $this->ControllerAction->paramsDecode($paramsEncoded);
+            $institutionId = $params['institution_id'];
             if ($entity->has('association_staff') && !empty($entity->association_staff)) {
                 $staffList = [];
                 foreach ($entity->association_staff as $staffVal) {
-                        $staffLink = $event->subject()->Html->link($staffVal->user->name_with_id, [
+                        $staffLink = $event->getSubject()->Html->link($staffVal->user->name_with_id, [
                             'plugin' => 'Institution',
                             'controller' => 'Institutions',
                             'action' => 'StaffUser',
                             'view',
-                            $this->paramsEncode(['id' => $staffVal->user->id])
+                            $this->paramsEncode(['id' => $staffVal->user->id, 'institution_id' => $institutionId, 'staff_id'=> $staffVal->user->id])
                         ]);
-
                         $staffList[] = $staffLink;
                 } 
                 return implode(', ', $staffList);
@@ -615,7 +615,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
 
     private function getAcademicPeriodOptions($institutionId)
     {
-        $InstitutionStudentsTable = TableRegistry::get('institution_students');
+        $InstitutionStudentsTable = TableRegistry::get('Institution.InstitutionStudents');
         $InstitutionStudentsYears = $InstitutionStudentsTable
             ->find('all')
             ->where(['institution_id' => $institutionId])

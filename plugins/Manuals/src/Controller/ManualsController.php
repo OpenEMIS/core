@@ -1,5 +1,5 @@
 <?php
-namespace Manual\Controller;
+namespace Manuals\Controller;
 
 use ArrayObject;
 use App\Controller\AppController;
@@ -28,7 +28,7 @@ class ManualsController extends AppController
 
 
     public function Institutions()
-    {
+    { 
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Manuals.Institution']);
     }
 
@@ -38,19 +38,19 @@ class ManualsController extends AppController
     }
     public function Reports()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Manual.Reports']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Manuals.Reports']);
     }
     public function Administration()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Manual.Administration']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Manuals.Administration']);
     }
     public function Personal()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Manual.Personal']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Manuals.Personal']);
     }
     public function Guardian()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Manual.Guardian']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Manuals.Guardian']);
     }
 
 
@@ -72,33 +72,32 @@ class ManualsController extends AppController
         }
         $tabElements = [
             'Institutions' => [
-                'url' => ['plugin' => 'Manual', 'controller' => 'Manuals', 'action' => 'Institutions'],
+                'url' => ['plugin' => 'Manuals', 'controller' => 'Manuals', 'action' => 'Institutions'],
                 'text' => __('Institutions')
             ],
             'Directory' => [
-                'url' => ['plugin' => 'Manual', 'controller' => 'Manuals', 'action' => 'Directory'],
+                'url' => ['plugin' => 'Manuals', 'controller' => 'Manuals', 'action' => 'Directory'],
                 'text' => __('Directory')
             ],
             'Reports' => [
-                'url' => ['plugin' => 'Manual', 'controller' => 'Manuals', 'action' => 'Reports'],
+                'url' => ['plugin' => 'Manuals', 'controller' => 'Manuals', 'action' => 'Reports'],
                 'text' => __('Reports')
             ],
             'Administration' => [
-                'url' => ['plugin' => 'Manual', 'controller' => 'Manuals', 'action' => 'Administration'],
+                'url' => ['plugin' => 'Manuals', 'controller' => 'Manuals', 'action' => 'Administration'],
                 'text' => __('Administration')
             ],
             'Personal' => [
-                'url' => ['plugin' => 'Manual', 'controller' => 'Manuals', 'action' => 'Personal'],
+                'url' => ['plugin' => 'Manuals', 'controller' => 'Manuals', 'action' => 'Personal'],
                 'text' => __('Personal')
             ],
             'Guardian' => [
-                'url' => ['plugin' => 'Manual', 'controller' => 'Manuals', 'action' => 'Guardian'],
+                'url' => ['plugin' => 'Manuals', 'controller' => 'Manuals', 'action' => 'Guardian'],
                 'text' => __('Guardian')
             ],
             
 
         ];
-
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $setupTab);

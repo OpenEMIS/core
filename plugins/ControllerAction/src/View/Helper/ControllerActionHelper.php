@@ -99,7 +99,7 @@ class ControllerActionHelper extends Helper
         // cancel button
         $backBtn = $this->_View->get('backButton');
         $buttons[] = [
-            'name' => '<i class="fa fa-close"></i> ' . __('Cancel'),
+            'name' =>  __('Cancel'),
             'attr' => ['class' => 'btn btn-outline btn-cancel', 'escape' => false],
             'url' => !is_null($backBtn) ? $backBtn['url'] : []
         ];
@@ -254,19 +254,26 @@ class ControllerActionHelper extends Helper
     public function getTableRow(Entity $entity, array $fields, $searchableFields = [])
     {
         $row = [];
-
+        $request = $this->_View->getRequest();
         $search = '';
-        if ($this->request !== null && $this->request->getData('Search') !== null) {
-            $searchData = $this->request->getData('Search');
+        if ($request !== null && $request->getData('Search') !== null) {
+            $searchData = $request->getData('Search');
 
             if (array_key_exists('searchField', $searchData)) {
-                $search = $this->request->getData('Search')['searchField'];
+                $search = $request->getData('Search')['searchField'];
             }
         }
 
 
         if (null !== $searchData && array_key_exists('searchField', $searchData)) {
-            $search = $this->request->getData('Search')['searchField'];
+            $search = $request->getData('Search')['searchField'];
+        }
+        // display highlight value in result
+        if(empty($search)) {
+            $session = $request->getSession();
+            $alias = $request->getParam('plugin'). '.' .$request->getParam('action'); 
+            $alias = $session->check('search.search_alias') ? $session->read('search.search_alias') : $alias;
+            $search = $session->check($alias.'.search.key') ? $session->read($alias.'.search.key') : '';// dd($search);
         }
 
         $table = null;

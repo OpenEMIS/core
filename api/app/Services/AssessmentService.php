@@ -325,4 +325,24 @@ class AssessmentService extends Controller
             return $this->sendErrorResponse('Institution subject student list not found');
         }
     }
+
+
+
+    //POCOR-8292 start...
+    public function getAssessmentViaAcademicTerm($params, $assessmentId)
+    {
+        try {
+            $data = $this->assessmentRepository->getAssessmentViaAcademicTerm($params, $assessmentId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch assessment periods list from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+             
+            return $this->sendErrorResponse('Failed to fetch assessment periods list from DB.');
+        }
+    }
+    //POCOR-8292 end...
 }
