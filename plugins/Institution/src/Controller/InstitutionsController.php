@@ -2874,7 +2874,9 @@ class InstitutionsController extends AppController
             $header = $persona->name . ' - ' . $humanTitle;
             $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
         }
-
+        if ($alias == 'StudentUser' || $alias == 'StudentAccount') {
+            $this->set('contentHeader', $header);
+        }
         if ($alias == 'IndividualPromotion') {
             $subHeader = __('Individual Promotion / Repeat');
         }
