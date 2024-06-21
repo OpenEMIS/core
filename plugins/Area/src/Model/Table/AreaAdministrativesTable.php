@@ -27,7 +27,7 @@ class AreaAdministrativesTable extends ControllerActionTable
         $this->hasMany('Institutions', ['className' => 'Institution.Institutions']);
         $this->hasMany('UsersAddressAreas', ['className' => 'Directory.Directories', 'foreignKey' => 'address_area_id']);
         $this->hasMany('UsersBirthplaceAreas', ['className' => 'Directory.Directories', 'foreignKey' => 'birthplace_area_id']);
-        // $this->addBehavior('Tree');
+        $this->addBehavior('Tree');
         if ($this->behaviors()->has('Reorder')) {
             $reorderBehavior = $this->behaviors()->get('Reorder');
             $reorderBehavior->setConfig('filter', 'parent_id');
@@ -38,7 +38,6 @@ class AreaAdministrativesTable extends ControllerActionTable
             'SgTree' => ['index'],
             'Results' => ['index', 'view'] //POCOR-5672
         ]);
-
         $this->setDeleteStrategy('restrict');
     }
     //POCOR-5672 starts
@@ -60,6 +59,7 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('code', 'ruleUniqueCode', [
                 'rule' => 'validateUnique',
@@ -80,28 +80,30 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('area_administrative_level_id');
-        
-        $this->field('name');
-        $count = $this->find()->where([
-                'OR' => [
-                    [$this->aliasField('lft').' IS NULL'],
-                    [$this->aliasField('rght').' IS NULL']
-                ]
-            ])
-            ->count();
-        if ($count) {
-            $this->rebuildLftRght();
+        if($this->action != 'index'){
+            $this->field('area_administrative_level_id');
+            
+            $this->field('name');
+            $count = $this->find()->where([
+                    'OR' => [
+                        [$this->aliasField('lft').' IS NULL'],
+                        [$this->aliasField('rght').' IS NULL']
+                    ]
+                ])
+                ->count();
+            if ($count) {
+                $this->rebuildLftRght();
+            }
+            $this->fields['lft']['visible'] = false;
+            $this->fields['rght']['visible'] = false;
+
+            $query = $this->find()
+                    ->select([$this->aliasField('id')])
+                    ->where([$this->aliasField('parent_id').' IS NULL'])
+                    ->first();
+
+            $this->worldId = $query->id;
         }
-        $this->fields['lft']['visible'] = false;
-        $this->fields['rght']['visible'] = false;
-
-        $query = $this->find()
-                ->select([$this->aliasField('id')])
-                ->where([$this->aliasField('parent_id').' IS NULL'])
-                ->first();
-
-        $this->worldId = $query->id;
     }
 
     public function rebuildLftRght()
@@ -380,7 +382,7 @@ class AreaAdministrativesTable extends ControllerActionTable
         return $event->getSubject()->HtmlField->link($entity->name, [
             'plugin' => $this->controller->getPlugin(),
             'controller' => $this->controller->getName(),
-            'action' => $this->getAlias(),
+            'action' => 'Administratives',
             'index',
             'parent' => $entity->id
         ]);
@@ -532,7 +534,7 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if ($entity->dirty('is_main_country')) {
+        if ($entity->getDirty('is_main_country')) {
             if ($entity->is_main_country == 1) { //if set as main country
 
                 // update the rest of areas to non main country
@@ -556,5 +558,18 @@ class AreaAdministrativesTable extends ControllerActionTable
 
         $this->dispatchEventToModels('Model.AreaAdministrative.afterDelete', [$entity], $this, $listeners);    
     }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
 
 }
