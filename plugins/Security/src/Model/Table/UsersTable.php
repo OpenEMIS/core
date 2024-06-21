@@ -253,6 +253,7 @@ class UsersTable extends ControllerActionTable
         $this->fields['nationality_id']['type'] = 'readonly';
         $this->fields['identity_type_id']['type'] = 'readonly';
         $this->fields['status']['visible'] = true;
+        $this->fields['failed_logins']['visible'] = false;
         if ($this->action == 'edit') {
             $this->fields['last_login']['visible'] = false;
         }
@@ -623,4 +624,93 @@ class UsersTable extends ControllerActionTable
         return $buttons;
     }
     /*POCOR-6380 ends*/
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $options)
+    {
+        if (!$this->isAdvancedSearchEnabled()) {
+            $event->stopPropagation();
+            return [];
+        } else {
+            $this->behaviors()->get('AdvanceSearch')->setConfig([
+                'showOnLoad' => 0,
+            ]);
+        }
+
+        $conditions = [];
+        $notSuperAdminCondition = [
+            $this->aliasField('super_admin') => 0
+        ];
+        $conditions = array_merge($conditions, $notSuperAdminCondition);
+
+        $orders = [];
+        if (!isset($this->request->getQuery['sort'])) {
+            $orders = [
+                $this->aliasField('first_name'),
+                $this->aliasField('last_name')
+            ];
+        }
+        
+        $query->where($conditions)
+            ->order($orders);
+        $options['auto_search'] = true;
+        $userType = $this->Session->read('Users.advanceSearch.belongsTo.user_type');
+        if ($userType == self::STAFF || $userType == self::STUDENT) {
+            $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+            $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+            $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            if($userType == self::STAFF){
+                $ConfigItem =   $ConfigItemTable
+                                ->find()
+                                ->where([
+                                    $ConfigItemTable->aliasField('code') => 'staff_identity_number',
+                                    $ConfigItemTable->aliasField('value') => 1
+                                ])
+                                ->first();
+            }else if($userType == self::STUDENT){
+                $ConfigItem =   $ConfigItemTable
+                                ->find()
+                                ->where([
+                                    $ConfigItemTable->aliasField('code') => 'student_identity_number',
+                                    $ConfigItemTable->aliasField('value') => 1
+                                ])
+                                ->first();
+            }else{
+                $ConfigItem =   $ConfigItemTable
+                                ->find()
+                                ->where([
+                                    $ConfigItemTable->aliasField('code') => 'directory_identity_number',
+                                    $ConfigItemTable->aliasField('value') => 1
+                                ])
+                                ->first();
+            }
+            
+            if(!empty($ConfigItem)){
+                //value_selection
+                //get data from Identity Type table 
+                $typesIdentity = $this->getIdentityTypeData($ConfigItem->value_selection);
+                if(!empty($typesIdentity)){                
+                    $query
+                        ->select([
+                            'identity_type' => $IdentityTypes->aliasField('name'),
+                            // for POCOR-6561 changed $typesIdentity->identity_type to $typesIdentity->id below
+                            $typesIdentity->id => $UserIdentities->aliasField('number')
+                        ])
+                        ->LeftJoin(
+                                    [$UserIdentities->getAlias() => $UserIdentities->getTable()],
+                                    [
+                                        $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('id'),
+                                        $UserIdentities->aliasField('identity_type_id = ') . $typesIdentity->id
+                                    ]
+                                )
+                        ->LeftJoin(
+                            [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
+                            [
+                                $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
+                                $IdentityTypes->aliasField('id = ') . $typesIdentity->id
+                            ]
+                        );
+                }
+            }   
+        }
+    }
 }
