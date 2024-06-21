@@ -26,6 +26,7 @@ use App\Models\InstitutionStudentAbsenceDetails;
 use App\Models\StudentAbsenceReason;
 use App\Models\AbsenceTypes;
 use App\Models\InstitutionClassAttendanceRecord;
+use App\Models\Institutions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -2092,8 +2093,72 @@ class AttendanceRepository extends Controller
                 'Failed to export students attendances from DB.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            dd($e);
             return $this->sendErrorResponse('Failed to export students attendances from DB.');
+        }
+    }
+
+
+    public function getStudentAttendancesImportTemplate($params)
+    {
+        try {
+            $institution_class_id = $params['institution_class_id'];
+            $institution_id = $params['institution_id'];
+
+            $currentYearData = AcademicPeriod::where("current", 1)->first();
+            $institutionData = Institutions::where('id', $institution_id)->first();
+
+            $outputData['Data']['header'] = [
+                "Date ( DD/MM/YYYY )",
+                "Student Attendance Type Code",
+                "Period",
+                "Institution Subject Name",
+                " OpenEMIS ID",
+                "Absence Type Code",
+                "Student Absence Reason Code",
+                "Comment"
+            ];
+
+            $outputData['References'] = [];
+
+            $outputData['References']['Student Attendance Types']['header'] = ['Name', 'Code'];
+            $getStudentAttendanceType = getStudentAttendanceType();
+            $outputData['References']['Student Attendance Types']['data'] = $getStudentAttendanceType;
+
+
+            $outputData['References']['Period']['header'] = ['Number Of Periods', 'Id'];
+            $getNumberOfPeriods = getNumberOfPeriods();
+            $outputData['References']['Period']['data'] = $getNumberOfPeriods;
+
+
+            $outputData['References']['Subject']['header'] = ['Subject', 'Id'];
+            $getInstutionClassSubject = getInstutionClassSubject($institution_id, $institution_class_id);
+            $outputData['References']['Subject']['data'] = $getInstutionClassSubject;
+
+
+            $institutionHeader = "Institution: ".$institutionData->name??"";
+            $academicHeader = "Academic Period: ".$currentYearData->name??"";
+            $outputData['References']['Student']['header'] = [$institutionHeader, $academicHeader, 'Education Grade', 'Name', 'OpenEMIS ID'];
+            $getInstutionClassStudent = getInstutionClassStudent($institution_id, $institution_class_id);
+            $outputData['References']['Student']['data'] = $getInstutionClassStudent;
+
+
+            $outputData['References']['Absence Type']['header'] = ['Name', 'Code'];
+            $getAbsenceTypes = getAbsenceTypes();
+            $outputData['References']['Absence Type']['data'] = $getAbsenceTypes;
+
+
+            $outputData['References']['Student Absence Reason']['header'] = ['Name', 'National Code'];
+            $getStudentAbsenceReason = getStudentAbsenceReason();
+            $outputData['References']['Student Absence Reason']['data'] = $getStudentAbsenceReason;
+            return $outputData;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch students attendances import template data from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            dd($e);
+            return $this->sendErrorResponse('Failed to fetch students attendances import template data from DB.');
         }
     }
     //For POCOR-8363 Ends...
