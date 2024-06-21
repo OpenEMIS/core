@@ -251,7 +251,7 @@ class UsersTable extends ControllerActionTable
         $this->fields['address_area_id']['visible'] = false;
         $this->fields['birthplace_area_id']['visible'] = false;
         $this->fields['nationality_id']['type'] = 'readonly';
-        $this->fields['identity_type_id']['visible'] = 'readonly';
+        $this->fields['identity_type_id']['type'] = 'readonly';
         $this->fields['status']['visible'] = true;
         if ($this->action == 'edit') {
             $this->fields['last_login']['visible'] = false;
