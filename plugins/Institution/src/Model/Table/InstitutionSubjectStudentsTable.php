@@ -18,7 +18,7 @@ use Cake\Utility\Text;
 use Cake\Log\Log;
 use Cake\ORM\Locator\TableLocator;
 
-class SubjectStudentsTable extends AppTable
+class InstitutionSubjectStudentsTable extends AppTable
 {
     public function initialize(array $config): void
     {
