@@ -406,8 +406,7 @@ class InstitutionStatusTable extends ControllerActionTable
         ];
 
         $session = $this->request->getSession();
-        $institutionId = $this->request->pass[1];
-
+        $institutionId = $this->request->getAttribute('params')['pass'][1];
         $extraButtons = [
             'close' => [
                 'Institution' => ['Institutions', 'edit', $institutionId],

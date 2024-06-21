@@ -72,6 +72,11 @@ class InstitutionTabBehavior extends Behavior
             $toolbarButtons['back']['url'][1] = $queryString;
         }
         if (isset($toolbarButtons['list'])) {
+            if($model->getAlias() == 'FeederOutgoingInstitutions'){
+                $queryString = $model->getQueryString();
+                $queryString['institution_id'] = $queryString['feeder_institution_id'];
+                $queryString = $model->paramsEncode($queryString);
+            }
             $toolbarButtons['list']['url'][0] = 'index';
             $toolbarButtons['list']['url'][1] = $queryString;
         }
@@ -88,8 +93,13 @@ class InstitutionTabBehavior extends Behavior
         $model = $this->_table;
         $institutionID = $this->getInstitutionID();
         $params = $model->getQueryString();
+        if($model->getAlias() == 'FeederOutgoingInstitutions'){
+            $params['institution_id'] = $params['feeder_institution_id'];
+        }else{
+            $params['institution_id'] = $institutionID;
+        }
 //        $params['id'] = $institutionID;
-        $params['institution_id'] = $institutionID;
+        
         $queryString = $model->paramsEncode($params);
         if ($toolbarButtons->offsetExists('back')) {
             $toolbarButtons['back']['url'][0] = 'index';
@@ -174,14 +184,19 @@ class InstitutionTabBehavior extends Behavior
 
         $model = $this->_table;
         $institutionID = $this->getInstitutionID();
+
         $actions = ['view', 'edit'];
+        // if($appliedAction == 'Textbooks') {
+        //     $actions = ['view', 'edit','remove'];
+        // }
+        
         foreach ($actions as $action) {
             if (isset($buttons[$action])) {
                 $url = $buttons[$action]['url'];
                 $url_action = $url['action'];
                 $additionalParam = null;
                 if (isset($appliedActions[$url_action])) {
-//                    die($url_action);
+                    //  die($url_action);
                     if ($url_action == 'StudentUser' || $url_action == 'StaffUser') {
                         if (isset($url[2])) {
                             $url[1] = $url[2];
@@ -191,18 +206,28 @@ class InstitutionTabBehavior extends Behavior
                         if (isset($url[2])) {
                             unset($url[2]);
                         }
+
                         $queryString = $model->getQueryString();
                         $queryString['id'] = $entity->id;
-                        $queryString['institution_id'] = $institutionID;
+                        if(empty($institutionID) && ($url['plugin'] == 'Institution' && $url['controller'] == 'Institutions' && $url['action'] == 'Institutions' && $url[0] == 'view')){
+                            $queryString['institution_id'] = $entity->id;
+                        }else{
+                            $queryString['institution_id'] = $institutionID;
+                        }
                         // echo "<pre>"; print_r($url_action);
                         // echo "<pre>"; print_r($appliedActions[$url_action]);
+                        // echo "<pre>"; print_r($entity);
                         // die;
                         foreach ($appliedActions[$url_action] as $additionalParam) {
                             if($url_action == 'Classes' && $additionalParam == 'institution_class_id'){
                                 $queryString['id'] = $entity->{$additionalParam};
                             }else if($url_action == 'Subjects' && $additionalParam == 'institution_subject_id'){
                                 $queryString['institution_subject_id'] = $entity->id;
-                            }else{
+                            }
+                            // else if($url_action == 'Textbooks' && $additionalParam == 'academic_period_id'){
+                            //     $queryString['academic_period_id'] = $entity->academic_period->id;
+                            // }
+                            else{
                                 $queryString[$additionalParam] = $entity->{$additionalParam};
                             }
                         }
@@ -215,7 +240,12 @@ class InstitutionTabBehavior extends Behavior
                     }
                     $queryString = $model->getQueryString();
                     $queryString['id'] = $entity->id;
-                    $queryString['institution_id'] = $institutionID;
+                    if(empty($institutionID) && ($url['plugin'] == 'Institution' && $url['controller'] == 'Institutions' && $url['action'] == 'Institutions' && $url[0] == 'view')){
+                        $queryString['institution_id'] = $entity->id;
+                    }else{
+                        $queryString['institution_id'] = $institutionID;
+                    }
+                    //$queryString['institution_id'] = $institutionID;
                     foreach ($appliedActions[$url_action] as $additionalParam) {
                         $queryString[$additionalParam] = $entity->{$additionalParam};
                     }
@@ -226,7 +256,7 @@ class InstitutionTabBehavior extends Behavior
             }
         }
 
-    //    die('<pre>' . print_r($appliedActions, true) . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
+        // die('<pre>' . print_r($appliedActions, true) . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
 
         return $buttons;
     }
@@ -282,7 +312,7 @@ class InstitutionTabBehavior extends Behavior
             'Languages' => ['text' => __('Languages')],
             'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')],
-            'History' => ['text' => __('History')]
+            // 'History' => ['text' => __('History')]
         ];
         if ($userRule == 'Student') {
             $userID = $this->getStudentID();
@@ -367,7 +397,7 @@ class InstitutionTabBehavior extends Behavior
         // POCOR-8074-QueryStringProfile start
         $maincontroller = $model->controller;
         $controllerName = $maincontroller->getName();
-        $labels_tbl = TableRegistry::get('labels');   //POCOR-8056
+        $labels_tbl = TableRegistry::get('System.Labels');   //POCOR-8056
         $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();//POCOR-8056
         if(empty($curricular_label_Data->name)){
             $curricular_label_Data->name = "Institution Curriculars";

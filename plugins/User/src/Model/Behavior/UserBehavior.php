@@ -120,14 +120,8 @@ class UserBehavior extends Behavior
              case 'student_guardians':
                 break;
             default:
-            if (in_array('username', $columns)) {
-                $schema->setColumnType('username', 'string'); // If username is not a string, you may need to adjust this line
-                $schema->addColumn('username', ['type' => 'string']);
-            }
-            if (in_array('last_login', $columns)) {
-                $schema->setColumnType('last_login', 'datetime'); // If last_login is not a datetime, you may need to adjust this line
-                $schema->addColumn('last_login', ['type' => 'datetime']);
-            }
+                $this->_table->fields['username']['visible'] = false;
+                $this->_table->fields['last_login']['visible'] = false;
             break;
         }
         if ($this->_table->getTable() == 'security_users') {
@@ -186,7 +180,6 @@ class UserBehavior extends Behavior
                     ],
                     'default_date' => false,
                 ]);
-                $this->_table->field('photo_content');
             } else {
                 $this->_table->ControllerAction->field('date_of_birth', [
                         'date_options' => [
@@ -195,8 +188,6 @@ class UserBehavior extends Behavior
                         'default_date' => false,
                     ]
                 );
-
-                $this->_table->ControllerAction->field('photo_content');
             }
 
             $this->_table->fields['date_of_birth']['order'] = $i++;

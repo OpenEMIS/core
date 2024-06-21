@@ -63,6 +63,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         $this->addBehavior('Institution.InfrastructureShift');
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
+        $this->CustomFieldValues = TableRegistry::get('CustomField.CustomFieldValues');
         $this->levelOptions = $this->Levels->find('list')->toArray();
         $this->accessibilityOptions = $this->getSelectOptions('InstitutionAssets.accessibility');
         $this->accessibilityTooltip = $this->getMessage('InstitutionInfrastructures.accessibilityOption');
@@ -76,6 +77,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('code', [
                 'ruleUnique' => [
@@ -136,6 +138,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function validationSavingByAssociation(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator;
     }
 
@@ -727,7 +730,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         } elseif ($action == 'edit') {
             $attr['options'] = $this->getYearOptionsByConfig();
             $attr['type'] = 'select';
-            $selectedEditType = $request->query('edit_type');
+            $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
             if (!$this->canUpdateDetails) {
                 $attr['type'] = 'hidden';
             }

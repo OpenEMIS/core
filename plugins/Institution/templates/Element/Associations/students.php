@@ -158,7 +158,7 @@
 
 				<tbody>
 				<?php
-				
+				$institutionId = $attr['data']['params']['institution_id'];//POCOR-7485
 				foreach($attr['data']['students'] as $i => $obj) :
 
 					if ($action=='edit') :
@@ -198,10 +198,10 @@
 									'controller' => 'Institutions',
 									'action' => 'StudentUser',
 									'view',
-									$this->ControllerAction->paramsEncode(['id' => $obj->security_user_id])
+									$this->ControllerAction->paramsEncode(['id' => $obj->security_user_id, 'student_id' => $obj->user->id, 'institution_id' => $institutionId])
 								];
 
-								$newUrl = $this->ControllerAction->setQueryString($url, ['institution_id' => $obj->institution_id]);
+								$newUrl = $this->ControllerAction->setQueryString($url, ['institution_id' => $institutionId, 'student_id' => $obj->user->id]);
 							?>
 							<?= $this->html->link($obj->user->openemis_no, $newUrl) ?>
 						</td>
