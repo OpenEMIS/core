@@ -2658,7 +2658,7 @@ class NavigationComponent extends Component
                         'FieldOptions.remove']
                 ],
 
-                'Labels.index' => [
+                'Labels.Labels' => [
                     'title' => 'Labels',
                     'parent' => 'SystemSetup',
                     'selected' => ['Labels.index',
@@ -2683,8 +2683,7 @@ class NavigationComponent extends Component
                 'Manuals.Institutions' => [
                     'title' => 'Manuals',
                     'parent' => 'SystemSetup',
-                    'selected' => ['Manuals.Institutions', 'Manuals.view',
-                        'Manuals.edit',
+                    'selected' => ['Manuals.Institutions',
                         'Manuals.Directory',
                         'Manuals.Reports',
                         'Manuals.Personal',
@@ -2983,7 +2982,7 @@ class NavigationComponent extends Component
                         'parent' => 'SystemSetup',
                         'link' => false,
                     ],
-                    'Locales.index' => [
+                    'Locales.Locales' => [
                         'title' => 'Languages',
                         'parent' => 'SystemSetup.Localization',
                         'selected' => ['Locales.index',
@@ -2991,7 +2990,7 @@ class NavigationComponent extends Component
                             'Locales.edit',
                             'Locales.add']
                     ],
-                    'LocaleContents.index' => [
+                    'LocaleContents.LocaleContents' => [
                         'title' => 'Translations',
                         'parent' => 'SystemSetup.Localization',
                         'selected' => ['LocaleContents.index',
@@ -3011,7 +3010,7 @@ class NavigationComponent extends Component
                     //     'selected' => ['ApiSecurities.view', 'ApiSecurities.add', 'ApiSecurities.edit', 'ApiSecurities.delete']
                     // ],
                     //POCOR-7312[END]
-                    'Credentials.index' => [
+                    'Credentials.Credentials' => [
                         'title' => 'Credentials',
                         'parent' => 'API',
                         'selected' => ['Credentials.view',

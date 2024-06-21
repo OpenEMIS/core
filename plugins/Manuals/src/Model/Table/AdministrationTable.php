@@ -1,5 +1,5 @@
 <?php
-namespace Manual\Model\Table;
+namespace Manuals\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
@@ -11,7 +11,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\ORM\ResultSet;
 
-class GuardianTable extends ControllerActionTable
+class AdministrationTable extends ControllerActionTable
 {
     // private $defaultMarkType;
 
@@ -40,7 +40,7 @@ class GuardianTable extends ControllerActionTable
             $this->aliasField('module'),
             $this->aliasField('category'),
         ])
-        ->where([$this->aliasField('module') => 'Guardian'])
+        ->where([$this->aliasField('module') => 'Administration'])
         ->order([
             $this->aliasField('order')
         ])
@@ -75,7 +75,6 @@ class GuardianTable extends ControllerActionTable
         $this->field('visible', ['visible' => false]);   
         $this->field('controller', ['visible' => false]);   
         $this->field('module', ['visible' => false]);   
-        $this->field('category', ['visible' => false]);   
         $this->field('parent_id', ['visible' => false]);   
         $this->fields['function']['type'] = 'readonly';
         
