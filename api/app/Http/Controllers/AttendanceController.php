@@ -13,6 +13,7 @@ use App\Http\Requests\StudentAttendanceTypeListRequest;
 use App\Http\Requests\SubjectsByClassPerAcademicPeriodRequest;
 use App\Http\Requests\StudentAttendanceMarkTypeListRequest;
 use App\Http\Requests\StudentAttendancesExportRequest;
+use App\Http\Requests\StudentAttendancesImportTemplateRequest;
 use Illuminate\Support\Facades\Log;
 use App\Exports\StudentAttendancesExport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -254,8 +255,31 @@ class AttendanceController extends Controller
                 'Failed to export students attendances from DB.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            dd($e);
             return $this->sendErrorResponse('Failed to export students attendances from DB.');
+        }
+    }
+
+
+    public function getStudentAttendancesImportTemplate(StudentAttendancesImportTemplateRequest $request)
+    {
+        try {
+            $params = $request->all();
+
+            $data = $this->attendanceService->getStudentAttendancesImportTemplate($params);
+            
+            if(!empty($data)){
+                return $this->sendSuccessResponse("Student attendance import template data found.", $data);
+            } else {
+                return $this->sendErrorResponse("Student attendance import template data found.", $data);
+            }
+
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch students attendances import template data from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to fetch students attendances import template data from DB.');
         }
     }
     //For POCOR-8363 Ends...

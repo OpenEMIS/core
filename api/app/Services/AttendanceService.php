@@ -246,6 +246,22 @@ class AttendanceService extends Controller
             return $this->sendErrorResponse('Failed to export students attendances from DB.');
         }
     }
+
+
+    public function getStudentAttendancesImportTemplate($params)
+    {
+        try {
+            $data = $this->attendanceRepository->getStudentAttendancesImportTemplate($params);
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch students attendances import template data from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to fetch students attendances import template data from DB.');
+        }
+    }
     //For POCOR-8363 Ends...
 
 }
