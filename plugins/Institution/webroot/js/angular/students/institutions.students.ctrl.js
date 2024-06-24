@@ -375,6 +375,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             const { openemis_no, username } = selectedUserData;
 
             if ((isInternalSearchSelected || isExternalSearchSelected) && openemis_no && !isNaN(Number(openemis_no.toString()))) {
+
                 selectedUserData.username = angular.copy(openemis_no);
                 resolve();
                 return;
@@ -472,6 +473,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
                 userSvc.getInternalSearchData(param)
                     .then(function (response) {
+                        // console.log(param)
+                        // console.log(response)
                         const gridData = response.data.data || [];
                         userCtrl.isSearchResultEmpty = gridData.length === 0;
                         const totalRowCount = response.data.total === 0 ? 1 : response.data.total;
@@ -643,7 +646,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
         userSvc.getEducationGrades(param)
             .then(resp => {
-                console.log(resp.data);
+                // console.log(resp.data);
                 userCtrl.educationGradeOptions = resp.data !== 'null' ? resp.data : [];
             })
             .catch(error => {
@@ -786,7 +789,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function changeNationality() {
         const { selectedUserData, nationalitiesOptions, identityTypeOptions } = userCtrl;
-        console.log(selectedUserData);
+        // console.log(selectedUserData);
         const nationalityId = selectedUserData.nationality_id;
 
         if (nationalityId === null) {
@@ -2523,7 +2526,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
 
     async function checkUserExistByIdentityFromConfiguration() {
-        console.log('checkUserExistByIdentityFromConfiguration');
+        // console.log('checkUserExistByIdentityFromConfiguration');
         //POCOR-7481-HINDOL
 
 
