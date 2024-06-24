@@ -74,7 +74,7 @@ class TrainingsTable extends AppTable
         $this->controller->Navigation->substituteCrumb($this->getAlias(), $reportName);
         $this->controller->set('contentHeader', __($controllerName).' - '.$reportName);
         $this->fields = [];
-        $feature = $this->request->data[$this->getAlias()]['feature'];
+        $feature = $this->request->getData()[$this->getAlias()]['feature'];
         $this->ControllerAction->field('feature', ['select' => false]);
         if ($feature == 'Report.TrainingSessionParticipants'){//POCOR-6828 change position of field
             $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
@@ -98,7 +98,7 @@ class TrainingsTable extends AppTable
         }
         //End:POCOR-6829
         // Starts POCOR-6592
-        if ($this->request->data[$this->getAlias()]['feature'] ==  'Report.EmployeeTrainingCard') {
+        if ($this->request->getData()[$this->getAlias()]['feature'] ==  'Report.EmployeeTrainingCard') {
             $this->ControllerAction->field('guardian_id');
             $this->ControllerAction->field('format'); 
         }else if ($feature == 'Report.TrainingSessionParticipants'){//POCOR-6828 starts add condition for report TrainingSessionParticipants

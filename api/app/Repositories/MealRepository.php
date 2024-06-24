@@ -18,8 +18,17 @@ use App\Models\MealRating;
 use App\Models\MealStatusType;
 use App\Models\FoodType;
 use App\Models\Manual;
+use App\Models\SecurityUsers;
+use App\Models\InstitutionStudent;
+use App\Models\InstitutionMealStudents;
+use App\Models\InstitutionClasses;
+use App\Models\AcademicPeriod;
 use Carbon\Carbon;
 use JWTAuth;
+use File;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\StudentMealImport;
+use App\Exports\StudentMealExport;
 
 
 class MealRepository extends Controller
@@ -545,5 +554,350 @@ class MealRepository extends Controller
         }
     }
     //For POCOR-8210 End...
+
+
+
+    //For POCOR-8348 Start...
+    public function getStudentMealImport($params)
+    {
+        try {
+            $validExtension = ['xlsx', 'xls', 'csv'];
+            $extension = File::extension($params['file']->getClientOriginalName());
+
+            if (!in_array($extension, $validExtension)) {
+                return 1; //Invalid file extension...
+            }
+
+            $headers = ['Date ( DD/MM/YYYY )', 'OpenEMIS ID', 'Meal Programme Code', 'Meal Received Code', 'Meal Benefit Name', 'Comment'];
+            $results = Excel::toArray(new StudentMealImport(), $params['file']);
+            
+            if (empty($results[0][1])) {
+                return 2; //Header is not present...
+            }
+
+            if (empty($results[0][2])) {
+                return 3; //Imported file is empty...
+            }
+
+
+            foreach($headers as $k => $header){
+                $trimmedArray = array_map('trim', $results[0][1]); //Removing whitespace...
+                
+                if(!in_array($header, $trimmedArray)){
+                    return 4; //Not a valid header...
+                }
+            }
+
+            $institutionClass = InstitutionClasses::where('institution_id', $params['institution_id'])->where('id', $params['institution_class_id'])->first();
+
+            if(!$institutionClass){
+                return 5; //Institution is not linked with Institution Class...
+            }
+
+            $currentAcademicPeriod = AcademicPeriod::where('current', 1)->first();
+            if(!$currentAcademicPeriod){
+                return 6; //No current Academic Period is set in DB...
+            }
+
+            $rowsCount = count($results[0]) - 2;
+            
+            if ($rowsCount > config('constantvalues.importExcelRules.noRows')) {
+                return 5; //File can not have more than 2000 records.
+            }
+
+            $import = $this->importStudentMeals($results,  $params, $currentAcademicPeriod);
+            return $import;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to import students meals in DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to import students meals in DB.');
+        }
+    }
+
+
+    public function importStudentMeals($results,  $params, $currentAcademicPeriod)
+    {   
+        DB::beginTransaction();
+        try {
+            $i = -1;
+            $validation = [];
+            $updated_data = [];
+            $add_data = [];
+            $importResponse = [];
+
+            foreach ($results[0] as $key => $row) {
+                $errors = [];
+                $i++;
+
+                if ($i < 2) {
+                    continue;
+                }
+
+                if (!$row[0]) { //Date
+                    $label = $results[0][1][0];
+                    $errors[$label] = 'Date is required.';
+                } else {
+                    if(!preg_match('/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/', $row[0])){
+                        $label = $results[0][1][0];
+                        $errors[$label] = 'Invalid date format.';
+                    } else {
+                        $date = str_replace('/', '-', $row[0]);
+                        $date = date('Y-m-d', strtotime($date));
+                        
+                        if($date < $currentAcademicPeriod->start_date || $date > $currentAcademicPeriod->end_date){
+                            $label = $results[0][1][0];
+                            $errors[$label] = 'Invalid date value. Date should be between '.$currentAcademicPeriod->start_date.' and '.$currentAcademicPeriod->end_date.' for current academic period.';
+                        }
+                    }
+                }
+
+                if (!$row[1]) { //OpenEMIS Id
+                    $label = $results[0][1][1];
+                    $errors[$label] = 'OpenEMIS Id is required.';
+                }
+
+                if (!$row[2]) { //Meal programme code
+                    $label = $results[0][1][2];
+                    $errors[$label] = 'Meal programme code is required.';
+                }
+
+                if (!$row[3]) { //Meal received code
+                    $label = $results[0][1][3];
+                    $errors[$label] = 'Meal received code is required.';
+                }
+
+                if (!$row[4]) { //Meal benefit name
+                    $label = $results[0][1][4];
+                    $errors[$label] = 'Meal benefit name is required.';
+                }
+
+
+                $allRows = [
+                    $results[0][1][0] => $row[0],
+                    $results[0][1][1] => $row[1],
+                    $results[0][1][2] => $row[2],
+                    $results[0][1][3] => $row[3],
+                    $results[0][1][4] => $row[4],
+                    $results[0][1][5] => $row[5]
+                ];
+
+
+                if (count($errors) > 0) {
+                    $validation[] = [
+                        'row_number' => $i,
+                        'data' => $allRows,
+                        'errors' => $errors
+                    ];
+                } else {
+                    $user = SecurityUsers::where('openemis_no', $row[1])->where('is_student', 1)->first();
+                    $institutionStudent = InstitutionStudent::where('student_id', $user->id??0)->where('institution_id', $params['institution_id'])->first();
+                    $mealProgramme = MealProgrammes::where('code', $row[2])->first();
+                    $mealReceived = MealReceived::where('code', $row[3])->first();
+                    $mealBenefit = MealBenefits::where('id', $row[4])->first();
+
+                    if(!$user){
+                        $label = $results[0][1][1];
+                        $errors[$label] = 'OpenEMIS ID does not exist.';
+                        $validation[] = [
+                            'row_number' => $i,
+                            'data' => $allRows,
+                            'errors' => $errors
+                        ];
+                    }
+
+                    if(!$institutionStudent){
+                        $label = $results[0][1][1];
+                        $errors[$label] = 'Student does not associated with institution.';
+                        $validation[] = [
+                            'row_number' => $i,
+                            'data' => $allRows,
+                            'errors' => $errors
+                        ];
+                    }
+
+                    if(!$mealProgramme){
+                        $label = $results[0][1][2];
+                            $errors[$label] = 'Meal programmes code does not exist.';
+                            $validation[] = [
+                                'row_number' => $i,
+                                'data' => $allRows,
+                                'errors' => $errors
+                            ];
+                    }
+
+                    if(!$mealReceived){
+                        $label = $results[0][1][3];
+                            $errors[$label] = 'Meal received code does not exist.';
+                            $validation[] = [
+                                'row_number' => $i,
+                                'data' => $allRows,
+                                'errors' => $errors
+                            ];
+                    }
+
+                    if(!$mealBenefit){
+                        $label = $results[0][1][4];
+                            $errors[$label] = 'Meal benefit code does not exist.';
+                            $validation[] = [
+                                'row_number' => $i,
+                                'data' => $allRows,
+                                'errors' => $errors
+                            ];
+                    }
+
+                    if($user && $institutionStudent && $mealProgramme && $mealReceived && $mealBenefit){
+                        
+                        $date = str_replace('/', '-', $row[0]);
+                        $date = date('Y-m-d', strtotime($date));
+
+                        $check = InstitutionMealStudents::where([
+                            'student_id' => $user->id,
+                            'academic_period_id' => $currentAcademicPeriod->id,
+                            'institution_class_id' => $params['institution_class_id'],
+                            'institution_id' => $params['institution_id'],
+                            'meal_programmes_id' => $mealProgramme->id,
+                            'date' => $date
+                        ])->first();
+
+
+                        if(!$check){
+                            $insert['student_id'] = $user->id; 
+                            $insert['academic_period_id'] = $currentAcademicPeriod->id; 
+                            $insert['institution_class_id'] = $params['institution_class_id']; 
+                            $insert['institution_id'] = $params['institution_id']; 
+                            $insert['meal_programmes_id'] = $mealProgramme->id; 
+                            $insert['date'] = $date; 
+                            $insert['meal_benefit_id'] = $row[4]; 
+                            $insert['meal_received_id'] = $mealReceived->id; 
+                            $insert['paid'] = Null; 
+                            $insert['comment'] = $row[5]; 
+                            $insert['created_user_id'] = JWTAuth::user()->id; 
+                            $insert['created'] = Carbon::now()->toDateTimeString(); 
+
+                            $store = InstitutionMealStudents::insert($insert);
+
+                            $add_data[] = [
+                                'row_number' => $i,
+                                'data' => $allRows,
+                                'errors' => $errors
+                            ];
+                        } else {
+                            $update['student_id'] = $user->id; 
+                            $update['academic_period_id'] = $currentAcademicPeriod->id; 
+                            $update['institution_class_id'] = $params['institution_class_id']; 
+                            $update['institution_id'] = $params['institution_id']; 
+                            $update['meal_programmes_id'] = $mealProgramme->id; 
+                            $update['date'] = $date; 
+                            $update['meal_benefit_id'] = $row[4]; 
+                            $update['meal_received_id'] = $mealReceived->id; 
+                            $update['paid'] = Null; 
+                            $update['comment'] = $row[5]; 
+                            $update['modified_user_id'] = JWTAuth::user()->id; 
+                            $update['modified'] = Carbon::now()->toDateTimeString();
+
+                            $updateData = InstitutionMealStudents::where([
+                                    'student_id' => $user->id,
+                                    'academic_period_id' => $currentAcademicPeriod->id,
+                                    'institution_class_id' => $params['institution_class_id'],
+                                    'institution_id' => $params['institution_id'],
+                                    'meal_programmes_id' => $mealProgramme->id,
+                                    'date' => $date
+                                ])->update($update);
+
+                            $updated_data[] = [
+                                'row_number' => $i,
+                                'data' => $allRows,
+                                'errors' => $errors
+                            ];
+                        }
+                        
+                    }
+
+                }
+
+            }
+
+            $importResponse = [
+                'total_count' => count($results[0]) - 2,
+                'records_added' => [
+                    'count' => count($add_data),
+                    'rows' => $add_data,
+                ],
+                'records_updated' => [
+                    'count' => count($updated_data),
+                    'rows' => $updated_data,
+                ],
+                'records_failed' => [
+                    'count' => count($validation),
+                    'rows' => $validation,
+                ],
+            ];
+  
+            DB::commit();
+            return $importResponse;
+
+        } catch (\Exception $e){
+            DB::rollBack();
+
+            Log::error(
+                'Failed in importStudentMeals method.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return false;
+        }
+    }
+
+
+    public function getStudentMealImportTemplate($params)
+    {
+        try {
+            $institution_class_id = $params['institution_class_id'];
+            $institution_id = $params['institution_id'];
+
+            $outputData['Data']['header'] = [
+                "Date ( DD/MM/YYYY )",
+                "OpenEMIS ID",
+                "Meal Programme Code",
+                "Meal Received Code",
+                "Meal Benefit Name",
+                "Comment",
+            ];
+
+            $outputData['References'] = [];
+
+            $outputData['References']['OpenEMIS ID']['header'] = ['Name', 'OpenEMIS ID'];
+            $getClassStudents = getClassStudents($institution_id, $institution_class_id);
+            $outputData['References']['OpenEMIS ID']['data'] = $getClassStudents;
+
+
+            $outputData['References']['Meal Programmes']['header'] = ['Name', 'Code'];
+            $getMealProgrammes = getMealProgrammes();
+            $outputData['References']['Meal Programmes']['data'] = $getMealProgrammes;
+
+
+            $outputData['References']['Meal Received']['header'] = ['Name', 'Code'];
+            $getMealReceived = getMealReceived();
+            $outputData['References']['Meal Received']['data'] = $getMealReceived;
+
+
+            $outputData['References']['Meal Benefit']['header'] = ['Name', 'Id'];
+            $getMealBenefits = getMealBenefits();
+            $outputData['References']['Meal Benefit']['data'] = $getMealBenefits;
+
+            return $outputData;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch student meals import template data from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to fetch student meals import template data from DB.');
+        }
+    }
+    //For POCOR-8348 End...
 
 }

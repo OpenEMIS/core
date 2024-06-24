@@ -190,6 +190,7 @@ class StudentsTable extends ControllerActionTable
             ['student_status_id',
                 'academic_period_id',]]]);
 
+        $this->setDeleteStrategy('restrict');//POCOR-8333
     }
 
     public function implementedEvents(): array
@@ -798,33 +799,197 @@ class StudentsTable extends ControllerActionTable
         // End POCOR-5188
 
     }
+    /**
+     * @param Entity $entity
+     * POCOR-8333 -- Initialize for delete.
+     */
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $student_id = $entity->student_id;
+        $student = $this->Users->get($entity->student_id);
+        $entity->showDeletedValueAs = $student->name_with_id;
+        
+        $SecurityGroupUsersTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $associatedStudentRecordsCount = $SecurityGroupUsersTbl->find()
+        ->where([
+            $SecurityGroupUsersTbl->aliasField('security_user_id') => $student_id,
+        ])
+        ->count();
+        $extra['associatedRecords'][] = ['model' => 'SecurityGroupUsers', 'count' => $associatedStudentRecordsCount];    
+        
+        $UserActivitiesTbl = TableRegistry::getTableLocator()->get('User.UserActivities');
+        $associatedActivitiesRecordsCount = $UserActivitiesTbl->find()
+        ->where([
+            $UserActivitiesTbl->aliasField('security_user_id') => $student_id,
+        ])
+        ->count();
+        $extra['associatedRecords'][] = ['model' => 'UserActivities', 'count' => $associatedActivitiesRecordsCount];    
+        
+        $StudentCustomFieldValuesTbl = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldValues');
+        $associatedStudentCustomRecordsCount = $StudentCustomFieldValuesTbl->find()
+        ->where([
+            $StudentCustomFieldValuesTbl->aliasField('student_id') => $student_id,
+        ])
+        ->count();
+        $extra['associatedRecords'][] = ['model' => 'StudentCustomFieldValues', 'count' => $associatedStudentCustomRecordsCount];    
+       
+        $StudentAdmissionTbl = TableRegistry::getTableLocator()->get('Institution.StudentAdmission');
+        $associatedStudentAdmissionRecordsCount = $StudentAdmissionTbl->find()
+        ->where([
+            $StudentAdmissionTbl->aliasField('student_id') => $student_id,
+        ])
+        ->count();
+        $extra['associatedRecords'][] = ['model' => 'StudentAdmission', 'count' => $associatedStudentAdmissionRecordsCount];    
+           
+        $StudentSurveysTbl = TableRegistry::getTableLocator()->get('Student.StudentSurveys');
+        $associatedStudentSurveysRecordsCount = $StudentSurveysTbl->find()
+        ->where([
+            $StudentSurveysTbl->aliasField('student_id') => $student_id,
+        ])
+        ->count();
+        $extra['associatedRecords'][] = ['model' => 'InstitutionStudentSurveys', 'count' => $associatedStudentSurveysRecordsCount];    
+        
+        $StudentStatusUpdatesTbl = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates');
+        $associatedStudentStatusUpdatesRecordsCount = $StudentStatusUpdatesTbl->find()
+        ->where([
+            $StudentStatusUpdatesTbl->aliasField('security_user_id') => $student_id,
+        ])
+        ->count();
+        $extra['associatedRecords'][] = ['model' => 'StudentStatusUpdates', 'count' => $associatedStudentStatusUpdatesRecordsCount];    
+    }
 
+    /**
+     * @param Event $event
+     * @param Entity $entity
+     * POCOR-8333 -- before delete
+     */
     public function beforeDelete(Event $event, Entity $entity)
     {
-        $studentStatuses = $this->StudentStatuses->findCodeList();
-        // if user tries to delete record that is not enrolled
-//        if ($entity->student_status_id != $studentStatuses['CURRENT']) {
-//            $event->stopPropagation();
-//            return false;
-//        }
-        $body = array();
         $student_id = !empty($entity->student_id) ? $entity->student_id : NULL;
-        $institution_id = !empty($entity->institution_id) ? $entity->institution_id : NULL;
-        $institution_student_id = !empty($entity->id) ? $entity->id : NULL;
-        $body = [
-            'institution_student_id' => $student_id,
-            'institution_id' => $institution_id,
-        ];
-        $affected = $this->removeIndividualChildRecords($student_id, $institution_student_id);
-//        $this->log("removed $affected security records", 'debug');
-        if (!empty($this->action) && $this->action == 'remove') {
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $username = $this->Auth->user()['username'];
-                $Webhooks->triggerShell('student_delete', ['username' => $username], $body);
-            }
+        $institution_id = !empty($entity->institution_id) ? $entity->institution_id : 0;
+        $result = $this->checkStudentRecords($entity);
+        if ($result) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        } else {
+            $body = array();
+            $institution_student_id = !empty($entity->id) ? $entity->id : NULL;
+            $body = [
+                'institution_student_id' => $student_id,
+                'institution_id' => $institution_id,
+            ];
+            $affected = $this->removeIndividualChildRecords($student_id, $institution_student_id);
+            // $this->log("removed $affected security records", 'debug');
+            if (!empty($this->action) && $this->action == 'remove') {
+                $Webhooks = TableRegistry::get('Webhook.Webhooks');
+                if ($this->Auth->user()) {
+                    $username = $this->Auth->user()['username'];
+                    $Webhooks->triggerShell('student_delete', ['username' => $username], $body);
+                }
+            }    
         }
     }
+
+    /**
+     * @param Entity $entity
+     * POCOR-8333 -- check if association exits before deleting child records.
+     */
+    public function checkStudentRecords($entity)
+    {
+        $result = false;
+        $checkAllRecords = [];
+        $institutionId = $entity->institution_id ?? 0;
+        $student_id = $entity->student_id ?? 0;
+        if ($institutionId && $student_id) {
+
+            $SecurityGroupUsersTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+            $associatedStudentRecordsCount = $SecurityGroupUsersTbl->find()
+            ->where([
+                $SecurityGroupUsersTbl->aliasField('security_user_id') => $student_id,
+            ])
+            ->count();
+            $checkAllRecords['associatedRecords'][] = ['model' => 'SecurityGroupUsers', 'count' => $associatedStudentRecordsCount];
+
+            $UserActivitiesTbl = TableRegistry::getTableLocator()->get('User.UserActivities');
+            $associatedActivitiesRecordsCount = $UserActivitiesTbl->find()
+            ->where([
+                $UserActivitiesTbl->aliasField('security_user_id') => $student_id,
+            ])
+            ->count();
+            $checkAllRecords['associatedRecords'][] = ['model' => 'UserActivities', 'count' => $associatedActivitiesRecordsCount];
+
+            $StudentCustomFieldValuesTbl = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldValues');
+            $associatedStudentCustomRecordsCount = $StudentCustomFieldValuesTbl->find()
+            ->where([
+                $StudentCustomFieldValuesTbl->aliasField('student_id') => $student_id,
+            ])
+            ->count();
+            $checkAllRecords['associatedRecords'][] = ['model' => 'StudentCustomFieldValues', 'count' => $associatedStudentCustomRecordsCount];
+    
+            $StudentAdmissionTbl = TableRegistry::getTableLocator()->get('Institution.StudentAdmission');
+            $associatedStudentAdmissionRecordsCount = $StudentAdmissionTbl->find()
+            ->where([
+                $StudentAdmissionTbl->aliasField('student_id') => $student_id,
+            ])
+            ->count();
+            $checkAllRecords['associatedRecords'][] = ['model' => 'StudentAdmission', 'count' => $associatedStudentAdmissionRecordsCount];
+    
+            $StudentSurveysTbl = TableRegistry::getTableLocator()->get('Student.StudentSurveys');
+            $associatedStudentSurveysRecordsCount = $StudentSurveysTbl->find()
+            ->where([
+                $StudentSurveysTbl->aliasField('student_id') => $student_id,
+            ])
+            ->count();
+            $checkAllRecords['associatedRecords'][] = ['model' => 'InstitutionStudentSurveys', 'count' => $associatedStudentSurveysRecordsCount];
+    
+            $StudentStatusUpdatesTbl = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates');
+            $associatedStudentStatusUpdatesRecordsCount = $StudentStatusUpdatesTbl->find()
+            ->where([
+                $StudentStatusUpdatesTbl->aliasField('security_user_id') => $student_id,
+            ])
+            ->count();
+            $checkAllRecords['associatedRecords'][] = ['model' => 'StudentStatusUpdates', 'count' => $associatedStudentStatusUpdatesRecordsCount];
+    
+            if (!empty($checkAllRecords)) {
+                foreach ($checkAllRecords['associatedRecords'] as $record) {
+                    echo $record['count'];
+                    if ($record['count'] > 0) {
+                        $result = true;
+                    }
+                }
+            }
+        }
+        return $result;
+    }
+
+    // comment by Abhinav POCOR-8333 - Old code V3
+    // public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    // { 
+    //     $studentStatuses = $this->StudentStatuses->findCodeList();
+    //     // if user tries to delete record that is not enrolled
+    //     // if ($entity->student_status_id != $studentStatuses['CURRENT']) {
+    //     //    $event->stopPropagation();
+    //     //    return false;
+    //     // }
+    //     $body = array();
+    //     $student_id = !empty($entity->student_id) ? $entity->student_id : NULL;
+    //     $institution_id = !empty($entity->institution_id) ? $entity->institution_id : NULL;
+    //     $institution_student_id = !empty($entity->id) ? $entity->id : NULL;
+    //     $body = [
+    //         'institution_student_id' => $student_id,
+    //         'institution_id' => $institution_id,
+    //     ];
+    //     $affected = $this->removeIndividualChildRecords($student_id, $institution_student_id);
+    //     //        $this->log("removed $affected security records", 'debug');
+    //     if (!empty($this->action) && $this->action == 'remove') {
+    //         $Webhooks = TableRegistry::get('Webhook.Webhooks');
+    //         if ($this->Auth->user()) {
+    //             $username = $this->Auth->user()['username'];
+    //             $Webhooks->triggerShell('student_delete', ['username' => $username], $body);
+    //         }
+    //     }
+    // }
 
     private function removeIndividualChildRecords($student_id, $institution_student_id)
     {
@@ -835,9 +1000,9 @@ class StudentsTable extends ControllerActionTable
             $field_name = 'security_user_id';
             $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
-//            $table_name = 'institution_class_students';
-//            $field_name = 'student_id';
-//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+            // $table_name = 'institution_class_students';
+            // $field_name = 'student_id';
+            // $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'User.UserActivities';
             $field_name = 'security_user_id';
@@ -847,49 +1012,49 @@ class StudentsTable extends ControllerActionTable
             $field_name = 'student_id';
             $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
-//            $table_name = 'institution_competency_results';
-//            $field_name = 'student_id';
-//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-//
-//            $table_name = 'institution_student_absences';
-//            $field_name = 'student_id';
-//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-//
-//            $table_name = 'institution_student_absence_days';
-//            $field_name = 'student_id';
-//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-//
-//            $table_name = 'institution_student_absence_details';
-//            $field_name = 'student_id';
-//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-//
-//            $table_name = 'institution_student_risks';
-//            $field_name = 'student_id';
-//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-//
-//            $table_name = 'institution_subject_students';
-//            $field_name = 'student_id';
-//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-//
-//            $table_name = 'user_special_needs_devices';
-//            $field_name = 'security_user_id';
-//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-//
-//            $table_name = 'user_special_needs_referrals';
-//            $field_name = 'security_user_id';
-//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-//
-//            $table_name = 'user_special_needs_services';
-//            $field_name = 'security_user_id';
-//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-//
-//            $table_name = 'user_special_needs_assessments';
-//            $field_name = 'security_user_id';
-//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-//
-//            $table_name = 'user_nationalities';
-//            $field_name = 'security_user_id';
-//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+            // $table_name = 'institution_competency_results';
+            // $field_name = 'student_id';
+            // $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+            //
+            // $table_name = 'institution_student_absences';
+            // $field_name = 'student_id';
+            // $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+            //
+            // $table_name = 'institution_student_absence_days';
+            // $field_name = 'student_id';
+            // $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+            //
+            // $table_name = 'institution_student_absence_details';
+            // $field_name = 'student_id';
+            // $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+            //
+            // $table_name = 'institution_student_risks';
+            // $field_name = 'student_id';
+            // $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+            //
+            // $table_name = 'institution_subject_students';
+            // $field_name = 'student_id';
+            // $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+            //
+            // $table_name = 'user_special_needs_devices';
+            // $field_name = 'security_user_id';
+            // $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+            //
+            // $table_name = 'user_special_needs_referrals';
+            // $field_name = 'security_user_id';
+            // $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+            //
+            // $table_name = 'user_special_needs_services';
+            // $field_name = 'security_user_id';
+            // $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+            //
+            // $table_name = 'user_special_needs_assessments';
+            // $field_name = 'security_user_id';
+            // $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+            //
+            // $table_name = 'user_nationalities';
+            // $field_name = 'security_user_id';
+            // $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
             $table_name = 'Institution.InstitutionStudentAdmission';
             $field_name = 'student_id';
@@ -903,26 +1068,26 @@ class StudentsTable extends ControllerActionTable
             $field_name = 'security_user_id';
             $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
 
-//            $table_name = 'institution_students_report_cards_comments';
-//            $field_name = 'student_id';
-//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-//
-//            $table_name = 'institution_students_report_cards';
-//            $field_name = 'student_id';
-//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-//
-//            $table_name = 'student_report_cards';
-//            $field_name = 'student_id';
-//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-//
-//            $table_name = 'institution_association_student';
-//            $field_name = 'security_user_id';
-//            $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
-//
-//            if($institution_student_id){
-//                $table_name = 'institution_students';
-//                $affected = $affected + $this->removeFromTableTwo($student_id, $institution_student_id, $table_name);
-//            }
+            // $table_name = 'institution_students_report_cards_comments';
+            // $field_name = 'student_id';
+            // $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+            //
+            // $table_name = 'institution_students_report_cards';
+            // $field_name = 'student_id';
+            // $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+            //
+            // $table_name = 'student_report_cards';
+            // $field_name = 'student_id';
+            // $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+            //
+            // $table_name = 'institution_association_student';
+            // $field_name = 'security_user_id';
+            // $affected = $affected + $this->removeFromTable($student_id, $table_name, $field_name);
+            //
+            // if($institution_student_id){
+            //     $table_name = 'institution_students';
+            //     $affected = $affected + $this->removeFromTableTwo($student_id, $institution_student_id, $table_name);
+            // }
 
         }
 
@@ -1159,7 +1324,7 @@ class StudentsTable extends ControllerActionTable
             //->contain(['EducationGrades'])
             ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
             ->where(['institution_id' => $institutionId])
-            ->where(['EducationSystems.academic_period_id' => $selectedAcademicPeriod])
+            ->where(['EducationSystems.academic_period_id IS' => $selectedAcademicPeriod])
             ->order(['EducationGrades.name' => 'ASC'])//POCOR-7247
             ->group('education_grade_id')
             ->toArray();
@@ -1906,17 +2071,20 @@ class StudentsTable extends ControllerActionTable
                 $icon = '<i class="fa fa-history"></i>';
                 $url = [
                     'plugin' => 'Institution',
-                    'institutionId' => $institutionId,
-                    'controller' => 'StudentHistories',
-                    'action' => 'index',
+                    //'institutionId' => $institutionId,
+                    //'controller' => 'StudentHistories',
+                    //'action' => 'index',
+                    'controller' => 'Institutions',//POCOR-8333
+                    'action' => 'StudentHistories',//POCOR-8333
+                    '0' => 'index',//POCOR-8333
                     '1' => $encodedQueryString
                 ];
-
+                
                 $buttons['history'] = $buttons['view'];
                 $buttons['history']['label'] = $icon . __('History');
                 $buttons['history']['url'] = $this->ControllerAction->setQueryString($url, [
                     'security_user_id' => $entity->_matchingData['Users']->id,
-                    'user_type' => 'Student'
+                    'user_type' => 'Student', 'institution_id' => $entity->institution->id//POCOR-8333
                 ]);
             }
             // end POCOR-3125 history button permission
@@ -1928,35 +2096,37 @@ class StudentsTable extends ControllerActionTable
         }
 
         /*POCOR-6634 starts - added remove button functionality*/
-        if (isset($buttons['remove'])) {
-            $institutionId = $entity->institution->id;
-            $studentId = $entity->_matchingData['Users']['id'];
-            $periodId = $entity->academic_period->id;
-            $gradeId = $entity->education_grade->id;
-            $toBeDeleteId = $this->find()
-                ->where([
-                    $this->aliasField('institution_id') => $institutionId,
-                    $this->aliasField('academic_period_id') => $periodId,
-                    $this->aliasField('education_grade_id') => $gradeId,
-                    $this->aliasField('student_id') => $studentId
-                ])
-                ->first()->id;
-            $encodedId = $this->paramsEncode([
-                'id' => $toBeDeleteId
-            ]);
-            $attr = [
-                'role' => 'menuitem',
-                'tabindex' => -1,
-                'escape' => false,
-                'data-toggle' => 'modal',
-                'data-target' => '#delete-modal',
-                'field-target' => '#recordId',
-                'field-value' => $encodedId,
-                'onclick' => 'ControllerAction.fieldMapping(this)'
-            ];
+        //POCOR-8333 STARTS-- Comment this code because of old code V3.
+        // if (isset($buttons['remove'])) {
+        //     $institutionId = $entity->institution->id;
+        //     $studentId = $entity->_matchingData['Users']['id'];
+        //     $periodId = $entity->academic_period->id;
+        //     $gradeId = $entity->education_grade->id;
+        //     $toBeDeleteId = $this->find()
+        //         ->where([
+        //             $this->aliasField('institution_id') => $institutionId,
+        //             $this->aliasField('academic_period_id') => $periodId,
+        //             $this->aliasField('education_grade_id') => $gradeId,
+        //             $this->aliasField('student_id') => $studentId
+        //         ])
+        //         ->first()->id;
+        //     $encodedId = $this->paramsEncode([
+        //         'id' => $toBeDeleteId
+        //     ]);
+        //     $attr = [
+        //         'role' => 'menuitem',
+        //         'tabindex' => -1,
+        //         'escape' => false,
+        //         'data-toggle' => 'modal',
+        //         'data-target' => '#delete-modal',
+        //         'field-target' => '#recordId',
+        //         'field-value' => $encodedId,
+        //         'onclick' => 'ControllerAction.fieldMapping(this)'
+        //     ];
 
-            $buttons['remove']['attr'] = $attr;
-        }
+        //     $buttons['remove']['attr'] = $attr;
+        // }
+        //POCOR-8333 ENDS
         /*POCOR-6634 ends*/
         return $buttons;
     }
@@ -3214,7 +3384,7 @@ class StudentsTable extends ControllerActionTable
         $guardians = TableRegistry::getTableLocator()->get('User.Users');
         $student_guardians = TableRegistry::getTableLocator()->get('Student.StudentGuardians');
         $guardian_relations = TableRegistry::getTableLocator()->get('Student.GuardianRelations');
-        $guardian_contacts = TableRegistry::getTableLocator()->get('User.UserContacts');
+        $guardian_contacts = TableRegistry::getTableLocator()->get('User.Contacts');
         $guardians->getAlias('guardians');
         $student_guardians->getAlias('student_guardians');
         $guardian_relations->getAlias('guardian_relations');
@@ -3247,7 +3417,7 @@ class StudentsTable extends ControllerActionTable
 
     private function addStudentContactFields(Query $query)
     {
-        $student_contacts = TableRegistry::getTableLocator()->get('User.UserContacts');
+        $student_contacts = TableRegistry::getTableLocator()->get('User.Contacts');
         $contact_types = TableRegistry::getTableLocator()->get('User.ContactTypes');
         $contact_options = TableRegistry::getTableLocator()->get('User.ContactOptions');
         $student_contacts->getAlias('student_contacts');

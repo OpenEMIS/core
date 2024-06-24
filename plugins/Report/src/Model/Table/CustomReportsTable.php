@@ -9,6 +9,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
+use Cake\Http\ServerRequest;
 
 class CustomReportsTable extends AppTable
 {
@@ -79,7 +80,7 @@ class CustomReportsTable extends AppTable
 
             // filters
             if (!empty($customReportData) && !empty($customReportData->filter)) {
-                $validator = $this->validator();
+                $validator = $this->getValidator();
                 $filters = json_decode($customReportData->filter, true);
 
                 // academic period filter
@@ -239,7 +240,7 @@ class CustomReportsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldFormat(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             if (isset($this->request->getData($this->getAlias())['feature']) && !empty($this->request->getData($this->getAlias())['feature'])) {
@@ -261,7 +262,7 @@ class CustomReportsTable extends AppTable
     }
 
     // academic period filter
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -327,7 +328,7 @@ class CustomReportsTable extends AppTable
     }
 
     /*POCOR-6451 starts- institution filter*/
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $InstitutionsTable = TableRegistry::get('Institution.Institutions');
@@ -364,7 +365,7 @@ class CustomReportsTable extends AppTable
     /*POCOR-6451 ends*/
 
     // Institution Type filter POCOR-7069
-    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $TypesTable = TableRegistry::get('Institution.Types');
@@ -383,7 +384,7 @@ class CustomReportsTable extends AppTable
     }
 
     // POCOR-7096 education grade filter
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -436,7 +437,7 @@ class CustomReportsTable extends AppTable
     }
 
     // POCOR-7069 education sujbect filter 
-    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $selectedPeriod = $request->data['CustomReports']['academic_period_id'];
