@@ -166,7 +166,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         let url = angular.baseUrl + '/Directories/directoryInternalSearch';
         $http.post(url, {params: param})
         .then(function(response){
-            console.log(response);
+            // console.log(response);
             deferred.resolve(response);
         }, function(error) {
             deferred.reject(error);
