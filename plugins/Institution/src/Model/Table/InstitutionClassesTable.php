@@ -210,6 +210,16 @@ class InstitutionClassesTable extends ControllerActionTable
             }
             return  __((string)$Courses);
             
+        }else if ($field == 'staff_id') {
+            return __('Class Teacher');
+        }else if ($field == 'name') {
+            return __('Class Name');
+        }else if ($field == 'multigrade') {
+            return __('Multi-grade');
+        }else if ($field == 'total_male_students') {
+            return __('Male Students');
+        }else if ($field == 'total_female_students') {
+            return __('Female Students');
         }
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
@@ -319,8 +329,8 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->field('academic_period_id', ['type' => 'select', 'visible' => ['view' => true, 'edit' => true]]);
         $this->field('institution_shift_id', ['type' => 'select', 'visible' => ['view' => true, 'edit' => true]]);
 
-        $this->field('institution_unit_id', ['type' => 'select', 'visible' => ['index' => true, 'add' => true, 'view' => true, 'edit' => true]]);
-        $this->field('institution_course_id', ['type' => 'select', 'visible' => ['index' => true, 'add' => true,'view' => true, 'edit' => true]]);
+        $this->field('institution_unit_id', ['type' => 'select', 'visible' => ['index' => false, 'add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('institution_course_id', ['type' => 'select', 'visible' => ['index' => false, 'add' => true,'view' => true, 'edit' => true]]);
 
         $this->field('total_students', ['type' => 'integer', 'visible' => ['index' => true]]);
         $this->field('subjects', ['override' => true, 'type' => 'integer', 'visible' => ['index' => true]]);
@@ -2446,7 +2456,7 @@ class InstitutionClassesTable extends ControllerActionTable
         * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
         * @ticket POCOR-6635 starts
         */
-        $encodedClassId = $this->request->getAttribute('params')['pass'][1];
+        $encodedClassId = $this->request->getAttribute('params')['pass'][2];//POCOR-8323
         if (!empty($encodedClassId)) {
             $query;
         } else {
@@ -2458,13 +2468,13 @@ class InstitutionClassesTable extends ControllerActionTable
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
 
-                $institutionClassSubjectsTable = TableRegistry::get('InstitutionClassSubjects');
+                $institutionClassSubjectsTable = TableRegistry::get('Institution.InstitutionClassSubjects');
                 $institutionClassSubjecs = $institutionClassSubjectsTable->find()
                                                 ->where(['institution_class_id' => $row['institution_class_id']])->all();
                       
                 $nArr = [];                                    
                 foreach($institutionClassSubjecs as $key => $institutionClassSubject) { 
-                    $institutionSubjectStaffTable = TableRegistry::get('InstitutionSubjectStaff');
+                    $institutionSubjectStaffTable = TableRegistry::get('Institution.InstitutionSubjectStaff');
                     $institutionSubjectStaff[$key] = $institutionSubjectStaffTable->find()
                                                 ->where(['institution_subject_id' => $institutionClassSubject['institution_subject_id']])->all();
                                                         
@@ -2478,7 +2488,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 $subteachers = '';       
                 foreach($splArr as $kjj => $institutionSubjectStaffOne) {
 
-                    $staffUserTable = TableRegistry::get('SecurityUsers');
+                    $staffUserTable = TableRegistry::get('Security.Users');
                     $staffUserData = $staffUserTable->find()
                                                 ->where(['id' => $institutionSubjectStaffOne])->first();
                     $subteachers .=  $staffUserData['first_name'].' '.$staffUserData['last_name'].',';
