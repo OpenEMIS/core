@@ -145,7 +145,10 @@ class ContactsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-
+		if($this->request->getParam('controller') == 'Staff') {
+            $userId = $this->getUserID();
+            $this->field('security_user_id', ['attr' => ['value' => $userId], 'type' => 'hidden']);
+        }
         $this->fields['preferred']['type'] = 'select';
         $this->fields['preferred']['options'] = $this->getSelectOptions('general.yesno');
     }

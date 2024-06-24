@@ -32,9 +32,9 @@ class TextbooksTable extends ControllerActionTable {
         $this->belongsTo('EducationGrades',     ['className' => 'Education.EducationGrades']);
         $this->belongsTo('EducationSubjects',   ['className' => 'Education.EducationSubjects']);
 
-        // $this->belongsTo('TextbookDimensions',   ['className' => 'Textbook.TextbookDimensions']); //POCOR-7362
+        $this->belongsTo('TextbookDimensions',   ['className' => 'Textbook.TextbookDimensions']); //POCOR-7362
 
-        $this->hasMany('TextbookDimensions', ['className' => 'Textbook.TextbookDimensions', 'foreignKey' => ['textbook_id', 'textbook_dimension_id'], 'dependent' => true, 'cascadeCallBack' => true]); //POCOR-7362
+        // $this->hasMany('TextbookDimensions', ['className' => 'Textbook.TextbookDimensions', 'foreignKey' => ['textbook_id', 'textbook_dimension_id'], 'dependent' => true, 'cascadeCallBack' => true]); //POCOR-7362
 
         $this->hasMany('InstitutionTextbooks', ['className' => 'Institution.InstitutionTextbooks', 'foreignKey' => ['textbook_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallBack' => true]);
 

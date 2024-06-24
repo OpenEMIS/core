@@ -46,7 +46,7 @@ class InstitutionTextbookExcelBehavior extends Behavior
     {
         $this->getConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
         if (!array_key_exists('filename', $config)) {
-            $this->getConfig('filename', $this->_table->getAlias());
+            $this->setConfig('filename', $this->_table->getAlias());
         }
         $folder = WWW_ROOT . $this->getConfig('folder');
 
@@ -64,7 +64,7 @@ class InstitutionTextbookExcelBehavior extends Behavior
         }
         $pages = $this->getConfig('pages');
         if ($pages !== false && empty($pages)) {
-            $this->getConfig('pages', ['index', 'view']);
+            $this->setConfig('pages', ['index', 'view']);
         }
     }
 
@@ -90,7 +90,7 @@ class InstitutionTextbookExcelBehavior extends Behavior
         $id = 0;
         $break = false;
         $action = $this->_table->action;
-        $pass = $this->_table->request->pass;
+        $pass = $this->_table->request->getParam('pass');
         if (in_array($action, $pass)) {
             unset($pass[array_search($action, $pass)]);
             $pass = array_values($pass);
@@ -181,10 +181,14 @@ class InstitutionTextbookExcelBehavior extends Behavior
 
         $session = $this->_table->request->getSession();
         $institution_id = $session->read('Institution.Institutions.id') ? $session->read('Institution.Institutions.id'): 0;
-
-        $subject_id = !empty($this->_table->request->query) ? $this->_table->request->query['subject'] : 0;
-        $period_id = !empty($this->_table->request->query) ? $this->_table->request->query['period'] : 0;
-        $grade_id = !empty($this->_table->request->query) ? $this->_table->request->query['grade'] : 0;
+        
+        if(empty($institution_id) && isset($this->_table->request->getParam('pass')[1])) {
+            $institution_id = $this->_table->paramsDecode($this->_table->request->getParam('pass')[1])['institution_id'];
+        }
+        
+        $subject_id = !empty($this->_table->request->getQuery('subject')) ? $this->_table->request->getQuery('subject') : 0;
+        $period_id = !empty($this->_table->request->getQuery('period')) ? $this->_table->request->getQuery('period') : 0;
+        $grade_id = !empty($this->_table->request->getQuery('grade')) ? $this->_table->request->getQuery('grade') : 0;
 
         $InstitutionTextbooks = TableRegistry::get('Institution.InstitutionTextbooks');
 
