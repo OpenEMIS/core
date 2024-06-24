@@ -506,10 +506,10 @@ class StudentsController extends AppController
             $session->write('Student.ExaminationResults.student_id', $studentId);
 
             // tabs
-            // $options = ['type' => 'student'];
-            // $tabElements = $this->getAcademicTabElements($options);
-            // $this->set('tabElements', $tabElements);
-            // $this->set('selectedAction', 'ExaminationResults');
+            $options = ['type' => 'student'];
+            $tabElements = $this->getAcademicTabElements($options);
+            $this->set('tabElements', $tabElements);
+            $this->set('selectedAction', 'ExaminationResults');
             // End
 
 

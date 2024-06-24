@@ -184,7 +184,12 @@ class InstitutionTabBehavior extends Behavior
 
         $model = $this->_table;
         $institutionID = $this->getInstitutionID();
+
         $actions = ['view', 'edit'];
+        // if($appliedAction == 'Textbooks') {
+        //     $actions = ['view', 'edit','remove'];
+        // }
+        
         foreach ($actions as $action) {
             if (isset($buttons[$action])) {
                 $url = $buttons[$action]['url'];
@@ -218,9 +223,11 @@ class InstitutionTabBehavior extends Behavior
                                 $queryString['id'] = $entity->{$additionalParam};
                             }else if($url_action == 'Subjects' && $additionalParam == 'institution_subject_id'){
                                 $queryString['institution_subject_id'] = $entity->id;
-                            }else if($url_action == 'Textbooks' && $additionalParam == 'academic_period_id'){
-                                $queryString['academic_period_id'] = $entity->academic_period->id;
-                            }else{
+                            }
+                            // else if($url_action == 'Textbooks' && $additionalParam == 'academic_period_id'){
+                            //     $queryString['academic_period_id'] = $entity->academic_period->id;
+                            // }
+                            else{
                                 $queryString[$additionalParam] = $entity->{$additionalParam};
                             }
                         }
@@ -249,7 +256,7 @@ class InstitutionTabBehavior extends Behavior
             }
         }
 
-//        die('<pre>' . print_r($appliedActions, true) . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
+        // die('<pre>' . print_r($appliedActions, true) . print_r($entity, true) . '</pre><h1>BUTTONS</h1><pre>' . print_r($buttons, true));
 
         return $buttons;
     }
@@ -305,7 +312,7 @@ class InstitutionTabBehavior extends Behavior
             'Languages' => ['text' => __('Languages')],
             'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')],
-            'History' => ['text' => __('History')]
+            // 'History' => ['text' => __('History')]
         ];
         if ($userRule == 'Student') {
             $userID = $this->getStudentID();
@@ -390,7 +397,7 @@ class InstitutionTabBehavior extends Behavior
         // POCOR-8074-QueryStringProfile start
         $maincontroller = $model->controller;
         $controllerName = $maincontroller->getName();
-        $labels_tbl = TableRegistry::get('labels');   //POCOR-8056
+        $labels_tbl = TableRegistry::get('System.Labels');   //POCOR-8056
         $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();//POCOR-8056
         if(empty($curricular_label_Data->name)){
             $curricular_label_Data->name = "Institution Curriculars";

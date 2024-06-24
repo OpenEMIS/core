@@ -30,12 +30,41 @@ class LocaleContentsLanguageTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $header = __(Inflector::humanize(Inflector::underscore($this->getAlias())));
-        $this->controller->set('contentHeader', $header);
+        $this->controller->set('contentHeader', 'Translations');
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('created', ['visible' => true, 'sort' => true]);
+        // By default English has to be there
+        $defaultLocale = 'en';
+
+        // Get the localization option from localization component
+        $localeOptions = $this->Localization->getOptions();
+
+        if(array_key_exists($defaultLocale, $localeOptions)){
+            unset($localeOptions[$defaultLocale]);
+        }
+        $this->controller->set(compact('localeOptions'));
+
+        $selectedOption = $this->queryString('translations_id', $localeOptions);
+        $this->controller->set('selectedOption', $selectedOption);
+
+        $toolbarElements = [
+            ['name' => 'System.controls', 'data' => [], 'options' => []]
+        ];
+        $this->controller->set('toolbarElements', $toolbarElements);
+
+        $selected = 'ar';
+        if(array_key_exists($selectedOption, $localeOptions)){
+            $selected = $selectedOption;
+        }
+
+        $this->ControllerAction->setFieldOrder([
+             $defaultLocale, $selected
+        ]);
+        $this->ControllerAction->setFieldVisible(['index'], [
+            $defaultLocale, $selected
+        ]);
 
     }
 

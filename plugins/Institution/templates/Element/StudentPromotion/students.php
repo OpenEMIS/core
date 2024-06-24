@@ -1,16 +1,17 @@
 <?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
 
-<?php if (in_array($action, ['add', 'reconfirm'])) : ?>
+<?php if (in_array($action, ['add', 'reconfirm'])) : 
+	$getNextclassId = $this->request->getData()['StudentPromotion']['next_class']; ?>
 	<div class="input clearfix required">
-		<label><?= isset($attr['label']) ? __($attr['label']) : __($attr['field']) ?></label>
+		<label><?= !is_null($attr['label']) ? __($attr['label']) : __($attr['field']) ?></label>
 		<div class="table-wrapper">
 			<div class="table-in-view">
 				<table class="table table-checkable">
 					<thead>
 						<tr>
 							<?php
-								$showNextClass = isset($attr['displayNextClassColumn']) ? $attr['displayNextClassColumn'] : false;
-								$nextClassOptions = isset($attr['nextClassOptions']) ? $attr['nextClassOptions'] : [];
+								$showNextClass = !is_null($attr['displayNextClassColumn']) ? $attr['displayNextClassColumn'] : false;
+								$nextClassOptions = !is_null($attr['nextClassOptions']) ? $attr['nextClassOptions'] : [];
 							?>
 							<?php if ($action != 'reconfirm') { ?>
 							<th class="checkbox-column"><input type="checkbox" class="no-selection-label" kd-checkbox-radio/></th>
@@ -24,7 +25,8 @@
 							<?php } ?>
 						</tr>
 					</thead>
-					<?php if (isset($attr['data'])) :
+
+					<?php if (!is_null($attr['data'])) :
 							$selectedStudents = array_key_exists('selectedStudents', $attr)? $attr['selectedStudents']: [];
 							$onlySelectedStudents = [];
 							foreach ($selectedStudents as $sskey => $ssvalue) {
@@ -60,19 +62,23 @@
 									<td><?= $obj->_matchingData['Users']->openemis_no ?></td>
 									<td><?= $obj->_matchingData['Users']->name ?></td>
 									<td><?= $obj->_matchingData['EducationGrades']->programme_grade_name ?></td>
-									<td><?= isset($attr['classOptions'][$obj->institution_class_id]) ? $attr['classOptions'][$obj->institution_class_id] : '' ?></td>
+									<td><?= !is_null($attr['classOptions'][$obj->institution_class_id]) ? $attr['classOptions'][$obj->institution_class_id] : '' ?></td>
 									<?php if ($showNextClass) { ?>
 										<td>
 											<?php if ($action == 'add') {
+
 													if ($pendingRequestsCount == 0) {
 														echo $this->Form->input("$fieldPrefix.next_institution_class_id", [
 															'options' => $nextClassOptions,
-															'value' => [$obj->next_institution_class_id]
+															//'value' => [$obj->next_institution_class_id]//POCOR-8332
+															'value' => [$getNextclassId]
 														]);
+
 													}
 												} elseif ($action == 'reconfirm') {
-													$nextClassId = isset($attr['selectedStudents'][$i]['next_institution_class_id']) && $attr['selectedStudents'][$i]['next_institution_class_id'] != 0 ? $attr['selectedStudents'][$i]['next_institution_class_id'] : null;
-													$displayNextClassValue = isset($nextClassOptions[$nextClassId]) ? $nextClassOptions[$nextClassId] : '';
+													$nextClassId = !is_null($attr['selectedStudents'][$i]['next_institution_class_id']) && $attr['selectedStudents'][$i]['next_institution_class_id'] != 0 ? $attr['selectedStudents'][$i]['next_institution_class_id'] : null;
+													$displayNextClassValue = !is_null($nextClassOptions[$nextClassId]) ? $nextClassOptions[$nextClassId] : '';
+
 													echo $displayNextClassValue;
 												}
 											?>
@@ -95,3 +101,16 @@
 		</div>
 	</div>
 <?php endif ?>
+
+<script>
+$(document).ready(function() {
+    $('#studentpromotion-education-grade-id option').each(function() {
+        if($(this).val() === '') {
+            $(this).hide();
+        }
+        if($(this).css('display') === 'none') {
+            $(this).remove();
+        }
+    });
+});
+</script>
