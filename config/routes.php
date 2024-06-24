@@ -68,6 +68,7 @@ Router::scope('/', function (RouteBuilder $routes) {
     $routes->connect('/Dashboard/*', ['controller' => 'Dashboard', 'action' => 'index']);
     $routes->connect('/Notices/*', ['controller' => 'Notices', 'action' => 'Notices']);
     $routes->connect('/Credentials/*', ['controller' => 'Credentials', 'action' => 'Credentials']);
+    $routes->connect('/MoodleApi/*', ['controller' => 'MoodleApi', 'action' => 'MoodleApi']);
     $routes->connect('/Labels/*', ['controller' => 'Labels', 'action' => 'Labels']);
     $routes->connect('/Calendars/*', ['controller' => 'Calendars', 'action' => 'Calendars']);
     $routes->connect('/ScholarshipRecipients/*', ['controller' => 'Scholarship', 'action' => 'ScholarshipRecipients']);

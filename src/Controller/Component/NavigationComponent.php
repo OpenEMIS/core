@@ -4082,13 +4082,10 @@ class NavigationComponent extends Component
                         'parent' => 'Administration',
                         'link' => false,
                     ],
-                    'MoodleApi.log' => [
+                    'MoodleApi.index' => [
                         'title' => 'Log',
                         'parent' => 'Administration.MoodleApi',
-                        'selected' => ['MoodleApiLog.index'],
-                        'params' => ['plugin' => 'MoodleApi',
-                            'controller' => 'MoodleApiLog',
-                            'action' => 'index']
+                        'selected' => ['MoodleApi.MoodleApi'],
                     ],
                 ];
             }
@@ -4099,13 +4096,10 @@ class NavigationComponent extends Component
                     'parent' => 'Administration',
                     'link' => false,
                 ],
-                'MoodleApi.log' => [
+                'MoodleApi.index' => [
                     'title' => 'Log',
                     'parent' => 'Administration.MoodleApi',
-                    'selected' => ['MoodleApiLog.index'],
-                    'params' => ['plugin' => 'MoodleApi',
-                        'controller' => 'MoodleApiLog',
-                        'action' => 'index']
+                    'selected' => ['MoodleApi.MoodleApi'],
                 ],
 
             ];
