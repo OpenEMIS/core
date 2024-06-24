@@ -18,6 +18,7 @@ use DateTime;
 use mysql_xdevapi\Exception;
 use PHPExcel_Worksheet;
 use Workflow\Model\Behavior\WorkflowBehavior;
+use Cake\Http\ServerRequest;
 
 class ImportStudentAdmissionTable extends AppTable
 {
@@ -28,9 +29,9 @@ class ImportStudentAdmissionTable extends AppTable
     private $studentStatusId;
     private $availableClasses;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('import_mapping');
+        $this->setTable('import_mapping');
         parent::initialize($config);
 
         $this->addBehavior('Import.Import', [
@@ -61,10 +62,10 @@ class ImportStudentAdmissionTable extends AppTable
         ]);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         list($periodOptions, $selectedPeriod) = array_values(
-            $this->getAcademicPeriod($this->request->query('period'), true)
+            $this->getAcademicPeriod($this->request->getQuery('period'), true)
         );
         if ($action == 'add') {
             # $attr['default'] = $selectedPeriod;
@@ -78,12 +79,12 @@ class ImportStudentAdmissionTable extends AppTable
     {
         $request = $this->request;
         if ($request->is(['post', 'put'])) {
-            $thisAlias = $this->alias();
-            $requestData = $request->data;
+            $thisAlias = $this->getAlias();
+            $requestData = $request->getData();
             if (isset($requestData[$thisAlias])) {
                 if (isset($requestData[$thisAlias]['academic_period_id'])) {
                     $academic_period_id = $requestData[$thisAlias]['academic_period_id'];
-                    $request->query['period'] = $academic_period_id;
+                    $request->getQuery['period'] = $academic_period_id;
                     $this->gradesInInstitution = $this->getCustomInstitudeGradeIds($academic_period_id);
                 }
             }
@@ -138,12 +139,13 @@ class ImportStudentAdmissionTable extends AppTable
 
     public function beforeAction($event)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         if ($session->check('Institution.Institutions.id')) {
             $this->institutionId = $session->read('Institution.Institutions.id');
             $academicPeriodId = $this->AcademicPeriods->getCurrent();
-            if (isset($this->request->query['period']) && !empty($this->request->query['period'])) {
-                $academicPeriodId = $this->request->query['period'];
+            $requestQuery = $this->request->getQuery();
+            if (isset($requestQuery['period']) && !empty($requestQuery['period'])) {
+                $academicPeriodId = $requestQuery['period'];
             }
             $this->academicPeriodId = $academicPeriodId;
             $this->gradesInInstitution = $this->getCustomInstitudeGradeIds($academicPeriodId);
@@ -154,7 +156,7 @@ class ImportStudentAdmissionTable extends AppTable
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -167,13 +169,13 @@ class ImportStudentAdmissionTable extends AppTable
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
     {
-        $crumbTitle = $this->getHeader($this->alias());
+        $crumbTitle = $this->getHeader($this->getAlias());
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
 
-    public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
+    public function onImportCheckUnique(Event $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
     {
         $columns = new Collection($columns);
         $filtered = $columns->filter(function ($value, $key, $iterator) {
@@ -204,8 +206,9 @@ class ImportStudentAdmissionTable extends AppTable
     {
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $academicPeriodId = $this->AcademicPeriods->getCurrent();
-        if (isset($this->request->query['period']) && !empty($this->request->query['period'])) {
-            $academicPeriodId = $this->request->query['period'];
+        $requestQuery = $this->request->getQuery();
+        if (isset($requestQuery'period']) && !empty($requestQuery['period'])) {
+            $academicPeriodId = $requestQuery['period'];
         }
         $modelData = $lookedUpTable->getAvailableAcademicPeriodsById($academicPeriodId, false);
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
@@ -824,6 +827,20 @@ class ImportStudentAdmissionTable extends AppTable
         $timeZone = !empty($setTimeZone) ? $setTimeZone : 'UTC'; //POCOR-6732
         date_default_timezone_set($timeZone);
         return $timeZone;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'select_file':
+                return __('Select File To Import');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
 

@@ -8,8 +8,8 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use Cake\Network\Session;
-use Cake\Network\Request;
+use Cake\Http\Session;
+use Cake\Http\ServerRequest;
 use Cake\Log\Log;
 use ControllerAction\Model\Traits\UtilityTrait;
 use App\Model\Table\ControllerActionTable;
@@ -25,9 +25,9 @@ class StaffPositionTitlesTable extends ControllerActionTable
 
 	private $positionGradeSelection = [];
 
-	public function initialize(array $config)
+	public function initialize(array $config): void
 	{
-        $this->table('staff_position_titles');
+        $this->setTable('staff_position_titles');
         parent::initialize($config);
         $this->hasMany('TrainingCoursesTargetPopulations', ['className' => 'Training.TrainingCoursesTargetPopulations', 'foreignKey' => 'target_population_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles']);
@@ -56,9 +56,10 @@ class StaffPositionTitlesTable extends ControllerActionTable
 
 	}
 
-	public function validationDefault(Validator $validator)
+	public function validationDefault(Validator $validator): Validator
 	{
 		$validator = parent::validationDefault($validator);
+		$validator->setProvider('custom', $this);
 		return $validator
 			->requirePresence('position_grades')
 		    ->allowEmpty('file_content')//POCOR-7758
@@ -110,8 +111,8 @@ class StaffPositionTitlesTable extends ControllerActionTable
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
 	{
-		if (array_key_exists($this->alias(), $requestData)) {
-			if (isset($requestData[$this->alias()]['position_grades']['_ids']) && empty($requestData[$this->alias()]['position_grades']['_ids'])) {
+		if (array_key_exists($this->getAlias(), $requestData)) {
+			if (isset($requestData[$this->getAlias()]['position_grades']['_ids']) && empty($requestData[$this->alias()]['position_grades']['_ids'])) {
 				$requestData[$this->alias()]['position_grades'] = []; 
 			}
 		}
@@ -170,16 +171,17 @@ class StaffPositionTitlesTable extends ControllerActionTable
      * @ticket POCOR-6950
      */
 
-	public function onUpdateFieldStaffPositionCategoriesId(Event $event, array $attr, $action, Request $request) 
+	public function onUpdateFieldStaffPositionCategoriesId(Event $event, array $attr, $action, ServerRequest $request) 
 	{
+		$request = $this->request;
         if ($action == 'add' || $action == 'edit') {
         	list($levelOptions, $selectedLevel) = array_values($this->getTypeOptions($request, $action));//POCOR-7292 add param action
         	$attr['options'] = $levelOptions;
         	if ($action == 'add') {
         		$attr['default'] = $selectedLevel;
         	}else if($action == 'edit'){//POCOR-7292 starts
-        		$typeId= $this->paramsDecode($request->params['pass'][1]);
-        		$StaffPositionTitles = TableRegistry::get('staff_position_titles');
+        		$typeId= $this->paramsDecode($request->getAttribute('params')['pass'][1]);
+        		$StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
         		$Options = $StaffPositionTitles
 					            ->find()
 					            ->where([$StaffPositionTitles->aliasField('id') => $typeId['id']])
@@ -199,12 +201,12 @@ class StaffPositionTitlesTable extends ControllerActionTable
 
 	public function getTypeOptions($request, $action = null)//POCOR-7292 add param $action
     {
-		$type = $request->data['StaffPositionTitles']['type'];
+		$type = $this->request->getData('StaffPositionTitles')['type'];
 		$StaffPositionCategories = TableRegistry::get('Staff.StaffPositionCategories');
         //POCOR-7292 starts
         if($action == 'edit'){
-    		$StaffPositionTitlesPass= $this->paramsDecode($request->params['pass'][1]);
-    		$StaffPositionTitles = TableRegistry::get('staff_position_titles');
+    		$StaffPositionTitlesPass= $this->paramsDecode($this->request->getAttribute('params')['pass'][1]);
+    		$StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
     		$Options = $StaffPositionTitles
 				            ->find()
 				            ->where([$StaffPositionTitles->aliasField('id') => $StaffPositionTitlesPass['id']])
@@ -216,11 +218,11 @@ class StaffPositionTitlesTable extends ControllerActionTable
             ->where([ $StaffPositionCategories->aliasField('type') => $type ])
             ->toArray();
            
-         $selectedLevel = !is_null($this->request->query('level')) ? $this->request->query('level') : key($levelOptions);
+         $selectedLevel = !is_null($this->request->getQuery('level')) ? $this->request->getQuery('level') : key($levelOptions);
          return compact('levelOptions', 'selectedLevel');
     }
 
-	public function onUpdateFieldPositionGradeSelection(Event $event, array $attr, $action, Request $request) 
+	public function onUpdateFieldPositionGradeSelection(Event $event, array $attr, $action, ServerRequest $request) 
 	{
 		if ($action == 'add' || $action == 'edit') {
 			$attr['options'] = $this->positionGradeSelection;
@@ -230,15 +232,15 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		return $attr;
 	}
 
-	public function onUpdateFieldPositionGrades(Event $event, array $attr, $action, Request $request) 
+	public function onUpdateFieldPositionGrades(Event $event, array $attr, $action, ServerRequest $request) 
 	{
-		$requestData = $request->data;
+		$requestData = $this->request->getData();
 		$entity = $attr['entity'];
 		$staffPositionGradeOptions = TableRegistry::get('Institution.StaffPositionGrades')->getList()->toArray();
 
 		$positionGradeSelection = null;
-		if (isset($requestData[$this->alias()]['position_grade_selection'])) {
-			$positionGradeSelection = $requestData[$this->alias()]['position_grade_selection'];
+		if (isset($requestData[$this->getAlias()]['position_grade_selection'])) {
+			$positionGradeSelection = $requestData[$this->getAlias()]['position_grade_selection'];
 		} else {
 			$positionGradeSelection = $entity->position_grade_selection; 
 		}
@@ -404,7 +406,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		return false;
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$events['Shell.shellRestartUpdateRole'] = 'shellRestartUpdateRole';
 		return $events;
@@ -479,7 +481,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	public function getPrincipalRoleId()
     {
         $principalData = $this->find()
-            ->select([$this->primaryKey()])
+            ->select([$this->getPrimaryKey()])
             ->where([$this->aliasField('name') => 'Principal'])
             ->first();
 
@@ -489,10 +491,63 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	public function getDeputyPrincipalRoleId()
     {
         $deputyPrincipalData = $this->find()
-            ->select([$this->primaryKey()])
+            ->select([$this->getPrimaryKey()])
             ->where([$this->aliasField('name') => 'Vice Principal'])
             ->first();
 
         return (!empty($deputyPrincipalData))? $deputyPrincipalData->id: null;
+	}
+
+
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'visible':
+                return __('Visible');
+            case 'name':
+                return __('Name');
+            case 'international_code':
+                return __('International Code');
+            case 'national_code':
+                return __('National Code');
+            case 'editable':
+                return __('Editable');
+            case 'default':
+                return __('Default');
+            case 'type':
+                return __('Type');
+            case 'staff_position_categories_id':
+                return __('StafF Position Categories');
+            case 'security_role_id':
+                return __('Security Role');
+            case 'position_grade_selection':
+                return __('Position Grade');
+            case 'position_grades':
+                return __('Position Grades');
+            case 'file_content':
+                return __('Attachment');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

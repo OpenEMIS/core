@@ -13,7 +13,7 @@ class SurveyQuestionsTable extends CustomFieldsTable
 {
     protected $fieldTypeFormat = ['OpenEMIS', 'OpenEMIS_Institution'];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->hasMany('CustomFieldOptions', ['className' => 'Survey.SurveyQuestionChoices', 'foreignKey' => 'survey_question_id', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -34,7 +34,7 @@ class SurveyQuestionsTable extends CustomFieldsTable
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -60,10 +60,11 @@ class SurveyQuestionsTable extends CustomFieldsTable
         $this->field('code');
     }
 
-    public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCode(Event $event, array $attr, $action)
     {
-        if ($action == 'add') {
-            if (!$request->is('post')) {
+        if ($this->request->getAttribute('params')['pass'][0] == 'add') {
+            if (!$_SERVER['REQUEST_METHOD'] == 'POST') {
                 $textValue = substr(Text::uuid(), 0, 8);
                 $attr['attr']['value'] = $textValue;
             }
@@ -122,4 +123,37 @@ class SurveyQuestionsTable extends CustomFieldsTable
 		}
     }
     // End POCOR-5188
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'question') {
+            return __('Question');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'field_type') {
+            return __('field Type');
+        }  elseif ($field == 'is_mandatory') {
+            return __('Is Mandatory');
+        } elseif ($field == 'is_unique') {
+            return __('Is Unique');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }elseif ($field == 'description') {
+            return __('Description');
+        }elseif ($field == 'description') {
+            return __('Description');
+        }elseif ($field == 'params') {
+            return __('Params');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

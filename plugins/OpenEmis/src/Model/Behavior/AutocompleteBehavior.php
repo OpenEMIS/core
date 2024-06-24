@@ -7,14 +7,15 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 
 class AutocompleteBehavior extends Behavior {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 	}
 
 	public function onGetAutocompleteElement(Event $event, $action, $entity, $attr, $options=[]) {
 		$value = '';
+
 		if ($action == 'edit') {
-			$subject = $event->subject();
+			$subject = $event->getSubject();
 			$Form = $subject->Form;
 			$url = $subject->Url->build($attr['url']);
 			$label = isset($attr['label']) ? $attr['label'] : $attr['field'];

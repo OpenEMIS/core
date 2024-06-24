@@ -10,10 +10,13 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\ORM\ResultSet;
 use PHPExcel_IOFactory;
+use Cake\Http\Exception\NotFoundException;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
 class ReportsController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->ControllerAction->models = [
@@ -37,16 +40,20 @@ class ReportsController extends AppController
         ];
         $this->loadComponent('Paginator');
         $this->loadComponent('Training.Training');
+        $this->loadComponent('Navigation');
     }
 
     public function beforeFilter(Event $event)
-    {
+    { 
+        if ($this->getPlugin() == 'Report') {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
         //POCOR-8034 : start
         $header = __('Reports');
-        $action = $this->request->action;
+        $action = $this->getRequest()->getParam('action');
         if ($action != 'ViewReport') {
-            $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $action]);
+            $this->Navigation->addCrumb($header, ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' =>$this->getRequest()->getParam('action')]);
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($action)));
             $this->Navigation->addCrumb($crumbTitle);
         }
@@ -55,7 +62,7 @@ class ReportsController extends AppController
 
     public function onInitialize(Event $event, Table $table, ArrayObject $extra)
     {
-        $header = __('Reports') . ' - ' . __($table->alias());
+        $header = __('Reports') . ' - ' . __($table->getAlias());
         $this->set('contentHeader', $header);
     }
 
@@ -264,17 +271,15 @@ class ReportsController extends AppController
         $this->autoRender = false;
         $userId = $this->Auth->user('id');
         $dataSet = [];
-
-        if (isset($this->request->query['ids'])) {
-            $ids = $this->request->query['ids'];
-
+        if ($this->getRequest()->getQuery['ids']!=null) {
+            $ids = $this->getRequest()->getQuery['ids'];
             $fields = array(
                 'ReportProgress.status',
                 'ReportProgress.modified',
                 'ReportProgress.current_records',
                 'ReportProgress.total_records'
             );
-            $ReportProgress = TableRegistry::get('Report.ReportProgress');
+            $ReportProgress = TableRegistry::getTableLocator()->get('Report.ReportProgress');
             if (!empty($ids)) {
                 $results = $ReportProgress
                     ->find()
@@ -322,35 +327,48 @@ class ReportsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Report.Profiles']);
     }
 
-    // view report
+    // View report
     public function ViewReport()
     {
         ini_set('memory_limit', '-1');
-        $data = $_GET;
-        //POCOR-7000
-        // $explode_data = explode("/", $data['file_path']);
+        $data = $this->request->getQuery();
+        $file = $this->request->getData('file_path');
+        $data['file_path'] = $this->request->getQuery('file_path');
+
         $replace_data = str_replace('\\', '/', $data['file_path']);
         $institutionId = $this->getInstitutionID();
-        // POCOR-8034 : start
-        $this->Navigation->addCrumb(__('Reports'), ['plugin' => $this->plugin,
-            'controller' => $this->name,
-            'action' => $data['module']
+
+        if ($data['module'] == NULL) {
+           $dataModule =  $data['amp;module'];
+        } else {
+            $dataModule = $data['module'];
+        }
+
+        $this->Navigation->addCrumb(__('Reports'), [
+            'plugin' => $this->getPlugin(),
+            'controller' => $this->getName(),
+            'action' => $dataModule
         ]);
-        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
-        $this->Navigation->addCrumb($crumbTitle); // POCOR-8034
-        $moduleTitle = __(Inflector::humanize(Inflector::underscore($data['module'])));
+
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
+        $this->Navigation->addCrumb($crumbTitle);
+
+        $moduleTitle = __(Inflector::humanize(Inflector::underscore($dataModule)));
         $this->Navigation->addCrumb($moduleTitle);
+
         $header = __('Reports') . ' - ' . $moduleTitle;
-        // POCOR-8034 : end
-        //$inputFileName = WWW_ROOT. 'export/'.end($explode_data);
+
         $inputFileName = $replace_data;
-        //end of POCOR-7000
+        // POCOR-8289 - for view report chagne in IOFactory logic 
+        try {
+            $inputFileType = IOFactory::identify($inputFileName);
+            $objReader = IOFactory::createReader($inputFileType);
+            $spreadsheet = $objReader->load($inputFileName);
+        } catch (\Exception $e) {
+            throw new NotFoundException(__('Error loading file: ') . $e->getMessage());
+        }
 
-        $inputFileType = PHPExcel_IOFactory::identify($inputFileName);
-        $objReader = PHPExcel_IOFactory::createReader($inputFileType);
-        $objPHPExcel = $objReader->load($inputFileName);
-
-        $sheet = $objPHPExcel->getSheet(0);
+        $sheet = $spreadsheet->getSheet(0);
         $highestRow = $sheet->getHighestRow();
         if ($data['module'] == 'InstitutionStatistics') {
             $highestRow = $sheet->getHighestRow() + 1;
@@ -358,24 +376,17 @@ class ReportsController extends AppController
         $highestColumn = $sheet->getHighestColumn();
 
         for ($row = 1; $row <= 1; $row++) {
-            $rowHeader = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
-                NULL,
-                TRUE,
-                FALSE);
+            $rowHeader = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
         }
 
         $rowHeaderNew = $this->array_flatten($rowHeader);
         for ($row = 2; $row <= $highestRow - 1; $row++) {
-            //  Read a row of data into an array
-            $rowData[] = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
-                NULL,
-                TRUE,
-                FALSE);
+            $rowData[] = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
             if ($this->isEmptyRow(reset($rowData))) {
                 continue;
             }
-            //  Insert row data array into your database of choice here
         }
+
         foreach ($rowData as $newKey => $newDataVal) {
             foreach ($newDataVal as $kay2 => $new_data_arr) {
                 if (isset($new_data_arr)) {
@@ -383,10 +394,9 @@ class ReportsController extends AppController
                 }
             }
         }
-//        print_r($newArr2);die();
+
         $this->set('rowHeader', $rowHeader);
         $this->set('newArr2', $newArr2);
-
         $this->set('contentHeader', $header);
     }
 
@@ -427,7 +437,7 @@ class ReportsController extends AppController
 
     private function getInstitutionID()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $insitutionIDFromSession = $session->read('Institution.Institutions.id');
         $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
         $encodedInstitutionID = isset($this->request->params['institutionId']) ?

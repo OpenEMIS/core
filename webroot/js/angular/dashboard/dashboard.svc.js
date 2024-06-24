@@ -289,7 +289,7 @@ function DashboardSvc($q, $filter, KdDataSvc) {
                 filterParams: filterParams,
                 filter: 'text',
                 cellRenderer: function(params) {
-                    // console.log(params)
+                    console.log(params)
                     if (typeof params.data !== 'undefined') {
                         var urlParams = params.data.url;
 

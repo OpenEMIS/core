@@ -25,9 +25,9 @@ class EmployeeTrainingCardTable extends AppTable
     CONST WITHDRAWN_STATUS = 2;
     private $_dynamicFieldName = 'result_type';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('training_sessions');
+        $this->setTable('training_sessions');
         parent::initialize($config);
         $this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
         $this->belongsTo('Trainees', ['className' => 'User.Users', 'foreignKey' => 'trainee_id']);
@@ -41,7 +41,7 @@ class EmployeeTrainingCardTable extends AppTable
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -50,7 +50,7 @@ class EmployeeTrainingCardTable extends AppTable
 
     public function onExcelGetIdentityType(Event $event, Entity $entity)
     {   
-        $userIdentities = TableRegistry::get('user_identities');
+        $userIdentities = TableRegistry::getTableLocator()->get('User.UserIdentities');
         $userIdentitiesResult = $userIdentities->find()
                 ->leftJoin(['IdentityTypes' => 'identity_types'], ['IdentityTypes.id = '. $userIdentities->aliasField('identity_type_id')])
                 ->select([
@@ -164,7 +164,7 @@ class EmployeeTrainingCardTable extends AppTable
         {
             return $results->map(function ($row)
             {
-                $training_session_trainee_results = TableRegistry::get('training_session_trainee_results');
+                $training_session_trainee_results = TableRegistry::getTableLocator()->get('Training.TrainingSessionTraineeResults');
                 $trainingSessionTraineeResultData = $training_session_trainee_results
                                 ->find()
                                 ->where([
@@ -174,7 +174,7 @@ class EmployeeTrainingCardTable extends AppTable
                                 ->first();
                                 
                 if(!empty($trainingSessionTraineeResultData)){
-                    $training_result_types = TableRegistry::get('training_result_types');
+                    $training_result_types = TableRegistry::getTableLocator()->get('Training.TrainingResultTypes');
                     $trainingResultTypesData = $training_result_types->find()->select([
                         'trainingResultTypes_id' => $training_result_types->aliasfield('id'),
                         'trainingResultTypes_name' => $training_result_types->aliasfield('name')
@@ -273,7 +273,7 @@ class EmployeeTrainingCardTable extends AppTable
             'label' => __('Training Courses')
         ];
         //START: POCOR-6592 training result types
-        $training_result_types = TableRegistry::get('training_result_types');
+        $training_result_types = TableRegistry::getTableLocator()->get('Training.TrainingResultTypes');
         $trainingResultTypesData = $training_result_types->find()->select([
             'trainingResultTypes_id' => $training_result_types->aliasfield('id'),
             'trainingResultTypes_name' => $training_result_types->aliasfield('name')

@@ -9,7 +9,7 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Workflow\Model\Behavior\WorkflowBehavior;
 use Cake\Datasource\ConnectionManager;
 
@@ -19,9 +19,9 @@ class ImportInstitutionPositionsTable extends AppTable
 
     private $institutionId;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('import_mapping');
+        $this->setTable('import_mapping');
         parent::initialize($config);
         
         $this->addBehavior('Import.ImportPosition', [
@@ -33,7 +33,7 @@ class ImportInstitutionPositionsTable extends AppTable
         $this->InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
@@ -47,14 +47,14 @@ class ImportInstitutionPositionsTable extends AppTable
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
     {
-        $session = $request->session();
+        $session = $request->getSession();
         if ($session->check('Institution.Institutions.id')) {
             $this->institutionId = $session->read('Institution.Institutions.id');
         }
 
-        $crumbTitle = $this->getHeader($this->alias());
+        $crumbTitle = $this->getHeader($this->getAlias());
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
     //POCOR-7684:: Start
@@ -170,7 +170,7 @@ class ImportInstitutionPositionsTable extends AppTable
             ->matching('WorkflowModels', function ($q) {
                 return $q->where(['WorkflowModels.model' => 'Institution.InstitutionPositions']);
             })
-            ->matching($lookedUpTable->alias())
+            ->matching($lookedUpTable->getAlias())
             ->order([
                 $this->Workflows->aliasField('name'),
                 $lookupModel.'.category'

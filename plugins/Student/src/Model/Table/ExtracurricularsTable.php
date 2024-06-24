@@ -9,9 +9,9 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 
 class ExtracurricularsTable extends ControllerActionTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 	
-		$this->table('student_extracurriculars');
+		$this->setTable('student_extracurriculars');
 		parent::initialize($config);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -67,7 +67,7 @@ class ExtracurricularsTable extends ControllerActionTable {
 		$this->ControllerAction->setFieldOrder('comment', $order++);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 
 		return $validator
@@ -80,7 +80,7 @@ class ExtracurricularsTable extends ControllerActionTable {
 		$options['type'] = 'student';
 		$tabElements = $this->controller->getAcademicTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
+		$this->controller->set('selectedAction', $this->getAlias());
 	}
 
 	public function afterAction(Event $event, $data) {
@@ -90,16 +90,16 @@ class ExtracurricularsTable extends ControllerActionTable {
 	/*POCOR-6474 - commenting function because this function was enabling users to edit and view correct record*/
 	public function beforeFind( Event $event, Query $query )
 	{   
-		//if ($this->controller->name == 'Profiles' && $this->request->query['type'] == 'student') {
-		$session = $this->request->session();
+		//if ($this->controller->getName() == 'Profiles' && $this->request->query['type'] == 'student') {
+		$session = $this->request->getSession();
 		$userData = $this->Session->read(); //# [POCOR-6548] Check if user data not found then add current login user data
 		$studentId = $session->read('Student.Students.id');
-		if ($this->alias() == 'Extracurriculars') {
+		if ($this->getAlias() == 'Extracurriculars') {
 			/*POCOR-6700 starts - added academic period condition into index query*/
-			$periodId = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+			$periodId = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
 			$conditions[$this->aliasField('academic_period_id')] = $periodId;
 			/*POCOR-6700 ends*/
-			if ($this->controller->name == 'Profiles') {
+			if ($this->controller->getName() == 'Profiles') {
 				if ($this->Session->read('Auth.User.is_guardian') == 1) {
 					$sId = $this->Session->read('Student.ExaminationResults.student_id');
 					/**
@@ -125,15 +125,15 @@ class ExtracurricularsTable extends ControllerActionTable {
 				}
 			} 
 			/*POCOR-6267 starts*/
-			if ($this->controller->name == 'GuardianNavs') {
-				$session = $this->request->session();//POCOR-6267
+			if ($this->controller->getName() == 'GuardianNavs') {
+				$session = $this->request->getSession();//POCOR-6267
 				$studentId = $session->read('Student.Students.id');
 			}
 			/*POCOR-6267 ends*/
 			$conditions[$this->aliasField('security_user_id')] = $studentId;
 			/*POCOR-6474 starts*/	
 			if ($this->action == 'view' || $this->action == 'edit') {
-				$id = $this->ControllerAction->paramsDecode($this->request->params['pass'][1])['id'];
+				$id = $this->ControllerAction->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
     			$conditions[$this->aliasField('id')] = $id;
 				$query->where($conditions, [], true);
 			} else {
@@ -153,7 +153,7 @@ class ExtracurricularsTable extends ControllerActionTable {
     {
     	//academic period filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $conditions[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //end
@@ -161,7 +161,7 @@ class ExtracurricularsTable extends ControllerActionTable {
         $extra['elements']['controls'] = ['name' => 'Student.Extracurriculars/controls', 'data' => [], 'options' => [], 'order' => 1];
 
 		// Start POCOR-5188
-		if($this->request->params['controller'] == 'Students'){
+		if($this->request->getParam('controller') == 'Students'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Extracurricular','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -178,7 +178,7 @@ class ExtracurricularsTable extends ControllerActionTable {
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Extracurriculars','Students - Academic');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [

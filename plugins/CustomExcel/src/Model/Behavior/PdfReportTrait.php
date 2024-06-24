@@ -375,9 +375,9 @@ trait PdfReportTrait
         }
         // Merge all the pdf that belongs to one report
         if(!empty($student_id)) {
-            $fileName = $this->config('filename') . '_' . $student_id;
+            $fileName = $this->getConfig('filename') . '_' . $student_id;
         } else {
-            $fileName = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His');
+            $fileName = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His');
         }
        
         Log::write('debug', '----------------------fileName---------------------: ');

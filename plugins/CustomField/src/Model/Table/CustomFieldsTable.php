@@ -5,10 +5,9 @@ namespace CustomField\Model\Table;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
-
+use Cake\Http\ServerRequest;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
 
@@ -26,7 +25,7 @@ class CustomFieldsTable extends ControllerActionTable
     private $fieldTypeOptions = [];
     private $CustomFieldTypes = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         // belongsTo: CustomFieldTypes is not needed as code is store instead of id
@@ -82,12 +81,17 @@ class CustomFieldsTable extends ControllerActionTable
     public function addOnInitialize(Event $event, Entity $entity)
     {
         // always reset
-        unset($this->request->query['field_type']);
+        $queryParams = $this->request->getQueryParams();
+        unset($queryParams['field_type']);
+        $this->request = $this->request->withQueryParams($queryParams);
+
     }
 
     public function editOnInitialize(Event $event, Entity $entity)
     {
-        $this->request->query['field_type'] = $entity->field_type;
+        $this->request = $this->request->withQueryParams(['field_type' => $entity->field_type]);
+        return null;
+
     }
 
     /**
@@ -100,11 +104,14 @@ class CustomFieldsTable extends ControllerActionTable
      */
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
-        $url = $this->request->here();
+
+        $paramsPass = $this->request->getAttribute('params')['pass'][1];
+        $entity->id = $this->paramsDecode($paramsPass)['id'];
+        $url = $this->request->getRequestTarget();
          //POCOR-7872::Start //update student_custom_forms_fields if student_custom_field_id exist in table
          if (strpos($url, "StudentCustomFields")!==false){
-            $student_custom_forms_fieldsT = TableRegistry::get('student_custom_forms_fields');
-            $student_custom_fieldsT = TableRegistry::get('student_custom_fields');
+            $student_custom_forms_fieldsT = TableRegistry::get('StudentCustomField.StudentCustomFormsFields');
+            $student_custom_fieldsT = TableRegistry::get('StudentCustomField.StudentCustomFields');
             $student_custom_fields_data = $student_custom_fieldsT->get($entity->id);
             $student_custom_forms_fields_data = $student_custom_forms_fieldsT->find()->where(['student_custom_field_id'=> $entity->id])->first();
             if(!empty($student_custom_forms_fields_data)){
@@ -115,9 +122,6 @@ class CustomFieldsTable extends ControllerActionTable
             }
         }
         //POCOR-7872::End
-//        $this->log('entity', 'debug');
-//        $this->log($entity, 'debug');
-//        $this->log($url, 'debug');
         $no_options = true;
         if ($entity->field_type == "CHECKBOX" ) {
             $no_options = false;
@@ -130,13 +134,17 @@ class CustomFieldsTable extends ControllerActionTable
         }
         list($options_table_name, $options_custom_field_id) =
             $this->getCustomFieldDomain($url);
-//        $this->log("$options_table_name, $options_custom_field_id", 'debug');
-
-        $CustomFieldOptions =
+        if($this->controller->getName() =='Infrastructures'){
+            //$options_table_name = 'InfrastructureCustomFieldOptions';
+            //$CustomFieldOptions = TableRegistry::get($options_table_name);
+            $CustomFieldOptions = TableRegistry::get('Infrastructure.InfrastructureCustomFieldOptions');
+        }else{
+            $CustomFieldOptions =
             TableRegistry::get($options_table_name);
-        $oldCustomFieldOptions =
-            $CustomFieldOptions->find('all')
+        }
+        $oldCustomFieldOptions = $CustomFieldOptions->find('all')
                 ->where([$options_custom_field_id => $entity->id])
+                ->enableHydration(false)
                 ->toArray();
         $oldCustomFieldOptionsList = array_column($oldCustomFieldOptions, "id");
         $newCustomFieldOptions = $entity['custom_field_options'];
@@ -144,13 +152,24 @@ class CustomFieldsTable extends ControllerActionTable
         $editedOptionsList = array_intersect($oldCustomFieldOptionsList, $newCustomFieldOptionsList);
         $deletedOptionsList = array_diff($oldCustomFieldOptionsList,
             $editedOptionsList);
-
         foreach ($oldCustomFieldOptions as $key => $value) {
-            if (in_array($value->id, $deletedOptionsList)) {
-                $CustomFieldOptions->delete($value);
+            if (in_array($value['id'], $deletedOptionsList)) {
+                // Fetch the entity by ID
+                $entity = $CustomFieldOptions->get($value['id']);
+                try {
+                    $result = $CustomFieldOptions->delete($entity);
+                    if ($result) {
+                        // Deletion successful
+                    } else {
+                        // Deletion failed
+                        echo "Deletion failed for entity ID: {$value['id']}";
+                    }
+                } catch (\Exception $e) {
+                    // Handle any exceptions or errors
+                    echo 'Error: ' . $e->getMessage();
+                }
             }
         }
-
 
     }
 
@@ -159,7 +178,7 @@ class CustomFieldsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldFieldType(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFieldType(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
         } elseif ($action == 'add') {
@@ -170,7 +189,7 @@ class CustomFieldsTable extends ControllerActionTable
             $attr['onChangeReload'] = 'changeType';
         } elseif ($action == 'edit') {
             $fieldTypeOptions = $this->fieldTypeOptions;
-            $selectedFieldType = $request->query('field_type');
+            $selectedFieldType = $request->getQuery('field_type');
 
             $attr['type'] = 'readonly';
             $attr['value'] = $selectedFieldType;
@@ -180,11 +199,12 @@ class CustomFieldsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldIsMandatory(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldIsMandatory(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldIsMandatory(Event $event, array $attr, $action)
     {
         if ($action == 'view') {
         } elseif ($action == 'add' || $action == 'edit') {
-            $selectedFieldType = $request->query('field_type');
+            $selectedFieldType = $this->request->getQuery('field_type');
             $mandatoryOptions = $this->getSelectOptions('general.yesno');
             $isMandatory = !is_null($selectedFieldType) ? $this->CustomFieldTypes->findByCode($selectedFieldType)->first()->is_mandatory : 0;
 
@@ -201,11 +221,12 @@ class CustomFieldsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldIsUnique(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldIsUnique(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldIsUnique(Event $event, array $attr, $action)
     {
         if ($action == 'view') {
         } elseif ($action == 'add' || $action == 'edit') {
-            $selectedFieldType = $request->query('field_type');
+            $selectedFieldType = $this->request->getQuery('field_type');
             $uniqueOptions = $this->getSelectOptions('general.yesno');
             $isUnique = !is_null($selectedFieldType) ? $this->CustomFieldTypes->findByCode($selectedFieldType)->first()->is_unique : 0;
 
@@ -225,12 +246,14 @@ class CustomFieldsTable extends ControllerActionTable
     public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['field_type']);
-
+        $queryParams = $request->getQueryParams();
+        unset($queryParams['field_type']);
+        $request = $request->withQueryParams($queryParams);
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('field_type', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['field_type'])) {
-                    $this->request->query['field_type'] = $request->data[$this->alias()]['field_type'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('field_type', $request->getData()[$this->getAlias()]) && !empty($request->getData()[$this->getAlias()]['field_type'])) {
+                    $queryParams['field_type'] = $request->getData()[$this->getAlias()]['field_type'];
+                    $this->request = $request->withQueryParams($queryParams);
                 }
             }
         }
@@ -246,7 +269,7 @@ class CustomFieldsTable extends ControllerActionTable
         $fieldType = Inflector::camelize(strtolower($entity->field_type));
         $event = $this->dispatchEvent('Setup.set' . $fieldType . 'Elements', [$entity], $this);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
 
         $this->setFieldOrder(['field_type', 'name', 'description', 'is_mandatory', 'is_unique']);
@@ -315,5 +338,17 @@ class CustomFieldsTable extends ControllerActionTable
             }
         }
         return array($options_table_name, $options_custom_field_id);
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
     }
 }

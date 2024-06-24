@@ -5,17 +5,17 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Directory\Model\Table\DirectoriesTable as UserTable;
 
 class StudentUserTable extends UserTable {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Guardian.afterSave'] = 'guardianAfterSave';
@@ -36,9 +36,9 @@ class StudentUserTable extends UserTable {
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         // MUST set user_type to request query before call parent's beforeAction
-        $this->request->query['user_type'] = UserTable::STUDENT;
+        $this->request->getQuery['user_type'] = UserTable::STUDENT;
         parent::beforeAction($event, $extra);
-        //parent::hideOtherInformationSection($this->controller->name, $this->action);
+        //parent::hideOtherInformationSection($this->controller->getName(), $this->action);
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -71,6 +71,6 @@ class StudentUserTable extends UserTable {
         $tabElements = $this->controller->getUserTabElements(['id' => $studentId, 'userRole' => 'Students']);
 
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());        
+        $this->controller->set('selectedAction', $this->getAlias());        
     }
 }

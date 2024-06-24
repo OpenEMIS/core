@@ -272,7 +272,6 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                             }
                             data.id = idx;
                         });
-
                         var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
                         scope.isSearchResultEmpty = gridData.length === 0;
                         return scope.processExternalGridUserRecord(gridData, params, totalRowCount);
@@ -341,9 +340,11 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         DirectoryaddguardianSvc.getIdentityTypes()
             .then(function (response) {
                 scope.identityTypeOptions = response.data;
+                //scope.checkConfigForExternalSearch()
                 UtilsSvc.isAppendLoader(false);
             }, function (error) {
                 console.error(error);
+                //scope.checkConfigForExternalSearch()
                 UtilsSvc.isAppendLoader(false);
             });
     }
@@ -422,6 +423,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                     scope.selectedUserData.identity_type_name = identityOptions['0'].name;
                 } else {
                     scope.selectedUserData.identity_type_id = options[i].identity_type_id;
+                    //scope.selectedUserData.identity_type_name = options[i].identity_type.name;
                     scope.selectedUserData.identity_type_name = options[i].identity_type_name;
                 }
                 scope.selectedUserData.nationality_name = options[i].name;
@@ -446,7 +448,6 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             }
         }
         scope.checkConfigForExternalSearch();
-
     }
 
     scope.changeContactType = function () {
@@ -1669,7 +1670,6 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         if (identity_type_name == 'UNHCR') {
             isSkipableForIdentity = false;
         }
-
         if (isIdentityHasError) {
             return ['Identity', true]
         }
@@ -1691,7 +1691,6 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     scope.checkConfigForExternalSearch = function checkConfigForExternalSearch() {
         var nationality_id = scope.selectedUserData.nationality_id
         var identity_type_id = scope.selectedUserData.identity_type_id
-
         DirectoryaddguardianSvc.checkConfigForExternalSearch(nationality_id, identity_type_id).then(function (resp) {
             scope.isExternalSearchEnable = resp.showExternalSearch;
             scope.externalSearchSourceName = resp.value;
@@ -1702,7 +1701,6 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             UtilsSvc.isAppendLoader(false);
         });
     }
-
     scope.isNextButtonShouldDisable = function isNextButtonShouldDisable() {
         const { step, selectedUserData, isIdentityUserExist, externalSearchSourceName } = scope;
         const { first_name, last_name, date_of_birth, gender_id, identity_number } = selectedUserData;
@@ -1710,6 +1708,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         if (isIdentityUserExist && step === "internal_search") {
             return true;
         }
+
         if (step === 'external_search' && externalSearchSourceName === 'UNHCR' && !identity_number) {
             return true;
         }
@@ -1719,7 +1718,6 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
         }
         return false;
     }
-
 
     scope.getCSPDSearchData = function getCSPDSearchData() {
         var param = scope.selectedUserData; //POCOR-7916

@@ -17,7 +17,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
     const FORMULA_SUM = "SUM";
     const FORMULA_AVG = "AVG";
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->hasOne('AppraisalFormsCriterias', [
@@ -44,7 +44,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Appraisal.add.afterSave'] = 'updateAppraisalScore';
@@ -57,7 +57,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
     public function updateAppraisalScore(Event $event, Entity $entity, ArrayObject $requestData, $alias)
     {
         // Form ID
-        $requestData[$this->alias()]['id'] = $entity->id;
+        $requestData[$this->getAlias()]['id'] = $entity->id;
 
         $this->createAppraisalFormsCriteriasScoresRecord($requestData);
     }
@@ -208,7 +208,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
 
         if (!empty($data)) {
             $newEntities = $AppraisalScoreAnswers->newEntities($data);
-            $AppraisalScoreAnswers->connection()->transactional(function () use ($AppraisalScoreAnswers, $newEntities) {
+            $AppraisalScoreAnswers->getConnection()->transactional(function () use ($AppraisalScoreAnswers, $newEntities) {
                 foreach ($newEntities as $entity) {
                     $AppraisalScoreAnswers->save($entity);
                 }
@@ -249,7 +249,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
             if (!is_null($actualDataToBeSave)) {
                 // Process all the entities as a single transaction
                 $newEntities = $appraisalFormsCriteriasScores->newEntities($actualDataToBeSave);
-                $appraisalFormsCriteriasScores->connection()->transactional(function () use ($appraisalFormsCriteriasScores, $newEntities) {
+                $appraisalFormsCriteriasScores->getConnection()->transactional(function () use ($appraisalFormsCriteriasScores, $newEntities) {
                 foreach ($newEntities as $entity) {
                     $appraisalFormsCriteriasScores->save($entity, ['atomic' => false]);
                     }

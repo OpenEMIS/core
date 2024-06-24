@@ -14,9 +14,9 @@ class StudentSurveysTable extends ControllerActionTable
     private $surveyInstitutionId = null;
     private $studentId = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_surveys');
+        $this->setTable('institution_student_surveys');
         parent::initialize($config);
 
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
@@ -49,7 +49,7 @@ class StudentSurveysTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.InstitutionSurveys.afterSave'] = 'institutionSurveyAfterSave';

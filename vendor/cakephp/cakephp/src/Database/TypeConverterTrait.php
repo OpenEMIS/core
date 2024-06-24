@@ -1,16 +1,18 @@
 <?php
+declare(strict_types=1);
+
 /**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * CakePHP(tm) : Rapid Development Framework (https://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
  *
  * Licensed under The MIT License
  * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link          http://cakephp.org CakePHP(tm) Project
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (https://cakefoundation.org)
+ * @link          https://cakephp.org CakePHP(tm) Project
  * @since         3.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       https://opensource.org/licenses/mit-license.php MIT License
  */
 namespace Cake\Database;
 
@@ -19,14 +21,14 @@ namespace Cake\Database;
  */
 trait TypeConverterTrait
 {
-
     /**
      * Converts a give value to a suitable database value based on type
      * and return relevant internal statement type
      *
      * @param mixed $value The value to cast
-     * @param \Cake\Database\Type|string $type The type name or type instance to use.
+     * @param \Cake\Database\TypeInterface|string|int $type The type name or type instance to use.
      * @return array list containing converted value and internal type
+     * @pslam-return array{mixed, int}
      */
     public function cast($value, $type)
     {
@@ -51,7 +53,7 @@ trait TypeConverterTrait
      * @param array $types list or associative array of types
      * @return array
      */
-    public function matchTypes($columns, $types)
+    public function matchTypes(array $columns, array $types): array
     {
         if (!is_int(key($types))) {
             $positions = array_intersect_key(array_flip($columns), $types);

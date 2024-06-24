@@ -119,7 +119,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.setstaffData = setstaffData;
     StaffController.setStaffDataFromExternalSearchData = setStaffDataFromExternalSearchData;
     StaffController.getStaffCustomFields = getStaffCustomFields;
-    StaffController.createCustomFieldsArray = createCustomFieldsArray;
+    // StaffController.createCustomFieldsArray = createCustomFieldsArray;
     StaffController.onDecimalNumberChange = onDecimalNumberChange;
     StaffController.changeOption = changeOption;
     StaffController.changeContactType = changeContactType;
@@ -691,7 +691,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         InstitutionsStaffSvc.getStaffCustomFields(staffId).then(function (resp) {
             StaffController.customFields = resp.data;
             StaffController.customFieldsArray = [];
-            StaffController.createCustomFieldsArray();
+            // StaffController.createCustomFieldsArray();
             UtilsSvc.isAppendLoader(false);
         }, function (error) {
             console.error(error);

@@ -10,6 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Text;
 use Cake\ORM\Query;
 use App\Model\Traits\OptionsTrait;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -17,9 +18,9 @@ class SurveyRulesTable extends ControllerActionTable
 {
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('survey_rules');
+        $this->setTable('survey_rules');
         parent::initialize($config);
         $this->belongsTo('SurveyForms',                     ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id']);
         $this->belongsTo('SurveyQuestions',                 ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id']);
@@ -31,7 +32,7 @@ class SurveyRulesTable extends ControllerActionTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
@@ -52,6 +53,7 @@ class SurveyRulesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        $serverRequest = $this->request;
         if ($this->Auth->user('super_admin') == 1 || $this->AccessControl->check(['Surveys', 'Rules', 'edit'])) {
             $toolbarButtons = $extra['toolbarButtons'];
             $toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
@@ -67,7 +69,7 @@ class SurveyRulesTable extends ControllerActionTable
 
         $extra['elements']['controls'] = ['name' => 'Survey.survey_rules_controls', 'data' => [], 'options' => [], 'order' => 2];
         $this->fields['survey_question_id']['type'] = 'integer';
-        if (!$this->request->query('survey_form_id')) {
+        if (!$serverRequest->getQuery('survey_form_id')) {
             $this->fields['survey_form_id']['type'] = 'integer';
         }
 
@@ -103,7 +105,7 @@ class SurveyRulesTable extends ControllerActionTable
                 ->find()
                 ->select([$SurveyQuestionChoicesTable->aliasField('name')])
                 ->where([$SurveyQuestionChoicesTable->aliasField('id').' IN' => $showOptions])
-                ->hydrate(false)
+                ->enabledHydration(false)
                 ->extract('name')
                 ->toList();
             return implode('<br />', $options);
@@ -130,6 +132,7 @@ class SurveyRulesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // Survey form options
+        $serverRequest = $this->request;
         $surveyFormOptions = $this->SurveyForms
             ->find('list')
             ->order([
@@ -137,7 +140,7 @@ class SurveyRulesTable extends ControllerActionTable
             ])
             ->toArray();
         $surveyFormOptions = ['' => '-- '.__('All Surveys').' --'] + $surveyFormOptions;
-        $surveyFormId = $this->request->query('survey_form_id');
+        $surveyFormId = $serverRequest->getQuery('survey_form_id');
         $this->advancedSelectOptions($surveyFormOptions, $surveyFormId);
         $this->controller->set(compact('surveyFormOptions'));
 
@@ -165,7 +168,7 @@ class SurveyRulesTable extends ControllerActionTable
             $sectionOptions = array_values($sectionOptions);
             // original section options will not be translated
             $originalOptions = $sectionOptions;
-            $sectionId = $this->request->query('section_id');
+            $sectionId = $serverRequest->getQuery('section_id');
             $this->advancedSelectOptions($sectionOptions, $sectionId);
             $this->controller->set(compact('sectionOptions'));
         }
@@ -224,5 +227,38 @@ class SurveyRulesTable extends ControllerActionTable
                 'options' => $this->aliasField('show_options')
             ])
             ->group(['question']);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'survey_form_id') {
+            return __('Survey Form');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'custom_module_id') {
+            return __('Custom Module');
+        }  elseif ($field == 'is_mandatory') {
+            return __('Is Mandatory');
+        } elseif ($field == 'is_unique') {
+            return __('Is Unique');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }elseif ($field == 'description') {
+            return __('Description');
+        }elseif ($field == 'description') {
+            return __('Description');
+        }elseif ($field == 'params') {
+            return __('Params');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

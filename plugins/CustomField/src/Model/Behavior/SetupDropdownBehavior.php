@@ -9,7 +9,7 @@ use CustomField\Model\Behavior\SetupBehavior;
 
 class SetupDropdownBehavior extends SetupBehavior
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
@@ -41,9 +41,9 @@ class SetupDropdownBehavior extends SetupBehavior
         $model = $this->_table;
         $request = $model->request;
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($model->alias(), $request->data)) {
-                if (array_key_exists('custom_field_options', $request->data[$model->alias()])) {
-                    unset($data[$model->alias()]['custom_field_options']);
+            if (array_key_exists($model->getAlias(), $request->getData())) {
+                if (array_key_exists('custom_field_options', $request->getData()[$model->getAlias()])) {
+                    unset($data[$model->getAlias()]['custom_field_options']);
                 }
             }
         }
@@ -52,12 +52,12 @@ class SetupDropdownBehavior extends SetupBehavior
     public function addEditOnAddOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
-        if ($data[$model->alias()]['field_type'] == $this->fieldTypeCode) {
+        if ($data[$model->getAlias()]['field_type'] == $this->fieldTypeCode) {
             $fieldOptions = [
                 'name' => '',
                 'visible' => 1
             ];
-            $data[$model->alias()]['custom_field_options'][] = $fieldOptions;
+            $data[$model->getAlias()]['custom_field_options'][] = $fieldOptions;
 
             //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
             $options['associated'] = [

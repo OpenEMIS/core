@@ -12,7 +12,7 @@ class DirectoryInsurancesController extends BaseController
 
         $page = $this->Page;
 
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $userId = $session->read('Directory.Directories.id');
         $userName = $session->read('Directory.Directories.name');
        

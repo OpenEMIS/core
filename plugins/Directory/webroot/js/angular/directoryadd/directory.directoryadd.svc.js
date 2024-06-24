@@ -35,7 +35,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc, $wind
         getCspdData: getCspdData,
     };
     return service;
-
+    
     function init(baseUrl){
         KdOrmSvc.base(baseUrl);
         KdOrmSvc.controllerAction('Directory');
@@ -263,6 +263,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc, $wind
             'nationality_id' : nationality_id,
             'identity_type_id' : identity_type_id
         };
+
         $http.post(url, {params: params})
             .then(function (response)
             {
@@ -274,7 +275,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc, $wind
         return deferred.promise;
     }
 
-
+    
     /**
      * @name  Url: /Institutions/getCspdData
      * @description  Request Params: identity_number

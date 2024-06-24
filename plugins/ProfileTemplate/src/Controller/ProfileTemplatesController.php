@@ -10,7 +10,7 @@ use Cake\ORM\TableRegistry;
 
 class ProfileTemplatesController extends AppController
 {
-    public function initialize() {
+    public function initialize(): void {
         parent::initialize();
         $this->loadComponent('Paginator');
     }
@@ -36,7 +36,14 @@ class ProfileTemplatesController extends AppController
     {
         $header = __('Profile');
         $header .= ' - ' . $model->getHeader($model->alias);
-        $this->Navigation->addCrumb('Profile', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
+        $this->Navigation->addCrumb('Profile', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $model->alias]);
         $this->set('contentHeader', $header);
+    }
+
+    public function beforeFilter(Event $event)
+    {
+        if ($this->getPlugin() == 'ProfileTemplate') {
+            $this->Security->setConfig('validatePost', false);
+        }
     }
 }

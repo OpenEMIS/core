@@ -57,10 +57,10 @@ class StaffExcelReportBehavior extends Behavior
     {
         parent::initialize($config);
         $model = $this->_table;
-        $folder = WWW_ROOT . $this->config('folder');
-        $subfolder = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder');
+        $folder = WWW_ROOT . $this->getConfig('folder');
+        $subfolder = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder');
         if (!array_key_exists('filename', $config)) {
-            $this->config('filename', $model->alias());
+            $this->getConfig('filename', $model->getAlias());
         }
 
         new Folder($folder, true, 0777);
@@ -433,9 +433,9 @@ class StaffExcelReportBehavior extends Behavior
         $variableValues = new ArrayObject([]);
         if ($this->config('variableSource') == 'database') {
             $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialiseQueryVariables', [$params, $extra], $this);
-            if ($event->isStopped()) { return $event->result; }
-            if ($event->result) {
-                $variableValues = $event->result;
+            if ($event->isStopped()) { return $event->getResult(); }
+            if ($event->getResult()) {
+                $variableValues = $event->getResult();
             }
 
         } else if ($this->config('variableSource') == 'file') {
@@ -443,9 +443,9 @@ class StaffExcelReportBehavior extends Behavior
 
             foreach ($variables as $var) {
                 $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialise'.$var, [$params, $extra], $this);
-                if ($event->isStopped()) { return $event->result; }
-                if ($event->result) {
-                    $variableValues[$var] = $event->result;
+                if ($event->isStopped()) { return $event->getResult(); }
+                if ($event->getResult()) {
+                    $variableValues[$var] = $event->getResult();
                 }
             }
         }
