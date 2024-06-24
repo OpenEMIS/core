@@ -869,7 +869,7 @@ class StaffController extends AppController
         $institutionId = $this->getInstitutionID();
         if (!empty($institutionId)) {
             if ($this->request->getParam('action') == 'StaffCurriculars') {
-                $labels_tbl = TableRegistry::get('labels');   
+                $labels_tbl = TableRegistry::get('Labels');
                 $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();  
                 if(empty($curricular_label_Data->name)){
                     $curricular_label_Data->name = "Institution Curriculars";
