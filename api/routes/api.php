@@ -485,5 +485,6 @@ Route::group(
         //POCOR-8292 start...
         Route::get('/assessments/{assessment_id}/periods', 'AssessmentController@getAssessmentViaAcademicTerm');
         //POCOR-8292 end...
+        
     }
 );
