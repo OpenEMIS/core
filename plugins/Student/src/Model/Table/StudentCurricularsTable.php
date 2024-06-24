@@ -9,7 +9,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\ORM\ResultSet;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Log\Log;
 use Cake\Utility\Security;
 use Cake\Datasource\ConnectionManager;
@@ -19,9 +19,9 @@ use App\Model\Table\ControllerActionTable;
 //POCOR-6673
 class StudentCurricularsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_curricular_students');
+        $this->setTable('institution_curricular_students');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('InstitutionCurriculars', ['className' => 'Institution.InstitutionCurriculars']);
@@ -31,6 +31,10 @@ class StudentCurricularsTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('view', true);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StudentCurriculars' =>['id']
+            ]
+        ]);
     }
     //POCOR-8056
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -44,18 +48,18 @@ class StudentCurricularsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         //POCOR-8028 removed academic period
-        $session = $this->request->session();
-        $sId = $session->read('Student.Students.id');
+        $session = $this->request->getSession();
+        $sId = $this->getStudentID();
         $userData = $this->Session->read();
         if ($sId != null) {
             $sId_id = $sId;
         } else {
             $sId_id = $userData['Auth']['User']['id'];
         }
-        $InstitutionCurriculars = TableRegistry::get('institution_curriculars');
-        $curricular_types = TableRegistry::get('curricular_types');
-        $institutionId = $this->Session->read('Institution.Institutions.id');
-        if ($this->controller->name == 'Profiles') {
+        $InstitutionCurriculars = TableRegistry::get('Institution.InstitutionCurriculars');
+        $curricular_types = TableRegistry::get('FieldOption.CurricularTypes');
+        $institutionId = $this->getInstitutionID();
+        if ($this->controller->getName() == 'Profiles') {
             $where = [$this->aliasField('student_id') => $sId_id];
         } else {
             $where = [$this->aliasField('student_id') => $sId_id,
@@ -70,10 +74,10 @@ class StudentCurricularsTable extends ControllerActionTable
                 'category' => $InstitutionCurriculars->aliasField('category'),
             ])
             // POCOR-8028 query made more strict
-            ->InnerJoin([$InstitutionCurriculars->alias() => $InstitutionCurriculars->table()],
+            ->InnerJoin([$InstitutionCurriculars->getAlias() => $InstitutionCurriculars->getTable()],
                 [$InstitutionCurriculars->aliasField('id') . ' = ' . $this->aliasField('institution_curricular_id')
                 ])
-            ->InnerJoin([$curricular_types->alias() => $curricular_types->table()],
+            ->InnerJoin([$curricular_types->getAlias() => $curricular_types->getTable()],
                 [$curricular_types->aliasField('id') . ' = ' . $InstitutionCurriculars->aliasField('curricular_type_id')
                 ])
 
@@ -106,7 +110,7 @@ class StudentCurricularsTable extends ControllerActionTable
             'curricular_position_id',
             'start_date',
             'end_date']);
-        if ($this->controller->name == 'Profiles') {
+        if ($this->controller->getName() == 'Profiles') {
             unset($settings['indexButtons']['view']);
         }
 
@@ -127,8 +131,8 @@ class StudentCurricularsTable extends ControllerActionTable
 
     public function onGetOpenemisNo(Event $event, Entity $entity)
     {
-        $session = $this->request->session();
-        $sId = $session->read('Student.Students.id');
+        $session = $this->request->getSession();
+        $sId = $this->getStudentID();
         $connection = ConnectionManager::get('default');
         $student_rec = $connection->query("SELECT openemis_no FROM security_users WHERE security_users.id=" . $sId);
         $student_data = $student_rec->fetch();
@@ -137,8 +141,8 @@ class StudentCurricularsTable extends ControllerActionTable
 
     public function onGetStudentName(Event $event, Entity $entity)
     {
-        $session = $this->request->session();
-        $sId = $session->read('Student.Students.id');
+        $session = $this->request->getSession();
+        $sId = $this->getStudentID();
         $connection = ConnectionManager::get('default');
         $student_rec = $connection->query("SELECT first_name,last_name FROM security_users WHERE security_users.id=" . $sId);
         $student_data = $student_rec->fetch();
@@ -171,9 +175,10 @@ class StudentCurricularsTable extends ControllerActionTable
     private function setupTabElements()
     {
         $options['type'] = 'student';
-        $tabElements = $this->controller->getAcademicTabElements($options);
+        // $tabElements = $this->controller->getAcademicTabElements($options);
+        $tabElements = $this->getAcademicTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
@@ -207,8 +212,8 @@ class StudentCurricularsTable extends ControllerActionTable
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         // $this->field('student_id', ['visible' => false]);
-        $InstitutionID = $_SESSION['Institution']['Institutions']['id'];
-        $InstitutionCurriculars = TableRegistry::get('institution_curriculars');
+        $InstitutionID = $this->getStudentID();
+        $InstitutionCurriculars = TableRegistry::get('Institution.InstitutionCurriculars');
         $result = $InstitutionCurriculars
             ->find()
             ->select(['id', 'name'])
@@ -222,7 +227,7 @@ class StudentCurricularsTable extends ControllerActionTable
             }
         }
 
-        $curricularPosition = TableRegistry::get('curricular_positions');
+        $curricularPosition = TableRegistry::get('FieldOption.CurricularPositions');
         $result1 = $curricularPosition
             ->find()
             ->select(['id', 'name'])
@@ -234,8 +239,8 @@ class StudentCurricularsTable extends ControllerActionTable
                 $cp_arr[$val->id] = $val->name;
             }
         }
-        $session = $this->request->session();
-        $sId = $session->read('Student.Students.id');
+        $session = $this->request->getSession();
+        $sId = $this->getStudentID();
         $this->field('institution_curricular_id', ['type' => 'select', 'options' => $ic_arr]);
         $this->field('start_date');
         $this->field('end_date');
@@ -263,6 +268,49 @@ class StudentCurricularsTable extends ControllerActionTable
             $updateQuery = 'UPDATE institution_curriculars SET total_female_students = ' . $data . ' WHERE id = ' . $entity->institution_curricular_id;
         }
         $connection->execute($updateQuery);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'student_name') {
+            return __('Student Name');
+        } elseif ($field == 'education_grade') {
+            return __('Education Grade');
+        } elseif ($field == 'institution_class') {
+            return __('Institution Class');
+        } elseif ($field == 'curricular_category') {
+            return __('Curricular Category');
+        } elseif ($field == 'curricular_type') {
+            return __('Curricular Type');
+        } elseif ($field == 'institution_curricular_id') {
+            return __('Institution Curricular');
+        } elseif ($field == 'curricular_position_id') {
+            return __('Curricular Position');
+        } elseif ($field == 'start_date') {
+            return __('Start Date');
+        } elseif ($field == 'end_date') {
+            return __('End Date');
+        } elseif ($field == 'hours') {
+            return __('Hour');
+        } elseif ($field == 'points') {
+            return __('Point');
+        } elseif ($field == 'location') {
+            return __('Location');
+        } elseif ($field == 'comments') {
+            return __('Comment');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
 }

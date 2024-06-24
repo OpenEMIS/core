@@ -13,8 +13,8 @@ use Cake\I18n\I18n;
 use Cake\Utility\Hash;
 use XLSXWriter;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
-use Cake\Network\Session;
+use Cake\Http\ServerRequest;
+use Cake\Http\Session;
 // Events
 // public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {}
 // public function onExcelGenerate(Event $event, $writer, ArrayObject $settings) {}
@@ -42,13 +42,13 @@ class ClassExcelBehavior extends Behavior
         'auto_contain' => true
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->config('excludes', array_merge($this->config('default_excludes'), $this->config('excludes')));
+        $this->setConfig('excludes', array_merge($this->setConfig('default_excludes'), $this->setConfig('excludes')));
         if (!array_key_exists('filename', $config)) {
-            $this->config('filename', $this->_table->alias());
+            $this->setConfig('filename', $this->_table->getAlias());
         }
-        $folder = WWW_ROOT . $this->config('folder');
+        $folder = WWW_ROOT . $this->getConfig('folder');
 
         if (!file_exists($folder)) {
             umask(0);
@@ -62,9 +62,9 @@ class ClassExcelBehavior extends Behavior
             //  $this->deleteOldFiles($folder, $format);
             // }
         }
-        $pages = $this->config('pages');
+        $pages = $this->setConfig('pages');
         if ($pages !== false && empty($pages)) {
-            $this->config('pages', ['index', 'view']);
+            $this->setConfig('pages', ['index', 'view']);
         }
     }
 
@@ -89,16 +89,19 @@ class ClassExcelBehavior extends Behavior
     {
         $id = 0;
         $break = false;
-        $action = $this->_table->action;
-        $pass = $this->_table->request->pass;
+        $action = $this->_table->request->getParam('action');
+        $pass = $this->_table->request->getParam('pass');
         if (in_array($action, $pass)) {
             unset($pass[array_search($action, $pass)]);
             $pass = array_values($pass);
         }
+        echo "<pre>"; print_r($pass);die;
         if (isset($pass[0])) {
             $id = $pass[0];
         }
-        $ids = empty($id) ? [] : $this->_table->paramsDecode($id);
+      // echo "<pre>"; print_r($pass);die;
+       $ids = empty((int)$id) ? [] : $this->_table->paramsDecode($id);
+
         $this->generateXLXS($ids);
         return true;
     }
@@ -111,8 +114,8 @@ class ClassExcelBehavior extends Behavior
     public function generateXLXS($settings = [])
     {
         $_settings = [
-            'file' => $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
-            'path' => WWW_ROOT . $this->config('folder') . DS,
+            'file' => $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
+            'path' => WWW_ROOT . $this->getConfig('folder') . DS,
             'download' => true,
             'purge' => true
         ];
@@ -131,10 +134,10 @@ class ClassExcelBehavior extends Behavior
 
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$_settings]);
         if ($event->isStopped()) {
-            return $event->result;
+            return $event->getResult();
         }
-        if (is_callable($event->result)) {
-            $generate = $event->result;
+        if (is_callable($event->getResult())) {
+            $generate = $event->getResult();
         }
 
         $generate($_settings);
@@ -164,7 +167,7 @@ class ClassExcelBehavior extends Behavior
 
         if (count($sheets->getArrayCopy())==0) {
             $sheets[] = [
-                'name' => $this->_table->alias(),
+                'name' => $this->_table->getAlias(),
                 'table' => $this->_table,
                 'query' => $this->_table->find(),
             ];
@@ -172,7 +175,7 @@ class ClassExcelBehavior extends Behavior
 
         $sheetNameArr = [];
         //POCOR-5852 starts
-        $session = $this->_table->request->session();
+        $session = $this->_table->getRequest()->getSession();
         $institution_id = $session->read('Institution.Institutions.id') ? $session->read('Institution.Institutions.id'): 0;
         $education_grade_id = $academic_period_id = '';
         $condition = [];
@@ -180,10 +183,10 @@ class ClassExcelBehavior extends Behavior
             $education_grade_id = $this->_table->request->query['education_grade_id'];
             $academic_period_id = $this->_table->request->query['academic_period_id'];
 
-            $InstitutionClassGrades = TableRegistry::get('institution_class_grades');
+            $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 
-            if($this->_table->request->query['education_grade_id'] > 0){
+            if($this->_table->request->getQuery['education_grade_id'] > 0){
                 $conditions = [
                     $InstitutionClassGrades->aliasField('InstitutionClassGrades.education_grade_id') => $education_grade_id,
                     $InstitutionClasses->aliasField('InstitutionClasses.academic_period_id') => $academic_period_id,
@@ -212,14 +215,14 @@ class ClassExcelBehavior extends Behavior
 			$StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
 			$Institutions = TableRegistry::get('Institution.Institutions');
 			$InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
-			$InstitutionStudents = TableRegistry::get('Institution.InstitutionClassesStudents');
+			$InstitutionStudents = TableRegistry::get('Institution.InstitutionClassStudents');
 			$InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
             /**
             * added condition to make query on the bases on selected class and exporting student's list
             * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
             * @ticket POCOR-6635 starts
             */
-            $encodedClassId = $this->_table->request->params['pass'][1];
+            $encodedClassId = $this->_table->request->getAttribute('params')['pass'][1];
             if (!empty($encodedClassId)) {
                 $decodedClassId = $this->_table->paramsDecode($encodedClassId);
                 $classId = $decodedClassId['id'];
@@ -486,7 +489,7 @@ class ClassExcelBehavior extends Behavior
                 }
             }
 
-            if ($this->config('auto_contain')) {
+            if ($this->getConfig('auto_contain')) {
                 $this->contain($query, $fields, $table);
             }
 
@@ -504,24 +507,24 @@ class ClassExcelBehavior extends Behavior
             $sheetCount = 1;
             $sheetRowCount = 0;
             $percentCount = intval($count / 100);
-            $pages = ceil($count / $this->config('limit'));
+            $pages = ceil($count / $this->getConfig('limit'));
 
             // Debugging 
             $pages = 1;
 
             if (isset($sheet['orientation'])) {
                 if ($sheet['orientation'] == 'landscape') {
-                    $this->config('orientation', 'landscape');
+                    $this->getConfig('orientation', 'landscape');
                 } else {
-                    $this->config('orientation', 'portrait');
+                    $this->getConfig('orientation', 'portrait');
                 }
             } elseif ($count == 1) {
-                $this->config('orientation', 'portrait');
+                $this->getConfig('orientation', 'portrait');
             }
 
             $this->dispatchEvent($table, $this->eventKey('onExcelStartSheet'), 'onExcelStartSheet', [$settings, $count], true);
             $this->onEvent($table, $this->eventKey('onExcelBeforeWrite'), 'onExcelBeforeWrite');
-            if ($this->config('orientation') == 'landscape') {
+            if ($this->getConfig('orientation') == 'landscape') {
                 $headerRow = [];
                 $headerStyle = [];
                 $headerFormat = [];
@@ -589,7 +592,7 @@ class ClassExcelBehavior extends Behavior
                 // process every page based on the limit
                 for ($pageNo=0; $pageNo<$pages; $pageNo++) {
                     $resultSet = $query
-                    ->limit($this->config('limit'))
+                    ->limit($this->getConfig('limit'))
                     ->page($pageNo+1)
                     ->all();
 
@@ -601,7 +604,7 @@ class ClassExcelBehavior extends Behavior
 
                     // process each row based on the result set
                     foreach ($resultSet as $entity) {
-                        if ($sheetRowCount >= $this->config('sheet_limit')) {
+                        if ($sheetRowCount >= $this->getConfig('sheet_limit')) {
                             $sheetCount++;
                             $sheetName = $baseSheetName . '_' . $sheetCount;
 
@@ -624,7 +627,7 @@ class ClassExcelBehavior extends Behavior
                         $sheetRowCount++;
                         $rowCount++;
                         $event = $this->dispatchEvent($table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
-                        if (!$event->result) {
+                        if (!$event->getResult()) {
                             $writer->writeSheetRow($sheetName, $row, $rowStyle);
                         }
                     }
@@ -667,7 +670,7 @@ class ClassExcelBehavior extends Behavior
 
     private function getFields($table, $settings)
     {
-        $schema = $table->schema();
+        $schema = $table->getSchema();
         //$columns = $schema->columns();
         //POCOR-5852 added 'identity_type', 'identity_number' starts
 		$columns = ['institution_code','institution_name','academic_period_id',
@@ -676,18 +679,18 @@ class ClassExcelBehavior extends Behavior
 					'special_need', 'identity_type', 'identity_number'
 					];
         //POCOR-5852 ends                  
-        $excludes = $this->config('excludes');
+        $excludes = $this->getConfig('excludes');
 
-        if (!is_array($table->primaryKey())) { //if not composite key
-            $excludes[] = $table->primaryKey();
+        if (!is_array($table->getPrimaryKey())) { //if not composite key
+            $excludes[] = $table->getPrimaryKey();
         }
 
         $fields = new ArrayObject();
-        $module = $table->alias();
-        $language = I18n::locale();
+        $module = $table->getAlias();
+        $language = I18n::getLocale();
         $excludedTypes = ['binary'];
         /*POCOR-6635 starts - added condition to export individual class with student's list*/
-        $encodedClassId = $this->_table->request->params['pass'][1];
+        $encodedClassId = $this->_table->request->getAttribute('params')['pass'][1];
         if (!empty($encodedClassId)) {
             $columns = ['institution_code','institution_name','academic_period_id',
                     'class_name','shift','education_grade','homeroom_teacher','secondary_teacher',
@@ -698,13 +701,13 @@ class ClassExcelBehavior extends Behavior
         }
         /*POCOR-6635 ends */
         foreach ($columns as $col) {
-            $field = $schema->column($col);
+            $field = $schema->getColumn($col);
             if (!in_array($field['type'], $excludedTypes)) {
                 $label = $table->aliasField($col);
 
                 $event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $col, $language], true);
-                if (strlen($event->result)) {
-                    $label = $event->result;
+                if (strlen($event->getResult())) {
+                    $label = $event->getResult();
                 }
 
                 $fields[] = [
@@ -811,7 +814,7 @@ class ClassExcelBehavior extends Behavior
     {
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     return true;
                 }
             }
@@ -825,7 +828,7 @@ class ClassExcelBehavior extends Behavior
 
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
-                if ($field === $assoc->foreignKey()) {
+                if ($field === $assoc->getForeignKey()) {
                     $relatedModel = $assoc;
                     break;
                 }
@@ -850,7 +853,7 @@ class ClassExcelBehavior extends Behavior
         foreach ($fields as $attr) {
             $field = $attr['field'];
             if ($this->isForeignKey($table, $field)) {
-                $contain[] = $this->getAssociatedTable($table, $field)->alias();
+                $contain[] = $this->getAssociatedTable($table, $field)->getAlias();
             }
         }
         $query->contain($contain);
@@ -880,7 +883,7 @@ class ClassExcelBehavior extends Behavior
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 0];
@@ -901,7 +904,7 @@ class ClassExcelBehavior extends Behavior
     {
         $action = $this->_table->action;
         //POCOR-5852 starts add  || $action == 'index' condition
-        if (in_array($action, $this->config('pages')) || $action == 'index') {
+        if (in_array($action, $this->getConfig('pages')) || $action == 'index') {
             $toolbarButtons = isset($extra['toolbarButtons']) ? $extra['toolbarButtons'] : [];
             $toolbarAttr = [
                 'class' => 'btn btn-xs btn-default',
@@ -941,7 +944,7 @@ class ClassExcelBehavior extends Behavior
                 $export['url']['action'] = 'excel';
             }
 
-            $pages = $this->config('pages');
+            $pages = $this->getConfig('pages');
             if (in_array($action, $pages)) {
                 $toolbarButtons['export'] = $export;
             }
@@ -958,7 +961,7 @@ class ClassExcelBehavior extends Behavior
                 $export['url']['action'] = 'excel';
             }
 
-            $pages = $this->config('pages');
+            $pages = $this->getConfig('pages');
             if ($pages != false) {
                 if (in_array($action, $pages)) {
                     $toolbarButtons['export'] = $export;

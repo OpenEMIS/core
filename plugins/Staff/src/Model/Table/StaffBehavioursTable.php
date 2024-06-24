@@ -12,7 +12,7 @@ use App\Model\Table\ControllerActionTable;
 
 class StaffBehavioursTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -27,6 +27,8 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Staff.StaffTab');
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -43,12 +45,14 @@ class StaffBehavioursTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $options['type'] = 'staff';
-        $tabElements = $this->controller->getCareerTabElements($options);
+        $tabElements = $this->getCareerTabElements($options);
+        $controllerName = $this->controller->getName();
+        $selectedAction = 'Behaviours';
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'Behaviours');
+        $this->controller->set('selectedAction', $selectedAction);
 
         // Start POCOR-5188
-		if($this->request->params['controller'] == 'Staff'){
+		if($this->request->getParam('controller') == 'Staff'){
 			$is_manual_exist = $this->getManualUrl('Institutions','Behaviour','Staff - Career');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -66,7 +70,7 @@ class StaffBehavioursTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
+		}elseif($this->request->getParam('controller') == 'Directories'){ 
 			$is_manual_exist = $this->getManualUrl('Directory','Behaviours','Staff - Career');       
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
@@ -105,11 +109,41 @@ class StaffBehavioursTable extends ControllerActionTable
             $buttons['view']['url'] = $url;
 
             // POCOR-1893 unset the view button on profiles controller
-            if ($this->controller->name == 'Profiles') {
+            if ($this->controller->getName() == 'Profiles') {
                 unset($buttons['view']);
             }
         }
 
         return $buttons;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'start_date':
+                return __('Date');
+            case 'time_in':
+                return __('Time');
+            case 'behaviour_classification_id':
+                return __('Behaviour Classifications');
+            case 'institution_id':
+                return __('Institution');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'status_id':
+                return __('Status');
+            case 'assignee_id':
+                return __('Assignees');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

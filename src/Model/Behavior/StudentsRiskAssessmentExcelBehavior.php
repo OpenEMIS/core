@@ -41,13 +41,13 @@ class StudentsRiskAssessmentExcelBehavior extends Behavior
         'auto_contain' => true
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-    	$this->config('excludes', array_merge($this->config('default_excludes'), $this->config('excludes')));
+    	$this->setConfig('excludes', array_merge($this->setConfig('default_excludes'), $this->setConfig('excludes')));
     	if (!array_key_exists('filename', $config)) {
-    		$this->config('filename', $this->_table->alias());
+    		$this->setConfig('filename', $this->_table->getAlias());
     	}
-    	$folder = WWW_ROOT . $this->config('folder');
+    	$folder = WWW_ROOT . $this->getConfig('folder');
 
     	if (!file_exists($folder)) {
     		umask(0);
@@ -61,9 +61,9 @@ class StudentsRiskAssessmentExcelBehavior extends Behavior
             //  $this->deleteOldFiles($folder, $format);
             // }
     	}
-    	$pages = $this->config('pages');
+    	$pages = $this->setConfig('pages');
     	if ($pages !== false && empty($pages)) {
-    		$this->config('pages', ['index', 'view']);
+    		$this->setConfig('pages', ['index', 'view']);
     	}
     }
 
@@ -110,8 +110,8 @@ class StudentsRiskAssessmentExcelBehavior extends Behavior
     public function generateXLXS($settings = [])
     {
     	$_settings = [
-    		'file' => $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
-    		'path' => WWW_ROOT . $this->config('folder') . DS,
+    		'file' => $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
+    		'path' => WWW_ROOT . $this->getConfig('folder') . DS,
     		'download' => true,
     		'purge' => true
     	];
@@ -130,10 +130,10 @@ class StudentsRiskAssessmentExcelBehavior extends Behavior
 
     	$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$_settings]);
     	if ($event->isStopped()) {
-    		return $event->result;
+    		return $event->getResult();
     	}
-    	if (is_callable($event->result)) {
-    		$generate = $event->result;
+    	if (is_callable($event->getResult())) {
+    		$generate = $event->getResult();
     	}
 
     	$generate($_settings);
@@ -308,11 +308,11 @@ private function getData($settings)
 
 private function getFields($table, $settings, $label)
 {
-   $language = I18n::locale();
-   $module = $this->_table->alias();
+   $language = I18n::getLocale();
+   $module = $this->_table->getAlias();
 
    $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $label, $language], true);
-   return $event->result;
+   return $event->getResult();
 }
 
 private function getFooter()
@@ -336,8 +336,8 @@ private function getValue($entity, $table, $attr)
         } else {
             $event = $this->dispatchEvent($table, $this->eventKey($method), null, [$entity, $attr]);
         }
-        if ($event->result) {
-            $returnedResult = $event->result;
+        if ($event->getResult()) {
+            $returnedResult = $event->getResult();
             if (is_array($returnedResult)) {
                $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
                $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
@@ -348,8 +348,8 @@ private function getValue($entity, $table, $attr)
    } else {
      $method = 'onExcelGet' . Inflector::camelize($field);
      $event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity], true);
-     if ($event->result) {
-        $returnedResult = $event->result;
+     if ($event->getResult()) {
+        $returnedResult = $event->getResult();
         if (is_array($returnedResult)) {
            $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
            $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
@@ -411,15 +411,15 @@ private function isForeignKey($table, $field)
     	$tableObj = $this->getAssociatedTable($table, $field);
     	$key = null;
     	if (is_object($tableObj)) {
-    		$key = Inflector::underscore(Inflector::singularize($tableObj->alias()));
+    		$key = Inflector::underscore(Inflector::singularize($tableObj->getAlias()));
     	}
     	return $key;
     }
 
     public function generate($settings = [])
     {
-    	$language = I18n::locale();
-    	$module = $this->_table->alias();
+    	$language = I18n::getLocale();
+    	$module = $this->_table->getAlias();
         //echo '<pre>';print_r($module);
 
     	$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, 'postal_code', $language], true);
@@ -432,7 +432,7 @@ private function isForeignKey($table, $field)
     	foreach ($fields as $attr) {
     		$field = $attr['field'];
     		if ($this->isForeignKey($table, $field)) {
-    			$contain[] = $this->getAssociatedTable($table, $field)->alias();
+    			$contain[] = $this->getAssociatedTable($table, $field)->getAlias();
     		}
     	}
     	$query->contain($contain);
@@ -461,7 +461,7 @@ private function isForeignKey($table, $field)
     	}
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 0];
@@ -481,7 +481,7 @@ private function isForeignKey($table, $field)
     public function beforeAction(Event $event, ArrayObject $extra)
     {
     	$action = $this->_table->action;
-    	if (in_array($action, $this->config('pages'))) {
+    	if (in_array($action, $this->getConfig('pages'))) {
     		$toolbarButtons = isset($extra['toolbarButtons']) ? $extra['toolbarButtons'] : [];
     		$toolbarAttr = [
     			'class' => 'btn btn-xs btn-default',
@@ -537,7 +537,7 @@ private function isForeignKey($table, $field)
     			$export['url']['action'] = 'excel';
     		}
 
-    		$pages = $this->config('pages');
+    		$pages = $this->getConfig('pages');
     		if ($pages != false) {
     			if (in_array($action, $pages)) {
     				$toolbarButtons['export'] = $export;

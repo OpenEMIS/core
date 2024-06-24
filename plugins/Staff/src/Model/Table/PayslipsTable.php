@@ -13,12 +13,16 @@ use App\Model\Traits\MessagesTrait;
 class PayslipsTable extends ControllerActionTable
 {
     use MessagesTrait;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('staff_payslips');
+        $this->setTable('staff_payslips');
         
         parent::initialize($config);
-
+        // $this->addBehavior('User.UserTab', [
+        //     'appliedAction' => ['Payslips' =>
+        //         ['id'],
+        //     ]
+        // ]);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StaffPayslips' => ['add']
         ]);
@@ -30,15 +34,35 @@ class PayslipsTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
 
+        // if ($this->behaviors()->has('ControllerAction')) {
+        //     $reorderBehavior = $this->behaviors()->get('ControllerAction');
+        //     $reorderBehavior->setConfig('actions', ['download' => ['show' => true]]);
+        //     // $this->behaviors()->get('ControllerAction')->config([
+        //     //     'actions' => [
+        //     //         'download' => ['show' => true] // to show download on toolbar
+        //     //     ]
+        //     // ]);
+        // }
         if ($this->behaviors()->has('ControllerAction')) {
-            $this->behaviors()->get('ControllerAction')->config([
+            $this->behaviors()->get('ControllerAction')->setConfig([
                 'actions' => [
                     'download' => ['show' => true] // to show download on toolbar
                 ]
             ]);
         }
 
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Payslips'=>['id']]
+        ]);
+
     } 
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $queryString = $this->getQueryString();
+        $data['staff_id'] = $queryString['staff_id'];
+        $this->field('staff_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
+    }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -57,7 +81,7 @@ class PayslipsTable extends ControllerActionTable
             'created'
         ]);
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Staff'){ 
+        if($this->request->getAttribute('params')['controller'] == 'Staff'){ 
             $is_manual_exist = $this->getManualUrl('Institutions','Payslips','Staff - Finance');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -75,7 +99,7 @@ class PayslipsTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Directories'){ 
+        }elseif($this->request->getAttribute('params')['controller'] == 'Directories'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Payslips','Staff - Finance');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -110,24 +134,24 @@ class PayslipsTable extends ControllerActionTable
             $path_uri = '/Staff/Payslips/add';
             if(!isset($entity->name)){
                 $response["name"][] ="Field Can not be empty";
-                $entity->errors($response);
+                $entity->getErrors($response);
                     return false;
             }else if(!isset($entity->file_name)){
                 $response["file_name"][] ="Field Can not be empty";
-                $entity->errors($response);
+                $entity->getErrors($response);
                     return false;
             }else if(!isset($entity->file_content)){
                 $response["file_content"][] ="Field Can not be empty";
-                $entity->errors($response);
+                $entity->getErrors($response);
                     return false;
             }else if($emptyFields == 1 && !is_int(strpos($_SERVER['REQUEST_URI'], $path_uri))){
-                echo $_SERVER['REQUEST_URI'];die;
+                //echo $_SERVER['REQUEST_URI'];die;
                 $response = array('error'=> 'Please enter either OpenEMIS ID or identity number');
-                $entity->errors($response);    
+                $entity->getErrors($response);    
                 return false;
             }else{
-                $apiSecuritiesScopes = TableRegistry::get('AcademicPeriod.ApiSecuritiesScopes');
-                $apiSecurities = TableRegistry::get('AcademicPeriod.ApiSecurities');
+                $apiSecuritiesScopes = TableRegistry::get('ApiSecuritiesScopes');
+                $apiSecurities = TableRegistry::get('ApiSecurities');
                 $apiSecuritiesData = $apiSecurities->find('all')
                     ->select([
                         'ApiSecurities.id','ApiSecurities.name','ApiSecurities.add'
@@ -147,7 +171,7 @@ class PayslipsTable extends ControllerActionTable
                     ->first();
                 if($apiSecuritiesScopesData->add == 0){
                     $response["message"][] ="Api is disabled";
-                    $entity->errors($response);
+                    $entity->getErrors($response);
                     return false;
                 }else{
                     if (!empty($entity->openemis_id)) {
@@ -161,7 +185,7 @@ class PayslipsTable extends ControllerActionTable
                             $entity->staff_id = $user_data['id'];
                         }else{
                             $response["openemis_id"][] ="Record not found";
-                            $entity->errors($response);
+                            $entity->getErrors($response);
                             return false;
                         } 
                     }
@@ -179,7 +203,7 @@ class PayslipsTable extends ControllerActionTable
                         }else{
                             if($openemis_payload_exist == 0){
                                 $response["user_identity_number"][] ="Record not found";
-                                $entity->errors($response);
+                                $entity->getErrors($response);
                                 return false;
                             }
                         } 
@@ -187,11 +211,11 @@ class PayslipsTable extends ControllerActionTable
                         if(($openemis_payload_exist == 0 && !is_int(strpos($_SERVER['REQUEST_URI'], $path_uri)) )){
                             if(empty($entity->user_identity_number)){
                                 $response["user_identity_number"][] ="Field Can not be empty";
-                                $entity->errors($response);
+                                $entity->getErrors($response);
                                 return false;
                             }else if(empty($entity->user_identity_type_id)){
                                 $response["user_identity_type_id"][] ="Field Can not be empty";
-                                $entity->errors($response);
+                                $entity->getErrors($response);
                                 return false;
                             }
                         }
@@ -262,9 +286,6 @@ class PayslipsTable extends ControllerActionTable
                 ];
             }
         }
-        
-
-
         return $buttons;
     } 
 
@@ -276,7 +297,7 @@ class PayslipsTable extends ControllerActionTable
     private function setupTabElements()
     {
         $nonSchoolController = ['Directories', 'Profiles'];
-        if (in_array($this->controller->name, $nonSchoolController)) {
+        if (in_array($this->controller->getName(), $nonSchoolController)) {
             $options = [
                 'type' => 'staff'
             ];
@@ -285,8 +306,27 @@ class PayslipsTable extends ControllerActionTable
             $tabElements = $this->controller->getFinanceTabElements();
         }
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
-   
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'description') {
+            return __('Description');
+        } elseif ($field == 'file_content') {
+            return __('File Content');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

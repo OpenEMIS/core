@@ -680,14 +680,20 @@ trait MessagesTrait
         'ImportInstitutionSurveys' => [
             'restrictImport' => 'Import operation is not allowed as the record is already Done'
         ],
+
         'TrainingSessions' => [
             'trainer_type' => 'Type',
-            'trainer' => 'Trainer'
+            'trainer' => 'Trainer',
+            'evaluator_types' => 'Type',
+            'evaluator' => 'Evaluator'
         ],
+        
         'TrainingSessionResults' => [
             'noResultTypes' => 'You need to configure Result Types under Training Course.',
             'noTrainees' => 'No Available Trainees'
         ],
+
+
         'StaffTrainingApplications' => [
             'success' => 'This session has been added successfully.',
             'fail' => 'Failed to add the session.',
@@ -785,7 +791,11 @@ trait MessagesTrait
             'select_classification' => 'Select Classification'
         ],
         'UserNationalities' => [
-            'noRecordRemain' => 'There should be at least one Nationality record'
+            'noRecordRemain' => 'There should be at least one Nationality record',
+            'ValidateNumberSuccess' => 'Identity number validate successfully.',
+            'ValidateNumberFail' => 'Please enter correct identity number.',
+            'IdentityNumberNotExist' => 'Identity number should not be blank.',
+            'NationalitiesRecordNoRemain' => 'There must be at least one Preferred Nationality.',
         ],
         'StudentAbsence' => [
             'deleteRecord' => 'Student absence record deleted successfully'
@@ -1555,7 +1565,7 @@ trait MessagesTrait
                     'ruleValidatePreferred' => 'There must be one Preferred Contact for each Contact Type'
                 ],
             ],
-            'Identities' => [
+            'IdentitiesPersonal' => [
                 'identity_type_id' => [
                     'ruleNotBlank' => 'Please select a Type',
                     'custom_validation' => 'Identity Type exists for this Nationality'
@@ -1685,6 +1695,14 @@ trait MessagesTrait
                 'date_to' => [
                     'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
                 ]
+            ],
+            'Identities' => [
+                'issue_date' => [
+                    'ruleCompareDate' => 'Please select',
+                ],
+                'identity_type_id' => [
+                    'ruleCustomIdentityType' => 'Please select',
+                ],
             ],
         ],
         'Student' => [

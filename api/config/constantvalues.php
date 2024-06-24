@@ -66,6 +66,11 @@ cBTJu9PbEiWNdue+jOCZr/OXZr3qsrrNzdYxzjECgYEA1MLomrFew31pvd+letOA
 zECeE3WndcaYQmtr5oX8oczcGkkSHBUfC+TjIgYeOEBc5Sv7OEdIVgHAoMYGnL5K
 0dp0MErWsDpo4t2PzwtjRWcfNOG6okki5VkDLo8X9eN70FJgBR09+pil/6+mJpcO
 ZA+2wTKNehFHLFruHFUzxnE=
------END PRIVATE KEY-----'
+-----END PRIVATE KEY-----',
+
+    
+    'importExcelRules' => [
+        'noRows' => 2000,
+    ],
 
 ];

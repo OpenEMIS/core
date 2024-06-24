@@ -16,10 +16,10 @@ class UsersTable extends AppTable
     const STUDENT = 1;
     const STAFF = 2;
     
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_users');
-        $this->entityClass('User.User');
+        $this->setTable('security_users');
+        $this->setEntityClass('User.User');
         parent::initialize($config);
 
         $this->belongsTo('Genders', ['className' => 'User.Genders']);

@@ -10,11 +10,11 @@ use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 
 class UndoPromotedBehavior extends UndoBehavior {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 	}
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
 		$events = parent::implementedEvents();
 		$events['Undo.'.'get'.$this->undoAction.'Students'] = 'onGet'.$this->undoAction.'Students';
 		$events['Undo.'.'processSave'.$this->undoAction.'Students'] = 'processSave'.$this->undoAction.'Students';
@@ -36,8 +36,8 @@ class UndoPromotedBehavior extends UndoBehavior {
 		$selectedGrade = $entity->education_grade_id;
 		$selectedStatus = $entity->student_status_id;
 
-		$institutionStudent = TableRegistry::get('institution_students');
-		$institution = TableRegistry::get('institutions');
+		$institutionStudent = TableRegistry::get('Institution.InstitutionStudents');
+		$institution = TableRegistry::get('Institution.Institutions');
 		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
 
 		if (isset($entity->students)) {

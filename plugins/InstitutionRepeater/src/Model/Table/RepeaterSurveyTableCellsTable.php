@@ -4,7 +4,7 @@ namespace InstitutionRepeater\Model\Table;
 use CustomField\Model\Table\CustomTableCellsTable;
 
 class RepeaterSurveyTableCellsTable extends CustomTableCellsTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		$this->table('institution_repeater_survey_table_cells');
 
 		parent::initialize($config);

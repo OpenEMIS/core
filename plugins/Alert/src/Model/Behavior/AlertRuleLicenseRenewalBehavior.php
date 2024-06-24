@@ -6,7 +6,7 @@ use ArrayObject;
 use Alert\Model\Behavior\AlertRuleBehavior;
 
 use Cake\ORM\Entity;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 
 class AlertRuleLicenseRenewalBehavior extends AlertRuleBehavior
@@ -103,7 +103,7 @@ class AlertRuleLicenseRenewalBehavior extends AlertRuleBehavior
         ]
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
@@ -113,7 +113,7 @@ class AlertRuleLicenseRenewalBehavior extends AlertRuleBehavior
         $model = $this->_table;
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
             if (isset($data['submit']) && $data['submit'] == 'save') {
-                $validator = $model->validator();
+                $validator = $model->getValidator();
                 $validator
                     ->add('training_categories', 'custom', [
                         'rule' => function($value, $context) {

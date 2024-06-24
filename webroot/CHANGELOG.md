@@ -1,3 +1,51 @@
+### [4.0.1] - 2024-06-24
+- Implemented: Develop a PHP file to display the server IP address
+- Implemented: Develop OpenEMIS Core Assessment v4 APIs
+- Implemented: Develop APIs for meals import and export
+- Bug Fixed: Report>Staff: When selecting Area Level which is not All Area Level, the report is stuck in progress
+- Bug Fixed: Institutions>General>Map: User is able to delete institution while deleting map
+- Bug Fixed: Institutions>Students(Automation): Promote,Graduate, Repeat should work
+- Bug Fixed: Institutions>Students>Export: Export is giving blank page
+- Bug Fixed: Institutions>Students>General: Showing Avory Primary School instead of the student itself
+- Bug Fixed: Institutions>Performance>Competencies: User should be able to edit
+- Bug Fixed: Personal>History tab(Automation): It should collapse the left menu
+- Bug Fixed: Report>Examination>Add(Automation): Going blank page
+- Bug Fixed: Administration(Automation): User is getting blank page and left menu not collapsed
+- Bug Fixed: Institutions>Students(Automation): There is no tabs to select from the top menu
+- Bug Fixed: Institutions>Students>Promote Button: Next class is not showing in core
+- Bug Fixed: Report>Survey>Add(Automation): Getting blank page
+
+### [4.0.0] - 2024-06-18
+- Bug Fixed: Update existing APIv4 for Student attendance Toolbar functions
+- Bug Fixed: Update existing APIv4 for Student Assessment Toolbar functions
+- Bug Fixed: Institutions>Contacts>Institutions: User is unable to open the page
+- Bug Fixed: Institutions>Contacts>People>View: Page is empty
+- Bug Fixed: Administration>Profile>Institution: Cannot download report
+- Bug Fixed: Institutions>Attendance>Staff: Day is not appearing and buttons are not working
+- Bug Fixed: Institutions>General>Shift: When adding for other institution, owner is not filtering for other institution
+- Bug Fixed: Institutions>Academic>Programmes>Export: Report is empty
+- Bug Fixed: Institutions>Schedules>Interval>Add: Getting blank page when adding intervals
+- Bug Fixed: Institutions>Academic>Textbook: Showing blank page
+- Bug Fixed: Institutions>Academic>Houses>Add: User and staff are empty
+- Bug Fixed: Institutions>Students/Staff>Dashboard: Dashboard module is missing
+- Bug Fixed: Institutions>Students>Account>Edit: User should be able to edit and success message should return
+- Bug Fixed: Institutions>Students>Academic: Academic module is not working and giving blank page
+- Bug Fixed: Institutions>Staff>General>Nationalities: User is unable to add Nationalities
+
+### [3.107.0] - 2024-05-20
+- Implemented: Develop changes to OpenEMIS Core Training feature
+- Implemented: Develop a migration script to remove edit account permission
+- Implemented: Remove OpenEMIS Core swagger v2 API YAML file
+- Bug Fixed: Institutions > Staff: User can delete position that is still active
+- Bug Fixed: Institutions>Search: when searching for schools that have " ʻ " OR " ' ", the search returned schools with the " ʻ " and " ' "even if search string contained " ' "
+- Bug Fixed: Institutions>Finance>Institution Fees: Fees that show 0 should not show
+- Bug Fixed: Institutions > Finances > Student Fees: The page is not showing the fees configured in Institution Fees page
+- Bug Fixed: Sign in with Microsoft login
+- Bug Fixed: Registration: Identity number api is not able to filter properly
+- Bug Fixed: Institutions>Attendance>Students: When i marked unexcused absent for a class, the system gives an error
+- Bug Fixed: API: Report card Angular pages
+- Bug Fixed: Institutions > Classes > Unit / Course : Labels are not reflected
+
 ### [3.106.0] - 2024-05-10
 - Implemented: Develop OpenEMIS Core Training v4 APIs
 - Implemented: Develop changes to OpenEMIS Core Staff v4 API

@@ -1,0 +1,141 @@
+@charset "UTF-8";
+
+@import "../general/variables.scss";
+@import "../general/classes.scss";
+@import "../general/animation.rotating.scss";
+
+/* Progress Loader V1.1.0 */
+
+.kdx-progressloader {
+    width: 100%;
+    text-align: center;
+
+    .progressbar-wrapper {
+        height: 4px;
+        width: 100%;
+        background-color: #EEE;
+        margin-top: -15px;
+        overflow: hidden;
+        .progress-bar {
+            display: block;
+            height: 100%;
+            transition: width 0.1s ease;
+        }
+    }
+
+    .kdx-load-page.kdx-small-spinner {
+        .kdx-loader-wrapper {
+            min-width: 50px;
+            min-height: 50px;
+            .kdx-loader-container {
+                width: 50px;
+                height: 50px;
+
+                .kdx-loader {
+                    width: 50px;
+                    height: 50px;
+                }
+
+                .kdx-loader-spinner-center-text {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    padding-top: $padding5;
+                    font-size: $textSizeS;
+                    line-height: 40px;
+                }
+            }
+            .kdx-loader-text-wrapper {
+                padding-top: 8px;
+                .kdx-loader-text-loading {
+                    font-size: $textSizeS;
+                }
+                .loader-new-message {
+                    width: 200px;
+                    font-size: $textSizeXS;
+                }
+            }
+        }
+    }
+}
+
+
+
+.kdx-load-page {
+    z-index: 99999;
+    background: rgba(255, 255, 255, 0.9);
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+
+    .kdx-loader-wrapper {
+        position: relative;
+        font-size: $iconSizeXXL;
+        color: #555;
+        margin: $noMargin auto;
+        top: 50%;
+        padding: $padding10;
+        transform: translateY(-50%);
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+        min-width: 80px;
+        min-height: 80px;
+
+        .kdx-loader-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: auto;
+        }
+
+        .kdx-loader-text-wrapper {
+            position: relative;
+            min-width: 150px;
+            min-height: 25px;
+            padding-top: $padding15;
+            text-align: center;
+
+            .kdx-loader-text-loading {
+                font-size: $textSizeXL;
+            }
+
+            .loader-new-message {
+                width: 200px;
+                font-size: $textSizeM;
+            }
+
+            .loader-new-message,
+            .kdx-loader-text-loading {
+                margin-left: auto;
+                margin-right: auto;
+            }
+        }
+    }
+    .openemis-icon {
+        font-size: $iconSizeXXL;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    .kdx-loader {
+        color: #333;
+        width: 80px;
+        height: 80px;
+        border-left: 5px solid #BBB;
+        border-right: 5px solid #BBB;
+        border-bottom: 5px solid #BBB;
+        border-radius: 100%;
+        z-index: 999;
+    }
+}
+
+.kdx-rotating {
+    animation: rotating 2s linear infinite;
+}

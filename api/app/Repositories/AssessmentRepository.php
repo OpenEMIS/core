@@ -412,6 +412,47 @@ class AssessmentRepository extends Controller
         }
     }
 
+
+    //POCOR-8292 start...
+    public function getAssessmentViaAcademicTerm($params, $assessmentId)
+    {
+        try {
+            $assessmentPeriods = AssessmentPeriod::where('assessment_id', $assessmentId);
+
+            if(isset($params['academic_term'])){
+                $assessmentPeriods = $assessmentPeriods->where('academic_term', $params['academic_term']);
+            }
+
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $assessmentPeriods = $assessmentPeriods->orderBy($col, $orderBy);
+            }
+            
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $assessmentPeriods->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $assessmentPeriods->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch assessment periods list from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            dd($e);
+            return $this->sendErrorResponse('Failed to fetch assessment periods list from DB.');
+        }
+    }
+    //POCOR-8292 end...
+
 }
 
 

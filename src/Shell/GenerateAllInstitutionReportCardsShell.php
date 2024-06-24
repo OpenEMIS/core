@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Shell;
 
 use ArrayObject;
@@ -13,7 +12,7 @@ class GenerateAllInstitutionReportCardsShell extends Shell
 {
     private $sleepTime = 5;
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('CustomExcel.InstitutionReportCards');
@@ -26,7 +25,6 @@ class GenerateAllInstitutionReportCardsShell extends Shell
     {
         $previousErrorReporting = error_reporting();
         error_reporting(E_ERROR);
-
         if (!empty($this->args[0]) && !empty($this->args[1])) {
             $systemProcessId = $this->SystemProcesses->addProcess('GenerateAllInstitutionReportCards', getmypid(), $this->args[0], '', $this->args[1]);
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
@@ -57,14 +55,13 @@ class GenerateAllInstitutionReportCardsShell extends Shell
                 $excelParams = new ArrayObject([]);
                 $excelParams['className'] = 'CustomExcel.InstitutionReportCards';
                 $excelParams['requestQuery'] = $recordToProcess;
-
+				
                 try {
                     $this->InstitutionReportCards->renderExcelTemplate($excelParams);
                 } catch (\Exception $e) {
                     $this->out('Error generating Report Card for Institution ' . $recordToProcess['institution_id']);
                     $this->out($e->getMessage());
                 }
-
                 $this->out('End generating report card for Institution ' . $recordToProcess['institution_id'] . ' (' . Time::now() . ')');
                 $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
                 $this->recursiveCallToMyself($this->args);
@@ -88,8 +85,8 @@ class GenerateAllInstitutionReportCardsShell extends Shell
         $shellCmd = $cmd . ' >> ' . $logs;
         try {
             $pid = exec($shellCmd);
-        } catch (\Exception $ex) {
-            $this->out('error : ' . __METHOD__ . ' exception when recursiveCallToMyself : ' . $ex);
+        } catch(\Exception $ex) {
+            $this->out('error : ' . __METHOD__ . ' exception when recursiveCallToMyself : '. $ex);
         }
     }
 }

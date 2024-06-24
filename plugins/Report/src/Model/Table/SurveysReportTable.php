@@ -15,15 +15,15 @@ use Cake\Datasource\ResultSetInterface;
 //POCOR-6695 Starts
 class SurveysReportTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_surveys');
+        $this->setTable('institution_surveys');
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
-        $this->belongsTo('AreaLevels', ['className' => 'AreaLevel.AreaLevels']);
+        $this->belongsTo('AreaLevels', ['className' => 'Area.AreaLevels']);
 
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
@@ -33,21 +33,21 @@ class SurveysReportTable extends AppTable
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.InstitutionSecurity');
     }
+
     //Modify query -- POCOR-8043
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {
-        $surveyForms = TableRegistry::get('survey_forms');
-        $surveyFormsFilters = TableRegistry::get('survey_forms_filters');
-        $surveyFormsFilters = TableRegistry::get('survey_forms_filters');
-        $institutionTypes = TableRegistry::get('institution_types');
-        $institutions = TableRegistry::get('institutions');
-        $institutionStatuses = TableRegistry::get('institution_statuses');
-        $surveyFormsQuestion = TableRegistry::get('survey_forms_questions');
-        $surveyQuestion = TableRegistry::get('survey_questions');
-        $SurveyRows = TableRegistry::get('survey_table_rows');
-        $SurveyColumns = TableRegistry::get('survey_table_columns');
-        $areas = TableRegistry::get('areas');
-        $areaLevels = TableRegistry::get('area_levels');
+        $surveyForms = TableRegistry::get('Survey.SurveyForms');
+        $surveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+        $institutionTypes = TableRegistry::get('Institution.InstitutionTypes');
+        $institutions = TableRegistry::get('Institution.Institutions');
+        $institutionStatuses = TableRegistry::get('Institution.InstitutionStatuses');
+        $surveyFormsQuestion = TableRegistry::get('Survey.SurveyFormsQuestions');
+        $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
+        $SurveyRows = TableRegistry::get('Survey.SurveyTableRows');
+        $SurveyColumns = TableRegistry::get('Survey.SurveyTableColumns');
+        $areas = TableRegistry::get('Area.Areas');
+        $areaLevels = TableRegistry::get('Area.AreaLevels');
         
         $condition = [];
         $groupBy = [];
@@ -104,35 +104,35 @@ class SurveysReportTable extends AppTable
                 'survey_table_row_id' => $SurveyRows->aliasField('id'),
                 'question_row' => $SurveyRows->aliasField('name')
             ])
-            ->innerJoin([$surveyForms->alias() => $surveyForms->table()],
+            ->innerJoin([$surveyForms->getAlias() => $surveyForms->getTable()],
             [
                 $surveyForms->aliasField('id') . ' = '. $this->aliasField('survey_form_id')
             ])
-            ->innerJoin([$surveyFormsQuestion->alias() => $surveyFormsQuestion->table()],
+            ->innerJoin([$surveyFormsQuestion->getAlias() => $surveyFormsQuestion->getTable()],
             [
                 $surveyFormsQuestion->aliasField('survey_form_id') . ' = '. $surveyForms->aliasField('id')
             ])
-            ->innerJoin([$surveyQuestion->alias() => $surveyQuestion->table()],
+            ->innerJoin([$surveyQuestion->getAlias() => $surveyQuestion->getTable()],
             [
                 $surveyQuestion->aliasField('id') . ' = '. $surveyFormsQuestion->aliasField('survey_question_id')
             ])
-            ->innerJoin([$SurveyRows->alias() => $SurveyRows->table()],
+            ->innerJoin([$SurveyRows->getAlias() => $SurveyRows->getTable()],
             [
                 $SurveyRows->aliasField('survey_question_id') . ' = '. $surveyQuestion->aliasField('id')
             ])
-            ->innerJoin([$institutions->alias() => $institutions->table()],
+            ->innerJoin([$institutions->getAlias() => $institutions->getTable()],
             [
                 $institutions->aliasField('id') . ' = '. $this->aliasField('institution_id')
             ])
-            ->innerJoin([$areas->alias() => $areas->table()],
+            ->innerJoin([$areas->getAlias() => $areas->getTable()],
             [
                 $areas->aliasField('id') . ' = '. $institutions->aliasField('area_id')
             ])
-            ->innerJoin([$areaLevels->alias() => $areaLevels->table()],
+            ->innerJoin([$areaLevels->getAlias() => $areaLevels->getTable()],
             [
                 $areaLevels->aliasField('id') . ' = '. $areas->aliasField('area_level_id')
             ])
-            ->innerJoin([$institutionStatuses->alias() => $institutionStatuses->table()],
+            ->innerJoin([$institutionStatuses->getAlias() => $institutionStatuses->getTable()],
             [
                 $institutionStatuses->aliasField('id') . ' = '. $institutions->aliasField('institution_status_id')
             ])
@@ -144,10 +144,10 @@ class SurveysReportTable extends AppTable
         $query->formatResults(function (ResultSetInterface $results) use ($tableQuestion) {
             return $results->map(function ($row) use ($tableQuestion) {
                 $survey_table_row_id = $row->survey_table_row_id;
-                $insSurveyTblCell = TableRegistry::get('institution_survey_table_cells');
-                $surveyTableColumns = TableRegistry::get('survey_table_columns');
-                $institutionSurveys = TableRegistry::get('institution_surveys');
-                $institutions = TableRegistry::get('institutions');
+                $insSurveyTblCell = TableRegistry::get('Institution.InstitutionSurveyTableCells');
+                $surveyTableColumns = TableRegistry::get('Survey.SurveyTableColumns');
+                $institutionSurveys = TableRegistry::get('Institution.InstitutionSurveys');
+                $institutions = TableRegistry::get('Institution.Institutions');
                 $insSurveyTblCellRes = $insSurveyTblCell
                     ->find()
                     ->select([
@@ -162,16 +162,16 @@ class SurveysReportTable extends AppTable
                         'name' => $surveyTableColumns->aliasField('name'),
                         'institution_id' => $institutions->aliasField('id')
                     ])
-                    ->leftJoin([$surveyTableColumns->alias() => $surveyTableColumns->table()],
+                    ->leftJoin([$surveyTableColumns->getAlias() => $surveyTableColumns->getTable()],
                     [
                         $surveyTableColumns->aliasField('id') . ' = '. $insSurveyTblCell->aliasField('survey_table_column_id'),
                         $surveyTableColumns->aliasField('survey_question_id') . ' = '. $insSurveyTblCell->aliasField('survey_question_id')
                     ])
-                    ->innerJoin([$institutionSurveys->alias() => $institutionSurveys->table()],
+                    ->innerJoin([$institutionSurveys->getAlias() => $institutionSurveys->getTable()],
                     [
                         $institutionSurveys->aliasField('id') . ' = '. $insSurveyTblCell->aliasField('institution_survey_id')
                     ])
-                    ->innerJoin([$institutions->alias() => $institutions->table()],
+                    ->innerJoin([$institutions->getAlias() => $institutions->getTable()],
                     [
                         $institutions->aliasField('id') . ' = '. $institutionSurveys->aliasField('institution_id')
                     ])
@@ -199,7 +199,7 @@ class SurveysReportTable extends AppTable
             });
         });
     }
-
+    
     public function getChildren($id, $idArray) {
         $Areas = TableRegistry::get('Area.Areas');
         $result = $Areas->find()
@@ -310,8 +310,8 @@ class SurveysReportTable extends AppTable
             'label' => __('Survey Question Name')
         ];
 
-        $SurveyTblColumns = TableRegistry::get('survey_table_columns');
-        $surveyFormsQuestion = TableRegistry::get('survey_forms_questions');
+        $SurveyTblColumns = TableRegistry::get('Survey.SurveyTableColumns');
+        $surveyFormsQuestion = TableRegistry::get('Survey.SurveyFormsQuestions');
         $SurveyTblColumnRes = $SurveyTblColumns
             ->find()
             ->select([
@@ -319,7 +319,7 @@ class SurveysReportTable extends AppTable
                 'survey_column_name' => $SurveyTblColumns->aliasField('name'),
                 'survey_column_order' => $SurveyTblColumns->aliasField('order')
             ])
-            ->LeftJoin([$surveyFormsQuestion->alias() => $surveyFormsQuestion->table()],
+            ->LeftJoin([$surveyFormsQuestion->getAlias() => $surveyFormsQuestion->getTable()],
                 [
                     $surveyFormsQuestion->aliasField('survey_question_id') . ' = '. $SurveyTblColumns->aliasField('survey_question_id')
                 ])

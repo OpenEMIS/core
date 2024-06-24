@@ -16,7 +16,7 @@ class ExaminationCentreRoomsExaminationsTable extends ControllerActionTable
     private $queryString;
     private $examCentreId = null;
 
-    public function initialize(array $config) {
+    public function initialize(array $config): void {
         parent::initialize($config);
         $this->belongsTo('ExaminationCentreRooms', ['className' => 'Examination.ExaminationCentreRooms']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
@@ -37,7 +37,7 @@ class ExaminationCentreRoomsExaminationsTable extends ControllerActionTable
         $this->addBehavior('CompositeKey');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.ExaminationCentreRooms.afterSave'] = 'examinationCentreRoomsAfterSave';

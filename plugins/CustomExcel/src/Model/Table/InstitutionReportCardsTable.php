@@ -21,9 +21,9 @@ class InstitutionReportCardsTable extends AppTable
     private $_dynamicFieldName = 'result_type';
     //private $fileType = 'pdf';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institutions');
+        $this->setTable('institutions');
         parent::initialize($config);
         ini_set("pcre.backtrack_limit", "50000000"); //POCOR-6744
 
@@ -139,7 +139,7 @@ class InstitutionReportCardsTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onExcelTemplateBeforeGenerate'] = 'onExcelTemplateBeforeGenerate';

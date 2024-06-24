@@ -24,12 +24,15 @@ class UsersTable extends AppTable
     const OTHER = 4;
     const ACTIVE = 1;
     const INACTIVE = 2;//PCOOR-6922 Ends
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_users');
+        $this->setTable('security_users');
         parent::initialize($config);
-        $this->entityClass('User.User');
+        $this->setEntityClass('User.User');
 
+        $this->belongsTo('Students', [
+            'foreignKey' => 'student_id', // Replace with your actual foreign key field
+        ]);
         $this->belongsTo('Genders', ['className' => 'User.Genders']);
         $this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
         $this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
@@ -71,6 +74,7 @@ class UsersTable extends AppTable
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
         $this->addBehavior('User.MoodleCreateUser');
+        $this->addBehavior('OpenEmis.Section');
         //POCOR-6922 starts
         $this->addBehavior('User.AdvancedIdentitySearch');
         $this->addBehavior('User.AdvancedContactNumberSearch');
@@ -92,18 +96,19 @@ class UsersTable extends AppTable
             'customFields' => ['user_type','status']
         ]);
         //POCOR-6922 ends
+
+        $this->setDisplayField('name_with_id_role');
     }
 
     public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
     {
         if ($primary) {
-            $schema = $this->schema();
+            $schema = $this->getSchema();
             $fields = $schema->columns();
             foreach ($fields as $key => $field) {
                 //POCOR-6380 - added OR condition to unset pre-defined fields only for Administration >> Security> Users listing
-                //echo "<pre>";print_r($this->action);die();
-                if ($schema->column($field)['type'] == 'binary') {
-                    if ($this->table() == 'security_users' || $this->action == 'index') {
+                if ($schema->getColumn($field)['type'] == 'binary') {
+                    if ($this->getTable() == 'security_users' || $this->action == 'index') {
                         unset($fields[$key]);
                     }
                 }
@@ -113,7 +118,7 @@ class UsersTable extends AppTable
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['AdvanceSearch.getCustomFilter'] = 'getCustomFilter';//POCOR-6922
@@ -267,18 +272,17 @@ class UsersTable extends AppTable
         $this->fields['gender_id']['visible'] = false;
         $this->fields['date_of_birth']['visible'] = false;
         $this->fields['username']['visible'] = true;
-
         $this->ControllerAction->field('name');
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options)
     {
         //POCOR-6922 Start
         if (!$this->isAdvancedSearchEnabled()) {
             $event->stopPropagation();
             return [];
         } else {
-            $this->behaviors()->get('AdvanceSearch')->config([
+            $this->behaviors()->get('AdvanceSearch')->setConfig([
                 'showOnLoad' => 0,
             ]);
         }
@@ -291,7 +295,7 @@ class UsersTable extends AppTable
 
         // POCOR-2547 sort list of staff and student by name
         $orders = [];
-        if (!isset($this->request->query['sort'])) {
+        if (!isset($this->request->getQuery['sort'])) {
             $orders = [
                 $this->aliasField('first_name'),
                 $this->aliasField('last_name')
@@ -303,9 +307,9 @@ class UsersTable extends AppTable
         $options['auto_search'] = true;
         $userType = $this->Session->read('Users.advanceSearch.belongsTo.user_type');
         if ($userType == self::STAFF || $userType == self::STUDENT) {
-            $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
-            $UserIdentities = TableRegistry::get('User.Identities');
-            $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+            $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+            $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+            $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
             if($userType == self::STAFF){
                 $ConfigItem =   $ConfigItemTable
                                 ->find()
@@ -344,14 +348,14 @@ class UsersTable extends AppTable
                             $typesIdentity->id => $UserIdentities->aliasField('number')
                         ])
                         ->LeftJoin(
-                                    [$UserIdentities->alias() => $UserIdentities->table()],
+                                    [$UserIdentities->getAlias() => $UserIdentities->getTable()],
                                     [
                                         $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('id'),
                                         $UserIdentities->aliasField('identity_type_id = ') . $typesIdentity->id
                                     ]
                                 )
                         ->LeftJoin(
-                            [$IdentityTypes->alias() => $IdentityTypes->table()],
+                            [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
                             [
                                 $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
                                 $IdentityTypes->aliasField('id = ') . $typesIdentity->id
@@ -365,7 +369,7 @@ class UsersTable extends AppTable
     //POCOR-6922 starts
     public function getIdentityTypeData($value_selection)
     {
-        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $typesIdentity =   $IdentityTypes
                             ->find()
                             ->select([
@@ -464,7 +468,7 @@ class UsersTable extends AppTable
     {
         $tableHeaders = [__('Groups'), __('Roles')];
         $tableCells = [];
-        $alias = $this->alias();
+        $alias = $this->getAlias();
         $key = 'roles';
 
         if ($action == 'view') {
@@ -482,8 +486,8 @@ class UsersTable extends AppTable
             foreach ($groupUserRecords as $obj) {
                 $rowData = [];
                 $url = [
-                    'plugin' => $this->controller->plugin,
-                    'controller' => $this->controller->name,
+                    'plugin' => $this->controller->getPlugin(),
+                    'controller' => $this->controller->getName(),
                     'view',
                     $this->paramsEncode(['id' => $obj->group_id])
                 ];
@@ -492,7 +496,7 @@ class UsersTable extends AppTable
                 } else {
                     $url['action'] = 'UserGroups';
                 }
-                $rowData[] = $event->subject()->Html->link($obj->group_name, $url);
+                $rowData[] = $event->getSubject()->Html->link($obj->group_name, $url);
 
                 $rowData[] = $obj->role_name; // role name
                 $tableCells[] = $rowData;
@@ -501,7 +505,7 @@ class UsersTable extends AppTable
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
-        return $event->subject()->renderElement('User.Accounts/' . $key, ['attr' => $attr]);
+        return $event->getSubject()->renderElement('User.Accounts/' . $key, ['attr' => $attr]);
     }
 
     public function addAfterAction(Event $event, Entity $entity)
@@ -528,7 +532,7 @@ class UsersTable extends AppTable
         $this->fields['password']['attr']['autocomplete'] = 'off';
 
         // setting the tooltip message on password
-        $tooltipMessagePassword = $this->getMessage($this->alias().'.tooltip_message_password');
+        $tooltipMessagePassword = $this->getMessage($this->getAlias().'.tooltip_message_password');
         $this->fields['password']['attr']['label']['escape'] = false; //disable the htmlentities (on LabelWidget) so can show html on label.
         $this->fields['password']['attr']['label']['class'] = 'tooltip-desc'; //css class for label
         $this->fields['password']['attr']['label']['text'] = __(Inflector::humanize($this->fields['password']['field'])) . $this->tooltipMessage($tooltipMessagePassword);
@@ -544,12 +548,12 @@ class UsersTable extends AppTable
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         // not saving empty passwords
-        if (empty($data[$this->alias()]['password'])) {
-            unset($data[$this->alias()]['password']);
+        if (empty($data[$this->getAlias()]['password'])) {
+            unset($data[$this->getAlias()]['password']);
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $BaseUsers = TableRegistry::get('User.Users');
@@ -590,7 +594,7 @@ class UsersTable extends AppTable
                 $conditions[$thresholdArray['condition']]
             ])
 
-            ->hydrate(false)
+            ->enableHydration(false);
             ;
 
         return $licenseData->toArray();

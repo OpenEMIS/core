@@ -10,7 +10,7 @@ use CustomField\Model\Behavior\RenderBehavior;
 
 class RenderDecimalBehavior extends RenderBehavior
 {
-	public function initialize(array $config)
+	public function initialize(array $config): void
     {
         parent::initialize($config);
     }

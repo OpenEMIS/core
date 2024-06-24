@@ -57,6 +57,8 @@ function InstitutionSubjectStudentsSvc($http, $q, $filter, KdDataSvc) {
 
     function getUnassignedStudent(institutionSubjectId, academicPeriodId, educationGradeId, institutionClassIds) {
         var success = function(response, deferred) {
+            console.log('getUnassignedStudent');
+            console.log(response);
             deferred.resolve(response.data.data);
         };
 

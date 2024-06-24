@@ -1,91 +1,87 @@
 <?php
+
 /**
- * Phinx
- *
- * (The MIT license)
- * Copyright (c) 2015 Rob Morgan
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated * documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- *
- * @package    Phinx
- * @subpackage Phinx\Console
+ * MIT License
+ * For full license information, please view the LICENSE file that was distributed with this source code.
  */
+
 namespace Phinx\Console\Command;
 
+use InvalidArgumentException;
 use Phinx\Migration\Manager\Environment;
+use Phinx\Util\Util;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-/**
- * @author Leonid Kuzmin <lndkuzmin@gmail.com>
- */
+#[AsCommand(name: 'test')]
 class Test extends AbstractCommand
 {
     /**
-     * {@inheritdoc}
+     * @var string|null
      */
-    protected function configure()
+    protected static $defaultName = 'test';
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return void
+     */
+    protected function configure(): void
     {
         parent::configure();
 
         $this->addOption('--environment', '-e', InputOption::VALUE_REQUIRED, 'The target environment');
 
-        $this->setName('test')
-             ->setDescription('Verify the configuration file')
-             ->setHelp(
-<<<EOT
-The <info>test</info> command verifies the YAML configuration file and optionally an environment
+        $this->setDescription('Verify the configuration file')
+            ->setHelp(
+                <<<EOT
+The <info>test</info> command is used to verify the phinx configuration file and optionally an environment
 
 <info>phinx test</info>
 <info>phinx test -e development</info>
 
+If the environment option is set, it will test that phinx can connect to the DB associated with that environment
 EOT
-             );
+            );
     }
 
     /**
      * Verify configuration file
      *
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     * @throws \RuntimeException
+     * @param \Symfony\Component\Console\Input\InputInterface $input Input
+     * @param \Symfony\Component\Console\Output\OutputInterface $output Output
      * @throws \InvalidArgumentException
-     * @return void
+     * @return int 0 on success
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->loadConfig($input, $output);
         $this->loadManager($input, $output);
 
-        $this->verifyMigrationDirectory($this->getConfig()->getMigrationPath());
+        // Verify the migrations path(s)
+        array_map(
+            [$this, 'verifyMigrationDirectory'],
+            Util::globAll($this->getConfig()->getMigrationPaths())
+        );
+
+        // Verify the seed path(s)
+        array_map(
+            [$this, 'verifySeedDirectory'],
+            Util::globAll($this->getConfig()->getSeedPaths())
+        );
 
         $envName = $input->getOption('environment');
         if ($envName) {
             if (!$this->getConfig()->hasEnvironment($envName)) {
-                throw new \InvalidArgumentException(sprintf(
+                throw new InvalidArgumentException(sprintf(
                     'The environment "%s" does not exist',
                     $envName
                 ));
             }
 
-            $output->writeln(sprintf('<info>validating environment</info> %s', $envName));
+            $output->writeln(sprintf('<info>validating environment</info> %s', $envName), $this->verbosityLevel);
             $environment = new Environment(
                 $envName,
                 $this->getConfig()->getEnvironment($envName)
@@ -94,6 +90,8 @@ EOT
             $environment->getAdapter()->connect();
         }
 
-        $output->writeln('<info>success!</info>');
+        $output->writeln('<info>success!</info>', $this->verbosityLevel);
+
+        return self::CODE_SUCCESS;
     }
 }

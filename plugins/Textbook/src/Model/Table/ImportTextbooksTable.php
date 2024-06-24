@@ -12,9 +12,9 @@ use PHPExcel_Worksheet;
 
 class ImportTextbooksTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('import_mapping');
+        $this->setTable('import_mapping');
         parent::initialize($config);
 
         $this->addBehavior('Import.Import', [
@@ -27,7 +27,7 @@ class ImportTextbooksTable extends AppTable
         $this->Textbooks = TableRegistry::get('Textbook.Textbooks');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.import.onImportPopulateAcademicPeriodsData'] = 'onImportPopulateAcademicPeriodsData';

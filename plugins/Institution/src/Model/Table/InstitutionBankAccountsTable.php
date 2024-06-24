@@ -24,16 +24,20 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 ** CakePHP default methods
 **
 ******************************************************************************************************************/
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
 
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('BankBranches', ['className' => 'FieldOption.BankBranches']);
 
         $this->addBehavior('Excel', ['pages' => ['index']]);
+
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['BankAccounts'=>['id']]
+        ]);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 		return $validator;
 	}
@@ -93,6 +97,34 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 		$query->contain('BankBranches.Banks');
 	}
 
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+    	switch ($field) {
+            case 'active':
+                return __('Active');
+            case 'bank':
+                return __('Bank');
+            case 'account_name':
+                return __('Account Name');
+            case 'account_number':
+                return __('Account Number');
+            case 'remarks':
+                return __('Comments');
+            case 'bank_branch_id':
+                return __('Bank Branch');
+            case 'modified_user_id';
+                return __('Modified By');
+            case 'modified';
+                return __('Modified On');
+            case 'created_user_id';
+                return __('Created By');
+            case 'created';
+                return __('Created On');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 /******************************************************************************************************************
 **
 ** addEdit action methods
@@ -125,7 +157,7 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
 			->find('visible')
 			->where(['bank_id'=>$this->_selectedBankId])
-			->order(['order'])
+			// ->order(['order' => 'ASC'])
 			->toArray();
 
 		$this->fields['bank_branch_id']['options'] = $bankBranches;
@@ -165,11 +197,17 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 		if (empty($this->_bankOptions)) {
 			$this->_bankOptions = $this->getBankOptions();
 		}
+
 		$this->_selectedBankId = $this->postString('bank', $this->_bankOptions);
+		if(!empty($this->_selectedBankId)){
+			$condition = ['bank_id' => $this->_selectedBankId];
+		}else{
+			$condition = ['bank_id IS' => null];
+		}
 		$bankBranches = $this->BankBranches
 			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
 			->find('visible')
-			->where(['bank_id'=>$this->_selectedBankId])
+			->where($condition) 
 			->toArray();
 		$attr['options'] = $bankBranches;
 		if (empty($bankBranches)) {
@@ -197,14 +235,14 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 		return $this->_bankOptions = $this->BankBranches->Banks
 			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
 			->find('visible')
-			->order(['order'])
+			// ->order(['order' => 'ASC'])
 			->toArray();
 	}
 
 	// POCOR-6160 starts
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-		$banks = TableRegistry::get('Banks');
+		$banks = TableRegistry::getTableLocator()->get('FieldOption.Banks');
 
 		$query
 		->select([
@@ -215,10 +253,10 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 			'bank' => 'Banks.name',
 			'bank_branch' => 'BankBranches.name'
 		])
-		->LeftJoin([$this->BankBranches->alias() => $this->BankBranches->table()],[
+		->LeftJoin([$this->BankBranches->getAlias() => $this->BankBranches->getTable()],[
 			$this->BankBranches->aliasField('id ='). 'InstitutionBankAccounts.bank_branch_id'
 		])
-		->LeftJoin([$banks->alias() => $banks->table()],[
+		->LeftJoin([$banks->getAlias() => $banks->getTable()],[
 			$banks->aliasField('id ='). 'BankBranches.bank_id'
 		]);
     }
@@ -226,11 +264,12 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
 
-		$banks = TableRegistry::get('Banks');
-		$branches = TableRegistry::get('BankBranches');
+		$banks = TableRegistry::getTableLocator()->get('FieldOption.Banks');
+		$branches = TableRegistry::getTableLocator()->get('FieldOption.BankBranches');
 		
 		$query
 		->select([
@@ -241,10 +280,10 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
 			'bank' => 'Banks.name',
 			'bank_branch' => 'BankBranches.name'
 		])
-		->LeftJoin([$this->BankBranches->alias() => $this->BankBranches->table()],[
+		->LeftJoin([$this->BankBranches->getAlias() => $this->BankBranches->getTable()],[
 			$this->BankBranches->aliasField('id ='). 'InstitutionBankAccounts.bank_branch_id'
 		])
-		->LeftJoin([$banks->alias() => $banks->table()],[
+		->LeftJoin([$banks->getAlias() => $banks->getTable()],[
 			$banks->aliasField('id ='). 'BankBranches.bank_id'
 		])
         ->where([
@@ -307,5 +346,30 @@ class InstitutionBankAccountsTable extends ControllerActionTable {
         $fields->exchangeArray($extraField);
     }
 
+    /*public function implementedEvents(): array
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.add.beforeAction'] = 'addDeleteBeforeAction';
+        return $events;
+    }
 
+	public function addDeleteBeforeAction(Event $event, ArrayObject $extra)
+    {
+
+        $model = $this;
+        $url = $model->url('index');
+        $institutionID = $this->getInstitutionID();
+        if (isset($url[2])) {
+            unset($url[2]);
+        }
+        //$queryString['id'] = $institutionID;
+        $queryString = $model->getQueryString();
+
+
+        unset($queryString['id']);
+
+        $queryString['institution_id'] = $institutionID;
+        $url[1] = $model->paramsEncode($queryString);
+        $extra['redirect'] = $url;
+    }*/
 }

@@ -9,7 +9,7 @@ class SystemPatchesTable extends AppTable {
         parent::initialize($config);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Restful.Model.onGetAllowedActions'] = 'onGetAllowedActions';

@@ -7,16 +7,15 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
-
 use App\Model\Table\ControllerActionTable;
 
 
 class InstitutionAssociationStaffTable extends ControllerActionTable
 {
     private $InstitutionAssociationStudent;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_associations');
+        $this->setTable('institution_associations');
         parent::initialize($config);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -25,10 +24,12 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
         $this->toggle('add', false);
+        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Staff.StaffTab');
              
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;
@@ -38,8 +39,24 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
     {
        if ($field == 'total_male_students') {
             return  __('Male Students');
+        } else if ($field == 'name') {
+            return __('Name');
+        } else if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } else if ($field == 'institution_id') {
+            return __('Institution');
+        } else if ($field == 'total_students') {
+            return __('Total Students');
         } else if ($field == 'total_female_students') {
             return  __('Female Students');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -99,8 +116,8 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
                 $this->aliasField('id IN') => $Ids,
             ];
         } 
-        $query
-        ->orWhere($where);
+        // $query
+        // ->orWhere($where); // POCOR-7485
     }
   
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
@@ -119,7 +136,7 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
         if (!is_null($userId)) {
             $options['user_id'] = $userId;
         }
-        $tabElements = $this->controller->getCareerTabElements($options);
+        $tabElements = $this->getCareerTabElements($options);
         //echo '<pre>';print_r($extra);die;
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'StaffAssociations');
@@ -128,10 +145,10 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
      public function getUserId()
     {
         $userId = null;
-        if (!is_null($this->request->query('user_id'))) {
-            $userId = $this->request->query('user_id');
+        if (!is_null($this->request->getQuery('user_id'))) {
+            $userId = $this->request->getQuery('user_id');
         } else {
-            $session = $this->request->session();
+            $session = $this->request->getSession();
             if ($session->check('Staff.Staff.id')) {
                 $userId = $session->read('Staff.Staff.id');
             }

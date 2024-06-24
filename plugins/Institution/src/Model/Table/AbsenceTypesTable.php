@@ -13,7 +13,7 @@ use App\Model\Traits\OptionsTrait;
 
 class AbsenceTypesTable extends ControllerActionTable {
     use OptionsTrait;
-    public function initialize(array $config) {
+    public function initialize(array $config): void {
         parent::initialize($config);
         $this->hasMany('StudentAbsences', ['className' => 'Institution.InstitutionStudentAbsences', 'foreignKey' =>'absence_type_id']);
 
