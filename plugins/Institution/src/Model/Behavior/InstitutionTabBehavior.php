@@ -185,10 +185,10 @@ class InstitutionTabBehavior extends Behavior
         $model = $this->_table;
         $institutionID = $this->getInstitutionID();
 
-        $actions = ['view', 'edit','remove'];
-        if($appliedAction == 'Textbooks') {
-            $actions = ['view', 'edit','remove'];
-        }
+        $actions = ['view', 'edit'];
+        // if($appliedAction == 'Textbooks') {
+        //     $actions = ['view', 'edit','remove'];
+        // }
         
         foreach ($actions as $action) {
             if (isset($buttons[$action])) {
@@ -223,9 +223,11 @@ class InstitutionTabBehavior extends Behavior
                                 $queryString['id'] = $entity->{$additionalParam};
                             }else if($url_action == 'Subjects' && $additionalParam == 'institution_subject_id'){
                                 $queryString['institution_subject_id'] = $entity->id;
-                            }else if($url_action == 'Textbooks' && $additionalParam == 'academic_period_id'){
-                                $queryString['academic_period_id'] = $entity->academic_period->id;
-                            }else{
+                            }
+                            // else if($url_action == 'Textbooks' && $additionalParam == 'academic_period_id'){
+                            //     $queryString['academic_period_id'] = $entity->academic_period->id;
+                            // }
+                            else{
                                 $queryString[$additionalParam] = $entity->{$additionalParam};
                             }
                         }
