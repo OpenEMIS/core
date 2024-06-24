@@ -65,7 +65,7 @@ class StaffTable extends AppTable
 
         $this->InstitutionStaff = TableRegistry::get('Institution.Staff');
         $this->addBehavior('Institution.InstitutionTab');
-        $this->addBehavior('Staff.StaffTab');
+        $this->addBehavior('Staff.StaffTab', ['controller' => $controller]);
     }
 
     public static function handleAssociations($model)
