@@ -18,9 +18,9 @@ class AssessmentItemResultsTable extends AppTable
     use OptionsTrait;
     use MessagesTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('assessment_item_results');
+        $this->setTable('assessment_item_results');
         parent::initialize($config);
 
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
@@ -40,7 +40,7 @@ class AssessmentItemResultsTable extends AppTable
         }
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

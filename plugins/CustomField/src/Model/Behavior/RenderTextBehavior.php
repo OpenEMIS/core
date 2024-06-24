@@ -7,7 +7,7 @@ use Cake\Event\Event;
 use CustomField\Model\Behavior\RenderBehavior;
 
 class RenderTextBehavior extends RenderBehavior {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
         parent::initialize($config);
     }
 
@@ -38,13 +38,13 @@ class RenderTextBehavior extends RenderBehavior {
                 if ($customField->has('params') && !empty($customField->params)) {
                     $params = json_decode($customField->params, true);
                     if (array_key_exists('url', $params)) {
-                        $value = $event->subject()->Html->link($savedValue, $savedValue, ['target' => '_blank', 'escape' => false]);
+                        $value = $event->getSubject()->Html->link($savedValue, $savedValue, ['target' => '_blank', 'escape' => false]);
                     }
                 }
                 // End
             }
         } else if ($action == 'edit') {
-            $form = $event->subject()->Form;
+            $form = $event->getSubject()->Form;
             $unlockFields = [];
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
@@ -56,7 +56,7 @@ class RenderTextBehavior extends RenderBehavior {
             if ($customField->has('params') && !empty($customField->params)) {
                 $params = json_decode($customField->params, true);
                 if (array_key_exists('input_mask', $params) && !empty($params['input_mask'])) {
-                    $HtmlField = $event->subject();
+                    $HtmlField = $event->getSubject();
                     $HtmlField->includes['jasny']['include'] = true;
                     $options['data-mask'] = $params['input_mask'];
                 }

@@ -1,0 +1,86 @@
+<kd-progressloader *ngIf="displayLoading" configtype="small-spinner" [configvalue]="null"></kd-progressloader>
+<kd-splitter class="has-page-header has-breadcrumb" floatbtn="false" collapsible="false">
+    <div class="workbench-header">
+        <div class="home-header">
+            <h2 id="main-header" style="max-width: 100%; white-space: normal; text-overflow: unset; display: block;">
+                Home Page</h2>
+        </div>
+    </div>
+    <kd-pane [ngClass]="showFullWidth == true ? 'full-width' : ''">
+        <div class="main-wrapper">
+            <div class="content-wrapper">
+                <div class="content-area">
+                    <div class="content">
+
+                        <!-- <button class="btn btn-text" (click)="showSubContent()">Show Sub Splitter Content</button> -->
+
+                        <div class="margin-bottom30">
+                            <h3>Profile Completeness</h3>
+                            <kd-mini-dashboard [config]="miniDashboardConfig" [input]="miniDashboardData">
+                            </kd-mini-dashboard>
+
+                            <h3>Notices</h3>
+                            <div class="workbench-notices">
+                                <div class="workbench-sub-notices">
+                                    <p class="no-notices" *ngIf="noticeTotal == 0">No notices</p>
+                                    <div *ngIf="noticeTotal > 0">
+                                        <p class="no-notices" *ngFor="let notices of noticeData">{{ notices.modified }}: {{ notices.message }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h3>Workbench</h3>
+                            <div class="workbench-notices-data">
+                                <div class="workbench-sub-notices-data" *ngIf="workBenchAray?.length > 0">
+                                    <ul class="list-group">
+                                        <li class="list-group-item" (click)="showSubContent(element)" *ngFor="let element of workBenchAray">
+                                            <div class="list-icon">
+                                                <i class="fa fa-table"></i>
+                                                <div class="badge btn-red badge-right">{{ element?.total_value }}</div>
+                                            </div>
+                                            <div class="list-text">
+                                                <p class="ng-binding m-0">{{ element?.value }}</p>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="workbench-notices" *ngIf="workBenchAray?.length == 0">
+                                    <div class="workbench-sub-notices">
+                                        <p class="no-notices">No Workbench Data</p>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </kd-pane>
+    <kd-pane size="70%" min="10%" max="70%" [ngClass]="showFullWidth == true ? 'push-subcontent-right-out' : ''">
+        <div class="main-wrapper">
+            <div class="content-wrapper">
+                <div class="content-area">
+                    <div class="content">
+                        <div class="split-content-header ng-scope">
+                            <div class="kdx-split-header-container">
+                                <h3>Cases</h3>
+                                <div class="split-content-btn">
+                                    <button class="btn btn-outline" (click)="hideSubContent()">
+                                        <i class="fa fa-close fa-lg"></i>
+                                    </button>
+                                </div>
+
+                                <kd-table class="workbench-table-data" [column]="_column" [row]="_row"
+                                    [config]="_config" displayLoading="true" displayFull="false" _classKdxTable="false">
+                                </kd-table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </kd-pane>
+</kd-splitter>

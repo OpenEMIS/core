@@ -21,7 +21,7 @@ class AlertsTable extends ControllerActionTable
 
     private $statusTypes = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -32,7 +32,7 @@ class AlertsTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.process'] = 'process';
@@ -71,7 +71,7 @@ class AlertsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
          //POCOR-7558 start
-        $systemProcess=TableRegistry::get('system_processes');
+        $systemProcess=TableRegistry::get('SystemProcesses');
         $query->select([
             $this->aliasField('id'),
             $this->aliasField('name'),
@@ -84,7 +84,7 @@ class AlertsTable extends ControllerActionTable
             $this->aliasField('created'),
             "last_run_date"=>$systemProcess->aliasField('end_date'),]) 
         ->leftJoin(
-            [ $systemProcess->alias() => $systemProcess->table()],
+            [ $systemProcess->getAlias() => $systemProcess->getTable()],
             [
                 $systemProcess->aliasField('name = ') . $this->aliasField('name'),
             ])
@@ -165,7 +165,7 @@ class AlertsTable extends ControllerActionTable
 
     public function process(Event $event, ArrayObject $extra)
     {
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
         $params = [];
         if (array_key_exists('queryString', $requestQuery)) {
             $params = $this->paramsDecode($requestQuery['queryString']);
@@ -237,7 +237,23 @@ class AlertsTable extends ControllerActionTable
         switch ($field) {
             case 'last_run_date':
                 return __('Last Run');
-       default:
+            case 'frequency':
+                return __('Frequency');
+            case 'name':
+                return __('Name');
+            case 'last_run_date':
+                return __('Last Run');
+            case 'last_run_date':
+                return __('Last Run');
+            case 'created_user_id':
+                return __('Created By');
+            case 'created':
+                return __('Created On');
+            case 'modified':
+                return __('Modified By');
+            case 'modified_user_id':
+                return __('Modified On');
+        default:
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }

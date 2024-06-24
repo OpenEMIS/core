@@ -17,7 +17,7 @@ class StaffReportCardsTable extends ControllerActionTable
      CONST GENERATED = 3;
      CONST PUBLISHED = 4;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('StaffTemplates', ['className' => 'ProfileTemplate.StaffTemplates', 'foreignKey' => 'staff_profile_template_id']);

@@ -12,9 +12,9 @@ use PHPExcel_Worksheet;
 
 class ImportResultsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('import_mapping');
+        $this->setTable('import_mapping');
         parent::initialize($config);
 
         $this->addBehavior('Import.Import', [
@@ -22,9 +22,11 @@ class ImportResultsTable extends AppTable
             'model' => 'ExaminationStudentSubjectResults',
             'backUrl' => ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamResults']
         ]);
+
+        $this->addBehavior('ControllerAction.FileUpload');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.import.onImportPopulateExaminationsData'] = 'onImportPopulateExaminationsData';
@@ -260,5 +262,14 @@ class ImportResultsTable extends AppTable
         }
 
         return true;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'file_input') {
+            return  __('File');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

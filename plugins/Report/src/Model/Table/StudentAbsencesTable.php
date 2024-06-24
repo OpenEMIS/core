@@ -16,9 +16,9 @@ use DateTime; // POCOR-7479
 
 class StudentAbsencesTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_absence_details');
+        $this->setTable('institution_student_absence_details');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
@@ -53,7 +53,7 @@ class StudentAbsencesTable extends AppTable
 
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -68,10 +68,10 @@ class StudentAbsencesTable extends AppTable
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
-        $InstitutionSubjects = TableRegistry::get('institution_subjects');
-        $grades = TableRegistry::get('education_grades');
-        $academicPeriod = TableRegistry::get('academic_periods');
-        $securityUsers = TableRegistry::get('security_users');
+        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $grades = TableRegistry::get('Education.EducationGrades');
+        $academicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $securityUsers = TableRegistry::get('Security.Users');
         $selectedArea = $requestData->area_education_id;
         $conditions = [];
 
@@ -195,16 +195,16 @@ class StudentAbsencesTable extends AppTable
                     ]
                 ],
             ])
-             ->innerJoin([$grades->alias() => $grades->table()], [
+             ->innerJoin([$grades->getAlias() => $grades->getTable()], [
                 $grades->aliasField('id = ') . $this->aliasField('education_grade_id')
             ])
-            ->innerJoin([$academicPeriod->alias() => $academicPeriod->table()], [
+            ->innerJoin([$academicPeriod->getAlias() => $academicPeriod->getTable()], [
                 $academicPeriod->aliasField('id = ') . $this->aliasField('academic_period_id')
             ])
-             ->innerJoin([$securityUsers->alias() => $securityUsers->table()], [
+             ->innerJoin([$securityUsers->getAlias() => $securityUsers->getTable()], [
                 $securityUsers->aliasField('id = ') . $this->aliasField('student_id')
             ])
-            ->leftJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
+            ->leftJoin([$InstitutionSubjects->getAlias() => $InstitutionSubjects->getTable()], [
                 $InstitutionSubjects->aliasField('id = ') . $this->aliasField('subject_id')
             ]);
 

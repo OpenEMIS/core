@@ -15,9 +15,9 @@ class ImportUsersTable extends AppTable
     const IS_STAFF = "is_staff";
     const IS_STUDENT = "is_student";
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('import_mapping');
+        $this->setTable('import_mapping');
         parent::initialize($config);
 
         $this->addBehavior('Import.Import', ['plugin' => 'User', 'model' => 'Users']);
@@ -64,9 +64,10 @@ class ImportUsersTable extends AppTable
                 'prefix' => $prefix,
             ]
         ];
+        $this->addBehavior('ControllerAction.FileUpload');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -86,7 +87,13 @@ class ImportUsersTable extends AppTable
         return $events;
     }
 
-    public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
+    public function onImportCheckUnique(Event $event,
+                                        $sheet,
+                                        $row,
+                                        $columns,
+                                        ArrayObject $tempRow,
+                                        ArrayObject $importedUniqueCodes,
+                                        ArrayObject $rowInvalidCodeCols) //POCOR-8082
     {
         $columns = new Collection($columns);
         $extractedOpenemisNo = $columns->filter(function ($value, $key, $iterator) {

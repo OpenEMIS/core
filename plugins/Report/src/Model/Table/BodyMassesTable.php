@@ -13,9 +13,9 @@ use App\Model\Table\AppTable;
 
 class BodyMassesTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_students');
+        $this->setTable('institution_students');
         parent::initialize($config);
 
         // Associations
@@ -139,7 +139,7 @@ class BodyMassesTable extends AppTable
         $Class = TableRegistry::get('Institution.InstitutionClasses');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $areas = TableRegistry::get('Area.Areas');
-        $institutionsTable = TableRegistry::get('institutions');
+        $institutionsTable = TableRegistry::get('Institution.Institutions');
         
         $query
             ->select([
@@ -207,14 +207,14 @@ class BodyMassesTable extends AppTable
                 ]
             )
              
-            ->innerJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+            ->innerJoin([$ClassStudents->getAlias() => $ClassStudents->getTable()], [
                 $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                 $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                 $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,
                 $ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                 $ClassStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
             ])
-            ->leftJoin([$Class->alias() => $Class->table()], [
+            ->leftJoin([$Class->getAlias() => $Class->getTable()], [
                 $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
             ])
 
@@ -222,7 +222,7 @@ class BodyMassesTable extends AppTable
             //POCOR-6719 Starts
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($type) {
             return $results->map(function ($row) use($type) {
-                $areas1 = TableRegistry::get('areas');
+                $areas1 = TableRegistry::get('Area.Areas');
                 $areasData = $areas1
                             ->find()
                             ->where([$areas1->alias('code')=>$row->area_code])
@@ -230,9 +230,9 @@ class BodyMassesTable extends AppTable
                 $row['region_code'] = '';            
                 $row['region_name'] = '';
                 if(!empty($areasData)){
-                    $areas = TableRegistry::get('areas');
-                    $areaLevels = TableRegistry::get('area_levels');
-                    $institutions = TableRegistry::get('institutions');
+                    $areas = TableRegistry::get('Area.Areas');
+                    $areaLevels = TableRegistry::get('Area.AreaLevels');
+                    $institutions = TableRegistry::get('Instituion.Institutions');
                     $val = $areas
                                 ->find()
                                 ->select([
@@ -240,13 +240,13 @@ class BodyMassesTable extends AppTable
                                     $areas1->aliasField('name'),
                                     ])
                                 ->leftJoin(
-                                    [$areaLevels->alias() => $areaLevels->table()],
+                                    [$areaLevels->getAlias() => $areaLevels->getTable()],
                                     [
                                         $areas->aliasField('area_level_id  = ') . $areaLevels->aliasField('id')
                                     ]
                                 )
                                 ->leftJoin(
-                                    [$institutions->alias() => $institutions->table()],
+                                    [$institutions->getAlias() => $institutions->getTable()],
                                     [
                                         $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
                                     ]
@@ -286,8 +286,8 @@ class BodyMassesTable extends AppTable
         ];  
 
         //POCOR-6650 Starts
-        $AreaLevelTbl = TableRegistry::get('area_levels');
-        $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->hydrate(false)->toArray();
+        $AreaLevelTbl = TableRegistry::get('Area.Areas');
+        $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->enableHydration(false)->toArray();
         //POCOR-6719 Starts
         $extraFieldsFirst[] = [
             'key' => '',

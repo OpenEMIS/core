@@ -40,7 +40,6 @@ class LabelsTable extends AppTable
 
         $cacheFolder = new Folder(CACHE.'labels');
         $files = $cacheFolder->find();
-
         // ignore hidden files in linux - aka anything that starts with a dot will be ignored
         $filteredFiles = [];
         foreach ($files as $key => $value) {
@@ -48,7 +47,7 @@ class LabelsTable extends AppTable
                 $filteredFiles[] = $value;
             }
         }
-
+        
         if (empty($filteredFiles)) {
             $keyArray = [];
             $allLabels = $this->find();
@@ -57,7 +56,7 @@ class LabelsTable extends AppTable
                 $keyValue = self::concatenateLabel($eachLabel);
                 $keyArray[$keyCreation] = $keyValue;
             }
-
+            // echo "<pre>";print_r($keyArray);die;
             //Write multiple to cache
             $result = Cache::writeMany($keyArray, $this->defaultConfig);
         }
@@ -104,7 +103,7 @@ class LabelsTable extends AppTable
         return $this->defaultConfig;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 

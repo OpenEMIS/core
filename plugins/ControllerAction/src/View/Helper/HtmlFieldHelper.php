@@ -13,8 +13,10 @@ use Cake\I18n\Date;
 use Cake\I18n\I18n;
 use Cake\View\Helper\IdGeneratorTrait;
 use Cake\View\NumberHelper;
-use Cake\Network\Session;
+use Cake\Http\Session;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Hash;
+use Laminas\Diactoros\UploadedFile;
 
 use Cake\Log\Log;
 
@@ -71,9 +73,10 @@ class HtmlFieldHelper extends Helper
     private function patchInvalidFields($data, $field, $options)
     {
         if (!is_null($data)) {
-            $invalid = $data->invalid();
+            
+            $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                $options['value'] = $data->invalid($field);
+                $options['value'] = $invalid[$field];
             }
         }
         if (array_key_exists('label', $options)) {
@@ -91,10 +94,10 @@ class HtmlFieldHelper extends Helper
 
         if (!array_key_exists($eventKey, $eventMap) && !is_null($method)) {
             if (method_exists($subject, $method) || $subject->behaviors()->hasMethod($method)) {
-                $subject->eventManager()->on($eventKey, [], [$subject, $method]);
+                $subject->getEventManager()->on($eventKey, [], [$subject, $method]);
             }
         }
-        return $subject->eventManager()->dispatch($event);
+        return $subject->getEventManager()->dispatch($event);
     }
 
     public function render($type, $action, Entity $data, array $attr, array $options = [])
@@ -102,16 +105,16 @@ class HtmlFieldHelper extends Helper
         $html = '';
 
         if (is_null($this->table)) {
-            $this->table = TableRegistry::get($attr['className']);
+            $this->table = TableRegistry::getTableLocator()->get($attr['className']);
         }
 
         // trigger event for custom field types
         $method = 'onGet' . Inflector::camelize($type) . 'Element';
         $eventKey = 'ControllerAction.Model.' . $method;
         $event = $this->dispatchEvent($this->table, $eventKey, $method, ['action' => $action, 'entity' => $data, 'attr' => $attr, 'options' => $options]);
-
-        if (isset($event->result)) {
-            $html = $event->result;
+        //echo "<pre>";print_r($attr);die;
+        if ($event->getResult()) {
+            $html = $event->getResult();
         } else {
             if (method_exists($this, $type)) {
                 $html = $this->$type($action, $data, $attr, $options);
@@ -277,7 +280,7 @@ class HtmlFieldHelper extends Helper
             }
 
             if (!isset($attr['translate']) || (isset($attr['translate']) && $attr['translate'])) {
-                $value = __($value);
+                $value = __((string)$value);
             }
         } elseif ($action == 'edit') {
             if (array_key_exists('empty', $attr)) {
@@ -355,7 +358,7 @@ class HtmlFieldHelper extends Helper
                 $arrayKeys = array_merge($arrayKeys, array_keys($subList));
             } else {
                 if (!isset($attr['translate']) || (isset($attr['translate']) && $attr['translate'])) {
-                    $list[$key] = __($opt);
+                    $list[$key] = __((string) $opt);
                 } else {
                     $list[$key] = $opt;
                 }
@@ -366,7 +369,8 @@ class HtmlFieldHelper extends Helper
         if (isset($options['empty'])) {
             $arrayKeys[] = '';
         }
-        $session = $this->request->session();
+        
+        $session = $this->_View->getRequest()->getSession();
         $session->write('FormTampering.'.$fieldName, $arrayKeys);
         $options['type'] = 'select';
         $value = $this->Form->input($fieldName, $options);
@@ -470,11 +474,12 @@ class HtmlFieldHelper extends Helper
             $options['type'] = 'text';
             $options['disabled'] = 'disabled';
             $field = $attr['field'];
-            $invalid = $data->invalid();
+            
+            $invalid = $data->getInvalid();
 
             if (isset($attr['options']) && !isset($attr['attr']['value'])) {
                 if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                    $options['value'] = $attr['options'][$data->invalid($field)];
+                    $options['value'] = $attr['options'][$invalid[$field]];
                 } else {
                     $options['value'] = $attr['options'][$data->{$field}];
                 }
@@ -482,7 +487,7 @@ class HtmlFieldHelper extends Helper
                 $options['value'] = $attr['attr']['value'];
             } else {
                 if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                    $options['value'] = $data->invalid($field);
+                    $options['value'] = $invalid[$field];
                 } else {
                     $options['value'] = $data->{$field};
                 }
@@ -514,11 +519,21 @@ class HtmlFieldHelper extends Helper
             if (array_key_exists('ajaxLoad', $attr) && $attr['ajaxLoad']) {
                 $imageUrl = '';
                 if (array_key_exists('imageUrl', $attr) && $attr['imageUrl']) {
-                    $imageUrl = $this->Url->build($attr['imageUrl'], true);
+                    $imageUrl = $this->Url->build($attr['imageUrl'], []);
+                    //$imageUrl = $this->Url->build($attr['imageUrl'], true);
                     $imageUrl = str_replace('http','https',$imageUrl); //POCOR-7041 change http request to https..
                     
                 }
                 $imageDefault = (array_key_exists('imageDefault', $attr) && $attr['imageDefault'])? '<i class='.$attr['imageDefault'].'></i>': '';
+                    // $value= '<div class="table-thumb"
+					// data-load-image=true
+					// data-image-width='.$maxImageWidth.'
+					// data-image-url='.$imageUrl.'
+					// >
+					// <div class="profile-image-thumbnail">
+					// '.$imageDefault.'
+					// </div>
+					// </div>';
                 $value = (base64_decode($src, true)) ? '<div class="table-thumb"
                     data-load-image=true
                     data-image-width=' . $maxImageWidth . '
@@ -544,15 +559,15 @@ class HtmlFieldHelper extends Helper
             $defaultImgViewClass = $this->table->getDefaultImgViewClass();
             $defaultImgMsg = $this->table->getDefaultImgMsg();
             $defaultImgView = $this->table->getDefaultImgView();
-
+            
             $showRemoveButton = false;
-            if (isset($data[$attr['field']]['tmp_name'])) {
-                $tmp_file = ((is_array($data[$attr['field']])) && (file_exists($data[$attr['field']]['tmp_name']))) ? $data[$attr['field']]['tmp_name'] : "";
-                $tmp_file_read = (!empty($tmp_file)) ? file_get_contents($tmp_file) : "";
-            } else {
-                $tmp_file = true;
-                $tmp_file_read = $data[$attr['field']];
-            }
+            // if (isset($data[$attr['field']]['tmp_name'])) {
+            //     $tmp_file = ((is_array($data[$attr['field']])) && (file_exists($data[$attr['field']]['tmp_name']))) ? $data[$attr['field']]['tmp_name'] : "";
+            //     $tmp_file_read = (!empty($tmp_file)) ? file_get_contents($tmp_file) : "";
+            // } else {
+            //     $tmp_file = true;
+            //     $tmp_file_read = $data[$attr['field']];
+            // }
 
             if (!is_resource($tmp_file_read)) {
                 $src = (!empty($tmp_file_read)) ? '<img id="existingImage" class="'.$defaultImgViewClass.'" src="data:image/jpeg;base64,'.base64_encode($tmp_file_read).'"/>' : $defaultImgView;
@@ -572,12 +587,13 @@ class HtmlFieldHelper extends Helper
             }
 
             $this->includes['jasny']['include'] = true;
-            $value = $this->_View->element('ControllerAction.bootstrap-jasny/image_uploader', ['attr' => $attr, 'src' => $src,
-                                                                                            'defaultWidth' => $defaultWidth,
-                                                                                            'defaultHeight' => $defaultHeight,
-                                                                                            'showRemoveButton' => $showRemoveButton,
-                                                                                            'defaultImgMsg' => $defaultImgMsg,
-                                                                                            'defaultImgView' => $defaultImgView]);
+            $value = $this->_View->element('ControllerAction.bootstrap-jasny/image_uploader', ['attr' => $attr, 
+                'src' => $src,
+                'defaultWidth' => $defaultWidth,
+                'defaultHeight' => $defaultHeight,
+                'showRemoveButton' => $showRemoveButton,
+                'defaultImgMsg' => $defaultImgMsg,
+                'defaultImgView' => $defaultImgView]);
         }
 
         return $value;
@@ -620,9 +636,10 @@ class HtmlFieldHelper extends Helper
 
         $field = $attr['field'];
         if (!is_null($data)) {
-            $invalid = $data->invalid();
+            
+            $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                $value = $data->invalid($field);
+                $value = $invalid[$field];
             } else {
                 $value = $data->{$field};
             }
@@ -630,11 +647,11 @@ class HtmlFieldHelper extends Helper
 
         if ($action == 'index' || $action == 'view') {
             if (!is_null($value)) {
-                $table = TableRegistry::get($attr['className']);
+                $table = TableRegistry::getTableLocator()->get($attr['className']);
                 $event = new Event('ControllerAction.Model.onFormatDateTime', $this, compact('value'));
-                $event = $table->eventManager()->dispatch($event);
-                if (strlen($event->result) > 0) {
-                    $value = $event->result;
+                $event = $table->getEventManager()->dispatch($event);
+                if (strlen($event->getResult()) > 0) {
+                    $value = $event->getResult();
                 }
             }
         }
@@ -655,9 +672,9 @@ class HtmlFieldHelper extends Helper
         $defaultDate = true;
 
         if (isset($attr['className'])) {
-            $table = TableRegistry::get($attr['className']);
-            $schema = $table->schema();
-            $columnAttr = $schema->column($field);
+            $table = TableRegistry::getTableLocator()->get($attr['className']);
+            $schema = $table->getSchema();
+            $columnAttr = $schema->getColumn($field);
             if ($columnAttr['null'] == true) {
                 $defaultDate = date('d-m-Y');
             }
@@ -672,9 +689,9 @@ class HtmlFieldHelper extends Helper
         }
 
         if (!is_null($data)) {
-            $invalid = $data->invalid();
+            $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                $value = $data->invalid($field);
+                $value = $invalid[$field];
             } else {
                 $value = $data->{$field};
             }
@@ -683,9 +700,9 @@ class HtmlFieldHelper extends Helper
         if ($action == 'index' || $action == 'view') {
             if (!is_null($value)) {
                 $event = new Event('ControllerAction.Model.onFormatDate', $this, compact('value'));
-                $event = $table->eventManager()->dispatch($event);
-                if (strlen($event->result) > 0) {
-                    $value = $event->result;
+                $event = $table->getEventManager()->dispatch($event);
+                if (strlen($event->getResult()) > 0) {
+                    $value = $event->getResult();
                 }
             }
         } elseif ($action == 'edit') {
@@ -747,9 +764,10 @@ class HtmlFieldHelper extends Helper
         $field = $attr['field'];
 
         if (!is_null($data)) {
-            $invalid = $data->invalid();
+            
+            $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
-                $value = $data->invalid($field);
+                $value = $invalid[$field];
             } else {
                 $value = $data->{$field};
             }
@@ -757,11 +775,12 @@ class HtmlFieldHelper extends Helper
 
         if ($action == 'index' || $action == 'view') {
             if (!is_null($value)) {
-                $table = TableRegistry::get($attr['className']);
+                $table = TableRegistry::getTableLocator()->get($attr['className']);
                 $event = new Event('ControllerAction.Model.onFormatTime', $this, compact('value'));
-                $event = $table->eventManager()->dispatch($event);
-                if (strlen($event->result) > 0) {
-                    $value = $event->result;
+                $event = $table->getEventManager()->dispatch($event);
+               
+                if (strlen($event->getResult()) > 0) {
+                    $value = $event->getResult();
                 }
             }
         } elseif ($action == 'edit') {
@@ -835,8 +854,8 @@ class HtmlFieldHelper extends Helper
             'type' => 'select'
         ];
         
-        $Locales = TableRegistry::get('Locales');
-        $langDir = $Locales->getLangDir(I18n::locale());
+        $Locales = TableRegistry::getTableLocator()->get('Locales');
+        $langDir = $Locales->getLangDir(I18n::getLocale());
 
         if ($langDir == 'rtl') {
             $_options['class'] = 'chosen-select chosen-rtl';
@@ -874,16 +893,17 @@ class HtmlFieldHelper extends Helper
         return $this->Form->input($fieldName, $options);
     }
 
-    public function binary($action, Entity $data, $attr, $options = [])
+    public function binary($action, Entity $entity, $attr, $options = [])
     {
         $value = '';
         $table = TableRegistry::get($attr['className']);
-        $fileUpload = $table->behaviors()->get('FileUpload');
+        //this is comment becuase of facing error in Personal > General > Account edit by superrole.POCOR-7485 Starts cakephp-4
+        /*$fileUpload = $table->behaviors()->get('FileUpload');
         $name = '&nbsp;';
         if (!empty($fileUpload)) {
-            $name = $fileUpload->config('name');
-        }
-
+            $name = $fileUpload->getConfig('name');
+        }*/
+        //POCOR-7485 Ends
         if ($action == 'index' || $action == 'view') {
             // Modified logic
             // $buttons = $this->_View->get('_buttons');
@@ -894,21 +914,34 @@ class HtmlFieldHelper extends Helper
                 $action = $buttons['table']->url('download', false);
             }
 
-            // New logic from master
-            // $buttons = $this->_View->get('ControllerAction');
-            // $buttons = $buttons['buttons'];
-            // $action = $buttons['download']['url'];
-            $request = $this->request;
-            $ids = $this->ControllerAction->getIdKeys($table, $data, false);
-            $action = ['action' => $request->action, 'download', $this->ControllerAction->paramsEncode($ids)];
-            $value = $this->link($data->{$name}, $action);
-        } elseif ($action == 'edit') {
-            $this->includes['jasny']['include'] = true;
-            if (isset($data->{$name})) {
-                $attr['value'] = $data->{$name};
+            // POCOR-8074-6 start: fixed file upload
+            $request = $this->_View->getRequest();
+            $ids = $this->ControllerAction->getIdKeys($table, $entity, false);
+            $params = $request->getAttribute('params');
+            $action = $params['action'];
+            if($request->getParam('controller') == 'Directories'){
+                if (isset($entity['security_user_id']) && ! empty($entity['security_user_id'])) {
+                    $ids['security_user_id'] = $entity['security_user_id'];
+                }
+                if(empty($ids['security_user_id']) && isset($params['pass'][1]) && isset($this->ControllerAction->paramsDecode($params['pass'][1])['security_user_id'])) {
+                    $ids['security_user_id'] =  $this->ControllerAction->paramsDecode($params['pass'][1])['security_user_id'];
+                }
+                if(empty($ids['security_user_id']) && isset($params['pass'][1]) && isset($this->ControllerAction->paramsDecode($params['pass'][1])['user_id'])) {
+                    $ids['security_user_id'] =  $this->ControllerAction->paramsDecode($params['pass'][1])['user_id'];
+                }
             }
+            $action = ['action' => $action, 'download', $this->ControllerAction->paramsEncode($ids)];
+            $value = $this->link($entity->file_name, $action);
+
+        } elseif ($action == 'edit' || $action == 'add' ) {
+            $this->includes['jasny']['include'] = true;
+            $attr['value'] = $entity->file_name;
             $value = $this->_View->element('ControllerAction.file_input', ['attr' => $attr]);
+            $fieldName = $attr['model'] . '.' . $attr['field'];
+            //POCOR-8074-6 Ends
+            //POCOR-7485 Ends
         }
+        //die('<pre>'.print_r($value,true));
         return $value;
     }
 

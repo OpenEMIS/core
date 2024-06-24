@@ -7,7 +7,7 @@ use Cake\Console\Shell;
 use Cake\Utility\Text;
 class EducationStructureCopyShell extends Shell
 {
-    public function initialize()
+    public function initialize(): void
     {
         $this->loadModel('Education.EducationSystem');
         parent::initialize();

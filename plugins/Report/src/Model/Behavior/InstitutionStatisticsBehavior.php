@@ -118,14 +118,14 @@ class InstitutionStatisticsBehavior extends Behavior
 
             $joinConditions = $this->_processConditions($joinConditions, $params);
 
-            $alias = isset($joinData["alias"]) ? $joinData["alias"] : $joinTable->alias();
+            $alias = isset($joinData["alias"]) ? $joinData["alias"] : $joinTable->getAlias();
 
             switch ($joinType) {
             case 'INNER':
-                $query->innerJoin([$alias => $joinTable->table()], [$joinConditions]);
+                $query->innerJoin([$alias => $joinTable->getTable()], [$joinConditions]);
                 break;
             case 'LEFT':
-                $query->leftJoin([$alias => $joinTable->table()], [$joinConditions]);
+                $query->leftJoin([$alias => $joinTable->getTable()], [$joinConditions]);
                 break;
             }
         }
@@ -227,14 +227,14 @@ class InstitutionStatisticsBehavior extends Behavior
                     }
 
                     // allow same table to be joined twice
-                    $alias = array_key_exists('alias', $obj) ? $obj['alias'] : $joinTable->alias();
+                    $alias = array_key_exists('alias', $obj) ? $obj['alias'] : $joinTable->getAlias();
 
                     switch ($type) {
                         case 'INNER':
-                            $query->innerJoin([$alias => $joinTable->table()], [$joinConditions]);
+                            $query->innerJoin([$alias => $joinTable->getTable()], [$joinConditions]);
                             break;
                         case 'LEFT':
-                            $query->leftJoin([$alias => $joinTable->table()], [$joinConditions]);
+                            $query->leftJoin([$alias => $joinTable->getTable()], [$joinConditions]);
                             break;
                     }
                 }

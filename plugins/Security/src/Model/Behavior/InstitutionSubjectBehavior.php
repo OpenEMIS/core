@@ -11,7 +11,7 @@ use Cake\I18n\Date;
 
 class InstitutionSubjectBehavior extends Behavior
 {
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         // priority has to be set at 100 so that Institutions->indexBeforePaginate will be triggered first
@@ -146,8 +146,8 @@ class InstitutionSubjectBehavior extends Behavior
         $controller = $this->_table->controller;
         $roles = [];
         $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
-        if ($event->result) {
-            $roles = $event->result;
+        if ($event->getResult()) {
+            $roles = $event->getResult();
         }
         $mySubjectsEditPermission = $AccessControl->check(['Institutions', 'Subjects', $action], $roles);
         if ($mySubjectsEditPermission) {
@@ -164,8 +164,8 @@ class InstitutionSubjectBehavior extends Behavior
         $controller = $this->_table->controller;
         $roles = [];
         $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
-        if ($event->result) {
-            $roles = $event->result;
+        if ($event->getResult()) {
+            $roles = $event->getResult();
         }
         $allSubjectsEditPermission = $AccessControl->check(['Institutions', 'AllSubjects', $action], $roles);
         if ($allSubjectsEditPermission) {
@@ -263,8 +263,8 @@ class InstitutionSubjectBehavior extends Behavior
             if (array_key_exists('controller', $options)) {
                 $controller = $options['controller'];
                 $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
-                if (is_array($event->result)) {
-                    $roles = $event->result;
+                if (is_array($event->getResult())) {
+                    $roles = $event->getResult();
                 }
             }
 

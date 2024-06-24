@@ -9,9 +9,9 @@ use App\Model\Table\AppTable;
 
 class WorkflowTrainingSessionResultTable extends AppTable  
 {
-    public function initialize(array $config) 
+    public function initialize(array $config): void 
     {
-        $this->table("training_session_results");
+        $this->setTable("training_session_results");
         parent::initialize($config);
 
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
@@ -27,7 +27,7 @@ class WorkflowTrainingSessionResultTable extends AppTable
         ]);
     }
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
         $events['Model.excel.onExcelBeforeQuery'] = 'onExcelBeforeQuery';
         return $events;

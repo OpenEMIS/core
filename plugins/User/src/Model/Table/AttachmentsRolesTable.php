@@ -8,8 +8,8 @@ use Cake\Event\Event;
 use ArrayObject;
 
 class AttachmentsRolesTable extends AppTable {
-    public function initialize(array $config) {
-    	$this->table('user_attachments_roles');
+    public function initialize(array $config): void {
+    	$this->setTable('user_attachments_roles');
         parent::initialize($config);
         
         $this->belongsTo('Attachments', ['className' => 'User.Attachments', 'foreign_key' => 'user_attachment_id']);

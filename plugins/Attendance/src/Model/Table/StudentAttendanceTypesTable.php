@@ -8,23 +8,33 @@ use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
+use App\Model\Table\ControllerActionTable;
 
-class StudentAttendanceTypesTable extends AppTable
+class StudentAttendanceTypesTable extends ControllerActionTable
 {
     const DAY = 1;
     const SUBJECT = 2;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('student_attendance_types');
+        $this->setTable('student_attendance_types');
         parent::initialize($config);
 
         $this->hasMany('StudentAttendanceMarkTypes', ['className' => 'Attendance.StudentAttendanceMarkTypes', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Students' => ['index'],
+            'Staff' => ['index'],
+            'Results' => ['index'],
+            'StudentExaminationResults' => ['index'],
+            'OpenEMIS_Classroom' => ['index', 'view'],
+            'InstitutionStaffAttendances' => ['index', 'view'],
+            'StudentAttendances' => ['index', 'view'],
+            'ScheduleTimetable' => ['index']
+        ]);
     }
 
     public function findAttendanceTypeCode(Query $query, array $options)
     {
-
         $institution_id = $options['institution_id'];
         $academic_period_id = $options['academic_period_id'];
         $institution_class_id = $options['institution_class_id'];
@@ -42,19 +52,19 @@ class StudentAttendanceTypesTable extends AppTable
         $studentAttendanceMarkTypesData = $StudentAttendanceMarkTypes
             ->find()
             ->leftJoin(
-                [$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()],
+                [$StudentMarkTypeStatuses->getAlias() => $StudentMarkTypeStatuses->getTable()],
                 [
                     $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id = ') . $StudentAttendanceMarkTypes->aliasField('id')
                 ]
             )
             ->leftJoin(
-                [$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()],
+                [$StudentMarkTypeStatusGrades->getAlias() => $StudentMarkTypeStatusGrades->getTable()],
                 [
                     $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id = ') . $StudentMarkTypeStatuses->aliasField('id')
                 ]
             )
             ->leftJoin(
-                [$InstitutionClassGrades->alias() => $InstitutionClassGrades->table()],
+                [$InstitutionClassGrades->getAlias() => $InstitutionClassGrades->getTable()],
                 [
                     $InstitutionClassGrades->aliasField('education_grade_id = ') . $StudentMarkTypeStatusGrades->aliasField('education_grade_id')
                 ]
@@ -76,25 +86,25 @@ class StudentAttendanceTypesTable extends AppTable
                     'code' => $this->aliasField('code')
                 ])
                 ->leftJoin(
-                    [$StudentAttendanceMarkTypes->alias() => $StudentAttendanceMarkTypes->table()],
+                    [$StudentAttendanceMarkTypes->getAlias() => $StudentAttendanceMarkTypes->getTable()],
                     [
                         $StudentAttendanceMarkTypes->aliasField('student_attendance_type_id = ') . $this->aliasField('id')
                     ]
                 )
                 ->leftJoin(
-                    [$StudentMarkTypeStatuses->alias() => $StudentMarkTypeStatuses->table()],
+                    [$StudentMarkTypeStatuses->getAlias() => $StudentMarkTypeStatuses->getTable()],
                     [
                         $StudentMarkTypeStatuses->aliasField('student_attendance_mark_type_id = ') . $StudentAttendanceMarkTypes->aliasField('id')
                     ]
                 )
                 ->leftJoin(
-                    [$StudentMarkTypeStatusGrades->alias() => $StudentMarkTypeStatusGrades->table()],
+                    [$StudentMarkTypeStatusGrades->getAlias() => $StudentMarkTypeStatusGrades->getTable()],
                     [
                         $StudentMarkTypeStatusGrades->aliasField('student_mark_type_status_id = ') . $StudentMarkTypeStatuses->aliasField('id')
                     ]
                 )
                 ->leftJoin(
-                    [$InstitutionClassGrades->alias() => $InstitutionClassGrades->table()],
+                    [$InstitutionClassGrades->getAlias() => $InstitutionClassGrades->getTable()],
                     [
                         $InstitutionClassGrades->aliasField('education_grade_id = ') . $StudentMarkTypeStatusGrades->aliasField('education_grade_id')
                     ]

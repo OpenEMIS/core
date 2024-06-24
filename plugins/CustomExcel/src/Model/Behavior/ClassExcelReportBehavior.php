@@ -61,10 +61,10 @@ class ClassExcelReportBehavior extends Behavior
     {
         parent::initialize($config);
         $model = $this->_table;
-        $folder = WWW_ROOT . $this->config('folder');
-        $subfolder = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder');
+        $folder = WWW_ROOT . $this->getConfig('folder');
+        $subfolder = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder');
         if (!array_key_exists('filename', $config)) {
-            $this->config('filename', $model->alias());
+            $this->getConfig('filename', $model->getAlias());
         }
 
         new Folder($folder, true, 0777);
@@ -104,7 +104,7 @@ class ClassExcelReportBehavior extends Behavior
     public function renderExcelTemplate(ArrayObject $extra)
     {
         $model = $this->_table;
-        $format = $this->config('format');
+        $format = $this->getConfig('format');
             
         if (array_key_exists('requestQuery', $extra)) {
             $params = $extra['requestQuery'];
@@ -117,10 +117,10 @@ class ClassExcelReportBehavior extends Behavior
 
         $extra['vars'] = $this->getVars($params, $extra);
 
-        $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $format;
-        $extra['path'] = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
+        $extra['file'] = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $format;
+        $extra['path'] = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS;
 
-        $temppath = tempnam($extra['path'], $this->config('filename') . '_');
+        $temppath = tempnam($extra['path'], $this->getConfig('filename') . '_');
         $extra['file_path'] = $temppath;
 
         $objSpreadsheet = $this->loadExcelTemplate($extra);
@@ -148,7 +148,7 @@ class ClassExcelReportBehavior extends Behavior
 
         if (!empty($params['institution_id'])) {
             unset($params['area_id']);// POCOR-7838
-			$pdfFilePath = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS . $this->config('filename') . '_' . $params['institution_id'].'.txt';
+			$pdfFilePath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $this->getConfig('filename') . '_' . $params['institution_id'].'.txt';
             $pdfFileContent = file_get_contents($pdfFilePath);
 			
 			$ClassProfiles = TableRegistry::get('Institution.ClassProfiles');
@@ -160,7 +160,7 @@ class ClassExcelReportBehavior extends Behavior
 			$this->deleteFile($pdfFilePath);
         }
 		
-		if ($this->config('download')) {
+		if ($this->getConfig('download')) {
             $tempfile = new File($temppath);
             $tempinfo = $tempfile->info();
             $tempcontent = $tempfile->read();
@@ -169,7 +169,7 @@ class ClassExcelReportBehavior extends Behavior
             $this->downloadFile($tempcontent, $extra['file'], $tempinfo['filesize']);
         }
 
-        if ($this->config('purge')) {
+        if ($this->getConfig('purge')) {
             // delete excel file after download
             $this->deleteFile($temppath);
         }
@@ -181,13 +181,13 @@ class ClassExcelReportBehavior extends Behavior
     {
         $model = $this->_table;
 
-        if (array_key_exists('requestQuery', $extra) && array_key_exists($this->config('templateTableKey'), $extra['requestQuery'])) {
-            $recordId = $extra['requestQuery'][$this->config('templateTableKey')];
+        if (array_key_exists('requestQuery', $extra) && array_key_exists($this->getConfig('templateTableKey'), $extra['requestQuery'])) {
+            $recordId = $extra['requestQuery'][$this->getConfig('templateTableKey')];
         } else {
-            $recordId = $model->getQueryString($this->config('templateTableKey'));
+            $recordId = $model->getQueryString($this->getConfig('templateTableKey'));
         }
 
-        $Table = TableRegistry::get($this->config('templateTable'));
+        $Table = TableRegistry::get($this->getConfig('templateTable'));
 
         if (empty($recordId)) {
             $objSpreadsheet = new Spreadsheet();
@@ -199,7 +199,7 @@ class ClassExcelReportBehavior extends Behavior
                 $file = $this->getFile($entity->excel_template);
 
                 // Create a temporary file
-                $filepath = tempnam($extra['path'], $this->config('filename') . '_Template_');
+                $filepath = tempnam($extra['path'], $this->getConfig('filename') . '_Template_');
                 $extra['tmp_file_path'] = $filepath;
 
                 $excelTemplate = new File($filepath, true, 0777);
@@ -435,9 +435,9 @@ class ClassExcelReportBehavior extends Behavior
         $variableValues = new ArrayObject([]);
         if ($this->config('variableSource') == 'database') {
             $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialiseQueryVariables', [$params, $extra], $this);
-            if ($event->isStopped()) { return $event->result; }
-            if ($event->result) {
-                $variableValues = $event->result;
+            if ($event->isStopped()) { return $event->getResult(); }
+            if ($event->getResult()) {
+                $variableValues = $event->getResult();
             }
 
         } else if ($this->config('variableSource') == 'file') {
@@ -445,9 +445,9 @@ class ClassExcelReportBehavior extends Behavior
 
             foreach ($variables as $var) {
                 $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialise'.$var, [$params, $extra], $this);
-                if ($event->isStopped()) { return $event->result; }
-                if ($event->result) {
-                    $variableValues[$var] = $event->result;
+                if ($event->isStopped()) { return $event->getResult(); }
+                if ($event->getResult()) {
+                    $variableValues[$var] = $event->getResult();
                 }
             }
         }

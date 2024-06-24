@@ -8,7 +8,7 @@ use App\Model\Table\AppTable;
 
 class WorkflowModelsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->hasMany('Workflows', ['className' => 'Workflow.Workflows', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -65,8 +65,8 @@ class WorkflowModelsTable extends AppTable
         $featureOptions = [];
         foreach ($records as $obj) {
             $model = TableRegistry::get($obj->model);
-            $feature = Inflector::humanize(Inflector::underscore($model->alias()));
-            $featureOptions[$model->alias()] = __($feature);
+            $feature = Inflector::humanize(Inflector::underscore($model->getAlias()));
+            $featureOptions[$model->getAlias()] = __($feature);
         }
 
         return $featureOptions;
