@@ -539,8 +539,7 @@ class StudentUserExportTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-
-        self::debug($settings);
+//        self::debug($settings);
         $params = $this->getQueryString();
         $this->institution_id = $params['institution_id'];
         $this->student_id = $params['student_id'];
@@ -549,12 +548,7 @@ class StudentUserExportTable extends ControllerActionTable
         $InstitutionStudents = self::getDynamicTableInstance('institution_students');
         $ClassStudents = self::getDynamicTableInstance('Institution.InstitutionClassStudents');
         $Classes = self::getDynamicTableInstance('Institution.InstitutionClasses');
-//        $studentAbsenceDays = self::getDynamicTableInstance('institution_student_absence_days');
-//        $Subjects = self::getDynamicTableInstance('Institution.InstitutionSubjects');
-//        $SubjectStudents = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents');
         $institutionStudentId = $this->student_id;
-//        $institutionId = $this->institution_id;
-//        $currDateTime = date("Y-m-d");
 
         // for Academic Tab
         $AcademicPeriods = self::getDynamicTableInstance('academic_periods');
@@ -586,21 +580,21 @@ class StudentUserExportTable extends ControllerActionTable
                 return $results->map(function ($row) {
 
                     // POCOR-6130 custome fields code
-                    $Guardians = self::getDynamicTableInstance('student_custom_field_values');
+                    $customFieldsTable = self::getDynamicTableInstance('student_custom_field_values');
                     $studentCustomFieldOptions = self::getDynamicTableInstance('student_custom_field_options');
                     $studentCustomFields = self::getDynamicTableInstance('student_custom_fields');
 
-                    $guardianData = $Guardians->find()
+                    $customFieldsData = $customFieldsTable->find()
                         ->select([
-                            'id' => $Guardians->aliasField('id'),
-                            'student_id' => $Guardians->aliasField('student_id'),
-                            'student_custom_field_id' => $Guardians->aliasField('student_custom_field_id'),
-                            'text_value' => $Guardians->aliasField('text_value'),
-                            'number_value' => $Guardians->aliasField('number_value'),
-                            'decimal_value' => $Guardians->aliasField('decimal_value'),
-                            'textarea_value' => $Guardians->aliasField('textarea_value'),
-                            'date_value' => $Guardians->aliasField('date_value'),
-                            'time_value' => $Guardians->aliasField('time_value'),
+                            'id' => $customFieldsTable->aliasField('id'),
+                            'student_id' => $customFieldsTable->aliasField('student_id'),
+                            'student_custom_field_id' => $customFieldsTable->aliasField('student_custom_field_id'),
+                            'text_value' => $customFieldsTable->aliasField('text_value'),
+                            'number_value' => $customFieldsTable->aliasField('number_value'),
+                            'decimal_value' => $customFieldsTable->aliasField('decimal_value'),
+                            'textarea_value' => $customFieldsTable->aliasField('textarea_value'),
+                            'date_value' => $customFieldsTable->aliasField('date_value'),
+                            'time_value' => $customFieldsTable->aliasField('time_value'),
                             'checkbox_value_text' => 'studentCustomFieldOptions.name',
                             'question_name' => 'studentCustomField.name',
                             'field_type' => 'studentCustomField.field_type',
@@ -609,42 +603,42 @@ class StudentUserExportTable extends ControllerActionTable
                         ])->leftJoin(
                             ['studentCustomField' => 'student_custom_fields'],
                             [
-                                'studentCustomField.id = ' . $Guardians->aliasField('student_custom_field_id')
+                                'studentCustomField.id = ' . $customFieldsTable->aliasField('student_custom_field_id')
                             ]
                         )->leftJoin(
                             ['studentCustomFieldOptions' => 'student_custom_field_options'],
                             [
-                                'studentCustomFieldOptions.id = ' . $Guardians->aliasField('number_value')
+                                'studentCustomFieldOptions.id = ' . $customFieldsTable->aliasField('number_value')
                             ]
                         )
                         ->where([
-                            $Guardians->aliasField('student_id') => $row['id'],
+                            $customFieldsTable->aliasField('student_id') => $row['id'],
                         ])->toArray();
 
                     $existingCheckboxValue = '';
-                    foreach ($guardianData as $guadionRow) {
-                        $fieldType = $guadionRow->field_type;
+                    foreach ($customFieldsData as $customFieldsRow) {
+                        $fieldType = $customFieldsRow->field_type;
                         if ($fieldType == 'TEXT') {
-                            $row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id] = $guadionRow->text_value;
+                            $row[$this->_dynamicFieldName . '_' . $customFieldsRow->student_custom_field_id] = $customFieldsRow->text_value;
                         } else if ($fieldType == 'CHECKBOX') {
-                            $existingCheckboxValue = trim($row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id], ',') . ',' . $guadionRow->checkbox_value_text;
-                            $row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id] = trim($existingCheckboxValue, ',');
+                            $existingCheckboxValue = trim($row[$this->_dynamicFieldName . '_' . $customFieldsRow->student_custom_field_id], ',') . ',' . $customFieldsRow->checkbox_value_text;
+                            $row[$this->_dynamicFieldName . '_' . $customFieldsRow->student_custom_field_id] = trim($existingCheckboxValue, ',');
                         } else if ($fieldType == 'NUMBER') {
-                            $row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id] = $guadionRow->number_value;
+                            $row[$this->_dynamicFieldName . '_' . $customFieldsRow->student_custom_field_id] = $customFieldsRow->number_value;
                         } else if ($fieldType == 'DECIMAL') {
-                            $row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id] = $guadionRow->decimal_value;
+                            $row[$this->_dynamicFieldName . '_' . $customFieldsRow->student_custom_field_id] = $customFieldsRow->decimal_value;
                         } else if ($fieldType == 'TEXTAREA') {
-                            $row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id] = $guadionRow->textarea_value;
+                            $row[$this->_dynamicFieldName . '_' . $customFieldsRow->student_custom_field_id] = $customFieldsRow->textarea_value;
                         } else if ($fieldType == 'DROPDOWN') {
-                            $row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id] = $guadionRow->checkbox_value_text;
+                            $row[$this->_dynamicFieldName . '_' . $customFieldsRow->student_custom_field_id] = $customFieldsRow->checkbox_value_text;
                         } else if ($fieldType == 'DATE') {
-                            $row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id] = date('Y-m-d', strtotime($guadionRow->date_value));
+                            $row[$this->_dynamicFieldName . '_' . $customFieldsRow->student_custom_field_id] = date('Y-m-d', strtotime($customFieldsRow->date_value));
                         } else if ($fieldType == 'TIME') {
-                            $row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id] = date('h:i A', strtotime($guadionRow->time_value));
+                            $row[$this->_dynamicFieldName . '_' . $customFieldsRow->student_custom_field_id] = date('h:i A', strtotime($customFieldsRow->time_value));
                         } else if ($fieldType == 'COORDINATES') {
-                            $row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id] = $guadionRow->text_value;
+                            $row[$this->_dynamicFieldName . '_' . $customFieldsRow->student_custom_field_id] = $customFieldsRow->text_value;
                         } else if ($fieldType == 'NOTE') {
-                            $row[$this->_dynamicFieldName . '_' . $guadionRow->student_custom_field_id] = $guadionRow->field_description;
+                            $row[$this->_dynamicFieldName . '_' . $customFieldsRow->student_custom_field_id] = $customFieldsRow->field_description;
                         }
                     }
                     // POCOR-6130 custome fields code
@@ -762,68 +756,6 @@ class StudentUserExportTable extends ControllerActionTable
 
         // dump($query);die;
 
-    }
-
-
-    public function getAcademicTabElements($options = [])
-    {
-        $id = (array_key_exists('id', $options)) ? $options['id'] : 0;
-
-        $tabElements = [];
-        $studentTabElements = [
-            'Programmes' => ['text' => __('Programmes')],
-            'Classes' => ['text' => __('Classes')],
-            'Subjects' => ['text' => __('Subjects')],
-            'Absences' => ['text' => __('Absences')],
-            'Behaviours' => ['text' => __('Behaviours')],
-            'Outcomes' => ['text' => __('Outcomes')],
-            'Competencies' => ['text' => __('Competencies')],
-            'Results' => ['text' => __('Assessments')],
-            'ExaminationResults' => ['text' => __('Examinations')],
-            'ReportCards' => ['text' => __('Report Cards')],
-            'Awards' => ['text' => __('Awards')],
-            //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7648
-            'Textbooks' => ['text' => __('Textbooks')],
-            'Risks' => ['text' => __('Risks')],
-            'Associations' => ['text' => __('Houses')], //POCOR-7938
-            'Curriculars' => ['text' => __('Curriculars')]
-        ];
-
-        $tabElements = array_merge($tabElements, $studentTabElements);
-
-        // Programme & Textbooks will use institution controller, other will be still using student controller
-        foreach ($studentTabElements as $key => $tab) {
-            if ($key == 'Programmes' || $key == 'Textbooks' || $key == 'Associations') {
-                $type = (array_key_exists('type', $options)) ? $options['type'] : null;
-                $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'index', 'type' => $type]);
-            } elseif ($key == 'Risks') {
-                $type = (array_key_exists('type', $options)) ? $options['type'] : null;
-                $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'index', 'type' => $type]);
-            } elseif ($key == 'Curriculars') {
-                $type = (array_key_exists('type', $options)) ? $options['type'] : null;
-                $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'index', 'type' => $type]);
-            } else {
-                $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
-            }
-        }
-
-        if (Configure::read('schoolMode')) {
-            if (isset($tabElements['ExaminationResults'])) {
-                unset($tabElements['ExaminationResults']);
-            }
-
-            if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
-                if (isset($tabElements['Risks'])) {
-                    unset($tabElements['Risks']);
-                }
-            }
-        }
-
-        return $tabElements;
     }
 
 }
