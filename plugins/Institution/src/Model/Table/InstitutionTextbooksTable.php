@@ -53,7 +53,10 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportInstitutionTextbooks']);
         $this->addBehavior('InstitutionTextbookExcel', ['excludes' => ['security_group_id'], 'pages' => ['index']]); // POCOR-3627
-        $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Textbooks' =>['id','academic_period_id', 'institution_id']
+            ]
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator {
@@ -286,21 +289,20 @@ class InstitutionTextbooksTable extends ControllerActionTable
                 $this->Textbooks->aliasField('code').' LIKE' => '%' . $searchKey . '%',
             ];
         } else { //if no search key specified, then search is by filter.
-
             $selectedPeriod = $extra['selectedPeriod'];
             $selectedSubject = $extra['selectedSubject'];
             $selectedTextbook = $extra['selectedTextbook'];
 
             if (isset($selectedPeriod)) {
-                if ($selectedPeriod > 0) {
+                //if ($selectedPeriod > 0) {
                     $conditions[] = $this->aliasField('academic_period_id = ') . $selectedPeriod;
-                }
+                //}
             }
 
             if (isset($selectedSubject)) {
-//                if ($selectedSubject > 0) {
+                //if ($selectedSubject > 0) {
                     $conditions[] = $this->aliasField('education_subject_id = ') . $selectedSubject;
-//                }
+                //}
             }
 
             if (isset($selectedTextbook)) {
@@ -337,7 +339,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity)
     {
-        
+
         $this->setupFields($entity);
 
         $this->field('textbooks_students', ['visible' => false]);
@@ -654,22 +656,30 @@ class InstitutionTextbooksTable extends ControllerActionTable
     public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        $requestProgramme = $request->getQuery('programme');
-        $requestClass = $request->getQuery('class');
-        $requestSubject = $request->getQuery('subject');
-        $requestTextbook = $request->getQuery('textbook');
-        $requestPeriod = $request->getQuery('period');
-        $requestGrade = $request->getQuery('grade');
-        $requestProgramme = -1;
-        $requestClass = '-1';
-        $requestSubject = '-1';
-        $requestTextbook = '-1';
-        $requestGrade = '-1';
+        // $requestProgramme = $request->getQuery('programme');
+        // $requestClass = $request->getQuery('class');
+        // $requestSubject = $request->getQuery('subject');
+        // $requestTextbook = $request->getQuery('textbook');
+        // $requestPeriod = $request->getQuery('period');
+        // $requestGrade = $request->getQuery('grade');
+        // $requestProgramme = -1;
+        // $requestClass = '-1';
+        // $requestSubject = '-1';
+        // $requestTextbook = '-1';
+        // $requestGrade = '-1';
+        $queryParams = $this->request->getQueryParams();
+        $queryParams['programme'] = '-1';
+        $queryParams['class'] = '-1';
+        $queryParams['subject'] = '-1';
+        $queryParams['textbook'] = '-1';
+        $queryParams['period'] = '-1';
+        $queryParams['grade'] = '-1';
 
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->getAlias(), $request->getData())) {
                 if (array_key_exists('academic_period_id', $request->getData($this->getAlias()))) {
-                    $requestPeriod = $request->getData($this->getAlias())['academic_period_id'];
+                    //$requestPeriod = $request->getData($this->getAlias())['academic_period_id'];
+                    $queryParams['period'] = $request->getData($this->getAlias())['academic_period_id'];
                 }
                 if (isset($data[$this->getAlias()]['textbooks_students'])) {
                     unset($data[$this->getAlias()]['textbooks_students']);
@@ -685,6 +695,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
                 }
             }
         }
+        $this->request = $request->withQueryParams($queryParams);
     }
 
     public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
@@ -731,26 +742,32 @@ class InstitutionTextbooksTable extends ControllerActionTable
     public function addEditOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        $requestClass = $request->getQuery('class');
-        $requestSubject = $request->getQuery('subject');
-        $requestTextbook = $request->getQuery('textbook');
-        $requestPeriod = $request->getQuery('period');
-        $requestGrade = $request->getQuery('grade');
-        $requestClass = -1;
-        $requestSubject = -1;
-        $requestTextbook = -1;
+        // $requestClass = $request->getQuery('class');
+        // $requestSubject = $request->getQuery('subject');
+        // $requestTextbook = $request->getQuery('textbook');
+        // $requestPeriod = $request->getQuery('period');
+        // $requestGrade = $request->getQuery('grade');
+        // $requestClass = -1;
+        // $requestSubject = -1;
+        // $requestTextbook = -1;
         //$request->query('class') = '-1';
         //$request->query('subject') = '-1';
         //$request->query('textbook') = '-1';
+        $queryParams = $this->request->getQueryParams();
+        $queryParams['class'] = '-1';
+        $queryParams['subject'] = '-1';
+        $queryParams['textbook'] = '-1';
 
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->getAlias(), $request->getData())) {
                 if (array_key_exists('academic_period_id', $request->getData($this->getAlias()))) {
-                    $requestPeriod = $request->getData($this->getAlias())['academic_period_id'];
+                    //$requestPeriod = $request->getData($this->getAlias())['academic_period_id'];
+                    $queryParams['period'] = $request->getData($this->getAlias())['academic_period_id'];
                 }
 
                 if (array_key_exists('education_grade_id', $request->getData($this->getAlias()))) {
-                    $requestGrade = $request->getData($this->getAlias())['education_grade_id'];
+                    //$requestGrade = $request->getData($this->getAlias())['education_grade_id'];
+                    $queryParams['grade'] = $request->getData($this->getAlias())['education_grade_id'];
                 }
 
                 if (isset($data[$this->getAlias()]['textbooks_students'])) {
@@ -758,6 +775,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
                 }
             }
         }
+        $this->request = $request->withQueryParams($queryParams);       
     }
 
     public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, ServerRequest $request)
@@ -789,31 +807,41 @@ class InstitutionTextbooksTable extends ControllerActionTable
     public function addEditOnChangeEducationSubject(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        $requestClass = $request->getQuery('class');
-        $requestSubject = $request->getQuery('subject');
-        $requestPeriod = $request->getQuery('period');
-        $requestGrade = $request->getQuery('grade');
+        // $requestClass = $request->getQuery('class');
+        // $requestSubject = $request->getQuery('subject');
+        // $requestPeriod = $request->getQuery('period');
+        // $requestGrade = $request->getQuery('grade');
+        $queryParams = $this->request->getQueryParams();
+        $queryParams['class'] = '-1';
+        $queryParams['subject'] = '-1';
+        $queryParams['period'] = '-1';
+        $queryParams['grade'] = '-1';
 
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->getAlias(), $request->getData())) {
                 if (array_key_exists('academic_period_id', $request->getData($this->getAlias()))) {
-                    $requestPeriod = $request->getData($this->getAlias())['academic_period_id'];
+                    //$requestPeriod = $request->getData($this->getAlias())['academic_period_id'];
+                    $queryParams['period'] = $request->getData($this->getAlias())['academic_period_id'];
                 }
 
                 if (array_key_exists('education_grade_id', $request->getData[$this->getAlias()])) {
-                    $requestGrade = $request->getData($this->getAlias())['education_grade_id'];
+                    //$requestGrade = $request->getData($this->getAlias())['education_grade_id'];
+                    $queryParams['grade'] = $request->getData($this->getAlias())['education_grade_id'];
                 }
                 if (array_key_exists('institution_class_id', $request->getData($this->getAlias()))) {
-                    $requestClass = $request->getData($this->getAlias())['institution_class_id'];
+                    //$requestClass = $request->getData($this->getAlias())['institution_class_id'];
+                    $queryParams['class'] = $request->getData($this->getAlias())['institution_class_id'];
                 }
                 if (array_key_exists('education_subject_id', $request->getData($this->getAlias()))) {
-                    $requestSubject = $request->getData($this->getAlias())['education_subject_id'];
+                    //$requestSubject = $request->getData($this->getAlias())['education_subject_id'];
+                    $queryParams['subject'] = $request->getData($this->getAlias())['education_subject_id'];
                 }
 
                 if (isset($data[$this->getAlias()]['textbooks_students'])) {
                     unset($data[$this->getAlias()]['textbooks_students']);
                 }
             }
+            $this->request = $request->withQueryParams($queryParams);
         }
     }
 
@@ -852,34 +880,46 @@ class InstitutionTextbooksTable extends ControllerActionTable
     public function addEditOnChangeTextbook(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        $requestClass = $request->getQuery('class');
-        $requestSubject = $request->getQuery('subject');
-        $requestPeriod = $request->getQuery('period');
-        $requestGrade = $request->getQuery('grade');
-        $requestTextbook = $request->getQuery('textbook');
+        // $requestClass = $request->getQuery('class');
+        // $requestSubject = $request->getQuery('subject');
+        // $requestPeriod = $request->getQuery('period');
+        // $requestGrade = $request->getQuery('grade');
+        // $requestTextbook = $request->getQuery('textbook');
+        $queryParams = $this->request->getQueryParams();
+        $queryParams['class'] = '-1';
+        $queryParams['subject'] = '-1';
+        $queryParams['period'] = '-1';
+        $queryParams['grade'] = '-1';
+        $queryParams['textbook'] = '-1';
 
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->getAlias(), $request->getData())) {
                 if (array_key_exists('academic_period_id', $request->getData($this->getAlias()))) {
-                    $requestPeriod = $request->getData($this->getAlias())['academic_period_id'];
+                    //$requestPeriod = $request->getData($this->getAlias())['academic_period_id'];
+                    $queryParams['period'] = $request->getData($this->getAlias())['academic_period_id'];
                 }
 
                 if (array_key_exists('education_grade_id', $request->getData($this->getAlias()))) {
-                    $requestGrade = $request->getData($this->getAlias())['education_grade_id'];
+                    //$requestGrade = $request->getData($this->getAlias())['education_grade_id'];
+                    $queryParams['grade'] = $request->getData($this->getAlias())['education_grade_id'];
                 }
                 if (array_key_exists('institution_class_id', $request->getData($this->getAlias()))) {
-                    $requestClass = $request->getData($this->getAlias())['institution_class_id'];
+                    //$requestClass = $request->getData($this->getAlias())['institution_class_id'];
+                    $queryParams['class'] = $request->getData($this->getAlias())['institution_class_id'];
                 }
                 if (array_key_exists('education_subject_id', $request->getData($this->getAlias()))) {
-                    $requestSubject = $request->getData($this->getAlias())['education_subject_id'];
+                    //$requestSubject = $request->getData($this->getAlias())['education_subject_id'];
+                    $queryParams['subject'] = $request->getData($this->getAlias())['education_subject_id'];
                 }
 
                 if (array_key_exists('textbook_id', $request->getData($this->getAlias()))) {
-                    $requestTextbook = $request->getData($this->getAlias())['textbook_id'];
+                    //$requestTextbook = $request->getData($this->getAlias())['textbook_id'];
+                    $queryParams['textbook'] = $request->getData($this->getAlias())['textbook_id'];
                 }
                 if (isset($data[$this->getAlias()]['textbooks_students'])) {
                     unset($data[$this->getAlias()]['textbooks_students']);
                 }
+                $this->request = $request->withQueryParams($queryParams); 
             }
         }
     }
@@ -942,10 +982,10 @@ class InstitutionTextbooksTable extends ControllerActionTable
                 $tableHeaders[] = ''; // for delete column
                 $Form = $event->getSubject()->Form;
                 $Form->unlockField('InstitutionTextbooks.textbooks_students');
-//                echo "<pre>"; print_r($alias);
-//                echo "<pre>"; print_r($fieldKey);
-//                echo "<pre>"; print_r($this->request);
-//die;
+                //echo "<pre>"; print_r($alias);
+                // echo "<pre>"; print_r($fieldKey);
+                // echo "<pre>"; print_r($this->request);
+                //die;
 
 
                 // refer to addEditOnAddTextbooksStudents for http post

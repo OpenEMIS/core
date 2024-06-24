@@ -54,7 +54,6 @@ class DirectoriesController extends AppController
         $this->loadModel('FieldOption.Nationalities');
         $this->loadModel('Directory.Directories');
         $this->loadModel('Area.AreaAdministratives');
-        // $this->loadModel('Directory.AreaAdministratives');
         $this->attachAngularModules();
         $this->attachAngularModulesForDirectory();
         //POCOR-5672 it is used for removing csrf token mismatch condition in directory external search
@@ -81,6 +80,12 @@ class DirectoriesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentFees']);
     }
+
+    public function Histories()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserHistories']);
+    }
+    
     public function StaffEmployments()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Employments']);
@@ -249,7 +254,7 @@ class DirectoriesController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentRisks']);
     }
 
-    public function StudentAssociations()
+     public function StudentAssociations()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.InstitutionAssociationStudent']);
     }
@@ -355,6 +360,10 @@ class DirectoriesController extends AppController
         //POCOR-7231 :: Start
         $requestDataa = base64_decode($this->request->getQuery('queryString'));
         $requestDataa = json_decode($requestDataa, true);
+        if(empty($requestDataa) && isset($this->request->getParam('pass')[0])) {
+            $requestDataa = base64_decode($this->request->getParam('pass')[0]);
+            $requestDataa = json_decode($requestDataa, true);
+        }
         $UsersTable = TableRegistry::get('User.Users');
         $InstitutionTable = TableRegistry::get('Institution.Institutions');
         $UserData = $UsersTable->find('all',['conditions'=>['id'=>$requestDataa['student_id']]])->first();
@@ -439,8 +448,6 @@ class DirectoriesController extends AppController
 
     public function StaffAttendances()
     {
-        //$session = $this->request->session();
-        //$staffId = $session->read('Staff.Staff.id');
         $paramsQuery = $this->ControllerAction->getQueryString();
         $staffId = $paramsQuery['staff_id'];
         $tabElements = $this->getCareerTabElements();
@@ -455,10 +462,10 @@ class DirectoriesController extends AppController
 
         // Start POCOR-5188
         $manualTable = TableRegistry::get('Manuals');
-        $ManualContent = $manualTable->find()->select(['url'])->where([
-                    $manualTable->aliasField('function') => 'Attendances',
-                    $manualTable->aliasField('module') => 'Directory',
-                    $manualTable->aliasField('category') => 'Staff - Career',
+        $ManualContent =   $manualTable->find()->select(['url'])->where([
+                $manualTable->aliasField('function') => 'Attendances',
+                $manualTable->aliasField('module') => 'Directory',
+                $manualTable->aliasField('category') => 'Staff - Career',
                 ])->first();
 
         if (!empty($ManualContent['url'])) {
@@ -597,16 +604,8 @@ class DirectoriesController extends AppController
 
             if (!empty($id)) {
                 $entity = $this->Directories->get($id);
-                $name = $entity->name;
                 $session->write('Directory.Directories.id', $entity->id);//POCOR-7485 add
-                $session->write('Directory.Directories.name', $name);
-                $session->write('Staff.Staff.id', $id);
-                $session->write('Staff.Staff.name', $name);
-                $session->write('Student.Students.id', $id);
-                $session->write('Student.Students.name', $name);
-                $session->write('Guardian.Guardians.id', $id);
-                $session->write('Guardian.Guardians.name', $name);
-
+                $name = $entity->name;
                 $header = $action == 'StudentResults' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
                 $this->Navigation->addCrumb($name, ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories', 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
             }
@@ -653,61 +652,29 @@ class DirectoriesController extends AppController
          */
         $session = $this->request->getSession();
         if ($session->check('Directory.Directories.id') || $session->check('Directory.Directories.primaryKey.id')) {
-            // POCOR-8014-n:start
+            $header = '';
+            $userId = $session->read('Directory.Directories.id');
+            $userId = $session->read('Directory.Directories.primaryKey.id');
 
-            $action = $this->request->getParam('action');
-            $id = 0;
-            if (isset($this->request->getParam('pass')[0]) && ($action == 'view' || $action == 'edit')) {
-                $id = $this->ControllerAction->paramsDecode($this->request->getParam('pass')[0])['id'];
-            } else if (isset($this->request->getParam('pass')[1]) && ($this->request->getParam('pass')[0] == 'view' || $this->request->getParam('pass')[0] == 'edit')) {
-                $id = $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1])['id'];
-            } else if (isset($this->request->getQuery()['queryString']) && $action == 'StudentGuardians') {
-                $id = $this->getQueryString('id');
-            } else if ($session->check('Directory.Directories.id')) {
-                $id = $session->read('Directory.Directories.id');
-            }
-
-            if (is_numeric($id)) {
-                $entity = $this->Directories->get($id);
-                $name = $entity->name;
-                $session->write('Directory.Directories.id', $id);
-                $session->write('Directory.Directories.name', $name);
-                $session->write('Staff.Staff.id', $id);
-                $session->write('Staff.Staff.name', $name);
-                $session->write('Student.Students.id', $id);
-                $session->write('Student.Students.name', $name);
-                $session->write('Guardian.Guardians.id', $id);
-                $session->write('Guardian.Guardians.name', $name);
-            }
-            // POCOR-8014-n:end
-            if ($session->check('Directory.Directories.name')) {
+            if (isset($this->request->getParam('pass')[0]) && ($this->request->getParam('pass')[0] == 'view' || $this->request->getParam('pass')[0] == 'edit')) {
+                $param = $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1]);
+                $id = $param['id'];
+                if(isset($param['staff_id']) && !empty($param['staff_id'])) {
+                    $id = $param['staff_id'];
+                } else if(isset($param['security_user_id']) && !empty($param['security_user_id'])) {
+                    $id = $param['security_user_id'];
+                }
+                $Directories = TableRegistry::getTableLocator()->get('Directory.Directories');
+                $entity = $Directories->get($id);
+                $header = $entity->name;
+            } else if ($session->check('Directory.Directories.name')) {
                 $header = $session->read('Directory.Directories.name');
+            } 
+
+            $alias =$this->request->getParam('action');//$model->getAlias();
+            if($alias == 'ComponentAction') {
+                $alias = $model->getAlias();
             }
-            
-            // $header = '';
-            // $userId = $session->read('Directory.Directories.id');
-            // $userId = $session->read('Directory.Directories.primaryKey.id');
-
-            // if (isset($this->request->getParam('pass')[0]) && ($this->request->getParam('pass')[0] == 'view' || $this->request->getParam('pass')[0] == 'edit')) {
-            //     $param = $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1]);
-            //     $id = $param['id'];
-            //     if(isset($param['staff_id']) && !empty($param['staff_id'])) {
-            //         $id = $param['staff_id'];
-            //     } else if(isset($param['security_user_id']) && !empty($param['security_user_id'])) {
-            //         $id = $param['security_user_id'];
-            //     }
-            //     $Directories = TableRegistry::getTableLocator()->get('Directory.Directories');
-            //     $entity = $Directories->get($id);
-            //     $header = $entity->name;
-            // } else if ($session->check('Directory.Directories.name')) {
-            //     $header = $session->read('Directory.Directories.name');
-            // } 
-
-            //$alias =$this->request->getParam('action');//$model->getAlias();
-            $alias = $model->alias;
-            // if($alias == 'ComponentAction') {
-            //     $alias = $model->getAlias();
-            // }
             //POCOR-5890 starts
             if($alias == 'HealthImmunizations'){
                 $alias = __('Vaccinations');
@@ -835,6 +802,16 @@ class DirectoriesController extends AppController
                 $this->Navigation->addCrumb($model->getHeader($model->getAlias()));
                 $header = __('Users') . ' - ' . $model->getHeader($model->getAlias());
                 $this->set('contentHeader', $header);
+            } else if($model->getAlias() == 'UserHistories') {
+                $userId = $this->getQueryString('security_user_id');
+                $Directories = TableRegistry::getTableLocator()->get('Directory.Directories');
+                $entity = $Directories->get($userId);
+                $header = $entity->name;
+                $pass = $this->ControllerAction->paramsEncode(['id' => $userId]);
+                $this->Navigation->addCrumb($header,  ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories', 'view', $pass]);
+                $this->Navigation->addCrumb('History');
+                $header = $header . ' - History';
+                $this->set('contentHeader', $header);
             } else if ($model->getAlias() != 'Directories') {
                 $this->Alert->warning('general.notExists');
                 $event->stopPropagation();
@@ -846,31 +823,15 @@ class DirectoriesController extends AppController
     public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
     {
         $session = $this->request->getSession();
-        //POCOR-8014-n start
-        $action = $this->request->getParam('action');
-        $id = 0;
-        if (isset($this->request->getQuery()['queryString']) && $action == 'StudentGuardians') {
-            $id = $this->getQueryString('id');
-        }
-
-        if (!$id) {
-            if ($session->check('Directory.Directories.id')) {
-                $id = $session->read('Directory.Directories.id');
-            }
-        }//POCOR-8014-n stop
-
         if ($model->getAlias() != 'Directories') {
             if ($session->check('Directory.Directories.id') || $session->check('Directory.Directories.primaryKey.id')) {
-                //$userId = $session->read('Directory.Directories.id');
-                $userId = $id;
-                $guardianId = $id;
-                $studentId = $id;
+                $userId = $session->read('Directory.Directories.id');
+                if(empty($userId)){
+                    $userId = $session->read('Directory.Directories.primaryKey.id');
+                }
 
-                // if(empty($userId)){
-                //     $userId = $session->read('Directory.Directories.primaryKey.id');
-                // }
-                //$guardianId = $session->read('Guardian.Guardians.id');
-                //$studentId = $session->read('Student.Students.id');
+                $guardianId = $session->read('Guardian.Guardians.id');
+                $studentId = $session->read('Student.Students.id');
                 $isGuardian = $session->read('Directory.Directories.is_guardian');
                 $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
                 $guardianToStudent = $session->read('Directory.Directories.guardianToStudent');
@@ -898,6 +859,8 @@ class DirectoriesController extends AppController
                         $query->where([$model->aliasField('staff_id') => $userId]);
                     }
                 }
+            } else if ($model->getAlias() == 'UserHistories') {
+
             } else {
                 $this->Alert->warning('general.noData');
                 $event->stopPropagation();
@@ -928,7 +891,7 @@ class DirectoriesController extends AppController
     public function getUserTabElements($options = [])
     {
         if (array_key_exists('queryString', $this->request->getQuery())) { //to filter if the URL already contain querystring
-            $id = $this->ControllerAction->getQueryString('security_user_id');
+            $id = $this->getQueryString('security_user_id');
         }
         $plugin = $this->getPlugin();
         $name = $this->getName();    
@@ -1281,20 +1244,10 @@ class DirectoriesController extends AppController
         $nationalities = TableRegistry::get('FieldOption.Nationalities');
         $nationalities_result = $nationalities
             ->find()
-            ->leftJoin(['IdentityTypes' => 'identity_types'],
-                [$nationalities->aliasField('identity_type_id') . ' = IdentityTypes.id'])
-            ->select(['id' => $nationalities->aliasField('id'),
-                'name' => $nationalities->aliasField('name'),
-                'identity_type_id' => $nationalities->aliasField('identity_type_id'),
-                'identity_type_name' => 'IdentityTypes.name'])
+            ->select(['id','name'])
             ->toArray();
-        foreach ($nationalities_result as $result) {
-            $result_array[] = array(
-                    "id" => $result['id'],
-                    "name" => __($result['name']),
-                    "identity_type_id" => $result['identity_type_id'],
-                    "identity_type_name" => __($result['identity_type_name']),
-                );
+        foreach($nationalities_result AS $result){
+            $result_array[] = array("id" => $result['id'], "name"=> $result['name']);
         }
         echo json_encode($result_array);die;
     }
@@ -1370,7 +1323,7 @@ class DirectoriesController extends AppController
             return true;
         }
     }
-    //POCOR-7072 starts
+
     public function directoryInternalSearch()
     {
         $Directories = TableRegistry::get('Directory.Directories');
@@ -1930,7 +1883,7 @@ class DirectoriesController extends AppController
             }
         }
         return $custom_field;
-    }//POCOR-7072 ends
+    }
 
     public function getStudentCustomData($student_id=null){
         $studentCustomFieldValues = TableRegistry::get('StudentCustomField.StudentCustomFieldValues');
@@ -1964,7 +1917,7 @@ class DirectoriesController extends AppController
                 ])
                 ->where([
                 $studentCustomFieldValues->aliasField('student_id') => $student_id,
-                ])->enableHydration(false)->toArray();
+                ])->hydrate(false)->toArray();
         $custom_field = array();
         $count = 0;
         if(!empty($studentCustomData)){
@@ -2146,82 +2099,19 @@ class DirectoriesController extends AppController
 
     public function directoryExternalSearch()
     {
-        //$this->log(__FUNCTION__, 'debug');
         $this->autoRender = false;
-        
-        $requestInput = $this->request->input('json_decode', true);
-        $params = $requestInput['params'];
-        $firstName = (array_key_exists('first_name', $params)) ? $params['first_name'] : null;
-        $lastName = (array_key_exists('last_name', $params)) ? $params['last_name'] : null;
-        $openemisNo = (array_key_exists('openemis_no', $params)) ? $params['openemis_no'] : null;
-        $identityNumber = (array_key_exists('identity_number', $params)) ? $params['identity_number'] : null;
-        $nationalityID = (array_key_exists('nationality_id', $params)) ? $params['nationality_id'] : null;
-        $dateOfBirth = (array_key_exists('date_of_birth', $params) && !empty($params['date_of_birth'])) ? date('Y-m-d', strtotime($params['date_of_birth'])) : null;
-        $limit = (array_key_exists('limit', $params)) ? $params['limit'] : 10;
-        $page = (array_key_exists('page', $params)) ? $params['page'] : 1;
-        $id = (array_key_exists('id', $params)) ? $params['id'] : '';
-        $search_type = (array_key_exists('search_type', $params)) ? $params['search_type'] : '';
-        //POCOR-5672 starts new changes searching by identity number
-
         $ExternalAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
-        $attributesQuery = $ExternalAttributes
+        $attributes = $ExternalAttributes
             ->find('list', [
                 'keyField' => 'attribute_field',
                 'valueField' => 'value'
             ])
             ->innerJoin(['ConfigItems' => 'config_items'], [
-                'ConfigItems.type' => 'External Data Source - Identity',
-                $ExternalAttributes->aliasField('external_data_source_type') . ' = ConfigItems.label'
+                'ConfigItems.code' => 'external_data_source_type',
+                $ExternalAttributes->aliasField('external_data_source_type').' = ConfigItems.value'
             ])
-            ->innerJoin(['Nationalities' => 'nationalities'],[
-                'Nationalities.id = ' . $nationalityID,
-                'Nationalities.external_validation = ConfigItems.id'
-            ]);
+            ->toArray();
 
-        $attributes = $attributesQuery->toArray();
-
-        $noData = json_encode(['data' => [], 'total' => 0]);
-        //$this->log(__FUNCTION__ . ': search_type', 'debug');
-        //$this->log($search_type, 'debug');
-        if ($search_type !== 'UNHCR') {
-            try {
-                $response = $this->getTokenedData($attributes, $identityNumber, $noData, $id);
-            } catch (\Exception $exception) {
-                die($exception->getMessage());
-            }
-        } else {
-            try {
-                $response = $this->getUNHCRData($attributes, $noData, $identityNumber, $dateOfBirth);
-            } catch (\Exception $exception) {
-                die($exception->getMessage());
-            }
-        }
-        return $response;
-    }
-
-    private function getTokenedData($attributes, $identityNumber, $noData, $id = null)
-    {
-        if (!empty($identityNumber)) {
-            $fieldMapping = [
-                '{page}' => $page,
-                '{limit}' => $limit,
-                '{first_name}' => '',
-                '{last_name}' => '',
-                '{date_of_birth}' => '',
-                '{identity_number}' => $identityNumber
-            ];//POCOR-5672 ends
-        } else {
-            $fieldMapping = [
-                '{page}' => $page,
-                '{limit}' => $limit,
-                '{first_name}' => $firstName,
-                '{last_name}' => $lastName,
-                '{date_of_birth}' => $dateOfBirth,
-                '{identity_number}' => $identityNumber
-            ];
-        }
-
-        $ExternalAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
         $clientId = $attributes['client_id'];
         $scope = $attributes['scope'];
         $tokenUri = $attributes['token_uri'];
@@ -2233,53 +2123,77 @@ class DirectoriesController extends AppController
             'assertion' => $token
         ];
 
-        $http = new Client();
-        $response = $http->post($tokenUri, $data);
-        $decodedResponse = $response->body('json_decode');
+        $requestData = $this->request->input('json_decode', true);
+        $requestData = $requestData['params'];
+        $firstName = (array_key_exists('first_name', $requestData))? $requestData['first_name']: null;
+        $lastName = (array_key_exists('last_name', $requestData))? $requestData['last_name']: null;
+        $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
+        $identityNumber = (array_key_exists('identity_number', $requestData))? $requestData['identity_number']: null;
+        $dateOfBirth = (array_key_exists('date_of_birth', $requestData) && !empty($requestData['date_of_birth']))? date('Y-m-d', strtotime($requestData['date_of_birth'])): null;
+        $limit = (array_key_exists('limit', $requestData)) ? $requestData['limit']: 10;
+        $page = (array_key_exists('page', $requestData)) ? $requestData['page']: 1;
+        $id = (array_key_exists('id', $requestData)) ? $requestData['id']: '';
+        //POCOR-5672 starts new changes searching by identity number
+        if(!empty($identityNumber)){
+            $fieldMapping = [
+                '{page}' => $page,
+                '{limit}' => $limit,
+                '{first_name}' => '',
+                '{last_name}' => '',
+                '{date_of_birth}' => '',
+                '{identity_number}' => $identityNumber
+            ];//POCOR-5672 ends
+        }else{
+            $fieldMapping = [
+                '{page}' => $page,
+                '{limit}' => $limit,
+                '{first_name}' => $firstName,
+                '{last_name}' => $lastName,
+                '{date_of_birth}' => $dateOfBirth,
+                '{identity_number}' => $identityNumber
+            ];
+        }
 
+        $http = new Client();
+        $response = $http->post($attributes['token_uri'], $data);
+        $noData = json_encode(['data' => [], 'total' => 0], JSON_PRETTY_PRINT);
         if ($response->isOK()) {
-            $body = $decodedResponse;
+            $body = $response->body('json_decode');
             $recordUri = $attributes['record_uri'];
+
             foreach ($fieldMapping as $key => $map) {
                 $recordUri = str_replace($key, $map, $recordUri);
             }
 
             $http = new Client([
-                'headers' => ['Authorization' => $body->token_type . ' ' . $body->access_token]
+                'headers' => ['Authorization' => $body->token_type.' '.$body->access_token]
             ]);
 
             $response = $http->get($recordUri);
-            $decodedResponse = $response->body('json_decode');
 
             if ($response->isOK()) {
-                $responseData = json_encode($decodedResponse, JSON_PRETTY_PRINT);
+                $this->response->body(json_encode($response->body('json_decode'), JSON_PRETTY_PRINT));
             } else {
-                $responseData = $noData;
+                $this->response->body($noData);
             }
         } else {
-            $responseData = $noData;
+            $this->response->body($noData);
         }
 
-        if (!empty($id)) {
-            $mydata = json_decode(new Response(['body' => json_encode($decodedResponse, JSON_PRETTY_PRINT)]));
-
+        if(!empty($id)){
+            $mydata = json_decode(new Response(['body' => $this->response->body(json_encode($response->body('json_decode'), JSON_PRETTY_PRINT))]));
             $singleUserData = [];
-            foreach ($mydata->getData() as $key => $value) {
-                if ($value->id == $id) {
+            foreach ($mydata->data as $key => $value) {
+                if($value->id == $id){
                     $singleUserData['data'][] = $value;
                 }
             }
-            $responseData = json_encode($singleUserData, JSON_PRETTY_PRINT);
+            return new Response(['body' => $this->response->body(json_encode($singleUserData, JSON_PRETTY_PRINT))]);
         }
-//        $this->log(__FUNCTION__, 'debug');
-//        $this->log($responseData, 'debug');
 
-        $response = new Response(['body' => $responseData]);
-//        $this->log($response, 'debug');
-        return $response;
+        return new Response(['body' => $this->response->body(json_encode($response->body('json_decode'), JSON_PRETTY_PRINT))]);
     }
 
-    // POCOR-8012-n
     private function getUNHCRData($attributes, $noData, $identityNumber, $dateOfBirth)
     {
         $application_id = $attributes['application_id'];
@@ -2354,31 +2268,18 @@ class DirectoriesController extends AppController
         //$this->log($response, 'debug');
         return $response;
     }
-    //POCOR-5673 starts
 
     public function getContactType()
     {
         $contact_types = TableRegistry::get('User.ContactTypes');
-        $contact_options = TableRegistry::get('User.ContactOptions');
-
         $contact_types_result = $contact_types
             ->find()
-            ->innerJoin([$contact_options->getAlias() => $contact_options->getTable()],
-                $contact_options->aliasField('id = ') . $contact_types->aliasField('contact_option_id'))
-            ->select(['id' => $contact_types->aliasField('id'),
-                'name' => $contact_types->aliasField('name'),
-                'option' => $contact_options->aliasField('name'),
-            ])
-            ->orderAsc($contact_options->aliasField('order'))
-            ->orderAsc($contact_types->aliasField('order'))
+            ->select(['id','name'])
             ->toArray();
-
-        foreach ($contact_types_result as $result) {
-            $result_array[] = array("id" => $result['id'], "name" => $result['option'] . ' (' . $result['name'] . ')');
+        foreach($contact_types_result AS $result){
+            $result_array[] = array("id" => $result['id'], "name"=> $result['name']);
         }
-
-        echo json_encode($result_array);
-        die;
+        echo json_encode($result_array);die;
     }
 
     //POCOR-5673 starts

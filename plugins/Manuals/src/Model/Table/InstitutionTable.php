@@ -1,5 +1,5 @@
 <?php
-namespace Manual\Model\Table;
+namespace Manuals\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
@@ -10,21 +10,22 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\ORM\ResultSet;
+use Cake\Utility\Inflector;
 
-class ReportsTable extends ControllerActionTable
+class InstitutionTable extends ControllerActionTable
 {
-    // private $defaultMarkType;
-
     public function initialize(array $config): void
     {
         $this->setTable('manuals');
         parent::initialize($config);
+
         $this->toggle('add', false);
         // $this->toggle('search', false);
         $this->toggle('remove', false);
         $this->toggle('reorder', false);
+
         $this->removeBehavior('Reorder');
-    } 
+    }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -40,7 +41,7 @@ class ReportsTable extends ControllerActionTable
             $this->aliasField('module'),
             $this->aliasField('category'),
         ])
-        ->where([$this->aliasField('module') => 'Reports'])
+        ->where([$this->aliasField('module') => 'Institutions'])
         ->order([
             $this->aliasField('order')
         ])
@@ -91,11 +92,11 @@ class ReportsTable extends ControllerActionTable
         $this->field('visible', ['visible' => false]);   
         $this->field('controller', ['visible' => false]);   
         $this->field('module', ['visible' => false]);   
-        $this->field('parent_id', ['visible' => false]);   
+        $this->field('category', ['visible' => true]);   
+        $this->field('parent_id', ['visible' => false]);           
 
-        $this->setFieldOrder(['category','function', 'url']);
+        $this->setFieldOrder(['category','function','url']);
     }
-
 
     public function onGetUrl(Event $event, Entity $entity)
     {
@@ -105,6 +106,12 @@ class ReportsTable extends ControllerActionTable
         }else{
             return '';
         }
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $header = __(Inflector::humanize(Inflector::underscore($this->getAlias())));
+        $this->controller->set('contentHeader', $header);
     }
 
 }

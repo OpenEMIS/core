@@ -135,4 +135,24 @@ class StudentAccountTable extends AppTable {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    //function added to  redirect to view after successfully edit account details
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        $errors = $entity->getErrors();
+        if (empty($errors)) {
+            $this->Alert->success('general.edit.success', ['reset' => true]);
+            $session = $this->request->getSession();
+            $session->write('successAlert', 'yes');
+            $action = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentAccount','view',$this->request->getParam('pass.1')];
+            return $this->controller->redirect($action);
+        } 
+    }
+    public function viewBeforeAction() {    
+        $session = $this->request->getSession();
+        if($session->read('successAlert') === 'yes' && empty($session->read('_alert'))){
+            $session->delete('successAlert');
+            $this->Alert->success('general.edit.success', ['reset' => true]);
+        }
+    }
 }

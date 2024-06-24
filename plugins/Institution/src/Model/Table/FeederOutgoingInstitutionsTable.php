@@ -30,7 +30,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         $this->toggle('edit','delete', false);
 
         $this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['FeederOutgoingInstitutions' =>['academic_period_id','education_grade_id','feeder_institution_id', 'id']
+            'appliedAction' => ['FeederOutgoingInstitutions' =>['academic_period_id','education_grade_id','feeder_institution_id', 'institution_id']
             ]
         ]);
     }
@@ -38,6 +38,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         $validator
             ->requirePresence('area_education_id')
             ->add('institution_id', 'ruleUnique', [

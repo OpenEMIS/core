@@ -1,17 +1,17 @@
 <?php
-namespace Manual\Model\Table;
+namespace Manuals\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\ORM\ResultSet;
 
-class PersonalTable extends ControllerActionTable
+class DirectoryTable extends ControllerActionTable
 {
     // private $defaultMarkType;
 
@@ -40,7 +40,7 @@ class PersonalTable extends ControllerActionTable
             $this->aliasField('module'),
             $this->aliasField('category'),
         ])
-        ->where([$this->aliasField('module') => 'Personal'])
+        ->where([$this->aliasField('module') => 'Directory'])
         ->order([
             $this->aliasField('order')
         ])

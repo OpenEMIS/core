@@ -22,8 +22,11 @@ class UserHistoriesController extends PageController
     public function beforeFilter(Event $event)
     {
         $session = $this->request->getSession();
-        $institutionId = $this->getInstitutionID();
-        $institutionName = $session->read('Institution.Institutions.name');
+        //$institutionId = $this->getInstitutionID();
+        //$institutionName = $session->read('Institution.Institutions.name');
+        $institutionId = $this->getQueryString('institution_id');
+        $activeInstitution = $this->Institutions->get($institutionId);
+        $institutionName = $activeInstitution->name;
         $userId = $this->paramsDecode($this->request->getQuery('queryString'))['security_user_id'];
         $userName = $this->Users->get($userId)->name;
         $userType = $this->paramsDecode($this->request->getQuery('queryString'))['user_type'];
