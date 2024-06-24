@@ -6,6 +6,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Services\MealService;
 use App\Http\Requests\MealStudentListRequest;
+use App\Http\Requests\StudentMealImportRequest;
+use App\Http\Requests\StudentMealExportRequest;
+use App\Http\Requests\StudentMealImportTemplateRequest;
+use App\Exports\StudentMealExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MealController extends Controller
 {
@@ -967,4 +972,80 @@ class MealController extends Controller
         }
     }
     //For POCOR-8078 End...
+
+    //For POCOR-8348 Start...
+    public function getStudentMealImport(StudentMealImportRequest $request)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->mealService->getStudentMealImport($params);
+            if(!is_array($data)){
+                if(isset($data) && $data == 1){
+                    return $this->sendErrorResponse('Invalid file extension.');
+                } elseif(isset($data) && $data == 2){
+                    return $this->sendErrorResponse('Header is not present.');
+                } elseif(isset($data) && $data == 3){
+                    return $this->sendErrorResponse('Imported file is empty.');
+                } elseif(isset($data) && $data == 4){
+                    return $this->sendErrorResponse('Not a valid heading.');
+                } elseif(isset($data) && $data == 5){
+                    return $this->sendErrorResponse('Institution is not linked with Institution Class.');
+                } elseif(isset($data) && $data == 6){
+                    return $this->sendErrorResponse('No current Academic Period is set in DB.');
+                } else {
+                    return $this->sendErrorResponse('Student meals not imported.');
+                }
+            } else {
+                return $this->sendSuccessResponse("Student meals imported.", $data);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to import students meals in DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to import students meals in DB.');
+        }
+    }
+
+
+    public function getStudentMealExport(StudentMealExportRequest $request)
+    {
+        try {
+            $params = $request->all();
+            $str = time();
+            $fileName = 'StudentMeals_'.$str.'.xlsx';
+            return Excel::download(new StudentMealExport($params), $fileName);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to exported students meals from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to exported students meals from DB.');
+        }
+    }
+
+
+    public function getStudentMealImportTemplate(StudentMealImportTemplateRequest $request)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->mealService->getStudentMealImportTemplate($params);
+
+            return $this->sendSuccessResponse("Student meal import template data found.", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch student meals import template data from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch student meals import template data from DB.');
+        }
+    }
+
+    //For POCOR-8348 End...
 }

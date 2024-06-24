@@ -99,7 +99,7 @@ class ControllerActionHelper extends Helper
         // cancel button
         $backBtn = $this->_View->get('backButton');
         $buttons[] = [
-            'name' => '<i class="fa fa-close"></i> ' . __('Cancel'),
+            'name' =>  __('Cancel'),
             'attr' => ['class' => 'btn btn-outline btn-cancel', 'escape' => false],
             'url' => !is_null($backBtn) ? $backBtn['url'] : []
         ];

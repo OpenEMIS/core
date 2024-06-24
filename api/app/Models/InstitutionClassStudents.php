@@ -9,6 +9,8 @@ class InstitutionClassStudents extends Model
 {
     use HasFactory;
 
+    protected $primaryKey = 'id';
+    public $incrementing = false;
     public $timestamps = false;
     protected $table = "institution_class_students";
 

@@ -473,5 +473,17 @@ Route::group(
         Route::get('/security-roles/{roleId}', 'ReportCardController@getSecurityRoleData');
         Route::get('/reportcards/{reportcardId}', 'ReportCardController@getReportCardData');
         //POCOR-8270 end...
+
+
+
+        //POCOR-8438 start...
+        Route::post('/institutions/students/meals/import', 'MealController@getStudentMealImport');
+        Route::get('/institutions/students/meals/export', 'MealController@getStudentMealExport');
+        Route::get('/institutions/students/meals/import/template', 'MealController@getStudentMealImportTemplate');
+        //POCOR-8438 end...
+        
+        //POCOR-8292 start...
+        Route::get('/assessments/{assessment_id}/periods', 'AssessmentController@getAssessmentViaAcademicTerm');
+        //POCOR-8292 end...
     }
 );
