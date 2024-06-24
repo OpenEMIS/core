@@ -1,3 +1,20 @@
+### [4.0.1] - 2024-06-24
+- Implemented: Develop a PHP file to display the server IP address
+- Implemented: Develop OpenEMIS Core Assessment v4 APIs
+- Implemented: Develop APIs for meals import and export
+- Bug Fixed: Report>Staff: When selecting Area Level which is not All Area Level, the report is stuck in progress
+- Bug Fixed: Institutions>General>Map: User is able to delete institution while deleting map
+- Bug Fixed: Institutions>Students(Automation): Promote,Graduate, Repeat should work
+- Bug Fixed: Institutions>Students>Export: Export is giving blank page
+- Bug Fixed: Institutions>Students>General: Showing Avory Primary School instead of the student itself
+- Bug Fixed: Institutions>Performance>Competencies: User should be able to edit
+- Bug Fixed: Personal>History tab(Automation): It should collapse the left menu
+- Bug Fixed: Report>Examination>Add(Automation): Going blank page
+- Bug Fixed: Administration(Automation): User is getting blank page and left menu not collapsed
+- Bug Fixed: Institutions>Students(Automation): There is no tabs to select from the top menu
+- Bug Fixed: Institutions>Students>Promote Button: Next class is not showing in core
+- Bug Fixed: Report>Survey>Add(Automation): Getting blank page
+
 ### [4.0.0] - 2024-06-18
 - Bug Fixed: Update existing APIv4 for Student attendance Toolbar functions
 - Bug Fixed: Update existing APIv4 for Student Assessment Toolbar functions
