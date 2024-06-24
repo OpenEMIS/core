@@ -33,7 +33,7 @@ class CustomFieldValuesTable extends AppTable
 			->add('text_value', 'ruleUnique', [
 		        'rule' => function ($value, $context) {
 		            // POCOR-8202.Check if uniqueness is required
-                    // POCOR-8231 fixed
+                    // POCOR-8332 fixed
 		            $unique = isset($context['data']['unique']) ? (bool)$context['data']['unique'] : false;
 		            // If uniqueness is not required (unique = 0), return true
 		            if (!$unique) {
@@ -83,7 +83,7 @@ class CustomFieldValuesTable extends AppTable
 			->add('number_value', 'ruleUnique', [
 			    'rule' => function ($value, $context) {
 			        // Check if uniqueness is required
-                    // POCOR-8231 fixed
+                    // POCOR-8332 fixed
 			        $unique = isset($context['data']['unique']) ? (bool) $context['data']['unique'] : false;
 
 			        // If uniqueness is not required, return true
