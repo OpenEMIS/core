@@ -34,11 +34,11 @@ function SgTreeController($scope, $window, SgTreeSvc) {
             })
             .then(function(res) {
                 $scope.textConfig = res;
-                console.log('document ready res', res);
+                // console.log('document ready res', res);
             }, function (error) {
                 console.log(error);
             });
-        console.log('document ready');
+        // console.log('document ready');
     });
 
     function triggerLoad(refreshList) {
