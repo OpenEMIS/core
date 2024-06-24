@@ -481,9 +481,10 @@ class AttachmentsTable extends ControllerActionTable
 
             $buttons['download']['label'] = '<i class="kd-download"></i>' . __('Download');
             $buttons['download']['attr'] = $indexAttr;
-            $buttons['download']['url']['action'] = $this->alias;
+            $buttons['download']['url']['action'] = $this->getAlias();
             $buttons['download']['url'][0] = 'download';
-            $buttons['download']['url'][1] = $this->paramsEncode(['id' => $entity->id, 'security_user_id' => $entity->security_user_id]);
+            // $buttons['download']['url'][1] = $this->paramsEncode(['id' => $entity->id, 'security_user_id' => $entity->security_user_id]);
+            $buttons['download']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
         }
 
         return $buttons;
