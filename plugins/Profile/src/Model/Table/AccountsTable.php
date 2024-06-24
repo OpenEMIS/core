@@ -8,19 +8,24 @@ use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
-
+use Cake\Http\ServerRequest;
+use Cake\ORM\Locator\TableLocator;
 class AccountsTable extends AppTable
 {
     private $targetField = null;
 
-	public function initialize(array $config)
+	public function initialize(array $config): void
     {
-		$this->addBehavior('User.Account');
+        
+        $this->setTable('security_users');
 		parent::initialize($config);
+        $this->addBehavior('User.Account');
+        $this->addBehavior('User.UserTab');
 	}
 
-	public function validationDefault(Validator $validator)
+	/*public function validationDefault(Validator $validator): Validator
     {
+
 		$validator = parent::validationDefault($validator);
 		return $validator
             ->add('current_password', [
@@ -28,9 +33,8 @@ class AccountsTable extends AppTable
                     'rule' => ['checkUserPassword', $this],
                     'provider' => 'table',
                 ]
-            ])
-        ;
-	}
+            ]);
+	}*/
 
     public function editAfterAction(Event $event, Entity $entity)
     {
@@ -45,13 +49,15 @@ class AccountsTable extends AppTable
     */
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
     {
-        
-        $userActivities = TableRegistry::get('user_activities');
-        $userTable = TableRegistry::get('security_users');
+        $userActivities = TableRegistry::get('User.UserActivities');
+        $tableLocator = new TableLocator();
+        $userTable = $tableLocator->get('security_users');
+        //$userTable = TableRegistry::get('security_users');
         $user = $this->Auth->user();
         $userId = $user['id'];
         $currentTimeZone = date("Y-m-d H:i:s");
-        $newpassword = $entity->extractOriginalChanged($entity->visibleProperties());
+
+        $newpassword = $entity->extractOriginalChanged($entity->getVisible());
         $setPassword =  $newpassword['password'];
 
         $securityData = $userTable->find()->where([$userTable->aliasField('id')=>$userId])->first()->username;
@@ -79,6 +85,31 @@ class AccountsTable extends AppTable
                 ];
         $entity = $userActivities->newEntity($data);
         $save =  $userActivities->save($entity);
+        //POCOR-8127 starts
+        if($save){
+            $session = $this->request->getSession();
+            //write session for API use
+            $username = $this->request->getData('Accounts')['username'];
+            $password = $this->request->getData('Accounts')['password'];
+            $session->write('auth_username', $username);
+            $session->write('auth_password', base64_encode($password));        
+        }//POCOR-8127 ends
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'username') {
+            return __('Username');
+        }else if ($field == 'last_login') {
+            return __('Last Login');
+        }else if ($field == 'roles') {
+            return __('Roles');
+        }else if ($field == 'current_password') {
+            return __('Current Password');
+        }
+        else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
 }

@@ -131,7 +131,7 @@ function InstitutionsResultsController($q,
 
             var promise;
 
-            $scope.editPermission = result[0].is_editable;
+            // $scope.editPermission = result[0].is_editable;
             $scope.subjects = result;
 
             promise = InstitutionsResultsSvc.getStudentStatusId("CURRENT");
@@ -143,7 +143,7 @@ function InstitutionsResultsController($q,
         function handleSuccessGetStudentStatusId(result) {
             // console.log('handleSuccessGetStudentStatusId');
             // console.log(JSON.stringify(result));
-            $scope.enrolledStatus = result.data[0].id;
+            // $scope.enrolledStatus = result.data[0].id;
             if (angular.isObject($scope.subjects) && $scope.subjects.length > 0) {
                 var subject = $scope.subjects[0];
                 $scope.initGrid(subject);
@@ -411,15 +411,15 @@ function InstitutionsResultsController($q,
         function handleGetSubjectEditPermissionSetPeriods(result) {
             // console.log('handleGetSubjectEditPermissionSetPeriods');
             // console.log(JSON.stringify(result));
-            var promise;
-            $scope.editPermissionForSelectedSubject = result;
-            promise = InstitutionsResultsSvc.getPeriods(
-                $scope.assessment_id,
-                $scope.selectedAcademicTerm)
-            return promise.then(function (result) {
+            // var promise;
+            // $scope.editPermissionForSelectedSubject = result;
+            // promise = InstitutionsResultsSvc.getPeriods(
+            //     $scope.assessment_id,
+            //     $scope.selectedAcademicTerm)
+            // return promise.then(function (result) {
 
-                return result;
-            });
+            //     return result;
+            // });
         }
 
         function handleGetPeriodsSetCopyGradingTypes(result) {

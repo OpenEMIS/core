@@ -23,7 +23,7 @@ class SpecialNeedsBehavior extends Behavior
         'Directories' => 'Directory.Directories.name'
     ];
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 100];
@@ -34,17 +34,17 @@ class SpecialNeedsBehavior extends Behavior
     {
         $model = $this->_table;
         $controller = $this->_table->controller;
-        $controllerName = $controller->name;
+        $controllerName = $controller->getName();
 
         // Breadcrumbs
         $navigation = $model->Navigation;
-        $oldTitle = $model->getHeader($model->alias());
-        $newTitle = $this->_tabFeatures[$model->alias()];
+        $oldTitle = $model->getHeader($model->getAlias());
+        $newTitle = $this->_tabFeatures[$model->getAlias()];
         $newTitle = $model->getHeader($newTitle);
         $navigation->substituteCrumb($oldTitle, $newTitle);
 
         // Header
-        $session = $model->request->session();
+        $session = $model->request->getSession();
         $sessionKey = $this->_sessionReadKeys[$controllerName];
         $username = $session->read($sessionKey);
         $postfix = $newTitle;
@@ -55,18 +55,26 @@ class SpecialNeedsBehavior extends Behavior
         $tabElements = $this->getSpecialNeedsTab();
         $tabElements = $controller->TabPermission->checkTabPermission($tabElements);
         $controller->set('tabElements', $tabElements);
-        $controller->set('selectedAction', $model->alias());
+        $controller->set('selectedAction', $model->getAlias());
     }
 
     public function getSpecialNeedsTab()
     {
-        $controller = $this->_table->controller;
-        $plugin = $controller->plugin;
-        $controllerName = $controller->name;
+        $model = $this->_table;
+        $controller = $model->controller;
+        $plugin = $controller->getPlugin();
+        $controllerName = $controller->getName();
+        /*$userID = $model->getQueryString();
+        $param = ['user_id' => $userID];
+        $queryString = $model->paramsEncode($param);*/
 
+        $queryString = $model->getQueryString();
+        $encodedQueryString = $model->paramsEncode($queryString);
         $urlBase = [
             'plugin' => $plugin,
-            'controller' => $controllerName
+            'controller' => $controllerName,
+            '0' => 'index',
+            '1' => $encodedQueryString
         ];
 
         $tabElements = [];

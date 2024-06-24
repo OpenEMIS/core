@@ -26,7 +26,7 @@ function DirectoryaddguardianSvc($http, $q, $window, KdOrmSvc, AlertSvc, UtilsSv
         getCspdData: getCspdData,
     };
     return service;
-
+    
     function init(baseUrl){
         KdOrmSvc.base(baseUrl);
         KdOrmSvc.controllerAction('Directory');
@@ -211,6 +211,7 @@ function DirectoryaddguardianSvc($http, $q, $window, KdOrmSvc, AlertSvc, UtilsSv
             'nationality_id' : nationality_id,
             'identity_type_id' : identity_type_id
         };
+
         $http.post(url, {params: params})
             .then(function (response)
             {
@@ -243,5 +244,5 @@ function DirectoryaddguardianSvc($http, $q, $window, KdOrmSvc, AlertSvc, UtilsSv
               });
           return deferred.promise;
       }
-
+    
 };

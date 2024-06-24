@@ -34,7 +34,7 @@ class ProfilesController extends AppController
         'StaffAttendances',
     ];
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
@@ -77,11 +77,21 @@ class ProfilesController extends AppController
         $this->set('contentHeader', 'Personal');
     }
 
+    public function StudentBehaviours()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentBehaviours']);
+    }
+
     public function Personal()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']);
     }
     // public function Profiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
+
+    public function History()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserActivities']);
+    }
 
     // CAv4
     public function StudentAbsences()
@@ -147,6 +157,16 @@ class ProfilesController extends AppController
     public function Nationalities()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']);
+    }
+
+    public function Memberships()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Memberships']);
+    }
+
+    public function Awards()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']);
     }
 
     public function Languages()
@@ -284,7 +304,7 @@ class ProfilesController extends AppController
 
     public function StudentOutcomes()
     {
-        $comment = $this->request->query['comment'];
+        $comment = $this->request->getQuery('comment');
         if (!empty($comment) && $comment == 1) {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomeComments']);
 
@@ -321,6 +341,11 @@ class ProfilesController extends AppController
             // POCOR-7905: middle
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.ScholarshipApplications']);
         }   // POCOR-7905: END
+    }
+
+    public function ScholarshipsDirectory($pass = 'index')
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.ScholarshipsDirectory']);
     }
 
     public function Demographic()
@@ -378,6 +403,16 @@ class ProfilesController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']);
     }
+
+    public function HealthInsurances()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Insurances']);
+    }
+
+    public function HealthBodyMasses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.BodyMasses']);
+    }
     // End Health
 
     // Special Needs
@@ -431,7 +466,7 @@ class ProfilesController extends AppController
         $staffId = $this->Auth->user('id');
         $tabElements = $this->getCareerTabElements();
 
-        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
         $this->Navigation->addCrumb($crumbTitle);
         $this->set('institution_id', $institutionId);
         $this->set('staff_id', $staffId);
@@ -442,7 +477,7 @@ class ProfilesController extends AppController
 
     // End
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         //$events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored'; //POCOR-5312
@@ -459,9 +494,9 @@ class ProfilesController extends AppController
     // AngularJS
     public function StudentResults()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         //$studentId = $this->Auth->user('id');
-        $sId = $this->request->pass[1];
+        $sId = $this->request->getParam('pass')[1];
 
         // tabs
         $options['type'] = 'student';
@@ -475,12 +510,12 @@ class ProfilesController extends AppController
 
     public function StudentExaminationResults()
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         /*$studentId = $this->Auth->user('id');*/
         if ($session->read('Auth.User.is_guardian') == 1) {
             $studentId = $session->read('Student.ExaminationResults.student_id');
         } else {
-            $studentId = $this->request->pass[1];
+            $studentId = $this->request->getParam('pass')[1];
         }
         $session->write('Student.ExaminationResults.student_id', $studentId);
 
@@ -539,19 +574,22 @@ class ProfilesController extends AppController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
-
-        $session = $this->request->session();
-//        $this->log($session->read(), 'debug');
-        $action = $this->request->params['action'];
+        $session = $this->request->getSession();
+        $action = $this->request->getParam('action');
 
         $loginUserId = $this->Auth->user('id'); // login user
-
+        if(!$loginUserId){
+            $loginUserId = $session->read('Auth.User.name');
+        }
+        if(!$loginUserId){
+            $loginUserId = $this->getQueryString('user_id');
+        }
         $this->Navigation->addCrumb('Personal', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Personal', 'view', $this->ControllerAction->paramsEncode(['id' => $loginUserId])]);
 
         $header = '';
         $entity = null;
         $user_id = $session->read('Profile.Profiles.primaryKey.id');
-        if ($this->Profiles->exists([$this->Profiles->primaryKey() => $loginUserId])) {
+        if ($this->Profiles->exists([$this->Profiles->getPrimaryKey() => $loginUserId])) {
             if ($action == 'StudentReportCards') {
                 if (isset($user_ids['id']) && !empty($user_ids['id'])) {
                     $user_id = $user_ids['id'];
@@ -561,7 +599,7 @@ class ProfilesController extends AppController
                 }//POCOR-6202 end
             }
             if (!$user_id) {
-                $user_id_req = $this->request->pass[1];
+                $user_id_req = $this->request->getAttribute('params')['pass'][1];
                 $entity = null;
                 if (!empty($user_id_req)) {
                     $user_ids = $this->ControllerAction->paramsDecode($user_id_req);
@@ -576,7 +614,7 @@ class ProfilesController extends AppController
             }
         }
         try {
-            $entity = $this->Profiles->get($user_id);
+            $entity = $this->Profiles->get($loginUserId);
             $name = $entity->name;
         } catch
         (RecordNotFoundException $e) {
@@ -599,7 +637,7 @@ class ProfilesController extends AppController
     public
     function changeUserHeader($model, $modelAlias, $userType)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         // add the student name to the header
         $id = 0;
         if ($session->check('Staff.Staff.id')) {
@@ -611,7 +649,7 @@ class ProfilesController extends AppController
             $name = $entity->name;
             $crumb = Inflector::humanize(Inflector::underscore($modelAlias));
             $header = $name . ' - ' . __($crumb);
-            $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+            $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
             $this->Navigation->addCrumb('Staff', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff']);
             $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $userType, 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
             $this->Navigation->addCrumb($crumb);
@@ -622,7 +660,7 @@ class ProfilesController extends AppController
     public
     function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
 
         if ($model instanceof \App\Model\Table\ControllerActionTable) { // CAv4
             // off the import action
@@ -630,7 +668,7 @@ class ProfilesController extends AppController
                 $model->removeBehavior('ImportLink');
             }
 
-            $alias = $model->alias();
+            $alias = $model->getAlias();
             $excludedModel = ['ScholarshipApplications',
                 'Applications', // POCOR-7905
                 'Leave', 'StudentReportCards', 'Contacts', 'TrainingNeeds', 'Comments']; //POCOR-5695 add TrainingNeeds POCOR-6353 add comment
@@ -660,7 +698,7 @@ class ProfilesController extends AppController
                 }
             }
         } else if ($model instanceof \App\Model\Table\AppTable) { // CAv3
-            $alias = $model->alias();
+            $alias = $model->getAlias();
             $excludedModel = ['Accounts', 'Extracurriculars', 'UserActivities'];
 
             if (!in_array($alias, $excludedModel)) {
@@ -668,7 +706,7 @@ class ProfilesController extends AppController
             }
         } else if ($model instanceof \Staff\Model\Table\StaffClassesTable || $model instanceof \Staff\Model\Table\StaffSubjectsTable) {
             $model->toggle('add', false);
-        } else if ($model->alias() == 'Guardians') {
+        } else if ($model->getAlias() == 'Guardians') {
             $model->editButtonAction('ProfileGuardianUser');
         }
 
@@ -684,7 +722,7 @@ class ProfilesController extends AppController
         //POCOR-5890 ends
         $this->Navigation->addCrumb($model->getHeader($alias));
         //POCOR-5675
-        $action = $this->request->params['action'];
+        $action = $this->request->getParam('action');
         if ($action == 'Profiles') {
             $action = __('Personal');
         }
@@ -708,7 +746,7 @@ class ProfilesController extends AppController
                 if ($session->read('Auth.User.is_guardian') == 1) {
                     //$studentId = $this->ControllerAction->paramsDecode($studentId)['id'];//POCOR-6202 uncomment $studentId
                     if ($action == 'Personal') {
-                        $studentId = $this->ControllerAction->paramsDecode($this->request->params['pass'][1]);
+                        $studentId = $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1]);
                     } /*POCOR-6324 starts*/ else {
                         $studentId = $this->Auth->user('id');
                     } /*POCOR-6324 ends*/
@@ -744,9 +782,9 @@ class ProfilesController extends AppController
 
             $model->fields['security_user_id']['type'] = 'hidden';
             $model->fields['security_user_id']['value'] = $userId;
-
-            if (count($this->request->pass) > 1) {
-                $modelId = $this->request->pass[1]; // id of the sub model
+            
+            if (count($this->request->getParam('pass')) > 2) {
+                $modelId = $this->request->getParam('pass')[1]; // id of the sub model
                 $ids = $this->ControllerAction->paramsDecode($modelId);
                 $idKey = $this->ControllerAction->getIdKeys($model, $ids);
                 $idKey[$model->aliasField('security_user_id')] = $userId;
@@ -764,8 +802,8 @@ class ProfilesController extends AppController
             $model->fields['staff_id']['type'] = 'hidden';
             $model->fields['staff_id']['value'] = $userId;
 
-            if (count($this->request->pass) > 1) {
-                $modelId = $this->request->pass[1]; // id of the sub model
+            if (count($this->request->getParam('pass')) > 1) {
+                $modelId = $this->request->getParam('pass')[1]; // id of the sub model
 
                 $ids = $this->ControllerAction->paramsDecode($modelId);
                 $idKey = $this->ControllerAction->getIdKeys($model, $ids);
@@ -811,8 +849,13 @@ class ProfilesController extends AppController
     function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
     {
         $loginUserId = $this->Auth->user('id'); // login user
-        $action = $this->request->params['action'];
-        $session = $this->request->session();
+        $action = $this->request->getParam('action');
+        $session = $this->request->getSession();
+        //POCOR-7485 this code resolve the issue when login user not able to see his nationalities record
+        if($this->request->getAttribute('params')['controller'] == 'Profiles' && $this->request->getAttribute('params')['action'] == 'Nationalities' && $model->hasField('security_user_id')){
+            $query->where([$model->aliasField('security_user_id') => $loginUserId]);
+            return $query;
+        }//POCOR-7485 ends
         if ($model->hasField('security_user_id')) {
             $studentId = $session->read('Student.Students.id');
             if (!empty($studentId)) {
@@ -859,6 +902,13 @@ class ProfilesController extends AppController
         }
     }
 
+    public function beforeRender(Event $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+
+    }
+
     public
     function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra)
     {
@@ -872,7 +922,7 @@ class ProfilesController extends AppController
         $this->ControllerAction->autoRender = false;
         $this->Image->getUserImage($id);
     }
-    // POCOR-8039-start
+    // POCOR-8334 start
     public function PersonalDashboard($action, $encodedParam)
     {
         if (!$action) {
@@ -888,14 +938,18 @@ class ProfilesController extends AppController
         $params = $this->paramsDecode($encodedParam);
         $header = 'Profile Dashboard';
         $this->set('haveProfilePermission', $hasPermission);
-        $this->set('contentHeader', $header);
+        //POCOR-8334-START
+
+        $session = $this->request->getSession();
+        $userName = $session->read('Auth.User.name');
+        $this->set('userName', $userName);
+        //POCOR-8334-END
         $userID = $params['id'];
         // $this->ControllerAction->model->action = $this->request->action;
         $Institutions = TableRegistry::get('Institution.Institutions');
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $currentPeriod = $AcademicPeriods->getCurrent();
         //POCOR-7733 start
-        $session = $this->request->session();
         $session->write('AcademicPeriod.currentAcademicPeriod', $currentPeriod);
         $session->write('AcademicPeriod.currentAcademicPeriodName', $AcademicPeriods->get($currentPeriod)->name);
         //POCOR-7733 end
@@ -905,8 +959,6 @@ class ProfilesController extends AppController
 
 //         $highChartDatas = ['{"chart":{"type":"column","borderWidth":1},"xAxis":{"title":{"text":"Position Type"},"categories":["Non-Teaching","Teaching"]},"yAxis":{"title":{"text":"Total"}},"title":{"text":"Number Of Staff"},"subtitle":{"text":"For Year 2015-2016"},"series":[{"name":"Male","data":[0,2]},{"name":"Female","data":[0,1]}]}'];
         $highChartDatas = [];
-
-
         $profileData = $this->getPersonalProfileCompletenessData($userID);
         $this->set('personalProfileCompletness', $profileData);
         $this->set('highChartDatas', $highChartDatas);
@@ -921,11 +973,11 @@ class ProfilesController extends AppController
 
         //        $this->log('dashboard', 'debug');
     }
-    // POCOR-8039-end
+    // POCOR-8334 end
     public
     function getUserTabElements($options = [])
     {
-        if (array_key_exists('queryString', $this->request->query)) { //to filter if the URL already contain querystring
+        if (array_key_exists('queryString', $this->request->getQuery())) { //to filter if the URL already contain querystring
             $id = $this->ControllerAction->getQueryString('security_user_id');
         }
 
@@ -978,17 +1030,17 @@ class ProfilesController extends AppController
     public
     function getAcademicTabElements($options = [])
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         if ($session->read('Auth.User.is_guardian') == 1) {
             $studentId = $session->read('Student.ExaminationResults.student_id');
         } else {
-            $studentId = $this->request->pass[1];
+            $studentId = $this->request->getParam('pass')[1];
         }
         $id = (array_key_exists('id', $options)) ? $options['id'] : 0;
         $type = (array_key_exists('type', $options)) ? $options['type'] : null;
         $tabElements = [];
         $studentUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
-        $plugin = $this->plugin;
+        $plugin = $this->getPlugin();
         $studentTabElements = [
             'Programmes' => ['text' => __('Programmes')],
             'Classes' => ['text' => __('Classes')],
@@ -1095,7 +1147,7 @@ class ProfilesController extends AppController
 
     public function getLastData($userID, $tableName, $fieldName)
     {
-        $table = TableRegistry::get($tableName);
+        $table = $this->getDynamicTableInstance($tableName);
         $usersData = $table->find()
             ->select([
                 'created' => $table->aliasField('created'),
@@ -1108,13 +1160,38 @@ class ProfilesController extends AppController
 
         return $usersData;
     }
+    public
+    function getDynamicTableInstance($tableName)
+    {
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableAlias = \Cake\Utility\Inflector::camelize($tableName);
+
+        // Create a TableLocator instance
+        $locator = TableRegistry::getTableLocator();
+
+        // Check if the table instance already exists
+        if (!$locator->exists($tableAlias)) {
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'table' => $tableName,
+                'alias' => $tableAlias,
+                'className' => 'Cake\ORM\Table', // Use the generic Table class
+            ]);
+        }
+
+
+        // Return the table instance
+        return $locator->get($tableAlias);
+    }
+
     // POCOR-8039-end
     public
     function getFinanceTabElements($options = [])
     {
         $type = (array_key_exists('type', $options)) ? $options['type'] : null;
-        $plugin = $this->plugin;
-        $name = $this->name;
+        $plugin = $this->getPlugin();
+        $name = $this->getName();
         $tabElements = [];
         $studentUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
         $studentTabElements = [
@@ -1168,7 +1245,7 @@ class ProfilesController extends AppController
     public
     function getProfessionalTabElements($options = [])
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $isStudent = $session->read('Auth.User.is_student');
         $isStaff = $session->read('Auth.User.is_staff');
 
@@ -1222,7 +1299,7 @@ class ProfilesController extends AppController
         $tabElements = array_merge($tabElements, $staffTabElements);
 
         foreach ($staffTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff' . $key, 'type' => $type]);
+            $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff' . $key, '?' => ['type' => 'staff']]);
         }
 
         return $this->TabPermission->checkTabPermission($tabElements);
@@ -1252,11 +1329,15 @@ class ProfilesController extends AppController
     public
     function getCompetencyTabElements($options = [])
     {
-        $queryString = $this->request->query('queryString');
+        $queryString = $this->request->getQuery('queryString');
 
         $tabElements = [
             'Competencies' => [
-                'url' => ['plugin' => 'Student', 'controller' => 'Students', 'action' => 'StudentCompetencies', 'view', 'queryString' => $queryString],
+                'url' => ['plugin' => 'Student',
+                    'controller' => 'Students',
+                    'action' => 'StudentCompetencies',
+                    'view',
+                    '?' => ['queryString' => $queryString]],  // POCOR-8074-QueryStringProfile
                 'text' => __('Items')
             ]
         ];
@@ -1279,7 +1360,7 @@ class ProfilesController extends AppController
                 'InstitutionStaff.staff_id' => $userId,
                 'InstitutionStaff.staff_status_id' => self::APPROVED
             ])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->first();
 
         $institutionId = $InstitutionStaff['institution_id'];
@@ -1296,7 +1377,7 @@ class ProfilesController extends AppController
             ->where([
                 $Institutions->aliasField('id') => $institutionId,
             ])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->toArray();
 
         $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
@@ -1310,17 +1391,17 @@ class ProfilesController extends AppController
         $scheduleIntervals = $intervals->find('list')
             ->where([
                 $intervals->aliasField('academic_period_id') => $academicPeriodId,
-                $intervals->aliasField('institution_id') => $institutionId
-            ])
-            ->toArray();
+                //$intervals->aliasField('institution_id') => $institutionId
+                $institutionId !== null ? $intervals->aliasField('institution_id IS NULL') : $intervals->aliasField('institution_id IS NULL')
+            ])->toArray();
 
         $this->set('userId', $userId);
         $this->set('selectedInstitutionOptions', $selectedInstitutionOptions);
         $this->set('scheduleIntervals', $scheduleIntervals);
-        $scheduleIntervalDefaultId = (isset($this->request->query['schedule_interval_id'])) ? $this->request->query['schedule_interval_id'] : key($scheduleIntervals);
+        $scheduleIntervalDefaultId = (!empty($this->request->getQuery('schedule_interval_id'))) ? $this->request->getQuery('schedule_interval_id') : key($scheduleIntervals);
         $this->set('scheduleIntervalDefaultId', $scheduleIntervalDefaultId);
         $this->set('shiftOptions', $shiftOptions);
-        $shiftDefaultId = (isset($this->request->query['shift'])) ? $this->request->query['shift'] : key($shiftOptions);
+        $shiftDefaultId = (!empty($this->request->getQuery('shift'))) ? $this->request->getQuery('shift') : key($shiftOptions);
         $this->set('academicPeriodId', $academicPeriodId);
         $this->set('academicPeriodName', $academicPeriodOptions[$academicPeriodId]);
         $this->set('shiftDefaultId', $shiftDefaultId);
@@ -1339,7 +1420,7 @@ class ProfilesController extends AppController
                 ->where([
                     'InstitutionStudents.student_id' => $userId
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->first();
 
         $institutionId = $InstitutionStudents['institution_id'];
@@ -1352,12 +1433,13 @@ class ProfilesController extends AppController
                 ->where([
                     'academic_period_id' => $academicPeriodId,
                     'student_id' => $userId,
-                    'institution_id' => $institutionId
+                    'institution_id IS' => $institutionId
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->first();
 
         $institutionClassId = $InstitutionClassStudentsResult['institution_class_id'];
+        if ($institutionClassId !== null) {
         $ScheduleTimetables = TableRegistry::get('Schedule.ScheduleTimetables')
             ->find()
             ->where([
@@ -1366,9 +1448,9 @@ class ProfilesController extends AppController
                 'institution_id' => $institutionId,
                 'status' => 2
             ])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->first();
-
+        }
         $this->set('userId', $userId);
         $timetable_id = (isset($ScheduleTimetables['id'])) ? $ScheduleTimetables['id'] : 0;
         $this->set('timetable_id', $timetable_id);
@@ -1422,4 +1504,9 @@ class ProfilesController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Cases.InstitutionCases']);
     }
 //POCOR-7439 end
+
+    public function SpecialNeedsDiagnostics()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDiagnostics']);
+    }
 }

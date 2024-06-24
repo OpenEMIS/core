@@ -4,7 +4,7 @@ namespace System\Model\Table;
 use ArrayObject;
 use InvalidArgumentException;
 
-use Cake\Network\Request;
+use Cake\Http\Request;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -13,12 +13,14 @@ use Cake\Mailer\Email;
 use Cake\I18n\Time;
 use Cake\Http\Client;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
+use Cake\Http\Response;
 
 use App\Model\Table\ControllerActionTable;
 
 class SystemUpdatesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -30,7 +32,7 @@ class SystemUpdatesTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.updates'] = 'updates';
@@ -79,17 +81,28 @@ class SystemUpdatesTable extends ControllerActionTable
         $api = $domain . '/restful/v2/System-SystemUpdates.json?_fields=id,version,date_released&_limit=50&_order=-id';
 
         $http = new Client();
+
+        // New Code [START]
         $response = $http->get($api);
+        $response = $response->getBody()->getContents();
+        // New Code [END]
+
+        //Old Code[START]
+        // $response = $http->get($api);
+        //Old Code[END]
 
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $supportEmails = $ConfigItems->value('version_support_emails');
         $emails = explode(',', $supportEmails);
-
-        $host = $this->request->env('HTTP_HOST');
+        $request = new ServerRequest();
+        $get_response = new Response();
+        $host = $request->getUri()->getHost();
         $subject = 'Core Upgrade Request Failed - ' . $host;
 
-        if ($response->getStatusCode() == 200) {
-            $jsonResponse = json_decode($response->body(), true);
+        if ($get_response->getStatusCode() == 200) {
+            // $jsonResponse = json_decode($response->body(), true);
+            $jsonResponse = json_decode($response, true);
+            // echo "<pre>";print_r($jsonResponse);die;
             $data = array_reverse($jsonResponse['data']);
 
             foreach ($data as $item) {
@@ -171,7 +184,7 @@ class SystemUpdatesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $queryParams = $this->request->query;
+        $queryParams = $this->request->getQuery();
         if (!array_key_exists('sort', $queryParams)) {
             $query->order([$this->aliasField('date_released') => 'DESC', $this->aliasField('version') => 'DESC']);
         }
@@ -181,7 +194,7 @@ class SystemUpdatesTable extends ControllerActionTable
 
             $updateBtn['attr']['title'] = __('Update');
             $updateBtn['label'] = '<i class="fa fa-refresh"></i>';
-            $updateBtn['url'] = ['controller' => $this->controller->name, 'action' => 'Updates', 'updates'];
+            $updateBtn['url'] = ['controller' => $this->controller->getName(), 'action' => 'Updates', 'updates'];
 
             $extra['toolbarButtons']['update'] = $updateBtn;
         }
@@ -193,7 +206,7 @@ class SystemUpdatesTable extends ControllerActionTable
             $name = str_replace('Save', 'Update', $buttons[0]['name']);
             $buttons[0]['name'] = $name;
 
-            $buttons[1]['url'] = ['controller' => $this->controller->name, 'action' => 'Updates', 'index'];
+            $buttons[1]['url'] = ['controller' => $this->controller->getName(), 'action' => 'Updates', 'index'];
         }
     }
 
@@ -244,6 +257,34 @@ class SystemUpdatesTable extends ControllerActionTable
 
             $this->controller->set('data', $entity);
             return $entity;
+        }
+    }
+
+     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'version':
+                return __('Version');
+            case 'date_released':
+                return __('Date Released');
+            case 'date_approved':
+                return __('Date Approved');
+            case 'status':
+                return __('Status');
+            case 'approved_by':
+                return __('Approved By');
+            case 'name':
+                return __('Name');
+            case 'international_code':
+                return __('International Code');
+            case 'national_code':
+                return __('National Code');
+            case 'editable':
+                return __('Editable');
+            case 'default':
+                return __('Default');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }

@@ -30,18 +30,19 @@ class RestSurveyComponent extends Component
 
     public $components = ['Paginator', 'Workflow'];
 
-    public $allowedActions = array('listing', 'schools', 'download' . 'downloadUrl', 'studentlist', 'stafflist','checkIns');
+    public $allowedActions = array('listing', 'schools', 'download' . 'downloadUrl', 'studentlist',
+                                'stafflist','checkIns');
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->controller = $this->_registry->getController();
-        $this->action = $this->request->params['action'];
+        $this->action = $this->getController()->getRequest()->getParam('action');
 
-        $models = $this->config('models');
+        $models = $this->getConfig('models');
         foreach ($models as $key => $model) {
             if (!is_null($model)) {
-                $this->{$key} = TableRegistry::get($model);
-                $this->{lcfirst($key) . 'Key'} = Inflector::underscore(Inflector::singularize($this->{$key}->alias())) . '_id';
+                $this->{$key} = TableRegistry::get((string)$model);
+                $this->{lcfirst($key) . 'Key'} = Inflector::underscore(Inflector::singularize($this->{$key}->getAlias())) . '_id';
             } else {
                 $this->{$key} = null;
             }
@@ -54,7 +55,7 @@ class RestSurveyComponent extends Component
 
     public function downloadUrl()
     {
-        $url = '/' . $this->controller->name . '/survey/download/xform/';
+        $url = '/' . $this->controller->getName() . '/survey/download/xform/';
         $this->response->body(json_encode($url, JSON_UNESCAPED_UNICODE));
         $this->response->type('json');
         return $this->response;
@@ -69,6 +70,7 @@ class RestSurveyComponent extends Component
             default:
                 break;
         }
+        //echo "<pre>";print_r($result);die;
 
         if ($output) { // true = output to screen
             if (is_object($result)) {
@@ -92,35 +94,30 @@ class RestSurveyComponent extends Component
             return $this->response;
         }
     }
-
-
     //POCOR-8089
     public function getXXList($instanceId, $id, $insCode, $acamic)
     {
-    $title = $this->Form->get($id)->name;
-    $institutionSurveysTbl = TableRegistry::get('institution_surveys');
-    $institutionTbl = TableRegistry::get('Institution.Institutions');
-    $insData = $institutionTbl->find('all', ['conditions' => ['code' => $insCode]])->first();
-    $insId = $insData->id;
-    $academicPeriodTbl = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-    $apData = $academicPeriodTbl->find('all', ['conditions' => ['name' => $acamic]])->first();
-    $apId = $apData->id;
+        $title = $this->Form->get($id)->name;
+        $institutionSurveysTbl = TableRegistry::get('institution_surveys');
+        $institutionTbl = TableRegistry::get('Institution.Institutions');
+        $insData = $institutionTbl->find('all', ['conditions' => ['code' => $insCode]])->first();
+        $insId = $insData->id;
+        $academicPeriodTbl = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $apData = $academicPeriodTbl->find('all', ['conditions' => ['name' => $acamic]])->first();
+        $apId = $apData->id;
 
-    $checkInsSurvey = $institutionSurveysTbl->find('all', ['conditions'=>['institution_id'=> $insId, 'academic_period_id'=> $apId, 'survey_form_id' => $id]])->first();
-    if(empty($checkInsSurvey)){
-        $final['code'] = '302';
-        $final['survey_exist_for_ins'] = 'no';
-    }else{
-        $final['code'] = '200';
-        $final['survey_exist_for_ins'] = 'yes';
-    }
-    $params = json_encode($final, true);
-    echo $params;
-    die;
-    }
-    //POCOR-8089
-	
-	
+        $checkInsSurvey = $institutionSurveysTbl->find('all', ['conditions'=>['institution_id'=> $insId, 'academic_period_id'=> $apId, 'survey_form_id' => $id]])->first();
+        if(empty($checkInsSurvey)){
+            $final['code'] = '302';
+            $final['survey_exist_for_ins'] = 'no';
+        }else{
+            $final['code'] = '200';
+            $final['survey_exist_for_ins'] = 'yes';
+        }
+        $params = json_encode($final, true);
+        echo $params;
+        die;
+    }//POCOR-8089
 	
 	//POCOR-8089
     public function checkIns($format = "xform", $id = 0, $insCode = 0, $academicPeriod = 0, $surveyQuesId = 0, $output = true)
@@ -134,8 +131,6 @@ class RestSurveyComponent extends Component
         }
     }
     //POCOR-8089
-
-
     //POCOR-7707
     public function studentlist($format = "xform", $id = 0, $insCode = 0, $academicPeriod = 0, $surveyQuesId = 0, $output = true)
     {
@@ -206,8 +201,8 @@ class RestSurveyComponent extends Component
 
             if (array_key_exists('response', $data)) {
                 $CustomRecords = TableRegistry::get('Institution.InstitutionSurveys');
-                $formAlias = $this->Form->alias();
-                $fieldAlias = $this->Field->alias();
+                $formAlias = $this->Form->getAlias();
+                $fieldAlias = $this->Field->getAlias();
 
                 $xmlResponse = $data['response'];
 
@@ -818,14 +813,14 @@ class RestSurveyComponent extends Component
 
         $instanceNode = $modelNode->addChild("instance", null, NS_XF);
         $instanceNode->addAttribute("id", $instanceId);
-        $formNode = $instanceNode->addChild($this->Form->alias(), null, NS_OE);
+        $formNode = $instanceNode->addChild($this->Form->getAlias(), null, NS_OE);
         $formNode->addAttribute("id", $id);
 
         // need further testing if is commented out
         // $sectionBreakNode = $bodyNode;
 
         // set fixed Institutions Field
-        $references = [$this->Form->alias(), 'Institutions'];
+        $references = [$this->Form->getAlias(), 'Institutions'];
 
         $formNode->addChild('Institutions', null, NS_OE);
         $fieldNode = $bodyNode->addChild("input", null, NS_XF);
@@ -837,13 +832,13 @@ class RestSurveyComponent extends Component
         // End
 
         // set fixed Academic Periods Field
-        $references = [$this->Form->alias(), 'AcademicPeriods'];
+        $references = [$this->Form->getAlias(), 'AcademicPeriods'];
 
         $formNode->addChild('AcademicPeriods', null, NS_OE);
         $fieldNode = $bodyNode->addChild("select1", null, NS_XF);
         $fieldNode->addAttribute("ref", $this->getRef($instanceId, $references));
         $fieldNode->addAttribute("oe-type", "integer");
-        $fieldNode->addAttribute("oe-dependency", $this->getRef($instanceId, [$this->Form->alias(), 'Institutions']));
+        $fieldNode->addAttribute("oe-dependency", $this->getRef($instanceId, [$this->Form->getAlias(), 'Institutions']));
         $fieldNode->addChild("label", "Academic Period", NS_XF);
 
         $SurveyForms = TableRegistry::get('Survey.SurveyForms');
@@ -909,7 +904,7 @@ class RestSurveyComponent extends Component
             $extra['hint'] = null;
             $extra['constraint'] = null;
 
-            $extra['references'] = [$this->Form->alias(), $this->Field->alias() . "[" . $extra['index'] . "]"];
+            $extra['references'] = [$this->Form->getAlias(), $this->Field->getAlias() . "[" . $extra['index'] . "]"];
             $extra['default_value'] = null; // to handle default value for dropdown
 
             // For relevancy
@@ -1370,7 +1365,7 @@ class RestSurveyComponent extends Component
                 'params' => $this->Field->aliasField('params')
             ])
             ->innerJoin(
-                [$this->Field->alias() => $this->Field->table()],
+                [$this->Field->getAlias() => $this->Field->getTable()],
                 [$this->Field->aliasField('id =') . $this->FormField->aliasField($this->fieldKey)]
             )
             ->where([
@@ -2023,7 +2018,7 @@ class RestSurveyComponent extends Component
 
     private function setModelNode($field, $formNode, $instanceId, $extra)
     {
-        $fieldNode = $formNode->addChild($this->Field->alias(), $extra['default_value'], NS_OE);
+        $fieldNode = $formNode->addChild($this->Field->getAlias(), $extra['default_value'], NS_OE);
         $fieldNode->addAttribute("id", $field->field_id);
 
         return $fieldNode;

@@ -14,15 +14,15 @@ class AdvancedProgrammeSearchBehavior extends Behavior
         'associatedKey' => '',
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $associatedKey = $this->config('associatedKey');
+        $associatedKey = $this->getConfig('associatedKey');
         if (empty($associatedKey)) {
-            $this->config('associatedKey', $this->_table->aliasField('id'));
+            $this->setConfig('associatedKey', $this->_table->aliasField('id'));
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [

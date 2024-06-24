@@ -10,7 +10,7 @@ use Cake\ORM\TableRegistry;
 
 class AssessmentsController extends AppController
 {
-	public function initialize() {
+	public function initialize(): void {
 		parent::initialize();
 		$this->loadComponent('Paginator');
 	}
@@ -22,6 +22,10 @@ class AssessmentsController extends AppController
 	// End
 
 	public function beforeFilter(Event $event) {
+
+		if ($this->getPlugin() == 'Assessment') {
+            $this->Security->setConfig('validatePost', false);
+        }
     	parent::beforeFilter($event);
 
 		$tabElements = [

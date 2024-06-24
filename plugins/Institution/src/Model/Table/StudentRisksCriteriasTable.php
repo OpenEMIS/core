@@ -7,13 +7,13 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\AppTable;
 
 class StudentRisksCriteriasTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('InstitutionStudentRisks', ['className' => 'Institution.InstitutionStudentRisks', 'foreignKey' => 'institution_student_risk_id']);

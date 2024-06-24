@@ -18,18 +18,18 @@ class RubricCriteriasTable extends AppTable
     );
     private $_contain = ['RubricCriteriaOptions.RubricTemplateOptions'];
 
-    public function initialize(array $config) {
+    public function initialize(array $config): void {
         parent::initialize($config);
         $this->belongsTo('RubricSections', ['className' => 'Rubric.RubricSections']);
         $this->hasMany('RubricCriteriaOptions', ['className' => 'Rubric.RubricCriteriaOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
         if ($this->behaviors()->has('Reorder')) {
-            $this->behaviors()->get('Reorder')->config([
+            $this->behaviors()->get('Reorder')->setConfig([
                 'filter' => 'rubric_section_id',
             ]);
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
@@ -41,7 +41,7 @@ class RubricCriteriasTable extends AppTable
         $searchableFields[] = 'name';
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -61,11 +61,12 @@ class RubricCriteriasTable extends AppTable
     {
         //Add new fields
         $this->ControllerAction->field('criterias', [
-            'type' => 'element',
+             'type' => 'element',
             'element' => 'Rubric.criterias',
             'visible' => false,
             'valueClass' => 'table-full-width'
         ]);
+
     }
 
     public function indexBeforeAction(Event $event)
@@ -153,8 +154,8 @@ class RubricCriteriasTable extends AppTable
 
     public function addEditOnReload(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $selectedSection = $data[$this->alias()]['rubric_section_id'];
-        $selectedCriteriaType = $data[$this->alias()]['type'];
+        $selectedSection = $data[$this->getAlias()]['rubric_section_id'];
+        $selectedCriteriaType = $data[$this->getAlias()]['type'];
         $selectedTemplate = $this->RubricSections->find('all')->where([$this->RubricSections->aliasField('id') => $selectedSection])->first()->rubric_template_id;
 
         if ($selectedCriteriaType == 1) {   //1-> Section Break, 2 -> Dropdown
@@ -179,7 +180,7 @@ class RubricCriteriasTable extends AppTable
                     ];
                 }
 
-                $data[$this->alias()]['rubric_criteria_options'] = $criteriaOptions;
+                $data[$this->getAlias()]['rubric_criteria_options'] = $criteriaOptions;
                 //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
                 //$options['associated'] = ['RubricCriteriaOptions.RubricTemplateOptions'];
                 $options['associated'] = [
@@ -199,7 +200,7 @@ class RubricCriteriasTable extends AppTable
     public function getSelectOptions()
     {
         //Return all required options and their key
-        $query = $this->request->query;
+        $query = $this->request->getQuery();
 
         $templateOptions = $this->RubricSections->RubricTemplates->find('list')->toArray();
         $selectedTemplate = isset($query['template']) ? $query['template'] : key($templateOptions);
@@ -224,5 +225,36 @@ class RubricCriteriasTable extends AppTable
         $this->ControllerAction->setFieldOrder([
             'rubric_section_id', 'name', 'type', 'criterias'
         ]);
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'type') {
+            return __('Type');
+        }elseif ($field == 'rubric_section_id') {
+            return __('Rubric Section');
+        }elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

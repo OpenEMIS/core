@@ -13,9 +13,9 @@ use App\Model\Table\ControllerActionTable;
 
 class StudentAbsencesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config):void
     {
-        $this->table('institution_student_absence_details');
+        $this->setTable('institution_student_absence_details');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);

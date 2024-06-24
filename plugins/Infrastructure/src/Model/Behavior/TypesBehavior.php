@@ -14,12 +14,12 @@ class TypesBehavior extends Behavior
         'code' => null
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 10];
@@ -32,27 +32,30 @@ class TypesBehavior extends Behavior
         $model = $this->_table;
 
         if ($model->action == 'index') {
-            $selectedLevel = !is_null($model->request->query('level')) ? $model->request->query('level') : '-1';
+            $selectedLevel = !is_null($model->request->getQuery('level')) ? $model->request->getQuery('level') : '-1';
             $InfrastructureLevels = TableRegistry::get('Infrastructure.InfrastructureLevels');
             $levelDetails = $InfrastructureLevels->find('list', [
                     'keyField' => 'id',
                     'valueField' => 'code'
                 ])
                 ->toArray();
-            $ControllerActionComponent = $event->subject();
+            $ControllerActionComponent = $event->getSubject();
             $request = $ControllerActionComponent->request;
-            $level = $request->query('level');
-            $redirectAction = isset($levelDetails[$level]) ? ucfirst(strtolower($levelDetails[$level])).'Types' : null;
+            if(!empty($request)){
+                $level = $request->getQuery('level');
+                $redirectAction = isset($levelDetails[$level]) ? ucfirst(strtolower($levelDetails[$level])).'Types' : null;
 
-            if ($redirectAction && $redirectAction != $model->alias()) {
-                // call from general, if room selected, redirect to room types
-                $code = $levelDetails[$selectedLevel];
-                $url = $model->url('index');
-                $url['action'] = $redirectAction;
+                if ($redirectAction && $redirectAction != $model->alias()) {
+                    // call from general, if room selected, redirect to room types
+                    $code = $levelDetails[$selectedLevel];
+                    $url = $model->url('index');
+                    $url['action'] = $redirectAction;
 
-                $event->stopPropagation();
-                return $model->controller->redirect($url);
+                    $event->stopPropagation();
+                    return $model->controller->redirect($url);
+                }
             }
+            
         } else {
             unset($extra['elements']['controls']);
         }

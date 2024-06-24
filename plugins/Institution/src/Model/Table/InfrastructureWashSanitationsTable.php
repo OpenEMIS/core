@@ -13,9 +13,9 @@ use App\Model\Table\ControllerActionTable;
 
 class InfrastructureWashSanitationsTable extends ControllerActionTable {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('infrastructure_wash_sanitations');
+        $this->setTable('infrastructure_wash_sanitations');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods',   ['className' => 'AcademicPeriod.AcademicPeriods', 'foreign_key' => 'academic_period_id']);
@@ -31,12 +31,16 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
             'excludes' => ['academic_period_id', 'institution_id'],
             'pages' => ['index'],
         ]);
+
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InfrastructureWashSanitations'=>['id']]
+        ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         $validator
             ->add('infrastructure_wash_sanitation_male_functional', [
                 'rulePositive' => [
@@ -101,42 +105,42 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
         $SanitationQuantitiesTable = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
         $SanitationQuantitiesTable->deleteAll(['infrastructure_wash_sanitation_id' => $entity->id]);
 
-        $data1 = $SanitationQuantitiesTable->newEntity();
+        $data1 = $SanitationQuantitiesTable->newEmptyEntity();
         $data1->gender_id = 1;
         $data1->functional = 1;
         $data1->value = $entity->infrastructure_wash_sanitation_male_functional;
         $data1->infrastructure_wash_sanitation_id = $entity->id;
         $SanitationQuantitiesTable->save($data1);
 
-        $data2 = $SanitationQuantitiesTable->newEntity();
+        $data2 = $SanitationQuantitiesTable->newEmptyEntity();
         $data2->gender_id = 1;
         $data2->functional = 0;
         $data2->value = $entity->infrastructure_wash_sanitation_male_nonfunctional;
         $data2->infrastructure_wash_sanitation_id = $entity->id;
         $SanitationQuantitiesTable->save($data2);
 
-        $data3 = $SanitationQuantitiesTable->newEntity();
+        $data3 = $SanitationQuantitiesTable->newEmptyEntity();
         $data3->gender_id = 2;
         $data3->functional = 1;
         $data3->value = $entity->infrastructure_wash_sanitation_female_functional;
         $data3->infrastructure_wash_sanitation_id = $entity->id;
         $SanitationQuantitiesTable->save($data3);
 
-        $data4 = $SanitationQuantitiesTable->newEntity();
+        $data4 = $SanitationQuantitiesTable->newEmptyEntity();
         $data4->gender_id = 2;
         $data4->functional = 0;
         $data4->value = $entity->infrastructure_wash_sanitation_female_nonfunctional;
         $data4->infrastructure_wash_sanitation_id = $entity->id;
         $SanitationQuantitiesTable->save($data4);
 
-        $data5 = $SanitationQuantitiesTable->newEntity();
+        $data5 = $SanitationQuantitiesTable->newEmptyEntity();
         $data5->gender_id = 3;
         $data5->functional = 1;
         $data5->value = $entity->infrastructure_wash_sanitation_mixed_functional;
         $data5->infrastructure_wash_sanitation_id = $entity->id;
         $SanitationQuantitiesTable->save($data5);
 
-        $data6 = $SanitationQuantitiesTable->newEntity();
+        $data6 = $SanitationQuantitiesTable->newEmptyEntity();
         $data6->gender_id = 3;
         $data6->functional = 0;
         $data6->value = $entity->infrastructure_wash_sanitation_mixed_nonfunctional;
@@ -177,15 +181,17 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
 
         // element control
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
 
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
 
         $extra['elements']['control'] = [
             'name' => 'Risks/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'academicPeriodOptions'=>$academicPeriodOptions,
                 'selectedAcademicPeriod'=>$selectedAcademicPeriodId
             ],
@@ -195,7 +201,7 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
         // end element control
 
         // Start POCOR-5188
-        $manualTable = TableRegistry::get('Manuals');
+        $manualTable = TableRegistry::getTableLocator()->get('Institution.Manuals');
         $ManualContent =   $manualTable->find()->select(['url'])->where([
                 $manualTable->aliasField('function') => 'Infrastructure WASH Sanitation',
                 $manualTable->aliasField('module') => 'Institutions',
@@ -224,6 +230,8 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
         switch ($field) {
+            case 'academic_period_id':
+                return __('Academic Period');
             case 'infrastructure_wash_sanitation_type_id':
                 return __('Type');
             case 'infrastructure_wash_sanitation_use_id':
@@ -238,6 +246,14 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
                 return __('Quality');
             case 'infrastructure_wash_sanitation_accessibility_id':
                 return __('Accessibility');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'modified':
+                return __('Modified On');
+            case 'created_user_id':
+                return __('Created By');
+            case 'created':
+                return __('Created On');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -308,8 +324,8 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
     }
 
     public function getData(){
-        $InfrastructureWashSanitationQuantities = TableRegistry::get('InfrastructureWashSanitationQuantities');
-        $sanatationQuantitiesIdArr = $this->paramsDecode($this->request->params['pass'][1]);
+        $InfrastructureWashSanitationQuantities = TableRegistry::get('Institution.InfrastructureWashSanitationQuantities');
+        $sanatationQuantitiesIdArr = $this->paramsDecode($this->request->getAttribute('params')['pass'][1]);
         $sanatationId = $sanatationQuantitiesIdArr['id'];
         $sanitationQualitiesData = $InfrastructureWashSanitationQuantities->find()
         ->select([
@@ -412,8 +428,9 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
         $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $query
         ->Where([
             $this->aliasField('institution_id = ').$institutionId,

@@ -16,7 +16,7 @@ class SingleGradeBehavior extends Behavior
 {
     use EventTrait;
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.add.afterSave'] = ['callable' => 'addAfterSave', 'priority' => 9];
@@ -46,8 +46,8 @@ class SingleGradeBehavior extends Behavior
         
         $numberOfClasses = 1;
 
-        if ($request->is(['post']) && array_key_exists($model->alias(), $request->data)) {
-            $modelData = $request->data[$model->alias()];
+        if ($request->is(['post']) && array_key_exists($model->getAlias(), $request->getData())) {
+            $modelData = $request->getData()[$model->getAlias()];
             $selectedEducationGradeId = $modelData['education_grade'];
             $numberOfClasses = $modelData['number_of_classes'];
             /**
@@ -72,7 +72,9 @@ class SingleGradeBehavior extends Behavior
 
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
         $session = $this->_table->Session;
-        $institutionId = $session->read('Institution.Institutions.id');
+        // Call a method from another behavior attached to the same table
+        $institutionId =  $this->_table->getBehavior('InstitutionTab')->getInstitutionID();
+        // $institutionId = $session->read('Institution.Institutions.id');
 
         $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $gradeOptions = [0 => '-- '.__('Select').' --'] + $gradeOptions;
@@ -133,7 +135,8 @@ class SingleGradeBehavior extends Behavior
         $unitOptions = [0 => '-- '.__('Select').' --'] + $unitOptions;//POCOR-7336
         $courseOptions = [0 => '-- '.__('Select').' --'] + $courseOptions; //POCOR-7336
         //POCOR-7680 start
-        $institutionId = $session->read('Institution.Institutions.id');
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId =  $this->_table->getBehavior('InstitutionTab')->getInstitutionID();
         $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
         //POCOR-7680 end
 
@@ -222,8 +225,8 @@ class SingleGradeBehavior extends Behavior
                 $classes = $model->newEntities($requestData['MultiClasses']);
                 $error = false;
                 foreach ($classes as $key => $class) {
-                    if ($class->errors()) {
-                        $error = $class->errors();
+                    if ($class->getErrors()) {
+                        $error = $class->getErrors();
                         $requestData['MultiClasses'][$key]['errors'] = $error;
                     }
                 }
@@ -289,7 +292,7 @@ class SingleGradeBehavior extends Behavior
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         $model = $this->_table;
-        $errors = $entity->errors();
+        $errors = $entity->getErrors();
         if (isset($requestData['errorMessage'])) {
             if (!empty($requestData['errorMessage'])) {
                 $model->Alert->error($requestData['errorMessage'], ['reset'=>true]);

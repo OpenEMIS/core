@@ -9,14 +9,14 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-
+use Laminas\Diactoros\UploadedFile;
 
 class SpecialNeedsPlansTable extends ControllerActionTable
 {
     const COMMENT_MAX_LENGTH = 350;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('user_special_needs_plans');
+        $this->setTable('user_special_needs_plans');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
@@ -43,12 +43,18 @@ class SpecialNeedsPlansTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
         $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['SpecialNeedsPlans' =>
+                ['academic_period_id',
+                    'special_needs_plan_types_id']
+            ]
+        ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
                 ->add('comment', 'length', [
                 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
@@ -67,7 +73,7 @@ class SpecialNeedsPlansTable extends ControllerActionTable
         $this->setFieldOrder(['special_needs_device_type_id']);
 
         // Start POCOR-5188
-        if($this->request->params['controller'] == 'Staff'){
+        if($this->request->getParam('controller') == 'Staff'){
             $is_manual_exist = $this->getManualUrl('Institutions','Plans','Staff - Special Needs');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -85,7 +91,7 @@ class SpecialNeedsPlansTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->params['controller'] == 'Students'){
+        }elseif($this->request->getParam('controller') == 'Students'){
             $is_manual_exist = $this->getManualUrl('Institutions','Plans','Students - Special Needs');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -104,7 +110,7 @@ class SpecialNeedsPlansTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Directories'){ 
+        }elseif($this->request->getParam('controller') == 'Directories'){ 
             $is_manual_exist = $this->getManualUrl('Directory','Plans','Special Needs');       
             if(!empty($is_manual_exist)){
                 $btnAttr = [
@@ -123,7 +129,7 @@ class SpecialNeedsPlansTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->params['controller'] == 'Profiles'){ 
+        }elseif($this->request->getParam('controller') == 'Profiles'){ 
             $is_manual_exist = $this->getManualUrl('Personal','Plans','Special Needs');       
             if(!empty($is_manual_exist)){ 
                 $btnAttr = [
@@ -144,6 +150,44 @@ class SpecialNeedsPlansTable extends ControllerActionTable
 
         }
         // End POCOR-5188
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        $sentData = $this->request->getData();
+        $alias = $this->getAlias();
+        $sentData = $sentData[$alias];
+        
+        $fileContent = 'file_content';
+        $uploadedFile = $sentData[$fileContent];
+        $fileName = 'file_name';
+    
+        if ($uploadedFile instanceof UploadedFile) {
+            //$content = (string)$uploadedFile->getStream();
+            $error = $uploadedFile->getError();
+            if ($error === UPLOAD_ERR_OK) {
+                // Accessing the file contents
+                $content = (string)$uploadedFile->getStream();
+            }
+            $name = $uploadedFile->getClientFilename();
+        }
+
+        if (isset($content) && isset($error) && $error == UPLOAD_ERR_OK) {
+            $data[$fileName] = $name;
+            $data[$fileContent] = $content;
+        } elseif (isset($error) && $error == UPLOAD_ERR_NO_FILE) {
+            $data->offsetUnset($fileContent);
+            if ($data->offsetExists($fileName)) {
+                $data->offsetUnset($fileName);
+            }
+        } elseif (isset($data[$fileContent . '_remove']) && $data[$fileContent . '_remove'] == 1) {
+            $data[$fileName] = null;
+            $data[$fileContent] = null;
+        } elseif (!isset($data[$fileName])) {
+            $var = null;
+            $data[$fileName] = null;
+            $data[$fileContent] = null;
+        }
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -178,12 +222,10 @@ class SpecialNeedsPlansTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
-        $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
-
+        $userId = $this->getUserID();
         $query
         ->where([
-            'security_user_id =' .$studentUserId,
+            'security_user_id =' .$userId,
         ]);
     }
 
@@ -192,6 +234,14 @@ class SpecialNeedsPlansTable extends ControllerActionTable
         switch ($field) {
             case 'special_needs_plan_types_id':
                 return __('Plan Type');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'plan_name':
+                return __('Plan Name');
+            case 'file_content':
+                return __('Attachment');
+            case 'comment':
+                return __('Comment');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -202,7 +252,7 @@ class SpecialNeedsPlansTable extends ControllerActionTable
     {
         // Academic Periods Filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : '-1';
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : '-1';
 
         $academicPeriodOptions = ['-1' => 'All Academic Period'] + $academicPeriodOptions;
         if ($selectedAcademicPeriod != '-1') {
@@ -210,7 +260,10 @@ class SpecialNeedsPlansTable extends ControllerActionTable
                 $this->aliasField('academic_period_id') => $selectedAcademicPeriod
             ]);
         }
-
+        $userID = $this->getUserID();
+        $query->where([
+            $this->aliasField('security_user_id') => $userID
+        ]);
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $extra['elements']['controls'] = ['name' => 'SpecialNeeds.Plans/controls', 'data' => [], 'options' => [], 'order' => 1];
         // Academic Periods Filter - END

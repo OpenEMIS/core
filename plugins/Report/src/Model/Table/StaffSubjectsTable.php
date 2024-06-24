@@ -10,8 +10,8 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 
 class StaffSubjectsTable extends AppTable  {
-    public function initialize(array $config) {
-        $this->table('institution_subject_staff');
+    public function initialize(array $config): void {
+        $this->setTable('institution_subject_staff');
 
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
@@ -46,7 +46,7 @@ class StaffSubjectsTable extends AppTable  {
         $qualificationLevels = TableRegistry::get('qualification_levels');
         $staffQualificationsSpecialisations = TableRegistry::get('staff_qualifications_specialisations');
         $qualificationSpecialisations = TableRegistry::get('qualification_specialisations');
-        $institutionPositions = TableRegistry::get('institution_positions');
+        $institutionPositions = TableRegistry::get('Institution.institution_positions');
         $staffPositionTitles = TableRegistry::get('staff_position_titles');
         $genders = TableRegistry::get('User.Genders');
         $mainNationalities = TableRegistry::get('FieldOption.Nationalities');

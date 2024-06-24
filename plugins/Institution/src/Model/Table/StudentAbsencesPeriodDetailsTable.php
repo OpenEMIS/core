@@ -13,9 +13,9 @@ use Cake\Validation\Validator;
 
 class StudentAbsencesPeriodDetailsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_absence_details');
+        $this->setTable('institution_student_absence_details');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -32,7 +32,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $absencesList = $this->AbsenceTypes->getCodeList();
@@ -202,7 +202,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                     $institutionData = $institutionTable->get($entity->institution_id);
                     $institutionSecurityGroupId = $institutionData->security_group_id;
 
-                    $alertRulesTable = TableRegistry::get('alert_rules');
+                    $alertRulesTable = TableRegistry::get('Alert.AlertRules');
                     $alertRuleData = $alertRulesTable->find('all', ['conditions' => ['feature' => 'StudentAttendance', 'enabled' => 1]])->toArray(); //POCOR-7397
                     if (!empty($alertRuleData)) {
                         foreach ($alertRuleData as $alertRuleData1) {
@@ -215,20 +215,22 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                                     $securityRoleIds[] = $alertRole->security_role_id;
                                 }
 
-                                $securityGroupUsersTable = TableRegistry::get('security_group_users');
+                                $securityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
                                 $securityGroupUsersData = $securityGroupUsersTable->find()
                                     ->where(['security_group_id' => $institutionSecurityGroupId, 'security_role_id in' => $securityRoleIds])
                                     ->group(['security_user_id'])
                                     ->toArray();
                                 if (!empty($securityGroupUsersData)) {
                                     foreach ($securityGroupUsersData as $securityGU) {
-                                        $userTable = TableRegistry::get('security_users');
+                                        $userTable = TableRegistry::get('User.Users');
                                         $userData = $userTable->get($securityGU->security_user_id);
                                         $studentData = $userTable->get($entity->student_id);
-                                        //POCOR-7266::Start
-                                        $nationalyTable = TableRegistry::get('nationalities');
-                                        $genderTable = TableRegistry::get('genders');
-                                        $idTypeTable = TableRegistry::get('identity_types');
+                                        ///POCOR-7266::Start
+                                        $nationalitiesLocator = new TableLocator();
+                                        $nationalyTable = $nationalitiesLocator ->get('nationalities');
+                                        // $nationalyTable = TableRegistry::get('nationalities');
+                                        $genderTable = TableRegistry::get('User.Genders');
+                                        $idTypeTable = TableRegistry::get('FieldOption.IdentityTypes');
                                         $nationalData = $nationalyTable->find('all', ['conditions' => ['id' => $studentData->nationality_id]])->first();
                                         $genderData = $genderTable->find('all', ['conditions' => ['id' => $studentData->gender_id]])->first();
                                         $idtypeData = $idTypeTable->find('all', ['conditions' => ['id' => $studentData->identity_type_id]])->first();
@@ -416,24 +418,24 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                                         }
 
                                         //POCOR-7266::End
-                                        if (($alertRuleData1->threshold) == $absenceCount) { //POCOR-7398 just changed <= to == also removed -1 after threshold
-                                            $absenceCount = $absenceCount + 1;
-                                            if (!empty($userData->email)) {
-                                                $email = new Email('openemis');
-                                                $emailSubject = 'OpenEMIS Attendance Alert for ' . $insCode . " - " . $insName;
-                                                $emailMessage = $alertRuleMessage; //POCOR-7266
-                                                // POCOR-8039 start
-                                                try {
-                                                    $email
-                                                        ->to($userData->email)
-                                                        ->subject($emailSubject)
-                                                        ->send($emailMessage);
-                                                } catch (\Exception $exception) {
-                                                    $this->log($exception->getMessage(), 'error');
-                                                }
-                                                // POCOR-8039 end
-                                            }
-                                        }
+                                        // if (($alertRuleData1->threshold) == $absenceCount) { //POCOR-7398 just changed <= to == also removed -1 after threshold
+                                        //     $absenceCount = $absenceCount + 1;
+                                        //     if (!empty($userData->email)) {
+                                        //         $email = new Email('openemis');
+                                        //         $emailSubject = 'OpenEMIS Attendance Alert for ' . $insCode . " - " . $insName;
+                                        //         $emailMessage = $alertRuleMessage; //POCOR-7266
+                                        //         // POCOR-8039 start
+                                        //         try {
+                                        //             $email
+                                        //                 ->to($userData->email)
+                                        //                 ->subject($emailSubject)
+                                        //                 ->send($emailMessage);
+                                        //         } catch (\Exception $exception) {
+                                        //             $this->log($exception->getMessage(), 'error');
+                                        //         }
+                                        //         // POCOR-8039 end
+                                        //     }
+                                        // }
                                     }
                                 }
                             }

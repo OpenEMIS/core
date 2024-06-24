@@ -16,13 +16,13 @@ class AppraisalNumbersTable extends AppTable
     const LESS_THAN_OR_EQUAL = 'less_than_equal';
     const BETWEEN = 'between';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AppraisalCriterias', ['className' => 'StaffAppraisal.AppraisalCriterias']);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
 
         return $validator

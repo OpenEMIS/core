@@ -11,6 +11,10 @@ use App\Models\ConfigItem;
 use App\Models\SecurityUsers;
 use App\Models\OpenemisTemp;
 use App\Models\AcademicPeriod;
+use App\Models\InstitutionClassStudents;
+use App\Models\MealProgrammes;
+use App\Models\MealReceived;
+use App\Models\MealBenefits;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
@@ -491,5 +495,66 @@ if(!function_exists('checkAccess')){
 		}
 	}
 	//For POCOR-8208 End...
+
+
+	//For POCOR-8348 Start...
+	if(!function_exists('getClassStudents')){
+		function getClassStudents($institution_id, $institution_class_id)
+		{	
+		    $getClassStudents = InstitutionClassStudents::select('security_users.first_name', 'security_users.last_name', 'security_users.openemis_no')->join('security_users', 'security_users.id', '=', 'institution_class_students.student_id')->where("institution_id", $institution_id)->where('institution_class_id', $institution_class_id)->get()->toArray();
+	    	
+	    	$resp = [];
+		    foreach($getClassStudents as $k => $student){
+		    	$resp[$k]['Name'] = $student['first_name']. ' '.$student['last_name'];
+		    	$resp[$k]['OpenEMIS ID'] = $student['openemis_no'];
+		    }
+		    return $resp;
+		}
+	}
+
+
+	if(!function_exists('getMealProgrammes')){
+		function getMealProgrammes()
+		{	
+			$currentAcademicYear = AcademicPeriod::where('current', 1)->first();
+		    $getMealProgrammes = MealProgrammes::where('academic_period_id', $currentAcademicYear->id??0)->get()->toArray();
+	    	
+	    	$resp = [];
+		    foreach($getMealProgrammes as $k => $mealProgramme){
+		    	$resp[$k]['Name'] = $mealProgramme['name'];
+		    	$resp[$k]['Code'] = $mealProgramme['code'];
+		    }
+		    return $resp;
+		}
+	}
+
+	if(!function_exists('getMealReceived')){
+		function getMealReceived()
+		{	
+		    $getMealReceived = MealReceived::get()->toArray();
+	    	
+	    	$resp = [];
+		    foreach($getMealReceived as $k => $mealReceived){
+		    	$resp[$k]['Name'] = $mealReceived['name'];
+		    	$resp[$k]['Code'] = $mealReceived['code'];
+		    }
+		    return $resp;
+		}
+	}
+
+	if(!function_exists('getMealBenefits')){
+		function getMealBenefits()
+		{	
+		    $getMealBenefits = MealBenefits::where('visible', 1)->orderBy('order', 'ASC')->get()->toArray();
+	    	
+	    	$resp = [];
+		    foreach($getMealBenefits as $k => $mealReceived){
+		    	$resp[$k]['Name'] = $mealReceived['name'];
+		    	$resp[$k]['Id'] = $mealReceived['id'];
+		    }
+		    return $resp;
+		}
+	}
+	//For POCOR-8348 End...
 
 }

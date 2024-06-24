@@ -7,7 +7,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 
@@ -23,9 +23,9 @@ class ConfigStaffReleasesTable extends ControllerActionTable
     CONST RESTRICT_STAFF_RELEASE_BETWEEN_DIFFERENT_PROVIDER = 'restrict_staff_release_between_different_provider';
     CONST SELECTION_DISABLE = "0";
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('config_items');
+        $this->setTable('config_items');
         parent::initialize($config);
 
         $this->addBehavior('Configuration.ConfigItems');
@@ -277,7 +277,7 @@ class ConfigStaffReleasesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onUpdateFieldValueSelection(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldValueSelection(Event $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
 
@@ -310,7 +310,7 @@ class ConfigStaffReleasesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
 

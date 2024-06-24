@@ -11,9 +11,9 @@ use Cake\ORM\TableRegistry;
 class InfrastructureWashWatersTable extends ControllerActionTable
 {
     private $infrastructureTabsData = [0 => "Water", 1 => "Sanitation", 2 => "Hygiene", 3 => "Waste", 4 => "Sewage"];
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('infrastructure_wash_waters');
+        $this->setTable('infrastructure_wash_waters');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreign_key' => 'academic_period_id']);
@@ -29,6 +29,10 @@ class InfrastructureWashWatersTable extends ControllerActionTable
         $this->toggle('search', false);
 
         $this->addBehavior('Excel', ['excludes' => ['academic_period_id', 'institution_id'], 'pages' => ['index'], ]);
+
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InfrastructureWashWaters'=>['id']]
+        ]);
 
     }
 
@@ -56,7 +60,7 @@ class InfrastructureWashWatersTable extends ControllerActionTable
             ->AcademicPeriods
             ->getYearList();
         $requestQuery = $this
-            ->request->query;
+            ->request->getQuery();
 
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this
             ->AcademicPeriods
@@ -64,7 +68,10 @@ class InfrastructureWashWatersTable extends ControllerActionTable
 
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
 
-        $extra['elements']['control'] = ['name' => 'Risks/controls', 'data' => ['academicPeriodOptions' => $academicPeriodOptions, 'selectedAcademicPeriod' => $selectedAcademicPeriodId], 'options' => [], 'order' => 3];
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
+        $extra['elements']['control'] = ['name' => 'Risks/controls', 'data' => ['encodedQueryString' => $encodedQueryString, 'academicPeriodOptions' => $academicPeriodOptions, 'selectedAcademicPeriod' => $selectedAcademicPeriodId], 'options' => [], 'order' => 3];
         // end element control
 
         // Start POCOR-5188
@@ -148,14 +155,14 @@ class InfrastructureWashWatersTable extends ControllerActionTable
     {
         unset($sheets[0]);
         $infrastructureTabsData = $this->infrastructureTabsData;
-        $InstitutionStudents = TableRegistry::get('User.InstitutionStudents');
+        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
         $institutionStudentId = $settings['id'];
 
         foreach ($infrastructureTabsData as $key => $val)
         {
             $tabsName = $val;
             $sheets[] = ['sheetData' => ['infrastructure_tabs_type' => $val], 'name' => $tabsName, 'table' => $this, 'query' => $this->find()
-            /* ->leftJoin([$InstitutionStudents->alias() => $InstitutionStudents->table()],[
+            /* ->leftJoin([$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()],[
                         $this->aliasField('id = ').$InstitutionStudents->aliasField('student_id')
                     ])
                     ->where([
@@ -245,26 +252,27 @@ class InfrastructureWashWatersTable extends ControllerActionTable
     {
         $session = $this
             ->request
-            ->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+            ->getSession();
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
         $requestQuery = $this
-            ->request->query;
+            ->request->getQuery();
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this
             ->AcademicPeriods
             ->getCurrent();
         $sheetData = $settings['sheet']['sheetData'];
         $infrastructureType = $sheetData['infrastructure_tabs_type'];
-        $areaAdministratives = TableRegistry::get('area_administratives');
-        $institutions = TableRegistry::get('institutions');
-        $area = TableRegistry::get('areas');
+        $areaAdministratives = TableRegistry::get('Area.AreaAdministratives');
+        $institutions = TableRegistry::get('Institution.Institutions');
+        $area = TableRegistry::get('Area.Areas');
         /* $query->select(['institutions_name'=>'institutions.name','institutions_code'=>'institutions.code','area_administratives_name'=>'area_administratives.name','area_name'=>'areas.name'])
-             ->LeftJoin([$institutions->alias() => $institutions->table()],[
+             ->LeftJoin([$institutions->getAlias() => $institutions->getTable()],[
                 $institutions->aliasField('id').' = ' . $this->aliasField('institution_id')
                 ])
-              ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table()],[
+              ->LeftJoin([$areaAdministratives->getAlias() => $areaAdministratives->getTable()],[
                 $areaAdministratives->aliasField('id').' = ' . $institutions->aliasField('area_administrative_id')
                 ])
-              ->LeftJoin([$area->alias() => $area->table()],[
+              ->LeftJoin([$area->getAlias() => $area->getTable()],[
                 $area->aliasField('id').' = ' . $institutions->aliasField('area_id')
                 ])
               ->where([
@@ -274,104 +282,104 @@ class InfrastructureWashWatersTable extends ControllerActionTable
 
         if ($infrastructureType == 'Water')
         {
-            $infrastructureWashWaterTypes = TableRegistry::get('infrastructure_wash_water_types');
-            $infrastructureWashWaterProximities = TableRegistry::get('infrastructure_wash_water_proximities');
-            $infrastructureWashWaterFunctionalities = TableRegistry::get('infrastructure_wash_water_functionalities');
-            $infrastructureWashWaterQualities = TableRegistry::get('infrastructure_wash_water_qualities');
-            $infrastructureWashWaterQuantities = TableRegistry::get('infrastructure_wash_water_quantities');
-            $infrastructureWashWaterAccessibilities = TableRegistry::get('infrastructure_wash_water_accessibilities');
-            $res = $query->select(['water_type' => 'infrastructure_wash_water_types.name', 'water_functionality' => 'infrastructure_wash_water_functionalities.name', 'water_proximity' => 'infrastructure_wash_water_proximities.name', 'water_quality' => 'infrastructure_wash_water_qualities.name', 'water_quantity' => 'infrastructure_wash_water_quantities.name', 'water_accessbility' => 'infrastructure_wash_water_accessibilities.name', 'institutions_name' => 'institutions.name', 'institutions_code' => 'institutions.code', 'area_administratives_name' => 'area_administratives.name', 'area_name' => 'areas.name'])
-                ->LeftJoin([$infrastructureWashWaterTypes->alias() => $infrastructureWashWaterTypes->table() ], [$this->aliasField('infrastructure_wash_water_type_id') . ' = ' . $infrastructureWashWaterTypes->aliasField('id') ])
-                ->LeftJoin([$infrastructureWashWaterProximities->alias() => $infrastructureWashWaterProximities->table() ], [$this->aliasField('infrastructure_wash_water_proximity_id') . ' = ' . $infrastructureWashWaterProximities->aliasField('id') ])
-                ->LeftJoin([$infrastructureWashWaterFunctionalities->alias() => $infrastructureWashWaterFunctionalities->table() ], [$this->aliasField('infrastructure_wash_water_functionality_id') . ' = ' . $infrastructureWashWaterFunctionalities->aliasField('id') ])
-                ->LeftJoin([$infrastructureWashWaterQualities->alias() => $infrastructureWashWaterQualities->table() ], [$this->aliasField('infrastructure_wash_water_quality_id') . ' = ' . $infrastructureWashWaterQualities->aliasField('id') ])
-                ->LeftJoin([$infrastructureWashWaterQuantities->alias() => $infrastructureWashWaterQuantities->table() ], [$this->aliasField('infrastructure_wash_water_quantity_id') . ' = ' . $infrastructureWashWaterQuantities->aliasField('id') ])
-                ->LeftJoin([$infrastructureWashWaterAccessibilities->alias() => $infrastructureWashWaterAccessibilities->table() ], [$this->aliasField('infrastructure_wash_water_accessibility_id') . ' = ' . $infrastructureWashWaterAccessibilities->aliasField('id') ])
-                ->LeftJoin([$institutions->alias() => $institutions->table() ], [$institutions->aliasField('id') . ' = ' . $this->aliasField('institution_id') ])
-                ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table() ], [$areaAdministratives->aliasField('id') . ' = ' . $institutions->aliasField('area_administrative_id') ])
-                ->LeftJoin([$area->alias() => $area->table() ], [$area->aliasField('id') . ' = ' . $institutions->aliasField('area_id') ])
+            $infrastructureWashWaterTypes = TableRegistry::get('Institution.InfrastructureWashWaterTypes');
+            $infrastructureWashWaterProximities = TableRegistry::get('Institution.InfrastructureWashWaterProximities');
+            $infrastructureWashWaterFunctionalities = TableRegistry::get('Institution.InfrastructureWashWaterFunctionalities');
+            $infrastructureWashWaterQualities = TableRegistry::get('Institution.InfrastructureWashWaterQualities');
+            $infrastructureWashWaterQuantities = TableRegistry::get('Institution.InfrastructureWashWaterQuantities');
+            $infrastructureWashWaterAccessibilities = TableRegistry::get('Institution.InfrastructureWashWaterAccessibilities');
+            $res = $query->select(['water_type' => $infrastructureWashWaterTypes->aliasField('name'), 'water_functionality' => $infrastructureWashWaterFunctionalities->aliasField('name'), 'water_proximity' => $infrastructureWashWaterProximities->aliasField('name'), 'water_quality' => $infrastructureWashWaterQualities->aliasField('name'), 'water_quantity' => $infrastructureWashWaterQuantities->aliasField('name'), 'water_accessbility' => $infrastructureWashWaterAccessibilities->aliasField('name'), 'institutions_name' => $institutions->aliasField('name'), 'institutions_code' => $institutions->aliasField('code'), 'area_administratives_name' => $areaAdministratives->aliasField('name'), 'area_name' => $area->aliasField('name')])
+                ->LeftJoin([$infrastructureWashWaterTypes->getAlias() => $infrastructureWashWaterTypes->getTable() ], [$this->aliasField('infrastructure_wash_water_type_id') . ' = ' . $infrastructureWashWaterTypes->aliasField('id') ])
+                ->LeftJoin([$infrastructureWashWaterProximities->getAlias() => $infrastructureWashWaterProximities->getTable() ], [$this->aliasField('infrastructure_wash_water_proximity_id') . ' = ' . $infrastructureWashWaterProximities->aliasField('id') ])
+                ->LeftJoin([$infrastructureWashWaterFunctionalities->getAlias() => $infrastructureWashWaterFunctionalities->getTable() ], [$this->aliasField('infrastructure_wash_water_functionality_id') . ' = ' . $infrastructureWashWaterFunctionalities->aliasField('id') ])
+                ->LeftJoin([$infrastructureWashWaterQualities->getAlias() => $infrastructureWashWaterQualities->getTable() ], [$this->aliasField('infrastructure_wash_water_quality_id') . ' = ' . $infrastructureWashWaterQualities->aliasField('id') ])
+                ->LeftJoin([$infrastructureWashWaterQuantities->getAlias() => $infrastructureWashWaterQuantities->getTable() ], [$this->aliasField('infrastructure_wash_water_quantity_id') . ' = ' . $infrastructureWashWaterQuantities->aliasField('id') ])
+                ->LeftJoin([$infrastructureWashWaterAccessibilities->getAlias() => $infrastructureWashWaterAccessibilities->getTable() ], [$this->aliasField('infrastructure_wash_water_accessibility_id') . ' = ' . $infrastructureWashWaterAccessibilities->aliasField('id') ])
+                ->LeftJoin([$institutions->getAlias() => $institutions->getTable() ], [$institutions->aliasField('id') . ' = ' . $this->aliasField('institution_id') ])
+                ->LeftJoin([$areaAdministratives->getAlias() => $areaAdministratives->getTable() ], [$areaAdministratives->aliasField('id') . ' = ' . $institutions->aliasField('area_administrative_id') ])
+                ->LeftJoin([$area->getAlias() => $area->getTable() ], [$area->aliasField('id') . ' = ' . $institutions->aliasField('area_id') ])
                 ->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriodId, $this->aliasField('institution_id') => $institutionId])->orderDesc($this->aliasField('created'));
 
         }
         if ($infrastructureType == 'Sanitation')
         {
-            $infrastructureWashSanitations = TableRegistry::get('infrastructure_wash_sanitations');
-            $infrastructureWashSanitationTypes = TableRegistry::get('infrastructure_wash_sanitation_types');
-            $infrastructureWashSanitationUses = TableRegistry::get('infrastructure_wash_sanitation_uses');
-            $infrastructureWashSanitationQualities = TableRegistry::get('infrastructure_wash_sanitation_qualities');
-            $infrastructureWashSanitationAccessibilities = TableRegistry::get('infrastructure_wash_sanitation_accessibilities');
+            $infrastructureWashSanitations = TableRegistry::get('Institution.InfrastructureWashSanitations');
+            $infrastructureWashSanitationTypes = TableRegistry::get('Institution.InfrastructureWashSanitationTypes');
+            $infrastructureWashSanitationUses = TableRegistry::get('Institution.InfrastructureWashSanitationUses');
+            $infrastructureWashSanitationQualities = TableRegistry::get('Institution.InfrastructureWashSanitationQualities');
+            $infrastructureWashSanitationAccessibilities = TableRegistry::get('Institution.InfrastructureWashSanitationAccessibilities');
 
-            $res = $query->select(['sanitation_name' => 'infrastructure_wash_sanitation_types.name', 'sanitation_use_name' => 'infrastructure_wash_sanitation_uses.name', 'total_male' => 'infrastructure_wash_sanitations.infrastructure_wash_sanitation_total_male', 'total_female' => 'infrastructure_wash_sanitations.infrastructure_wash_sanitation_total_female', 'total_mixed' => 'infrastructure_wash_sanitations.infrastructure_wash_sanitation_total_mixed', 'quality' => 'infrastructure_wash_sanitation_qualities.name', 'accessibility' => 'infrastructure_wash_sanitation_accessibilities.name', 'institutions_name' => 'institutions.name', 'institutions_code' => 'institutions.code', 'area_administratives_name' => 'area_administratives.name', 'area_name' => 'areas.name'])
+            $res = $query->select(['sanitation_name' => $infrastructureWashSanitationTypes->aliasField('name'), 'sanitation_use_name' => $infrastructureWashSanitationUses->aliasField('name'), 'total_male' => $infrastructureWashSanitations->aliasField('infrastructure_wash_sanitation_total_male'), 'total_female' => $infrastructureWashSanitations->aliasField('infrastructure_wash_sanitation_total_female'), 'total_mixed' => $infrastructureWashSanitations->aliasField('infrastructure_wash_sanitation_total_mixed'), 'quality' => $infrastructureWashSanitationQualities->aliasField('name'), 'accessibility' => $infrastructureWashSanitationAccessibilities->aliasField('name'), 'institutions_name' => $institutions->aliasField('name'), 'institutions_code' => $institutions->aliasField('code'), 'area_administratives_name' => $areaAdministratives->aliasField('name'), 'area_name' => $area->aliasField('name')])
             // Sanitation Name
             
-                ->LeftJoin([$infrastructureWashSanitations->alias() => $infrastructureWashSanitations->table() ], [$infrastructureWashSanitations->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id') , $infrastructureWashSanitations->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id') ])
-                ->LeftJoin([$infrastructureWashSanitationTypes->alias() => $infrastructureWashSanitationTypes->table() ], [$infrastructureWashSanitations->aliasField('infrastructure_wash_sanitation_type_id') . ' = ' . $infrastructureWashSanitationTypes->aliasField('id') ])
+                ->LeftJoin([$infrastructureWashSanitations->getAlias() => $infrastructureWashSanitations->getTable() ], [$infrastructureWashSanitations->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id') , $infrastructureWashSanitations->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id') ])
+                ->LeftJoin([$infrastructureWashSanitationTypes->getAlias() => $infrastructureWashSanitationTypes->getTable() ], [$infrastructureWashSanitations->aliasField('infrastructure_wash_sanitation_type_id') . ' = ' . $infrastructureWashSanitationTypes->aliasField('id') ])
             // Sanitation Name End
             // Sanitation  Use
             
-                ->LeftJoin([$infrastructureWashSanitationUses->alias() => $infrastructureWashSanitationUses->table() ], [$infrastructureWashSanitations->aliasField('infrastructure_wash_sanitation_use_id') . ' = ' . $infrastructureWashSanitationUses->aliasField('id') ])
+                ->LeftJoin([$infrastructureWashSanitationUses->getAlias() => $infrastructureWashSanitationUses->getTable() ], [$infrastructureWashSanitations->aliasField('infrastructure_wash_sanitation_use_id') . ' = ' . $infrastructureWashSanitationUses->aliasField('id') ])
             // Sanitation  Use End
             // Sanitation  Quality
             
-                ->LeftJoin([$infrastructureWashSanitationQualities->alias() => $infrastructureWashSanitationQualities->table() ], [$infrastructureWashSanitations->aliasField('infrastructure_wash_sanitation_quality_id') . ' = ' . $infrastructureWashSanitationQualities->aliasField('id') ])
+                ->LeftJoin([$infrastructureWashSanitationQualities->getAlias() => $infrastructureWashSanitationQualities->getTable() ], [$infrastructureWashSanitations->aliasField('infrastructure_wash_sanitation_quality_id') . ' = ' . $infrastructureWashSanitationQualities->aliasField('id') ])
             // Sanitation  Quality End
             // Sanitation  Accessbility
             
-                ->LeftJoin([$infrastructureWashSanitationAccessibilities->alias() => $infrastructureWashSanitationAccessibilities->table() ], [$infrastructureWashSanitations->aliasField('infrastructure_wash_sanitation_accessibility_id') . ' = ' . $infrastructureWashSanitationAccessibilities->aliasField('id') ])
-                ->LeftJoin([$institutions->alias() => $institutions->table() ], [$institutions->aliasField('id') . ' = ' . $this->aliasField('institution_id') ])
-                ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table() ], [$areaAdministratives->aliasField('id') . ' = ' . $institutions->aliasField('area_administrative_id') ])
-                ->LeftJoin([$area->alias() => $area->table() ], [$area->aliasField('id') . ' = ' . $institutions->aliasField('area_id') ])
-                ->where(['infrastructure_wash_sanitations.academic_period_id' => $selectedAcademicPeriodId, 'infrastructure_wash_sanitations.institution_id' => $institutionId])->group('infrastructure_wash_sanitations.id');
+                ->LeftJoin([$infrastructureWashSanitationAccessibilities->getAlias() => $infrastructureWashSanitationAccessibilities->getTable() ], [$infrastructureWashSanitations->aliasField('infrastructure_wash_sanitation_accessibility_id') . ' = ' . $infrastructureWashSanitationAccessibilities->aliasField('id') ])
+                ->LeftJoin([$institutions->getAlias() => $institutions->getTable() ], [$institutions->aliasField('id') . ' = ' . $this->aliasField('institution_id') ])
+                ->LeftJoin([$areaAdministratives->getAlias() => $areaAdministratives->getTable() ], [$areaAdministratives->aliasField('id') . ' = ' . $institutions->aliasField('area_administrative_id') ])
+                ->LeftJoin([$area->getAlias() => $area->getTable() ], [$area->aliasField('id') . ' = ' . $institutions->aliasField('area_id') ])
+                ->where([$infrastructureWashSanitations->aliasField('academic_period_id') => $selectedAcademicPeriodId, $infrastructureWashSanitations->aliasField('institution_id') => $institutionId])->group($infrastructureWashSanitations->aliasField('id'));
 
             //->orderDesc($this->infrastructureWashSanitations->aliasField('created'))
             
         }
         if ($infrastructureType == 'Hygiene')
         {
-            $infrastructureWashHygienes = TableRegistry::get('infrastructure_wash_hygienes');
-            $infrastructureWashHygieneTypes = TableRegistry::get('infrastructure_wash_hygiene_types');
-            $infrastructureWashHygieneSoapashAvailabilities = TableRegistry::get('infrastructure_wash_hygiene_soapash_availabilities');
-            $infrastructureWashHygieneEducations = TableRegistry::get('infrastructure_wash_hygiene_educations');
-            $res = $query->select(['hygiene_type_name' => 'infrastructure_wash_hygiene_types.name', 'soap_ash_availability' => 'infrastructure_wash_hygiene_soapash_availabilities.name', 'hygiene_education' => 'infrastructure_wash_hygiene_educations.name', 'hygeine_total_male' => 'infrastructure_wash_hygienes.infrastructure_wash_hygiene_total_male', 'hygeine_total_female' => 'infrastructure_wash_hygienes.infrastructure_wash_hygiene_total_female', 'hygeine_total_mixed' => 'infrastructure_wash_hygienes.infrastructure_wash_hygiene_total_mixed', 'institutions_name' => 'institutions.name', 'institutions_code' => 'institutions.code', 'area_administratives_name' => 'area_administratives.name', 'area_name' => 'areas.name'])
-                ->LeftJoin([$infrastructureWashHygienes->alias() => $infrastructureWashHygienes->table() ], [$infrastructureWashHygienes->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id') , $infrastructureWashHygienes->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id') ])
-                ->LeftJoin([$infrastructureWashHygieneTypes->alias() => $infrastructureWashHygieneTypes->table() ], [$infrastructureWashHygieneTypes->aliasField('id') . ' = ' . $infrastructureWashHygienes->aliasField('infrastructure_wash_hygiene_type_id') ])
-                ->LeftJoin([$infrastructureWashHygieneSoapashAvailabilities->alias() => $infrastructureWashHygieneSoapashAvailabilities->table() ], [$infrastructureWashHygieneSoapashAvailabilities->aliasField('id') . ' = ' . $infrastructureWashHygienes->aliasField('infrastructure_wash_hygiene_soapash_availability_id ') ])
-                ->LeftJoin([$infrastructureWashHygieneEducations->alias() => $infrastructureWashHygieneEducations->table() ], [$infrastructureWashHygieneEducations->aliasField('id') . ' = ' . $infrastructureWashHygienes->aliasField('infrastructure_wash_hygiene_education_id ') ])
-                ->LeftJoin([$institutions->alias() => $institutions->table() ], [$institutions->aliasField('id') . ' = ' . $this->aliasField('institution_id') ])
-                ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table() ], [$areaAdministratives->aliasField('id') . ' = ' . $institutions->aliasField('area_administrative_id') ])
-                ->LeftJoin([$area->alias() => $area->table() ], [$area->aliasField('id') . ' = ' . $institutions->aliasField('area_id') ])
-                ->where(['infrastructure_wash_hygienes.academic_period_id' => $selectedAcademicPeriodId, 'infrastructure_wash_hygienes.institution_id' => $institutionId])->group('infrastructure_wash_hygienes.id');
+            $infrastructureWashHygienes = TableRegistry::get('Institution.InfrastructureWashHygienes');
+            $infrastructureWashHygieneTypes = TableRegistry::get('Institution.InfrastructureWashHygieneTypes');
+            $infrastructureWashHygieneSoapashAvailabilities = TableRegistry::get('Institution.InfrastructureWashHygieneSoapashAvailabilities');
+            $infrastructureWashHygieneEducations = TableRegistry::get('Institution.InfrastructureWashHygieneEducations');
+            $res = $query->select(['hygiene_type_name' => $infrastructureWashHygieneTypes->aliasField('name'), 'soap_ash_availability' => $infrastructureWashHygieneSoapashAvailabilities->aliasField('name'), 'hygiene_education' => $infrastructureWashHygieneEducations->aliasField('name'), 'hygeine_total_male' => $infrastructureWashHygienes->aliasField('infrastructure_wash_hygiene_total_male'), 'hygeine_total_female' => $infrastructureWashHygienes->aliasField('infrastructure_wash_hygiene_total_female'), 'hygeine_total_mixed' => $infrastructureWashHygienes->aliasField('infrastructure_wash_hygiene_total_mixed'), 'institutions_name' => $institutions->aliasField('name'), 'institutions_code' => $institutions->aliasField('code'), 'area_administratives_name' => $areaAdministratives->aliasField('name'), 'area_name' => $area->aliasField('name')])
+                ->LeftJoin([$infrastructureWashHygienes->getAlias() => $infrastructureWashHygienes->getTable() ], [$infrastructureWashHygienes->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id') , $infrastructureWashHygienes->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id') ])
+                ->LeftJoin([$infrastructureWashHygieneTypes->getAlias() => $infrastructureWashHygieneTypes->getTable() ], [$infrastructureWashHygieneTypes->aliasField('id') . ' = ' . $infrastructureWashHygienes->aliasField('infrastructure_wash_hygiene_type_id') ])
+                ->LeftJoin([$infrastructureWashHygieneSoapashAvailabilities->getAlias() => $infrastructureWashHygieneSoapashAvailabilities->getTable() ], [$infrastructureWashHygieneSoapashAvailabilities->aliasField('id') . ' = ' . $infrastructureWashHygienes->aliasField('infrastructure_wash_hygiene_soapash_availability_id ') ])
+                ->LeftJoin([$infrastructureWashHygieneEducations->getAlias() => $infrastructureWashHygieneEducations->getTable() ], [$infrastructureWashHygieneEducations->aliasField('id') . ' = ' . $infrastructureWashHygienes->aliasField('infrastructure_wash_hygiene_education_id ') ])
+                ->LeftJoin([$institutions->getAlias() => $institutions->getTable() ], [$institutions->aliasField('id') . ' = ' . $this->aliasField('institution_id') ])
+                ->LeftJoin([$areaAdministratives->getAlias() => $areaAdministratives->getTable() ], [$areaAdministratives->aliasField('id') . ' = ' . $institutions->aliasField('area_administrative_id') ])
+                ->LeftJoin([$area->getAlias() => $area->getTable() ], [$area->aliasField('id') . ' = ' . $institutions->aliasField('area_id') ])
+                ->where([$infrastructureWashHygienes->aliasField('academic_period_id') => $selectedAcademicPeriodId, $infrastructureWashHygienes->aliasField('institution_id') => $institutionId])->group($infrastructureWashHygienes->aliasField('id'));
             // /print_r($res); exit;
             
         }
         if ($infrastructureType == 'Waste')
         {
-            $infrastructureWashWastes = TableRegistry::get('infrastructure_wash_wastes');
-            $infrastructureWashWasteTypes = TableRegistry::get('infrastructure_wash_waste_types');
-            $infrastructureWashWasteFunctionalities = TableRegistry::get('infrastructure_wash_waste_functionalities');
+            $infrastructureWashWastes = TableRegistry::get('Institution.InfrastructureWashWastes');
+            $infrastructureWashWasteTypes = TableRegistry::get('Institution.InfrastructureWashWasteTypes');
+            $infrastructureWashWasteFunctionalities = TableRegistry::get('Institution.InfrastructureWashWasteFunctionalities');
 
-            $res = $query->select(['waste_type' => 'infrastructure_wash_waste_types.name', 'waste_functionality' => 'infrastructure_wash_waste_functionalities.name', 'institutions_name' => 'institutions.name', 'institutions_code' => 'institutions.code', 'area_administratives_name' => 'area_administratives.name', 'area_name' => 'areas.name'])
-                ->LeftJoin([$infrastructureWashWastes->alias() => $infrastructureWashWastes->table() ], [$infrastructureWashWastes->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id') , $infrastructureWashWastes->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id') ])
-                ->LeftJoin([$infrastructureWashWasteTypes->alias() => $infrastructureWashWasteTypes->table() ], [$infrastructureWashWasteTypes->aliasField('id') . ' = ' . $infrastructureWashWastes->aliasField('infrastructure_wash_waste_type_id') ])
-                ->LeftJoin([$infrastructureWashWasteFunctionalities->alias() => $infrastructureWashWasteFunctionalities->table() ], [$infrastructureWashWasteFunctionalities->aliasField('id') . ' = ' . $infrastructureWashWastes->aliasField('infrastructure_wash_waste_functionality_id') ])
-                ->LeftJoin([$institutions->alias() => $institutions->table() ], [$institutions->aliasField('id') . ' = ' . $this->aliasField('institution_id') ])
-                ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table() ], [$areaAdministratives->aliasField('id') . ' = ' . $institutions->aliasField('area_administrative_id') ])
-                ->LeftJoin([$area->alias() => $area->table() ], [$area->aliasField('id') . ' = ' . $institutions->aliasField('area_id') ])
-                ->where(['infrastructure_wash_wastes.academic_period_id' => $selectedAcademicPeriodId, 'infrastructure_wash_wastes.institution_id' => $institutionId])->group('infrastructure_wash_wastes.id');
+            $res = $query->select(['waste_type' => $infrastructureWashWasteTypes->aliasField('name'), 'waste_functionality' => $infrastructureWashWasteFunctionalities->aliasField('name'), 'institutions_name' => $institutions->aliasField('name'), 'institutions_code' => $institutions->aliasField('code'), 'area_administratives_name' => $areaAdministratives->aliasField('name'), 'area_name' => $area->aliasField('name')])
+                ->LeftJoin([$infrastructureWashWastes->getAlias() => $infrastructureWashWastes->getTable() ], [$infrastructureWashWastes->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id') , $infrastructureWashWastes->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id') ])
+                ->LeftJoin([$infrastructureWashWasteTypes->getAlias() => $infrastructureWashWasteTypes->getTable() ], [$infrastructureWashWasteTypes->aliasField('id') . ' = ' . $infrastructureWashWastes->aliasField('infrastructure_wash_waste_type_id') ])
+                ->LeftJoin([$infrastructureWashWasteFunctionalities->getAlias() => $infrastructureWashWasteFunctionalities->getTable() ], [$infrastructureWashWasteFunctionalities->aliasField('id') . ' = ' . $infrastructureWashWastes->aliasField('infrastructure_wash_waste_functionality_id') ])
+                ->LeftJoin([$institutions->getAlias() => $institutions->getTable() ], [$institutions->aliasField('id') . ' = ' . $this->aliasField('institution_id') ])
+                ->LeftJoin([$areaAdministratives->getAlias() => $areaAdministratives->getTable() ], [$areaAdministratives->aliasField('id') . ' = ' . $institutions->aliasField('area_administrative_id') ])
+                ->LeftJoin([$area->getAlias() => $area->getTable() ], [$area->aliasField('id') . ' = ' . $institutions->aliasField('area_id') ])
+                ->where([$infrastructureWashWastes->aliasField('academic_period_id') => $selectedAcademicPeriodId, $infrastructureWashWastes->aliasField('institution_id') => $institutionId])->group($infrastructureWashWastes->aliasField('id'));
         }
         if ($infrastructureType == 'Sewage')
         {
-            $infrastructureWashSewages = TableRegistry::get('infrastructure_wash_sewages');
-            $infrastructureWashSewageTypes = TableRegistry::get('infrastructure_wash_sewage_types');
-            $infrastructureWashSewageFunctionalities = TableRegistry::get('infrastructure_wash_sewage_functionalities');
-            $res = $query->select(['sewage_type' => 'infrastructure_wash_sewage_types.name', 'sewage_functionality' => 'infrastructure_wash_sewage_functionalities.name', 'institutions_name' => 'institutions.name', 'institutions_code' => 'institutions.code', 'area_administratives_name' => 'area_administratives.name', 'area_name' => 'areas.name'])
-                ->LeftJoin([$infrastructureWashSewages->alias() => $infrastructureWashSewages->table() ], [$infrastructureWashSewages->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id') , $infrastructureWashSewages->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id') ])
-                ->LeftJoin([$infrastructureWashSewageTypes->alias() => $infrastructureWashSewageTypes->table() ], [$infrastructureWashSewageTypes->aliasField('id') . ' = ' . $infrastructureWashSewages->aliasField('infrastructure_wash_sewage_type_id') ])
-                ->LeftJoin([$infrastructureWashSewageFunctionalities->alias() => $infrastructureWashSewageFunctionalities->table() ], [$infrastructureWashSewageFunctionalities->aliasField('id') . ' = ' . $infrastructureWashSewages->aliasField('infrastructure_wash_sewage_functionality_id') ])
-                ->LeftJoin([$institutions->alias() => $institutions->table() ], [$institutions->aliasField('id') . ' = ' . $this->aliasField('institution_id') ])
-                ->LeftJoin([$areaAdministratives->alias() => $areaAdministratives->table() ], [$areaAdministratives->aliasField('id') . ' = ' . $institutions->aliasField('area_administrative_id') ])
-                ->LeftJoin([$area->alias() => $area->table() ], [$area->aliasField('id') . ' = ' . $institutions->aliasField('area_id') ])
-                ->where(['infrastructure_wash_sewages.academic_period_id' => $selectedAcademicPeriodId, 'infrastructure_wash_sewages.institution_id' => $institutionId])->group('infrastructure_wash_sewages.id');
+            $infrastructureWashSewages = TableRegistry::get('Institution.InfrastructureWashSewages');
+            $infrastructureWashSewageTypes = TableRegistry::get('Institution.InfrastructureWashSewageTypes');
+            $infrastructureWashSewageFunctionalities = TableRegistry::get('Institution.InfrastructureWashSewageFunctionalities');
+            $res = $query->select(['sewage_type' => $infrastructureWashSewageTypes->aliasField('name'), 'sewage_functionality' => $infrastructureWashSewageFunctionalities->aliasField('name'), 'institutions_name' => $institutions->aliasField('name'), 'institutions_code' => $institutions->aliasField('code'), 'area_administratives_name' => $areaAdministratives->aliasField('name'), 'area_name' => $area->aliasField('name')])
+                ->LeftJoin([$infrastructureWashSewages->getAlias() => $infrastructureWashSewages->getTable() ], [$infrastructureWashSewages->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id') , $infrastructureWashSewages->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id') ])
+                ->LeftJoin([$infrastructureWashSewageTypes->getAlias() => $infrastructureWashSewageTypes->getTable() ], [$infrastructureWashSewageTypes->aliasField('id') . ' = ' . $infrastructureWashSewages->aliasField('infrastructure_wash_sewage_type_id') ])
+                ->LeftJoin([$infrastructureWashSewageFunctionalities->getAlias() => $infrastructureWashSewageFunctionalities->getTable() ], [$infrastructureWashSewageFunctionalities->aliasField('id') . ' = ' . $infrastructureWashSewages->aliasField('infrastructure_wash_sewage_functionality_id') ])
+                ->LeftJoin([$institutions->getAlias() => $institutions->getTable() ], [$institutions->aliasField('id') . ' = ' . $this->aliasField('institution_id') ])
+                ->LeftJoin([$areaAdministratives->getAlias() => $areaAdministratives->getTable() ], [$areaAdministratives->aliasField('id') . ' = ' . $institutions->aliasField('area_administrative_id') ])
+                ->LeftJoin([$area->getAlias() => $area->getTable() ], [$area->aliasField('id') . ' = ' . $institutions->aliasField('area_id') ])
+                ->where([$infrastructureWashSewages->aliasField('academic_period_id') => $selectedAcademicPeriodId, $infrastructureWashSewages->aliasField('institution_id') => $institutionId])->group($infrastructureWashSewages->aliasField('id'));
 
         }
     }

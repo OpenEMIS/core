@@ -5,11 +5,11 @@ use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
 
 class ScheduleTimetablesTable extends ControllerActionTable
 {
@@ -18,9 +18,9 @@ class ScheduleTimetablesTable extends ControllerActionTable
     const DEFAULT = -1;
     private $_status = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_schedule_timetables');
+        $this->setTable('institution_schedule_timetables');
         parent::initialize($config);
 
         $this->belongsTo('Institutions', [
@@ -32,24 +32,24 @@ class ScheduleTimetablesTable extends ControllerActionTable
         ]);
 
         $this->belongsTo('InstitutionClasses', [
-            'className' => 'Institution.InstitutionClasses', 
+            'className' => 'Institution.InstitutionClasses',
             'foreignKey' => 'institution_class_id'
         ]);
 
         $this->belongsTo('ScheduleIntervals', [
-            'className' => 'Schedule.ScheduleIntervals', 
+            'className' => 'Schedule.ScheduleIntervals',
             'foreignKey' => 'institution_schedule_interval_id'
         ]);
 
         $this->belongsTo('ScheduleTerms', [
-            'className' => 'Schedule.ScheduleTerms', 
+            'className' => 'Schedule.ScheduleTerms',
             'foreignKey' => 'institution_schedule_term_id'
         ]);
 
         $this->hasMany('Lessons', [
-            'className' => 'Schedule.ScheduleLessons', 
-            'foreignKey' => 'institution_schedule_timetable_id', 
-            'dependent' => true, 
+            'className' => 'Schedule.ScheduleLessons',
+            'foreignKey' => 'institution_schedule_timetable_id',
+            'dependent' => true,
             'cascadeCallbacks' => true
         ]);
 
@@ -64,9 +64,13 @@ class ScheduleTimetablesTable extends ControllerActionTable
             self::DRAFT => __('Draft'),
             self::PUBLISHED => __('Published')
         ];
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['ScheduleTimetableOverview' =>['id']
+            ]
+        ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator
@@ -90,7 +94,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         return $validator;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.onGetFormButtons'] = 'onGetFormButtons';
@@ -106,6 +110,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
                     'name' => '<i class="fa kd-header-row"></i>' . __('Start Scheduling'),
                     'attr' => [
                         'class' => 'btn btn-default',
+//                        'escapeTitle' => false,
                         'name' => 'submit',
                         'value' => 'saveSchedule',
                         'div' => false
@@ -125,6 +130,26 @@ class ScheduleTimetablesTable extends ControllerActionTable
                 return __('Term');
             case 'institution_class_id':
                 return __('Class');
+            case 'status':
+                return __('Status');
+            case 'name':
+                return __('Name');
+            case 'shift':
+                return __('Shift');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'grade':
+                return __('Grade');
+            case 'time_slots':
+                return __('Time Slots');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
             case 'institution_schedule_interval_id':
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
             default:
@@ -140,17 +165,17 @@ class ScheduleTimetablesTable extends ControllerActionTable
         // academic_period_id filter
         if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
             $query->where([
-                $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']  
+                $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']
             ]);
         }
 
         // institution_schedule_term_id filter
         if (array_key_exists('selectedTermOptions', $extra) && $extra['selectedTermOptions'] != self::DEFAULT) {
             $query->where([
-                $this->aliasField('institution_schedule_term_id') => $extra['selectedTermOptions']  
+                $this->aliasField('institution_schedule_term_id') => $extra['selectedTermOptions']
             ]);
         }
-        
+
         // education_grade_id filter
         if (array_key_exists('selectedGradeOptions', $extra) && $extra['selectedGradeOptions'] != self::DEFAULT) {
             $educationGradeId = $extra['selectedGradeOptions'];
@@ -163,7 +188,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         // status filter
         if (array_key_exists('selectedStatusOptions', $extra) && $extra['selectedStatusOptions'] != self::DEFAULT) {
             $query->where([
-                $this->aliasField('status') => $extra['selectedStatusOptions']  
+                $this->aliasField('status') => $extra['selectedStatusOptions']
             ]);
         }
     }
@@ -180,7 +205,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         $this->setFieldOrder(['status', 'institution_schedule_term_id', 'name', 'institution_class_id', 'shift']);
 
         // filter options
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
 
         // academic_period_id filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
@@ -192,8 +217,9 @@ class ScheduleTimetablesTable extends ControllerActionTable
         }
 
         $extra['selectedAcademicPeriodOptions'] = $selectedPeriodId;
+
         // academic_period_id filter - END
-        
+
         // institution_schedule_term_id filter
         $termOptions = $this->getTermOptions($extra['selectedAcademicPeriodOptions'], true);
 
@@ -205,7 +231,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
 
         $extra['selectedTermOptions'] = $selectedTerm;
         // institution_schedule_term_id filter - END
-        
+
         // education_grade_id filter
         $educationGradeOptions = $this->getEducationGradeOptions($extra['selectedAcademicPeriodOptions'], true);
 
@@ -229,10 +255,12 @@ class ScheduleTimetablesTable extends ControllerActionTable
 
         $extra['selectedStatusOptions'] = $selectedStatusId;
         // status filter - END
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['control'] = [
             'name' => 'Schedule.Timetables/controls',
             'data' => [
+                 'encodedQueryString' => $encodedQueryString,
                 // academic_period_id
                 'periodOptions'=> $academicPeriodOptions,
                 'selectedPeriodOption'=> $extra['selectedAcademicPeriodOptions'],
@@ -245,7 +273,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
                 'educationGradeOptions' => $educationGradeOptions,
                 'selectedGradeOptions' => $extra['selectedGradeOptions'],
 
-                // status 
+                // status
                 'statusOptions' => $statusOptions,
                 'selectedStatusOption' => $extra['selectedStatusOptions']
             ],
@@ -253,7 +281,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         ];
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Timetable','Schedules');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Timetable','Schedules');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -311,25 +339,26 @@ class ScheduleTimetablesTable extends ControllerActionTable
         ]);
         $this->field('institution_schedule_interval_id', ['visible' => true]);
         $this->setFieldOrder(['academic_period_id', 'institution_schedule_term_id', 'status', 'name', 'grade', 'institution_class_id', 'shift', 'time_slots']);
-       
+        $params = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($params);
         $tabElements = [
             'ScheduleTimetableOverview' => [
                 'url' => [
-                    'plugin' => $this->controller->plugin,
-                    'controller' => $this->controller->name,
-                    'action' => 'ScheduleTimetableOverview'
+                    'plugin' => $this->controller->getPlugin(),
+                    'controller' => $this->controller->getName(),
+                    'action' => 'ScheduleTimetableOverview',
+                    '0' => 'view',
+                    '1' => $encodedQueryString,
                 ],
                 'text' => __('Overview')
             ],
             'ScheduleTimetable' => [
                 'url' => [
-                    'plugin' => $this->controller->plugin,
-                    'controller' => $this->controller->name,
+                    'plugin' => $this->controller->getPlugin(),
+                    'controller' => $this->controller->getName(),
                     'action' => 'ScheduleTimetable',
-                    'view',
-                    'timetableId'=>$this->request->params['pass'][1],
-                    'period'=>$this->request->query('period')
-                    
+                    '0' => 'view',
+                    '1' => $encodedQueryString
                 ],
                 'text' => __('Timetable')
             ]
@@ -343,16 +372,18 @@ class ScheduleTimetablesTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         if (array_key_exists('edit', $extra['toolbarButtons'])) {
+            $params = $this->getQueryString();
             $timetableId = $entity->id;
             $institutionId = $entity->institution_id;
-
+            $params['institution_id'] = $institutionId;
+            $params['timetable_id'] = $timetableId;
+            $encodedQueryString = $this->paramsEncode($params);
             $timetableEditUrl = [
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
-                'action' => 'ScheduleTimetable',
-                'institutionId' => $this->paramsEncode(['id' => $institutionId]),
-                'edit',
-                'timetableId' => $this->paramsEncode(['id' => $timetableId])
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
+                'action' => 'ScheduleTimetableOverview',
+                '0' => 'edit',
+                '1' => $encodedQueryString,
             ];
 
             $extra['toolbarButtons']['edit']['url'] = $timetableEditUrl;
@@ -367,13 +398,13 @@ class ScheduleTimetablesTable extends ControllerActionTable
         } else { // self::PUBLISHED
             $color = '#77B576';
         }
-        
+
         $status = $this->_status[$entity->status];
 
         if ($this->action == 'index') {
             return '<span class="status" style="border:none; background-color: ' . $color . ';">' . $status . '</span>';
 
-        } 
+        }
         return $status;
     }
 
@@ -399,7 +430,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
     }
 
     // OnUpdate Events
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['type'] = 'select';
@@ -411,7 +442,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionScheduleTermId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionScheduleTermId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $academicPeriodId = $this->extractRequestData($request, 'academic_period_id');
@@ -422,37 +453,38 @@ class ScheduleTimetablesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $academicPeriodId = $this->extractRequestData($request, 'academic_period_id');
 
             $attr['attr']['label'] = __('Grade');
-            $attr['onChangeReload'] = true;            
+            $attr['onChangeReload'] = true;
             $attr['attr']['required'] = true;
             $attr['options'] = $this->getEducationGradeOptions($academicPeriodId);
         }
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $academicPeriodId = $this->extractRequestData($request, 'academic_period_id');
             $educationGradeId = $this->extractRequestData($request, 'education_grade_id');
-            
+
             $attr['type'] = 'select';
             $attr['options'] = $this->getInstitutionClassOptions($academicPeriodId, $educationGradeId);
         }
+
         return $attr;
     }
 
-    public function onUpdateFieldShift(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldShift(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $academicPeriodId = $this->extractRequestData($request, 'academic_period_id');
 
-            $attr['onChangeReload'] = true;            
+            $attr['onChangeReload'] = true;
             $attr['type'] = 'select';
             $attr['attr']['required'] = true;
             $attr['options'] = $this->getShiftOptions($academicPeriodId);
@@ -460,7 +492,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionScheduleIntervalId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionScheduleIntervalId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $shiftId = $this->extractRequestData($request, 'shift');
@@ -474,7 +506,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['type'] = 'readonly';
@@ -487,30 +519,39 @@ class ScheduleTimetablesTable extends ControllerActionTable
     // Change Events
     public function addOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        unset($data[$this->alias()]['institution_schedule_interval_id']);
-        unset($data[$this->alias()]['shift']);
-        unset($data[$this->alias()]['education_grade_id']);
+        unset($data[$this->getAlias()]['institution_schedule_interval_id']);
+        unset($data[$this->getAlias()]['shift']);
+        unset($data[$this->getAlias()]['education_grade_id']);
     }
 
     public function addOnSaveSchedule(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
     {
+
         $patchOptions['validate'] = true;
-        $entity = $this->patchEntity($entity, $data->getArrayCopy(), $patchOptions->getArrayCopy());
+        $entity = $this->patchEntity($entity,
+            $data->getArrayCopy(),
+            $patchOptions->getArrayCopy());
         $result = $this->save($entity);
+//        echo "<pre>"; print_r($result); die('gjhghg');
+
 
         if ($result) {
+            $params = $this->getQueryString();
             $timetableId = $result->id;
             $institutionId = $result->institution_id;
+            $params['institution_id'] = $institutionId;
+            $params['timetable_id'] = $timetableId;
+            $encodedQueryString = $this->paramsEncode($params);
             $timetableEditUrl = [
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
                 'action' => 'ScheduleTimetable',
-                'institutionId' => $this->paramsEncode(['id' => $institutionId]),
-                'edit',
-                'timetableId' => $this->paramsEncode(['id' => $timetableId])
+                '0' => 'edit',
+                '1' => $encodedQueryString
             ];
-            return $this->controller->redirect($timetableEditUrl);   
+            return $this->controller->redirect($timetableEditUrl);
         } else {
+//            die('<pre>' . print_r($errors, true));
             $this->controller->Alert->error('general.add.failed');
         }
     }
@@ -521,8 +562,8 @@ class ScheduleTimetablesTable extends ControllerActionTable
         if (is_null($educationGradeId) || is_null($academicPeriodId)) {
             return [];
         }
-        
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+
+        $institutionId = $this->getInstitutionID();
         $classOptions = $this->InstitutionClasses
             ->find('list')
             ->find('byGrades', ['education_grade_id' => $educationGradeId])
@@ -542,10 +583,9 @@ class ScheduleTimetablesTable extends ControllerActionTable
             return [];
         }
 
-        $institutionId = $this->Session->read('Institution.Institutions.id');
-        $InstitutionGradesTable = TableRegistry::get('Institution.InstitutionGrades');
+        $institutionId = $this->getInstitutionID();
+        $InstitutionGradesTable = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
         $educationGradeOptions = $InstitutionGradesTable->getGradeOptions($institutionId, $academicPeriodId);
-
         if ($withDefault) {
             if (!empty($educationGradeOptions)) {
                 $educationGradeOptions = [0 => __('-- Select Grade --')] + $educationGradeOptions;
@@ -557,13 +597,13 @@ class ScheduleTimetablesTable extends ControllerActionTable
         return $educationGradeOptions;
     }
 
-    private function getScheduleIntervalOptions($academicPeriodId = null, $shiftId = null) 
+    private function getScheduleIntervalOptions($academicPeriodId = null, $shiftId = null)
     {
         if (is_null($shiftId) || is_null($academicPeriodId)) {
             return [];
         }
 
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $intervalOptions = $this->ScheduleIntervals
             ->find('list')
             ->where([
@@ -582,7 +622,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
             return [];
         }
 
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $termOptions = $this->ScheduleTerms
             ->find('list')
             ->where([
@@ -608,8 +648,8 @@ class ScheduleTimetablesTable extends ControllerActionTable
             return [];
         }
 
-        $institutionId = $this->Session->read('Institution.Institutions.id');
-        $ShiftsTable = TableRegistry::get('Institution.InstitutionShifts');
+        $institutionId = $this->getInstitutionID();
+        $ShiftsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
 
         $shiftOptions = $ShiftsTable
             ->find('list', [
@@ -648,12 +688,12 @@ class ScheduleTimetablesTable extends ControllerActionTable
         });
     }
 
-    // Misc 
-    private function extractRequestData(Request $request, $field)
+    // Misc
+    private function extractRequestData(serverRequest $request, $field)
     {
-        if (isset($request->data) && array_key_exists($this->alias(), $request->data)) {
-            $requestData = $request->data[$this->alias()];
-
+        $getRequestData = $request->getData();
+        if (isset($getRequestData) && array_key_exists($this->getAlias(), $getRequestData)) {
+            $requestData = $getRequestData[$this->getAlias()];
             if (array_key_exists($field, $requestData)) {
                 return $requestData[$field];
             }

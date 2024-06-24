@@ -8,7 +8,7 @@ use Cake\ORM\Table;
 
 class AlertsController extends AppController
 {
-	public function initialize() {
+	public function initialize(): void {
 		parent::initialize();
 
     }
@@ -18,8 +18,11 @@ class AlertsController extends AppController
     public function Logs() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.AlertLogs']); }
 
     public function beforeFilter(Event $event) {
-    	parent::beforeFilter($event);
-	}
+        if ($this->getPlugin() == $this->getPlugin()) {
+            $this->Security->setConfig('validatePost', false);
+        }
+        parent::beforeFilter($event);
+    }
 
 	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		$header = __('Communications');

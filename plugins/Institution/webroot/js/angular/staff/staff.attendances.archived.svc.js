@@ -81,8 +81,8 @@ function StaffAttendancesArchivedSvc($http, $q, $filter, KdDataSvc, AlertSvc, Ut
         var success = function (response, deferred) {
             var periods = response.data.data;
             if (angular.isObject(periods) && periods.length > 0) {
-                // console.log('getAcademicPeriodOptions');
-                // console.log(periods);
+                console.log('getAcademicPeriodOptions');
+                console.log(periods);
                 deferred.resolve(periods);
             } else {
                 deferred.reject('There was an error when retrieving the academic periods');
@@ -201,14 +201,14 @@ function StaffAttendancesArchivedSvc($http, $q, $filter, KdDataSvc, AlertSvc, Ut
         }
 
         columnDefs.push({
-            headerName: translateText.translated.openemis_no,
+            headerName: 'Open EMIS ID',
             field: "_matchingData.Users.openemis_no",
             pinned: direction,
             menuTabs: []
         });
 
         columnDefs.push({
-            headerName: translateText.translated.Name,
+            headerName: 'Name',
             field: "_matchingData.Users.name",
             filter: "text",
             filterParams: filterParams,
@@ -226,7 +226,7 @@ function StaffAttendancesArchivedSvc($http, $q, $filter, KdDataSvc, AlertSvc, Ut
         // });
 
         columnDefs.push({
-            headerName: translateText.translated.TimeIn + " - " + translateText.translated.TimeOut,
+            headerName: 'Time In - Time Out',
             field: "attendance." + selectedDayDate,
             menuTabs: [],
             suppressSorting: true,
@@ -241,7 +241,7 @@ function StaffAttendancesArchivedSvc($http, $q, $filter, KdDataSvc, AlertSvc, Ut
         });
 
         columnDefs.push({
-            headerName: translateText.translated.Leave,
+            headerName: 'Leave',
             field: "attendance." + selectedDayDate,
             menuTabs: [],
             suppressSorting: true,
@@ -258,7 +258,7 @@ function StaffAttendancesArchivedSvc($http, $q, $filter, KdDataSvc, AlertSvc, Ut
         });
 
         columnDefs.push({
-            headerName: translateText.translated.Comments,
+            headerName: 'Comments',
             field: "attendance." + selectedDayDate,
             menuTabs: [],
             suppressSorting: true,

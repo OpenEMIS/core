@@ -19,9 +19,9 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
         2 => 'Non-Teaching'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('infrastructure_utility_internets');
+        $this->setTable('infrastructure_utility_internets');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods',   ['className' => 'AcademicPeriod.AcademicPeriods', 'foreign_key' => 'academic_period_id']);
@@ -34,6 +34,9 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
             'excludes' => ['comment', 'academic_period_id', 'institution_id'],
             'pages' => ['index'],
         ]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InfrastructureUtilityInternets'=>['id']]
+        ]);
     }
 
     public function getPurposeOptions()
@@ -41,7 +44,7 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
         return $this->internetPurpose;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -69,15 +72,17 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
 
         // element control
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $requestQuery = $this->request->query;
+        $requestQuery = $this->request->getQuery();
 
         $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
 
         $extra['elements']['control'] = [
             'name' => 'Risks/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'academicPeriodOptions'=>$academicPeriodOptions,
                 'selectedAcademicPeriod'=>$selectedAcademicPeriodId
             ],
@@ -109,14 +114,26 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
         switch ($field) {
+            case 'comment':
+                return __('Comment');
+            case 'academic_period_id':
+                return __('Academic Period');
             case 'utility_internet_type_id':
                 return __('Type');
             case 'utility_internet_condition_id':
                 return __('Condition');
             case 'internet_purpose':
                 return __('Purpose');
-                case 'utility_internet_bandwidth_id':
-                    return __('Bandwidth');
+            case 'utility_internet_bandwidth_id':
+                return __('Bandwidth');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'modified':
+                return __('Modified On');
+            case 'created_user_id':
+                return __('Created By');
+            case 'created':
+                return __('Created On');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -197,8 +214,9 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-		$institutionId  = $this->Session->read('Institution.Institutions.id');
-        $academicPeriod = $this->request->query['academic_period_id'];
+		//$institutionId  = $this->Session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
+        $academicPeriod = $this->request->getQuery('academic_period_id');
 
         if (empty($academicPeriod)) {
             $academicPeriod = $this->AcademicPeriods->getCurrent();

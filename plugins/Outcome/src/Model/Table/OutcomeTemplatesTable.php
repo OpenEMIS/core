@@ -8,12 +8,13 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
 class OutcomeTemplatesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -56,7 +57,7 @@ class OutcomeTemplatesTable extends ControllerActionTable
         $this->addBehavior('Import.ImportLink', ['import_model'=>'ImportOutcomeTemplates']);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -77,7 +78,7 @@ class OutcomeTemplatesTable extends ControllerActionTable
     {
         // academic period filter
         $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedPeriod = !is_null($this->request->query('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent();
+        $selectedPeriod = !is_null($serverRequest->getAttribute('query')['period']) ? $serverRequest->getAttribute('query')['period'] : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('periodOptions', 'selectedPeriod'));
         $conditions[$this->aliasField('academic_period_id')] = $selectedPeriod;
 
@@ -138,7 +139,7 @@ class OutcomeTemplatesTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -158,11 +159,11 @@ class OutcomeTemplatesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
+		$academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
 
         if ($action == 'add') {
             $programmeOptions = $EducationProgrammes
@@ -188,21 +189,22 @@ class OutcomeTemplatesTable extends ControllerActionTable
     public function addEditOnChangeEducationProgrammeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        unset($request->query['programme']);
+        unset($request->getQuery['programme']);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('education_programme_id', $request->data[$this->alias()])) {
-                    $request->query['programme'] = $request->data[$this->alias()]['education_programme_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('education_programme_id', $request->getData()[$this->getAlias()])) {
+                    $request->getQuery['programme'] = $request->getData()[$this->getAlias()]['education_programme_id'];
                 }
             }
         }
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $selectedProgramme = $request->query('programme');
+            // $selectedProgramme = $request->getQuery('programme'); //POCOR-7485
+            $selectedProgramme = $request->getData()['OutcomeTemplates']['education_programme_id'];
 
             $gradeOptions = [];
             if (!is_null($selectedProgramme)) {
@@ -227,9 +229,38 @@ class OutcomeTemplatesTable extends ControllerActionTable
         return $attr;
     }
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'description') {
+            return __('Description');
+        } elseif ($field == 'education_programme_id') {
+            return __('Education Programme');
+        } elseif ($field == 'education_grade_id') {
+            return __('Education Grade');
+        } elseif ($field == 'date_disabled') {
+            return __('Date Disabled');
+        }  elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
-        if (empty($entity->errors())) {
+        if (empty($entity->getRrrors())) {
             // set redirect url to view page
             $url = $this->url('view');
             $url[1] = $this->paramsEncode(['id' => $entity->id, 'academic_period_id' => $entity->academic_period_id]);

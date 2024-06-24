@@ -16,7 +16,7 @@ class GenerateAllClassProfilesShell extends Shell
 {
     private $sleepTime = 5;
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('CustomExcel.ClassProfiles');
