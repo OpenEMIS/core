@@ -89,7 +89,8 @@ class ExcelBehavior extends Behavior
         $id = 0;
         $break = false;
         $action = $this->_table->action;
-        $pass = $this->_table->request->pass;
+        //$pass = $this->_table->request->pass;
+        $pass = $this->_table->request->getAttribute('params')['pass'];
         if (in_array($action, $pass)) {
             unset($pass[array_search($action, $pass)]);
             $pass = array_values($pass);
@@ -110,7 +111,7 @@ class ExcelBehavior extends Behavior
     public function generateXLXS($settings = [])
     {
         set_time_limit(0); //POCOR-7268 starts
-        ini_set('memory_limit', '-1'); 
+        ini_set('memory_limit', '-1');
         ini_set('max_execution_time', '9600'); //POCOR-7268 ends
         $_settings = [
             'file' => $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
@@ -159,7 +160,7 @@ class ExcelBehavior extends Behavior
     public function generate($settings = [])
     {
         set_time_limit(0); //POCOR-7268 starts
-        ini_set('memory_limit', '-1'); 
+        ini_set('memory_limit', '-1');
         ini_set('max_execution_time', '9600'); //POCOR-7268 ends
         $writer = $settings['writer'];
         $sheets = new ArrayObject();
@@ -184,7 +185,7 @@ class ExcelBehavior extends Behavior
 
             $footer = $this->getFooter();
             $query = $sheet['query'];
-            
+
             $this->dispatchEvent($table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$settings, $query], true);
             $sheetName = $sheet['name'];
 
@@ -237,7 +238,7 @@ class ExcelBehavior extends Behavior
             $percentCount = intval($count / 100);
             $pages = ceil($count / $this->getConfig('limit'));
 
-            // Debugging 
+            // Debugging
             $pages = 1;
 
             if (isset($sheet['orientation'])) {
@@ -405,7 +406,7 @@ class ExcelBehavior extends Behavior
         if (!is_array($table->getPrimaryKey())) { //if not composite key
             $excludes[] = $table->getPrimaryKey();
         }
-        
+
         $fields = new ArrayObject();
         $module = $table->getAlias();
         $language = I18n::getLocale();
@@ -469,14 +470,14 @@ class ExcelBehavior extends Behavior
                             //->first();
         foreach ($ConfigItem->toArray() as $value) {
             if (!empty($value['zonevalue'])) {
-                $timezone =  $value['zonevalue']; 
+                $timezone =  $value['zonevalue'];
                 date_default_timezone_set($timezone);
             }
             else{
                 date_default_timezone_set('Europe/London');  //POCOR-6819
             }
-        }      
-        // END: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>              
+        }
+        // END: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
         $footer = [__("Report Generated") . ": "  . date("Y-m-d H:i:s")];
         return $footer;
     }
@@ -516,7 +517,7 @@ class ExcelBehavior extends Behavior
                     } else {
                         $value = $returnedResult;
                     }
-                } elseif ($entity->has((string)$field)) {//POCOR-7485 add (string) becuase of custom fields excel on Infrastructure land 
+                } elseif ($entity->has((string)$field)) {//POCOR-7485 add (string) becuase of custom fields excel on Infrastructure land
                     if ($this->isForeignKey($table, (string)$field)) {
                         $associatedField = $this->getAssociatedKey($table, (string)$field);
                         if ($entity->has($associatedField)) {
@@ -632,7 +633,7 @@ class ExcelBehavior extends Behavior
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $action = $this->_table->action;
-        
+
         if (in_array($action, $this->getConfig('pages'))) {
             $toolbarButtons = isset($extra['toolbarButtons']) ? $extra['toolbarButtons'] : [];
             $toolbarAttr = [
