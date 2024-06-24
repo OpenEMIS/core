@@ -1821,7 +1821,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
                             'class_subjects' => [
                                 [
                                     'status' => 1,
-                                    'institution_class_id' => $entity->id
+                                    'institution_class_id' => $entity->id,
+                                    'institution_subject_id' =>  $educationSubject['id'] //POCOR-8323 It is necessary to show array without institution_subject_id validation
                                 ]
                             ]
                         ];

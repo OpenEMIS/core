@@ -155,6 +155,43 @@ class InstitutionClassesTable extends ControllerActionTable
         return $events;
     }
 
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $encodedString = $this->request->getAttribute('params')['pass'][1];
+        $query = $this->request->getQuery();
+        $academic_period_id = $this->AcademicPeriods->getCurrent();
+        if(!empty($query['academic_period_id'])){
+            $academic_period_id = $query['academic_period_id'];
+        }
+        $education_grade_id = -1;
+        if(!empty($query['education_grade_id'])){
+            $education_grade_id = $query['education_grade_id'];
+        }
+        
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $buttons['remove'] = [
+            'url' => [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Classes',
+                '0' => 'remove',
+                '1' => $encodedString,
+                '2' => $this->ControllerAction->paramsEncode(['id' => $entity->id]),
+                '_ext'=>'',
+                'academic_period_id'=> $academic_period_id,
+                'education_grade_id'=> $education_grade_id,
+            ],
+            'type' => 'button',
+            'label' => '<i class="fa fa-trash"></i>' . __('Delete'),
+            'attr' => [
+                    'role' => 'menuitem',
+                    'tabindex' => -1,
+                    'escape' => false,
+                ]
+        ];
+        return $buttons;
+    }
+
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
         $LabelTable = TableRegistry::get('Labels');
@@ -163,13 +200,13 @@ class InstitutionClassesTable extends ControllerActionTable
         }else if ($field == 'institution_unit_id') {
             $unitname = $LabelTable->find()->where(['module_name' =>'Institutions -> Classes' , 'field_name' =>'Unit'])->first();
             if($unitname != null){
-               $unit =  $unitname->name;
+               $unit =  $unitname->name;//add this name from Adminsitration > System Setup > Labels
             }
             return  __((string)$unit);
         } else if ($field == 'institution_course_id') {
             $CourseName = $LabelTable->find()->where(['module_name' =>'Institutions -> Classes' , 'field_name' =>'Course'])->first();
             if($CourseName != null){
-               $Courses =  $CourseName->name;
+               $Courses =  $CourseName->name;//add this name from Adminsitration > System Setup > Labels
             }
             return  __((string)$Courses);
             
@@ -219,7 +256,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $extra['institution_id'] = $institutionId;
         $academicPeriodOptions = $this->getAcademicPeriodOptions($institutionId);
         $selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
-
+        
         if ($this->action == 'index') {
             if (empty($query['academic_period_id'])) {
                 $query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
@@ -257,14 +294,20 @@ class InstitutionClassesTable extends ControllerActionTable
         //POCOR-5852 starts
         if (empty($this->request->getQuery('academic_period_id'))) {
             $selectedAcademicPeriodId = $selectedAcademicPeriodId; 
-            $this->request->withQueryParams(['academic_period_id' => $selectedAcademicPeriodId]);
+            $this->request = $this->request->withQueryParams(array_merge(
+                $this->request->getQueryParams(),
+                ['academic_period_id' => $selectedAcademicPeriodId]
+            ));
 
             $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptionsForIndex($institutionId, $selectedAcademicPeriodId);
             if (!empty($gradeOptions)) {
                 $gradeOptions = [-1 => __('All Grades')] + $gradeOptions;
             }
             $selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
-            $this->request->withQueryParams(['education_grade_id' => $selectedEducationGradeId]);
+            $this->request = $this->request->withQueryParams(array_merge(
+                $this->request->getQueryParams(),
+                ['education_grade_id' => $selectedEducationGradeId]
+            ));
         }
         //POCOR-5852 ends
         $this->field('class_number', ['visible' => false]);
@@ -1467,13 +1510,14 @@ class InstitutionClassesTable extends ControllerActionTable
     public function onGetStaffId(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
+            $institutionId = $this->getQueryString('institution_id'); //POCOR-8323
             if ($entity->has('staff')) {
                 return $event->getSubject()->Html->link($entity->staff->name_with_id, [
                     'plugin' => 'Institution',
                     'controller' => 'Institutions',
                     'action' => 'StaffUser',
                     'view',
-                    $this->paramsEncode(['id' => $entity->staff->id])
+                    $this->paramsEncode(['id' => $entity->staff->id, 'institution_id' => $institutionId, 'staff_id' => $entity->staff->id])//POCOR-8323
                 ]);
             } else {
                 return $this->getMessage($this->aliasField('noTeacherAssigned'));
@@ -1490,6 +1534,7 @@ class InstitutionClassesTable extends ControllerActionTable
     public function onGetClassesSecondaryStaff(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
+            $institutionId = $this->getQueryString('institution_id'); //POCOR-8323
             if ($entity->has('classes_secondary_staff') && !empty($entity->classes_secondary_staff)) {
                 $staffList = [];
                 foreach ($entity->classes_secondary_staff as $classStaffEntity) {
@@ -1499,7 +1544,7 @@ class InstitutionClassesTable extends ControllerActionTable
                             'controller' => 'Institutions',
                             'action' => 'StaffUser',
                             'view',
-                            $this->paramsEncode(['id' => $classStaffEntity->secondary_staff->id])
+                            $this->paramsEncode(['id' => $classStaffEntity->secondary_staff->id, 'institution_id' => $institutionId, 'staff_id' => $classStaffEntity->secondary_staff->id ])
                         ]);
 
                         $staffList[] = $staffLink;
@@ -1897,9 +1942,13 @@ class InstitutionClassesTable extends ControllerActionTable
                             $query->formatResults(function ($results) {
                                 $returnArr = [];
                                 foreach ($results as $result) {
-                                    if ($result->has('Users')) {
-                                        $returnArr[$result->Users->id] = $result->Users->name_with_id;
-                                    }
+                                    // if ($result->has('Users')) {
+                                    //     $returnArr[$result->Users->id] = $result->Users->name_with_id;
+                                    // }
+                                    //POCOR-8323 starts
+                                    if ($result->has('user')) {
+                                        $returnArr[$result->user->id] = $result->user->name_with_id;
+                                    }//POCOR-8323 ends
                                 }
                                 return $returnArr;
                             });
