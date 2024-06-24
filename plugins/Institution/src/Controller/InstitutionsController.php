@@ -1640,7 +1640,7 @@ class InstitutionsController extends AppController
     public function Comments()
     {
         // POCOR-3983 check institution status
-        $institutionId = $this->ControllerAction->getQueryString('institution_id');
+        $institutionId = $this->getQueryString('institution_id');
 
         $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $isActive = $Institutions->isActive($institutionId);
@@ -1649,9 +1649,13 @@ class InstitutionsController extends AppController
         } else {
             $_edit = false;
         }
+        $queryString = $this->ControllerAction->paramsEncode(['id' =>  $institutionId, 'institution_id'=>  $institutionId] );
         // echo "<pre>";print_r($this->request->getAttribute('params')['action']);die;
         // echo "<pre>";print_r($_SESSION);die;
         // end POCOR-3983
+        $userId = $this->Auth->user('id');
+        $this->set('loginUserId', $userId);
+        $this->set('queryString', $queryString);
         $this->set('_edit', $_edit);
         $this->set('ngController', 'InstitutionCommentsCtrl as InstitutionCommentsController');
     }
