@@ -508,15 +508,12 @@ class DirectoriesTable extends ControllerActionTable
     {
 
         $student = self::getStudent($securityUserId);
-        Log::debug(__FUNCTION__);
-        Log::debug(print_r($student, true));
-//        die(print_r($student, true));
         if (!$student) {
             return [];
         }
         $isSameSchool = $isDiffSchool = 0;
-        if ($student->institution_id) {
-            $isSameSchool = $student->institution_id == $institutionId ? 1 : 0;
+        if ($student['institution_id']) {
+            $isSameSchool = $student['institution_id'] == $institutionId ? 1 : 0;
             $isDiffSchool = !$isSameSchool ? 1 : 0;
         }
         $pendingTransfer = self::getPendingTransfer($securityUserId);

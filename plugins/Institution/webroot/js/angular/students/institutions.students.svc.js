@@ -166,6 +166,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         let url = angular.baseUrl + '/Directories/directoryInternalSearch';
         $http.post(url, {params: param})
         .then(function(response){
+            console.log(response);
             deferred.resolve(response);
         }, function(error) {
             deferred.reject(error);
@@ -992,7 +993,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
 
     function getUniqueOpenEmisId() {
         var deferred = $q.defer();
-        let url = angular.baseUrl + '/Directories/getUniqueOpenemisId/Student';
+        let url = angular.baseUrl + '/Directories/getUniqueOpenemisId';
         $http.get(url)
         .then(function(response){
             deferred.resolve(response.data.openemis_no);
