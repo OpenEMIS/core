@@ -2573,6 +2573,7 @@ class StaffTable extends ControllerActionTable
     public function getNumberOfStaffByAttendanceType($params = [])
     {
         $conditions = isset($params['conditions']) ? $params['conditions'] : [];
+        Log::debug(print_r($conditions,true));
         $_conditions = [];
         foreach ($conditions as $key => $value) {
             $_conditions[$this->getAlias() . '.' . $key] = $value;
@@ -2595,10 +2596,14 @@ class StaffTable extends ControllerActionTable
 
         $institutionStaff = TableRegistry::getTableLocator()->get('Institution.StaffAttendances');
         /**POCOR-6900 starts - Modified complete query to get correct records of staff Present, Late and Absent as suggested by client*/
+        $where = [
+            $this->aliasField('institution_id') => $conditions['institution_id']
+        ];
+        if(isset($conditions['staff_id'])){
+            $where[$this->aliasField('staff_id')] = $conditions['staff_id'];
+        }
         $staffAttendances = $this->find()
-            ->where([
-                $this->aliasField('institution_id') => $conditions['institution_id']
-            ])
+            ->where($where)
             ->group([
                 $this->aliasField('institution_id'),
                 $this->aliasField('staff_id')
