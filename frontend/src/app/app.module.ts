@@ -7,6 +7,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { KdComponentsModule } from 'openemis-styleguide-lib';
 import { IntitutionModule } from './institution.module';
+import { ApiService } from './api.service';
 
 @NgModule({
   declarations: [
@@ -21,7 +22,7 @@ import { IntitutionModule } from './institution.module';
     HttpClientModule,
     IntitutionModule
   ],
-  providers: [],
+  providers: [ApiService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
