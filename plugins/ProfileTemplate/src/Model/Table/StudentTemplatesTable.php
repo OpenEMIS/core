@@ -13,6 +13,7 @@ use Cake\I18n\Date;
 use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
 use Cake\Http\ServerRequest;
+use Cake\Datasource\EntityInterface;
 
 class StudentTemplatesTable extends ControllerActionTable
 {
@@ -62,23 +63,23 @@ class StudentTemplatesTable extends ControllerActionTable
 
     public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('code', 'ruleUniqueCode', [
                 'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
                 'provider' => 'table'
             ])
-            // ->add('generate_start_date', 'ruleInAcademicPeriod', [
-            //     'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-            // ])
-            // ->add('generate_end_date', [
-            //     'ruleInAcademicPeriod' => [
-            //         'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-            //     ],
-            //     'ruleCompareDateReverse' => [
-            //         'rule' => ['compareDateReverse', 'generate_start_date', false]
-            //     ]
-            // ])
+            ->add('generate_start_date', 'ruleInAcademicPeriod', [
+                'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+            ])
+            ->add('generate_end_date', [
+                'ruleInAcademicPeriod' => [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+                ],
+                'ruleCompareDateReverse' => [
+                    'rule' => ['compareDateReverse', 'generate_start_date', false]
+                ]
+            ])
             ->allowEmpty('excel_template');
     }
 
@@ -309,17 +310,15 @@ class StudentTemplatesTable extends ControllerActionTable
         echo file_get_contents($filepath);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-
+    public function beforeSave(Event $event, EntityInterface $entity, ArrayObject $options) {
         if (!empty($entity->generate_start_date)) {
-            $entity->generate_start_date = (new Date($entity->generate_start_date))->format('Y-m-d H:i:s');
+            $entity->generate_start_date = (new Time($this->request->getData()['StudentTemplates']['generate_start_date']))->format('Y-m-d H:i:s');
         }
 
         if (!empty($entity->generate_end_date)) {
-            $entity->generate_end_date = (new Date($entity->generate_end_date))->format('Y-m-d H:i:s');
-        }        
-
-    } 
+            $entity->generate_end_date = (new Time($this->request->getData()['StudentTemplates']['generate_end_date']))->format('Y-m-d H:i:s');
+        }       
+    }
     
     private function setupTabElements() {
         $options['type'] = 'StaffTemplates';
@@ -373,6 +372,46 @@ class StudentTemplatesTable extends ControllerActionTable
         }else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    public function onUpdateFieldGenerateStartDate(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            return $this->updateDateRangeField('start_date', $attr, $request);
+        }
+    }
+
+    public function onUpdateFieldGenerateEndDate(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            return $this->updateDateRangeField('end_date', $attr, $request);
+        }
+    }
+
+    // Misc
+    private function updateDateRangeField($key, $attr, ServerRequest $request)
+    {
+        $requestData = $request->getData();
+        if (array_key_exists($this->getAlias(), $requestData) && array_key_exists('academic_period_id', $requestData[$this->getAlias()])) {
+            $selectedPeriodId = $requestData[$this->getAlias()]['academic_period_id'];
+        } else {
+            $selectedPeriodId = $this->AcademicPeriods->getCurrent();
+        }
+
+        $selectedPeriod = $this->AcademicPeriods->get($selectedPeriodId);
+        $attr['type'] = 'date';
+        $attr['date_options']['startDate'] = $selectedPeriod->start_date->format('d-m-Y');
+        $attr['date_options']['endDate'] = $selectedPeriod->end_date->format('d-m-Y');
+        
+        if (!array_key_exists($this->getAlias(), $requestData) || !array_key_exists($key, $requestData[$this->getAlias()])) {
+            if ($selectedPeriodId != $this->AcademicPeriods->getCurrent()) {
+                $attr['value'] = $selectedPeriod->start_date;
+            } else {
+                $attr['value'] = Time::now();
+            }
+        }
+
+        return $attr;
     }
     
 }
