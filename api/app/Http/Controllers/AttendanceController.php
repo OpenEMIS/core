@@ -14,6 +14,7 @@ use App\Http\Requests\SubjectsByClassPerAcademicPeriodRequest;
 use App\Http\Requests\StudentAttendanceMarkTypeListRequest;
 use App\Http\Requests\StudentAttendancesExportRequest;
 use App\Http\Requests\StudentAttendancesImportTemplateRequest;
+use App\Http\Requests\StudentAttendanceImportRequest;
 use Illuminate\Support\Facades\Log;
 use App\Exports\StudentAttendancesExport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -280,6 +281,47 @@ class AttendanceController extends Controller
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
             return $this->sendErrorResponse('Failed to fetch students attendances import template data from DB.');
+        }
+    }
+
+
+
+    public function studentAttendancesImport(StudentAttendanceImportRequest $request)
+    {
+        try {
+            $params = $request->all();
+            //dd($params);
+            $data = $this->attendanceService->studentAttendancesImport($params);
+            
+            if(!is_array($data)){
+                if(isset($data) && $data == 1){
+                    return $this->sendErrorResponse('Invalid file extension.');
+                } elseif(isset($data) && $data == 2){
+                    return $this->sendErrorResponse('Header is not present.');
+                } elseif(isset($data) && $data == 3){
+                    return $this->sendErrorResponse('Imported file is empty.');
+                } elseif(isset($data) && $data == 4){
+                    return $this->sendErrorResponse('Not a valid heading.');
+                } elseif(isset($data) && $data == 5){
+                    return $this->sendErrorResponse('Institution is not linked with Institution Class.');
+                } elseif(isset($data) && $data == 6){
+                    return $this->sendErrorResponse('No current Academic Period is set in DB.');
+                } elseif(isset($data) && $data == 7){
+                    return $this->sendErrorResponse('Uploaded file exceeds maximum no of records limit ('.config("constantvalues.importExcelRules.maxRows").').');
+                } else {
+                    return $this->sendErrorResponse('Student attendance not imported.');
+                }
+            } else {
+                return $this->sendSuccessResponse("Student attendance imported.", $data);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to import students attendance in DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to import students attendance in DB.');
         }
     }
     //For POCOR-8363 Ends...
