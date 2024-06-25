@@ -247,6 +247,8 @@ class MealController extends Controller
                     return $this->sendErrorResponse('Institution is not linked with Institution Class.');
                 } elseif(isset($data) && $data == 6){
                     return $this->sendErrorResponse('No current Academic Period is set in DB.');
+                } elseif(isset($data) && $data == 7){
+                    return $this->sendErrorResponse('Uploaded file exceeds maximum no of records limit ('.config("constantvalues.importExcelRules.maxRows").').');
                 } else {
                     return $this->sendErrorResponse('Student meals not imported.');
                 }
