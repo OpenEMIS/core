@@ -490,6 +490,7 @@ Route::group(
         //POCOR-8363 start...
         Route::get('/institutions/students/attendances/export', 'AttendanceController@getStudentAttendancesExport');
         Route::get('/institutions/students/attendances/import/template', 'AttendanceController@getStudentAttendancesImportTemplate');
+        Route::post('/institutions/students/attendances/import', 'AttendanceController@studentAttendancesImport');
         //POCOR-8363 end...
     }
 );
