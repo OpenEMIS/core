@@ -100,14 +100,14 @@ class StaffProfilesTable extends ControllerActionTable
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
         // check if report card request is valid
-        $reportCardId = $this->request->query('staff_profile_template_id');
-        $institutionId = $this->request->query('institution_id');
-        $academicPeriodId = $this->request->query('academic_period_id');
+        $reportCardId = $this->request->getQuery('staff_profile_template_id');
+        $institutionId = $this->request->getQuery('institution_id');
+        $academicPeriodId = $this->request->getQuery('academic_period_id');
         //START:POCOR-6667
         unset($buttons['view']);
         //END:POCOR-6667
         
-		if (!is_null($reportCardId) && $this->StaffTemplates->exists([$this->StaffTemplates->primaryKey() => $reportCardId])) {
+		if (!is_null($reportCardId) && $this->StaffTemplates->exists([$this->StaffTemplates->getPrimaryKey() => $reportCardId])) {
 
             $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
             $params = [
@@ -533,8 +533,8 @@ class StaffProfilesTable extends ControllerActionTable
                 $generateButton['attr'] = $toolbarAttr;
                 $generateButton['attr']['title'] = __('Generate All');
                 //$ReportCards = TableRegistry::get('ReportCard.ReportCards');
-                if (!is_null($this->request->query('staff_profile_template_id'))) {
-                    $reportCardId = $this->request->query('staff_profile_template_id');
+                if (!is_null($this->request->getQuery('staff_profile_template_id'))) {
+                    $reportCardId = $this->request->getQuery('staff_profile_template_id');
                 }
 
                 $ReportCardsData = $this->StaffTemplates
@@ -678,10 +678,10 @@ class StaffProfilesTable extends ControllerActionTable
     {
         if ($entity->has('staff_profile_template_id')) {
             $reportCardId = $entity->staff_profile_template_id;
-        } else if (!is_null($this->request->query('staff_profile_template_id'))) {
-            $reportCardId = $this->request->query('staff_profile_template_id');
+        } else if (!is_null($this->request->getQuery('staff_profile_template_id'))) {
+            $reportCardId = $this->request->getQuery('staff_profile_template_id');
         }
-		$academicPeriodId = $this->request->query('academic_period_id');
+		$academicPeriodId = $this->request->getQuery('academic_period_id');
 
         $search = [
             'staff_profile_template_id' => $reportCardId,
@@ -713,9 +713,9 @@ class StaffProfilesTable extends ControllerActionTable
         $value = '';
         if ($entity->has('staff_profile_template_id')) {
             $reportCardId = $entity->staff_profile_template_id;
-        } else if (!is_null($this->request->query('staff_profile_template_id'))) {
+        } else if (!is_null($this->request->getQuery('staff_profile_template_id'))) {
             // used if student report card record has not been created yet
-            $reportCardId = $this->request->query('staff_profile_template_id');
+            $reportCardId = $this->request->getQuery('staff_profile_template_id');
         }
 
         if (!empty($reportCardId)) {
@@ -1097,7 +1097,7 @@ class StaffProfilesTable extends ControllerActionTable
         Log::write('debug', 'Initialize Add All Staff Profile Report Cards '.$reportCardId.' for Institution '.$institutionId.' to processes ('.Time::now().')');
 
         $StaffReportCardProcesses = TableRegistry::get('ReportCard.StaffReportCardProcesses');
-        $staffTable = TableRegistry::get('institution_staff');
+        $staffTable = TableRegistry::get('Institution.InstitutionStaff');
         $where = [];
         $where[$staffTable->aliasField('institution_id')] = $institutionId;
         if (!is_null($staffId)) {
@@ -1176,7 +1176,7 @@ class StaffProfilesTable extends ControllerActionTable
     private function triggerGenerateAllReportCardsShell($institutionId, $academicPeriodId, $reportCardId, $staffId = null)
     {
         $SystemProcesses = TableRegistry::get('SystemProcesses');
-        $runningProcess = $SystemProcesses->getRunningProcesses($this->registryAlias());
+        $runningProcess = $SystemProcesses->getRunningProcesses($this->getRegistryAlias());
 
         foreach ($runningProcess as $key => $processData) {
             $systemProcessId = $processData['id'];
@@ -1194,7 +1194,7 @@ class StaffProfilesTable extends ControllerActionTable
         }
 
         if (count($runningProcess) <= self::MAX_PROCESSES) {
-            $processModel = $this->registryAlias();
+            $processModel = $this->getRegistryAlias();
             $passArray = [
                 'institution_id' => $institutionId,
                 'staff_profile_template_id' => $reportCardId
@@ -1209,6 +1209,7 @@ class StaffProfilesTable extends ControllerActionTable
             $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllStaffReportCards '.$args;
             $logs = ROOT . DS . 'logs' . DS . 'GenerateAllStaffReportCards.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
+            // echo "<pre>";print_r($shellCmd);die;
             try {
                 $pid = exec($shellCmd);
                 Log::write('debug', $shellCmd);
@@ -1270,14 +1271,14 @@ class StaffProfilesTable extends ControllerActionTable
     private function triggerEmailAllReportCardsShell($institutionId, $institutionClassId, $reportCardId, $staffId = null)
     {
         $SystemProcesses = TableRegistry::get('SystemProcesses');
-        $runningProcess = $SystemProcesses->getRunningProcesses($this->StaffReportCardEmailProcesses->registryAlias());
+        $runningProcess = $SystemProcesses->getRunningProcesses($this->StaffReportCardEmailProcesses->getRegistryAlias());
 
         // to-do: add logic to purge shell which is 30 minutes old
 
         if (count($runningProcess) <= self::MAX_PROCESSES) {
             $name = 'EmailAllStaffReportCards';
             $pid = '';
-            $processModel = $this->StaffReportCardEmailProcesses->registryAlias();
+            $processModel = $this->StaffReportCardEmailProcesses->getRegistryAlias();
             $eventName = '';
             $passArray = [
                 'institution_id' => $institutionId,

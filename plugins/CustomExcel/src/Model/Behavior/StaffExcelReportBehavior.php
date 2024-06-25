@@ -20,6 +20,7 @@ use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use Cake\ORM\Table;
 
 class StaffExcelReportBehavior extends Behavior
 {
@@ -53,7 +54,7 @@ class StaffExcelReportBehavior extends Behavior
         'pdf' => 'Mpdf'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $model = $this->_table;
@@ -67,7 +68,7 @@ class StaffExcelReportBehavior extends Behavior
         new Folder($subfolder, true, 0777);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onRenderExcelTemplate'] = 'onRenderExcelTemplate';
@@ -100,7 +101,7 @@ class StaffExcelReportBehavior extends Behavior
     public function renderExcelTemplate(ArrayObject $extra)
     {
         $model = $this->_table;
-        $format = $this->config('format');
+        $format = $this->getConfig('format');
 
         if (array_key_exists('requestQuery', $extra)) {
             $params = $extra['requestQuery'];
@@ -114,10 +115,10 @@ class StaffExcelReportBehavior extends Behavior
         $extra['vars'] = $this->getVars($params, $extra);
 
 
-        $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $format;
-        $extra['path'] = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
+        $extra['file'] = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $format;
+        $extra['path'] = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS;
 
-        $temppath = tempnam($extra['path'], $this->config('filename') . '_');
+        $temppath = tempnam($extra['path'], $this->getConfig('filename') . '_');
         $extra['file_path'] = $temppath;
 
 
@@ -146,7 +147,7 @@ class StaffExcelReportBehavior extends Behavior
         $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateAfterGenerate', [$params, $extra], $this);
 	
         if (!empty($params['staff_id'])) {
-			$pdfFilePath = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS . $this->config('filename') . '_' . $params['staff_id'].'.txt';
+			$pdfFilePath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $this->getConfig('filename') . '_' . $params['staff_id'].'.txt';
             $pdfFileContent = file_get_contents($pdfFilePath);
 			
 			$StaffReportCards = TableRegistry::get('Institution.StaffReportCards');
@@ -158,7 +159,7 @@ class StaffExcelReportBehavior extends Behavior
 			$this->deleteFile($pdfFilePath);
         }
 		
-		if ($this->config('download')) {
+		if ($this->getConfig('download')) {
             $tempfile = new File($temppath);
             $tempinfo = $tempfile->info();
             $tempcontent = $tempfile->read();
@@ -167,7 +168,7 @@ class StaffExcelReportBehavior extends Behavior
             $this->downloadFile($tempcontent, $extra['file'], $tempinfo['filesize']);
         }
 
-        if ($this->config('purge')) {
+        if ($this->getConfig('purge')) {
             // delete excel file after download
             $this->deleteFile($temppath);
         }
@@ -431,15 +432,15 @@ class StaffExcelReportBehavior extends Behavior
         $model = $this->_table;
 
         $variableValues = new ArrayObject([]);
-        if ($this->config('variableSource') == 'database') {
+        if ($this->getConfig('variableSource') == 'database') {
             $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialiseQueryVariables', [$params, $extra], $this);
             if ($event->isStopped()) { return $event->getResult(); }
             if ($event->getResult()) {
                 $variableValues = $event->getResult();
             }
 
-        } else if ($this->config('variableSource') == 'file') {
-            $variables = $this->config('variables');
+        } else if ($this->getConfig('variableSource') == 'file') {
+            $variables = $this->getConfig('variables');
 
             foreach ($variables as $var) {
                 $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialise'.$var, [$params, $extra], $this);
@@ -1019,7 +1020,7 @@ class StaffExcelReportBehavior extends Behavior
         }
     }
 
-    private function table($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
+    public function table($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra) : Table
     {
         $rowValue = $attr['rowValue'];
         $columnIndex = $attr['columnIndex'];
