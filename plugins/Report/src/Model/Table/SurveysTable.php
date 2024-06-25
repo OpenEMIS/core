@@ -106,7 +106,7 @@ class SurveysTable extends AppTable
         }
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
@@ -541,7 +541,7 @@ class SurveysTable extends AppTable
         ];
     }
 
-    public function onUpdateFieldSurveyForm(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSurveyForm(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             if (isset($this->request->getData($this->getAlias())['feature'])) {
@@ -550,7 +550,8 @@ class SurveysTable extends AppTable
                 $todayDate = date('Y-m-d');
                 $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
                 if ($feature == $this->getRegistryAlias() || $feature == 'Report.SurveysReport') {
-                    $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
+                    // $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
+                    $SurveyStatusTable = TableRegistry::getTableLocator()->get('Survey.SurveyStatuses');
                     $surveyFormOptions = $this->SurveyForms
                                         ->find('list')
                                         ->leftJoin([$SurveyStatusTable->getAlias() => $SurveyStatusTable->getTable()], [
@@ -587,7 +588,7 @@ class SurveysTable extends AppTable
         }
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $feature = $this->request->getData($this->getAlias())['feature'];

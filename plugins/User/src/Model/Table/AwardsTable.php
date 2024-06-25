@@ -37,9 +37,9 @@ class AwardsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
-        $data['staff_id'] = $queryString['staff_id'];
+        $data['staff_id'] = $queryString['staff_id'];    
 		$this->field('security_user_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
-        if($this->request->getParam('controller') == 'Students'){
+        if($this->request->getParam('controller') == 'Students' || $this->request->getParam('controller') == 'Directories'){
             $this->field('security_user_id', ['type' => 'hidden', 'value' => $queryString['student_id']]);
         }
     }
@@ -47,6 +47,10 @@ class AwardsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $userId = $this->getUserID();
+        if(empty($userId)){
+            $queryString = $this->getQueryString();
+            $userId = isset($queryString['staff_id']) ? $queryString['staff_id'] : $queryString['student_id'] ;
+        }
         $query->where([$this->aliasField('security_user_id') => $userId]);
 
         // Start POCOR-5188

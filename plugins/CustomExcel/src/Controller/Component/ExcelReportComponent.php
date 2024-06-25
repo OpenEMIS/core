@@ -10,7 +10,7 @@ class ExcelReportComponent extends Component
 {
 	private $controller;
 
-	public function initialize(array $config)
+	public function initialize(array $config):void
 	{
 		parent::initialize($config);
 		$this->controller = $this->_registry->getController();
@@ -24,9 +24,9 @@ class ExcelReportComponent extends Component
 		$model = TableRegistry::get($className);
 
 		if ($model->behaviors()->has('ExcelReport') && array_key_exists('format', $params)) {
-			$model->behaviors()->get('ExcelReport')->config([
-				'format' => $params['format']
-			]);
+			$model->behaviors()->get('ExcelReport')->getConfig(
+				'format', $params['format']
+			);
 		}
 
 		$extra = new ArrayObject($params);

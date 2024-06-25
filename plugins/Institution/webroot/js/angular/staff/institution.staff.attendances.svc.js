@@ -121,7 +121,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             }
         };
         return AcademicPeriods
-            .find('daysForPeriodWeekArchive', {
+            .find('daysForPeriodWeek', {
                 academic_period_id: academicPeriodId,
                 week_id: weekId,
                 institution_id: institutionId,
@@ -257,14 +257,14 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         }
 
         columnDefs.push({
-            headerName: translateText.translated.openemis_no,
+            headerName: 'OpenEMIS ID',
             field: "_matchingData.Users.openemis_no",
             pinned: direction,
             menuTabs: []
         });
 
         columnDefs.push({
-            headerName: translateText.translated.Name,
+            headerName: 'Name',
             field: "_matchingData.Users.name",
             filter: "text",
             filterParams: filterParams,

@@ -282,6 +282,9 @@ class ImportOutcomeResultsTable extends AppTable
 //                $attr['onChangeReload'] = 'changeClass';
 //            }
 
+            if(empty($institutionId) && isset($this->request->getParam('pass')[1])) {
+                $institutionId = $this->paramsDecode($this->request->getParam('pass')[1])['institution_id'];
+            }
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
             $EducationGrades = TableRegistry::get('Education.EducationGrades');
             $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
@@ -402,6 +405,9 @@ class ImportOutcomeResultsTable extends AppTable
             $academicPeriodId = !is_null($request->getData('ImportOutcomeResults')['academic_period']) ? $request->getData('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
             $classId = $request->getQuery('class');
             $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
+            if(empty($institutionId) && isset($this->request->getParam('pass')[1])) {
+                $institutionId = $this->paramsDecode($this->request->getParam('pass')[1])['institution_id'];
+            }
             // if class id is not null, then filter Outcome Template by class_grades of the class else by institution_grades of the school
             if (!is_null($classId) && !empty($classId)) {
                 $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
