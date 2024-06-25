@@ -23,6 +23,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        //For POCOR-8215 start...
+        if (env('APP_ENV') !== 'local') {
+            URL::forceScheme('https');
+        }
+        //For POCOR-8215 end...
     }
 }
