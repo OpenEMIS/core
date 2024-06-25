@@ -882,7 +882,7 @@ class StudentBehavioursTable extends ControllerActionTable
         $ids = isset($paramPass[1]) ? $this->paramsDecode($paramPass[1]) : [];
         if(isset($ids['id'])) {
             $studentBehaviourId = $ids['id'];
-            $queryString = $this->paramsEncode(['student_behaviour_id' => $studentBehaviourId]);
+            $queryString = $this->paramsEncode(['student_behaviour_id' => $studentBehaviourId, 'institution_id' => $institutionId]);
 
             $tabElements = [
                 'StudentBehaviours' => [
@@ -890,7 +890,7 @@ class StudentBehavioursTable extends ControllerActionTable
                     'text' => __('Overview')
                 ],
                 'StudentBehaviourAttachments' => [
-                    'url' => ['plugin' => 'Institution', 'controller' => 'StudentBehaviourAttachments', 'action' => 'index', 'queryString' => $queryString, 'institutionId' => $encodedInstitutionId],
+                    'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentBehaviourAttachments', 'index', $queryString],
                     'text' => __('Attachments')
                 ]
             ];

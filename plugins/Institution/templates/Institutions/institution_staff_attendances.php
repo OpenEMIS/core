@@ -33,8 +33,6 @@ $this->start('toolbar');
 // $superAdmin = $session->read('Auth.User.super_admin');
 // $is_connection_is_online = $session->read('is_connection_stablished');
 ?>
-
-<?php if(($is_button_accesible == 1)) :  ?>
 <?php if ($archiveUrl) : ?>
     <a href="<?=$archiveUrl ?>" ng-show="$ctrl.action == 'view'">
         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Archive') ?>" >
@@ -42,7 +40,6 @@ $this->start('toolbar');
         </button>
     </a>
 </button>
-<?php endif; ?>
 <?php endif; ?>
 <?php /*************** Start POCOR-5188 */ ?>
     <?php 

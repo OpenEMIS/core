@@ -45,7 +45,7 @@ class StudentUserExportTable extends ControllerActionTable
             'pages' => ['view']
         ]);
 
-        $this->addBehavior('Configuration.Pull');
+        // $this->addBehavior('Configuration.Pull');
 
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
         $this->addBehavior('Restful.RestfulAccessControl', [
