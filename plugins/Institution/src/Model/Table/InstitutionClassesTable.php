@@ -154,7 +154,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $events['ControllerAction.Model.delete.afterAction'] = ['callable' => 'deleteAfterAction', 'priority' => 10];
         return $events;
     }
-
+    //POCOR-8323 starts
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $encodedString = $this->request->getAttribute('params')['pass'][1];
@@ -189,8 +189,28 @@ class InstitutionClassesTable extends ControllerActionTable
                     'escape' => false,
                 ]
         ];
+
+        $buttons['view'] = [
+            'url' => [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Classes',
+                '0' => 'view',
+                '1' => $encodedString,
+                '_ext'=>'',
+                'academic_period_id'=> $academic_period_id,
+                'education_grade_id'=> $education_grade_id,
+            ],
+            'type' => 'button',
+            'label' => '<i class="fa fa-eye"></i>' . __('View'),
+            'attr' => [
+                    'role' => 'menuitem',
+                    'tabindex' => -1,
+                    'escape' => false,
+                ]
+        ];
         return $buttons;
-    }
+    }//POCOR-8323 ends
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
@@ -757,6 +777,7 @@ class InstitutionClassesTable extends ControllerActionTable
         if (array_key_exists('grade_type', $query)) {
             $action = $this->url('index');
             unset($action['grade_type']);
+            unset($action['?']);//POCOR-8323 remove grade_type and queryString value from url
             $this->controller->redirect($action);
         }
 
@@ -1042,12 +1063,13 @@ class InstitutionClassesTable extends ControllerActionTable
         }
 
         $requestQuery = $this->request->getQuery();
-        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
-        if(empty($requestQuery)){
-            $requestQuery = array(
-                            'academic_period_id' => !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent()
-                        );
-        }
+        //POCOR-8323 not using in v3
+        // $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        // if(empty($requestQuery)){
+        //     $requestQuery = array(
+        //                     'academic_period_id' => !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent()
+        //                 );
+        // }//POCOR-8323 ends
         if (array_key_exists('academic_period_id', $requestQuery) || array_key_exists('education_grade_id', $requestQuery)) {
             $action = $this->url('view');
             if (array_key_exists('academic_period_id', $requestQuery)) {
