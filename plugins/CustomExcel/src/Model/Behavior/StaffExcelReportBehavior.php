@@ -180,13 +180,13 @@ class StaffExcelReportBehavior extends Behavior
     {
         $model = $this->_table;
 
-        if (array_key_exists('requestQuery', $extra) && array_key_exists($this->config('templateTableKey'), $extra['requestQuery'])) {
-            $recordId = $extra['requestQuery'][$this->config('templateTableKey')];
+        if (array_key_exists('requestQuery', $extra) && array_key_exists($this->getConfig('templateTableKey'), $extra['requestQuery'])) {
+            $recordId = $extra['requestQuery'][$this->getConfig('templateTableKey')];
         } else {
-            $recordId = $model->getQueryString($this->config('templateTableKey'));
+            $recordId = $model->getQueryString($this->getConfig('templateTableKey'));
         }
 
-        $Table = TableRegistry::get($this->config('templateTable'));
+        $Table = TableRegistry::get($this->getConfig('templateTable'));
 
         if (empty($recordId)) {
             $objSpreadsheet = new Spreadsheet();
@@ -198,7 +198,7 @@ class StaffExcelReportBehavior extends Behavior
                 $file = $this->getFile($entity->excel_template);
 
                 // Create a temporary file
-                $filepath = tempnam($extra['path'], $this->config('filename') . '_Template_');
+                $filepath = tempnam($extra['path'], $this->getConfig('filename') . '_Template_');
                 $extra['tmp_file_path'] = $filepath;
 
                 $excelTemplate = new File($filepath, true, 0777);
@@ -225,7 +225,7 @@ class StaffExcelReportBehavior extends Behavior
             $this->processWorksheet($objSpreadsheet, $objWorksheet, $extra);
 
             // lock all sheets
-            if ($this->config('lockSheets')) {
+            if ($this->getConfig('lockSheets')) {
                 $objWorksheet->getProtection()->setSheet(true);
             }
         }
@@ -272,7 +272,7 @@ class StaffExcelReportBehavior extends Behavior
                 break;
         }
 
-        if ($this->config('wrapText')) {
+        if ($this->getConfig('wrapText')) {
             $cellStyle->getAlignment()->setWrapText(true);
         }
 
@@ -782,7 +782,7 @@ class StaffExcelReportBehavior extends Behavior
             $cellCoordinate = $objCell->getCoordinate();
             $cellStyle = $objCell->getStyle($cellCoordinate);
 
-            if ($this->config('wrapText')) {
+            if ($this->getConfig('wrapText')) {
                 $cellStyle->getAlignment()->setWrapText(true);
             }
 

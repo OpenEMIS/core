@@ -433,7 +433,7 @@ class StaffReportCardsTable extends AppTable
 					'education_grade' => 'EducationGrades.name',
                 ])
 				->innerJoin(
-					[$InstitutionClasses->alias() => $InstitutionClasses->table()],
+					[$InstitutionClasses->getAlias() => $InstitutionClasses->getTable()],
 					[
 						$InstitutionClasses->aliasField('id = ') .  $InstitutionClassesSecondaryStaff->aliasField('institution_class_id'),
 					]
