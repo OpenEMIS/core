@@ -11,12 +11,13 @@ use Cake\Utility\Inflector;
 use App\Model\Table\AppTable;
 
 class AccountsTable extends AppTable {
-	public function initialize(array $config) {
+
+	public function initialize(array $config): void {
 		$this->addBehavior('User.Account', ['userRole' => 'Securities', 'permission' => ['Securities', 'Accounts', 'edit']]);
 		parent::initialize($config);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 		return $validator;
 	}
@@ -27,18 +28,37 @@ class AccountsTable extends AppTable {
     */
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
     {
-        //echo "<pre>"; print_r($this->request);die;
-        $userActivities = TableRegistry::get('user_activities');
-        $userTable = TableRegistry::get('security_users');
+        $userActivities = TableRegistry::get('User.UserActivities');
+        $userTable = TableRegistry::get('Security.Users');
         $user = $this->Auth->user();
         $userId = $user['id'];
         $currentTimeZone = date("Y-m-d H:i:s");
-        $newpassword = $entity->extractOriginalChanged($entity->visibleProperties());
-        $setPassword =  $newpassword['password'];
+
+        // Get the list of changed properties
+        $changedProperties = $entity->getDirty();
+
+        // Extract the original values of the changed properties
+        $originalValues = [];
+        foreach ($changedProperties as $property) {
+            $originalValues[$property] = $entity->getOriginal($property);
+        }
+
+        // Check if password is one of the changed properties
+        if (isset($originalValues['password'])) {
+            $setPassword = $originalValues['password'];
+            // Perform your operations with $setPassword
+        }
+
 
         $securityData = $userTable->find()->where([$userTable->aliasField('id')=>$entity->id])->first()->username;
         $check = strcmp($securityData, $entity->username);
-        if($check==0){
+        $userPasswordUpdte = $userTable->updateAll(
+                        ['password' => $setPassword,
+                            ],    //field
+                        ['id' => $entity->id,
+                        ] //condition
+                    );
+        if($check == 0){
             $field = 'password';
             $old = $entity->password;
             $new = $setPassword;
@@ -61,5 +81,15 @@ class AccountsTable extends AppTable {
                 ];
         $entity = $userActivities->newEntity($data);
         $save =  $userActivities->save($entity);
+        $message = __('Record is Updated Successfully');
+        $this->Alert->success($message, ['type' => 'string', 'reset' => true]);
+        $queryParams = $this->request->getParam('pass')[1];
+        $url = ['plugin' => 'Security', 'controller' => 'Securities',
+                 'action' => 'Accounts',0 => 'view',1 => $this->request->getParam('pass')[1]];
+        return $this->controller->redirect($url);
+
+        
+            
+        
     }
 }
