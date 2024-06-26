@@ -46,7 +46,7 @@ class SubjectExcelBehavior extends Behavior
     {
         $this->getConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
         if (!array_key_exists('filename', $config)) {
-            $this->getConfig('filename', $this->_table->getAlias());
+            $this->setConfig('filename', $this->_table->getAlias());//POCOR-8324
         }
         $folder = WWW_ROOT . $this->getConfig('folder');
 
@@ -89,8 +89,8 @@ class SubjectExcelBehavior extends Behavior
     {
         $id = 0;
         $break = false;
-        $action = $this->_table->action;
-        $pass = $this->_table->request->pass;
+        $action = $this->_table->request->getParam('action');//POCOR-8324
+        $pass = $this->_table->request->getParam('pass');//POCOR-8324
         if (in_array($action, $pass)) {
             unset($pass[array_search($action, $pass)]);
             $pass = array_values($pass);
@@ -98,7 +98,7 @@ class SubjectExcelBehavior extends Behavior
         if (isset($pass[0])) {
             $id = $pass[0];
         }
-        $ids = empty($id) ? [] : $this->_table->paramsDecode($id);
+        $ids = empty((int)$id) ? [] : $this->_table->paramsDecode($id);//POCOR-8324
         $this->generateXLXS($ids);
         return true;
     }
@@ -172,13 +172,16 @@ class SubjectExcelBehavior extends Behavior
 
         $sheetNameArr = [];
         //POCOR-5852 starts
-        $session = $this->_table->request->getSession();
-        $institution_id = $session->read('Institution.Institutions.id') ? $session->read('Institution.Institutions.id'): 0;
+        //$session = $this->_table->request->getSession();
+        //$institution_id = $session->read('Institution.Institutions.id') ? $session->read('Institution.Institutions.id'): 0;
+        $request = $this->_table->request;//POCOR-8324
+        $institutionId = $this->_table->paramsDecode($request->getAttribute('params')['pass'][1]);//POCOR-8324
+        $institution_id = $institutionId ? $institutionId['institution_id']: 0;//POCOR-8324
         $class_id = $academic_period_id = '';
         $condition = [];
-        if(!is_null($this->_table->request->getQuery('class_id')) && !is_null($this->_table->request->getQuery('academic_period_id'))){
-            $class_id = $this->_table->request->getQuery('class_id');
-            $academic_period_id = $this->_table->request->getQuery('academic_period_id');
+        if(!is_null($this->_table->request->getQuery()['class_id']) && !is_null($this->_table->request->getQuery()['academic_period_id'])){//POCOR-8324
+            $class_id = $this->_table->request->getQuery()['class_id'];//POCOR-8324
+            $academic_period_id = $this->_table->request->getQuery()['academic_period_id'];//POCOR-8324
 
             $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
             $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
@@ -213,10 +216,13 @@ class SubjectExcelBehavior extends Behavior
             * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
             * @ticket POCOR-6635 starts
             */
-		    $encodedSubjectId = $this->_table->request->getAttribute('params')['pass'][1];
-            if (!empty($encodedSubjectId)) {
-                $decodedSubjectId = $this->_table->paramsDecode($encodedSubjectId);
-                $subjectId = $decodedSubjectId['id'];
+            $checkEncodedSubjectId = $this->_table->request->getAttribute('params')['pass'][1];//POCOR-8324
+            $encodedSubjectId = $this->_table->paramsDecode($checkEncodedSubjectId);//POCOR-8324
+            if (array_key_exists('institution_subject_id', $encodedSubjectId)) {//POCOR-8324
+                //$decodedSubjectId = $this->_table->paramsDecode($encodedSubjectId);//POCOR-8324
+                //$subjectId = $decodedSubjectId['id'];//POCOR-8324
+                $decodedSubjectId = $encodedSubjectId['institution_subject_id'];
+                $subjectId = $decodedSubjectId;
                 $where[$InstitutionSubjects->aliasField('InstitutionSubjects.id')] = $subjectId;
                 $query = $Query
                         ->select([
@@ -224,7 +230,7 @@ class SubjectExcelBehavior extends Behavior
                             'education_grade' => 'EducationGrades.name',
                             'institution_code' => 'Institutions.code',
                             'institution_name' => 'Institutions.name',
-                            'Class_Name' => $InstitutionClasses->getAlias().'.name',
+                            'Class_Name' => $InstitutionClasses->aliasField('name'),//POCOR-8324
                             'subject_name' => 'InstitutionSubjects.name',
                             'subject_code' => 'EducationSubjects.code',
                             'openEMIS_ID' => 'SubjectStudents.openemis_no',
@@ -277,7 +283,7 @@ class SubjectExcelBehavior extends Behavior
                             'education_grade' => 'EducationGrades.name',
                             'institution_code' => 'Institutions.code',
                             'institution_name' => 'Institutions.name',
-                            'Class_Name' => $InstitutionClasses->alias().'.name',
+                            'Class_Name' => $InstitutionClasses->aliasField('name'),//POCOR-8324
                             'subject_name' => 'InstitutionSubjects.name',
                             'subject_code' => 'EducationSubjects.code',
                             'openEMIS_ID' => 'SubjectStudents.openemis_no',
@@ -356,8 +362,8 @@ class SubjectExcelBehavior extends Behavior
                     if($table->alias!='Subjects'){
                         $query->group([
                             'SubjectStudents.id'
-                    ]);
-                        }
+                        ]);
+                    }
             }
                 $Query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
 					return $results->map(function ($row) {
@@ -376,52 +382,62 @@ class SubjectExcelBehavior extends Behavior
                 //POCOR-5852 starts
                 $Query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                     return $results->map(function ($row) {
-                        $Users = TableRegistry::get('Security.Users');
-                        $user_data= $Users
-                                    ->find()
-                                    ->where(['Users.openemis_no' => $row->openEMIS_ID])
-                                    ->first();
-                        $UserIdentities = TableRegistry::get('User.Identities');//POCOR-5852 starts
-                        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');//POCOR-5852 ends
-                        $conditions = [
-                            $UserIdentities->aliasField('security_user_id') => $user_data->id,
-                        ];
-                        $data = $UserIdentities
-                                    ->find()    
-                                    ->select([
-                                        'identity_type' => $IdentityTypes->getAlias().'.name',//POCOR-5852 starts
-                                        'identity_number' => $UserIdentities->getAlias().'.number',
-                                        '"default"' => $IdentityTypes->getAlias().'.default' // Note the double quotes to escape 'default'
-                                        //POCOR-5852 ends
-                                    ])
-                                    ->leftJoin(
-                                        [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
-                                        [
-                                            $IdentityTypes->aliasField('id = '). $UserIdentities->aliasField('identity_type_id')
-                                        ]
-                                    )
-                                    ->where($conditions)
-                                    ->toArray();
-                        $row['identity_type'] = '';            
-                        $row['identity_number'] = '';            
-                        if(!empty($data)){
-                            $identity_type_name = '';
-                            $identity_type_number = '';
-                            foreach ($data as $key => $value) {
-                                if($value->default == 1){
-                                   $identity_type_name =  $value->identity_type;    
-                                   $identity_type_number =  $value->identity_number;   
-                                   break; 
+                        $openemisId = $row->openEMIS_ID;//POCOR-8324 starts
+                        if ($openemisId !== null) {
+                            $Users = TableRegistry::get('Security.Users');
+                            $user_data= $Users
+                                        ->find()
+                                        ->where([$Users->aliasField('openemis_no') => $row->openEMIS_ID])
+                                        ->first();
+                            $UserIdentities = TableRegistry::get('User.Identities');//POCOR-5852 starts
+                            $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');//POCOR-5852 ends
+                            $conditions = [
+                                $UserIdentities->aliasField('security_user_id') => $user_data->id,
+                            ];
+                            $data = $UserIdentities
+                                        ->find()    
+                                        ->select([
+                                            // 'identity_type' => $IdentityTypes->getAlias().'.name',//POCOR-5852 starts
+                                            // 'identity_number' => $UserIdentities->getAlias().'.number',
+                                            // '"default"' => $IdentityTypes->getAlias().'.default' // Note the double quotes to escape 'default'
+                                            'identity_type' => $IdentityTypes->aliasField('name'),
+                                            'identity_number' => $UserIdentities->aliasField('number'),
+                                            '"default"' => $IdentityTypes->aliasField('default')
+                                            //POCOR-5852 ends
+                                        ])
+                                        ->leftJoin(
+                                            [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
+                                            [
+                                                $IdentityTypes->aliasField('id = '). $UserIdentities->aliasField('identity_type_id')
+                                            ]
+                                        )
+                                        ->where($conditions)
+                                        ->toArray();
+                            $row['identity_type'] = '';            
+                            $row['identity_number'] = '';            
+                            if(!empty($data)){
+                                $identity_type_name = '';
+                                $identity_type_number = '';
+                                foreach ($data as $key => $value) {
+                                    if($value->default == 1){
+                                    $identity_type_name =  $value->identity_type;    
+                                    $identity_type_number =  $value->identity_number;   
+                                    break; 
+                                    }
+                                }
+                                if(!empty($identity_type_name) && !empty($identity_type_number)){
+                                    $row['identity_type'] = $identity_type_name;
+                                    $row['identity_number'] = $identity_type_number;
+                                }else{
+                                    $row['identity_type'] = $data[0]->identity_type;
+                                    $row['identity_number'] = $data[0]->identity_number;
                                 }
                             }
-                            if(!empty($identity_type_name) && !empty($identity_type_number)){
-                                $row['identity_type'] = $identity_type_name;
-                                $row['identity_number'] = $identity_type_number;
-                            }else{
-                                $row['identity_type'] = $data[0]->identity_type;
-                                $row['identity_number'] = $data[0]->identity_number;
-                            }
-                        }
+                        }else{
+                            $user_data = null;
+                            $row['identity_type'] = '';            
+                            $row['identity_number'] = ''; 
+                        }//POCOR-8324 ends                        
                         return $row;           
                     });
                 });
@@ -660,8 +676,10 @@ class SubjectExcelBehavior extends Behavior
         $language = I18n::getLocale();
         $excludedTypes = ['binary'];
         /*POCOR-6635 starts - added condition to export individual subject with student's list*/
-        $encodedSubjectId = $this->_table->request->getAttribute('params')['pass'][1];
-        if (!empty($encodedSubjectId)) {
+        //$encodedSubjectId = $this->_table->request->getAttribute('params')['pass'][1];//POCOR-8324
+        $checkEncodedSubjectId = $this->_table->request->getAttribute('params')['pass'][1];//POCOR-8324
+        $encodedSubjectId = $this->_table->paramsDecode($checkEncodedSubjectId);//POCOR-8324
+        if (array_key_exists('institution_subject_id', $encodedSubjectId)) {//POCOR-8324
             $columns = ['institution_code', 'institution_name', 'academic_period_id', 'Class_Name', 'education_grade', 'subject_name','subject_code', 'teachers', 'rooms', 'openEMIS_ID', 'student_name', 'gender', 'student_status'];
         } else {
             $columns = array_diff($columns, $excludes);
@@ -700,8 +718,8 @@ class SubjectExcelBehavior extends Behavior
                 $column = $key[1];
                 // Redispatch get label
                 $event = $this->dispatchEvent($table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $column, $language], true);
-                if (strlen($event->result)) {
-                    $field['label'] = $event->result;
+                if (strlen($event->getResult())) {
+                    $field['label'] = $event->getResult();
                 }
             }
             $newFields[] = $field;
