@@ -882,7 +882,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                          */
                         foreach ($model->fields as $value) {
                             if ($value['field'] != 'institution_id') {
-                                $model->validator()->remove($value['field']);
+                                $model->getValidator()->remove($value['field']);//POCOR-8324
                             }
                         }
                         $extra[$this->aliasField('notice')] = $error;
@@ -904,7 +904,9 @@ class InstitutionSubjectsTable extends ControllerActionTable
             unset($extra[$this->aliasField('notice')]);
             if ($notice == 'passed') {
                 $this->Alert->success('general.add.success', ['reset' => true]);
-                return $this->controller->redirect($this->url('index', 'QUERY'));
+                $Url = $extra['redirect'];//POCOR-8324
+                return $this->controller->redirect($Url);//POCOR-8324
+                //return $this->controller->redirect($this->url('index', 'QUERY'));//POCOR-8324 comment because of redirection
             } else {
                 $this->Alert->error($notice, ['reset' => true]);
             }
@@ -1233,9 +1235,13 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         $teachers = [0 => '-- ' . __('Select Teacher or Leave Blank') . ' --'];
         foreach ($query as $key => $value) {
-            if ($value->has('Users')) {
-                $teachers[$value->Users->id] = $value->Users->name;
-            }
+            //POCOR-8324 Starts
+            // if ($value->has('Users')) {
+            //     $teachers[$value->Users->id] = $value->Users->name;
+            // }
+            if ($value->has('user')) {
+                $teachers[$value->user->id] = $value->user->name;
+            }//POCOR-8324 ends
         }
         $subjects = $this->getSubjectOptions($extra['selectedClassId']);
         $existedSubjects = $this->getExistedSubjects($extra['selectedClassId'], true);
@@ -1258,7 +1264,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         ];
 
         //check textbook
-        $InstitutionTextbooks = TableRegistry::getTableLocator()->get('Textbook.InstitutionTextbooks');
+        $InstitutionTextbooks = TableRegistry::getTableLocator()->get('Institution.InstitutionTextbooks');//POCOR-8324
         $associatedTextbooksCount = $InstitutionTextbooks->find()
             ->where([
                 $InstitutionTextbooks->aliasField('education_subject_id') => $entity->education_subject_id,
@@ -1322,7 +1328,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         'class_subjects' => [
                             [
                                 'status' => 1,
-                                'institution_class_id' => $commonData['class_name']
+                                'institution_class_id' => $commonData['class_name'],
+                                'institution_subject_id' =>  $row['education_subject_id'] //POCOR-8323 It is necessary to show array without institution_subject_id validation
                             ]
                         ]
                     ];
@@ -1821,7 +1828,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
                             'class_subjects' => [
                                 [
                                     'status' => 1,
-                                    'institution_class_id' => $entity->id
+                                    'institution_class_id' => $entity->id,
+                                    'institution_subject_id' =>  $educationSubject['id'] //POCOR-8323 It is necessary to show array without institution_subject_id validation
                                 ]
                             ]
                         ];
@@ -2198,8 +2206,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
          * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
          * @ticket POCOR-6635 starts
          */
-        $encodedSubjectId = $this->request->getAttribute('params')['pass'][1];
-        if (!empty($encodedSubjectId)) {
+        //$encodedSubjectId = $this->request->getAttribute('params')['pass'][1];//POCOR-8324
+        $checkEncodedSubjectId = $this->request->getAttribute('params')['pass'][1];//POCOR-8324
+        $encodedSubjectId = $this->paramsDecode($checkEncodedSubjectId);//POCOR-8324
+        if (array_key_exists('institution_subject_id', $encodedSubjectId)) {//POCOR-8324
             $query;
         } else {
             $query->group('InstitutionSubjects.id');
