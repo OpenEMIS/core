@@ -6,12 +6,16 @@
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
 ?>
+<script>
+    localStorage.setItem('login_user_id', '<?php echo $loginUserId;?>');
+</script>
     <?php
         $backUrl = [
             'plugin' => $this->request->getAttribute('params')['plugin'],
             'controller' => $this->request->getAttribute('params')['controller'],
             'action' => 'ReportCardComments',
-            'index'
+            '0' => 'index',
+            '1' => $queryString
         ];
         echo $this->Html->link('<i class="fa kd-back"></i>', $backUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escape' => false, 'ng-show' => 'action == \'view\'']);
     ?>
