@@ -174,4 +174,282 @@ class ScheduleController extends Controller
 
     }
 
+
+
+    //POCOR-8295 start...
+
+    /**
+     * @OA\Get(
+     *     path="/api/v1/institutions/schedule-timetables",
+     *     summary="Get schedule timetables for institutions",
+     *     tags={"Institution time table"},
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         description="Order of the results",
+     *         required=false,
+     *         @OA\Schema(type="string", example="id")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=2)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         description="Number of items per page",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Response(
+     *         response="200",
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                     @OA\Items(
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="P1A"),
+     *                         @OA\Property(property="status", type="integer", example=1),
+     *                         @OA\Property(property="academic_period_id", type="integer", example=29),
+     *                         @OA\Property(property="academic_period_name", type="string", example="2020"),
+     *                         @OA\Property(property="institution_class_id", type="integer", example=496),
+     *                         @OA\Property(property="institution_class_name", type="string", example="Primary 1-A"),
+     *                         @OA\Property(property="institution_id", type="integer", example=6),
+     *                         @OA\Property(property="institution_code", type="string", example="P1002"),
+     *                         @OA\Property(property="institution_name", type="string", example="Avory Primary School"),
+     *                         @OA\Property(property="institution_schedule_interval_id", type="integer", example=1),
+     *                         @OA\Property(property="institution_schedule_interval_name", type="string", example="APS Morning Shift"),
+     *                         @OA\Property(property="institution_schedule_term_id", type="integer", example=1),
+     *                         @OA\Property(property="institution_schedule_term_name", type="string", example="Semester 1"),
+     *                         @OA\Property(property="modified_user_id", type="integer", example=null),
+     *                         @OA\Property(property="modified", type="string", example=null),
+     *                         @OA\Property(property="created_user_id", type="integer", example=2),
+     *                         @OA\Property(property="created", type="string", example="2020-02-11 07:36:56")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
+    public function getScheduleTimetables(Request $request)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->scheduleService->getScheduleTimetables($params);
+
+            if (!empty($data)) {
+                return $this->sendSuccessResponse("Schedule timetables found.", $data);
+            } else {
+                return $this->sendErrorResponse("Schedule timetables not found.");
+            }
+            
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch schedule timetables.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to fetch schedule timetables.',[], 500);
+        }
+
+    }
+
+
+
+    /**
+     * @OA\Get(
+     *     path="/api/v1/institutions/{institutionId}/schedule-timetables",
+     *     summary="Get schedule timetables for institutions",
+     *     tags={"Institution time table"},
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         description="Institution Id",
+     *         required=true,
+     *         @OA\Schema(type="string", example="6")
+     *     )
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         description="Order of the results",
+     *         required=false,
+     *         @OA\Schema(type="string", example="id")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=2)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         description="Number of items per page",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Response(
+     *         response="200",
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array",
+     *                     @OA\Items(
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="P1A"),
+     *                         @OA\Property(property="status", type="integer", example=1),
+     *                         @OA\Property(property="academic_period_id", type="integer", example=29),
+     *                         @OA\Property(property="academic_period_name", type="string", example="2020"),
+     *                         @OA\Property(property="institution_class_id", type="integer", example=496),
+     *                         @OA\Property(property="institution_class_name", type="string", example="Primary 1-A"),
+     *                         @OA\Property(property="institution_id", type="integer", example=6),
+     *                         @OA\Property(property="institution_code", type="string", example="P1002"),
+     *                         @OA\Property(property="institution_name", type="string", example="Avory Primary School"),
+     *                         @OA\Property(property="institution_schedule_interval_id", type="integer", example=1),
+     *                         @OA\Property(property="institution_schedule_interval_name", type="string", example="APS Morning Shift"),
+     *                         @OA\Property(property="institution_schedule_term_id", type="integer", example=1),
+     *                         @OA\Property(property="institution_schedule_term_name", type="string", example="Semester 1"),
+     *                         @OA\Property(property="modified_user_id", type="integer", example=null),
+     *                         @OA\Property(property="modified", type="string", example=null),
+     *                         @OA\Property(property="created_user_id", type="integer", example=2),
+     *                         @OA\Property(property="created", type="string", example="2020-02-11 07:36:56")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
+    public function getScheduleTimetablesViaInstitutionId(Request $request, $institutionId)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->scheduleService->getScheduleTimetablesViaInstitutionId($params, $institutionId);
+
+            if (!empty($data)) {
+                return $this->sendSuccessResponse("Schedule timetables found.", $data);
+            } else {
+                return $this->sendErrorResponse("Schedule timetables not found.");
+            }
+            
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch schedule timetables.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to fetch schedule timetables.',[], 500);
+        }
+
+    }
+
+
+
+    /**
+     * @OA\Get(
+     *     path="/api/v1/institutions/schedule-timetables/{scheduleTimeTableId}",
+     *     summary="Get schedule timetables data for institutions",
+     *     tags={"Institution time table"},
+     *     @OA\Parameter(
+     *         name="scheduleTimeTableId",
+     *         in="path",
+     *         description="Schedule Time Table Id",
+     *         required=true,
+     *         @OA\Schema(type="string", example="1")
+     *     )
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         description="Order of the results",
+     *         required=false,
+     *         @OA\Schema(type="string", example="id")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=2)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         description="Number of items per page",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Response(
+     *         response="200",
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *                 @OA\Property(property="data", type="array",
+     *                     @OA\Items(
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="P1A"),
+     *                         @OA\Property(property="status", type="integer", example=1),
+     *                         @OA\Property(property="academic_period_id", type="integer", example=29),
+     *                         @OA\Property(property="academic_period_name", type="string", example="2020"),
+     *                         @OA\Property(property="institution_class_id", type="integer", example=496),
+     *                         @OA\Property(property="institution_class_name", type="string", example="Primary 1-A"),
+     *                         @OA\Property(property="institution_id", type="integer", example=6),
+     *                         @OA\Property(property="institution_code", type="string", example="P1002"),
+     *                         @OA\Property(property="institution_name", type="string", example="Avory Primary School"),
+     *                         @OA\Property(property="institution_schedule_interval_id", type="integer", example=1),
+     *                         @OA\Property(property="institution_schedule_interval_name", type="string", example="APS Morning Shift"),
+     *                         @OA\Property(property="institution_schedule_term_id", type="integer", example=1),
+     *                         @OA\Property(property="institution_schedule_term_name", type="string", example="Semester 1"),
+     *                         @OA\Property(property="modified_user_id", type="integer", example=null),
+     *                         @OA\Property(property="modified", type="string", example=null),
+     *                         @OA\Property(property="created_user_id", type="integer", example=2),
+     *                         @OA\Property(property="created", type="string", example="2020-02-11 07:36:56")
+     *                     )
+     *                 )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
+    public function getScheduleTimetableData($scheduleTimetableId)
+    {
+        try {
+            $data = $this->scheduleService->getScheduleTimetableData($scheduleTimetableId);
+
+            if (!empty($data)) {
+                return $this->sendSuccessResponse("Schedule timetable data found.", $data);
+            } else {
+                return $this->sendErrorResponse("Schedule timetable data not found.");
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch schedule timetable data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to fetch schedule timetables data',[], 500);
+        }
+
+    }
+
+    //POCOR-8295 end...
+
 }
