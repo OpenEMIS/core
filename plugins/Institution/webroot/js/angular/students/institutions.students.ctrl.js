@@ -213,7 +213,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
 
         function getMultipleInstitutionsStudentEnrollment() {
-            return userSvc.getConfigItemValue('MultipleInstitutionsStudentEnrollment')
+            return userSvc.getConfigItemValue('multiple_institutions_student_enrollment')
                 .then(configValue => {
                     const config_value = configValue === "1";
                     userCtrl.multipleInstitutionsStudentEnrollment = config_value;
@@ -224,7 +224,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
 
         function getMaxFileSizeConfig() {
-            return userSvc.getConfigItemValue('MaxFileSize')
+            return userSvc.getConfigItemValue('dashboard_img_size_limit')
                 .then(configValue => {
                     const config_value = configValue || 0;
                     userCtrl.maxFileSize = config_value;
