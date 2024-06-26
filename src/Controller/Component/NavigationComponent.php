@@ -846,7 +846,7 @@ class NavigationComponent extends Component
                     'Institutions.Staff',
                     'Institutions.StaffTransferIn',
                     'Institutions.StaffTransferOut',
-                    'StaffHistories.index', 'Staff.StaffCurriculars',]
+                    'StaffHistories.index']
             ],
 
             'Institution.Attendance' => [
@@ -1624,7 +1624,8 @@ class NavigationComponent extends Component
                     'Institutions.ImportStaffLeave',
                     'Staff.Duties',
                     'Staff.StaffAssociations',
-                    'Staff.StaffCurriculars'],
+                    'Staff.StaffCurriculars',
+                    ],
             ],
             'Staff.Staff.Employments.index' => [
                 'title' => 'Professional',
@@ -1671,8 +1672,10 @@ class NavigationComponent extends Component
                     'Staff.HealthImmunizations',
                     'Staff.HealthMedications',
                     'Staff.HealthTests',
-                    'Staff.StaffBodyMasses',
-                    'Staff.StaffInsurances']
+                    //'Staff.StaffBodyMasses', //old code
+                    //'Staff.StaffInsurances', //old code
+                    'Staff.HealthBodyMasses', //POCOR-8359
+                    'Staff.HealthInsurances']//POCOR-8359
             ],
             'Staff.Staff.SpecialNeedsReferrals.index' => [
                 'title' => 'Special Needs',
