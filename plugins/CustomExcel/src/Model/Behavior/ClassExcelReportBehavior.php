@@ -20,6 +20,7 @@ use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use Cake\ORM\Table;
 /**
  * 
  * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
@@ -226,7 +227,7 @@ class ClassExcelReportBehavior extends Behavior
             $this->processWorksheet($objSpreadsheet, $objWorksheet, $extra);
 
             // lock all sheets
-            if ($this->config('lockSheets')) {
+            if ($this->getConfig('lockSheets')) {
                 $objWorksheet->getProtection()->setSheet(true);
             }
         }
@@ -273,7 +274,7 @@ class ClassExcelReportBehavior extends Behavior
                 break;
         }
 
-        if ($this->config('wrapText')) {
+        if ($this->getConfig('wrapText')) {
             $cellStyle->getAlignment()->setWrapText(true);
         }
 
@@ -433,15 +434,15 @@ class ClassExcelReportBehavior extends Behavior
         $model = $this->_table;
 
         $variableValues = new ArrayObject([]);
-        if ($this->config('variableSource') == 'database') {
+        if ($this->getConfig('variableSource') == 'database') {
             $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialiseQueryVariables', [$params, $extra], $this);
             if ($event->isStopped()) { return $event->getResult(); }
             if ($event->getResult()) {
                 $variableValues = $event->getResult();
             }
 
-        } else if ($this->config('variableSource') == 'file') {
-            $variables = $this->config('variables');
+        } else if ($this->getConfig('variableSource') == 'file') {
+            $variables = $this->getConfig('variables');
 
             foreach ($variables as $var) {
                 $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialise'.$var, [$params, $extra], $this);
@@ -783,7 +784,7 @@ class ClassExcelReportBehavior extends Behavior
             $cellCoordinate = $objCell->getCoordinate();
             $cellStyle = $objCell->getStyle($cellCoordinate);
 
-            if ($this->config('wrapText')) {
+            if ($this->getConfig('wrapText')) {
                 $cellStyle->getAlignment()->setWrapText(true);
             }
 
@@ -1021,7 +1022,7 @@ class ClassExcelReportBehavior extends Behavior
         }
     }
 
-    private function table($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
+    public function table($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra): Table
     {
         $rowValue = $attr['rowValue'];
         $columnIndex = $attr['columnIndex'];

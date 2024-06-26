@@ -273,8 +273,9 @@ class ProfilesTable extends ControllerActionTable
             ->order([
                 $this->InstitutionReportCardProcesses->aliasField('created'),
             ])
-            // ->hydrate(false)
+            ->enableHydration(false)
             ->toArray();
+            // echo "<pre>";print_r($this->reportProcessList);die;
 		$this->setupTabElements();	
     }
 
@@ -539,16 +540,14 @@ class ProfilesTable extends ControllerActionTable
             $reportCardId = $serverRequest->getQuery('report_card_id');
         }
 		
-		$academicPeriodId = $serverRequest->getQuery('report_card_id');
+		$academicPeriodId = $serverRequest->getQuery('academic_period_id');
 
         $search = [
             'report_card_id' => $reportCardId,
             'institution_id' => $entity->id,
             'academic_period_id' => $academicPeriodId
         ];
-
         $resultIndex = array_search($search, $this->reportProcessList);
-
         if ($resultIndex !== false) {
             $totalQueueCount = count($this->reportProcessList);
             return sprintf(__('%s of %s'), $resultIndex + 1, $totalQueueCount);
@@ -704,7 +703,7 @@ class ProfilesTable extends ControllerActionTable
             $inProgress = $InstitutionReportCardProcesses->find()
                 ->where([
                     $InstitutionReportCardProcesses->aliasField('report_card_id') => $params['report_card_id'],
-                    $InstitutionReportCardProcesses->aliasField('institution_id') => $params['institution_id'],
+                    // $InstitutionReportCardProcesses->aliasField('institution_id') => $params['institution_id'],
                     $InstitutionReportCardProcesses->aliasField('academic_period_id') => $params['academic_period_id']
                 ])
                 ->count();      

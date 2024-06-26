@@ -230,7 +230,8 @@ class StaffProfilesTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
-        $this->field('staff_id', ['type' => 'integer', 'sort' => ['field' => 'Users.first_name']]);
+        $this->field('staff_id', ['type' => 'hidden', 'sort' => ['field' => 'Users.first_name']]);
+        $this->field('staff_name', ['type' => 'string', 'sort' => ['field' => 'Users.first_name']]);
         $this->field('profile_name');
         $this->field('status', ['sort' => ['field' => 'report_card_status']]);
         $this->field('started_on');
@@ -284,8 +285,8 @@ class StaffProfilesTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('report_queue');
-        $this->setFieldOrder(['openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
-		$this->setFieldVisible(['index'], ['openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
+        $this->setFieldOrder(['openemis_no', 'staff_id', 'staff_name', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
+		$this->setFieldVisible(['index'], ['openemis_no', 'staff_id' , 'staff_name', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
 
         // SQL Query to get the current processing list for report_queue table
         $this->reportProcessList = $this->StaffReportCardProcesses
@@ -303,7 +304,7 @@ class StaffProfilesTable extends ControllerActionTable
                 $this->StaffReportCardProcesses->aliasField('created'),
                 $this->StaffReportCardProcesses->aliasField('staff_id')
             ])
-            // ->hydrate(false)
+            ->enableHydration(false)
             ->toArray();
 		$this->setupTabElements();	
     }
@@ -386,7 +387,8 @@ class StaffProfilesTable extends ControllerActionTable
                 'report_card_started_on' => $this->StaffReportCards->aliasField('started_on'),
                 'report_card_completed_on' => $this->StaffReportCards->aliasField('completed_on'),
                 'email_status_id' => $this->StaffReportCardEmailProcesses->aliasField('status'),
-                'email_error_message' => $this->StaffReportCardEmailProcesses->aliasField('error_message')
+                'email_error_message' => $this->StaffReportCardEmailProcesses->aliasField('error_message'),
+                'staff_id' => $this->aliasField('staff_id')
             ])
 			->innerJoin([$AcademicPeriod->getAlias() => $AcademicPeriod->getTable()],
                 [
@@ -505,7 +507,8 @@ class StaffProfilesTable extends ControllerActionTable
                 $params = [
                     'institution_id' => $institutionId,
                     'academic_period_id' => $academicPeriodId,
-                    'staff_profile_template_id' => $reportCardId
+                    'staff_profile_template_id' => $reportCardId,
+                    'staff_id' => $this->getQueryString('staff_id')
                 ];
 				
 				if ($generatedCount > 0 || $publishedCount > 0) {
@@ -682,12 +685,16 @@ class StaffProfilesTable extends ControllerActionTable
             $reportCardId = $this->request->getQuery('staff_profile_template_id');
         }
 		$academicPeriodId = $this->request->getQuery('academic_period_id');
-
+        $ids = $this->getQueryString();
+        $institution_id = $ids['institution_id'];
+        $academic_period_id = $ids['academic_period_id'];
         $search = [
             'staff_profile_template_id' => $reportCardId,
             'staff_id' => $entity->staff_id,
-            'institution_id' => $entity->institution_id,
-            'academic_period_id' => $academicPeriodId
+            // 'institution_id' => $entity->institution_id,
+            'institution_id' => $institution_id,
+            // 'academic_period_id' => $academicPeriodId
+            'academic_period_id' => $academic_period_id
         ];
         $resultIndex = array_search($search, $this->reportProcessList);
 
@@ -701,11 +708,36 @@ class StaffProfilesTable extends ControllerActionTable
 
     public function onGetOpenemisNo(Event $event, Entity $entity)
     {
-        $value = '';
-        if ($entity->has('user')) {
-            $value = $entity->user->openemis_no;
-        }
-        return $value;
+        $Users = TableRegistry::get('User.Users');
+        $result = $Users
+            ->find()
+            ->select(['openemis_no'])
+            ->where(['id' => $entity->staff_id])
+            ->first();
+
+        return $entity->openemis_no = $result->openemis_no;
+        // $value = '';
+        // if ($entity->has('User')) {
+        //     $value = $entity->user->openemis_no;
+        // }
+        // return $value;
+    }
+
+    public function onGetStaffName(Event $event, Entity $entity)
+    {
+        $Users = TableRegistry::get('User.Users');
+        $result = $Users
+            ->find()
+            ->select(['first_name','last_name'])
+            ->where(['id' =>  $entity->staff_id])
+            ->first();
+
+        return $entity->_staff_name = $result->first_name.' '.$result->last_name;
+        // $value = '';
+        // if ($entity->has('User')) {
+        //     $value = $entity->user->openemis_no;
+        // }
+        // return $value;
     }
 
     public function onGetProfileName(Event $event, Entity $entity)
@@ -942,6 +974,7 @@ class StaffProfilesTable extends ControllerActionTable
 
             // delete file after download
             unlink($filepath);
+            exit();
         } else {
             $event->stopPropagation();
             $this->Alert->warning('StaffProfiles.noFilesToDownload');
@@ -990,6 +1023,7 @@ class StaffProfilesTable extends ControllerActionTable
 
             // delete file after download
             unlink($filepath);
+            exit();
         } else {
             $event->stopPropagation();
             $this->Alert->warning('StaffProfiles.noFilesToDownload');
@@ -1011,11 +1045,11 @@ class StaffProfilesTable extends ControllerActionTable
         $params = $this->getQueryString();
 
         // only publish report cards with generated status to published status
+        unset($params['staff_id']);
         $result = $this->StaffReportCards->updateAll(['status' => self::PUBLISHED], [
             $params,
             'status' => self::GENERATED
         ]);
-
         if ($result) {
             $this->Alert->success('StaffProfiles.publishAll');
         } else {
@@ -1029,6 +1063,7 @@ class StaffProfilesTable extends ControllerActionTable
     public function unpublish(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
+        nset($params['staff_id']);
         $result = $this->StaffReportCards->updateAll(['status' => self::NEW_REPORT], $params);
         $this->Alert->success('StaffProfiles.unpublish');
         $event->stopPropagation();
