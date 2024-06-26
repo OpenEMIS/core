@@ -137,6 +137,8 @@ export const TABLE_COLUMN_LIST: TableColumns = {
 };
 
 function getEditCommentElement(data: any, commentTypes: any) {
+  console.log(data,"data");
+  
   let eCell = document.createElement('div');
   eCell.setAttribute("class", "oe-select-wrapper input-select-wrapper");
   eCell.setAttribute("id", "edit_comment");
@@ -146,13 +148,16 @@ function getEditCommentElement(data: any, commentTypes: any) {
     let eOption = document.createElement("option");
     let labelText = obj.name;
     eOption.setAttribute("value", obj.id);
+    if(obj.id == data.comment_code) {
+    eOption.setAttribute("selected", obj.id);
+    }
     eOption.innerHTML = labelText;
     eSelect.appendChild(eOption);
   });
   eSelect.addEventListener('change', () => {
     console.log("data received topa");
 
-    // let oldValue = data.institution_student_meal[dataKey];
+    let oldValue = data.comment_code;
     let newValue = eSelect.value;
     console.log(commentTypes, newValue, "commentTypes");
 
@@ -160,10 +165,12 @@ function getEditCommentElement(data: any, commentTypes: any) {
     console.log(commentTypeObj, "commentTypeObj");
     console.log(data, "data");
     data.comment_code = commentTypeObj?.id;
-    // if (newValue != oldValue) {
-    //   let oldParams = {
-    //     meal_received_id: oldValue
-    //   };
+    if (newValue != oldValue) {
+      let oldParams = {
+        comment_code: oldValue
+      };
+      data.comment_code = newValue;
+    }
 
     //   switch (mealTypeObj.name) {
     //     case 'None':
