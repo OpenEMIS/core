@@ -3955,7 +3955,7 @@ class NavigationComponent extends Component
                     //         'ScholarshipRecipientAcademicStandings.delete']
                     // ],
                     'Scholarships.ScholarshipRecipients' => [
-                        'title' => 'ScholarshipRecipients',
+                        'title' => 'Recipients',
                         'parent' => 'Administration',
                         'selected' => ['Scholarships.ScholarshipRecipients']
                     ],
@@ -4030,8 +4030,8 @@ class NavigationComponent extends Component
                 //         'ScholarshipRecipientAcademicStandings.delete']
                 // ],
                 'Scholarships.ScholarshipRecipients' => [
-                    'title' => 'ScholarshipRecipients',
-                    'parent' => 'Administration',
+                    'title' => 'Recipients',
+                    'parent' => 'Administration.Scholarships',
                     'selected' => ['Scholarships.ScholarshipRecipients']
                 ],
             ];
@@ -4086,13 +4086,10 @@ class NavigationComponent extends Component
                         'parent' => 'Administration',
                         'link' => false,
                     ],
-                    'MoodleApi.log' => [
+                    'MoodleApi.index' => [
                         'title' => 'Log',
                         'parent' => 'Administration.MoodleApi',
-                        'selected' => ['MoodleApiLog.index'],
-                        'params' => ['plugin' => 'MoodleApi',
-                            'controller' => 'MoodleApiLog',
-                            'action' => 'index']
+                        'selected' => ['MoodleApi.MoodleApi'],
                     ],
                 ];
             }
@@ -4103,13 +4100,10 @@ class NavigationComponent extends Component
                     'parent' => 'Administration',
                     'link' => false,
                 ],
-                'MoodleApi.log' => [
+                'MoodleApi.index' => [
                     'title' => 'Log',
                     'parent' => 'Administration.MoodleApi',
-                    'selected' => ['MoodleApiLog.index'],
-                    'params' => ['plugin' => 'MoodleApi',
-                        'controller' => 'MoodleApiLog',
-                        'action' => 'index']
+                    'selected' => ['MoodleApi.MoodleApi'],
                 ],
 
             ];

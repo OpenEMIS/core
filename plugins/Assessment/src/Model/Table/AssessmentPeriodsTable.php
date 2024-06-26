@@ -407,9 +407,9 @@ class AssessmentPeriodsTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         //disable edit academic term if no period
-        if (isset($extra['toolbarButtons']['editAcademicTerm']) && $data->count() < 1) {
+        // if (isset($extra['toolbarButtons']['editAcademicTerm']) && $data->count() < 1) {
             unset($extra['toolbarButtons']['editAcademicTerm']);
-        }
+        // }
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -601,11 +601,11 @@ class AssessmentPeriodsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldAssessmentId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssessmentId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        list($periodOptions, $selectedPeriod) = array_values($this->Assessments->getAcademicPeriodOptions($this->request->query('period')));
+        list($periodOptions, $selectedPeriod) = array_values($this->Assessments->getAcademicPeriodOptions($this->request->getQuery('period')));
 
-        list($templateOptions, $selectedTemplate) = array_values($this->getTemplateOptions($selectedPeriod, $this->request->query('template')));
+        list($templateOptions, $selectedTemplate) = array_values($this->getTemplateOptions($selectedPeriod, $this->request->getQuery('template')));
 
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
@@ -922,7 +922,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
     }
 
     //POCOR-8266
-    public function onUpdateFieldWeight(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldWeight(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $attr['type'] = 'readonly';
