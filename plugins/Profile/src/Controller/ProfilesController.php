@@ -533,7 +533,7 @@ class ProfilesController extends AppController
 
     private function attachAngularModules()
     {
-        $action = $this->request->action;
+        $action = $this->request->getAttribute('params')['action'];//POCOR-8379
 
         switch ($action) {
             case 'StudentResults':
