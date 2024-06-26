@@ -43,13 +43,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         resetExternalVariable: resetExternalVariable,
         getGenders: getGenders,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
-        getAddNewStudentConfig: getAddNewStudentConfig,
-        //start POCOR-6172-HINDOL
-        getMultipleInstitutionsStudentEnrollmentConfig: getMultipleInstitutionsStudentEnrollmentConfig,
-        //end POCOR-6172-HINDOL
-        //start POCOR-7933
-        getMaxFileSizeConfig: getMaxFileSizeConfig,
-        //end POCOR-7933
+        getConfigItemValue: getConfigItemValue,
         getContactTypes: getContactTypes,
         getIdentityTypes: getIdentityTypes,
         getIdentityTypesExternalSave: getIdentityTypesExternalSave,
@@ -1057,24 +1051,6 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         return deferred.promise;
     }
     //POCOR-7716 end
-    //POCOR-6172-HINDOL[START]
-    function getMultipleInstitutionsStudentEnrollmentConfig() {
-        return ConfigItems
-            .select()
-            .where({code: 'multiple_institutions_student_enrollment'})
-            .ajax({defer: true});
-    }
-    //POCOR-6172-HINDOL[END]
-
-    //POCOR-7716 end
-    //POCOR-7993-HINDOL[START]
-    function getMaxFileSizeConfig() {
-        return ConfigItems
-            .select()
-            .where({code: 'dashboard_img_size_limit'})
-            .ajax({defer: true});
-    }
-    //POCOR-7993-HINDOL[END]
 
     function getContactTypes() {
         var deferred = $q.defer();
@@ -1225,4 +1201,26 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
             });
         return deferred.promise;
     }
+
+    function getConfigItemValue(code) {
+        var success = function(response, deferred) {
+            var results = response.data.data;
+            if (angular.isObject(results) && results.length > 0) {
+                var configItemValue = (results[0].value.length > 0) ? results[0].value : results[0].default_value;
+                deferred.resolve(configItemValue);
+            } else {
+                deferred.reject('There is no ' + code + ' configured');
+            }
+        };
+
+        return ConfigItems
+            .where({
+                code: code
+            })
+            .ajax({
+                success: success,
+                defer: true
+            });
+    }
+
 };

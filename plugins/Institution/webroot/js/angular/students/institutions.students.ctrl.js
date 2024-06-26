@@ -28,12 +28,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     userCtrl.postRespone = null;
     userCtrl.translateFields = null;
     //contacts/nationalities/identities req/no
-    userCtrl.contactSkipped = false; // POCOR-7882
-    userCtrl.contactsRequired = 'required'; // POCOR-7882
-    userCtrl.identitySkipped = false; // POCOR-7882
-    userCtrl.identitiesRequired = 'required'; // POCOR-7882
-    userCtrl.nationalitySkipped = false; // POCOR-7882
-    userCtrl.nationalitiesRequired = 'required'; // POCOR-7882
+    userCtrl.contactSkipped = true; // POCOR-7882
+    userCtrl.contactsRequired = ''; // POCOR-7882
+    userCtrl.identitySkipped = true; // POCOR-7882
+    userCtrl.identitiesRequired = ''; // POCOR-7882
+    userCtrl.nationalitySkipped = true; // POCOR-7882
+    userCtrl.nationalitiesRequired = ''; // POCOR-7882
     userCtrl.nationalityClass = 'input select';
     userCtrl.identityTypeClass = 'input select';
     userCtrl.identityClass = 'input string';
@@ -213,18 +213,24 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
 
         function getMultipleInstitutionsStudentEnrollment() {
-            return userSvc.getMultipleInstitutionsStudentEnrollmentConfig()
-                .then(resp => {
-                    const config_value = resp.data[0].value === "1";
+            return userSvc.getConfigItemValue('MultipleInstitutionsStudentEnrollment')
+                .then(configValue => {
+                    const config_value = configValue === "1";
                     userCtrl.multipleInstitutionsStudentEnrollment = config_value;
+                })
+                .catch(error => {
+                    console.error('Error fetching MultipleInstitutionsStudentEnrollment configuration:', error);
                 });
         }
 
         function getMaxFileSizeConfig() {
-            return userSvc.getMaxFileSizeConfig()
-                .then(resp => {
-                    const config_value = resp.data[0].value || 0;
+            return userSvc.getConfigItemValue('MaxFileSize')
+                .then(configValue => {
+                    const config_value = configValue || 0;
                     userCtrl.maxFileSize = config_value;
+                })
+                .catch(error => {
+                    console.error('Error fetching MaxFileSize configuration:', error);
                 });
         }
 
@@ -235,65 +241,40 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 });
         }
 
+        function handleConfigItem(configCode, configValue) {
+            switch (configCode) {
+                case "StudentContacts":
+                    userCtrl.contactSkipped = configValue === 2;
+                    userCtrl.contactsRequired = configValue === 1 ? 'required' : '';
+                    break;
+                case "StudentIdentities":
+                    userCtrl.identitySkipped = configValue === 2;
+                    userCtrl.identitiesRequired = configValue === 1 ? 'required' : '';
+                    break;
+                case "StudentNationalities":
+                    if (configValue === 2 && userCtrl.identitySkipped) {
+                        userCtrl.nationalitySkipped = true;
+                        userCtrl.nationalitiesRequired = '';
+                    } else {
+                        userCtrl.nationalitySkipped = configValue === 2;
+                        userCtrl.nationalitiesRequired = configValue === 1 ? 'required' : '';
+                    }
+                    break;
+                default:
+                    console.warn(`Unhandled config code: ${configCode}`);
+            }
+        }
         function getAddNewStudentConfig() {
-            return userSvc.getAddNewStudentConfig()
-                .then(resp => {
-                    userCtrl.addNewStudentConfig = resp.data;
-                    const addNewStudentConfigs = userCtrl.addNewStudentConfig;
+            const configCodes = ["StudentContacts", "StudentIdentities", "StudentNationalities"];
 
-                    angular.forEach(addNewStudentConfigs, (value, key) => {
-                        const configCode = value.code;
-                        const configValue = parseInt(value.value);
-
-                        if (configCode === "StudentContacts") {
-                            if (configValue === 0) {
-                                userCtrl.contactSkipped = false;
-                                userCtrl.contactsRequired = '';
-                            }
-                            if (configValue === 1) {
-                                userCtrl.contactSkipped = false;
-                                userCtrl.contactsRequired = 'required';
-                            }
-                            if (configValue === 2) {
-                                userCtrl.contactSkipped = true;
-                                userCtrl.contactsRequired = '';
-                            }
-                        }
-
-                        if (configCode === "StudentIdentities") {
-                            if (configValue === 0) {
-                                userCtrl.identitySkipped = false;
-                                userCtrl.identitiesRequired = '';
-                            }
-                            if (configValue === 1) {
-                                userCtrl.identitySkipped = false;
-                                userCtrl.identitiesRequired = 'required';
-                            }
-                            if (configValue === 2) {
-                                userCtrl.identitySkipped = true;
-                                userCtrl.identitiesRequired = '';
-                            }
-                        }
-
-                        if (configCode === "StudentNationalities") {
-                            if (configValue === 0) {
-                                userCtrl.nationalitySkipped = false;
-                                userCtrl.nationalitiesRequired = '';
-                            }
-                            if (configValue === 1) {
-                                userCtrl.nationalitySkipped = false;
-                                userCtrl.nationalitiesRequired = 'required';
-                            }
-                            if (configValue === 2 && userCtrl.identitySkipped === true) {
-                                userCtrl.nationalitySkipped = true;
-                                userCtrl.nationalitiesRequired = '';
-                            }
-                            if (configValue === 2 && userCtrl.identitySkipped === false) {
-                                userCtrl.nationalitySkipped = userCtrl.identitySkipped;
-                                userCtrl.nationalitiesRequired = userCtrl.identitiesRequired;
-                            }
-                        }
+            Promise.all(configCodes.map(code => userSvc.getConfigItemValue(code)))
+                .then(configValues => {
+                    configValues.forEach((configValue, index) => {
+                        handleConfigItem(configCodes[index], parseInt(configValue));
                     });
+                })
+                .catch(error => {
+                    console.error('Error fetching configuration items:', error);
                 });
         }
 
