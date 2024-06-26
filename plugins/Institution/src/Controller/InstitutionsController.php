@@ -1440,6 +1440,21 @@ class InstitutionsController extends AppController
 
             $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
 
+            //POCOR-8148:Start Check if institution is active
+            $Institutions = TableRegistry::get('Institution.Institutions');
+            $data = $Institutions->find()
+            ->where(['id' => $institutionId])
+            ->first();
+            //echo "<pre>";print_r($data);exit;
+            $_isActive = 1;
+            if ($data->offsetExists('date_closed') && !empty($data['date_closed'])) {
+                $todayDate = new Date();
+                $dateClosed = new Date($data['date_closed']);
+                if ($dateClosed < $todayDate) {
+                    $_isActive = 0;
+                }
+            }
+            //POCOR-8148:End
 
             // issue
             $excelUrl = [
@@ -1468,6 +1483,7 @@ class InstitutionsController extends AppController
             $this->Navigation->addCrumb($crumbTitle);
 
             $this->set('_edit', $_edit);
+            $this->set('_isActive', $_isActive);//POCOR-8148
             $this->set('_excel', $_excel);
             $this->set('_import', $_import);
             $this->set('_archive', $_archive);
