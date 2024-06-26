@@ -78,9 +78,7 @@ class StaffTabBehavior extends Behavior
 //            $staffID = $this->getUserID();
 //        }
         $queryString = $model->getQueryString();
-
-        // echo "<pre>"; print_r($queryString); die;
-        $encodedQueryString = $model->paramsEncode($queryString);
+        $encodedQueryString = !empty($queryString) ? $model->paramsEncode($queryString) : '';//POCOR-8379 
         $tabElements = [];
         $staffUrl = [
             'plugin' => $pluginName,
@@ -115,10 +113,23 @@ class StaffTabBehavior extends Behavior
         foreach ($staffTabElements as $key => $tab) {
                 $changeKeyArray = ['StaffLeave', 'StaffAttendances','StaffAppraisals','StaffAssociations','StaffCurriculars'];
                 if($controllerName == "Profiles" || $controllerName == "Directories"){
+                    $type = (array_key_exists('type', $options)) ? $options['type'] : null;//POCOR-8379 
                     if(in_array($key, $changeKeyArray)){
-                        $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString]);
+                        //POCOR-8379 starts
+                        if(!empty($encodedQueryString)){
+                            $paramsData = ['action' => $key, 'index', $encodedQueryString];
+                        }else{
+                            $paramsData = ['action' => $key, 'index', '?' => ['type' => $type]];
+                        }
+                        $tabElements[$key]['url'] = array_merge($staffUrl, $paramsData);
                     }else{
-                        $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff'.$key, 'index', $encodedQueryString]);
+                        if(!empty($encodedQueryString)){
+                            $paramsData = ['action' => 'Staff'.$key, 'index', $encodedQueryString];
+                        }else{
+                            $paramsData = ['action' => 'Staff'.$key, 'index', '?' => ['type' => $type]];
+                        }
+                        $tabElements[$key]['url'] = array_merge($staffUrl, $paramsData);
+                        //POCOR-8379 ends
                     }
                 }else{
                     $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString]);
@@ -127,7 +138,7 @@ class StaffTabBehavior extends Behavior
         if($controllerName == "Directories") {
             unset($tabElements['StaffCurriculars']);
         }
-        return $tabElements;
+        return $controller->TabPermission->checkTabPermission($tabElements);//POCOR-8379 
     }
 
 
