@@ -472,7 +472,11 @@ class StaffProfilesTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $serverRequest = $this->request;
-        $reportCardId = $serverRequest->getQuery('staff_profile_template_id');
+        //$reportCardId = $serverRequest->getQuery('staff_profile_template_id');
+        //POCOR-8379 starts
+        if (!is_null($this->request->getQuery('staff_profile_template_id'))) {
+            $reportCardId = $this->request->getQuery('staff_profile_template_id');
+        }//POCOR-8379 ends
         $institutionId = $serverRequest->getQuery('institution_id');
         $academicPeriodId = $serverRequest->getQuery('academic_period_id');
 

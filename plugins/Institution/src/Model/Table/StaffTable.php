@@ -3603,7 +3603,12 @@ class StaffTable extends ControllerActionTable
         $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
         $staffRecord = $institutionStaff->find('all', ['conditions' => ['staff_id' => $staffId]])
             ->first();
-        $staffStatusId = $staffRecord['staff_status_id'];
+        //POCOR-8379 starts
+        if(!empty($staffRecord)){
+            $staffStatusId = $staffRecord['staff_status_id'];
+        }else{
+            $staffStatusId = '';
+        }//POCOR-8379 ends
         //End of POCOR-7020
         $conditions = [];
         if ($institutionId != '') {
