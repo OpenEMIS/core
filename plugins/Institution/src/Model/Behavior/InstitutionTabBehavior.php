@@ -222,6 +222,7 @@ class InstitutionTabBehavior extends Behavior
                             if($url_action == 'Classes' && $additionalParam == 'institution_class_id'){
                                 $queryString['id'] = $entity->{$additionalParam};
                             }else if($url_action == 'Subjects' && $additionalParam == 'institution_subject_id'){
+                                $queryString['id'] = $entity->institution_subject_id;
                                 $queryString['institution_subject_id'] = $entity->id;
                             }
                             // else if($url_action == 'Textbooks' && $additionalParam == 'academic_period_id'){
