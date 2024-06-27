@@ -9,11 +9,10 @@ use Cake\Routing\Router;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
-use Cake\I18n\Date;
+use Cake\I18n\FrozenDate;
 use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
 use Cake\Http\ServerRequest;
-use Cake\Datasource\EntityInterface;
 
 class StudentTemplatesTable extends ControllerActionTable
 {
@@ -310,15 +309,17 @@ class StudentTemplatesTable extends ControllerActionTable
         echo file_get_contents($filepath);
     }
 
-    public function beforeSave(Event $event, EntityInterface $entity, ArrayObject $options) {
-        if (!empty($entity->generate_start_date)) {
-            $entity->generate_start_date = (new Time($this->request->getData()['StudentTemplates']['generate_start_date']))->format('Y-m-d H:i:s');
-        }
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+        $generate_start_date = $this->request->getData()['StudentTemplates']['generate_start_date'];
+        $generate_end_date = $this->request->getData()['StudentTemplates']['generate_end_date'];
+        if (!empty($generate_start_date)) {
+            $entity->generate_start_date = (new FrozenDate($generate_start_date))->format('Y-m-d H:i:s');
+        }  
+        if (!empty($generate_end_date)) {
+            $entity->generate_end_date = (new FrozenDate($generate_end_date))->format('Y-m-d H:i:s');
+        } 
 
-        if (!empty($entity->generate_end_date)) {
-            $entity->generate_end_date = (new Time($this->request->getData()['StudentTemplates']['generate_end_date']))->format('Y-m-d H:i:s');
-        }       
-    }
+    } 
     
     private function setupTabElements() {
         $options['type'] = 'StaffTemplates';
@@ -413,5 +414,6 @@ class StudentTemplatesTable extends ControllerActionTable
 
         return $attr;
     }
+
     
 }
