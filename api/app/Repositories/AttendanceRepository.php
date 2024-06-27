@@ -2530,6 +2530,109 @@ class AttendanceRepository extends Controller
             return false;
         }
     }
+
+
+    public function studentAttendancesNoScheduledClass($params)
+    {
+        try {
+            $institutionId = $params['institution_id'];
+            $academicPeriodId = $params['academic_period_id'];
+            $institutionClassId = $params['institution_class_id'];
+            $educationGradeId = $params['education_grade_id'];        
+            $day = $params['day_id'];
+
+            $studentAttendanceMarkedRecords = StudentAttendanceMarkedRecords::where([
+                    'institution_class_id' => $institutionClassId,
+                    'education_grade_id' => $educationGradeId,
+                    'institution_id' => $institutionId,
+                    'academic_period_id' => $academicPeriodId,
+                    'date' => $day
+                ])
+                ->get()
+                ->toArray();
+
+            if(!empty($studentAttendanceMarkedRecords)){
+                $updateArr['period'] = 0;
+                $updateArr['subject_id'] = 0;
+                $updateArr['no_scheduled_class'] = 1;
+
+                $update = StudentAttendanceMarkedRecords::where([
+                    'institution_class_id' => $institutionClassId,
+                    'education_grade_id' => $educationGradeId,
+                    'institution_id' => $institutionId,
+                    'academic_period_id' => $academicPeriodId,
+                    'date' => $day
+                ])
+                ->update($updateArr);
+            } else {
+                $insertArr = [
+                    'institution_class_id' => $institutionClassId,
+                    'education_grade_id' => $educationGradeId,
+                    'institution_id' => $institutionId,
+                    'academic_period_id' => $academicPeriodId,
+                    'date' => $day,
+                    'period' => 0,
+                    'subject_id' => 0,
+                    'no_scheduled_class' => 1
+                ];
+
+                $insert = StudentAttendanceMarkedRecords::insert($insertArr);
+            }
+
+
+            $totalMarkedCount = StudentAttendanceMarkedRecords::where([
+                    'institution_class_id' => $institutionClassId,
+                    'education_grade_id' => $educationGradeId,
+                    'institution_id' => $institutionId,
+                    'academic_period_id' => $academicPeriodId,
+                    'date' => $day
+                ])
+                ->first();
+
+            if(!empty($totalMarkedCount)){
+                $explodedData = explode("-", $day);
+                $year = (int) $explodedData[0];
+                $month = (int) $explodedData[1];
+                $daydata = (int) $explodedData[2];
+                $classAttendanceMarked = InstitutionClassAttendanceRecord::where([
+                    'academic_period_id' => $academicPeriodId,
+                    'institution_class_id' => $institutionClassId,
+                    'year' => $year,
+                    'month' => $month
+                ])
+                ->first();
+
+                if($classAttendanceMarked){
+                    $updateClassAttendanceMarked = InstitutionClassAttendanceRecord::where([
+                        'academic_period_id' => $academicPeriodId,
+                        'institution_class_id' => $institutionClassId,
+                        'year' => $year,
+                        'month' => $month
+                    ])
+                    ->update([
+                        self::DAY_COLUMN_PREFIX.$daydata => self::PARTIAL_MARKED
+                    ]);
+                } else {
+                    $insertClassAttendanceMarked = InstitutionClassAttendanceRecord::insert([
+                        'academic_period_id' => $academicPeriodId,
+                        'institution_class_id' => $institutionClassId,
+                        'year' => $year,
+                        'month' => $month,
+                        self::DAY_COLUMN_PREFIX.$daydata => self::PARTIAL_MARKED
+                    ]);
+                }
+            }
+
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to set Student attendance for no-schedules class.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to set Student attendance for no-schedules class.');
+        }
+    }
     //For POCOR-8363 Ends...
 
 }

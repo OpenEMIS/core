@@ -15,6 +15,7 @@ use App\Http\Requests\StudentAttendanceMarkTypeListRequest;
 use App\Http\Requests\StudentAttendancesExportRequest;
 use App\Http\Requests\StudentAttendancesImportTemplateRequest;
 use App\Http\Requests\StudentAttendanceImportRequest;
+use App\Http\Requests\StudentAttendancesNoScheduledClassRequest;
 use Illuminate\Support\Facades\Log;
 use App\Exports\StudentAttendancesExport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -326,7 +327,7 @@ class AttendanceController extends Controller
     }
 
 
-    public function studentAttendancesNoScheduledClass(Request $request)
+    public function studentAttendancesNoScheduledClass(StudentAttendancesNoScheduledClassRequest $request)
     {
         try {
             $params = $request->all();
@@ -334,18 +335,18 @@ class AttendanceController extends Controller
             $data = $this->attendanceService->studentAttendancesNoScheduledClass($params);
             
             if(!empty($data)){
-                return $this->sendSuccessResponse("Student attendance import template data found.", $data);
+                return $this->sendSuccessResponse("Student attendance set for no-schedules class.", $data);
             } else {
-                return $this->sendErrorResponse("Student attendance import not template data found.");
+                return $this->sendErrorResponse("Failed to set Student attendance for no-schedules class.");
             }
 
             
         } catch (\Exception $e) {
             Log::error(
-                'Failed to fetch students attendances import template data from DB.',
+                'Failed to set Student attendance for no-schedules class.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            return $this->sendErrorResponse('Failed to fetch students attendances import template data from DB.');
+            return $this->sendErrorResponse('Failed to set Student attendance for no-schedules class.');
         }
     }
     //For POCOR-8363 Ends...
