@@ -222,9 +222,16 @@ class InstitutionTabBehavior extends Behavior
                             if($url_action == 'Classes' && $additionalParam == 'institution_class_id'){
                                 $queryString['id'] = $entity->{$additionalParam};
                             }else if($url_action == 'Subjects' && $additionalParam == 'institution_subject_id'){
-                                $queryString['id'] = $entity->institution_subject_id;
+                                //PCOOR-8324 starts
+                                if($this->_table->getAlias() == 'InstitutionSubjects'){
+                                    $queryString['id'] = $entity->id;
+                                }else if($this->_table->getAlias() == 'StaffSubjects'){
+                                    $queryString['id'] = $entity->institution_subject->id;
+                                }else if($this->_table->getAlias() == 'StudentSubjects'){
+                                    $queryString['id'] = $entity->institution_subject_id;
+                                }
                                 $queryString['institution_subject_id'] = $entity->id;
-                            }
+                            }//PCOOR-8324 ends
                             // else if($url_action == 'Textbooks' && $additionalParam == 'academic_period_id'){
                             //     $queryString['academic_period_id'] = $entity->academic_period->id;
                             // }
