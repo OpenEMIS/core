@@ -1989,9 +1989,15 @@ class InstitutionsTable extends ControllerActionTable
             if(isset( $buttons['history']['url']['institutionId'])) {
                 unset($buttons['history']['url']['institutionId']);
             }
+            if(isset( $buttons['history']['url']['?'])) {
+                unset( $buttons['history']['url']['?']);
+            }
+            if(isset( $buttons['history']['url']['page'])) {
+                unset( $buttons['history']['url']['page']);
+            }
         }
 
-//        die('<pre>' . print_r($buttons));
+        //die('<pre>' . print_r($buttons,true));
         return $buttons;
     }
 
@@ -2417,7 +2423,8 @@ class InstitutionsTable extends ControllerActionTable
                 ->find()->where(['id' => $entity->id])->first();
             if (TableRegistry::getTableLocator()->get('Institution.Institutions')->delete($entity)) {
                 $this->Alert->success('general.delete.success', ['reset' => true]);
-                return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions']); // POCOR-7253
+                return $this->controller->redirect($this->url('index'));
+                //return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions']); // POCOR-7253
             }
         }
     }
