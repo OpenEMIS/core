@@ -2411,7 +2411,6 @@ class WorkflowBehavior extends Behavior
                 $this->_table->controller->Alert->error('general.edit.failed', ['reset' => true]);
             }
             // End
-
             // Redirect
             if ($this->isCAv4()) {
                 $url = $this->_table->url('view');
@@ -2419,6 +2418,9 @@ class WorkflowBehavior extends Behavior
                 $url = $this->_table->ControllerAction->url('view');
             }
 
+            $params = $this->_table->getQueryString();
+            $encodedQueryString = $this->_table->paramsEncode($params);
+            $url['1'] = $encodedQueryString;
             return $this->_table->controller->redirect($url);
             // End
         }
