@@ -45,10 +45,11 @@ class AssessmentsController extends AppController
 
 		$tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
-        $this->set('selectedAction', $this->request->action);
+        $this->set('selectedAction', $this->request->getParam('action'));
 
-	    if ($this->request->action=='addNewAssessmentPeriod') {
-	    	$this->request->params['_ext'] = 'json';
+	    if ($this->request->getParam('action') == 'addNewAssessmentPeriod') {
+	    	//$this->request->params['_ext'] = 'json';
+			$this->request = $this->request->withParam('_ext', 'json');
 	    }
 
 	}
