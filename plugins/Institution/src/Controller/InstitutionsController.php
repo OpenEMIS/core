@@ -1902,8 +1902,8 @@ class InstitutionsController extends AppController
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'Classes';
             $viewUrl[0] = 'view';
-            $viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $classId['id'], 'institution_id' => $institutionId]);
-
+            //$viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $classId['id'], 'institution_id' => $institutionId]);//POCOR-8323
+            $viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $classId['id'], 'institution_id' => $institutionId, 'institution_class_id' => $classId['id']]);//POCOR-8323
             //POCOR-8107
             $configItems = TableRegistry::get('Configuration.ConfigItems');
             $configItemsData = $configItems->find()->where(['type' => 'Fields for Institutions Classes Details Page'])->toArray();
@@ -1921,13 +1921,26 @@ class InstitutionsController extends AppController
             }
             $viewUrl['unit_field'] = $unitEnable;
             $viewUrl['course_field'] = $courseEnable;
+            //POCOR-8323 Starts
+            $requestQuery = $this->request->getQuery();
+            if(isset($requestQuery)){
+                if($requestQuery['academic_period_id']){
+                    $viewUrl['academic_period_id'] = $requestQuery['academic_period_id'];
+                }
+                if($requestQuery['education_grade_id']){
+                    $viewUrl['education_grade_id'] = $requestQuery['education_grade_id'];
+                }
+            } //POCOR-8323 Ends
+            
             //POCOR-8107
 
             $indexUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'Classes',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+                'index',//POCOR-8323
+                //'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+                $this->ControllerAction->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId])//POCOR-8323
             ];
 
             $alertUrl = [
