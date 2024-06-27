@@ -134,8 +134,8 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
-        return InstitutionShifts.find('StaffShiftOptions', 
-        {institution_id: institutionId, 
+        return InstitutionShifts.find('StaffShiftOptions',
+        {institution_id: institutionId,
             academic_period_id: academicPeriodId})
                 .ajax({success: success, defer: true});
         }
@@ -324,7 +324,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         var timeIn = params.value.time_in;
         var timeOut = params.value.time_out;
         var data = params.data;
-        
+
         var staffId = params.data.staff_id;
         var rowIndex = params.rowIndex;
         var timeinPickerId = 'time-in-' + rowIndex;
@@ -332,24 +332,24 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         var time = '';
         var historyUrl = data.historyUrl;
         var successInstitutionShifts = function(response, deferred) {
-          //POCOR-5885  Edit: Time in reverted to default time 
+          //POCOR-5885  Edit: Time in reverted to default time
         //    if(response.data.data.length > 0){
-              
-        //       params.value.time_in = response.data.data[0].startTime; 
+
+        //       params.value.time_in = response.data.data[0].startTime;
         //    }
-            
+
             deferred.resolve(response.data.data);
         };
-        
+
         /*var shiftsAttendance =  Staff.find('StaffShiftsAttendance', // comment in POCOR-7180
          {staff_id: staffId})
                 .ajax({success: successInstitutionShifts, defer: true});*/
-        
+
 		var ownEdit = params.context.ownEdit;
         var otherEdit = params.context.otherEdit;
         var permissionStaffId = params.context.permissionStaffId;
         var staffId = params.data.staff_id;
-       
+
         var conditionStatus = 0
         if(ownEdit == 0 && otherEdit == 1 && permissionStaffId != staffId){
             conditionStatus = 1;
@@ -358,7 +358,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         }else if(ownEdit == 1 && otherEdit == 1){
             conditionStatus = 1;
         }
-        
+
         if (action == 'edit' && conditionStatus == 1) {
             var divElement = document.createElement('div');
             var timeInInputDivElement = createTimeElement(params, 'time_in', rowIndex);
@@ -516,12 +516,15 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
 
         // div element
         var timeInputDivElement = document.createElement('div');
-        if (!isDisabled) timeInputDivElement.setAttribute('id', timepickerId); // for pop up
+        // if (!isDisabled)
+        timeInputDivElement.setAttribute('id', timepickerId); // for pop up
         //POCOR-7770 to hide
-        timeInputDivElement.setAttribute('class', 'input-group time timepicker');
+        if (!isDisabled) timeInputDivElement.setAttribute('class', 'input-group time timepicker');
+        if (isDisabled) timeInputDivElement.setAttribute('class', 'input-group time');
         //END POCOR-7770 to hide
         var timeInputElement = document.createElement('input');
-        timeInputElement.setAttribute('class', 'form-control timPikr'); //POCOR-7918
+        if (!isDisabled)  timeInputElement.setAttribute('class', 'form-control timPikr'); //POCOR-7918
+        if (isDisabled)  timeInputElement.setAttribute('class', 'form-control'); //POCOR-7918
         if (isDisabled) timeInputElement.setAttribute('disabled', true); // for styling ui
         timeInputElement.setAttribute('readonly', 'readonly');
         var timeSpanElement = document.createElement('span');
@@ -533,6 +536,9 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             timeInputElement.setAttribute("class", "form-control form-error");
         }
         setTimeout(function(event) {
+            if (isDisabled){
+                return;
+            }
             var timepickerControl = $('#' + timepickerId).timepicker({defaultTime: time, showInputs: true,minuteStep:1});
             $('#' + timepickerId).timepicker().on("hide.timepicker", function (e) {
                 UtilsSvc.isAppendSpinner(true, 'institution-staff-attendances-table');

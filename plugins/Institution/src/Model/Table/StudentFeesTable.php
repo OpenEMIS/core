@@ -75,7 +75,7 @@ class StudentFeesTable extends ControllerActionTable
     {
         $session = $this->request->getSession();
         //$this->institutionId = $session->read('Institution.Institutions.id');
-        $this->institutionId = $this->getInstitutionID();
+        $this->institutionId = $this->getQueryString('institution_id');//POCOR-8360
 
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $this->currency = $ConfigItems->value('currency');

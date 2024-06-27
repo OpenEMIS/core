@@ -201,10 +201,10 @@ class AssessmentItemsTable extends AppTable
 
         $query
             ->contain('EducationSubjects')
-            ->innerJoin([$ClassSubjects->alias() => $ClassSubjects->table()], [
+            ->innerJoin([$ClassSubjects->getAlias() => $ClassSubjects->getTable()], [
                 $ClassSubjects->aliasField('institution_class_id') => $classId
             ])
-            ->innerJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
+            ->innerJoin([$InstitutionSubjects->getAlias() => $InstitutionSubjects->getTable()], [
                 $InstitutionSubjects->aliasField('id = ') . $ClassSubjects->aliasField('institution_subject_id'),
                 $InstitutionSubjects->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id'),
             ])

@@ -503,8 +503,8 @@ class MealRepository extends Controller
 
             $rowsCount = count($results[0]) - 2;
             
-            if ($rowsCount > config('constantvalues.importExcelRules.noRows')) {
-                return 5; //File can not have more than 2000 records.
+            if ($rowsCount > config('constantvalues.importExcelRules.maxRows')) {
+                return 7; //File can not have more than 2000 records.
             }
 
             $import = $this->importStudentMeals($results,  $params, $currentAcademicPeriod);
@@ -538,7 +538,7 @@ class MealRepository extends Controller
                 if ($i < 2) {
                     continue;
                 }
-
+                
                 if (!$row[0]) { //Date
                     $label = $results[0][1][0];
                     $errors[$label] = 'Date is required.';
@@ -572,9 +572,11 @@ class MealRepository extends Controller
                     $errors[$label] = 'Meal received code is required.';
                 }
 
-                if (!$row[4]) { //Meal benefit name
-                    $label = $results[0][1][4];
-                    $errors[$label] = 'Meal benefit name is required.';
+                if(isset($row[3]) && $row[3] == "Received"){
+                    if (!$row[4]) { //Meal benefit name
+                        $label = $results[0][1][4];
+                        $errors[$label] = 'Meal benefit name is required.';
+                    }
                 }
 
 
@@ -599,7 +601,20 @@ class MealRepository extends Controller
                     $institutionStudent = InstitutionStudent::where('student_id', $user->id??0)->where('institution_id', $params['institution_id'])->first();
                     $mealProgramme = MealProgrammes::where('code', $row[2])->first();
                     $mealReceived = MealReceived::where('code', $row[3])->first();
-                    $mealBenefit = MealBenefits::where('id', $row[4])->first();
+
+                    if(isset($mealReceived) && $mealReceived->code == "Received"){
+                        $mealBenefit = MealBenefits::where('id', $row[4])->first();
+                        if(!$mealBenefit){
+                            $label = $results[0][1][4];
+                            $errors[$label] = 'Meal benefit code does not exist.';
+                            $validation[] = [
+                                'row_number' => $i,
+                                'data' => $allRows,
+                                'errors' => $errors
+                            ];
+                        }
+                    }
+                    
 
                     if(!$user){
                         $label = $results[0][1][1];
@@ -641,17 +656,9 @@ class MealRepository extends Controller
                             ];
                     }
 
-                    if(!$mealBenefit){
-                        $label = $results[0][1][4];
-                            $errors[$label] = 'Meal benefit code does not exist.';
-                            $validation[] = [
-                                'row_number' => $i,
-                                'data' => $allRows,
-                                'errors' => $errors
-                            ];
-                    }
+                    
 
-                    if($user && $institutionStudent && $mealProgramme && $mealReceived && $mealBenefit){
+                    if($user && $institutionStudent && $mealProgramme && $mealReceived){
                         
                         $date = str_replace('/', '-', $row[0]);
                         $date = date('Y-m-d', strtotime($date));
