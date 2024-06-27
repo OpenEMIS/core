@@ -11,9 +11,10 @@ class POCOR8311 extends AbstractMigration
      */
     public function up()
     {
-        $this->execute('DROP TRIGGER IF EXISTS trigger_institution_student_absence_details_insert ON institution_student_absence_details');
-        $this->execute('DROP TRIGGER IF EXISTS trigger_institution_student_absence_details_update ON institution_student_absence_details');
-        $this->execute('DROP TRIGGER IF EXISTS trigger_institution_student_absence_details_delete ON institution_student_absence_details');
+        $this->execute('DROP TRIGGER trigger_institution_student_absence_details_insert');
+        $this->execute('DROP TRIGGER trigger_institution_student_absence_details_update');
+        $this->execute('DROP TRIGGER trigger_institution_student_absence_details_delete');
+   
     }
     public function down()
     {
