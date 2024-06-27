@@ -233,9 +233,11 @@ class ClassExcelBehavior extends Behavior
             * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
             * @ticket POCOR-6635 starts
             */
-            $encodedClassId = $this->_table->request->getAttribute('params')['pass'][2];//POCOR-8323
-            if (!empty($encodedClassId)) {
-                $decodedClassId = $this->_table->paramsDecode($encodedClassId);
+            //$encodedClassId = $this->_table->request->getAttribute('params')['pass'][1];//POCOR-8323
+            $checkEncodedClassId = $this->_table->request->getAttribute('params')['pass'][1];//POCOR-8324
+            $encodedClassId = $this->_table->paramsDecode($checkEncodedClassId);//POCOR-8323
+            if (array_key_exists('institution_class_id', $encodedClassId)) {//POCOR-8323
+                //$decodedClassId = $this->_table->paramsDecode($encodedClassId);//POCOR-8323
                 $classId = $decodedClassId['id'];
                 $where[$InstitutionClasses->aliasField('InstitutionClasses.id')] = $classId;
                 $query = $Query
@@ -714,8 +716,10 @@ class ClassExcelBehavior extends Behavior
         $language = I18n::getLocale();
         $excludedTypes = ['binary'];
         /*POCOR-6635 starts - added condition to export individual class with student's list*/
-        $encodedClassId = $this->_table->request->getAttribute('params')['pass'][1];
-        if (!empty($encodedClassId)) {
+        //$encodedClassId = $this->_table->request->getAttribute('params')['pass'][1];
+        $checkEncodedSubjectId = $this->_table->request->getAttribute('params')['pass'][1];//POCOR-8323
+        $encodedClassId = $this->_table->paramsDecode($checkEncodedSubjectId);//POCOR-8323
+        if (array_key_exists('institution_class_id', $encodedClassId)) {//POCOR-8323
             $columns = ['institution_code','institution_name','academic_period_id',
                     'class_name','shift','education_grade','homeroom_teacher','secondary_teacher',
                     'openEMIS_ID','student_name','gender','student_status',
