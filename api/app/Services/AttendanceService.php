@@ -280,6 +280,24 @@ class AttendanceService extends Controller
             return $this->sendErrorResponse('Failed to import students attendances in DB.');
         }
     }
+
+
+    public function studentAttendancesNoScheduledClass($params)
+    {
+        try {
+            $data = $this->attendanceRepository->studentAttendancesNoScheduledClass($params);
+            
+            return $data;
+
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to set Student attendance for no-schedules class.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to set Student attendance for no-schedules class.');
+        }
+    }
     //For POCOR-8363 Ends...
 
 }
