@@ -11,12 +11,14 @@ use Cake\Utility\Inflector;
 use App\Model\Table\AppTable;
 
 class AccountsTable extends AppTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void
+    {
 		$this->addBehavior('User.Account', ['userRole' => 'Securities', 'permission' => ['Securities', 'Accounts', 'edit']]);
 		parent::initialize($config);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator
+    {
 		$validator = parent::validationDefault($validator);
 		return $validator;
 	}

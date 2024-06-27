@@ -85,7 +85,7 @@ class StaffLeaveTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
-        
+
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $allowOutAcademicYear = $ConfigItems->value('allow_out_academic_year');
 
@@ -202,7 +202,7 @@ class StaffLeaveTable extends ControllerActionTable
         $this->field('staff_id', ['type' => 'hidden']);
         $this->field('end_academic_period_id', ['visible' => false]);
         $institutionId = $this->getInstitutionID();
-        $this->field('institution_id', ['type' => 'hidden', 'value' => $institutionId]);        
+        $this->field('institution_id', ['type' => 'hidden', 'value' => $institutionId]);
         $this->setFieldOrder(['staff_leave_type_id', 'date_from', 'date_to', 'time', 'start_time', 'full_day', 'end_time', 'number_of_days', 'comments', 'file_name', 'file_content']);
 
         $this->setInstitutionStaffIDs();
@@ -211,6 +211,7 @@ class StaffLeaveTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+
         $this->field('start_time', ['visible' => false]);
         $this->field('end_time', ['visible' => false]);
         $this->field('time', ['after' => 'date_to']);
@@ -221,9 +222,15 @@ class StaffLeaveTable extends ControllerActionTable
 
     public function indexHistoricalBeforeQuery(Event $event, Query $mainQuery, Query $historicalQuery, ArrayObject $selectList, ArrayObject $defaultOrder, ArrayObject $extra)
     {
-        $institutionId = $this->institutionId;
-        $staffId = $this->staffId;
-        
+        $decodedQueryString = $this->getQueryString();
+//        echo "<pre>"; print_r($decodedQueryString);
+//        die;
+        $institutionId = $decodedQueryString['institution_id'];
+        $staffId = $decodedQueryString['user_id'];
+        if(!$staffId){
+            $decodedQueryString['staff_id'];
+        }
+
         //POCOR-5364 starts
         $requestFilter = $this->request->getQuery('filter');
         if (isset($extra['toolbarButtons']['search']['data']['url']['filter'])) {
@@ -804,7 +811,7 @@ class StaffLeaveTable extends ControllerActionTable
                 'AND' => [
                     $CalendarTypes->aliasField('code') => 'PUBLICHOLIDAY'
                 ]
-            ]) 
+            ])
             // ->orWhere([
             //     $CalendarEvents->aliasField('institution_id') => -1
             // ])
@@ -1047,31 +1054,12 @@ class StaffLeaveTable extends ControllerActionTable
      */
     private function setInstitutionStaffIDs()
     {
-
-        $institutionId = $staffId = null;
-        $session = $this->controller->getRequest()->getSession();
-        // if ($session->check('Institution.Institutions.id')) {
-        //     $institutionId = $session->read('Institution.Institutions.id');
-        // }
-        if ($this->getInstitutionID()) {
-            $institutionId = $this->getInstitutionID();
+        $decodedQueryString = $this->getQueryString();
+        $institutionId = $decodedQueryString['institution_id'];
+        $staffId = $decodedQueryString['user_id'];
+        if(!$staffId){
+            $decodedQueryString['staff_id'];
         }
-        if (!is_null($this->request->getQuery('user_id'))) {
-            $staffId = $this->request->getQuery('user_id');
-        }
-        if (!$staffId & !is_null($this->request->getQuery('staff_id'))) {
-            $staffId = $this->request->getQuery('staff_id');
-        }
-        if (!$staffId) {
-            $staffId = $session->read('Staff.Staff.id');
-        }
-        if (!$staffId) {
-            $staffId = $session->read('Institution.Staff.id');
-        }
-        if($staffId == ''){
-            $staffId = $this->getQueryString('user_id'); 
-        }
-
         $this->institutionId = $institutionId;
         $this->staffId = $staffId;
     }
@@ -1147,7 +1135,7 @@ class StaffLeaveTable extends ControllerActionTable
                     $workflowModelsTable->aliasField('id') . ' = ' . $Workflows->aliasField('workflow_model_id')
                 ])
             ->where([$workflowModelsTable->aliasField('name') => $workflowModel])->first();
-            
+
         if(!empty($workModelId)) {
             $workflowId = $workModelId->workflow_id;
             $isSchoolBased = $workModelId->is_school_based;
@@ -1160,7 +1148,7 @@ class StaffLeaveTable extends ControllerActionTable
                 ->first();
             $stepId = $workflowStepsOptions->stepId;
         }
-        
+
 
         $assigneeOptions = [];
         if (!is_null($stepId)) {
