@@ -2478,8 +2478,10 @@ class InstitutionClassesTable extends ControllerActionTable
         * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
         * @ticket POCOR-6635 starts
         */
-        $encodedClassId = $this->request->getAttribute('params')['pass'][2];//POCOR-8323
-        if (!empty($encodedClassId)) {
+        //$encodedClassId = $this->request->getAttribute('params')['pass'][1];//POCOR-8323
+        $checkEncodedClassId = $this->request->getAttribute('params')['pass'][1];//POCOR-8323
+        $encodedClassId = $this->paramsDecode($checkEncodedClassId);//POCOR-8323
+        if (array_key_exists('institution_class_id', $encodedClassId)) {//POCOR-8323
             $query;
         } else {
             $query->group(['InstitutionClasses.id']);
