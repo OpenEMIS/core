@@ -1251,6 +1251,37 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'existedSubjects' => $existedSubjects
         ];
     }
+    //POCOR-8324 starts
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        if ($this->checkRecordExists($entity)) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        }
+    }
+
+    public function checkRecordExists($entity)
+    {
+        $InstitutionSubjectStaffs = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');//POCOR-8324
+        $associatedInstitutionSubjectStaffCount = $InstitutionSubjectStaffs->find()
+            ->where([
+                $InstitutionSubjectStaffs->aliasField('institution_subject_id') => $entity->id,
+                $InstitutionSubjectStaffs->aliasField('institution_id') => $entity->institution_id
+            ])
+            ->count();
+        
+        $InstitutionTextbooks = TableRegistry::getTableLocator()->get('Institution.InstitutionTextbooks');//POCOR-8324
+        $associatedTextbooksCount = $InstitutionTextbooks->find()
+            ->where([
+                $InstitutionTextbooks->aliasField('education_subject_id') => $entity->education_subject_id,
+                $InstitutionTextbooks->aliasField('academic_period_id') => $entity->academic_period_id
+            ])
+            ->count();
+
+        $totalCount = $associatedInstitutionSubjectStaffCount + $associatedTextbooksCount;
+        return $totalCount;
+    }//POCOR-8324 ends
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
