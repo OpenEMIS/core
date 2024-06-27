@@ -491,6 +491,7 @@ Route::group(
         Route::get('/institutions/students/attendances/export', 'AttendanceController@getStudentAttendancesExport');
         Route::get('/institutions/students/attendances/import/template', 'AttendanceController@getStudentAttendancesImportTemplate');
         Route::post('/institutions/students/attendances/import', 'AttendanceController@studentAttendancesImport');
+        Route::get('/institutions/students/attendances/no-scheduled-class', 'AttendanceController@studentAttendancesNoScheduledClass');
         //POCOR-8363 end...
     }
 );
