@@ -90,6 +90,11 @@ class AccountBehavior extends Behavior
             $this->_table->controller->set('tabElements', $tabElements);
             $this->_table->controller->set('selectedAction', $this->_table->getAlias());
         }
+        if ($this->userRole == 'Securities') {
+            $tabElements =  $this->_table->controller->getUserTabElements($options);
+            $this->_table->controller->set('tabElements', $tabElements);
+            $this->_table->controller->set('selectedAction', $this->_table->getAlias());
+        }
 
     }
 

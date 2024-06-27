@@ -44,6 +44,7 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable
         $this->field('model', ['visible' => false]);
 
         $this->setFieldOrder(['field', 'old_value', 'new_value', 'created_user_id', 'created']);
+        $encodedString = $this->request->getAttribute('params')['pass'][1];
         $toolbarButtons = $extra['toolbarButtons'];
         $extra['toolbarButtons']['back'] = [
             'url' => [
@@ -51,6 +52,7 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable
                 'controller' => 'Staff',
                 'action' => 'StaffAttendances',
                 '0' => 'index',
+                $encodedString //POCOR-8359
             ],
             'type' => 'button',
             'label' => '<i class="fa kd-back"></i>',
@@ -70,16 +72,20 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable
         $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
-        $institutionId = $this->Session->read('Institution.Institutions.id');
-        if(empty($institution_id)) {
-            $institutionId = $this->request->getQuery('institution_id');
-        }
-        if ($this->request->getQuery('user_id') !== null) {
-            $staffId = $this->request->getQuery('user_id');
-            $this->Session->write('Staff.Staff.id', $staffId);
-        } else {
-            $staffId = $this->Session->read('Staff.Staff.id');
-        }
+        $params = $this->getQueryString();
+        $institutionId = $params['institution_id'];//POCOR-8359
+        $staffId = $params['staff_id'];//POCOR-8359
+        $this->Session->write('Staff.Staff.id', $staffId);
+        // $institutionId = $this->Session->read('Institution.Institutions.id');
+        // if(empty($institution_id)) {
+        //     $institutionId = $this->request->getQuery('institution_id');
+        // }
+        // if ($this->request->getQuery('user_id') !== null) {
+        //     $staffId = $this->request->getQuery('user_id');
+        //     $this->Session->write('Staff.Staff.id', $staffId);
+        // } else {
+        //     $staffId = $this->Session->read('Staff.Staff.id');
+        // }
 
         $periodOptions = $AcademicPeriod->getYearList();
 
@@ -235,7 +241,9 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable
                 ])
                 ->where($conditions);
 
-            $extra['elements']['controls'] = ['name' => 'Institution.Attendance/controls', 'data' => [], 'options' => [], 'order' => 1];
+            $queryString = $this->getQueryString();//POCOR-8359
+            $encodedQueryString = $this->paramsEncode($queryString);  //POCOR-8359
+            $extra['elements']['controls'] = ['name' => 'Institution.Attendance/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];//POCOR-8359
         }
     }
 

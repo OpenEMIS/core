@@ -19,7 +19,7 @@
 		    'action' => $this->request->getParam('action'),
 		    'ajaxEvaluatorAutocomplete'
 		]);
-		$alias = $ControllerAction['table']->alias();
+		$alias = $ControllerAction['table']->getAlias();
 
 		
 		echo $this->Form->input("$alias.types", [
@@ -29,7 +29,7 @@
  			'onchange' => "$('#reload').val('types').click();"
 		]);
 
-		$requestData = $this->request->data[$alias];
+		$requestData = $this->request->getData($alias);
 		$evaluatorType = (array_key_exists('types', $requestData)) ? $requestData['types']: 'Staff';
 		echo $this->Form->input("$alias.evaluator_search", [
 			'label' => __('Add Evaluator'),
