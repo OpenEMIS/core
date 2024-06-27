@@ -1352,8 +1352,10 @@ class InstitutionsTable extends ControllerActionTable
         $securityGroupId = $entity->security_group_id;
         $SecurityGroup = TableRegistry::getTableLocator()->get('Security.SystemGroups');
 
-        $groupEntity = $SecurityGroup->get($securityGroupId);
-        $SecurityGroup->delete($groupEntity);
+        $groupEntity = $SecurityGroup->find()->where(['id' =>$securityGroupId])->first();
+        if(!empty($groupEntity)) {
+            $SecurityGroup->delete($groupEntity);
+        }
         $body = array();
         $body = [
             'institution_id' => $entity->id
@@ -1957,6 +1959,7 @@ class InstitutionsTable extends ControllerActionTable
         $queryString = $this->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId]);
         foreach ($buttons as &$button) {
             if (isset($button['url'][1])) {
+                $button['url'][1] = $queryString;
                 $button['url']['institutionId'] = $button['url'][1];
             }
         }
@@ -2396,11 +2399,13 @@ class InstitutionsTable extends ControllerActionTable
             //POCOR -7324 starts
             $securityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions')
                 ->find()->where(['institution_id' => $entity->id])->first();
-            $securityGroups = TableRegistry::get('Security.SystemGroups')
+            if(!empty( $securityGroupInstitutions)) {
+                $securityGroups = TableRegistry::get('Security.SystemGroups')
                 ->find()->where(['id' => $securityGroupInstitutions->security_group_id])->first(); //POCOR-7755
+            }
             $institutionActivities = TableRegistry::get('Institution.InstitutionActivities')
                 ->find()->where(['institution_id' => $entity->id])->first();
-            if ($securityGroupInstitutions) {
+            if ($securityGroupInstitutions && $securityGroups) {
                 TableRegistry::get('Security.SecurityGroupInstitutions')->delete($securityGroupInstitutions);
                 TableRegistry::get('Security.SecurityGroups')->delete($securityGroups); //POCOR-7755
             }

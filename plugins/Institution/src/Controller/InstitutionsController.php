@@ -2645,7 +2645,7 @@ class InstitutionsController extends AppController
         if ($furtherAction == 'image' || $furtherAction == 'download') {
             return true;
         }
-        if ($pass[0] == 'add' && $action == 'ImportInstitutions') {
+        if (($pass[0] == 'add' && $action == 'ImportInstitutions') || ($action == 'ComponentAction' && $pass[0] == 'add')) {
             return true;
         }
         if ($pass[0] == 'ajaxInstitutionsAutocomplete' && $action == 'Shifts') {
