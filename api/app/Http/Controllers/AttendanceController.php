@@ -271,7 +271,7 @@ class AttendanceController extends Controller
             if(!empty($data)){
                 return $this->sendSuccessResponse("Student attendance import template data found.", $data);
             } else {
-                return $this->sendErrorResponse("Student attendance import template data found.", $data);
+                return $this->sendErrorResponse("Student attendance import not template data found.", $data);
             }
 
             
@@ -322,6 +322,30 @@ class AttendanceController extends Controller
             );
 
             return $this->sendErrorResponse('Failed to import students attendance in DB.');
+        }
+    }
+
+
+    public function studentAttendancesNoScheduledClass(Request $request)
+    {
+        try {
+            $params = $request->all();
+
+            $data = $this->attendanceService->studentAttendancesNoScheduledClass($params);
+            
+            if(!empty($data)){
+                return $this->sendSuccessResponse("Student attendance import template data found.", $data);
+            } else {
+                return $this->sendErrorResponse("Student attendance import not template data found.");
+            }
+
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch students attendances import template data from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to fetch students attendances import template data from DB.');
         }
     }
     //For POCOR-8363 Ends...

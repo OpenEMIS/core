@@ -27,6 +27,10 @@ use App\Models\StudentAbsenceReason;
 use App\Models\AbsenceTypes;
 use App\Models\InstitutionClassAttendanceRecord;
 use App\Models\Institutions;
+use App\Models\InstitutionClasses;
+use App\Models\InstitutionClassStudent;
+use App\Models\SecurityUsers;
+use App\Models\InstitutionSubjects;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -2263,7 +2267,7 @@ class AttendanceRepository extends Controller
                         }
                     }
                 }
-
+                //dd($row);
                 if (!$row[1]) { //Student attendance type code
                     $label = $results[0][1][1];
                     $errors[$label] = 'Student attendance type code is required.';
@@ -2313,14 +2317,28 @@ class AttendanceRepository extends Controller
                         'errors' => $errors
                     ];
                 } else {
+                    $academicPeriodId = $currentAcademicPeriod->id;
                     $user = SecurityUsers::where('openemis_no', $row[4])->where('is_student', 1)->first();
-                    $institutionStudent = InstitutionStudent::where('student_id', $user->id??0)->where('institution_id', $params['institution_id'])->first();
-                    $mealProgramme = MealProgrammes::where('code', $row[2])->first();
-                    $mealReceived = MealReceived::where('code', $row[3])->first();
-                    $mealBenefit = MealBenefits::where('id', $row[4])->first();
+                    
+                    $institutionClassStudent = InstitutionClassStudents::where('student_id', $user->id??0)
+                            ->where('institution_id', $params['institution_id'])
+                            ->where('institution_class_id', $params['institution_class_id'])
+                            ->first();
+
+                    $attendanceType = StudentAttendanceType::where('code', $row[1])->first();
+                    $institutionSubject = InstitutionSubjects::where('id', $row[3])->where('institution_id', $params['institution_id'])->first();
+
+                    $absenceType = AbsenceTypes::where('code', $row[5])->first();
+
+                    $absenceReason = StudentAbsenceReason::where('id', $row[6])->first();
+
+                    $institutionClassGrade = InstitutionClassGrades::where('institution_class_id', $params['institution_class_id'])
+                            ->first();
+
+                    
 
                     if(!$user){
-                        $label = $results[0][1][1];
+                        $label = $results[0][1][4];
                         $errors[$label] = 'OpenEMIS ID does not exist.';
                         $validation[] = [
                             'row_number' => $i,
@@ -2329,9 +2347,9 @@ class AttendanceRepository extends Controller
                         ];
                     }
 
-                    if(!$institutionStudent){
-                        $label = $results[0][1][1];
-                        $errors[$label] = 'Student does not associated with institution.';
+                    if(!$institutionClassStudent){
+                        $label = $results[0][1][4];
+                        $errors[$label] = 'Student does not associated with institution or institution classes.';
                         $validation[] = [
                             'row_number' => $i,
                             'data' => $allRows,
@@ -2339,9 +2357,9 @@ class AttendanceRepository extends Controller
                         ];
                     }
 
-                    if(!$mealProgramme){
-                        $label = $results[0][1][2];
-                            $errors[$label] = 'Meal programmes code does not exist.';
+                    if(!$attendanceType){
+                        $label = $results[0][1][1];
+                            $errors[$label] = 'Student attendance type code does not exist.';
                             $validation[] = [
                                 'row_number' => $i,
                                 'data' => $allRows,
@@ -2349,9 +2367,9 @@ class AttendanceRepository extends Controller
                             ];
                     }
 
-                    if(!$mealReceived){
+                    if(!$institutionSubject){
                         $label = $results[0][1][3];
-                            $errors[$label] = 'Meal received code does not exist.';
+                            $errors[$label] = 'Institution subject does not exist.';
                             $validation[] = [
                                 'row_number' => $i,
                                 'data' => $allRows,
@@ -2359,9 +2377,9 @@ class AttendanceRepository extends Controller
                             ];
                     }
 
-                    if(!$mealBenefit){
-                        $label = $results[0][1][4];
-                            $errors[$label] = 'Meal benefit code does not exist.';
+                    if(!$absenceType){
+                        $label = $results[0][1][5];
+                            $errors[$label] = 'Absence type code does not exist.';
                             $validation[] = [
                                 'row_number' => $i,
                                 'data' => $allRows,
@@ -2369,64 +2387,82 @@ class AttendanceRepository extends Controller
                             ];
                     }
 
-                    if($user && $institutionStudent && $mealProgramme && $mealReceived && $mealBenefit){
+                    /*if(!$absenceReason){
+                        $label = $results[0][1][6];
+                            $errors[$label] = 'Student absence reason code does not exist.';
+                            $validation[] = [
+                                'row_number' => $i,
+                                'data' => $allRows,
+                                'errors' => $errors
+                            ];
+                    }*/
+
+                    if($user && $institutionClassStudent && $institutionSubject && $absenceType){
                         
+
                         $date = str_replace('/', '-', $row[0]);
                         $date = date('Y-m-d', strtotime($date));
 
-                        $check = InstitutionMealStudents::where([
+                        $check = InstitutionStudentAbsenceDetails::where([
                             'student_id' => $user->id,
-                            'academic_period_id' => $currentAcademicPeriod->id,
-                            'institution_class_id' => $params['institution_class_id'],
                             'institution_id' => $params['institution_id'],
-                            'meal_programmes_id' => $mealProgramme->id,
-                            'date' => $date
+                            'academic_period_id' => $academicPeriodId,
+                            'institution_class_id' => $params['institution_class_id'],
+                            'date' => $date,
+                            'period' => $row[2],
+                            'subject_id' => $row[3]
                         ])->first();
 
-
+                        $insert = [];
+                        $updateArr = [];
+                        $storeArr = [];
                         if(!$check){
-                            $insert['student_id'] = $user->id; 
-                            $insert['academic_period_id'] = $currentAcademicPeriod->id; 
-                            $insert['institution_class_id'] = $params['institution_class_id']; 
-                            $insert['institution_id'] = $params['institution_id']; 
-                            $insert['meal_programmes_id'] = $mealProgramme->id; 
-                            $insert['date'] = $date; 
-                            $insert['meal_benefit_id'] = $row[4]; 
-                            $insert['meal_received_id'] = $mealReceived->id; 
-                            $insert['paid'] = Null; 
-                            $insert['comment'] = $row[5]; 
-                            $insert['created_user_id'] = JWTAuth::user()->id; 
-                            $insert['created'] = Carbon::now()->toDateTimeString(); 
 
-                            $store = InstitutionMealStudents::insert($insert);
+                            $insert['education_grade_id'] = (int)$institutionClassGrade->education_grade_id??0;
+                            $insert['academic_period_id'] = (int)$academicPeriodId;
+                            $insert['institution_id'] = (int)$params['institution_id'];
+                            $insert['institution_class_id'] = (int)$params['institution_class_id'];
+                            $insert['date'] = $date;
+                            $insert['period'] = $row[2];
+                            $insert['subject_id'] = $row[3];
+                            $insert['student_id'] = $user->id;
+                            $insert['absence_type_id'] = $absenceType->id;
+                            $insert['student_absence_reason_id'] = $row[6];
+                            $insert['comment'] = $row[7];
+                            $insert['created_user_id'] = JWTAuth::user()->id;
+                            $insert['created'] = Carbon::now()->toDateTimeString();
 
+                            $store = InstitutionStudentAbsenceDetails::insert($insert);
+                            
                             $add_data[] = [
                                 'row_number' => $i,
                                 'data' => $allRows,
                                 'errors' => $errors
                             ];
                         } else {
-                            $update['student_id'] = $user->id; 
-                            $update['academic_period_id'] = $currentAcademicPeriod->id; 
-                            $update['institution_class_id'] = $params['institution_class_id']; 
-                            $update['institution_id'] = $params['institution_id']; 
-                            $update['meal_programmes_id'] = $mealProgramme->id; 
-                            $update['date'] = $date; 
-                            $update['meal_benefit_id'] = $row[4]; 
-                            $update['meal_received_id'] = $mealReceived->id; 
-                            $update['paid'] = Null; 
-                            $update['comment'] = $row[5]; 
-                            $update['modified_user_id'] = JWTAuth::user()->id; 
-                            $update['modified'] = Carbon::now()->toDateTimeString();
+                            $updateArr['academic_period_id'] = (int)$academicPeriodId;
+                            $updateArr['education_grade_id'] = (int)$institutionClassGrade->education_grade_id??0;
+                            $updateArr['institution_id'] = (int)$params['institution_id'];
+                            $updateArr['institution_class_id'] = (int)$params['institution_class_id'];
+                            $updateArr['date'] = $date;
+                            $updateArr['period'] = $row[2];
+                            $updateArr['subject_id'] = $row[3];
+                            $updateArr['student_id'] = $user->id;
+                            $updateArr['absence_type_id'] = $absenceType->id;
+                            $updateArr['student_absence_reason_id'] = $row[6];
+                            $updateArr['comment'] = $row[7];
+                            $updateArr['modified_user_id'] = JWTAuth::user()->id;
+                            $updateArr['modified'] = Carbon::now()->toDateTimeString();
 
-                            $updateData = InstitutionMealStudents::where([
-                                    'student_id' => $user->id,
-                                    'academic_period_id' => $currentAcademicPeriod->id,
-                                    'institution_class_id' => $params['institution_class_id'],
-                                    'institution_id' => $params['institution_id'],
-                                    'meal_programmes_id' => $mealProgramme->id,
-                                    'date' => $date
-                                ])->update($update);
+                            $update = InstitutionStudentAbsenceDetails::where([
+                                'student_id' => $user->id,
+                                'institution_id' => (int)$params['institution_id'],
+                                'academic_period_id' => (int)$academicPeriodId,
+                                'institution_class_id' => (int)$params['institution_class_id'],
+                                'date' => $date,
+                                'period' => $row[2],
+                                'subject_id' => $row[3]
+                            ])->update($updateArr);
 
                             $updated_data[] = [
                                 'row_number' => $i,
@@ -2434,6 +2470,31 @@ class AttendanceRepository extends Controller
                                 'errors' => $errors
                             ];
                         }
+
+                        // For StudentAttendanceMarkedRecords Table...
+                        $checkMarkedRecord = StudentAttendanceMarkedRecords::where([
+                            'institution_id' => (int)$params['institution_id'],
+                            'academic_period_id' => (int)$academicPeriodId,
+                            'institution_class_id' => (int)$params['institution_class_id'],
+                            'education_grade_id' => (int)$institutionClassGrade->education_grade_id??0,
+                            'date' => $date,
+                            'period' => $row[2],
+                            'subject_id' => $row[3]
+                        ])
+                        ->first();
+
+                        if(!$checkMarkedRecord){
+                            $storeArr['institution_id'] = (int)$params['institution_id'];
+                            $storeArr['academic_period_id'] = (int)$academicPeriodId;
+                            $storeArr['institution_class_id'] = (int)$params['institution_class_id'];
+                            $storeArr['education_grade_id'] = (int)$institutionClassGrade->education_grade_id??0;
+                            $storeArr['date'] = $date;
+                            $storeArr['period'] = $row[2];
+                            $storeArr['subject_id'] = $row[3];
+
+                            $insert = StudentAttendanceMarkedRecords::insert($storeArr);
+                        }
+
                         
                     }
 
@@ -2462,7 +2523,6 @@ class AttendanceRepository extends Controller
 
         } catch (\Exception $e){
             DB::rollBack();
-
             Log::error(
                 'Failed in importStudentAttendances method.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
