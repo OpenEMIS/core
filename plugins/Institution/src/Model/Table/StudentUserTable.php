@@ -1182,77 +1182,77 @@ class StudentUserTable extends ControllerActionTable
     }
 
     // POCOR-6130 adding tabs in sheet
-
-    public function getAcademicTabElements($options = [])
-    {
-        $id = (array_key_exists('id', $options)) ? $options['id'] : 0;
-        $studentID = $this->getStudentID();
+    //PCOOR-8388 starts
+    // public function getAcademicTabElements($options = [])
+    // {
+    //     $id = (array_key_exists('id', $options)) ? $options['id'] : 0;
+    //     $studentID = $this->getStudentID();
         
-        $institutionID = $this->getInstitutionID();
-        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
-        $tabElements = [];
-        $studentTabElements = [
-            'Programmes' => ['text' => __('Programmes')],
-            'Classes' => ['text' => __('Classes')],
-            'Subjects' => ['text' => __('Subjects')],
-            'Absences' => ['text' => __('Absences')],
-            'Behaviours' => ['text' => __('Behaviours')],
-            'Outcomes' => ['text' => __('Outcomes')],
-            'Competencies' => ['text' => __('Competencies')],
-            //POCOR-7474-HINDOL TYPO FIX
-            'Assessments' => ['text' => __('Assessments')], //POCOR-5786
-            'ExaminationResults' => ['text' => __('Examinations')],
-            'ReportCards' => ['text' => __('Report Cards')],
-            'Awards' => ['text' => __('Awards')],
-            //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7648
-            'Textbooks' => ['text' => __('Textbooks')],
-            'Risks' => ['text' => __('Risks')],
-            'Associations' => ['text' => __('Houses')], //POCOR-7938
-            'Curriculars' => ['text' => __('Curriculars')] //POCOR-6673
-        ];
+    //     $institutionID = $this->getInstitutionID();
+    //     $type = (array_key_exists('type', $options)) ? $options['type'] : null;
+    //     $tabElements = [];
+    //     $studentTabElements = [
+    //         'Programmes' => ['text' => __('Programmes')],
+    //         'Classes' => ['text' => __('Classes')],
+    //         'Subjects' => ['text' => __('Subjects')],
+    //         'Absences' => ['text' => __('Absences')],
+    //         'Behaviours' => ['text' => __('Behaviours')],
+    //         'Outcomes' => ['text' => __('Outcomes')],
+    //         'Competencies' => ['text' => __('Competencies')],
+    //         //POCOR-7474-HINDOL TYPO FIX
+    //         'Assessments' => ['text' => __('Assessments')], //POCOR-5786
+    //         'ExaminationResults' => ['text' => __('Examinations')],
+    //         'ReportCards' => ['text' => __('Report Cards')],
+    //         'Awards' => ['text' => __('Awards')],
+    //         //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7648
+    //         'Textbooks' => ['text' => __('Textbooks')],
+    //         'Risks' => ['text' => __('Risks')],
+    //         'Associations' => ['text' => __('Houses')], //POCOR-7938
+    //         'Curriculars' => ['text' => __('Curriculars')] //POCOR-6673
+    //     ];
 
-        $tabElements = array_merge($tabElements, $studentTabElements);
-        $params = ['id' => $studentID,
-            'student_id' => $studentID,
-            'user_id' => $studentID,
-            'institution_id' => $institutionID,
-            'type' => $type];
-        $queryString = $this->paramsEncode($params);
-        // Programme & Textbooks will use institution controller, other will be still using student controller
-        $institutionControllerAction = [
-            'Programmes',
-            'Textbooks',
-            'Associations',
-            'Curriculars',
-            'Risks'];
-        foreach ($studentTabElements as $key => $tab) {
-            if (in_array($key, $institutionControllerAction)) {
-                $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-            } else {
-                $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
-            }
-            $urlParams = [
-                'action' => $key,
-                '0' => 'index',
-                '1' => $queryString
-            ];
-            $tabElements[$key]['url'] = array_merge($studentUrl, $urlParams);
-        }
+    //     $tabElements = array_merge($tabElements, $studentTabElements);
+    //     $params = ['id' => $studentID,
+    //         'student_id' => $studentID,
+    //         'user_id' => $studentID,
+    //         'institution_id' => $institutionID,
+    //         'type' => $type];
+    //     $queryString = $this->paramsEncode($params);
+    //     // Programme & Textbooks will use institution controller, other will be still using student controller
+    //     $institutionControllerAction = [
+    //         'Programmes',
+    //         'Textbooks',
+    //         'Associations',
+    //         'Curriculars',
+    //         'Risks'];
+    //     foreach ($studentTabElements as $key => $tab) {
+    //         if (in_array($key, $institutionControllerAction)) {
+    //             $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+    //         } else {
+    //             $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
+    //         }
+    //         $urlParams = [
+    //             'action' => $key,
+    //             '0' => 'index',
+    //             '1' => $queryString
+    //         ];
+    //         $tabElements[$key]['url'] = array_merge($studentUrl, $urlParams);
+    //     }
 
-        if (Configure::read('schoolMode')) {
-            if (isset($tabElements['ExaminationResults'])) {
-                unset($tabElements['ExaminationResults']);
-            }
-            if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
-                if (isset($tabElements['Risks'])) {
-                    unset($tabElements['Risks']);
-                }
-            }
-        }
+    //     if (Configure::read('schoolMode')) {
+    //         if (isset($tabElements['ExaminationResults'])) {
+    //             unset($tabElements['ExaminationResults']);
+    //         }
+    //         if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+    //             if (isset($tabElements['Risks'])) {
+    //                 unset($tabElements['Risks']);
+    //             }
+    //         }
+    //     }
 
-        return $tabElements;
-    }
-
+    //     return $tabElements;
+    // }
+    //PCOOR-8388 ends
     // POCOR-6130
 
     public
