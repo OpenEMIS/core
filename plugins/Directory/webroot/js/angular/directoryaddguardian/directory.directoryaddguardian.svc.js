@@ -26,7 +26,7 @@ function DirectoryaddguardianSvc($http, $q, $window, KdOrmSvc, AlertSvc, UtilsSv
         getCspdData: getCspdData,
     };
     return service;
-    
+
     function init(baseUrl){
         KdOrmSvc.base(baseUrl);
         KdOrmSvc.controllerAction('Directory');
@@ -86,8 +86,8 @@ function DirectoryaddguardianSvc($http, $q, $window, KdOrmSvc, AlertSvc, UtilsSv
         console.log(url);
         $http.get(url)
         .then(function(response){
-            console.log("response");
-            console.log(response);
+            // console.log("response");
+            // console.log(response);
             deferred.resolve(response.data.openemis_no);
         }, function(error) {
             deferred.reject(error);
@@ -244,5 +244,5 @@ function DirectoryaddguardianSvc($http, $q, $window, KdOrmSvc, AlertSvc, UtilsSv
               });
           return deferred.promise;
       }
-    
+
 };
