@@ -1642,7 +1642,7 @@ class InstitutionsController extends AppController
     public function Comments()
     {
         // POCOR-3983 check institution status
-        $institutionId = $this->ControllerAction->getQueryString('institution_id');
+        $institutionId = $this->getQueryString('institution_id');
 
         $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $isActive = $Institutions->isActive($institutionId);
@@ -1651,9 +1651,13 @@ class InstitutionsController extends AppController
         } else {
             $_edit = false;
         }
+        $queryString = $this->ControllerAction->paramsEncode(['id' =>  $institutionId, 'institution_id'=>  $institutionId] );
         // echo "<pre>";print_r($this->request->getAttribute('params')['action']);die;
         // echo "<pre>";print_r($_SESSION);die;
         // end POCOR-3983
+        $userId = $this->Auth->user('id');
+        $this->set('loginUserId', $userId);
+        $this->set('queryString', $queryString);
         $this->set('_edit', $_edit);
         $this->set('ngController', 'InstitutionCommentsCtrl as InstitutionCommentsController');
     }
@@ -1706,8 +1710,8 @@ class InstitutionsController extends AppController
             $indexUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
-                'action' => 'StudentCompetencies',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+                'action' => 'StudentCompetencies','index',
+                 $this->ControllerAction->paramsEncode(['id' => $institutionId,'institution_id'=> $institutionId])
             ];
             $this->Navigation->addCrumb($crumbTitle, $indexUrl);
             if (!$this->AccessControl->isAdmin() && $institutionId) {
@@ -1722,9 +1726,17 @@ class InstitutionsController extends AppController
             }
             $tabElements = $this->getCompetencyTabElements();
             $queryString = $this->ControllerAction->getQueryString();
+            if(empty($queryString)){
+                $queryString = $this->getQueryString();
+            }
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'StudentCompetencies';
             $viewUrl[0] = 'view';
+
+            $param = ['id' => $queryString['class_id'],'institution_class_id' => $queryString['class_id']];
+            $param = array_merge($queryString,$param);
+            $viewUrl['1'] = $this->ControllerAction->paramsEncode($param);
+            $viewUrl['queryString'] = $this->ControllerAction->paramsEncode($queryString);
 
             $alertUrl = [
                 'plugin' => 'Configuration',
@@ -1776,8 +1788,8 @@ class InstitutionsController extends AppController
             $indexUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
-                'action' => 'StudentCompetencies',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+                'action' => 'StudentCompetencies','index',
+                 $this->ControllerAction->paramsEncode(['id' => $institutionId,'institution_id'=> $institutionId])
             ];
             $this->Navigation->addCrumb('Student Competencies', $indexUrl);
 
@@ -1794,9 +1806,18 @@ class InstitutionsController extends AppController
 
             $tabElements = $this->getCompetencyTabElements();
             $queryString = $this->ControllerAction->getQueryString();
+            if(empty($queryString)){
+                $queryString = $this->getQueryString();
+            }
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'StudentCompetencyComments';
             $viewUrl[0] = 'view';
+
+            $param = ['id' => $queryString['class_id'],'institution_class_id' => $queryString['class_id']];
+            $param = array_merge($queryString,$param);
+            $viewUrl['1'] = $this->ControllerAction->paramsEncode($param);
+            $viewUrl['queryString'] = $this->ControllerAction->paramsEncode($queryString);
+            
             $alertUrl = [
                 'plugin' => 'Configuration',
                 'controller' => 'Configurations',
@@ -2893,7 +2914,7 @@ class InstitutionsController extends AppController
             }
         } elseif (isset($requestQuery['user_id'])) {
             // POCOR-4577 - to check if Users association existed in model - for staff leave import
-            if ($model->association('Users')) {
+            if ($model->getAssociation('Users')) {
                 $persona = $model->Users->get($user_id);
             } else {
                 $Users = TableRegistry::getTableLocator()->get('Security.Users');

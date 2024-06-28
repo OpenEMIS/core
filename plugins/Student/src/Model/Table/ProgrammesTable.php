@@ -184,7 +184,9 @@ class ProgrammesTable extends ControllerActionTable
 				$studentId = $this->paramsDecode($encodeStudentId);
 			}
 		}
-		
+		if(empty($studentId)){ //POCOR-8316
+            $studentId = $this->Auth->user('id');
+        }
 		// end POCOR-1893
 		$sortList = ['AcademicPeriods.name'];
 		

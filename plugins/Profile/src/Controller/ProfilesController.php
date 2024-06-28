@@ -798,7 +798,7 @@ class ProfilesController extends AppController
                     return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
                 }
             }
-        } else if ($model->hasField('staff_id')) {
+        } else if ($model->hasField('staff_id') && $this->getPlugin('Profile') != 'Profile') {
             $model->fields['staff_id']['type'] = 'hidden';
             $model->fields['staff_id']['value'] = $userId;
 
