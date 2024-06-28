@@ -20,9 +20,23 @@ use JWTAuth;
 class SystemConfigurationRepository
 {
 
-    public function getAllConfigurationItems()
+    public function getAllConfigurationItems($params)
     {
-        return ConfigItem::with('itemOptions')->get();
+        $items = ConfigItem::with('itemOptions');
+
+        if(isset($params['order'])){
+            $orderBy = $params['order_by']??"ASC";
+            $col = $params['order'];
+            $items = $items->orderBy($col, $orderBy);
+        }
+
+        if (isset($params['limit'])) {
+            $items = $items->paginate($params['limit']);
+        } else {
+            $items = $items->get();
+        }
+
+        return $items;
     }
 
     public function getConfigurationItemById($configId)
