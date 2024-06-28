@@ -102,7 +102,6 @@ class InstitutionsProfileTable extends ControllerActionTable
         // check if report card request is valid
         $reportCardId = $this->request->getQuery('report_card_id');
         $academicPeriodId = $this->request->getQuery('academic_period_id');
-
         if (!is_null($reportCardId) && $this->ReportCards->exists([$this->ReportCards->getPrimaryKey() => $reportCardId])) {
 
             $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
@@ -398,7 +397,11 @@ class InstitutionsProfileTable extends ControllerActionTable
     {
         $model = $this->InstitutionReportCards;
         $ids = $this->getQueryString();
-
+        foreach ($ids as $key => $value) {
+            if($key == 'id'){
+                unset($ids[$key]);
+            }
+        }
         if ($model->exists($ids)) {
             $data = $model->get($ids);
             $fileName = $data->file_name;
@@ -428,7 +431,11 @@ class InstitutionsProfileTable extends ControllerActionTable
     {
         $model = $this->InstitutionReportCards;
         $ids = $this->getQueryString();
-
+        foreach ($ids as $key => $value) {
+            if($key == 'id'){
+                unset($ids[$key]);
+            }
+        }
         if ($model->exists($ids)) {
             $data = $model->get($ids);
             $fileName = $data->file_name;
@@ -440,9 +447,7 @@ class InstitutionsProfileTable extends ControllerActionTable
             if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
                 $fileType = $this->fileTypes[$pathInfo['extension']];
             }
-
             // echo '<img src="data:image/jpg;base64,' .   base64_encode($file)  . '" />';
-
             header("Pragma: public", true);
             header("Expires: 0"); // set expiration time
             header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
