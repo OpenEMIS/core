@@ -424,7 +424,7 @@ class AreasTable extends ControllerActionTable
         $selected = !empty($options['selected']) && $options['selected'] != 'null' ? $options['selected'] : null;
 
         if (isset($options['recordOnly']) && $options['recordOnly']) {
-            return $query
+            $query = $query
                 ->contain(['AreaLevels'])
                 ->select([
                     $this->aliasField('id'),
@@ -432,8 +432,20 @@ class AreasTable extends ControllerActionTable
                     $this->aliasField('parent_id'),
                     'AreaLevels.name',
                     $this->aliasField('order')
-                ])
-                ->where([$this->aliasField('id') => $selected])
+                ]);
+            if(!empty($selected)) {
+                $query = $query->where([$this->aliasField('id') => $selected]);
+            }
+            return $query
+                // ->contain(['AreaLevels'])
+                // ->select([
+                //     $this->aliasField('id'),
+                //     $this->aliasField('name'),
+                //     $this->aliasField('parent_id'),
+                //     'AreaLevels.name',
+                //     $this->aliasField('order')
+                // ])
+                // ->where([$this->aliasField('id') => $selected])
                 ->enableHydration(false)
                 ->formatResults(function ($results) use ($selected) {
                     $results = $results->toArray();

@@ -89,7 +89,7 @@ class ExcelBehavior extends Behavior
         $id = 0;
         $break = false;
         $action = $this->_table->action;
-        $pass = $this->_table->request->pass;
+        $pass = $this->_table->request->getParam('pass');
         if (in_array($action, $pass)) {
             unset($pass[array_search($action, $pass)]);
             $pass = array_values($pass);
