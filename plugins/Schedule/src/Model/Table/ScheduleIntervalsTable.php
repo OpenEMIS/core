@@ -515,24 +515,30 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
         return $shiftOptions;
     }
-    
-    public function getStaffShiftOptions($academicPeriodId, $allShiftOption = false, $institutionId='')
+
+    public function getStaffShiftOptions($academicPeriodId, $allShiftOption = false, $institutionId = null)
     {
-        $shiftOptions = $this->Shifts
-            ->find('list', [
-                'keyField' => 'id',
-                'valueField' => 'name'
-            ])
-            ->select([
-                'id' => $this->Shifts->aliasField('id'),
-                'name' => 'ShiftOptions.name'
-            ])
-            ->contain('ShiftOptions')
-            ->where([
-                $this->Shifts->aliasField('academic_period_id') => $academicPeriodId,
-                $this->Shifts->aliasField('Institution_id') => $institutionId
-            ])
-            ->toArray();
+        $query = $this->Shifts->find('list', [
+            'keyField' => 'id',
+            'valueField' => 'name'
+        ])
+        ->select([
+            'id' => $this->Shifts->aliasField('id'),
+            'name' => 'ShiftOptions.name'
+        ])
+        ->contain('ShiftOptions');
+
+        $conditions = [
+            $this->Shifts->aliasField('academic_period_id') => $academicPeriodId
+        ];
+
+        if ($institutionId !== null) {
+            $conditions[$this->Shifts->aliasField('Institution_id')] = $institutionId;
+        } else {
+            $conditions[$this->Shifts->aliasField('Institution_id IS')] = null;
+        }
+
+        $shiftOptions = $query->where($conditions)->toArray();
 
         if (!empty($shiftOptions) && $allShiftOption) {
             $shiftOptions = ['-1' => '-- ' . __('All Shifts') . ' --'] + $shiftOptions;
@@ -540,6 +546,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
         return $shiftOptions;
     }
+
     public function getAcademicPeriodOptions($querystringPeriod)
     {
         $periodOptions = $this->AcademicPeriods->getYearList();
