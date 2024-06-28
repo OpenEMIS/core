@@ -825,7 +825,8 @@ class NavigationComponent extends Component
                     'Institutions.WithdrawRequests',
                     'Institutions.StudentUser.add',
                     'Institutions.ImportStudentAdmission',
-                    'Institutions.Students', 'StudentHistories.index',
+                    'Institutions.Students', 
+                    'Institutions.StudentHistories.index',//POCOR-8333
                     'Institutions.BulkStudentAdmission',
                     'Institutions.ImportStudentBodyMasses',
                     'Institutions.ImportStudentGuardians',
@@ -845,7 +846,7 @@ class NavigationComponent extends Component
                     'Institutions.Staff',
                     'Institutions.StaffTransferIn',
                     'Institutions.StaffTransferOut',
-                    'StaffHistories.index', 'Staff.StaffCurriculars',]
+                    'StaffHistories.index']
             ],
 
             'Institution.Attendance' => [
@@ -1448,7 +1449,9 @@ class NavigationComponent extends Component
                     'Students.StudentInsurances.view',
                     'Students.StudentInsurances.edit',
                     'Students.StudentInsurances.delete',
-                    'Students.StudentInsurances']
+                    'Students.StudentInsurances',
+                    'Students.HealthBodyMasses',
+                    'Students.HealthInsurances']
                 // 'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests', 'StudentBodyMasses.index', 'StudentBodyMasses.add', 'StudentBodyMasses.edit', 'StudentBodyMasses.view', 'StudentBodyMasses.delete', 'StudentInsurances.add', 'StudentInsurances.view', 'StudentInsurances.edit', 'StudentInsurances.delete', 'StudentInsurances.index']
             ],
             'Student.Students.SpecialNeedsReferrals.index' => [
@@ -1609,7 +1612,8 @@ class NavigationComponent extends Component
                     'Staff.StaffAttendances',
                     'Staff.ArchivedAttendances',
                     'Staff.InstitutionStaffAttendanceActivities',
-                    'Institutions.StaffLeave',
+                    //'Institutions.StaffLeave',
+                    'Staff.StaffLeave',
                     'Institutions.ArchivedStaffLeave',
                     'Institutions.HistoricalStaffLeave',
                     'Staff.Behaviours',
@@ -1620,7 +1624,8 @@ class NavigationComponent extends Component
                     'Institutions.ImportStaffLeave',
                     'Staff.Duties',
                     'Staff.StaffAssociations',
-                    'Staff.StaffCurriculars'],
+                    'Staff.StaffCurriculars',
+                    ],
             ],
             'Staff.Staff.Employments.index' => [
                 'title' => 'Professional',
@@ -1667,8 +1672,10 @@ class NavigationComponent extends Component
                     'Staff.HealthImmunizations',
                     'Staff.HealthMedications',
                     'Staff.HealthTests',
-                    'Staff.StaffBodyMasses',
-                    'Staff.StaffInsurances']
+                    //'Staff.StaffBodyMasses', //old code
+                    //'Staff.StaffInsurances', //old code
+                    'Staff.HealthBodyMasses', //POCOR-8359
+                    'Staff.HealthInsurances']//POCOR-8359
             ],
             'Staff.Staff.SpecialNeedsReferrals.index' => [
                 'title' => 'Special Needs',
@@ -2164,7 +2171,8 @@ class NavigationComponent extends Component
                     'Profiles.Comments',
                     'Profiles.Attachments',
                     'Profiles.UserActivities',
-                    'Profiles.Contacts'] // POCOR-6683
+                    'Profiles.Contacts',
+                    'Profiles.History'] // POCOR-6683
             ],
             'Profiles.Healths.index' => [
                 'title' => 'Health',
@@ -2655,7 +2663,7 @@ class NavigationComponent extends Component
                         'FieldOptions.remove']
                 ],
 
-                'Labels.index' => [
+                'Labels.Labels' => [
                     'title' => 'Labels',
                     'parent' => 'SystemSetup',
                     'selected' => ['Labels.index',
@@ -2680,8 +2688,7 @@ class NavigationComponent extends Component
                 'Manuals.Institutions' => [
                     'title' => 'Manuals',
                     'parent' => 'SystemSetup',
-                    'selected' => ['Manuals.Institutions', 'Manuals.view',
-                        'Manuals.edit',
+                    'selected' => ['Manuals.Institutions',
                         'Manuals.Directory',
                         'Manuals.Reports',
                         'Manuals.Personal',
@@ -2980,7 +2987,7 @@ class NavigationComponent extends Component
                         'parent' => 'SystemSetup',
                         'link' => false,
                     ],
-                    'Locales.index' => [
+                    'Locales.Locales' => [
                         'title' => 'Languages',
                         'parent' => 'SystemSetup.Localization',
                         'selected' => ['Locales.index',
@@ -2988,7 +2995,7 @@ class NavigationComponent extends Component
                             'Locales.edit',
                             'Locales.add']
                     ],
-                    'LocaleContents.index' => [
+                    'LocaleContents.LocaleContents' => [
                         'title' => 'Translations',
                         'parent' => 'SystemSetup.Localization',
                         'selected' => ['LocaleContents.index',
@@ -3008,7 +3015,7 @@ class NavigationComponent extends Component
                     //     'selected' => ['ApiSecurities.view', 'ApiSecurities.add', 'ApiSecurities.edit', 'ApiSecurities.delete']
                     // ],
                     //POCOR-7312[END]
-                    'Credentials.index' => [
+                    'Credentials.Credentials' => [
                         'title' => 'Credentials',
                         'parent' => 'API',
                         'selected' => ['Credentials.view',
@@ -3951,7 +3958,7 @@ class NavigationComponent extends Component
                     //         'ScholarshipRecipientAcademicStandings.delete']
                     // ],
                     'Scholarships.ScholarshipRecipients' => [
-                        'title' => 'ScholarshipRecipients',
+                        'title' => 'Recipients',
                         'parent' => 'Administration',
                         'selected' => ['Scholarships.ScholarshipRecipients']
                     ],
@@ -4026,8 +4033,8 @@ class NavigationComponent extends Component
                 //         'ScholarshipRecipientAcademicStandings.delete']
                 // ],
                 'Scholarships.ScholarshipRecipients' => [
-                    'title' => 'ScholarshipRecipients',
-                    'parent' => 'Administration',
+                    'title' => 'Recipients',
+                    'parent' => 'Administration.Scholarships',
                     'selected' => ['Scholarships.ScholarshipRecipients']
                 ],
             ];
@@ -4082,13 +4089,10 @@ class NavigationComponent extends Component
                         'parent' => 'Administration',
                         'link' => false,
                     ],
-                    'MoodleApi.log' => [
+                    'MoodleApi.index' => [
                         'title' => 'Log',
                         'parent' => 'Administration.MoodleApi',
-                        'selected' => ['MoodleApiLog.index'],
-                        'params' => ['plugin' => 'MoodleApi',
-                            'controller' => 'MoodleApiLog',
-                            'action' => 'index']
+                        'selected' => ['MoodleApi.MoodleApi'],
                     ],
                 ];
             }
@@ -4099,13 +4103,10 @@ class NavigationComponent extends Component
                     'parent' => 'Administration',
                     'link' => false,
                 ],
-                'MoodleApi.log' => [
+                'MoodleApi.index' => [
                     'title' => 'Log',
                     'parent' => 'Administration.MoodleApi',
-                    'selected' => ['MoodleApiLog.index'],
-                    'params' => ['plugin' => 'MoodleApi',
-                        'controller' => 'MoodleApiLog',
-                        'action' => 'index']
+                    'selected' => ['MoodleApi.MoodleApi'],
                 ],
 
             ];

@@ -1,5 +1,5 @@
 <?php
-namespace Manual\Model\Table;
+namespace Manuals\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
@@ -11,7 +11,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\ORM\ResultSet;
 
-class DirectoryTable extends ControllerActionTable
+class ReportsTable extends ControllerActionTable
 {
     // private $defaultMarkType;
 
@@ -40,7 +40,7 @@ class DirectoryTable extends ControllerActionTable
             $this->aliasField('module'),
             $this->aliasField('category'),
         ])
-        ->where([$this->aliasField('module') => 'Directory'])
+        ->where([$this->aliasField('module') => 'Reports'])
         ->order([
             $this->aliasField('order')
         ])
@@ -93,7 +93,7 @@ class DirectoryTable extends ControllerActionTable
         $this->field('module', ['visible' => false]);   
         $this->field('parent_id', ['visible' => false]);   
 
-        $this->setFieldOrder(['category','function','url']);
+        $this->setFieldOrder(['category','function', 'url']);
     }
 
 

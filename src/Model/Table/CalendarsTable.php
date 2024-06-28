@@ -407,6 +407,9 @@ class CalendarsTable extends ControllerActionTable
 
         $session = $this->request->getSession();
         $institutionId  = $this->getInstitutionID();
+        if(empty($institutionId)) {
+            $institutionId  = $session->read('Institution.Institutions.id');
+        }
         $calendarEventDates = TableRegistry::getTableLocator()->get('CalendarEventDates');
         $institutionShifts = TableRegistry::getTableLocator()->get('Institution.ShiftOptions');//institution_shifts
         $CalendarTypes = TableRegistry::getTableLocator()->get('CalendarTypes');
@@ -447,10 +450,12 @@ class CalendarsTable extends ControllerActionTable
         // ])
         ->innerJoin([$CalendarTypes->getAlias() => $CalendarTypes->getTable()], [
             [$CalendarTypes->aliasField('id ='). $this->aliasField('calendar_type_id')],
-        ])
-        //->group($this->aliasField('id'))
-        ->where([
-            'institution_id =' .$institutionId
         ]);
+        //->group($this->aliasField('id'))
+        if(!empty($institutionId)) {
+            $query->where([
+                'institution_id =' .$institutionId
+            ]);
+        }
     }    
 }
