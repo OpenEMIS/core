@@ -2646,13 +2646,13 @@ class InstitutionsController extends AppController
         if ($pass[0] == 'download' && ($action == 'Expenditure' || $action == 'Visits' || $action = 'Attachments') && ($plugin == 'Institution') && ($controller == 'Institutions')) {
             return true;
         }
-        if (($pass[0] == 'view' || $pass[0] == 'edit') && $action == 'Institutions' && $plugin == 'Institution' && $controller == 'Institutions') {
+        if (($pass[0] == 'view' || $pass[0] == 'edit' || $pass[0] == 'remove') && $action == 'Institutions' && $plugin == 'Institution' && $controller == 'Institutions') {
             return true;
         }
         if ($furtherAction == 'image' || $furtherAction == 'download') {
             return true;
         }
-        if ($pass[0] == 'add' && $action == 'ImportInstitutions') {
+        if (($pass[0] == 'add' && $action == 'ImportInstitutions') || ($action == 'ComponentAction' && $pass[0] == 'add')) {
             return true;
         }
         if ($pass[0] == 'ajaxInstitutionsAutocomplete' && $action == 'Shifts') {
@@ -9382,6 +9382,11 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserHistories']);
     }//POCOR -8333 ends
+
+    public function History()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionHistories']);
+    }
 }
 
 
