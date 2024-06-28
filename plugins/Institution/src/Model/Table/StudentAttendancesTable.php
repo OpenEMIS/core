@@ -626,7 +626,7 @@ class StudentAttendancesTable extends ControllerActionTable
             $WithDrawstudentId = [];
             $CurrentStudentId = [];
             $InstitutionStudentsCurrentData = []; //POCOR-8022
-            $InstitutionStudents = TableRegistry::get('InstitutionStudents');//POCOR-7902
+            $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');//POCOR-7902
             foreach ($studentWithdrawData as $studenetVal) {
                 $WithDrawstudentId[] = $studenetVal['student_id'];
             }
@@ -652,7 +652,7 @@ class StudentAttendancesTable extends ControllerActionTable
                         'student_id' => 'InstitutionStudents.student_id'
                     ])
                     ->where($whereWDR) //POCOR-8022
-                    ->autoFields(true)
+                    ->enableAutoFields(true)
                     ->toArray();
             }
             if(!empty($InstitutionStudentsCurrentData)){ //POCOR-8022
