@@ -58,6 +58,6 @@ class TrainingSession extends Model
 
     public function trainingSessionEvaluator()
     {
-        return $this->belongsToMany(SecurityUsers::class, 'training_session_evaluators', 'training_session_id', 'training_evaluators_id');
+        return $this->belongsToMany(SecurityUsers::class, 'training_session_evaluators', 'training_session_id', 'evaluator_id');
     }
 }
