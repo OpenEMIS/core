@@ -15,17 +15,18 @@ class POCOR8385 extends AbstractMigration
     public function up()
     {
         //backup
-        $this->execute('CREATE TABLE `z_8385_security_users` LIKE `security_users`');
-        $this->execute('INSERT INTO `z_8385_security_users` SELECT * FROM `security_users`');
+        $this->execute('CREATE TABLE `z_8385_security_functions` LIKE `security_functions`');
+        $this->execute('INSERT INTO `z_8385_security_functions` SELECT * FROM `security_functions`');
 
-        //enable Execute checkbox for export and import data
-        $this->execute("UPDATE `security_users` SET super_admin = 1 WHERE `username` = 'superrole';");
+        $this->execute("UPDATE `security_functions` SET
+        `controller` = 'Institutions', `_view` = 'InfrastructureUtilityTelephones.view|InfrastructureUtilityTelephones.index|InfrastructureUtilityTelephones.download', `_edit` = 'InfrastructureUtilityTelephones.edit', `_add` = 'InfrastructureUtilityTelephones.add', `_delete` = 'InfrastructureUtilityTelephones.delete'
+        WHERE `name` = 'Infrastructure Utility Telephone' AND `module` = 'Institutions' AND `category` = 'Details'");
     }
 
     //rollback
     public function down()
     {
-        $this->execute('DROP TABLE IF EXISTS `security_users`');
-        $this->execute('RENAME TABLE `z_8385_security_users` TO `security_users`');
+        $this->execute('DROP TABLE IF EXISTS `security_functions`');
+        $this->execute('RENAME TABLE `z_8385_security_functions` TO `security_functions`');
     }
 }

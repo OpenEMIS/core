@@ -1284,6 +1284,12 @@ class InstitutionsController extends AppController
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__('Internet'));
                 $this->set('contentHeader', $header);
+            } else if ($this->request->getParam('action') == 'InfrastructureUtilityTelephones') {
+                //$institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Internet');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
+                $this->Navigation->addCrumb(__('Internet'));
+                $this->set('contentHeader', $header);
             } else if ($this->request->getParam('action') == 'InfrastructureWashWaters') {
                 //$institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Water');
@@ -3572,14 +3578,14 @@ class InstitutionsController extends AppController
             ->first();
 
         //Utilities Telephone
-        $institutionUtilitiesTelephone = TableRegistry::getTableLocator()->get('Institution.InfrastructureUtilityInternets');
+        $institutionUtilitiesTelephone = TableRegistry::getTableLocator()->get('Institution.InfrastructureUtilityTelephones');
         $institutionUtilitiesTelephoneData = $institutionUtilitiesTelephone->find()
             ->select([
-                'created' => 'InfrastructureUtilityInternets.created',
-                'modified' => 'InfrastructureUtilityInternets.modified',
+                'created' => 'InfrastructureUtilityTelephones.created',
+                'modified' => 'InfrastructureUtilityTelephones.modified',
             ])
             ->where([$institutionUtilitiesTelephone->aliasField('institution_id') => $institutionId])
-            ->order(['InfrastructureUtilityInternets.modified' => 'desc'])
+            ->order(['InfrastructureUtilityTelephones.modified' => 'desc'])
             ->limit(1)
             ->first();
 
