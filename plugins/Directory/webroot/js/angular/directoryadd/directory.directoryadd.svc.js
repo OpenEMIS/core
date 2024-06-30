@@ -35,7 +35,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc, $wind
         getCspdData: getCspdData,
     };
     return service;
-    
+
     function init(baseUrl){
         KdOrmSvc.base(baseUrl);
         KdOrmSvc.controllerAction('Directory');
@@ -197,22 +197,66 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc, $wind
 
     function getAddressAreaId () {
         selectedAddressAreaId = $window.localStorage.getItem('address_area_id');
+        if (selectedAddressAreaId !== null) {  // localStorage returns null if the item is not found
+            try {
         return JSON.parse(selectedAddressAreaId);
+            } catch (e) {
+                console.error('Error parsing JSON from localStorage', e);
+                return null; // or handle the error as needed
+            }
+        } else {
+            // Handle the case where selectedBirthplaceAreaId is not found in localStorage
+            return null; // or any default value you prefer
+        }
+        return null;
     }
 
     function getAddressArea () {
         selectedAddressArea = $window.localStorage.getItem('address_area');
+        if (selectedAddressArea !== null) {  // localStorage returns null if the item is not found
+            try {
         return JSON.parse(selectedAddressArea);
+            } catch (e) {
+                console.error('Error parsing JSON from localStorage', e);
+                return null; // or handle the error as needed
+            }
+        } else {
+            // Handle the case where selectedBirthplaceAreaId is not found in localStorage
+            return null; // or any default value you prefer
+        }
+        return null;
     }
 
     function getBirthplaceAreaId () {
-        selectedBirthplcaeAreaId = $window.localStorage.getItem('birthplace_area_id');
-        return JSON.parse(selectedBirthplcaeAreaId);
+        selectedBirthplaceAreaId = $window.localStorage.getItem('birthplace_area_id');
+        if (selectedBirthplaceAreaId !== null) {  // localStorage returns null if the item is not found
+            try {
+                return JSON.parse(selectedBirthplaceAreaId);
+            } catch (e) {
+                console.error('Error parsing JSON from localStorage', e);
+                return null; // or handle the error as needed
+            }
+        } else {
+            // Handle the case where selectedBirthplaceAreaId is not found in localStorage
+            return null; // or any default value you prefer
+        }
+        return null;
     }
 
     function getBirthplaceArea () {
-        selectedBirthplcaeArea = $window.localStorage.getItem('birthplace_area');
-        return JSON.parse(selectedBirthplcaeArea);
+        selectedBirthplaceArea = $window.localStorage.getItem('birthplace_area');
+        if (selectedBirthplaceArea !== null) {  // localStorage returns null if the item is not found
+            try {
+                return JSON.parse(selectedBirthplaceArea);
+            } catch (e) {
+                console.error('Error parsing JSON from localStorage', e);
+                return null; // or handle the error as needed
+            }
+        } else {
+            // Handle the case where selectedBirthplaceAreaId is not found in localStorage
+            return null; // or any default value you prefer
+        }
+        return null;
     }
 
     function saveDirectoryData (params) {
@@ -275,7 +319,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AlertSvc, UtilsSvc, $wind
         return deferred.promise;
     }
 
-    
+
     /**
      * @name  Url: /Institutions/getCspdData
      * @description  Request Params: identity_number

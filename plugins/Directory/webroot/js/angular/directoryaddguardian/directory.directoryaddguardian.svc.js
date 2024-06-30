@@ -83,7 +83,7 @@ function DirectoryaddguardianSvc($http, $q, $window, KdOrmSvc, AlertSvc, UtilsSv
     function getUniqueOpenEmisId() {
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Directories/getUniqueOpenemisId/';
-        console.log(url);
+        // console.log(url);
         $http.get(url)
         .then(function(response){
             // console.log("response");
@@ -145,30 +145,75 @@ function DirectoryaddguardianSvc($http, $q, $window, KdOrmSvc, AlertSvc, UtilsSv
 
     function getAddressAreaId () {
         selectedAddressAreaId = $window.localStorage.getItem('address_area_id');
+        if (selectedAddressAreaId !== null) {  // localStorage returns null if the item is not found
+            try {
         return JSON.parse(selectedAddressAreaId);
+            } catch (e) {
+                console.error('Error parsing JSON from localStorage', e);
+                return null; // or handle the error as needed
+            }
+        } else {
+            // Handle the case where selectedBirthplaceAreaId is not found in localStorage
+            return null; // or any default value you prefer
+        }
+        return null;
     }
 
     function getAddressArea () {
         selectedAddressArea = $window.localStorage.getItem('address_area');
+        if (selectedAddressArea !== null) {  // localStorage returns null if the item is not found
+            try {
         return JSON.parse(selectedAddressArea);
+            } catch (e) {
+                console.error('Error parsing JSON from localStorage', e);
+                return null; // or handle the error as needed
+            }
+        } else {
+            // Handle the case where selectedBirthplaceAreaId is not found in localStorage
+            return null; // or any default value you prefer
+        }
+        return null;
     }
 
     function getBirthplaceAreaId () {
-        selectedBirthplcaeAreaId = $window.localStorage.getItem('birthplace_area_id');
-        return JSON.parse(selectedBirthplcaeAreaId);
+        selectedBirthplaceAreaId = $window.localStorage.getItem('birthplace_area_id');
+        if (selectedBirthplaceAreaId !== null) {  // localStorage returns null if the item is not found
+            try {
+                return JSON.parse(selectedBirthplaceAreaId);
+            } catch (e) {
+                console.error('Error parsing JSON from localStorage', e);
+                return null; // or handle the error as needed
+            }
+        } else {
+            // Handle the case where selectedBirthplaceAreaId is not found in localStorage
+            return null; // or any default value you prefer
+        }
+        return null;
     }
 
     function getBirthplaceArea () {
-        selectedBirthplcaeArea = $window.localStorage.getItem('birthplace_area');
-        return JSON.parse(selectedBirthplcaeArea);
+        selectedBirthplaceArea = $window.localStorage.getItem('birthplace_area');
+        if (selectedBirthplaceArea !== null) {  // localStorage returns null if the item is not found
+            try {
+                return JSON.parse(selectedBirthplaceArea);
+            } catch (e) {
+                console.error('Error parsing JSON from localStorage', e);
+                return null; // or handle the error as needed
+            }
+        } else {
+            // Handle the case where selectedBirthplaceAreaId is not found in localStorage
+            return null; // or any default value you prefer
+        }
+        return null;
     }
 
     function saveGuardianDetails(params){
-        console.log(params);
+        // console.log(params);
         var deferred = $q.defer();
-        var url = angular.baseUrl + '/Institution/Institutions/saveGuardianData/';
+        var url = angular.baseUrl + '/Institutions/saveGuardianData';
         $http.post(url, params)
         .then(function(response){
+            // console.log(response);
             deferred.resolve(response);
         }, function(error) {
             deferred.reject(error);
