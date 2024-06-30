@@ -1,9 +1,9 @@
-angular.module('directory.directoryaddguardian.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'directory.directoryaddguardian.svc', 'kd-angular-tree-dropdown'])
+angular.module('directory.directoryaddguardian.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'directory.directoryaddguardian.svc', 'kd-angular-tree-dropdown', 'kd.data.svc'])
     .controller('DirectoryaddguardianCtrl', DirectoryaddguardianController);
 
-DirectoryaddguardianController.$inject = ['$scope', '$q', '$window', '$http', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'DirectoryaddguardianSvc'];
+DirectoryaddguardianController.$inject = ['$scope', '$q', '$window', '$http', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'DirectoryaddguardianSvc', 'KdDataSvc'];
 
-function DirectoryaddguardianController($scope, $q, $window, $http, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, DirectoryaddguardianSvc) {
+function DirectoryaddguardianController($scope, $q, $window, $http, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, DirectoryaddguardianSvc, KdDataSvc) {
     var scope = $scope;
     scope.studentOpenEmisId = undefined;
     const userSvc = DirectoryaddguardianSvc;
@@ -1759,16 +1759,18 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
 
     scope.addGuardian = function addGuardian() {
         //POCOR-7231::Start
-        let str1 = document.URL;
-        ;
-        const Arr = str1.split("/");
-        var len = Arr.length - 1;
-        if (window.location.href.indexOf("Institution") > -1) {
-            $window.location.href = angular.baseUrl + '/Institution/Institutions/' + Arr[len];
-        } else {
-            const queryString = getParameterByName('queryString');
-            $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian?queryString=' + queryString;
+        if ($window.localStorage.getItem('studentOpenEmisId')) {
+            $window.localStorage.removeItem('studentOpenEmisId');
         }
+        // console.log("addGuardian");
+        // console.log(StudentController);
+        let params = {
+            openemis_no: scope.studentOpenEmisId
+        };
+
+        var queryString = KdDataSvc.urlsafeB64Encode(JSON.stringify(params));
+        $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian/' + queryString;
+
         //POCOR-7231::End
     }
 
