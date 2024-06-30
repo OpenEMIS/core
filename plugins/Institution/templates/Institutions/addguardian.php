@@ -413,7 +413,7 @@ h2, h3, h4, h5, h6 {
                         <label><?=
                             __('Password') . '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $tooltipMessage . '"></i>'
                         ?></label>
-                        <input ng-model="selectedUserData.password" type="string">
+                        <input ng-model="selectedUserData.password" type="string" ng-disabled="disableFields.password">
                         <div ng-if="error.password" class="error-message">
                             <p>{{ error.password }}</p>
                         </div>

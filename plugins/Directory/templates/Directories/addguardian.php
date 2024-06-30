@@ -472,11 +472,11 @@
                             <p>{{ error.relation_type_id }}</p>
                         </div>
                     </div>
-                    <div class="input password" ng-show="!disableFields.password">
+                    <div class="input password required"  ng-show="!disableFields.password">
                         <label><?=
                             __('Password') . '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $tooltipMessage . '"></i>'
                             ?></label>
-                        <input ng-model="selectedUserData.password" type="string">
+                        <input ng-model="selectedUserData.password" type="string" ng-disabled="disableFields.password">
                         <div ng-if="error.password" class="error-message">
                             <p>{{ error.password }}</p>
                         </div>

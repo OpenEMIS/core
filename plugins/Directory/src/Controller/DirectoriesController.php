@@ -475,14 +475,18 @@ class DirectoriesController extends AppController
     public function Addguardian()
     {
         //POCOR-7231 :: Start
+        $qs = $this->request->getQuery('queryString');
+        if($qs){
         $requestDataa = base64_decode($this->request->getQuery('queryString'));
         $requestDataa = json_decode($requestDataa, true);
+        }
         if (empty($requestDataa) && isset($this->request->getParam('pass')[0])) {
             $requestDataa = base64_decode($this->request->getParam('pass')[0]);
             $requestDataa = json_decode($requestDataa, true);
         }
-        $UsersTable = TableRegistry::get('User.Users');
-        $InstitutionTable = TableRegistry::get('Institution.Institutions');
+//        die(print_r($requestDataa, true));
+        $UsersTable = $this->getDynamicTableInstance('User.Users');
+        $InstitutionTable = $this->getDynamicTableInstance('Institution.Institutions');
 
         if (isset($requestDataa['student_id'])) {
             $UserData = $UsersTable->find('all', ['conditions' => ['id' => $requestDataa['student_id']]])->first();
