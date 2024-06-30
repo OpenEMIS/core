@@ -12,6 +12,9 @@ use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use Cake\Core\Configure;
 use App\Model\Table\ControllerActionTable;
+use Cake\ORM\Table;
+use Cake\Log\Log;
+use Cake\Utility\Inflector;
 
 class GuardiansTable extends ControllerActionTable
 {
@@ -55,6 +58,8 @@ class GuardiansTable extends ControllerActionTable
         // Starts POCOR-6592
         $events['ControllerAction.Model.ajaxUserStaffAutocomplete'] = 'ajaxUserStaffAutocomplete';
         // Ends  POCOR-6592
+        $events['ControllerAction.Model.add.beforeAction'] = 'addDeleteBeforeAction';
+        $events['ControllerAction.Model.delete.beforeAction'] = 'addDeleteBeforeAction';
         return $events;
     }
 
@@ -111,6 +116,7 @@ class GuardiansTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+
         if ($this->controller->getName() == 'Directories') {
             // POCOR-8014-n
                 $requestDataa = base64_decode($this->request->getQuery('queryString'));
@@ -124,13 +130,13 @@ class GuardiansTable extends ControllerActionTable
                 //$studentId = $this->Session->read('Student.Students.id');
                 $studentId = $this->ControllerAction->paramsDecode($this->request->getQuery('queryString'))['security_user_id'];
             }
-            
+
         $this->field('student_id', ['type' => 'hidden', 'value' => $studentId]);
         $this->field('guardian_id');
 
         // Start POCOR-5188
-        if($this->request->getParam('controller') == 'Students'){ 
-            $is_manual_exist = $this->getManualUrl('Institutions','Guardian Languages','Students - Guardians');       
+        if($this->request->getParam('controller') == 'Students'){
+            $is_manual_exist = $this->getManualUrl('Institutions','Guardian Languages','Students - Guardians');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -147,8 +153,8 @@ class GuardiansTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->getParam('controller') == 'Directories'){ 
-            $is_manual_exist = $this->getManualUrl('Directory','Guardian Relation','Students - Guardians');       
+        }elseif($this->request->getParam('controller') == 'Directories'){
+            $is_manual_exist = $this->getManualUrl('Directory','Guardian Relation','Students - Guardians');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -168,10 +174,29 @@ class GuardiansTable extends ControllerActionTable
 
         }
         // End POCOR-5188
+        if(isset($extra['toolbarButtons']['back'])){
+            $toolbarButtons = $extra['toolbarButtons'];
+            $queryString = $this->getQueryString();
+            $encodedQueryString = $this->paramsEncode($queryString);
+            $url = $toolbarButtons['back']['url'];
+            $url['0'] = 'index';
+            $url['1'] = $encodedQueryString;
+            unset($url['?']);
+            unset($url['queryString']);
+            $extra['toolbarButtons']['back']['url'] = $url;
+        }
+
+    }
+
+    public function addDeleteBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $url = $this->url('index', 'PASS');
+        $extra['redirect'] = $url;
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+
         $search = $this->getSearchKey();
         if (!empty($search)) {
             // function from AdvancedNameSearchBehavior
@@ -228,10 +253,12 @@ class GuardiansTable extends ControllerActionTable
 
     public function onUpdateFieldGuardianId(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'add') {
+            $params = $this->getQueryString();
             //POCOR-7093 starts
-            $SecurityUsers = TableRegistry::get('Security.Users');
+            $SecurityUsers = self::getDynamicTableInstance('security_users');
+
             if($this->controller->getName() == 'Directories'){
-                $security_user_id = $this->Session->read('Directory.Directories.id');
+                $security_user_id =$params['security_user_id'];
                 $securityUserData = $SecurityUsers->find()
                     ->where([
                         $SecurityUsers->aliasField('id') => $security_user_id])
@@ -239,28 +266,28 @@ class GuardiansTable extends ControllerActionTable
                     ->first();
                 $dataArray = ['institution_id' => 0, 'student_id'=> $security_user_id, 'openemis_no'=> $securityUserData['openemis_no']];
             }else{
-                $security_user_id = $this->getQueryString('security_user_id');
+                $security_user_id = $params['security_user_id'];
+                $institution_id = $params['institution_id'];
                 $securityUserData = $SecurityUsers->find()
                     ->where([
                         $SecurityUsers->aliasField('id') => $security_user_id])
                     ->enableHydration(false)
                     ->first();
-                $dataArray = ['institutionId'=>$this->Session->read('Institution.Institutions.id'),'institution_id' => $this->Session->read('Institution.Institutions.id'),'institution_student_id'=> $security_user_id ,'student_id'=> $security_user_id , 'openemis_no'=> $securityUserData['openemis_no']];
+                $dataArray = ['institutionId'=>$institution_id,'institution_id' => $institution_id,'institution_student_id'=> $security_user_id ,'student_id'=> $security_user_id , 'openemis_no'=> $securityUserData['openemis_no']];
             }
-            
+
             if($this->request->getParam('plugin') == 'Student'){
-                $queryString1 = base64_encode(json_encode($dataArray));
                 $queryString = $this->paramsEncode($dataArray);
                 $event->stopPropagation();
-                return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Addguardian', 'queryString' => $this->request->getQuery('queryString'),'queryString1'=> trim($queryString),'queryString2'=>trim($queryString1)]);
+                return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Addguardian', $queryString]);
             }else{
                 $queryString = base64_encode(json_encode($dataArray));
                 $event->stopPropagation();
                 return $this->controller->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Addguardian', $queryString]);
             }
-            
+
             /*
-            Note:- Don't uncomment this, becuase client's wants to redirect the page on directory add gaurdian page. Kindly connect with Anubhav/Ehteram.  
+            Note:- Don't uncomment this, becuase client's wants to redirect the page on directory add gaurdian page. Kindly connect with Anubhav/Ehteram.
             $attr['type'] = 'autocomplete';
             $attr['target'] = ['key' => 'guardian_id', 'name' => $this->aliasField('guardian_id')];
             $attr['noResults'] = __('No Guardian found.');
@@ -290,7 +317,7 @@ class GuardiansTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldGuardianRelationId(Event $event, array $attr, $action, ServerRequest $request) 
+    public function onUpdateFieldGuardianRelationId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -431,7 +458,7 @@ class GuardiansTable extends ControllerActionTable
     * @ticket POCOR-6592
     */
     public function ajaxUserStaffAutocomplete()
-    {   
+    {
         $this->controller->autoRender = false;
         $this->ControllerAction->autoRender = false;
 
@@ -480,4 +507,58 @@ class GuardiansTable extends ControllerActionTable
             die;
         }
     }
+    /**
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName . POCOR-8231
+     * @return \Cake\ORM\Table
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        // Create a TableLocator instance
+        $locator = TableRegistry::getTableLocator();
+
+        try {
+            // Try to get the table instance directly
+            return $locator->get($tableName);
+        } catch (\Exception $e) {
+            Log::debug('Error: ' . $e->getMessage());
+        }
+
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
 }

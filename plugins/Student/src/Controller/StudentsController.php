@@ -293,7 +293,7 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Medications']);
     }
-    
+
 
     public function HealthTests()
     {
@@ -326,7 +326,7 @@ class StudentsController extends AppController
     public function SpecialNeedsPlans()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsPlans']);
-    } 
+    }
 
     public function SpecialNeedsDiagnostics()
     {
@@ -346,6 +346,7 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentVisits']);
     }
+
     // Visits - END
 
     public function Counsellings()
@@ -360,7 +361,7 @@ class StudentsController extends AppController
         $session = $this->request->getSession();
         $studentID = $this->getStudentID();
         //if ($session->check('Student.Students.id')) {
-        if ($studentID !='') {
+        if ($studentID != '') {
             //$studentId = $session->read('Student.Students.id');
             $studentId = $studentID;
             $session->write('Student.Competencies.student_id', $studentId);
@@ -377,12 +378,17 @@ class StudentsController extends AppController
     }
 
     public
-    function getAcademicTabElements($options = [])
+    function getStudentID($debugString = "")
     {
-        //$tabElements = TableRegistry::get('Institution.StudentUser')->getAcademicTabElementsNew($options);//PCOOR-8388
-        $this->loadModel('Institution.StudentUser');//PCOOR-8388
-        $tabElements = $this->StudentUser->getAcademicTabElements($options, $this);//PCOOR-8388
-        return $tabElements;
+        // POCOR-8115;
+        // student_id should always be in query string, if not, die as an error
+        $student_id = $this->getQueryString('student_id');
+        if (!$student_id) {
+            if ($debugString != "") {
+                die($debugString . 'For Developer: You should put student_id into query string first');
+            }
+        }
+        return $student_id;
     }
 
     public function AssessmentItemResultsArchived()
@@ -452,20 +458,6 @@ class StudentsController extends AppController
 
     // End
 
-    public
-    function getStudentID($debugString = "")
-    {
-        // POCOR-8115;
-        // student_id should always be in query string, if not, die as an error
-        $student_id = $this->getQueryString('student_id');
-        if (!$student_id) {
-            if ($debugString != "") {
-                die($debugString . 'For Developer: You should put student_id into query string first');
-            }
-        }
-        return $student_id;
-    }
-
     public function Results()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentAssisments']);
@@ -490,6 +482,15 @@ class StudentsController extends AppController
 
             $this->set('ngController', 'StudentResultsCtrl as StudentResultsController');
         }
+    }
+
+    public
+    function getAcademicTabElements($options = [])
+    {
+        //$tabElements = TableRegistry::get('Institution.StudentUser')->getAcademicTabElementsNew($options);//PCOOR-8388
+        $this->loadModel('Institution.StudentUser');//PCOOR-8388
+        $tabElements = $this->StudentUser->getAcademicTabElements($options, $this);//PCOOR-8388
+        return $tabElements;
     }
 
     public function InstitutionStudentAbsencesArchived()
@@ -546,8 +547,15 @@ class StudentsController extends AppController
 
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $action = $this->request->getAttribute('params')['action'];
-        $institutionID = $this->getInstitutionID();
-        
+        $queryString = $this->getRequest()->getParam('pass')[1] ?? null;
+//                die(print_r($queryString, true));
+        if ($queryString) {
+            $queryString = $this->paramsDecode($queryString);
+        }
+//        echo 'a';
+//        die(print_r($queryString['institution_id'], true));
+        $institutionID = $queryString['institution_id'] ?? $this->getInstitutionID(__CLASS__ . __FUNCTION__ . __LINE__);
+
         $activeInstitution = $this->Institutions->get($institutionID);
         $institutionName = $activeInstitution->name;
 
@@ -590,7 +598,7 @@ class StudentsController extends AppController
                 $queryString = $this->getQueryString();
                 $name = $entity->name;
                 $header = $action == 'Assessments' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
-                $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $id, 'institution_id' => $institutionID, 'student_id' => $entity->id,'institution_student_id' => $queryString['institution_student_id']])]);
+                $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $id, 'institution_id' => $institutionID, 'student_id' => $entity->id, 'institution_student_id' => $queryString['institution_student_id']])]);
             } else {
                 $indexPage = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index'];
                 return $this->redirect($indexPage);
@@ -750,7 +758,7 @@ class StudentsController extends AppController
         /*if($studentID == null){
             $studentID =  $this->getUserID();
         }*/
-        
+
         $institutionID = $this->getInstitutionID();
         if ($this->StudentUser->exists([$this->StudentUser->getPrimaryKey() => $studentID])) {
             $entity = $this->StudentUser->get($studentID);
@@ -762,8 +770,8 @@ class StudentsController extends AppController
             // POCOR-8014-n
             try {
                 $userId = $this->getStudentID();
-                if($userId == null){
-                 $userId  = $this->getUserID();
+                if ($userId == null) {
+                    $userId = $this->getUserID();
                 }
                 $session->write('Student.Students.id', $userId);
                 $student = $this->StudentUser->get($userId);
@@ -781,7 +789,7 @@ class StudentsController extends AppController
                 $studentId = $this->getStudentID();
                 $enrolledStatus = false;
                 $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
-                 foreach ($institutionIds as $id) {
+                foreach ($institutionIds as $id) {
                     $enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $id);
                     if ($enrolledStatus) {
                         break;

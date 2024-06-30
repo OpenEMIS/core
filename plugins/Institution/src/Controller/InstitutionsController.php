@@ -6556,6 +6556,7 @@ class InstitutionsController extends AppController
                 'created_user_id' => $userId,
                 'created' => date('Y-m-d H:i:s')
             ];
+            Log::debug(print_r($entityGuardiansData, true));
 // Check for an existing entity based on unique fields
             $existingEntity = $StudentGuardians->find()
                 ->where([$StudentGuardians->aliasField('student_id') => $StudentData->id,
@@ -7290,27 +7291,48 @@ class InstitutionsController extends AppController
     public
     function Addguardian()
     {
-        $session = $this->request->getSession();
+        $qs = $this->request->getQuery('queryString');
+        if($qs){
+            $requestDataa = base64_decode($this->request->getQuery('queryString'));
+            $requestDataa = json_decode($requestDataa, true);
+        }
+        if (empty($requestDataa) && isset($this->request->getParam('pass')[0])) {
+            $requestDataa = base64_decode($this->request->getParam('pass')[0]);
+            $requestDataa = json_decode($requestDataa, true);
+        }
+        if (empty($requestDataa) && isset($this->request->getParam('pass')[0])) {
+            $requestDataa = $this->getQueryString();
+//            $requestDataa = json_decode($requestDataa, true);
+        }
+//        die(print_r($requestDataa, true));
+        $UsersTable = self::getDynamicTableInstance('User.Users');
+        $InstitutionTable = self::getDynamicTableInstance('Institution.Institutions');
+
+        if (isset($requestDataa['student_id'])) {
+            $UserData = $UsersTable->find('all', ['conditions' => ['id' => $requestDataa['student_id']]])->first();
+        }
+        if (isset($requestDataa['openemis_no'])) {
+            $UserData = $UsersTable->find('all', ['conditions' => ['openemis_no' => $requestDataa['openemis_no']]])->first();
+        }
+        if (isset($requestDataa['institution_id'])) {
+            $InstitutionData = $InstitutionTable->find('all', ['conditions' => ['id' => $requestDataa['institution_id']]])->first();
+        }
+
         $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
-        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-        $studentId = $session->read('Student.Students.id');
-        $studentName = $session->read('Student.Students.name');
-        $UsersTable = TableRegistry::getTableLocator()->get('User.Users');
-        $InstitutionTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
-        $UserData = $UsersTable->find('all', ['conditions' => ['id' => $studentId]])->first();
-        $InstitutionData = $InstitutionTable->find('all', ['conditions' => ['id' => $institutionId]])->first();
+        $encodedQueryString = $this->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId]);
         $queryStng = $this->paramsEncode(['id' => $UserData->id]);
         $this->Navigation->addCrumb(__('Students'), ['plugin' => 'Institution',
             'controller' => 'Institutions',
-            'institutionId' => $encodedInstitutionId,
             'action' => 'Students',
+            '0' => 'index',
+            '1' => $encodedQueryString
         ]);
         $this->Navigation->addCrumb($studentName, ['plugin' => 'Institution',
             'controller' => 'Institutions',
             'institutionId' => $encodedInstitutionId,
             'action' => 'StudentUser',
             'view',
-            $this->ControllerAction->paramsEncode(['id' => $studentId])]);
+            $this->ControllerAction->paramsEncode(['id' => $studentId, 'institution_id' => $institutionId])]);
         $this->Navigation->addCrumb(__('Add Guardians'), []);
         $this->set('InstitutionData', $InstitutionData);
         $this->set('UserData', $UserData);
