@@ -1961,16 +1961,21 @@ class DirectoriesController extends AppController
 
     public function getRelationshipType()
     {
-        $guardian_relations = TableRegistry::get('Student.GuardianRelations');
+        $resultArray = [];
+        $guardian_relations = $this->getDynamicTableInstance('Student.GuardianRelations');
         $guardian_relations_result = $guardian_relations
             ->find()
             ->where(['visible' => 1])
-            ->order(['order' =>'ASC']) //POCOR-7704
+            ->order([$guardian_relations->aliasField('order') => 'ASC'])
+            ->disableHydration()
             ->toArray();
-        foreach($guardian_relations_result AS $result){
-            $result_array[] = array("id" => $result['id'], "name" => $result['name']);
-        }
-        echo json_encode($result_array);die;
+        $resultArray = array_map(function ($result) {
+            return [
+                'id' => $result['id'],
+                'name' => __($result['name'])
+            ];
+        }, $guardian_relations_result);
+        return $this->sendJsonResponse($resultArray);
     }//POCOR-5673 ends
 
     public function StudentAbsences()
