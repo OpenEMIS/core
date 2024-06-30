@@ -60,9 +60,9 @@
 <body>
 <?= $this->element('OpenEmis.breadcrumbs') ?>
 <!--POCOR-7916 added student name-->
-<div class="page-header" ng-controller='DirectoryaddguardianCtrl'>
-    <h2 id="main-header"> <span ng-if="studentName">{{studentName}} - </span>
-        <span ng-if="!studentName"><?php
+<div class="page-header" >
+    <h2 id="main-header">
+        <span><?php
         if($UserData){
             echo $UserData->first_name.' '.$UserData->last_name . ' - ';
         }
@@ -72,8 +72,16 @@
 
 </body>
 <!-- POCOR-7231 :: END -->
-
-<div class="pd-10" ng-controller='DirectoryaddguardianCtrl'>
+<script>
+    if(localStorage.getItem('institution_id')){
+        localStorage.removeItem("institution_id");
+    }
+    localStorage.setItem('institution_id', '<?php echo $institutionId;?>');
+    localStorage.setItem('institution_name', '<?php echo $institutionName;?>');
+    localStorage.setItem('login_user_id', '<?php echo $loginUserId;?>');
+    localStorage.setItem('student_id', '<?php echo $studentId;?>');
+</script>
+<div class="pd-10" ng-controller = 'DirectoryaddguardianCtrl' ng-init="studentOpenEmisId='<?php echo $UserData->openemis_no; ?>'">
     <div class="alert {{messageClass}}" ng-if="message">
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
     </div>
@@ -298,7 +306,7 @@
                                     * Format Supported: .jpg, .jpeg, .png, .gif</p>
                                 <span class="btn btn-default btn-file" style="font-size: 12px !important;">
                                     <span class="fileinput-new">
-                                        <i class="fa fa-folder"></i> 
+                                        <i class="fa fa-folder"></i>
                                         <span style="font-size: 12px;">Select File</span>
                                     </span>
                                     <input id="image-file" class="file-input" type="file" onchange="savePhoto(this)">
