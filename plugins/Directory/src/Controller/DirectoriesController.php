@@ -2098,7 +2098,7 @@ class DirectoriesController extends AppController
         $contactTypes = $this->getDynamicTableInstance('contact_types');
         $contactOptions = $this->getDynamicTableInstance('contact_options');
 
-        $contactTypesResult = $contactTypes
+        $contactTypesQuery = $contactTypes
             ->find()
             ->innerJoin(
                 [$contactOptions->getAlias() => $contactOptions->getTable()],
@@ -2107,16 +2107,16 @@ class DirectoriesController extends AppController
             ->select([
                 'id' => $contactTypes->aliasField('id'),
                 'name' => $contactTypes->aliasField('name'),
-                'option' => $contactOptions->aliasField('name')
+                'contact_option' => $contactOptions->aliasField('name')
             ])
             ->orderAsc($contactOptions->aliasField('order'))
-            ->orderAsc($contactTypes->aliasField('order'))
-            ->toArray();
-
+            ->orderAsc($contactTypes->aliasField('order'));
+//            Log::debug($contactTypesQuery->sql());
+        $contactTypesResult = $contactTypesQuery->toArray();
         $resultArray = array_map(function ($result) {
             return [
                 'id' => $result['id'],
-                'name' => $result['option'] . ' (' . $result['name'] . ')'
+                'name' => $result['contact_option'] . ' (' . $result['name'] . ')'
             ];
         }, $contactTypesResult);
 
