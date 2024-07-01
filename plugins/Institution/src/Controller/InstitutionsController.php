@@ -1996,12 +1996,15 @@ class InstitutionsController extends AppController
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'Subjects';
             $viewUrl[0] = 'view';
-            $viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $institutionSubjectId, 'institution_id' => $institutionId]);
+            //$viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $institutionSubjectId, 'institution_id' => $institutionId]);
+            $viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $institutionSubjectId['institution_subject_id'], 'institution_id' => $institutionId, 'institution_subject_id' => $institutionSubjectId['institution_subject_id']]);//POCOR-8324
             $indexUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'Subjects',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+                'index',//POCOR-8324
+                //'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+                $this->ControllerAction->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId])//POCOR-8324
             ];
             $alertUrl = [
                 'plugin' => 'Configuration',
@@ -2643,13 +2646,13 @@ class InstitutionsController extends AppController
         if ($pass[0] == 'download' && ($action == 'Expenditure' || $action == 'Visits' || $action = 'Attachments') && ($plugin == 'Institution') && ($controller == 'Institutions')) {
             return true;
         }
-        if (($pass[0] == 'view' || $pass[0] == 'edit') && $action == 'Institutions' && $plugin == 'Institution' && $controller == 'Institutions') {
+        if (($pass[0] == 'view' || $pass[0] == 'edit' || $pass[0] == 'remove') && $action == 'Institutions' && $plugin == 'Institution' && $controller == 'Institutions') {
             return true;
         }
         if ($furtherAction == 'image' || $furtherAction == 'download') {
             return true;
         }
-        if ($pass[0] == 'add' && $action == 'ImportInstitutions') {
+        if (($pass[0] == 'add' && $action == 'ImportInstitutions') || ($action == 'ComponentAction' && $pass[0] == 'add')) {
             return true;
         }
         if ($pass[0] == 'ajaxInstitutionsAutocomplete' && $action == 'Shifts') {
@@ -2880,10 +2883,26 @@ class InstitutionsController extends AppController
                     '1' => $encodedQueryString]);
             $this->set('contentHeader', $tranlatedInstitutionName);
         }
+        //POCOR-8324 Starts
+        if($alias == 'Subjects' ){
+            if($action == 'index'){
+                $this->Navigation->addCrumb($humanTitle);
+            } else{
+                $crumbOptions = [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => $alias,
+                    '0' => 'index',
+                    '1' => $encodedQueryString];
+                $this->Navigation->addCrumb($humanTitle, $crumbOptions);
+            }
+            $header = $tranlatedInstitutionName;
+            $this->set('contentHeader', $header);
+        }//POCOR-8324 Ends
 
         $modelsWithChangedName = ['CommitteeAttachments',
             'InstitutionMaps',
-            'InstitutionAssociations'];
+            'InstitutionAssociations','Subjects'];//POCOR-8324 add Subjects
         if (!in_array($alias, $modelsWithChangedName)) {
             $this->Navigation->addCrumb($humanTitle, $crumbOptions);
             $header = $tranlatedInstitutionName;
@@ -9363,6 +9382,11 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserHistories']);
     }//POCOR -8333 ends
+
+    public function History()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionHistories']);
+    }
 }
 
 

@@ -70,7 +70,7 @@ ZA+2wTKNehFHLFruHFUzxnE=
 
     
     'importExcelRules' => [
-        'noRows' => 2000,
+        'maxRows' => 2000,
     ],
 
 ];
