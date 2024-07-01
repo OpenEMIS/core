@@ -330,7 +330,7 @@ Route::group(
         Route::get('administration/training/applications', 'WorkbenchController@getTrainingApplications');
         Route::get('administration/scholarships/applications', 'WorkbenchController@getScholarshipApplications');
         Route::get('institutions/cases', 'WorkbenchController@getInstitutionCases');
-        Route::get('institutions/positions', 'WorkbenchController@getInstitutionPositions');
+        //Route::get('institutions/positions', 'WorkbenchController@getInstitutionPositions');
         Route::get('minidashboard', 'WorkbenchController@getMinidashboardData');
         //POCOR-7754 ends
 
