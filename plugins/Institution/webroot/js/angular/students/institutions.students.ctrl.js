@@ -264,6 +264,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     console.warn(`Unhandled config code: ${configCode}`);
             }
         }
+
         function getAddNewStudentConfig() {
             const configCodes = ["StudentContacts", "StudentIdentities", "StudentNationalities"];
 
@@ -352,8 +353,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function getUniqueOpenEmisId() {
         return new Promise((resolve, reject) => {
-            const { isInternalSearchSelected, isExternalSearchSelected, selectedUserData } = userCtrl;
-            const { openemis_no, username } = selectedUserData;
+            const {isInternalSearchSelected, isExternalSearchSelected, selectedUserData} = userCtrl;
+            const {openemis_no, username} = selectedUserData;
 
             if ((isInternalSearchSelected || isExternalSearchSelected) && openemis_no && !isNaN(Number(openemis_no.toString()))) {
 
@@ -751,14 +752,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function changeGender() {
-        const { selectedUserData, genderOptions } = userCtrl;
+        const {selectedUserData, genderOptions} = userCtrl;
 
         if (selectedUserData.hasOwnProperty('gender_id')) {
             const gender = genderOptions.find(option => option.id === selectedUserData.gender_id);
             if (gender) {
-                selectedUserData.gender = { name: gender.name };
+                selectedUserData.gender = {name: gender.name};
                 userCtrl.error.gender_id = '';
-            }else{
+            } else {
                 selectedUserData.gender = null;
             }
             userCtrl.selectedUserData = selectedUserData;
@@ -769,7 +770,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
 
     function changeNationality() {
-        const { selectedUserData, nationalitiesOptions, identityTypeOptions } = userCtrl;
+        const {selectedUserData, nationalitiesOptions, identityTypeOptions} = userCtrl;
         // console.log(selectedUserData);
         const nationalityId = selectedUserData.nationality_id;
 
@@ -796,7 +797,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function changeIdentityType() {
-        const { selectedUserData, identityTypeOptions } = userCtrl;
+        const {selectedUserData, identityTypeOptions} = userCtrl;
         const identityTypeId = selectedUserData.identity_type_id;
 
         if (identityTypeId === null) {
@@ -815,9 +816,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
 
-
     async function changeAcademicPeriod() {
-        const { selectedUserData, academicPeriodOptions } = userCtrl;
+        const {selectedUserData, academicPeriodOptions} = userCtrl;
         const academicPeriod = selectedUserData.academic_period_id;
 
         const selectedPeriod = academicPeriodOptions.find(option => option.id === academicPeriod);
@@ -829,8 +829,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         userCtrl.error.academic_period_id = '';
 
         try {
-            const startDateRangeResponse = await userSvc.getStartDateFromAcademicPeriod({ academic_period_id: academicPeriod });
-            const { start_date, end_date } = startDateRangeResponse.data[0];
+            const startDateRangeResponse = await userSvc.getStartDateFromAcademicPeriod({academic_period_id: academicPeriod});
+            const {start_date, end_date} = startDateRangeResponse.data[0];
 
             userCtrl.getEducationGrades();
 
@@ -845,7 +845,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function changeClass() {
-        const { selectedUserData, classOptions, institutionId, error } = userCtrl;
+        const {selectedUserData, classOptions, institutionId, error} = userCtrl;
         const classId = selectedUserData.class_id;
 
         const selectedClass = classOptions.find(option => option.id === classId);
@@ -880,7 +880,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function changeContactType() {
 
-        const { selectedUserData, contactTypeOptions } = userCtrl;
+        const {selectedUserData, contactTypeOptions} = userCtrl;
 
         const contactTypeId = selectedUserData.contact_type_id;
 
@@ -892,8 +892,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     async function changeEducationGrade() {
-        const { selectedUserData, educationGradeOptions, error } = userCtrl;
-        const { education_grade_id, academic_period_id, date_of_birth } = selectedUserData;
+        const {selectedUserData, educationGradeOptions, error} = userCtrl;
+        const {education_grade_id, academic_period_id, date_of_birth} = selectedUserData;
 
         const selectedGrade = educationGradeOptions.find(option => option.education_grade_id === education_grade_id);
 
@@ -915,7 +915,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
             try {
                 const dateOfBirthValidationResponse = await userSvc.getDateOfBirthValidation(params);
-                const { validation_error, min_age, max_age, student_age } = dateOfBirthValidationResponse.data[0];
+                const {validation_error, min_age, max_age, student_age} = dateOfBirthValidationResponse.data[0];
 
                 if (validation_error === 1) {
                     error.date_of_birth = `The student is ${student_age} years old in the given Academic Period. The student should be between ${min_age} to ${max_age} years old`;
@@ -929,7 +929,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function changeTransferReason() {
-        const { selectedUserData, transferReasonsOptions, error } = userCtrl;
+        const {selectedUserData, transferReasonsOptions, error} = userCtrl;
         const transferReasonId = selectedUserData.transfer_reason_id;
 
         selectedUserData.transferReason = {};
@@ -969,18 +969,54 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             },
         };
     }
+
     function goToInternalSearch() {
         UtilsSvc.isAppendLoader(true);
 
         const internalColumnDefs = [
-            { headerName: userCtrl.translateFields.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true },
-            { headerName: userCtrl.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true },
-            { headerName: userCtrl.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true },
-            { headerName: userCtrl.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true },
-            { headerName: userCtrl.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true },
-            { headerName: userCtrl.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true },
-            { headerName: userCtrl.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true },
-            { headerName: userCtrl.translateFields.account_type, field: "account_type", suppressMenu: true, suppressSorting: true }
+            {
+                headerName: userCtrl.translateFields.openemis_no,
+                field: "openemis_no",
+                suppressMenu: true,
+                suppressSorting: true
+            },
+            {headerName: userCtrl.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
+            {
+                headerName: userCtrl.translateFields.gender_name,
+                field: "gender",
+                suppressMenu: true,
+                suppressSorting: true
+            },
+            {
+                headerName: userCtrl.translateFields.date_of_birth,
+                field: "date_of_birth",
+                suppressMenu: true,
+                suppressSorting: true
+            },
+            {
+                headerName: userCtrl.translateFields.nationality_name,
+                field: "nationality",
+                suppressMenu: true,
+                suppressSorting: true
+            },
+            {
+                headerName: userCtrl.translateFields.identity_type_name,
+                field: "identity_type",
+                suppressMenu: true,
+                suppressSorting: true
+            },
+            {
+                headerName: userCtrl.translateFields.identity_number,
+                field: "identity_number",
+                suppressMenu: true,
+                suppressSorting: true
+            },
+            {
+                headerName: userCtrl.translateFields.account_type,
+                field: "account_type",
+                suppressMenu: true,
+                suppressSorting: true
+            }
         ];
 
         const onInternalRowSelected = function (_e) {
@@ -1008,12 +1044,37 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         UtilsSvc.isAppendLoader(true);
 
         const externalColumnDefs = [
-            { headerName: userCtrl.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true },
-            { headerName: userCtrl.translateFields.gender_name, field: "gender", suppressMenu: true, suppressSorting: true },
-            { headerName: userCtrl.translateFields.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true },
-            { headerName: userCtrl.translateFields.nationality_name, field: "nationality", suppressMenu: true, suppressSorting: true },
-            { headerName: userCtrl.translateFields.identity_type_name, field: "identity_type", suppressMenu: true, suppressSorting: true },
-            { headerName: userCtrl.translateFields.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true }
+            {headerName: userCtrl.translateFields.name, field: "name", suppressMenu: true, suppressSorting: true},
+            {
+                headerName: userCtrl.translateFields.gender_name,
+                field: "gender",
+                suppressMenu: true,
+                suppressSorting: true
+            },
+            {
+                headerName: userCtrl.translateFields.date_of_birth,
+                field: "date_of_birth",
+                suppressMenu: true,
+                suppressSorting: true
+            },
+            {
+                headerName: userCtrl.translateFields.nationality_name,
+                field: "nationality",
+                suppressMenu: true,
+                suppressSorting: true
+            },
+            {
+                headerName: userCtrl.translateFields.identity_type_name,
+                field: "identity_type",
+                suppressMenu: true,
+                suppressSorting: true
+            },
+            {
+                headerName: userCtrl.translateFields.identity_number,
+                field: "identity_number",
+                suppressMenu: true,
+                suppressSorting: true
+            }
         ];
 
         const onExternalRowSelected = function (_e) {
@@ -1091,8 +1152,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             }
         }
     }
-
-
 
 
     function studentExistInTheSameSchool() {
@@ -1266,7 +1325,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     async function validateDetails() {
         const [blockName, hasError] = checkUserDetailValidationBlocksHasError();
-        const { selectedStudentData: selectedUserData, error } = userCtrl;
+        const {selectedStudentData: selectedUserData, error} = userCtrl;
 
         // Reset errors
         const errorFields = [
@@ -1523,69 +1582,92 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             contact_value: userCtrl.selectedUserData.contact_value,
         };
         userCtrl.customFieldsArray.forEach((customField) => {
-            customField.data.forEach((field) => {
-                if (field.field_type !== 'CHECKBOX') {
-                    let fieldData = {
-                        student_custom_field_id: field.student_custom_field_id,
-                        text_value: "",
-                        unique:  field.is_unique,
-                        mandatory:  field.is_mandatory,
-                        number_value: null,
-                        decimal_value: "",
-                        textarea_value: "",
-                        time_value: "",
-                        date_value: "",
-                        file: "",
-                        institution_id: userCtrl.institutionId,
-                    };
-                    if (field.field_type === 'TEXT' || field.field_type === 'NOTE') {
-                        fieldData.text_value = field.answer;
+                customField.data.forEach((field) => {
+                        if (field.field_type !== 'CHECKBOX') {
+                            let fieldData = {
+                                student_custom_field_id: field.student_custom_field_id,
+                                text_value: null,
+                                unique: field.is_unique,
+                                mandatory: field.is_mandatory,
+                                number_value: null,
+                                decimal_value: null,
+                                textarea_value: null,
+                                time_value: null,
+                                date_value: null,
+                                file: null,
+                                institution_id: userCtrl.institutionId,
+                            };
+                            if (field.field_type === 'TEXT' || field.field_type === 'NOTE') {
+                                if (field.answer) {
+                                    fieldData.text_value = field.answer;
+                                }
+                            }
+                            if (field.field_type === 'TEXTAREA') {
+                                if (field.answer) {
+                                    fieldData.textarea_value = field.answer;
+                                }
+                            }
+                            if (field.field_type === 'NUMBER') {
+                                if (field.answer) {
+                                    fieldData.number_value = field.answer;
+                                }
+                            }
+                            if (field.field_type === 'DECIMAL') {
+                                if (field.answer) {
+                                    fieldData.decimal_value = String(field.answer);
+                                }
+                            }
+                            if (field.field_type === 'DROPDOWN') {
+                                if (field.answer) {
+                                    fieldData.number_value = Number(field.answer);
+                                }
+                            }
+                            if (field.field_type === 'TIME') {
+                                if (field.answer) {
+
+                                    let time = field.answer.toLocaleTimeString();
+                                    let timeArray = time.split(':');
+                                    fieldData.time_value = `${timeArray[0]}:${timeArray[1]}`;
+                                }
+                            }
+                            if (field.field_type === 'DATE') {
+                                if (field.answer) {
+                                    fieldData.date_value = $filter('date')(field.answer, 'yyyy-MM-dd');
+                                }
+                            }
+                            if (field.field_type === 'FILE') {
+                                if (field.answer) {
+                                    fieldData.file = field.file;
+                                    fieldData.text_value = field.answer;
+                                }
+                            }
+                            params.custom.push(fieldData);
+                        } else {
+                            if (field.answer) {
+                                field.answer.forEach((id) => {
+                                    let fieldData = {
+                                        student_custom_field_id: field.student_custom_field_id,
+                                        text_value: null,
+                                        unique: field.is_unique,
+                                        mandatory: field.is_mandatory,
+                                        number_value: Number(id),
+                                        decimal_value: null,
+                                        textarea_value: null,
+                                        time_value: null,
+                                        date_value: null,
+                                        file: null,
+                                        institution_id: userCtrl.institutionId,
+                                    };
+                                    params.custom.push(fieldData);
+                                });
+                            }
+                        }
                     }
-                    if (field.field_type === 'TEXTAREA') {
-                        fieldData.textarea_value = field.answer;
-                    }
-                    if (field.field_type === 'NUMBER') {
-                        fieldData.number_value = field.answer;
-                    }
-                    if (field.field_type === 'DECIMAL') {
-                        fieldData.decimal_value = String(field.answer);
-                    }
-                    if (field.field_type === 'DROPDOWN') {
-                        fieldData.number_value = Number(field.answer);
-                    }
-                    if (field.field_type === 'TIME') {
-                        let time = field.answer.toLocaleTimeString();
-                        let timeArray = time.split(':');
-                        fieldData.time_value = `${timeArray[0]}:${timeArray[1]}`;
-                    }
-                    if (field.field_type === 'DATE') {
-                        fieldData.date_value = $filter('date')(field.answer, 'yyyy-MM-dd');
-                    }
-                    if (field.field_type === 'FILE') {
-                        fieldData.file = field.file;
-                        fieldData.text_value = field.answer;
-                    }
-                    params.custom.push(fieldData);
-                } else {
-                    field.answer.forEach((id) => {
-                        let fieldData = {
-                            student_custom_field_id: field.student_custom_field_id,
-                            text_value: "",
-                            unique:  field.is_unique,
-                            mandatory:  field.is_mandatory,
-                            number_value: Number(id),
-                            decimal_value: "",
-                            textarea_value: "",
-                            time_value: "",
-                            date_value: "",
-                            file: "",
-                            institution_id: userCtrl.institutionId,
-                        };
-                        params.custom.push(fieldData);
-                    });
-                }
-            });
-        });
+                )
+                ;
+            }
+        )
+        ;
         //POCOR-7733 start
         if (params.is_diff_school > 0) {
             if (params.currentAcademicPeriod != params.previous_academic_period_id) {
@@ -2400,7 +2482,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     }
 
     function checkConfigForExternalSearch() {
-        const { identity_type_id, nationality_id } = userCtrl.selectedUserData;
+        const {identity_type_id, nationality_id} = userCtrl.selectedUserData;
         // console.log({ nationality_id, identity_type_id });
 
         userCtrl.isExternalSearchEnable = false;
@@ -2555,7 +2637,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         const filteredSections = getFilteredSections(userCtrl.customFields);
         filteredSections.forEach(section => {
             const filteredArray = filterBySection(selectedCustomField, section);
-            userCtrl.customFieldsArray.push({ sectionName: section, data: filteredArray });
+            userCtrl.customFieldsArray.push({sectionName: section, data: filteredArray});
         });
 
         userCtrl.customFieldsArray.forEach(customField => {
@@ -2621,10 +2703,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             }
         });
     }
+
     function initializeDateField(fieldData) {
         fieldData.isDatepickerOpen = false;
         fieldData.params = parseParams(fieldData.params);
-        fieldData.datePickerOptions = { showWeeks: false };
+        fieldData.datePickerOptions = {showWeeks: false};
         const splitDate = fieldData.values.split('-').map(Number);
         fieldData.answer = fieldData.values ? new Date(splitDate[0], splitDate[1] - 1, splitDate[2]) : new Date();
     }
@@ -2679,7 +2762,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         } else {
             hours = meridian === 'AM' ? hours : hours + 12;
         }
-        return { hours, minutes };
+        return {hours, minutes};
     }
 
 
