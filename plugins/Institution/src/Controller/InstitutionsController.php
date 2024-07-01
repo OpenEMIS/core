@@ -4839,12 +4839,14 @@ class InstitutionsController extends AppController
         $academic_periods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $academic_periods_result = $academic_periods
             ->find()
-            ->select(['id', 'name'])
+            ->select(['id', 'name', 'current'])
             ->where(['code !=' => 'All', 'visible' => 1])
             ->order([$academic_periods->aliasField('id DESC')])
             ->toArray();
         foreach ($academic_periods_result as $result) {
-            $result_array[] = array("id" => $result['id'], "name" => $result['name']);
+            $result_array[] = array("id" => $result['id'],
+                "name" => $result['name'],
+                "current" => $result['current']);
         }
         echo json_encode($result_array);
         die;

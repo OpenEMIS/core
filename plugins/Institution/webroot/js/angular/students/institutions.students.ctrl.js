@@ -238,6 +238,14 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             return userSvc.getAcademicPeriods()
                 .then(resp => {
                     userCtrl.academicPeriodOptions = resp.data;
+                    // Iterate over the array to find the current academic period
+                    for (const period of resp.data) {
+                        if (period.current === 1) {
+                            userCtrl.currentAcademicPeriod = period.id;
+                            userCtrl.currentAcademicPeriodName = period.name;
+                            break; // Exit the loop once the current period is found
+                        }
+                    }
                 });
         }
 
@@ -1670,6 +1678,11 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         ;
         //POCOR-7733 start
         if (params.is_diff_school > 0) {
+            console.log(params);
+            console.log(userCtrl.selectedUserData);
+            console.log(params);
+            console.log(userCtrl.userData);
+
             if (params.currentAcademicPeriod != params.previous_academic_period_id) {
                 if (params.student_status_id == 1) {
                     userCtrl.message = `This student is allocated to ${userCtrl.userData.current_enrol_institution_code}
