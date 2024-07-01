@@ -5717,7 +5717,7 @@ class InstitutionsController extends AppController
                     'custom_field_id' => $customFormsFieldsTable->aliasField($this->getPrefixedFieldName($prefix, 'custom_field_id')),
                     'section' => $customFormsFieldsTable->aliasField('section'),
                     'name' => $customFormsFieldsTable->aliasField('name'),
-                    'order' => $customFormsFieldsTable->aliasField('order'),
+                    'field_order' => $customFormsFieldsTable->aliasField('order'), // Change alias here
                     'description' => $customFieldsTable->aliasField('description'),
                     'field_type' => $customFieldsTable->aliasField('field_type'),
                     'is_mandatory' => $customFieldsTable->aliasField('is_mandatory'),
@@ -5733,6 +5733,13 @@ class InstitutionsController extends AppController
                 ])
                 ->order([$customFormsFieldsTable->aliasField('order') => 'ASC'])
                 ->toArray();
+
+            // Change 'field_order' back to 'order' in the resulting array
+            $result = array_map(function ($item) {
+                $item['order'] = $item['field_order'];
+                unset($item['field_order']);
+                return $item;
+            }, $result);
         }
         return $result;
     }
