@@ -77,9 +77,9 @@ class GuardiansTable extends ControllerActionTable
                 }
             } elseif ($this->action == 'view') {
                 if ($this->controller->getName() == 'Directories') {
-                    $tabElements = $this->controller->getUserTabElements(['entity' => $entity, 'id' => $entity->guardian_id, 'userRole' => 'Guardians']);
+//                    $tabElements = $this->controller->getUserTabElements(['entity' => $entity, 'id' => $entity->guardian_id, 'userRole' => 'Guardians']);
                 } elseif ($this->controller->getName() == 'Students') {
-                    $tabElements = $this->controller->getGuardianTabElements(['entity' => $entity, 'id' => $entity->guardian_id, 'userRole' => 'Guardians']);
+//                    $tabElements = $this->controller->getGuardianTabElements(['entity' => $entity, 'id' => $entity->guardian_id, 'userRole' => 'Guardians']);
                 }
             }
         }
@@ -414,35 +414,95 @@ class GuardiansTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
+//        die(print_r($entity, true));
         $newButtons = [];
+        $params = ['id' => $entity->id];
+        $encodedParams = $this->paramsEncode($params);
         if (array_key_exists('view', $buttons)) {
+            $viewUrl = $buttons['view']['url'];
+            $viewUrl[1] = $encodedParams;
+            if(isset($viewUrl['?'])){
+                unset($viewUrl['?']);
+            }
+            if(isset($viewUrl['queryString'])){
+                unset($viewUrl['queryString']);
+            }
             $newButtons['view'] = $buttons['view'];
+            $newButtons['view']['url'] = $viewUrl;
+//            die(print_r( $newButtons['view'], true));
         }
-
         if (array_key_exists('edit', $buttons)) {
-            $editProfile = $buttons['edit'];
-            $editRelation = $buttons['edit'];
-
-            $editProfile['label'] = '<i class="fa fa-pencil"></i>' . __('Edit Profile');
-            $editRelation['label'] = '<i class="fa fa-pencil"></i>' . __('Edit Relation');
-
-            $newButtons['editProfile'] = $editProfile;
-            $newButtons['editRelation'] = $editRelation;
-            $newButtons['editProfile']['url'] = [
-                'plugin' => $this->controller->getPlugin(),
-                'controller' => $this->controller->getName(),
-                'action' => $this->editButtonAction(),
-                'edit',
-                $this->paramsEncode(['id' =>  $entity->_matchingData['Users']->id, 'StudentGuardians.id' => $entity->id])
-            ];
+            $editUrl = $buttons['view']['url'];
+            $editUrl['1'] = $encodedParams;
+            $editUrl['0'] = 'edit';
+            if(isset($editUrl['?'])){
+                unset($editUrl['?']);
+            }
+            if(isset($editUrl['2'])){
+                unset($editUrl['2']);
+            }
+            if(isset($editUrl['3'])){
+                unset($editUrl['3']);
+            }
+            if(isset($editUrl['queryString'])){
+                unset($editUrl['queryString']);
+            }
+            $newButtons['editRelation'] = $buttons['edit'];
+            $newButtons['editRelation']['label'] = '<i class="fa fa-pencil"></i>' . __('Edit Relation');
+            $newButtons['editRelation']['url'] = $editUrl;
+//            die(print_r( $newButtons['view'], true));
+        }
+        if (array_key_exists('edit', $buttons)) {
+            $params = ['id' => $entity->_matchingData['Users']->id];
+            $encodedParams = $this->paramsEncode($params);
+            $editUrl = $buttons['view']['url'];
+            $editUrl['plugin'] = 'Directory';
+            $editUrl['controller'] = 'Directories';
+            $editUrl['action'] = 'Directories';
+            $editUrl['1'] = $encodedParams;
+            $editUrl['0'] = 'view';
+            if(isset($editUrl['?'])){
+                unset($editUrl['?']);
+            }
+            if(isset($editUrl['2'])){
+                unset($editUrl['2']);
+            }
+            if(isset($editUrl['3'])){
+                unset($editUrl['3']);
+            }
+            if(isset($editUrl['queryString'])){
+                unset($editUrl['queryString']);
+            }
+            $newButtons['viewProfile'] = $buttons['edit'];
+            $newButtons['viewProfile']['label'] = '<i class="fa fa-pencil"></i>' . __('Edit Profile');
+            $newButtons['viewProfile']['url'] = $editUrl;
+//            die(print_r( $newButtons['view'], true));
         }
 
+//        if (array_key_exists('edit', $buttons)) {
+//            $editProfile = $buttons['edit'];
+//            $editRelation = $buttons['edit'];
+//
+//            $editProfile['label'] = '<i class="fa fa-pencil"></i>' . __('Edit Profile');
+//            $editRelation['label'] = '<i class="fa fa-pencil"></i>' . __('Edit Relation');
+//
+//            $newButtons['editProfile'] = $editProfile;
+//            $newButtons['editRelation'] = $editRelation;
+//            $newButtons['editProfile']['url'] = [
+//                'plugin' => $this->controller->getPlugin(),
+//                'controller' => $this->controller->getName(),
+//                'action' => $this->editButtonAction(),
+//                'edit',
+//                $this->paramsEncode(['id' =>  $entity->_matchingData['Users']->id, 'StudentGuardians.id' => $entity->id])
+//            ];
+//        }
+//
         if (array_key_exists('remove', $buttons)) {
             $newButtons['remove'] = $buttons['remove'];
         }
 
-        return $newButtons;
+        $buttons = $newButtons;
+        return $buttons;
     }
 
     public function editButtonAction($action = null)

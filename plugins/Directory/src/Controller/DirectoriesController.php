@@ -699,8 +699,11 @@ class DirectoriesController extends AppController
         $session = $this->request->getSession();
         $action = $this->request->getParam('action');
         $getQuery = $this->request->getParam('pass');
+        $furtherAction = $getQuery[0];
         $query = $this->request->getQuery();
-
+        if($action == 'StudentGuardians' && ($furtherAction == 'view' || $furtherAction == 'edit')) {
+            return;
+        }
         if (array_key_exists('user_id', $query)) {
             $userId = $query['user_id'];
             $Directories = TableRegistry::getTableLocator()->get('Directory.Directories');
@@ -794,6 +797,29 @@ class DirectoriesController extends AppController
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
+        $getQuery = $this->request->getParam('pass');
+        $action = $this->request->getParam('action');
+
+        $furtherAction = $getQuery[0];
+        if($action == 'StudentGuardians' && ($furtherAction == 'view' || $furtherAction == 'edit')) {
+            $studentGuardiansID = $this->getQueryString();
+            if(!$studentGuardiansID){
+                return;
+            }
+//            die(print_r($studentGuardiansID, true));
+            $StudentGuardians = $this->getDynamicTableInstance('student_guardians');
+
+            $StudentGuardiansRelationship = $StudentGuardians->get($studentGuardiansID);
+            $studentId = $StudentGuardiansRelationship->student_id;
+            $students = $this->getDynamicTableInstance('User.Users');
+            if(!$studentId){
+                return;
+            }
+            $student= $students->get($studentId);
+            $name = $student->name . ' - ' . __("Student's Guardian");
+            $this->set('contentHeader', $name);
+            return;
+        }
         if ($model instanceof \Staff\Model\Table\StaffClassesTable || $model instanceof \Staff\Model\Table\StaffSubjectsTable) {
             $model->toggle('add', false);
         } else if ($model->getAlias() == 'Guardians') {
