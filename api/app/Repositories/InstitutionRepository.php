@@ -1835,7 +1835,7 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
-            $positions = InstitutionPositions::with('staffPositionTitle:id,name as staff_position_title_name', 'status:id,name as status_name');
+            $positions = InstitutionPositions::with('staffPositionTitle:id,name as staff_position_title_name', 'status:id,name as status_name', 'institutionStaff');
             
 
             //For POCOR-7772 Start
@@ -1858,7 +1858,7 @@ class InstitutionRepository extends Controller
             }
 
             $list = $positions->paginate($limit)->toArray();
-            
+            //dd($list);
             return $list;
             
         } catch (\Exception $e) {
@@ -1891,7 +1891,7 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
-            $positions = InstitutionPositions::with('staffPositionTitle:id,name as staff_position_title_name', 'status:id,name as status_name');
+            $positions = InstitutionPositions::with('staffPositionTitle:id,name as staff_position_title_name', 'status:id,name as status_name', 'institutionStaff');
             
 
             //For POCOR-7772 Start
@@ -1950,7 +1950,7 @@ class InstitutionRepository extends Controller
 
             $positions = InstitutionPositions::with(
                     'staffPositionTitle:id,name as staff_position_title_name', 
-                    'status:id,name as status_name'
+                    'status:id,name as status_name', 'institutionStaff'
                 )
                 ->where('institution_id', $institutionId)
                 ->where('id', $positionId);
@@ -4894,5 +4894,26 @@ class InstitutionRepository extends Controller
         }
     }
     //For POCOR-8251 End...
+
+
+    //For POCOR-8384 Start...
+    public function getStaffPositionGrade($staffPositionTitleId = 0)
+    {
+        try {   
+            $getStaffPositionGrade = DB::table('staff_position_titles_grades')->join('staff_position_grades', 'staff_position_grades.id', '=', 'staff_position_titles_grades.staff_position_grade_id')
+                    ->where('staff_position_titles_grades.staff_position_title_id', $staffPositionTitleId)
+                    ->select('staff_position_grades.id', 'staff_position_grades.name')
+                    ->first();
+            return $getStaffPositionGrade;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in getStaffPositionGrade.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            dd($e);
+            return false;
+        }
+    }
+    //For POCOR-8384 End...
 
 }

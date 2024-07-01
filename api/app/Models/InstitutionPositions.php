@@ -44,4 +44,10 @@ class InstitutionPositions extends Model
     {
         return $this->belongsTo(Institutions::class, 'institution_id', 'id');
     }
+
+
+    public function institutionStaff()
+    {
+        return $this->belongsTo(InstitutionStaff::class, 'assignee_id', 'staff_id');
+    }
 }
