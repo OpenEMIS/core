@@ -5910,6 +5910,7 @@ class InstitutionsController extends AppController
         if (empty($requestData)) {
             return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
         }
+//        Log::debug(print_r($requestData['custom'], true));
         $userId = $this->request->getSession()->read('Auth.User.id') ?? 1;
         $studentData = $this->extractSecurityUserData($requestData, $userId, true);
         $securityUserResult = $this->saveSecurityUser($studentData);
@@ -6241,16 +6242,24 @@ class InstitutionsController extends AppController
      */
     private function handleCustomFields($userType, $requestData, $userId, $createdUserId)
     {
+        $cv = [];
         $customFields = $requestData['custom'] ?? null;
         if (!empty($customFields)) {
             $customFieldValuesTable = $this->getCustomFieldValuesTable($userType);
 
             // Delete existing custom fields
             $customFieldValuesTable->deleteAll([$customFieldValuesTable->aliasField($userType . '_id') => $userId]);
-
+            $relevantFields = [
+                'text_value',
+                'number_value',
+                'decimal_value',
+                'textarea_value',
+                'time_value',
+                'date_value',
+                'file'
+            ];
             // Save new custom fields
             foreach ($customFields as $field) {
-
                 $fieldData = [
                     'id' => Text::uuid(),
                     $userType . '_id' => $userId,
@@ -6258,21 +6267,38 @@ class InstitutionsController extends AppController
                     'created' => date('Y-m-d H:i:s')
                 ];
 
+                // Relevant fields to check
+
+
+                $hasValue = false;
+
                 foreach ($field as $key => $value) {
-                    $fieldData[$key] = $value;
+
+                    // Check if the current key is in the relevant fields and has a value
+                    if (in_array($key, $relevantFields) && (!empty($value) || $value !== null || $value != '')) {
+                        $fieldData[$key] = $value;
+                        $hasValue = true;
+                        Log::debug(print_r([$key, $value], true));
+                    }
+                    if (!in_array($key, $relevantFields)) {
+                        $fieldData[$key] = $value;
+                    }
                 }
 
-                $fieldEntity = $customFieldValuesTable->newEntity($fieldData);
-                try {
-                    $cv = $customFieldValuesTable->save($fieldEntity);
-                    return $cv;
-                } catch (\Exception $e) {
-                    Log::debug('Error: ' . $e->getMessage());
-                }
+                // Only create and save the entity if at least one relevant field has a value
+                if ($hasValue) {
+//                    Log::debug(print_r($fieldData, true));
+                    $fieldEntity = $customFieldValuesTable->newEntity($fieldData);
+                    try {
+                        $cv[] = $customFieldValuesTable->save($fieldEntity);
 
+                    } catch (\Exception $e) {
+                        Log::debug('Error: ' . $e->getMessage());
+                    }
+                }
             }
         }
-        return [];
+        return $cv;
     }
 
     /**
