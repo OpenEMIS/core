@@ -180,8 +180,13 @@ class ProgrammesTable extends ControllerActionTable
 			$queryString = $this->getQueryString();
 			$studentId = $queryString['student_id'];
 			if($this->controller->getName() == 'GuardianNavs' && isset($this->request->getQueryParams()['studentId'])) {
-				$encodeStudentId = $this->request->getQueryParams()['studentId'];
-				$studentId = $this->paramsDecode($encodeStudentId);
+				//POCOR-8379 starts
+				$session = $this->request->getSession();
+				$studentId = $session->read('Student.Students.id');
+				if(empty($studentId)){
+					$encodeStudentId = $this->request->getQueryParams()['studentId'];
+					$studentId = $this->paramsDecode($encodeStudentId);
+				}//POCOR-8379 ends				
 			}
 		}
 		
