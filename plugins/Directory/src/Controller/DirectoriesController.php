@@ -808,7 +808,7 @@ class DirectoriesController extends AppController
             }
 //            die(print_r($studentGuardiansID, true));
             $StudentGuardians = $this->getDynamicTableInstance('student_guardians');
-
+            $studentGuardiansID = $studentGuardiansID['id'];
             $StudentGuardiansRelationship = $StudentGuardians->get($studentGuardiansID);
             $studentId = $StudentGuardiansRelationship->student_id;
             $students = $this->getDynamicTableInstance('User.Users');
