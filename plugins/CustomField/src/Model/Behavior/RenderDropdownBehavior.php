@@ -47,7 +47,7 @@ class RenderDropdownBehavior extends RenderBehavior {
                 $value = $dropdownOptions[$savedValue];
             }
         } else if ($action == 'edit') {
-            $form = $event->subject()->Form;
+            $form = $event->getSubject()->Form;
             $unlockFields = [];
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
