@@ -1,8 +1,8 @@
 <?php
+
 namespace Student\Model\Table;
 
 use ArrayObject;
-use Cake\I18n\Time;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -47,8 +47,7 @@ class GuardiansTable extends ControllerActionTable
             ->add('guardian_id', 'ruleStudentGuardianId', [
                 'rule' => ['studentGuardianId'],
                 'on' => 'create'
-            ])
-        ;
+            ]);
     }
 
     public function implementedEvents(): array
@@ -61,6 +60,25 @@ class GuardiansTable extends ControllerActionTable
         $events['ControllerAction.Model.add.beforeAction'] = 'addDeleteBeforeAction';
         $events['ControllerAction.Model.delete.beforeAction'] = 'addDeleteBeforeAction';
         return $events;
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $listeners = [
+            TableRegistry::get('Student.GuardianUser')
+        ];
+        $this->dispatchEventToModels('Model.Guardian.afterSave', [$entity], $this, $listeners);
+    }
+
+    public function afterAction(Event $event, $data)
+    {
+        if ($this->action != 'view') {
+            $this->setupTabElements();
+        }
+
+        $this->setFieldOrder([
+            'photo_content', 'openemis_no', 'guardian_id', 'guardian_relation_id'
+        ]);
     }
 
     private function setupTabElements($entity = null)
@@ -88,25 +106,6 @@ class GuardiansTable extends ControllerActionTable
         $this->controller->set('selectedAction', $this->getAlias());
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        $listeners = [
-            TableRegistry::get('Student.GuardianUser')
-        ];
-        $this->dispatchEventToModels('Model.Guardian.afterSave', [$entity], $this, $listeners);
-    }
-
-    public function afterAction(Event $event, $data)
-    {
-        if ($this->action != 'view') {
-            $this->setupTabElements();
-        }
-
-        $this->setFieldOrder([
-            'photo_content', 'openemis_no', 'guardian_id', 'guardian_relation_id'
-        ]);
-    }
-
     public function onGetGuardianId(Event $event, Entity $entity)
     {
         if ($entity->has('_matchingData')) {
@@ -119,31 +118,31 @@ class GuardiansTable extends ControllerActionTable
 
         if ($this->controller->getName() == 'Directories') {
             // POCOR-8014-n
-                $requestDataa = base64_decode($this->request->getQuery('queryString'));
-                $requestDataa = json_decode($requestDataa, true);
-                $studentId = $requestDataa['student_id'];
-            } elseif ($this->controller->getName() == 'Guardians' || $this->controller->getName() == 'GuardianNavs') {
-                $studentId = $this->Session->read('Auth.User.id');
-            } elseif($this->controller->getName() == 'Students' && isset( $this->request->getParam('pass')[1])) {
-                $studentId = $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1])['student_id'];
-            } else {
-                //$studentId = $this->Session->read('Student.Students.id');
-                $studentId = $this->ControllerAction->paramsDecode($this->request->getQuery('queryString'))['security_user_id'];
-            }
+            $requestDataa = base64_decode($this->request->getQuery('queryString'));
+            $requestDataa = json_decode($requestDataa, true);
+            $studentId = $requestDataa['student_id'];
+        } elseif ($this->controller->getName() == 'Guardians' || $this->controller->getName() == 'GuardianNavs') {
+            $studentId = $this->Session->read('Auth.User.id');
+        } elseif ($this->controller->getName() == 'Students' && isset($this->request->getParam('pass')[1])) {
+            $studentId = $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1])['student_id'];
+        } else {
+            //$studentId = $this->Session->read('Student.Students.id');
+            $studentId = $this->ControllerAction->paramsDecode($this->request->getQuery('queryString'))['security_user_id'];
+        }
 
         $this->field('student_id', ['type' => 'hidden', 'value' => $studentId]);
         $this->field('guardian_id');
 
         // Start POCOR-5188
-        if($this->request->getParam('controller') == 'Students'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Guardian Languages','Students - Guardians');
-            if(!empty($is_manual_exist)){
+        if ($this->request->getParam('controller') == 'Students') {
+            $is_manual_exist = $this->getManualUrl('Institutions', 'Guardian Languages', 'Students - Guardians');
+            if (!empty($is_manual_exist)) {
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
                     'data-placement' => 'bottom',
                     'escape' => false,
-                    'target'=>'_blank'
+                    'target' => '_blank'
                 ];
 
                 $helpBtn['url'] = $is_manual_exist['url'];
@@ -153,15 +152,15 @@ class GuardiansTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->getParam('controller') == 'Directories'){
-            $is_manual_exist = $this->getManualUrl('Directory','Guardian Relation','Students - Guardians');
-            if(!empty($is_manual_exist)){
+        } elseif ($this->request->getParam('controller') == 'Directories') {
+            $is_manual_exist = $this->getManualUrl('Directory', 'Guardian Relation', 'Students - Guardians');
+            if (!empty($is_manual_exist)) {
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
                     'data-placement' => 'bottom',
                     'escape' => false,
-                    'target'=>'_blank'
+                    'target' => '_blank'
                 ];
 
                 $helpBtn['url'] = $is_manual_exist['url'];
@@ -174,7 +173,7 @@ class GuardiansTable extends ControllerActionTable
 
         }
         // End POCOR-5188
-        if(isset($extra['toolbarButtons']['back'])){
+        if (isset($extra['toolbarButtons']['back'])) {
             $toolbarButtons = $extra['toolbarButtons'];
             $queryString = $this->getQueryString();
             $encodedQueryString = $this->paramsEncode($queryString);
@@ -251,21 +250,22 @@ class GuardiansTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldGuardianId(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldGuardianId(Event $event, array $attr, $action, ServerRequest $request)
+    {
         if ($action == 'add') {
             $params = $this->getQueryString();
             //POCOR-7093 starts
             $SecurityUsers = self::getDynamicTableInstance('security_users');
 
-            if($this->controller->getName() == 'Directories'){
-                $security_user_id =$params['security_user_id'];
+            if ($this->controller->getName() == 'Directories') {
+                $security_user_id = $params['security_user_id'];
                 $securityUserData = $SecurityUsers->find()
                     ->where([
                         $SecurityUsers->aliasField('id') => $security_user_id])
                     ->enableHydration(false)
                     ->first();
-                $dataArray = ['institution_id' => 0, 'student_id'=> $security_user_id, 'openemis_no'=> $securityUserData['openemis_no']];
-            }else{
+                $dataArray = ['institution_id' => 0, 'student_id' => $security_user_id, 'openemis_no' => $securityUserData['openemis_no']];
+            } else {
                 $security_user_id = $params['security_user_id'];
                 $institution_id = $params['institution_id'];
                 $securityUserData = $SecurityUsers->find()
@@ -273,14 +273,14 @@ class GuardiansTable extends ControllerActionTable
                         $SecurityUsers->aliasField('id') => $security_user_id])
                     ->enableHydration(false)
                     ->first();
-                $dataArray = ['institutionId'=>$institution_id,'institution_id' => $institution_id,'institution_student_id'=> $security_user_id ,'student_id'=> $security_user_id , 'openemis_no'=> $securityUserData['openemis_no']];
+                $dataArray = ['institutionId' => $institution_id, 'institution_id' => $institution_id, 'institution_student_id' => $security_user_id, 'student_id' => $security_user_id, 'openemis_no' => $securityUserData['openemis_no']];
             }
 
-            if($this->request->getParam('plugin') == 'Student'){
+            if ($this->request->getParam('plugin') == 'Student') {
                 $queryString = $this->paramsEncode($dataArray);
                 $event->stopPropagation();
                 return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Addguardian', $queryString]);
-            }else{
+            } else {
                 $queryString = base64_encode(json_encode($dataArray));
                 $event->stopPropagation();
                 return $this->controller->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Addguardian', $queryString]);
@@ -317,6 +317,60 @@ class GuardiansTable extends ControllerActionTable
         return $attr;
     }
 
+    /**
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName . POCOR-8231
+     * @return \Cake\ORM\Table
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        // Create a TableLocator instance
+        $locator = TableRegistry::getTableLocator();
+
+        try {
+            // Try to get the table instance directly
+            return $locator->get($tableName);
+        } catch (\Exception $e) {
+            Log::debug('Error: ' . $e->getMessage());
+        }
+
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
     public function onUpdateFieldGuardianRelationId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
@@ -342,7 +396,7 @@ class GuardiansTable extends ControllerActionTable
 
     public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $options['validate']=true;
+        $options['validate'] = true;
         $patch = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
         $errorCount = count($patch->getErrors());
 
@@ -416,15 +470,28 @@ class GuardiansTable extends ControllerActionTable
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 //        die(print_r($entity, true));
         $newButtons = [];
-        $params = ['id' => $entity->id];
+        $queryParams = $this->getQueryString();
+
+        $params = ['id' => $entity->id,
+            'user_id' => $entity->student_id,
+            'student_id' => $entity->student_id];
+        if (isset($queryParams['institution_id'])) {
+            $params['institution_id'] = $queryParams['institution_id'];
+        }
+        if (isset($queryParams['institution_student_id'])) {
+            $params['institution_student_id'] = $queryParams['institution_student_id'];
+        }
+        if (isset($queryParams['user_id'])) {
+            $params['user_id'] = $queryParams['user_id'];
+        }
         $encodedParams = $this->paramsEncode($params);
         if (array_key_exists('view', $buttons)) {
             $viewUrl = $buttons['view']['url'];
             $viewUrl[1] = $encodedParams;
-            if(isset($viewUrl['?'])){
+            if (isset($viewUrl['?'])) {
                 unset($viewUrl['?']);
             }
-            if(isset($viewUrl['queryString'])){
+            if (isset($viewUrl['queryString'])) {
                 unset($viewUrl['queryString']);
             }
             $newButtons['view'] = $buttons['view'];
@@ -435,16 +502,16 @@ class GuardiansTable extends ControllerActionTable
             $editUrl = $buttons['view']['url'];
             $editUrl['1'] = $encodedParams;
             $editUrl['0'] = 'edit';
-            if(isset($editUrl['?'])){
+            if (isset($editUrl['?'])) {
                 unset($editUrl['?']);
             }
-            if(isset($editUrl['2'])){
+            if (isset($editUrl['2'])) {
                 unset($editUrl['2']);
             }
-            if(isset($editUrl['3'])){
+            if (isset($editUrl['3'])) {
                 unset($editUrl['3']);
             }
-            if(isset($editUrl['queryString'])){
+            if (isset($editUrl['queryString'])) {
                 unset($editUrl['queryString']);
             }
             $newButtons['editRelation'] = $buttons['edit'];
@@ -461,16 +528,16 @@ class GuardiansTable extends ControllerActionTable
             $editUrl['action'] = 'Directories';
             $editUrl['1'] = $encodedParams;
             $editUrl['0'] = 'view';
-            if(isset($editUrl['?'])){
+            if (isset($editUrl['?'])) {
                 unset($editUrl['?']);
             }
-            if(isset($editUrl['2'])){
+            if (isset($editUrl['2'])) {
                 unset($editUrl['2']);
             }
-            if(isset($editUrl['3'])){
+            if (isset($editUrl['3'])) {
                 unset($editUrl['3']);
             }
-            if(isset($editUrl['queryString'])){
+            if (isset($editUrl['queryString'])) {
                 unset($editUrl['queryString']);
             }
             $newButtons['viewProfile'] = $buttons['edit'];
@@ -479,24 +546,6 @@ class GuardiansTable extends ControllerActionTable
 //            die(print_r( $newButtons['view'], true));
         }
 
-//        if (array_key_exists('edit', $buttons)) {
-//            $editProfile = $buttons['edit'];
-//            $editRelation = $buttons['edit'];
-//
-//            $editProfile['label'] = '<i class="fa fa-pencil"></i>' . __('Edit Profile');
-//            $editRelation['label'] = '<i class="fa fa-pencil"></i>' . __('Edit Relation');
-//
-//            $newButtons['editProfile'] = $editProfile;
-//            $newButtons['editRelation'] = $editRelation;
-//            $newButtons['editProfile']['url'] = [
-//                'plugin' => $this->controller->getPlugin(),
-//                'controller' => $this->controller->getName(),
-//                'action' => $this->editButtonAction(),
-//                'edit',
-//                $this->paramsEncode(['id' =>  $entity->_matchingData['Users']->id, 'StudentGuardians.id' => $entity->id])
-//            ];
-//        }
-//
         if (array_key_exists('remove', $buttons)) {
             $newButtons['remove'] = $buttons['remove'];
         }
@@ -512,11 +561,12 @@ class GuardiansTable extends ControllerActionTable
         }
         $this->editButtonAction = $action;
     }
+
     /**
-    * Add Autocomplete For staff
-    * @author Akshay Patodi <akshay.patodi@mail.valuecoders.com>
-    * @ticket POCOR-6592
-    */
+     * Add Autocomplete For staff
+     * @author Akshay Patodi <akshay.patodi@mail.valuecoders.com>
+     * @ticket POCOR-6592
+     */
     public function ajaxUserStaffAutocomplete()
     {
         $this->controller->autoRender = false;
@@ -566,59 +616,6 @@ class GuardiansTable extends ControllerActionTable
             echo json_encode($data);
             die;
         }
-    }
-    /**
-     * Get a dynamic table instance with all associations.
-     *
-     * @param string $tableName . POCOR-8231
-     * @return \Cake\ORM\Table
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
-     */
-    private static function getDynamicTableInstance(string $tableName): Table
-    {
-        // Parse plugin and table names if dot notation is used
-        // Create a TableLocator instance
-        $locator = TableRegistry::getTableLocator();
-
-        try {
-            // Try to get the table instance directly
-            return $locator->get($tableName);
-        } catch (\Exception $e) {
-            Log::debug('Error: ' . $e->getMessage());
-        }
-
-        $parts = explode('.', $tableName);
-        $plugin = count($parts) > 1 ? $parts[0] : null;
-        $table = count($parts) > 1 ? $parts[1] : $parts[0];
-
-        // Convert the table name to camel case as expected by CakePHP conventions
-        $tableFullAlias = Inflector::camelize($tableName);
-        $tableAlias = Inflector::camelize($table);
-
-        // Create the fully qualified class name if a plugin is specified
-        if ($plugin) {
-            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
-        } else {
-            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
-        }
-
-        // Check if the table instance already exists
-        if (!$locator->exists($tableFullAlias)) {
-            // Check if the specific table class exists
-            if (!class_exists($className)) {
-                $className = Table::class; // Fallback to generic Table class
-            }
-
-            // Configure a new table instance
-            $locator->setConfig($tableAlias, [
-                'className' => $className,
-                'table' => $table,
-                'alias' => $tableAlias,
-            ]);
-        }
-
-        // Return the table instance
-        return $locator->get($tableFullAlias);
     }
 
 }
