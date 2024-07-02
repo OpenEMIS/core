@@ -7,6 +7,7 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
+use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use Cake\Utility\Inflector;
@@ -293,7 +294,7 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Medications']);
     }
-    
+
 
     public function HealthTests()
     {
@@ -326,7 +327,7 @@ class StudentsController extends AppController
     public function SpecialNeedsPlans()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsPlans']);
-    } 
+    }
 
     public function SpecialNeedsDiagnostics()
     {
@@ -379,8 +380,10 @@ class StudentsController extends AppController
     public
     function getAcademicTabElements($options = [])
     {
-        $tabElements = TableRegistry::get('Institution.StudentUser')->getAcademicTabElements($options);
-        return $this->TabPermission->checkTabPermission($tabElements);
+        //$tabElements = TableRegistry::get('Institution.StudentUser')->getAcademicTabElementsNew($options);//PCOOR-8388
+        $this->loadModel('Institution.StudentUser');//PCOOR-8388
+        $tabElements = $this->StudentUser->getAcademicTabElements($options, $this);//PCOOR-8388
+        return $tabElements;
     }
 
     public function AssessmentItemResultsArchived()
@@ -545,7 +548,7 @@ class StudentsController extends AppController
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $action = $this->request->getAttribute('params')['action'];
         $institutionID = $this->getInstitutionID();
-        
+
         $activeInstitution = $this->Institutions->get($institutionID);
         $institutionName = $activeInstitution->name;
 
@@ -611,7 +614,7 @@ class StudentsController extends AppController
         $controller = $request->getParam('controller');
         $plugin = $request->getParam('plugin');
         $furtherAction = $pass[0];
-
+//        Log::debug(print_r([$pass, $action, $controller, $plugin, $furtherAction], true));
         // if (($furtherAction == 'index' || $furtherAction == 'add' || $furtherAction == 'import')
         //     && ($action == 'Students')
         //     && ($plugin == 'Student')
@@ -621,7 +624,7 @@ class StudentsController extends AppController
         if ($pass[0] == 'download' && ($action == 'Qualifications') && ($plugin == 'Student') && ($controller == 'Students')) {
             return true;
         }
-        if ($furtherAction == 'image' || $furtherAction == 'download') {
+        if ($furtherAction == 'image' || $furtherAction == 'download' || $furtherAction == 'ajaxReferrerAutocomplete') {
             return true;
         }
 //        $this->log(print_r($request,true), debug);
@@ -748,7 +751,7 @@ class StudentsController extends AppController
         /*if($studentID == null){
             $studentID =  $this->getUserID();
         }*/
-        
+
         $institutionID = $this->getInstitutionID();
         if ($this->StudentUser->exists([$this->StudentUser->getPrimaryKey() => $studentID])) {
             $entity = $this->StudentUser->get($studentID);

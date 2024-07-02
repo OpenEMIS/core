@@ -272,8 +272,8 @@ class SurveyFormsTable extends CustomFormsTable
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
-            $this->CustomFields->getAlias(),
-            $this->CustomFilters->getAlias()
+            $this->CustomFields->getAlias()
+            //$this->CustomFilters->getAlias() //POCOR-8297
         ];
     }
 

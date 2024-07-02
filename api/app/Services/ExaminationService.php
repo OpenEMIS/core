@@ -64,26 +64,36 @@ class ExaminationService
         return $result;
     }
 
-    public function examinationCenterExaminationSubjects($examinationId, $centerId)
+    public function examinationCenterExaminationSubjects($params, $examinationId, $centerId)
     {
-        $subjects = $this->examinationRepository->examinationCenterExaminationSubjects($examinationId, $centerId);
+        $subjects = $this->examinationRepository->examinationCenterExaminationSubjects($params, $examinationId, $centerId);
+        //dd($subjects);
         $data = [];
 
         if (!$subjects) {
             return null;
         }
-        foreach($subjects as $key => $subject) {
-            $data[$key]['id'] = $subject->id;
-            $data[$key]['created'] = $subject->created;
-            $data[$key]['education_subject_id'] = $subject->education_subject_id;
-            $data[$key]['examination_centre_id'] = $subject->examination_centre_id;
-            $data[$key]['examination_id'] = $subject->examination_id;
-            $data[$key]['examination_subject_id'] = $subject->examination_subject_id;
-            $data[$key]['education_subject'] = $subject->educationSubject;
-            $data[$key]['examination_subject'] = $subject->examinationSubject;
+
+        foreach($subjects['data'] as $key => $subject) {
+            $data[$key]['id'] = $subject['id'];
+            $data[$key]['created'] = $subject['created'];
+            $data[$key]['education_subject_id'] = $subject['education_subject_id'];
+            $data[$key]['examination_centre_id'] = $subject['examination_centre_id'];
+            $data[$key]['examination_id'] = $subject['examination_id'];
+            $data[$key]['examination_subject_id'] = $subject['examination_subject_id'];
+            $data[$key]['education_subject'] = $subject['education_subject'];
+            $data[$key]['examination_subject'] = $subject['examination_subject'];
         }
 
-        return $data;
+        //For POCOR-8215/8216 start...
+        if(isset($params['limit'])){
+            $subjects['data'] = $data;
+            return $subjects;
+        } else {
+            return $data;
+        }
+        //For POCOR-8215/8216 end...
+   
     }
 
     public function examinationCenterExaminationSubjectsStudents($examinationId, $centerId, $subjectId)
