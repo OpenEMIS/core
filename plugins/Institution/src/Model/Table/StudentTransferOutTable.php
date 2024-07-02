@@ -6,6 +6,7 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\I18n\Date;
 use Cake\Http\ServerRequest;
@@ -139,7 +140,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         $toolbarButtonsArray['back']['attr'] = $toolbarAttr;
         $toolbarButtonsArray['back']['attr']['title'] = __('Back');
         $toolbarButtonsArray['back']['url'] = $this->url($action);
-        $toolbarButtonsArray['back']['url'][0] = $encodedQueryString;
+        $toolbarButtonsArray['back']['url'][1] = $encodedQueryString;
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         // end back button
 
@@ -318,7 +319,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    { 
+    {
         $this->addSections();
         if (empty($entity->start_date)) {
             $this->field('start_date', ['type' => 'hidden']);
@@ -364,7 +365,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                         $button = [
                             'type' => 'hidden',
                             'attr' => $btnAttr,
-                            'url' => [0 => 'index']
+                            'url' => [0 => 'xrindexa']
                         ];
                         $button['url']['action'] = $attr['action'];
                         $button['attr']['title'] = $attr['title'];
@@ -396,7 +397,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                         $button = [
                             'type' => 'hidden',
                             'attr' => $btnAttr,
-                            'url' => [0 => 'index']
+                            'url' => [0 => 'indexasdew']
                         ];
                         $button['url']['action'] = $attr['action'];
                         $button['attr']['title'] = $attr['title'];
@@ -412,12 +413,13 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $studentId = $this->getQueryString('student_id');
+        $studentId = $this->getQueryString('institution_student_id');
         $userId = $this->getQueryString('user_id');
 
         $queryString = $this->getQueryString();
+        $queryString['id'] = $userId;
         $encodedQueryString = $this->paramsEncode($queryString);
-        
+
         if (empty($studentId) || empty($userId)) {
             $event->stopPropagation();
             return $this->controller->redirect($this->url('index'));
@@ -462,7 +464,8 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
                 if ($visible) {
                     $url = $this->url('view');
-                    $url[1] = $this->paramsEncode(['id' => $pendingTransfer->id]);
+                    $url[1] = $this->paramsEncode(['id' => $pendingTransfer->id,
+                        'institution_id' => $pendingTransfer->previous_institution_id]);
                     $event->stopPropagation();
                     return $this->controller->redirect($url);
                 } else {
@@ -1030,9 +1033,9 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                         'plugin' => 'Institution',
                         'controller' => 'Institutions',
                         'action' => 'StudentTransferOut',
-                        'view',
-                        $this->paramsEncode(['id' => $row->id]),
-                        'institution_id' => $row->previous_institution_id
+                        0 => 'view',
+                        1 => $this->paramsEncode(['id' => $row->id, 'institution_id' => $row->previous_institution_id]),
+
                     ];
 
                     if (is_null($row->modified)) {
@@ -1086,10 +1089,10 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
             /*$session = $request->getSession();
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
-            }*/ 
+            }*/
             $institutionId  = $this->getInstitutionID();
-            $institutionId = $institutionId;  
-            
+            $institutionId = $institutionId;
+
             $assigneeOptions = [];
             if (!is_null($stepId)) {
                 $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
@@ -1142,5 +1145,67 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
             return $attr;
         }
     }
+    private static function debug($something)
+    {
+        if (is_null($something)) {
+            $message = 'NULL';
+        } elseif (is_bool($something)) {
+            $message = $something ? 'TRUE' : 'FALSE';
+        } elseif (is_array($something) || is_object($something)) {
+            $message = json_encode($something, JSON_PRETTY_PRINT);
+        } else {
+            $message = (string)$something;
+        }
+
+        \Cake\Log\Log::debug($message);
+    }
+
+    /**
+     * @param string $tableName
+     * @return Table
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        $locator = TableRegistry::getTableLocator();;
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        // Parse plugin and table names if dot notation is used
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
 
 }

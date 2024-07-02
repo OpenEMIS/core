@@ -488,20 +488,20 @@ class WorkflowBehavior extends Behavior
 
                 $params = [];
                 if ($workflowModel->is_school_based) {
-                    $session = $this->_table->request->getSession();
-                    if ($session->check('Institution.Institutions.id')) {
+                    $table = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+                    $institutionId = $table->paramsDecode('institution_id');
                         $params = [
-                            'institution_id' => $session->read('Institution.Institutions.id')
+                            'institution_id' => $institutionId
                         ];
-                    }
+//                    }
                 }
 
                 $newEvent = $subject->dispatchEvent('Workflow.getFilterOptions', [$params], $subject);
                 if ($newEvent->isStopped()) {
-                    return $newEvent->result;
+                    return $newEvent->getResult();
                 }
-                if (!empty($newEvent->result)) {
-                    $filterOptions = $newEvent->result;
+                if (!empty($newEvent->getResult())) {
+                    $filterOptions = $newEvent->getResult();
                 }
                 // End
                 //POCOR-7263::Start
@@ -1261,11 +1261,13 @@ class WorkflowBehavior extends Behavior
             if ($entity->has('institution_id')) {
                 $params['institution_id'] = $entity->institution_id;
             } else {
-                $session = $request->getSession();
-                if ($session->check('Institution.Institutions.id')) {
-                    $institutionId = $session->read('Institution.Institutions.id');
-                    $params['institution_id'] = $institutionId;
-                }
+                $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+                $institutionId = $model->paramsDecode('institution_id');
+//                $session = $request->getSession();
+//                if ($session->check('Institution.Institutions.id')) {
+//                    $institutionId = $session->read('Institution.Institutions.id');
+//                    $params['institution_id'] = $institutionId;
+//                }
             }
         }
 
@@ -1304,10 +1306,10 @@ class WorkflowBehavior extends Behavior
                 $attr['select'] = false;
             } else {
                 $model = $this->_table;
-                $session = $model->request->getSession();
-                $requestInstitutionId = $model->request->getAttribute('params')['institutionId'];
-                $institutionId = isset($requestInstitutionId) ? $model->paramsDecode($requestInstitutionId)['id'] : $session->read('Institution.Institutions.id');
-
+//                $session = $model->request->getSession();
+//                $requestInstitutionId = $model->request->getAttribute('params')['institutionId'];
+//                $institutionId = isset($requestInstitutionId) ? $model->paramsDecode($requestInstitutionId)['id'] : $session->read('Institution.Institutions.id');
+                $institutionId = $model->paramsDecode('institution_id');
                 $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
                 $params = [
                     'is_school_based' => $actionAttr['is_school_based'],
@@ -2409,7 +2411,6 @@ class WorkflowBehavior extends Behavior
                 $this->_table->controller->Alert->error('general.edit.failed', ['reset' => true]);
             }
             // End
-
             // Redirect
             if ($this->isCAv4()) {
                 $url = $this->_table->url('view');
@@ -2417,6 +2418,9 @@ class WorkflowBehavior extends Behavior
                 $url = $this->_table->ControllerAction->url('view');
             }
 
+            $params = $this->_table->getQueryString();
+            $encodedQueryString = $this->_table->paramsEncode($params);
+            $url['1'] = $encodedQueryString;
             return $this->_table->controller->redirect($url);
             // End
         }
