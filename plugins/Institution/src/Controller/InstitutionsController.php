@@ -846,7 +846,7 @@ class InstitutionsController extends AppController
         // POCOR-8115;
         // institution_id should always be in query string, if not, die as an error
         $institution_id = $this->getQueryString('institution_id');
-        
+
         if (empty($institution_id) && $this->request->getQuery('institution_id') != null) {
             $institution_id =  $this->request->getQuery('institution_id');
         }
@@ -1627,7 +1627,7 @@ class InstitutionsController extends AppController
         $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
         if ($hasTemplate) {
-            
+
             $customUrl = Router::url([
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -1635,7 +1635,7 @@ class InstitutionsController extends AppController
                 'add',
                 $queryString
             ]);
-            
+
             $this->set('reportCardGenerate', $customUrl);
 
             $exportPDF_Url = $this->ControllerAction->url('index');
@@ -1833,7 +1833,7 @@ class InstitutionsController extends AppController
             $param = array_merge($queryString,$param);
             $viewUrl['1'] = $this->ControllerAction->paramsEncode($param);
             $viewUrl['queryString'] = $this->ControllerAction->paramsEncode($queryString);
-            
+
             $alertUrl = [
                 'plugin' => 'Configuration',
                 'controller' => 'Configurations',
@@ -2826,7 +2826,7 @@ class InstitutionsController extends AppController
         if($alias == 'StudentHistories'){
             $humanTitle = __(Inflector::humanize(Inflector::underscore('History')));
         }//POCOR-8333 ends
-        
+
         $crumbOptions = [];
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
@@ -3031,6 +3031,11 @@ class InstitutionsController extends AppController
 
                 if (in_array($alias, ['StaffTransferOut', 'StudentTransferOut'])) {
                     $params[$model->aliasField('previous_institution_id IS')] = $institutionID;
+                    $pass = $this->getRequest()->getParam('pass');
+                    $furtherAction = $pass[0];
+                    if ($furtherAction == 'add') {
+                        return true;
+                    }
                     $exists = $model->exists($params);
                 } elseif (in_array($alias, ['InstitutionShifts'])) { //this is to show information for the occupier
                     $params['OR'] = [
@@ -9418,6 +9423,22 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionHistories']);
     }
+
+    private static function debug($something)
+    {
+        if (is_null($something)) {
+            $message = 'NULL';
+        } elseif (is_bool($something)) {
+            $message = $something ? 'TRUE' : 'FALSE';
+        } elseif (is_array($something) || is_object($something)) {
+            $message = json_encode($something, JSON_PRETTY_PRINT);
+        } else {
+            $message = (string)$something;
+        }
+
+        \Cake\Log\Log::debug($message);
+    }
+
 }
 
 

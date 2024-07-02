@@ -808,54 +808,54 @@ class StudentsTable extends ControllerActionTable
         $student_id = $entity->student_id;
         $student = $this->Users->get($entity->student_id);
         $entity->showDeletedValueAs = $student->name_with_id;
-        
+
         $SecurityGroupUsersTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $associatedStudentRecordsCount = $SecurityGroupUsersTbl->find()
         ->where([
             $SecurityGroupUsersTbl->aliasField('security_user_id') => $student_id,
         ])
         ->count();
-        $extra['associatedRecords'][] = ['model' => 'SecurityGroupUsers', 'count' => $associatedStudentRecordsCount];    
-        
+        $extra['associatedRecords'][] = ['model' => 'SecurityGroupUsers', 'count' => $associatedStudentRecordsCount];
+
         $UserActivitiesTbl = TableRegistry::getTableLocator()->get('User.UserActivities');
         $associatedActivitiesRecordsCount = $UserActivitiesTbl->find()
         ->where([
             $UserActivitiesTbl->aliasField('security_user_id') => $student_id,
         ])
         ->count();
-        $extra['associatedRecords'][] = ['model' => 'UserActivities', 'count' => $associatedActivitiesRecordsCount];    
-        
+        $extra['associatedRecords'][] = ['model' => 'UserActivities', 'count' => $associatedActivitiesRecordsCount];
+
         $StudentCustomFieldValuesTbl = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldValues');
         $associatedStudentCustomRecordsCount = $StudentCustomFieldValuesTbl->find()
         ->where([
             $StudentCustomFieldValuesTbl->aliasField('student_id') => $student_id,
         ])
         ->count();
-        $extra['associatedRecords'][] = ['model' => 'StudentCustomFieldValues', 'count' => $associatedStudentCustomRecordsCount];    
-       
+        $extra['associatedRecords'][] = ['model' => 'StudentCustomFieldValues', 'count' => $associatedStudentCustomRecordsCount];
+
         $StudentAdmissionTbl = TableRegistry::getTableLocator()->get('Institution.StudentAdmission');
         $associatedStudentAdmissionRecordsCount = $StudentAdmissionTbl->find()
         ->where([
             $StudentAdmissionTbl->aliasField('student_id') => $student_id,
         ])
         ->count();
-        $extra['associatedRecords'][] = ['model' => 'StudentAdmission', 'count' => $associatedStudentAdmissionRecordsCount];    
-           
+        $extra['associatedRecords'][] = ['model' => 'StudentAdmission', 'count' => $associatedStudentAdmissionRecordsCount];
+
         $StudentSurveysTbl = TableRegistry::getTableLocator()->get('Student.StudentSurveys');
         $associatedStudentSurveysRecordsCount = $StudentSurveysTbl->find()
         ->where([
             $StudentSurveysTbl->aliasField('student_id') => $student_id,
         ])
         ->count();
-        $extra['associatedRecords'][] = ['model' => 'InstitutionStudentSurveys', 'count' => $associatedStudentSurveysRecordsCount];    
-        
+        $extra['associatedRecords'][] = ['model' => 'InstitutionStudentSurveys', 'count' => $associatedStudentSurveysRecordsCount];
+
         $StudentStatusUpdatesTbl = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates');
         $associatedStudentStatusUpdatesRecordsCount = $StudentStatusUpdatesTbl->find()
         ->where([
             $StudentStatusUpdatesTbl->aliasField('security_user_id') => $student_id,
         ])
         ->count();
-        $extra['associatedRecords'][] = ['model' => 'StudentStatusUpdates', 'count' => $associatedStudentStatusUpdatesRecordsCount];    
+        $extra['associatedRecords'][] = ['model' => 'StudentStatusUpdates', 'count' => $associatedStudentStatusUpdatesRecordsCount];
     }
 
     /**
@@ -887,7 +887,7 @@ class StudentsTable extends ControllerActionTable
                     $username = $this->Auth->user()['username'];
                     $Webhooks->triggerShell('student_delete', ['username' => $username], $body);
                 }
-            }    
+            }
         }
     }
 
@@ -926,7 +926,7 @@ class StudentsTable extends ControllerActionTable
             ])
             ->count();
             $checkAllRecords['associatedRecords'][] = ['model' => 'StudentCustomFieldValues', 'count' => $associatedStudentCustomRecordsCount];
-    
+
             $StudentAdmissionTbl = TableRegistry::getTableLocator()->get('Institution.StudentAdmission');
             $associatedStudentAdmissionRecordsCount = $StudentAdmissionTbl->find()
             ->where([
@@ -934,7 +934,7 @@ class StudentsTable extends ControllerActionTable
             ])
             ->count();
             $checkAllRecords['associatedRecords'][] = ['model' => 'StudentAdmission', 'count' => $associatedStudentAdmissionRecordsCount];
-    
+
             $StudentSurveysTbl = TableRegistry::getTableLocator()->get('Student.StudentSurveys');
             $associatedStudentSurveysRecordsCount = $StudentSurveysTbl->find()
             ->where([
@@ -942,7 +942,7 @@ class StudentsTable extends ControllerActionTable
             ])
             ->count();
             $checkAllRecords['associatedRecords'][] = ['model' => 'InstitutionStudentSurveys', 'count' => $associatedStudentSurveysRecordsCount];
-    
+
             $StudentStatusUpdatesTbl = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates');
             $associatedStudentStatusUpdatesRecordsCount = $StudentStatusUpdatesTbl->find()
             ->where([
@@ -950,7 +950,7 @@ class StudentsTable extends ControllerActionTable
             ])
             ->count();
             $checkAllRecords['associatedRecords'][] = ['model' => 'StudentStatusUpdates', 'count' => $associatedStudentStatusUpdatesRecordsCount];
-    
+
             if (!empty($checkAllRecords)) {
                 foreach ($checkAllRecords['associatedRecords'] as $record) {
                     echo $record['count'];
@@ -965,7 +965,7 @@ class StudentsTable extends ControllerActionTable
 
     // comment by Abhinav POCOR-8333 - Old code V3
     // public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
-    // { 
+    // {
     //     $studentStatuses = $this->StudentStatuses->findCodeList();
     //     // if user tries to delete record that is not enrolled
     //     // if ($entity->student_status_id != $studentStatuses['CURRENT']) {
@@ -1309,7 +1309,7 @@ class StudentsTable extends ControllerActionTable
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }else{
                 $selectedAcademicPeriod = $query->toArray()[0]['academic_period_id'];
-            } 
+            }
         }
         //POCOR-8092::end
         $selectedStatus = $this->queryString('status_id', $statusOptions);
@@ -2079,7 +2079,7 @@ class StudentsTable extends ControllerActionTable
                     '0' => 'index',//POCOR-8333
                     '1' => $encodedQueryString
                 ];
-                
+
                 $buttons['history'] = $buttons['view'];
                 $buttons['history']['label'] = $icon . __('History');
                 $buttons['history']['url'] = $this->ControllerAction->setQueryString($url, [
