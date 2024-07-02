@@ -78,7 +78,7 @@ class SingleGradeBehavior extends Behavior
 
         $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $gradeOptions = [0 => '-- '.__('Select').' --'] + $gradeOptions;
-//echo 'ssssss';print_r($institutionShiftId);die;
+        //echo 'ssssss';print_r($institutionShiftId);die;
         $this->_table->advancedSelectOptions($gradeOptions, $selectedEducationGradeId, [
             'message' => '{{label}} - ' . $this->_table->getMessage($this->_table->aliasField('expiredGrade')),
             'callable' => function ($id) use ($InstitutionGrades, $institutionId, $AcademicPeriodTable, $selectedAcademicPeriodId) {
@@ -266,22 +266,24 @@ class SingleGradeBehavior extends Behavior
                         $errorMessage .= Inflector::classify($key);
                     }
                     unset($value);
-                    $model->log($error, 'debug');
+                    //$model->log($error, 'debug');
+                    $model->log(json_encode($error), 'debug');
                     /**
                      * unset all field validation except for "name" to trigger validation error in ControllerActionComponent
                      */
                     foreach ($model->fields as $value) {
                         if ($value['field'] != 'name' || $value['field'] != 'staff_id') {
-                            $model->validator()->remove($value['field']);
+                            $model->getValidator()->remove($value['field']);
                         }
                     }
                     unset($value);
                     $model->fields['single_grade_field']['data']['classes'] = $classes;
-                    $model->request->data['MultiClasses'] = $requestData['MultiClasses'];
+                    //$model->request->data['MultiClasses'] = $requestData['MultiClasses'];
+                    $model->request = $model->request->withData('MultiClasses', $requestData['MultiClasses']);//POCOR-8323
                     return false;
                 }
             } else {
-                $requestData['errorMessage'] = 'Institution.'.$model->alias().'.noGrade';
+                $requestData['errorMessage'] = 'Institution.'.$model->getAlias().'.noGrade';
                 return false;
             }
         };

@@ -38,6 +38,9 @@ class StudentBehavioursTable extends AppTable {
         
 	public function beforeFind(Event $event, Query $query, $options) 
 	{
+		if (isset($options['skipBeforeFind']) && $options['skipBeforeFind'] === true) {
+            return;
+        }
 		//$userData = $this->Session->read();
 		if ($this->controller->getName() != null && $this->controller->getName() == 'Profiles' && $this->request->getQuery('type' == 'student')) {
 			//if ($this->Session->read('Auth.User.is_guardian') == 1) {

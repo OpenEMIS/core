@@ -76,22 +76,23 @@ class UserRepository extends Controller
         try {
             $params = $request->all();
 
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
-            
             $users = SecurityUsers::with('identityType', 'nationalities', 'identities');
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
                 $users = $users->orderBy($col, $orderBy);
             }
-            $list = $users->paginate($limit)->toArray();
-            
-            return $list;
-            
+
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $users->paginate($limit)->toArray();
+            } else{
+                $users = $users->get()->toArray();
+                $resp['data'] = $users;
+            }
+
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -512,11 +513,27 @@ class UserRepository extends Controller
     public function getUsersGender($request)
     {
         try {
-            
-            $usersGender = Gender::get();
-            
-            return $usersGender;
-            
+            $params = $request->all();
+
+            $usersGender = new Gender();
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $usersGender = $usersGender->orderBy($col, $orderBy);
+            }
+                        
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $usersGender->paginate($limit)->toArray();
+                
+            } else {
+                $list = $usersGender->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
+            return $list;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Users Gender list from DB',
@@ -1636,15 +1653,25 @@ class UserRepository extends Controller
     //POCOR-7716 start
     public function getStudentAdmissionStatus()
     {
-        $configItemResult = ConfigItem::where('code', 'student_admission_status')->first();
-        $studentStatus = !empty($configItemResult->value) ? $configItemResult->value : $configItemResult->default_value;
-        if ($studentStatus === 0) {
-            $result_array[] = ["id" => 0, "name" => "Enrolled"];
-        } else {
-            $status = WorkflowSteps::findOrFail($studentStatus)->name;
-            $result_array[] = ["id" => $studentStatus, "name" => $status];
+        try {
+            $configItemResult = ConfigItem::where('code', 'student_admission_status')->first();
+            $studentStatus = !empty($configItemResult->value) ? $configItemResult->value : $configItemResult->default_value;
+            
+            if ($studentStatus == 0) {
+                $result_array[] = ["id" => 0, "name" => "Enrolled"];
+            } else {
+                $status = WorkflowSteps::findOrFail($studentStatus)->name;
+                $result_array[] = ["id" => $studentStatus, "name" => $status];
+            }
+            return $result_array;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Student Admission Status.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to get Student Admission Status.');
         }
-        return $result_array;
+        
     }
     //POCOR-7716 end
 
@@ -1925,4 +1952,3 @@ class UserRepository extends Controller
     }
     //POCOR-8139 Ends
 }
-
