@@ -525,6 +525,7 @@ class DirectoriesTable extends ControllerActionTable
             'institution_id' => $student['institution_id'],
             'institution_name' => $student['institution_name'],
             'institution_code' => $student['institution_code'],
+            'current_enrol_institution_id' => $student['institution_id'],
             'current_enrol_institution_name' => $student['institution_name'],
             'current_enrol_institution_code' => $student['institution_code'],
             'academic_period_id' => $student['academic_period_id'],

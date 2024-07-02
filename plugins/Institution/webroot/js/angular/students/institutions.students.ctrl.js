@@ -10,6 +10,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     const userCtrl = this;
     var scope = $scope;
     userCtrl.selectedUserData = {};
+    userCtrl.notSaved = true;
+    userCtrl.isConfirming = false;
     userCtrl.selectedStudentData = userCtrl.selectedUserData;
     const userData = userCtrl.selectedUserData;
     const userSvc = InstitutionsStudentsSvc;
@@ -1517,13 +1519,18 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         timer = setTimeout(() => {
             var res1 = $window.localStorage.getItem('repeater_validation');
             if (res1 == '"no"') {
-                userCtrl.saveUserDetails();
+                userCtrl.saveUserDetails('confirmUser');
                 $window.localStorage.removeItem('repeater_validation');
             }
         }, 3000);
     }
 
-    function saveUserDetails() {
+    function saveUserDetails(caller) {
+        if (userCtrl.isConfirming) {
+            console.log('Confirmation already in progress');
+            return;
+        }
+        userCtrl.isConfirming = true;
         if (userCtrl.multipleInstitutionsStudentEnrollment) {
             if (typeof userCtrl.userData != "undefined") {
                 if (typeof userCtrl.userData.is_diff_school != "undefined") {
@@ -1542,8 +1549,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         addressAreaRef && (userCtrl.selectedUserData.addressArea = addressAreaRef);
         const birthplaceAreaRef = userSvc.getBirthplaceArea();
         birthplaceAreaRef && (userCtrl.selectedUserData.birthplaceArea = birthplaceAreaRef)
-
+        // console.log(userCtrl.userData);
+        let previousInstitutionId = userCtrl.userData && userCtrl.userData.current_enrol_institution_id ? userCtrl.userData.current_enrol_institution_id : null;
         var params = {
+            called: caller,
             currentAcademicPeriod: userCtrl.currentAcademicPeriod,//POCOR-7733
             currentAcademicPeriodName: userCtrl.currentAcademicPeriodName,//POCOR-7733
             institution_id: userCtrl.institutionId,
@@ -1566,6 +1575,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             identity_number: userCtrl.selectedUserData.identity_number,
             nationality_id: userCtrl.selectedUserData.nationality_id,
             nationality_name: userCtrl.selectedUserData.nationality_name,
+            contact_type: userCtrl.selectedUserData.contact_type_id,
             contact_type_id: userCtrl.selectedUserData.contact_type_id,
             contact_value: userCtrl.selectedUserData.contact_value,
             education_grade_id: userCtrl.selectedUserData.education_grade_id,
@@ -1580,14 +1590,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             photo_name: userCtrl.selectedUserData.photo_name,
             is_diff_school: userCtrl.userData && userCtrl.userData.is_diff_school ? userCtrl.userData.is_diff_school : 0,
             student_id: userCtrl.userData && userCtrl.userData.id ? userCtrl.userData.id : null,
-            previous_institution_id: userCtrl.userData && userCtrl.userData.current_enrol_institution_id ? userCtrl.userData.current_enrol_institution_id : null,
+            previous_institution_id: previousInstitutionId,
             previous_academic_period_id: userCtrl.userData && userCtrl.userData.current_enrol_academic_period_id ? userCtrl.userData.current_enrol_academic_period_id : null,
             previous_education_grade_id: userCtrl.userData && userCtrl.userData.current_enrol_education_grade_id ? userCtrl.userData.current_enrol_education_grade_id : null,
             student_transfer_reason_id: userCtrl.selectedUserData.transfer_reason_id ? userCtrl.selectedUserData.transfer_reason_id : null,
             comment: userCtrl.selectedUserData.transferComment,
             custom: [],
-            contact_type: userCtrl.selectedUserData.contact_type_id,
-            contact_value: userCtrl.selectedUserData.contact_value,
         };
         userCtrl.customFieldsArray.forEach((customField) => {
                 customField.data.forEach((field) => {
@@ -1678,11 +1686,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         ;
         //POCOR-7733 start
         if (params.is_diff_school > 0) {
-            console.log(params);
-            console.log(userCtrl.selectedUserData);
-            console.log(params);
-            console.log(userCtrl.userData);
-
             if (params.currentAcademicPeriod != params.previous_academic_period_id) {
                 if (params.student_status_id == 1) {
                     userCtrl.message = `This student is allocated to ${userCtrl.userData.current_enrol_institution_code}
@@ -1695,14 +1698,16 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 }
             }
         }
+
         //POCOR-7733 end
         UtilsSvc.isAppendLoader(true);
 
+        // console.log(params)
         userSvc.saveStudentDetails(params).then(function (resp) {
-
-
             if (resp) {
                 //POCOR-6172-HINDOL[START]
+                // console.log(resp)
+                userCtrl.notSaved = false;
                 if (userCtrl.userData &&
                     //POCOR-6172-HINDOL[END]
                     userCtrl.userData.is_diff_school > 0
@@ -1710,7 +1715,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     userCtrl.message = 'Student transfer request is added successfully.';
                     userCtrl.messageClass = 'alert-success';
                     UtilsSvc.isAppendLoader(false);
-                    $window.history.back();
+                    userCtrl.isConfirming = false;
+                    // $window.history.back();
                 } else {
                     userCtrl.message = 'Student is added successfully.';
                     userCtrl.messageClass = 'alert-success';
@@ -1718,6 +1724,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                     var todayDate = new Date();
                     userCtrl.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
                     userCtrl.getRedirectToGuardian();
+                    userCtrl.isConfirming = false;
                 }
             }
         }, function (error) {
@@ -1770,7 +1777,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         timer = setTimeout(() => {
             var res1 = $window.localStorage.getItem('repeater_validation');
             if (res1 == '"no"') {
-                userCtrl.saveUserDetails();
+                userCtrl.saveUserDetails('transferStudent');
                 $window.localStorage.removeItem('repeater_validation')
             }
         }, 3000);

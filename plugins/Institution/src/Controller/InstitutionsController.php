@@ -12,7 +12,6 @@ use Cake\Event\Event;
 use Cake\Http\Response;
 use Cake\Http\Session;
 use Cake\I18n\Date;
-use Cake\I18n\Time;
 use Cake\Log\Log;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
@@ -5907,14 +5906,18 @@ class InstitutionsController extends AppController
      */
     public function saveStudentData()
     {
-        $this->autoRender = false;
         $requestData = $this->getRequestData();
         if (empty($requestData)) {
             return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
         }
-//        Log::debug(print_r($requestData['custom'], true));
+//        Log::debug(print_r($requestData, true));
         $userId = $this->request->getSession()->read('Auth.User.id') ?? 1;
         $studentData = $this->extractSecurityUserData($requestData, $userId, true);
+        if ($requestData['is_diff_school'] == 1) {
+            $userRecordId = $requestData['student_id'];
+            $result = $this->handleStudentTransfer($requestData, $userRecordId, $userId);
+            return $this->sendJsonResponse(['message' => 'success'], 200);
+        }
         $securityUserResult = $this->saveSecurityUser($studentData);
         if ($securityUserResult) {
             $userRecordId = $securityUserResult->id;
@@ -5924,9 +5927,6 @@ class InstitutionsController extends AppController
             $this->handleCustomFields('student', $requestData, $userRecordId, $userId);
             if ($requestData['student_admission_status_value'] == 0 || strtolower($requestData['student_admission_status']) == "enrolled") {
                 $this->handleInstitutionData($requestData, $userRecordId, $userId);
-            }
-            if ($requestData['is_diff_school'] == 1) {
-                $this->handleStudentTransfer($requestData, $userRecordId, $userId);
             }
             $this->triggerWebhooks($userRecordId, $requestData);
 //            Log::debug(print_r($studentData,true));
@@ -6280,7 +6280,7 @@ class InstitutionsController extends AppController
                     if (in_array($key, $relevantFields) && (!empty($value) || $value !== null || $value != '')) {
                         $fieldData[$key] = $value;
                         $hasValue = true;
-                        Log::debug(print_r([$key, $value], true));
+//                        Log::debug(print_r([$key, $value], true));
                     }
                     if (!in_array($key, $relevantFields)) {
                         $fieldData[$key] = $value;
@@ -6400,38 +6400,67 @@ class InstitutionsController extends AppController
     private function handleStudentTransfer(array $requestData, $userRecordId, $userId)
     {
         if ($requestData['is_diff_school'] == 1) {
-            $institutionId = $requestData['institution_id'] ?? null;
+            $institution_id = $requestData['institution_id'] ?? null;
             $academicPeriodId = $requestData['academic_period_id'] ?? null;
             $educationGradeId = $requestData['education_grade_id'] ?? null;
+            $previous_institution_id = $requestData['previous_institution_id'] ?? null;
+            $previous_education_grade_id = $requestData['previous_education_grade_id'] ?? null;
+            $previousAcademicPeriodID = $requestData['previous_academic_period_id'] ?? null;
+            $student_transfer_reason_id = $requestData['student_transfer_reason_id'] ?? null;
+            if(!$previous_institution_id){
+                return ['error' => 'no previous_institution_id'];
+            }
+            if(!$previousAcademicPeriodID){
+                return ['error' => 'no previousAcademicPeriodID'];
+            }
+            if(!$student_transfer_reason_id){
+                return ['error' => 'no student_transfer_reason_id'];
+            }
             $startDate = !empty($requestData['start_date']) ? date('Y-m-d', strtotime($requestData['start_date'])) : null;
             $endDate = !empty($requestData['end_date']) ? date('Y-m-d', strtotime($requestData['end_date'])) : null;
 
             $institutionStudentTransfers = self::getDynamicTableInstance('institution_student_transfers');
-            $entityTransferData = [
+            $datatocheck = [
                 'start_date' => $startDate,
                 'end_date' => $endDate,
-                'requested_date' => null,
-                'student_id' => $requestData['student_id'] ?? 0,
+                'student_id' => $userRecordId,
                 'status_id' => $this->getWorkflowStepId('Student Transfer - Receiving', 'Open'),
-                'assignee_id' => $this->request->getSession()->read('Auth.User.id'),
-                'institution_id' => $institutionId,
+                'institution_id' => $institution_id,
                 'academic_period_id' => $academicPeriodId,
                 'education_grade_id' => $educationGradeId,
-                'institution_class_id' => $requestData['institution_class_id'] ?? null,
-                'previous_institution_id' => $requestData['previous_institution_id'] ?? 0,
-                'previous_academic_period_id' => $requestData['previous_academic_period_id'] ?? 0,
-                'previous_education_grade_id' => $requestData['previous_education_grade_id'] ?? 0,
-                'student_transfer_reason_id' => $requestData['student_transfer_reason_id'] ?? 0,
-                'comment' => $requestData['comment'] ?? '',
-                'all_visible' => 1,
-                'created_user_id' => $userId,
-                'created' => date('Y-m-d H:i:s')
+                'previous_institution_id' => $previous_institution_id,
+                'previous_education_grade_id' => $previous_education_grade_id,
+                'previous_academic_period_id' => $previousAcademicPeriodID
             ];
-            $entity1 = $institutionStudentTransfers->newEntity($entityTransferData);
-            try {
-                $institutionStudentTransfers->save($entity1);
-            } catch (\Exception $exception) {
-                Log::debug('Error in Transfer: ' . $exception->getMessage());
+
+            $existingTransfer = $institutionStudentTransfers->find()
+                ->where($datatocheck)
+                ->first();
+
+            if ($existingTransfer) {
+                // Record already exists, handle accordingly
+                Log::debug('Student transfer record already exists.');
+                return ['error' => 'Student transfer record already exists.'];
+
+            } else {
+                // No existing record found, proceed with saving the new entity
+                $entityTransferData = array_merge($datatocheck, [
+                    'requested_date' => null,
+                    'assignee_id' => $userId,
+                    'institution_class_id' => $requestData['institution_class_id'] ?? null,
+                    'student_transfer_reason_id' => $student_transfer_reason_id,
+                    'comment' => $requestData['comment'] ?? '',
+                    'all_visible' => 1,
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s')
+                ]);
+
+                $entity1 = $institutionStudentTransfers->newEntity($entityTransferData);
+                try {
+                    return $institutionStudentTransfers->save($entity1);
+                } catch (\Exception $exception) {
+                    Log::debug('Error in Transfer: ' . $exception->getMessage());
+                }
             }
         }
     }
@@ -6591,7 +6620,7 @@ class InstitutionsController extends AppController
                 'created_user_id' => $userId,
                 'created' => date('Y-m-d H:i:s')
             ];
-            Log::debug(print_r($entityGuardiansData, true));
+//            Log::debug(print_r($entityGuardiansData, true));
 // Check for an existing entity based on unique fields
             $existingEntity = $StudentGuardians->find()
                 ->where([$StudentGuardians->aliasField('student_id') => $StudentData->id,
