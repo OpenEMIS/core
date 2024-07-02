@@ -121,7 +121,6 @@ function InstitutionSubjectStudentsSvc($http, $q, $filter, KdDataSvc) {
     };
 
     function saveInstitutionSubject(data) {
-        // console.log(data);
         return InstitutionSubjects.edit(data);
     }
 };

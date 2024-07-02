@@ -338,8 +338,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
                     Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'message', 'general.edit.success');
                     $http.get(Controller.alertUrl)
                     .then(function(response) {
-//                        $window.location.href = Controller.redirectUrl;
-                        console.log(response)
+                        $window.location.href = Controller.redirectUrl;
                     }, function (error) {
                         console.log(error);
                     });
