@@ -25,21 +25,21 @@ class StaffUserTable extends ControllerActionTable
         $this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' => ['Identities', 'Nationalities', 'Contacts']]);
         $this->addBehavior('AdvanceSearch');
 
-//        $this->addBehavior('CustomField.Record', [
-//            'model' => 'Staff.Staff',
-//            'behavior' => 'Staff',
-//            'fieldKey' => 'staff_custom_field_id',
-//            'tableColumnKey' => 'staff_custom_table_column_id',
-//            'tableRowKey' => 'staff_custom_table_row_id',
-//            'fieldClass' => ['className' => 'StaffCustomField.StaffCustomFields'],
-//            'formKey' => 'staff_custom_form_id',
-//            'filterKey' => 'staff_custom_filter_id',
-//            'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
-//             'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
-//            'recordKey' => 'staff_id',
-////            'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
-//            'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
-//        ]);
+       $this->addBehavior('CustomField.Record', [
+           'model' => 'Staff.Staff',
+           'behavior' => 'Staff',
+           'fieldKey' => 'staff_custom_field_id',
+           'tableColumnKey' => 'staff_custom_table_column_id',
+           'tableRowKey' => 'staff_custom_table_row_id',
+           'fieldClass' => ['className' => 'StaffCustomField.StaffCustomFields'],
+           'formKey' => 'staff_custom_form_id',
+           'filterKey' => 'staff_custom_filter_id',
+           'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
+            'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
+           'recordKey' => 'staff_id',
+           'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
+           'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+       ]);
 
         $this->addBehavior('Excel', [
             'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian', 'super_admin', 'date_of_death'],
