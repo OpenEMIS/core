@@ -54,11 +54,11 @@ class InstitutionController extends Controller
     }
 
 
-    public function getInstitutionData(int $id)
+    public function getInstitutionData(Request $request, int $id)
     {
         try {
-
-            $data = $this->institutionService->getInstitutionData($id);
+            $params = $request->all();
+            $data = $this->institutionService->getInstitutionData($params, $id);
             return $this->sendSuccessResponse("Institutions Data Found", $data);
             
         } catch (\Exception $e) {
