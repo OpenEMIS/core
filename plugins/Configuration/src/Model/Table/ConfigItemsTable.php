@@ -188,6 +188,12 @@ class ConfigItemsTable extends AppTable
         }
     }
 
+    public function validationDefault(Validator $validator): Validator {
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
+        return $validator;
+    }
+
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if (is_array($data[$this->getAlias()]['value'])) {
@@ -270,6 +276,24 @@ class ConfigItemsTable extends AppTable
         } else if ($entity->code == 'language_menu') {
             $this->deleteLanguageCacheFile();
         }
+        $session = $this->request->getSession();
+        $session->write('successAlert', 'yes');
+        $action = [
+            'plugin' => 'Configuration',
+            'controller' => 'Configurations',
+            'action' => 'view',
+            '1' => $this->request->getParam('pass')[0],
+            '?' => ['type' => $this->request->getQuery('type')]
+        ];
+        return $this->controller->redirect($action);
+    }
+    
+    public function viewBeforeAction() {    
+        $session = $this->request->getSession();
+        if($session->read('successAlert') === 'yes' && empty($session->read('_alert'))){
+            $session->delete('successAlert');
+            $this->Alert->success('general.edit.success', ['reset' => true]);
+        }
     }
 
     private function deleteLanguageCacheFile()
@@ -282,7 +306,7 @@ class ConfigItemsTable extends AppTable
             $languageFile = new File($this->languageFilePath);
             $languageFile->delete();
         }
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $session->delete('System.language_menu');
     }
 
