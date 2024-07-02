@@ -40,6 +40,7 @@ class PermissionsTable extends ControllerActionTable
                 $flag = $entity->Permissions[$operation];
             }
         }
+      //  echo "<pre>"; print_r($entity); die;
         return $flag;
     }
 
@@ -47,10 +48,11 @@ class PermissionsTable extends ControllerActionTable
     {
         $plugin = __($this->controller->getPlugin());
         $id = $this->request->getAttribute('params')['pass'][1];
+        $DecodedQueryString = $this->paramsDecode($id);
         try {
-            $name = $this->SecurityRoles->get($this->paramsDecode($id));
-            //$this->controller->set('contentHeader', $plugin . ' - ' . $name);
-            $this->controller->set('contentHeader', $plugin);
+            $name = $this->SecurityRoles->get($DecodedQueryString['id']);
+            $getRoleName = $name['name'];
+            $this->controller->set('contentHeader', $plugin . ' - ' . $getRoleName);
         } catch (RecordNotFoundException $e) {
             Log::write('error', $e->getMessage());
         }
@@ -154,6 +156,7 @@ class PermissionsTable extends ControllerActionTable
             }
             foreach ($this->operations as $op) {
                 $flag = $this->check($obj, $op);
+               // echo "<pre>"; print_r($obj); die;
                 $obj->Permissions[$op] = $icons[$flag];
             }
 
@@ -285,23 +288,26 @@ class PermissionsTable extends ControllerActionTable
         $toolbarButtons['edit']['attr']['title'] = __('Edit');
 
         // Log roleId and module
-        Log::write('debug', 'Role ID: ' . print_r($roleId, true));
-        Log::write('debug', 'Module: ' . print_r($module, true));
+        //Log::write('debug', 'Role ID: ' . print_r($roleId, true));
+        //Log::write('debug', 'Module: ' . print_r($module, true));
 
         // Ensure roleId and module are strings
         if (is_array($roleId)) {
-            Log::write('error', 'Role ID is an array: ' . print_r($roleId, true));
+            //Log::write('error', 'Role ID is an array: ' . print_r($roleId, true));
             $roleId = json_encode($roleId); // Convert array to JSON string
         } else {
             $roleId = (string)$roleId;
         }
 
         if (is_array($module)) {
-            Log::write('error', 'Module is an array: ' . print_r($module, true));
+            //Log::write('error', 'Module is an array: ' . print_r($module, true));
             $module = json_encode($module); // Convert array to JSON string
         } else {
             $module = (string)$module;
         }
+
+        $roleIdDecoded = json_decode($roleId, true); // Decode the JSON string to an array
+        $roleId = $roleIdDecoded['id'] ?? null;
 
         // Correct query construction
         $query = $this->SecurityFunctions->find('permissions', ['roleId' => $roleId, 'module' => $module]);

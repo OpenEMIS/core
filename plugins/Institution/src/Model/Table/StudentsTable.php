@@ -7,7 +7,7 @@ use ArrayObject;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Event\Event;
 use Cake\I18n\Time;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
