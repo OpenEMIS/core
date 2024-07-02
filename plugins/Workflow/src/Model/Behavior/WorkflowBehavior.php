@@ -489,11 +489,19 @@ class WorkflowBehavior extends Behavior
                 $params = [];
                 if ($workflowModel->is_school_based) {
                     $table = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-                    $institutionId = $table->paramsDecode('institution_id');
+                    //POCOR-8401,POCOR-8402 starts
+                    if($this->controller->getName() != 'Profiles'){
+                        $institutionId = $table->paramsDecode($this->_table->request->getAttribute('params')['pass'][1]);;
                         $params = [
                             'institution_id' => $institutionId
                         ];
-//                    }
+                    }//POCOR-8401,POCOR-8402 ends
+                    //$session = $this->controller->request->session();
+                    // if ($session->check('Institution.Institutions.id')) {
+                        // $params = [
+                        //     'institution_id' => $institutionId
+                        // ];
+                    // }
                 }
 
                 $newEvent = $subject->dispatchEvent('Workflow.getFilterOptions', [$params], $subject);
