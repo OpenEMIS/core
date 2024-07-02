@@ -103,7 +103,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
     }
 
     public function implementedEvents(): array
-    { 
+    {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
 
@@ -544,7 +544,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         $institutionClassId = $entity['class_subjects'][0]['institution_class_id'];
         $InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
-        
+
         //Commented for V4
         // $institution_subject_id = $InstitutionClassSubjects->find()->select(['institution_subject_id'])->where(['education_grade_id' => $entity->education_grade_id, 'academic_period_id' => $entity->academic_period_id, 'education_subject_id' => $entity->education_subject_id, 'institution_class_id' => $institutionClassId, 'institution_subject_id NOT IN ' => $entity->id])->first();
         // $institution_subject_id = $institution_subject_id['institution_subject_id'];
@@ -555,7 +555,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $countFemale = $this->SubjectStudents->getFemaleCountBySubject($id);
         $this->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
 
-        
+
         $countMale = $this->SubjectStudents->getMaleCountBySubject($institution_subject_id);
         $countFemale = $this->SubjectStudents->getFemaleCountBySubject($institution_subject_id);
         $this->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $institution_subject_id]);
@@ -778,7 +778,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             if ($action == 'add') {
                 $attr['default'] = $selectedLevel;
             }
-            
+
             return $attr;
         }
     }
@@ -950,7 +950,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         if (!$entity->isNew()) {
             //empty subject student is handled by beforeMarshal
-            //in another case, it will be save manually to avoid unecessary queries during save by association
+            //in another case, it will be saved manually to avoid unecessary queries during save by association
             if ($entity->has('subjectStudent') && !empty($entity->subjectStudent)) {
                 // $institutionClassId = 0;
                 $newStudents = [];
@@ -973,8 +973,15 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 $existingStudents = $SubjectStudents
                     ->find('all')
                     ->select([
-                        'id', 'student_id', 'institution_class_id', 'education_grade_id', 'academic_period_id', 'institution_id',
-                        'student_status_id', 'institution_subject_id', 'education_subject_id'
+                        'id',
+                        'student_id',
+                        'institution_class_id',
+                        'education_grade_id',
+                        'academic_period_id',
+                        'institution_id',
+                        'student_status_id',
+                        'institution_subject_id',
+                        'education_subject_id'
                     ])
                     ->where([
                         // $SubjectStudents->aliasField('institution_class_id') . ' IN ' => $institutionClassIds,
@@ -992,7 +999,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 }
                 foreach ($newStudents as $key => $student) {
                     $subjectStudentEntity = $this->SubjectStudents->newEntity($student);
-                    $this->SubjectStudents->save($subjectStudentEntity);
+                    Log::debug(__CLASS . __FUNCTION__);
+                    Log::debug($subjectStudentEntity);
+                    $subjectStudentEntity = $this->SubjectStudents->save($subjectStudentEntity);
+                    Log::debug($subjectStudentEntity);
+
                 }
             }
 
@@ -1270,7 +1281,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 $InstitutionSubjectStaffs->aliasField('institution_id') => $entity->institution_id
             ])
             ->count();
-        
+
         $InstitutionTextbooks = TableRegistry::getTableLocator()->get('Institution.InstitutionTextbooks');//POCOR-8324
         $associatedTextbooksCount = $InstitutionTextbooks->find()
             ->where([
@@ -2271,7 +2282,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 }
                 // GETTING ROOMS FOR EACH SUBJECT
 
-                // GET TEACHERS FOR EACH SUBJECT 
+                // GET TEACHERS FOR EACH SUBJECT
                 $institutionSubjectStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
                 $staffTable = TableRegistry::getTableLocator()->get('Security.Users');
 
