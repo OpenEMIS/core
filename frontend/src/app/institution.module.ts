@@ -29,6 +29,7 @@ import { AssessmentReportComponent } from './assessment-report/assessment-report
 import { StudentAttendanceReportComponent } from './student-attendance-report/student-attendance-report.component';
 import { StaffAttendanceReportComponent } from './staff-attendance-report/staff-attendance-report.component';
 import { StudentMealImportComponent } from './student-meal-import/student-meal-import.component';
+import { StudentMealResultComponent } from './student-meal-result/student-meal-result.component';
 
 export const appRoutes: Routes = [
   { path: 'Dashboard', component: WorkbenchComponent },
@@ -38,7 +39,8 @@ export const appRoutes: Routes = [
   { path: `Institution/Institutions/${setEncodedId()}/StudentAttendances/index`, component: StudentAttendanceComponent },
   { path: `Institution/Institutions/${setEncodedId()}/ImportStudentAttendances/add`, component: StudentAttendanceReportComponent },
   { path: `Institution/Institutions/StudentMeals/index/${setEncodedId()}`, component: StudentMealsComponent },
-  { path: `Institution/Institutions/${setEncodedId()}/ImportStudentMeals/add`, component: StudentMealImportComponent },
+  { path: `Institution/Institutions/${setEncodedData()}/ImportStudentMeals/add`, component: StudentMealImportComponent },
+  { path: `Institution/Institutions/ImportStudentMeals/results`, component: StudentMealResultComponent },
   { path: `Institution/Institutions/${setEncodedData()}/StudentMeals`, component: StudentMealsComponent },
   { path: 'Directory/Directories/Directories/add', component: AddDirectoryComponent },
   { path: `Institution/Institutions/${setEncodedId()}/Students/add`, component: AddStudentComponent },
@@ -113,7 +115,8 @@ function getBaseUrl() {
     AssessmentReportComponent,
     StudentAttendanceReportComponent,
     StaffAttendanceReportComponent,
-    StudentMealImportComponent
+    StudentMealImportComponent,
+    StudentMealResultComponent
   ],
   imports: [
     BrowserModule,

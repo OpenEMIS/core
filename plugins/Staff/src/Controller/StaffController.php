@@ -478,18 +478,22 @@ class StaffController extends AppController
     public function getCareerTabElements($options = [])
     {
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-        $userId = $this->getStaffId();
-        $institutionId = $this->getInstitutionId();
-        if ($userId) {
-            $options['user_id'] = $userId;
-        }
-        if ($institutionId) {
-            $options['institution_id'] = $institutionId;
-        }
-        
-        $tabElements = TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
-        
+        $this->loadModel('Staff.Staff');
+        $tabElements = $this->Staff->getCareerTabElements($options, $this);
         return $this->TabPermission->checkTabPermission($tabElements);
+        // $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+        // $userId = $this->getStaffId();
+        // $institutionId = $this->getInstitutionId();
+        // if ($userId) {
+        //     $options['user_id'] = $userId;
+        // }
+        // if ($institutionId) {
+        //     $options['institution_id'] = $institutionId;
+        // }
+        
+        // $tabElements = TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
+        
+        // return $this->TabPermission->checkTabPermission($tabElements);
     }
     // Special Needs - End
     // End
@@ -507,6 +511,19 @@ class StaffController extends AppController
         $historyUrl['plugin'] = 'Staff';
         $historyUrl['controller'] = 'Staff';
         $historyUrl['action'] = 'InstitutionStaffAttendanceActivities';
+        $historyUrl['0'] = 'index';
+        $queryString = $this->request->getAttribute('params')['pass'][1];
+        $historyUrl['1'] = $queryString;
+        //echo "<pre>"; print_r($queryString);
+        //die;
+        // $userId = $this->getStaffId();
+        // $institutionId = $this->getInstitutionId();
+        // if ($userId) {
+        //     $options['user_id'] = $userId;
+        // }
+        // if ($institutionId) {
+        //     $options['institution_id'] = $institutionId;
+        // }
         $this->set('historyUrl', Router::url($historyUrl));
         $this->set('_history', $_history);
     }
@@ -852,7 +869,7 @@ class StaffController extends AppController
         $institutionId = $this->getInstitutionID();
         if (!empty($institutionId)) {
             if ($this->request->getParam('action') == 'StaffCurriculars') {
-                $labels_tbl = TableRegistry::get('labels');   
+                $labels_tbl = TableRegistry::get('Labels');
                 $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();  
                 if(empty($curricular_label_Data->name)){
                     $curricular_label_Data->name = "Institution Curriculars";
@@ -863,7 +880,7 @@ class StaffController extends AppController
                 $staffName = $staff->first_name; // Accessing the first_name property of the retrieved staff record
 
                 $header = $staffName . ' - ' .$curricular_label_Data->name;
-                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
                 $this->Navigation->addCrumb(__($curricular_label_Data->name));
                 $this->set('contentHeader', $header);
             }
@@ -991,6 +1008,9 @@ class StaffController extends AppController
         $archiveUrl['plugin'] = 'Staff';
         $archiveUrl['controller'] = 'Staff';
         $archiveUrl['action'] = 'ArchivedAttendances';
+        $archiveUrl['0'] = 'index';
+        $queryString = $this->request->getAttribute('params')['pass'][1];
+        $archiveUrl['1'] = $queryString;
         $this->set('_archive', $_archive);
         $this->set('archiveUrl', Router::url($archiveUrl));
     }

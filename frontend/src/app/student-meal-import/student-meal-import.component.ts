@@ -24,7 +24,7 @@ export class StudentMealImportComponent implements OnInit {
     }],
     moreAction: [],
     moreBtn: false,
-    pageheaderText: "Avory Primary School - Import Student Attendances",
+    pageheaderText: "",
     searchBtn: false,
     searchEvent: ['change', 'keyup']
   }
@@ -76,6 +76,8 @@ export class StudentMealImportComponent implements OnInit {
   institution_id: any;
   academic_Period: any;
   selectedClassId: any;
+  meal_import_data: any;
+  institution_name: string;
 
   constructor(
     private Rest: ApiService,
@@ -86,9 +88,11 @@ export class StudentMealImportComponent implements OnInit {
 
   ngOnInit(): void {
     this.institution_id = JSON.parse(localStorage.getItem("institution_id"));
-    // this.institution_id = 6;
+    this.institution_id = 6;
     this.academic_Period = JSON.parse(localStorage.getItem("academic_Period"));
-    // this.academic_Period = 33;
+    this.academic_Period = 33;
+    this.institution_name = localStorage.getItem("institutionName");
+    this.pageheader.pageheaderText = `${this.institution_name} - Import Student Attendances`
     this.loginData();
   }
 
@@ -172,7 +176,6 @@ export class StudentMealImportComponent implements OnInit {
   }
 
   exportToExcel() {
-    this.generateImportTemplate();
     // var uri = '/assets/excelformat/OpenEMIS_Exams_Import_Exam_Centre_Template.xlsx';
     // var link = document.createElement("a");
     // link.href = uri;
@@ -180,81 +183,79 @@ export class StudentMealImportComponent implements OnInit {
     // document.body.appendChild(link);
     // link.click();
     // document.body.removeChild(link);
-  }
 
-  public generateImportTemplate() {
     let dataValidationHeadings = {
-      // 'Area Name':'AreaAdministrative',
-      // 'Ownership':'ExaminationCentreOwnership',
-      // "Date": "Date ( DD/MM/YYYY )",
       "OpenEMIS ID": "OpenEMIS ID",
       "Meal Programme Code": "Meal Programmes",
       "Meal Received Code": "Meal Received",
-      "Meal Benefit Name": "Meal Benefit",
-      // "Comment": "Comment"
-
+      "Meal Benefit Name": "Meal Benefit"
     };
+
+    let dataColumnHeadings = this.meal_import_data.data.Data.header;
+    let referenceNames = Object.keys(this.meal_import_data.data.References)
+    let temp2 = {}; let temp3 = {}; let temp4 = {}; let temp5 = {}; let temp6 = {}; let temp7 = {};
+    let assetsArr = this.meal_import_data.data.References["Meal Benefit"].data;
+    let statusArr = this.meal_import_data.data.References["Meal Programmes"].data;
+    let levelArr = this.meal_import_data.data.References["Meal Received"].data;
+    let parentArr = this.meal_import_data.data.References["OpenEMIS ID"].data;
+    let responseArr = [
+      {
+        key: 1,
+        value: 'Multiple Choice'
+      },
+      {
+        key: 2,
+        value: 'Open Ended'
+      },
+      {
+        key: 3,
+        value: 'Short Answer'
+      }
+    ];
+    for (let x in assetsArr) {
+      temp2[assetsArr[x].Name] = assetsArr[x].Id;
+    }
+    for (let x in statusArr) {
+      temp3[statusArr[x].Name] = statusArr[x]["Code"];
+    }
+    for (let x in levelArr) {
+      temp4[levelArr[x].Name] = levelArr[x]["Code"];
+    }
+    for (let x in parentArr) {
+      temp5[parentArr[x].Name] = parentArr[x]["OpenEMIS ID"];
+    }
+    for (let x in responseArr) {
+      temp6[responseArr[x].value] = responseArr[x].key;
+    }
+    if (!Object.keys(temp2).length) {
+      temp2 = { '': '' }
+    }
+    if (!Object.keys(temp3).length) {
+      temp3 = { '': '' }
+    }
+    if (!Object.keys(temp4).length) {
+      temp4 = { '': '' }
+    }
+    if (!Object.keys(temp5).length) {
+      temp5 = { '': '' }
+    }
+    this.meal_import_data.data.References["Meal Benefit"].data = temp2;
+    this.meal_import_data.data.References["Meal Received"].data = temp4;
+    this.meal_import_data.data.References["Meal Programmes"].data = temp3;
+    this.meal_import_data.data.References["OpenEMIS ID"].data = temp5;
+    let referenceData = this.meal_import_data.data.References;
+    console.log(referenceData, "referenceData");
+
+    this.excelSvc.init('OpenEMIS_Core_Import_Institution_Meal_Students_Template', 'Import Student Meals Data', dataColumnHeadings, referenceNames, referenceData, dataValidationHeadings);
+  }
+
+  public generateImportTemplate() {
+
     this.Rest.getItemImportTemplate(`institutions/students/meals/import/template?institution_id=${this.institution_id}&institution_class_id=${this.selectedClassId}`).subscribe((res: any) => {
       console.log(res, "res");
+      this.meal_import_data = res;
+      // localStorage.setItem("meal_import_result",JSON.stringify(res));
 
-      let dataColumnHeadings = res.data.Data.header;
-      let referenceNames = Object.keys(res.data.References)
-      let temp2 = {}; let temp3 = {}; let temp4 = {}; let temp5 = {}; let temp6 = {}; let temp7 = {};
-      let assetsArr = res.data.References["Meal Benefit"].data;
-      let statusArr = res.data.References["Meal Programmes"].data;
-      let levelArr = res.data.References["Meal Received"].data;
-      let parentArr = res.data.References["OpenEMIS ID"].data;
-      let responseArr = [
-        {
-          key: 1,
-          value: 'Multiple Choice'
-        },
-        {
-          key: 2,
-          value: 'Open Ended'
-        },
-        {
-          key: 3,
-          value: 'Short Answer'
-        }
-      ];
-      for (let x in assetsArr) {
-        temp2[assetsArr[x].Name] = assetsArr[x].Id;
-      }
-      for (let x in statusArr) {
-        temp3[statusArr[x].Name] = statusArr[x]["Code"];
-      }
-      for (let x in levelArr) {
-        temp4[levelArr[x].Name] = levelArr[x]["Code"];
-      }
-      for (let x in parentArr) {
-        temp5[parentArr[x].Name] = parentArr[x]["OpenEMIS ID"];
-      }
-      for (let x in responseArr) {
-        temp6[responseArr[x].value] = responseArr[x].key;
-      }
-      if (!Object.keys(temp2).length) {
-        temp2 = { '': '' }
-      }
-      if (!Object.keys(temp3).length) {
-        temp3 = { '': '' }
-      }
-      if (!Object.keys(temp4).length) {
-        temp4 = { '': '' }
-      }
-      if (!Object.keys(temp5).length) {
-        temp5 = { '': '' }
-      }
-      res.data.References["Meal Benefit"].data = temp2;
-      res.data.References["Meal Received"].data = temp4;
-      res.data.References["Meal Programmes"].data = temp3;
-      res.data.References["OpenEMIS ID"].data = temp5;
-      // res.data.References["Response Types"].data = temp6;
-      // res.data.References.Subjects.data = temp7;
-      let referenceData = res.data.References;
-      console.log(referenceData, "referenceData");
-
-      this.excelSvc.init('OpenEMIS_Core_Import_Institution_Meal_Students_Template', 'Import Student Meals Data', dataColumnHeadings, referenceNames, referenceData, dataValidationHeadings);
     },
       (error: any) => {
 
@@ -348,7 +349,7 @@ export class StudentMealImportComponent implements OnInit {
         }
       ]
       console.log(this._confirmationData, "_confirmationData");
-
+      this.generateImportTemplate();
       // this._confirmationData[this._confirmationData.length - 1]['config']['leftButton'][0].callback = this.generateImportTemplate.bind(this);
     } else if (event.controlType == "dropdown" && event.value == '') {
       let confirmation = this._confirmationData;
@@ -377,15 +378,22 @@ export class StudentMealImportComponent implements OnInit {
       formData.append('institution_id', this.institution_id);
       formData.append('academic_period_id', this.academic_Period);
       this.Rest.postImportTemplete('institutions/students/meals/import', formData).subscribe({
-        next: (response) => {
+        next: (response: any) => {
           console.log(response, "response");
           let toasterConfig: any = {
             title: 'Student meal imported successfully!!',
             showCloseButton: true,
             tapToDismiss: true,
           };
-    
+          // localStorage.setItem("meal_imported",JSON.stringify(response.data));
           this._kdAlertEvent.info(toasterConfig);
+          console.log(response.data, "response.data");
+          let meal_data = response.data;
+          this.router.navigateByUrl('Institution/Institutions/ImportStudentMeals/results', {
+            state: {
+              importData: { meal_imported: meal_data, meal_import_result: this.meal_import_data },
+            },
+          });
         },
         error: (error) => {
           console.log(error, "error");
@@ -394,7 +402,7 @@ export class StudentMealImportComponent implements OnInit {
             showCloseButton: true,
             tapToDismiss: true,
           };
-    
+
           this._kdAlertEvent.error(toasterConfig);
         }
       })

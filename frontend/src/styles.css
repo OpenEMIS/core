@@ -50,12 +50,14 @@ a.btn {
 bg-pane#leftPane {
   width: 177px !important;
   overflow: auto;
+  opacity: 1 !important;
 }
 
 bg-pane#rightPane {
   left: 177px;
   padding-left: 15px;
   border-left: 1px solid #DDD;
+  right: inherit !important;
 }
 
 .kdx-toolbar-left {
@@ -228,45 +230,49 @@ color: #FFFFFF !important;
   right: 37px !important;
 }
 
-ul.dropdown-menu.more-menu{
-position: fixed;
+ul.dropdown-menu.more-menu {
+  position: fixed;
 }
 
 /* ----------------- To display table ----------------- */
 @media only screen and (min-width: 1025px) {
   .assessment-student-table-data {
-      position: unset !important;
-      height: 100vh !important;
+    position: unset !important;
+    height: 100vh !important;
   }
-  
+
+  .student-meal-table-result {
+    display: flex;
+    /* margin-top: 30px; */
+  }
 }
 
 .kdx-table,
 .kdx-multiselect-table {
-    .stg-theme {
-        min-height: 1000px !important;
-    }
+  .stg-theme {
+    min-height: 1000px !important;
+  }
 }
 
 /* ---------------- Dropdown for assessment term ----------------- */
-.academic-term-section{
+.academic-term-section {
   margin: 10px 15px 0px 15px;
-  background: rgba(204,204,204,0.3)!important;
+  background: rgba(204, 204, 204, 0.3) !important;
   border: 1px solid #DDD;
   height: 42px;
 }
 
-.select-academic-term{
+.select-academic-term {
   margin: 8px;
   height: 26px;
   width: 20% !important;
-  font-family: 'Helvetica Neue',Arial,sans-serif;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
   font-size: 11px;
   border-color: #CCC !important;
   background-color: #FFFFFF !important;
 }
 
-.select-academic-term:focus-visible{
+.select-academic-term:focus-visible {
   border: 1px solid #CCC;
   border-color: #CCC !important;
 }
@@ -284,7 +290,7 @@ ul.dropdown-menu.more-menu {
   /* border-radius: 5px; */
 }
 
-.autoTableHeight .stg-theme{
+.autoTableHeight .stg-theme {
   /* height: auto !important; */
   min-height: auto !important;
 }
@@ -296,23 +302,25 @@ ul.dropdown-menu.more-menu {
 
 
 
-.ng-tabs ul, .scroll_tabs_container div.scroll_tab_inner {
-height: 36px !important;
+.ng-tabs ul,
+.scroll_tabs_container div.scroll_tab_inner {
+  height: 36px !important;
 }
-button.btn.btn-icon.btn-xs
-{
-  height:100%;
-  border:none;
+
+button.btn.btn-icon.btn-xs {
+  height: 100%;
+  border: none;
 }
 
 /* ---------------------- Set left icon proper align ------------------------- */
 
-.btn-group, .btn-group-vertical {
-flex-direction: column;
-align-items: flex-start;
-justify-content: center;
+.btn-group,
+.btn-group-vertical {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
 }
 
-a.btn{
-padding: 6px 10px !important;
+a.btn {
+  padding: 6px 10px !important;
 }
