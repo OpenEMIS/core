@@ -1336,6 +1336,9 @@ class InstitutionsController extends AppController
     {
         $timetableId = $this->getQueryString('timetable_id');
         $params = $this->getQueryString();
+        if(empty($timetableId)) {
+            $timetableId = $params['id'];
+        }
         $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         $params['id'] = $timetableId;
         $encodedQueryString = $this->ControllerAction->paramsEncode($params);
