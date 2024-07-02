@@ -353,9 +353,9 @@ trait InstitutionPdfReportTrait
         }
         // Merge all the pdf that belongs to one report
 		if(!empty($institution_id)) {
-			$fileName = $this->config('filename') . '_' . $institution_id;
+			$fileName = $this->getConfig('filename') . '_' . $institution_id;
 		} else {
-			$fileName = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His');
+			$fileName = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His');
 		}
        
         Log::write('debug', '----------------------fileName---------------------: ');
@@ -363,7 +363,7 @@ trait InstitutionPdfReportTrait
 
         $this->mergePDFFiles($filePaths, $fileName, $fileName);
         // // Remove the temp file that is converted from excel object and its successfully converted to pdf
-        if ($this->config('purge')) {
+        if ($this->getConfig('purge')) {
             foreach ($filePaths as $filepath) {
                 // delete excel file after successfully converted to pdf
                 $this->deleteFile($filepath);
@@ -380,7 +380,7 @@ trait InstitutionPdfReportTrait
 
         if ($filenames) {
             $filesTotal = sizeof($filenames);
-            $mpdf->SetImportUse();
+            // $mpdf->SetImportUse();
 
             for ($i = 0; $i<count($filenames);$i++) {
                 $curFile = $filenames[$i];
@@ -406,8 +406,8 @@ trait InstitutionPdfReportTrait
             }
         }
 		
-        $file_path = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS . $outFile.'.pdf';
-        $pdf_file_path = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
+        $file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $outFile.'.pdf';
+        $pdf_file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS;
         $content = $mpdf->Output($file_path, "S");
 		$fp = fopen($pdf_file_path . $outFile . ".txt","wb");
 		fwrite($fp,$content);

@@ -7,11 +7,11 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
-
+use Cake\I18n\FrozenTime;
 use App\Model\Traits\OptionsTrait;
 
 class UsersTable extends ControllerActionTable
@@ -81,6 +81,7 @@ class UsersTable extends ControllerActionTable
         $this->addBehavior('User.AdvancedContactNumberSearch');
         $this->addBehavior('User.AdvancedPositionSearch');
         $this->addBehavior('User.AdvancedSpecificNameTypeSearch');
+       
 
         //specify order of advanced search fields
         $advancedSearchFieldOrder = [
@@ -99,6 +100,7 @@ class UsersTable extends ControllerActionTable
         //POCOR-6922 ends
 
         $this->setDisplayField('name_with_id_role');
+
     }
 
     public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
@@ -246,6 +248,7 @@ class UsersTable extends ControllerActionTable
     public function beforeAction(Event $event)
     {
         $this->fields['photo_content']['visible'] = false;
+        $this->fields['password']['visible'] = true;
         $this->fields['address']['visible'] = false;
         $this->fields['postal_code']['visible'] = false;
         $this->fields['address_area_id']['visible'] = false;
@@ -514,14 +517,15 @@ class UsersTable extends ControllerActionTable
 
     public function addAfterAction(Event $event, Entity $entity)
     {
+
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $uniqueOpenemisId = $this->getUniqueOpenemisId(['model'=>Inflector::singularize('User')]);
 
-        // first value is for the hidden field value, the second value is for the readonly value
-        $this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'value' => $uniqueOpenemisId, 'attr' => ['value' => $uniqueOpenemisId]]);
+        $this->fields['openemis_no']['type'] = 'readonly';
+        $this->fields['openemis_no']['value'] = $uniqueOpenemisId;
+        $this->fields['openemis_no']['attr']['value'] = $uniqueOpenemisId;
 
-        //this field value will be generated automatically when identity details changed.
-        $this->ControllerAction->field('identity_number', ['type' => 'hidden']);
+        $this->fields['identity_number']['type'] = 'hidden';
 
         // username field will be the same as uniqueOpenemisId by default
         $this->fields['username']['visible'] = true;
@@ -534,6 +538,7 @@ class UsersTable extends ControllerActionTable
         $this->fields['password']['value'] = $generatePassword;
         $this->fields['password']['attr']['value'] = $generatePassword;
         $this->fields['password']['attr']['autocomplete'] = 'off';
+        $this->fields['password']['type'] = 'string';
 
         // setting the tooltip message on password
         $tooltipMessagePassword = $this->getMessage($this->getAlias().'.tooltip_message_password');
@@ -557,12 +562,13 @@ class UsersTable extends ControllerActionTable
         }
     }
 
-    public function validationDefault(Validator $validator): Validator
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         $BaseUsers = TableRegistry::get('User.Users');
         return $BaseUsers->setUserValidation($validator, $this);
-    }
+    }*/
 
     public function isAdmin($userId)
     {
@@ -627,6 +633,15 @@ class UsersTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $options)
     {
+        if ($this->request->is('post')) {
+            $firstName = $this->request->getData()['AdvanceSearch']['Users']['hasMany']['first_name'];
+        }
+            if ($this->request->getData()['AdvanceSearch']['Users']['hasMany']['first_name']==null){
+            $currentDate = FrozenTime::now()->format('Y-m-d');
+                $query->where(function ($exp, $query) use ($currentDate) {
+                    return $exp->eq('DATE(Users.created)', $currentDate);
+                });
+        }
         if (!$this->isAdvancedSearchEnabled()) {
             $event->stopPropagation();
             return [];

@@ -163,7 +163,7 @@ class AssessmentService extends Controller
             $data = $this->assessmentRepository->getAssessmentGradingOptionList($request);
             $list = [];
             if(count($data) > 0){
-                foreach($data as $k => $d){
+                foreach($data['data'] as $k => $d){
                     $list[$k]['id'] = $d['id'];
                     $list[$k]['code'] = $d['code'];
                     $list[$k]['name'] = $d['name'];
@@ -178,7 +178,8 @@ class AssessmentService extends Controller
                 }
             }
 
-            return $list;
+            $data['data'] = $list;
+            return $data;
 
         } catch (\Exception $e) {
             Log::error(
