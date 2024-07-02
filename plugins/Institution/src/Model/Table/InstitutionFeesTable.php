@@ -377,7 +377,11 @@ class InstitutionFeesTable extends ControllerActionTable
         if (empty($this->request->getData()[$this->getAlias()]['academic_period_id'])) {
             $this->request->getData()[$this->getAlias()]['academic_period_id'] = $this->AcademicPeriods->getCurrent();
         }
-        $this->_selectedAcademicPeriodId = $this->request->getData()[$this->getAlias()]['academic_period_id'];
+        //$this->_selectedAcademicPeriodId = $this->request->getData()[$this->getAlias()]['academic_period_id'];
+        $this->_selectedAcademicPeriodId = isset($this->request->getData()[$this->getAlias()]['academic_period_id'])
+        ? $this->request->getData()[$this->getAlias()]['academic_period_id']
+        : $this->AcademicPeriods->getCurrent(); //POCOR-8360
+
         $this->_gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
         $attr['options'] = $this->_gradeOptions;
         return $attr;

@@ -2064,10 +2064,10 @@ class AcademicPeriodsTable extends ControllerActionTable
             $this->aliasField('academic_period_level_id') => $periodLevelId,
             $this->aliasField('start_date >=') => $startDate
         ];
-
-        $nextAcademicPeriodId = $this->AcademicPeriods
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $nextAcademicPeriodId = $AcademicPeriods
             ->find('visible')
-            ->find('editable', ['isEditable' => true])
+            // ->find('editable', ['isEditable' => true]) V4
             ->where($where)
             ->order([$this->aliasField('order') => 'DESC'])
             ->extract('id')
