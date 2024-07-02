@@ -7,7 +7,6 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\Log\Log;
 use Cake\Http\ServerRequest;
 use Cake\Datasource\ResultSetInterface;
@@ -46,22 +45,22 @@ class InstitutionSurveysTable extends ControllerActionTable
         $this->addBehavior('Survey.Survey', [
             'module' => $this->module
         ]);
-//        $this->addBehavior('CustomField.Record', [
-//            'tabSection' => true,
-//            'moduleKey' => null,
-//            'fieldKey' => 'survey_question_id',
-//            'tableColumnKey' => 'survey_table_column_id',
-//            'tableRowKey' => 'survey_table_row_id',
-//            'fieldClass' => ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id'],
-//            'formKey' => 'survey_form_id',
-//            // 'filterKey' => 'custom_filter_id',
-//            'formClass' => ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id'],
-//            'formFieldClass' => ['className' => 'Survey.SurveyFormsQuestions'],
-//            // 'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
-//            'recordKey' => 'institution_survey_id',
-////            'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
-//            'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true,]
-//        ]);
+       $this->addBehavior('CustomField.Record', [
+           'tabSection' => true,
+           'moduleKey' => null,
+           'fieldKey' => 'survey_question_id',
+           'tableColumnKey' => 'survey_table_column_id',
+           'tableRowKey' => 'survey_table_row_id',
+           'fieldClass' => ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id'],
+           'formKey' => 'survey_form_id',
+           // 'filterKey' => 'custom_filter_id',
+           'formClass' => ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id'],
+           'formFieldClass' => ['className' => 'Survey.SurveyFormsQuestions'],
+            'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
+           'recordKey' => 'institution_survey_id',
+           'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
+           'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true,]
+       ]);
         $this->addBehavior('Excel', ['pages' => ['view']]);
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Import.ImportLink');
@@ -156,6 +155,7 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
+
         $tabSection = null;
         $newData = [];
         $conditions = [];
@@ -770,6 +770,7 @@ class InstitutionSurveysTable extends ControllerActionTable
     }
 
     public function viewAfterAction(Event $event, Entity $entity) {
+
         // to get all the workflow steps for this model
         $workflow = $this->getWorkflow($this->getRegistryAlias(), $entity);
         if (!empty($workflow)) {
@@ -905,7 +906,7 @@ class InstitutionSurveysTable extends ControllerActionTable
     public function buildSurveyRecords($institutionId = null, $surveyFormId = null, $academicPeriodId = null)
     {
         if (is_null($institutionId)) {
-            $session = $this->controller->request->session();
+            $session = $this->controller->request->getSession();
             $institutionId = $this->getInstitutionID();
         }
 

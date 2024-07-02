@@ -853,7 +853,11 @@ class RecordBehavior extends Behavior
         $ControllerAction = $this->isCAv4() ? $model : $model->ControllerAction;
         $session = $model->request->getSession();
         $query = $this->getCustomFieldQuery($entity);
-
+        if (!$query) {
+        // Log an error message or handle the null query case
+        Log::error('Custom field query returned null.');
+        return;
+    }
         // If tabSection is set, setup Tab Section
         if ($this->getConfig('tabSection')) {
             $customFields = $query->toArray();
