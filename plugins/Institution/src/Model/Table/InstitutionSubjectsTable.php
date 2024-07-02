@@ -999,7 +999,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 }
                 foreach ($newStudents as $key => $student) {
                     $subjectStudentEntity = $this->SubjectStudents->newEntity($student);
-                    Log::debug(__CLASS . __FUNCTION__);
+                    Log::debug(__CLASS__ . __FUNCTION__);
                     Log::debug($subjectStudentEntity);
                     $subjectStudentEntity = $this->SubjectStudents->save($subjectStudentEntity);
                     Log::debug($subjectStudentEntity);
