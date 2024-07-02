@@ -75,7 +75,7 @@ class RemoveBehavior extends Behavior
             $cells = $extra['cells'];
 
             $model->fields = [];
-            $primaryKey = $model->primaryKey();
+            $primaryKey = $model->getPrimaryKey();
             if (is_array($primaryKey)) {
                 foreach ($primaryKey as $key) {
                     $model->field($key, ['type' => 'hidden']);
@@ -340,7 +340,7 @@ class RemoveBehavior extends Behavior
         $request = $model->request;
         $extra['config']['form'] = ['type' => 'DELETE'];
         $extra['options'] = [
-            'keyField' => $model->primaryKey(),
+            'keyField' => $model->getPrimaryKey(),
             'valueField' => 'name'
         ];
 
@@ -377,7 +377,7 @@ class RemoveBehavior extends Behavior
                     ->toArray();
 
                 $convertOptions = [];
-                $primaryKey = $model->primaryKey();
+                $primaryKey = $model->getPrimaryKey();
 
                 foreach ($convertOptions as $value) {
                     $keysToEncode = $model->getIdKeys($model, $value, false);
