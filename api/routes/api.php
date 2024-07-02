@@ -74,7 +74,7 @@ Route::group(
         Route::get('institutions/areas', 'InstitutionController@getInstitutionAreas');
         Route::get('institutions/summaries', 'InstitutionController@getSummariesList');
         Route::get('institutions/staff', 'InstitutionController@getStaffList');
-        Route::get('institutions/positions', 'InstitutionController@getPositionsList');
+        Route::get('institutions/positions/list', 'InstitutionController@getPositionsList');
         Route::get('institutions/room-type-summaries', 'InstitutionController@roomTypeSummaries');
         Route::get('institutions/grades/summaries', 'InstitutionController@getGradeSummariesList');
         Route::get('institutions/{id}/grades/summaries', 'InstitutionController@getInstitutionGradeSummariesList');
@@ -447,7 +447,7 @@ Route::group(
 
         //POCOR-8259 start...
         Route::get('themes', 'ThemeController@getAllThemes');
-        Route::get('themes/{themeId}', 'ThemeController@getThemeId');
+        Route::get('themes/{themeId}', 'ThemeController@getThemeViaId');
         //POCOR-8259 end...
 
 

@@ -100,9 +100,11 @@ class InstitutionsTable extends ControllerActionTable
 
         //$this->hasMany('InstitutionCustomFieldValues', ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_id']); //not same as cakephp 3 code
         //$this->hasMany('InstitutionCustomFields', ['className' => 'InstitutionCustomField.InstitutionCustomFields', 'foreignKey' => 'id']); //not same as cakephp 3 code
-        $this->hasMany('InstitutionCustomFieldValues', ['className' => 'Institution.InstitutionCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_id']);
+        //$this->hasMany('InstitutionCustomFieldValues', ['className' => 'Institution.InstitutionCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_id']);
 
-        $this->hasMany('InstitutionCustomFields', ['className' => 'InstitutionCustomFieldValues.InstitutionCustomFields', 'foreignKey' => 'id']);
+        $this->hasMany('InstitutionCustomFieldValues', ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'institution_id']);
+        $this->hasMany('CustomFieldValues', ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'id']);
+        $this->hasMany('InstitutionCustomFields', ['className' => 'InstitutionCustomField.InstitutionCustomFields', 'foreignKey' => 'id']);
 
         // Note: InstitutionClasses already cascade deletes 'InstitutionSubjectStudents' - dependent and cascade not neccessary
         $this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -154,14 +156,14 @@ class InstitutionsTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
-        $this->belongsToMany('SecurityGroups', [
-            'className' => 'Security.SystemGroups',
-            'joinTable' => 'security_group_institutions',
-            'foreignKey' => 'institution_id',
-            'targetForeignKey' => 'security_group_id',
-            'through' => 'Security.SecurityGroupInstitutions',
-            'dependent' => true
-        ]);
+        // $this->belongsToMany('SecurityGroups', [
+        //     'className' => 'Security.SystemGroups',
+        //     'joinTable' => 'security_group_institutions',
+        //     'foreignKey' => 'institution_id',
+        //     'targetForeignKey' => 'security_group_id',
+        //     'through' => 'Security.SecurityGroupInstitutions',
+        //     'dependent' => true
+        // ]);
         $this->belongsToMany('UserGroups', [
             'className' => 'Security.UserGroups',
             'joinTable' => 'security_group_institutions',
@@ -173,19 +175,19 @@ class InstitutionsTable extends ControllerActionTable
         //POCOR-6520 starts: add isset condition only
         $request = Router::getRequest();
         if ($request !== null && isset($request->getParam('pass')[0]) && $request->getParam('pass')[0] != 'excel') {//POCOR-6520 ends
-            // $this->addBehavior('CustomField.Record', [
-            //     'fieldKey' => 'institution_custom_field_id',
-            //     'tableColumnKey' => 'institution_custom_table_column_id',
-            //     'tableRowKey' => 'institution_custom_table_row_id',
-            //     'fieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFields'],
-            //     'formKey' => 'institution_custom_form_id',
-            //     'filterKey' => 'institution_custom_filter_id',
-            //     'formFieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFields'],
-            //     'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
-            //     'recordKey' => 'institution_id',
-            //     'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
-            //     'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
-            // ]);
+            $this->addBehavior('CustomField.Record', [
+                'fieldKey' => 'institution_custom_field_id',
+                'tableColumnKey' => 'institution_custom_table_column_id',
+                'tableRowKey' => 'institution_custom_table_row_id',
+                'fieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFields'],
+                'formKey' => 'institution_custom_form_id',
+                'filterKey' => 'institution_custom_filter_id',
+                'formFieldClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFields'],
+                'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
+                'recordKey' => 'institution_id',
+                'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
+                'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+            ]);
         }
         $this->addBehavior('Year', ['date_opened' => 'year_opened', 'date_closed' => 'year_closed']);
         $this->addBehavior('TrackActivity', ['target' => 'Institution.InstitutionActivities', 'key' => 'institution_id', 'session' => 'Institution.Institutions.id']);
@@ -258,6 +260,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
         $this->addBehavior('Institution.LatLong');
         $this->addBehavior('Institution.InstitutionTab');
+        $this->SecurityGroups = TableRegistry::get('Security.SystemGroups');
 
     }
 
@@ -1349,8 +1352,10 @@ class InstitutionsTable extends ControllerActionTable
         $securityGroupId = $entity->security_group_id;
         $SecurityGroup = TableRegistry::getTableLocator()->get('Security.SystemGroups');
 
-        $groupEntity = $SecurityGroup->get($securityGroupId);
-        $SecurityGroup->delete($groupEntity);
+        $groupEntity = $SecurityGroup->find()->where(['id' =>$securityGroupId])->first();
+        if(!empty($groupEntity)) {
+            $SecurityGroup->delete($groupEntity);
+        }
         $body = array();
         $body = [
             'institution_id' => $entity->id
@@ -1954,6 +1959,7 @@ class InstitutionsTable extends ControllerActionTable
         $queryString = $this->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId]);
         foreach ($buttons as &$button) {
             if (isset($button['url'][1])) {
+                $button['url'][1] = $queryString;
                 $button['url']['institutionId'] = $button['url'][1];
             }
         }
@@ -1961,9 +1967,10 @@ class InstitutionsTable extends ControllerActionTable
         if (isset($buttons['view']) && $this->AccessControl->check(['InstitutionHistories', 'index'])) {
             $customUrl = [
                 'plugin' => 'Institution',
-                'controller' => 'InstitutionHistories',
-                'action' => 'index',
-                '0' => $queryString
+                'controller' => 'Institutions',
+                'action' => 'History',
+                '0' => 'index',
+                '1' => $queryString
             ];
             $icon = '<i class="fa fa-history"></i>';
             // $viewbutton = $buttons['view'];
@@ -1975,11 +1982,22 @@ class InstitutionsTable extends ControllerActionTable
             $buttons['history'] = $buttons['view'];
             $buttons['history']['label'] = $icon . __('History');
             $buttons['history']['url']['plugin'] = 'Institution';
-            $buttons['history']['url']['controller'] = 'InstitutionHistories';
-            $buttons['history']['url']['action'] = 'index';
+            $buttons['history']['url']['controller'] = 'Institutions';
+            $buttons['history']['url']['action'] = 'History';
+            $buttons['history']['url'][0] = 'index';
+            $buttons['history']['url'][1] = $queryString;
+            if(isset( $buttons['history']['url']['institutionId'])) {
+                unset($buttons['history']['url']['institutionId']);
+            }
+            if(isset( $buttons['history']['url']['?'])) {
+                unset( $buttons['history']['url']['?']);
+            }
+            if(isset( $buttons['history']['url']['page'])) {
+                unset( $buttons['history']['url']['page']);
+            }
         }
 
-//        die('<pre>' . print_r($buttons));
+        //die('<pre>' . print_r($buttons,true));
         return $buttons;
     }
 
@@ -2387,11 +2405,13 @@ class InstitutionsTable extends ControllerActionTable
             //POCOR -7324 starts
             $securityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions')
                 ->find()->where(['institution_id' => $entity->id])->first();
-            $securityGroups = TableRegistry::get('security_groups')
+            if(!empty( $securityGroupInstitutions)) {
+                $securityGroups = TableRegistry::get('Security.SystemGroups')
                 ->find()->where(['id' => $securityGroupInstitutions->security_group_id])->first(); //POCOR-7755
+            }
             $institutionActivities = TableRegistry::get('Institution.InstitutionActivities')
                 ->find()->where(['institution_id' => $entity->id])->first();
-            if ($securityGroupInstitutions) {
+            if ($securityGroupInstitutions && $securityGroups) {
                 TableRegistry::get('Security.SecurityGroupInstitutions')->delete($securityGroupInstitutions);
                 TableRegistry::get('Security.SecurityGroups')->delete($securityGroups); //POCOR-7755
             }
@@ -2403,7 +2423,8 @@ class InstitutionsTable extends ControllerActionTable
                 ->find()->where(['id' => $entity->id])->first();
             if (TableRegistry::getTableLocator()->get('Institution.Institutions')->delete($entity)) {
                 $this->Alert->success('general.delete.success', ['reset' => true]);
-                return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions']); // POCOR-7253
+                return $this->controller->redirect($this->url('index'));
+                //return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions']); // POCOR-7253
             }
         }
     }
@@ -2443,13 +2464,16 @@ class InstitutionsTable extends ControllerActionTable
             $institution_positions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions')->find()->where(['institution_id' => $institutionId])->count();
             $institution_shifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts')->find()->where(['institution_id' => $institutionId])->count();
             $institution_classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses')->find()->where(['institution_id' => $institutionId])->count();
-            $institution_custom_field_values = TableRegistry::getTableLocator()->get('Institution.InstitutionCustomFieldValues')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_custom_field_values = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFieldValues')->find()->where(['institution_id' => $institutionId])->count();
             $institution_subject_students = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents')->find()->where(['institution_id' => $institutionId])->count();
             $institution_subjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects')->find()->where(['institution_id' => $institutionId])->count();
             $institution_staff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff')->find()->where(['institution_id' => $institutionId])->count();
             $staff_behaviours = TableRegistry::getTableLocator()->get('Staff.StaffBehaviours')->find()->where(['institution_id' => $institutionId])->count();
             $institution_students = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents')->find()->where(['institution_id' => $institutionId])->count();
-            $student_behaviours = TableRegistry::getTableLocator()->get('Student.StudentBehaviours')->find()->where(['institution_id' => $institutionId])->count();
+           // $student_behaviours = TableRegistry::getTableLocator()->get('Student.StudentBehaviours')->find()->where(['institution_id' => $institutionId])->count();
+            $studentBehavioursTable = TableRegistry::getTableLocator()->get('Student.StudentBehaviours');
+            $query = $studentBehavioursTable->find();
+            $student_behaviours = $query->applyOptions(['skipBeforeFind' => true])->where(['institution_id' => $institutionId])->count();
             $institution_student_absences = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentAbsences')->find()->where(['institution_id' => $institutionId])->count();
             $institution_bank_accounts = TableRegistry::getTableLocator()->get('Institution.InstitutionBankAccounts')->find()->where(['institution_id' => $institutionId])->count();
             $institution_fees = TableRegistry::getTableLocator()->get('Institution.InstitutionFees')->find()->where(['institution_id' => $institutionId])->count();
@@ -2459,8 +2483,8 @@ class InstitutionsTable extends ControllerActionTable
             $institution_rooms = TableRegistry::getTableLocator()->get('Institution.InstitutionRooms')->find()->where(['institution_id' => $institutionId])->count();
             $institution_grades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades')->find()->where(['institution_id' => $institutionId])->count();
             $assessment_item_results = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults')->find()->where(['institution_id' => $institutionId])->count();
-            $institution_quality_rubrics = TableRegistry::getTableLocator()->get('Institution.InstitutionQualityRubrics')->find()->where(['institution_id' => $institutionId])->count();
-            $institution_quality_visits = TableRegistry::getTableLocator()->get('Institution.InstitutionQualityVisits')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_quality_rubrics = TableRegistry::getTableLocator()->get('Institution.InstitutionRubrics')->find()->where(['institution_id' => $institutionId])->count();
+            $institution_quality_visits = TableRegistry::getTableLocator()->get('Quality.InstitutionQualityVisits')->find()->where(['institution_id' => $institutionId])->count();
             $examination_centres = TableRegistry::getTableLocator()->get('Examination.ExaminationCentres')->find()->where(['institution_id' => $institutionId])->count();
             $examination_student_subject_results = TableRegistry::getTableLocator()->get('Examination.ExaminationStudentSubjectResults')->find()->where(['institution_id' => $institutionId])->count();
             $institution_committees = TableRegistry::getTableLocator()->get('Institution.InstitutionCommittees')->find()->where(['institution_id' => $institutionId])->count();

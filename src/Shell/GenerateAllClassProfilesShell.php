@@ -43,7 +43,7 @@ class GenerateAllClassProfilesShell extends Shell
                 ->order([
                     $this->ClassProfileProcesses->aliasField('created'),
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->first();
 
             if (!empty($recordToProcess)) {
