@@ -126,7 +126,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                 promises[1] = InstitutionClassStudentsSvc.getInstitutionShifts(response.institution_id, response.academic_period_id);
                 promises[2] = InstitutionClassStudentsSvc.getTeacherOptions(response.institution_id, response.academic_period_id);
                 promises[3] = InstitutionClassStudentsSvc.getConfigItemValue('max_students_per_class');
-                // promises[4] = InstitutionClassStudentsSvc.getInstitutionUnits(response.institution_id, response.academic_period_id);
+                promises[4] = InstitutionClassStudentsSvc.getInstitutionUnits(response.institution_id, response.academic_period_id);
                 promises[5] = InstitutionClassStudentsSvc.getInstitutionCourses(response.institution_id, response.academic_period_id);
                 return $q.all(promises);
             }, function(error) {
@@ -300,7 +300,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                     Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'message', 'general.edit.success');
                     $http.get(Controller.alertUrl)
                     .then(function(response) {
-                        alert(Controller.redirectUrl);
+                        //alert(Controller.redirectUrl);
                         $window.location.href = Controller.redirectUrl;
                     }, function (error) {
                         console.log(error);

@@ -447,7 +447,7 @@ Route::group(
 
         //POCOR-8259 start...
         Route::get('themes', 'ThemeController@getAllThemes');
-        Route::get('themes/{themeId}', 'ThemeController@getThemeId');
+        Route::get('themes/{themeId}', 'ThemeController@getThemeViaId');
         //POCOR-8259 end...
 
 

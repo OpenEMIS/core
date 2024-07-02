@@ -10,6 +10,7 @@ class InstitutionScheduleLessons extends Model
     use HasFactory;
 
     public $timestamps = false;
+    protected $keyType = 'string';
 
     use \Awobaz\Compoships\Compoships;
 

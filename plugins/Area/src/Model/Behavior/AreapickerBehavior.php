@@ -189,19 +189,19 @@ class AreapickerBehavior extends Behavior
 
     public function getAreaLevelName($targetModel, $areaId)
     {
-        // $targetTable = TableRegistry::getTableLocator()->get($targetModel);
-        // $levelAssociation = Inflector::singularize($targetTable->getAlias()).'Levels';
-        // $path = $targetTable
-        //     ->find('path', ['for' => $areaId])
-        //     ->contain([$levelAssociation])
-        //     ->select(['level_name' => $levelAssociation.'.name', 'area_name' => $targetTable->aliasField('name')])
-        //     //->bufferResults(false) // comment cakephp 4
-        //     ->toArray();
+        $targetTable = TableRegistry::getTableLocator()->get($targetModel);
+        $levelAssociation = Inflector::singularize($targetTable->getAlias()).'Levels';
+        $path = $targetTable
+            ->find('path', ['for' => $areaId])
+            ->contain([$levelAssociation])
+            ->select(['level_name' => $levelAssociation.'.name', 'area_name' => $targetTable->aliasField('name')])
+            //->bufferResults(false) // comment cakephp 4
+            ->toArray();
 
-        // if ($targetModel == 'Area.AreaAdministratives') {
-        //     // unset world
-        //     unset($path[0]);
-        // }
-        // return $path;
+        if ($targetModel == 'Area.AreaAdministratives') {
+            // unset world
+            unset($path[0]);
+        }
+        return $path;
     }
 }

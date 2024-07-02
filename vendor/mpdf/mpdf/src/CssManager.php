@@ -1527,6 +1527,9 @@ class CssManager
 
 	function MergeCSS($inherit, $tag, $attr)
 	{
+		set_time_limit(0); //POCOR-7268 starts
+        ini_set('memory_limit', '-1'); 
+        ini_set('max_execution_time', '9600'); //POCOR-7268 ends
 		$p = [];
 
 		$attr = is_array($attr) ? $attr : [];
