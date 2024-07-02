@@ -123,10 +123,10 @@ class InstitutionService extends Controller
     }
 
 
-    public function getInstitutionData(int $id)
+    public function getInstitutionData($params, int $id)
     {
         try {
-            $data = $this->institutionRepository->getInstitutionData($id);
+            $data = $this->institutionRepository->getInstitutionData($params, $id);
 
             $resp = [];
             if($data){

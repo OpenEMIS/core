@@ -105,7 +105,6 @@ class InstitutionRepository extends Controller
         try {
             
             $params = $request->all();
-
             //For POCOR-7772 Start
 
             $permissions = checkAccess();
@@ -137,6 +136,26 @@ class InstitutionRepository extends Controller
             //For POCOR-7772 End
 
 
+            //For POCOR-8398 Start...
+            if(isset($params['typeId'])){
+                $institutions = $institutions->where('institutions.institution_type_id', $params['typeId']);
+            }
+
+            if(isset($params['classificationId'])){
+                $institutions = $institutions->where('institutions.classification', $params['classificationId']);
+            }
+
+            if(isset($params['institutionId'])){
+                $institutions = $institutions->where('institutions.id', $params['institutionId']);
+            }
+
+
+            if(isset($params['institutionCode'])){
+                $institutions = $institutions->where('institutions.code', $params['institutionCode']);
+            }
+            //For POCOR-8398 End...
+
+
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
@@ -161,13 +180,12 @@ class InstitutionRepository extends Controller
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Institution List Not Found');
         }
     }
 
 
-    public function getInstitutionData($id)
+    public function getInstitutionData($params, $id)
     {
         try {
             //For POCOR-7772 Start
@@ -192,6 +210,26 @@ class InstitutionRepository extends Controller
                 $institution = $institution->whereIn('institutions.id', $institution_Ids);
             }
             //For POCOR-7772 End
+
+
+            //For POCOR-8398 Start...
+            if(isset($params['typeId'])){
+                $institution = $institution->where('institutions.institution_type_id', $params['typeId']);
+            }
+
+            if(isset($params['classificationId'])){
+                $institution = $institution->where('institutions.classification', $params['classificationId']);
+            }
+
+            if(isset($params['institutionId'])){
+                $institution = $institution->where('institutions.id', $params['institutionId']);
+            }
+
+
+            if(isset($params['institutionCode'])){
+                $institution = $institution->where('institutions.code', $params['institutionCode']);
+            }
+            //For POCOR-8398 End...
             
             $institution = $institution->first();
             return $institution;
@@ -1075,10 +1113,23 @@ class InstitutionRepository extends Controller
 
             $summaries = new SummaryInstitutions();
             
-            if(isset($params['academic_period_id'])){
+            //For POCOR-8398 Start...
+            /*if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
                 $summaries = $summaries->where('academic_period_id', $academic_period_id);
+            }*/
+
+
+            if(isset($params['academicPeriodId'])){
+                $academic_period_id = $params['academicPeriodId'];
+                $summaries = $summaries->where('academic_period_id', $academic_period_id);
             }
+
+
+            if(isset($params['institutionId'])){
+                $summaries = $summaries->where('institution_id', $params['institutionId']);
+            }
+            //For POCOR-8398 End...
 
 
             //For POCOR-7772 Start
@@ -1135,17 +1186,31 @@ class InstitutionRepository extends Controller
             //For POCOR-7772 End
 
             $summaries = new SummaryInstitutions();
-            
-            if(isset($params['academic_period_id'])){
-                $academic_period_id = $params['academic_period_id'];
-                $summaries = $summaries->where('academic_period_id', $academic_period_id);
-            }
 
             //For POCOR-7772 Start
             if(isset($institution_Ids)){
                 $summaries = $summaries->whereIn('summary_institutions.institution_id', $institution_Ids);
             }
             //For POCOR-7772 End
+
+
+            //For POCOR-8398 Start...
+            /*if(isset($params['academic_period_id'])){
+                $academic_period_id = $params['academic_period_id'];
+                $summaries = $summaries->where('academic_period_id', $academic_period_id);
+            }*/
+
+
+            if(isset($params['academicPeriodId'])){
+                $academic_period_id = $params['academicPeriodId'];
+                $summaries = $summaries->where('academic_period_id', $academic_period_id);
+            }
+
+
+            if(isset($params['institutionId'])){
+                $summaries = $summaries->where('institution_id', $params['institutionId']);
+            }
+            //For POCOR-8398 End...
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
