@@ -1147,54 +1147,22 @@ class StaffUserTable extends ControllerActionTable
         return $query;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function afterAction(Event $event, ArrayObject $options)
     {
-        if ($field == 'photo_content') {
-            return __('Photo Content');
-        } elseif ($field == 'openemis_id') {
-            return __('OpenEMIS ID');
-        } elseif ($field == 'first_name') {
-            return __('First Name');
-        } elseif ($field == 'middle_name') {
-            return __('Middle Name');
-        } elseif ($field == 'third_name') {
-            return __('Third Name');
-        } elseif ($field == 'last_name') {
-            return __('Last Name');
-        } elseif ($field == 'preferred_name') {
-            return __('Preferred Name');
-        } elseif ($field == 'gender_id') {
-            return __('Gender');
-        } elseif ($field == 'date_of_birth') {
-            return __('Date Of Birth');
-        } elseif ($field == 'email') {
-            return __('Email');
-        } elseif ($field == 'details') {
-            return __('Details');
-        } elseif ($field == 'address') {
-            return __('Address');
-        } elseif ($field == 'staff_id') {
-            return __('Staff');
-        } elseif ($field == 'start_date') {
-            return __('Start Date');
-        } elseif ($field == 'end_date') {
-            return __('End Date');
-        } elseif ($field == 'staff_status_id') {
-            return __('Staff Status');
-        } elseif ($field == 'passport_no') {
-            return __('Passport');
-        } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
-        } elseif ($field == 'modified') {
-            return __('Modified On');
-        } elseif ($field == 'created_user_id') {
-            return __('Created By');
-        } elseif ($field == 'created') {
-            return __('Created On');
-        } elseif ($field == 'failed_logins') {
-            return __('Failed Logins');
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        $users = TableRegistry::get('Security.Users');
+        $plugin = __($this->controller->getPlugin());
+        $id = $this->request->getAttribute('params')['pass'][1];
+        $DecodedQueryString = $this->paramsDecode($id);
+        $staffId = $DecodedQueryString['staff_id'];
+        $data = $users->find()->select(['first_name'=>$users->aliasField('first_name'),'middle_name'=>$users->aliasField('middle_name'),'third_name'=>$users->aliasField('third_name'),'last_name'=>$users->aliasField('last_name')])
+                ->where([$users->aliasField('id') => $staffId ])->first();
+        $StaffName = $data->first_name.' '.$data->middle_name.' '.$data->third_name.' '.$data->last_name;
+        try {
+            
+            $this->controller->set('contentHeader', $StaffName . ' - ' . 'Overview');
+        } catch (RecordNotFoundException $e) {
+            Log::write('error', $e->getMessage());
         }
     }
+
 }
