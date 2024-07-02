@@ -7,11 +7,13 @@
 						'plugin' => $this->request->getParam('plugin'),
 					    'controller' => $this->request->getParam('controller'),
 					    'action' => $this->request->getParam('action'),
+						'0' => 'index',//POCOR-8359
+                    	'1' => $encodedQueryString,//POCOR-8359
 					];
 					if (!empty($this->request->getParam('pass'))) {
 						$url = array_merge($url, $this->request->getParam('pass'));
 					}
-
+					
 					$dataNamedGroup = [];
 					if (!empty($this->request->getParam('query'))) {
 						foreach ($this->request->getParam('query') as $key => $value) {
@@ -95,7 +97,9 @@
 					$baseUrl = $this->Url->build([
 						'plugin' => $this->request->getParam('plugin'),
 					    'controller' => $this->request->getParam('controller'),
-					    'action' => $this->request->getParam('action')
+					    'action' => $this->request->getParam('action'),
+						'0' => 'index',//POCOR-8359
+                    	'1' => $encodedQueryString,//POCOR-8359
 					]);
 					$template = $this->ControllerAction->getFormTemplate();
 					$this->Form->templates($template);

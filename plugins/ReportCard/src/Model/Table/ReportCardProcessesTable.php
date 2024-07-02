@@ -232,7 +232,7 @@ class ReportCardProcessesTable extends ControllerActionTable
             $now = new DateTime();
             $currentDateTime = $now->format('Y-m-d H:i:s');
             $c_timestap = strtotime($currentDateTime);
-            $modifiedDate = $entity->modified;
+            $modifiedDate = $entity->modified->format('Y-m-d H:i:s');
             //POCOR-6841 starts
             if ($entity->status == 2) {
                 $currentTimeZone = new DateTime();

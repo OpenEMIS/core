@@ -173,7 +173,7 @@ class InstitutionClassSubjectsTable extends ControllerActionTable
         $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
         //$userAccessRoles = implode(', ', $roles);    
         
-        $QueryResult = TableRegistry::getTableLocator()->get('SecurityRoleFunctions')->find()              
+        $QueryResult = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()              
                 ->leftJoin(['SecurityFunctions' => 'security_functions'], [
                     [
                         'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
