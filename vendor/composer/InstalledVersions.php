@@ -29,11 +29,7 @@ private static $installed = array (
     'aliases' => 
     array (
     ),
-<<<<<<< HEAD
     'reference' => 'b1bbca275490b94eed7a9de851cdc8651a1435d9',
-=======
-    'reference' => '94675795f81fd548a002b560b6e25cfb081d71dd',
->>>>>>> origin/POCOR-7485-E
     'name' => 'korditpteltd/openemis-phpoe',
   ),
   'versions' => 
@@ -357,11 +353,7 @@ private static $installed = array (
       'aliases' => 
       array (
       ),
-<<<<<<< HEAD
       'reference' => 'b1bbca275490b94eed7a9de851cdc8651a1435d9',
-=======
-      'reference' => '94675795f81fd548a002b560b6e25cfb081d71dd',
->>>>>>> origin/POCOR-7485-E
     ),
     'laminas/laminas-diactoros' => 
     array (

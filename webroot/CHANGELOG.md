@@ -1,3 +1,18 @@
+### [4.0.2] - 2024-06-27
+- Bug Fixed: OpenEMIS Core Training v4 APIs is not working due to changes in table structure
+- Bug Fixed: API: When retrieving the institution schedule timetable using API v4, it gives a 404 error status
+- Bug Fixed: Institutions>Attendance>Staff: Late is not showing correctly
+- Bug Fixed: Institutions>Performance>Report Cards(Automation): User should be able to generate report cards
+- Bug Fixed: Institutions>Report Cards>Comments: User should be able to view and edit homeroom teacher, Principal and subject teacher tabs
+- Bug Fixed: Administration(Automation): User is getting blank page and left menu not collapsed part two
+- Bug Fixed: Institutions>Staff(Automation): User is getting blank page
+- Bug Fixed: Institution>Finance>Institution Fees(Automation): User is getting blank page
+- Bug Fixed: Personal>General>History(Automation): Left menu is not collapsed
+- Bug Fixed: When running "composer dump-autoload", having error
+- Bug Fixed: Institutions>Attendance>Students: No scheduled class button is taking very long to load and the query takes a long time to run.
+- Bug Fixed: Institutions>Attendance>Students(Automation): Login as homeroom teacher and attendance is not showing
+- Bug Fixed: Meals Benefits Api-Not received and none should not have mandatory meal benefits for import
+
 ### [4.0.1] - 2024-06-24
 - Implemented: Develop a PHP file to display the server IP address
 - Implemented: Develop OpenEMIS Core Assessment v4 APIs

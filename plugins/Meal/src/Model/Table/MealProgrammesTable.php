@@ -248,7 +248,7 @@ class MealProgrammesTable extends ControllerActionTable
     {
         $typeOptions = $this->MealNutritions->find('list')->toArray();
         $institutionsOptions = $this->Institutions->find('list')->toArray();
-        $foodTable= TableRegistry::get('Meal.Foodtypes');//POCOR_7363
+        $foodTable= TableRegistry::get('Meal.FoodTypes');//POCOR_7363
         $foodTypeOptions = $foodTable->find('list')->toArray();//POCOR-7363
         // $AreaLevelsOptions = $this->AreaLevels->find('list')->toArray(); //POCOR-6920
         $this->field('academic_period_id',['select' => false]);
@@ -1403,7 +1403,7 @@ class MealProgrammesTable extends ControllerActionTable
     */ 
     public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $MealInstitutionProgrammes = TableRegistry::get('Institution.InstitutionMealProgrammes');
+        $MealInstitutionProgrammes = TableRegistry::get('Institution.InstitutionDistributions');
         $InstitutionProgrammes = $MealInstitutionProgrammes
                 ->find('all')->select(['id'])
                 ->where([
@@ -1415,7 +1415,7 @@ class MealProgrammesTable extends ControllerActionTable
             }
         }
         //POCOR-7363 start
-        $MealFoodTable = TableRegistry::get('meal_food_records');
+        $MealFoodTable = TableRegistry::get('Meal.MealFoodRecords');
         $MealFoodRecords =  $MealFoodTable 
                 ->find('all')->select(['id'])
                 ->where([
