@@ -34,9 +34,7 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
-
         parent::initialize($config);
-
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
@@ -222,6 +220,8 @@ class InstitutionSurveysTable extends ControllerActionTable
 			$helpBtn['attr']['title'] = __('Help');
 			$extra['toolbarButtons']['help'] = $helpBtn;
 		}
+
+
 		// End POCOR-5188
 	}
 
@@ -1003,7 +1003,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                                 $surveyEntity = $this->newEntity($surveyData, ['validate' => false]);
                                 if ($this->save($surveyEntity)) {
                                 } else {
-                                    Log::write('debug', $surveyEntity->errors());
+                                    Log::write('debug', $surveyEntity->getErrors());
                                 }
                             } else {
                                 //POCOR-7622 for removing expire condition
@@ -1153,7 +1153,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                                 $surveyEntity = $this->newEntity($surveyData, ['validate' => false]);
                                 if ($this->save($surveyEntity)) {
                                 } else {
-                                    Log::write('debug', $surveyEntity->errors());
+                                    Log::write('debug', $surveyEntity->getErrors());
                                 }
                             } else {
                                 //POCOR-7622 for removing expire condition
@@ -1190,8 +1190,6 @@ class InstitutionSurveysTable extends ControllerActionTable
         $roleId = $userRole['security_role_id'];
         $workflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
         // $this->copyBuildSurveyRecords($controller);//POCOR-7412
-        $roleId = 2;
-        $userId = 8805;
         if(isset($roleId)){
             $query
             ->select([
@@ -1288,8 +1286,7 @@ class InstitutionSurveysTable extends ControllerActionTable
             return $this->controller->redirect($url);
         }
     }
-    // public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Institutions > Survey > Forms';
