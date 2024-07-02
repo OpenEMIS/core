@@ -20,6 +20,7 @@ use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use Cake\ORM\Table;
 
 class InstitutionExcelReportBehavior extends Behavior
 {
@@ -1020,7 +1021,7 @@ class InstitutionExcelReportBehavior extends Behavior
         }
     }
 
-    private function table($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
+    public function table($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra): Table
     {
         $rowValue = $attr['rowValue'];
         $columnIndex = $attr['columnIndex'];

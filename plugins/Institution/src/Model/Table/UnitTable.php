@@ -37,7 +37,7 @@ class UnitTable extends ControllerActionTable
         
         $institutionClasses = TableRegistry::getTableLocator()->get('Institution.Unit');
         $query = $institutionClasses->find('list',['keyField' => 'id', 'valueField' => 'name']);
-        return $query->toArray();
+        return $query;
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)

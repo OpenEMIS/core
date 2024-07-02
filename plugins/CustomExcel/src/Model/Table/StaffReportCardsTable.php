@@ -14,9 +14,9 @@ class StaffReportCardsTable extends AppTable
     private $fileType = 'xlsx';
     //private $fileType = 'pdf';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff');
+        $this->setTable('institution_staff');
         parent::initialize($config);
 
         $this->addBehavior('CustomExcel.StaffExcelReport', [
@@ -44,7 +44,7 @@ class StaffReportCardsTable extends AppTable
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onExcelTemplateBeforeGenerate'] = 'onExcelTemplateBeforeGenerate';
@@ -209,27 +209,39 @@ class StaffReportCardsTable extends AppTable
 					'address' => 'Users.address',
 					'date_of_birth' => 'Users.date_of_birth',
 					'identity_number' => 'Users.identity_number',
-					'staff_position_title' => 'Positions.StaffPositionTitles.staff_position_title',
+					// 'staff_position_title' => 'Positions.StaffPositionTitles.staff_position_title',
 					'gender' => 'Genders.name',
                 ])
-                ->contain([
+                ->join([
                     'Users' => [
-                        'fields' => [
-                            'identity_number',
-                            'first_name',
-                            'last_name',
-                            'photo_content',
-                            'email',
-                            'address',
-                            'date_of_birth',
-                        ]
+                        'table' => 'security_users',
+                        'type' => 'INNER',
+                        'conditions' => 'Users.id = Staff.staff_id'
                     ],
-					'Positions.StaffPositionTitles'=>[
-						'fields' => [
-							'staff_position_title' => 'StaffPositionTitles.name',
-						]
-					]
+                    'Genders' => [
+                        'table' => 'genders',
+                        'type' => 'INNER',
+                        'conditions' => 'Genders.id = Users.gender_id'
+                    ]
                 ])
+                // ->contain([
+                //     'Users' => [
+                //         'fields' => [
+                //             'identity_number',
+                //             'first_name',
+                //             'last_name',
+                //             'photo_content',
+                //             'email',
+                //             'address',
+                //             'date_of_birth',
+                //         ]
+                //     ],
+				// 	'Positions.StaffPositionTitles'=>[
+				// 		'fields' => [
+				// 			'staff_position_title' => 'StaffPositionTitles.name',
+				// 		]
+				// 	]
+                // ])
 				->matching('Users.Genders')
                 ->where([
                     $Staff->aliasField('institution_id') => $params['institution_id'],
@@ -421,7 +433,7 @@ class StaffReportCardsTable extends AppTable
 					'education_grade' => 'EducationGrades.name',
                 ])
 				->innerJoin(
-					[$InstitutionClasses->alias() => $InstitutionClasses->table()],
+					[$InstitutionClasses->getAlias() => $InstitutionClasses->getTable()],
 					[
 						$InstitutionClasses->aliasField('id = ') .  $InstitutionClassesSecondaryStaff->aliasField('institution_class_id'),
 					]

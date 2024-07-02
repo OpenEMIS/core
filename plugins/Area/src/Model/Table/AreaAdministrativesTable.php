@@ -127,9 +127,9 @@ class AreaAdministrativesTable extends ControllerActionTable
     public function findAreaList(Query $query, array $options)
     {
         $selected = !empty($options['selected']) && $options['selected'] != 'null' ? $options['selected'] : null;
-        $selected = 1;
+        //$selected = 1;
         if (isset($options['recordOnly']) && $options['recordOnly']) {
-            return $query
+            $query = $query
                 ->contain(['AreaAdministrativeLevels'])
                 ->select([
                     $this->aliasField('id'),
@@ -137,8 +137,20 @@ class AreaAdministrativesTable extends ControllerActionTable
                     $this->aliasField('parent_id'),
                     'AreaAdministrativeLevels.name',
                     $this->aliasField('order')
-                ])
-                ->where([$this->aliasField('id') => $selected])
+                ]);
+            if(!empty($selected)) {
+                $query = $query->where([$this->aliasField('id') => $selected]);
+            }
+            return $query
+                // ->contain(['AreaAdministrativeLevels'])
+                // ->select([
+                //     $this->aliasField('id'),
+                //     $this->aliasField('name'),
+                //     $this->aliasField('parent_id'),
+                //     'AreaAdministrativeLevels.name',
+                //     $this->aliasField('order')
+                // ])
+                // ->where([$this->aliasField('id') => $selected])
                 ->enableHydration(false)
                 ->formatResults(function ($results) use ($selected) {
                     $results = $results->toArray();

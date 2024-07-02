@@ -8,13 +8,25 @@ use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use JWTAuth;
 
-class ThemeRepository
+class ThemeRepository extends Controller
 {
 
     public function getAllThemes($params)
     {
         try {
-            $list = Theme::get()->toArray();
+            $list = new Theme;
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+            
+            if (isset($params['limit'])) {
+                $list = $list->paginate($params['limit']);
+            } else {
+                $list = $list->get();
+            }
             return $list;
         } catch (\Exception $e) {
             Log::error(
@@ -26,7 +38,7 @@ class ThemeRepository
     }
 
 
-    public function getThemeId($id)
+    public function getThemeViaId($id)
     {
         try {
             $list = Theme::where('id', $id)->first();

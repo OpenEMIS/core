@@ -379,8 +379,10 @@ class StudentsController extends AppController
     public
     function getAcademicTabElements($options = [])
     {
-        $tabElements = TableRegistry::get('Institution.StudentUser')->getAcademicTabElements($options);
-        return $this->TabPermission->checkTabPermission($tabElements);
+        //$tabElements = TableRegistry::get('Institution.StudentUser')->getAcademicTabElementsNew($options);//PCOOR-8388
+        $this->loadModel('Institution.StudentUser');//PCOOR-8388
+        $tabElements = $this->StudentUser->getAcademicTabElements($options, $this);//PCOOR-8388
+        return $tabElements;
     }
 
     public function AssessmentItemResultsArchived()

@@ -92,10 +92,11 @@ class InstitutionSubjectStaffTable extends AppTable
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
+        $institution_subject_id = isset($data['institution_subject_id']) ? $data['institution_subject_id'] : 0;//POCOR-8324
         $existingRecords = $this->find()->where([
             $this->aliasField('staff_id') => $data['staff_id'],
             $this->aliasField('institution_id') => $data['institution_id'],
-            $this->aliasField('institution_subject_id') => $data['institution_subject_id']
+            $this->aliasField('institution_subject_id') => $institution_subject_id//POCOR-8324
         ])->first();
         if ($existingRecords) {
             $this->isSubjectExistData = $existingRecords;

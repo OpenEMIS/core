@@ -34,7 +34,7 @@ class StudentSubjectsTable extends ControllerActionTable
 
         $this->addBehavior('Restful.RestfulAccessControl');
         $this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['StudentSubjects' =>['id']
+            'appliedAction' => ['Subjects' =>['id','institution_subject_id','institution_id']
             ]
         ]);
         // $this->addBehavior('Student.StudentTab', [
