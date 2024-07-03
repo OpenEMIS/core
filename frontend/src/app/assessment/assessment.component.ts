@@ -468,20 +468,22 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
             })
           }
           let baseData = this.getBaseUrl();
-          if (res?.data?.urls?.excel) {
-            let importExcelUrl = res?.data?.urls?.excel;
-            let finalExcelUrl = importExcelUrl.replace("cake_session_id", this.queryParamsData[1]);
-            this.excelReport = baseData + finalExcelUrl;
-          }
-          if (res?.data?.urls?.pdf) {
-            let importExcelUrl = res?.data?.urls?.pdf;
-            let finalExcelUrl = importExcelUrl.replace("cake_session_id", this.queryParamsData[1]);
-            this.pdfReport = baseData + finalExcelUrl;
-          }
-          if (res?.data?.urls?.reportCardGenerate) {
-            let importExcelUrl = res?.data?.urls?.reportCardGenerate;
-            let finalExcelUrl = importExcelUrl.replace("cake_session_id", this.queryParamsData[1]);
-            this.reportCard = baseData + finalExcelUrl;
+          if (this.queryParamsData?.length > 0) {
+            if (res?.data?.urls?.excel) {
+              let importExcelUrl = res?.data?.urls?.excel;
+              let finalExcelUrl = importExcelUrl.replace("cake_session_id", this.queryParamsData[1]);
+              this.excelReport = baseData + finalExcelUrl;
+            }
+            if (res?.data?.urls?.pdf) {
+              let importExcelUrl = res?.data?.urls?.pdf;
+              let finalExcelUrl = importExcelUrl.replace("cake_session_id", this.queryParamsData[1]);
+              this.pdfReport = baseData + finalExcelUrl;
+            }
+            if (res?.data?.urls?.reportCardGenerate) {
+              let importExcelUrl = res?.data?.urls?.reportCardGenerate;
+              let finalExcelUrl = importExcelUrl.replace("cake_session_id", this.queryParamsData[1]);
+              this.reportCard = baseData + finalExcelUrl;
+            }
           }
           timer(2000).subscribe((): void => {
             this._row = objData;
