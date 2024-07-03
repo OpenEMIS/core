@@ -1809,7 +1809,8 @@ class InstitutionRepository extends Controller
                 'institutionPosition:id,staff_position_title_id', 
                 'institutionPosition.staffPositionTitle:id,name', 
                 'staffType:id,name as staff_type_name',
-                'classes:id,name,staff_id');
+                'classes:id,name,staff_id',
+                'staffPositionGrade:id,name');
             
 
             //For POCOR-7772 Start
@@ -1870,7 +1871,8 @@ class InstitutionRepository extends Controller
                     'institutionPosition:id,staff_position_title_id', 
                     'institutionPosition.staffPositionTitle:id,name', 
                     'staffType:id,name as staff_type_name',
-                    'classes:id,name,staff_id');
+                    'classes:id,name,staff_id',
+                    'staffPositionGrade:id,name');
             
 
             //For POCOR-7772 Start
@@ -1930,7 +1932,8 @@ class InstitutionRepository extends Controller
                     'staffStatus:id,name as staff_status_name', 
                     'institutionPosition:id,staff_position_title_id', 
                     'institutionPosition.staffPositionTitle:id,name', 'staffType:id,name as staff_type_name',
-                    'classes:id,name,staff_id')
+                    'classes:id,name,staff_id',
+                    'staffPositionGrade:id,name')
                 ->where('institution_staff.institution_id', $institutionId)
                 ->where('institution_staff.staff_id', $staffId);
 
@@ -1950,7 +1953,6 @@ class InstitutionRepository extends Controller
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            dd($e);
             return $this->sendErrorResponse('Institution Staff Data Not Found');
         }
     }
