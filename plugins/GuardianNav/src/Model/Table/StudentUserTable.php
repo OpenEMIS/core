@@ -634,7 +634,7 @@ class StudentUserTable extends ControllerActionTable
             if ($studentEntity->student_status_id == $enrolledStatus) {
                 $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
                 $WithdrawRequests = TableRegistry::get('Institution.WithdrawRequests');
-                $session->write($WithdrawRequests->registryAlias().'.id', $institutionStudentId);
+                $session->write($WithdrawRequests->getRegistryAlias().'.id', $institutionStudentId);
                 $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
                 $approvedStatus = $WorkflowModels->getWorkflowStatusSteps('Institution.StudentWithdraw', 'APPROVED');
 
