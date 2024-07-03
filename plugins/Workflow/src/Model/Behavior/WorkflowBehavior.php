@@ -489,7 +489,12 @@ class WorkflowBehavior extends Behavior
                 $params = [];
                 if ($workflowModel->is_school_based) {
                     $table = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-                    $institutionId = $table->paramsDecode('institution_id');
+                    try {
+                        $institutionId = $table->getQueryString('institution_id');
+                    } catch (\Exception $exception) {
+                        Log::debug($exception->getMessage() . __CLASS__ . __FUNCTION__);
+                        $institutionId = $table->paramsDecode('institution_id');
+                    }
                         $params = [
                             'institution_id' => $institutionId
                         ];
@@ -1262,12 +1267,13 @@ class WorkflowBehavior extends Behavior
                 $params['institution_id'] = $entity->institution_id;
             } else {
                 $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-                $institutionId = $model->paramsDecode('institution_id');
-//                $session = $request->getSession();
-//                if ($session->check('Institution.Institutions.id')) {
-//                    $institutionId = $session->read('Institution.Institutions.id');
-//                    $params['institution_id'] = $institutionId;
-//                }
+                try {
+                    $institutionId = $table->getQueryString('institution_id');
+                } catch (\Exception $exception) {
+                    Log::debug($exception->getMessage() . __CLASS__ . __FUNCTION__);
+                    $institutionId = $table->paramsDecode('institution_id');
+                }
+
             }
         }
 
@@ -1306,10 +1312,12 @@ class WorkflowBehavior extends Behavior
                 $attr['select'] = false;
             } else {
                 $model = $this->_table;
-//                $session = $model->request->getSession();
-//                $requestInstitutionId = $model->request->getAttribute('params')['institutionId'];
-//                $institutionId = isset($requestInstitutionId) ? $model->paramsDecode($requestInstitutionId)['id'] : $session->read('Institution.Institutions.id');
-                $institutionId = $model->paramsDecode('institution_id');
+                try {
+                    $institutionId = $table->getQueryString('institution_id');
+                } catch (\Exception $exception) {
+                    Log::debug($exception->getMessage() . __CLASS__ . __FUNCTION__);
+                    $institutionId = $table->paramsDecode('institution_id');
+                }
                 $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
                 $params = [
                     'is_school_based' => $actionAttr['is_school_based'],
