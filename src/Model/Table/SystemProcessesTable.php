@@ -48,7 +48,7 @@ class SystemProcessesTable extends ControllerActionTable {
 				$this->aliasField('model') => $model,
 				$this->aliasField('process_id') => $pid
 			])
-			//->hydrate(false)
+			->enableHydration(false)
 			->toArray();
 	}
 
@@ -79,7 +79,7 @@ class SystemProcessesTable extends ControllerActionTable {
 				$this->aliasField('model') => $model,
 				$this->aliasField('status') => self::RUNNING
 			])
-			//->hydrate(false)
+			->enableHydration(false)
 			->toArray();
 	}
 

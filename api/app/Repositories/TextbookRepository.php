@@ -18,12 +18,26 @@ use JWTAuth;
 class TextbookRepository extends Controller
 {
 
-    public function getTextbookConditions(){
-        
+    public function getTextbookConditions($params)
+    {
         try {
-            $data = TextbookConditions::get();
+            $data = [];
+
+            $list = new TextbookConditions;
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
+            if (isset($params['limit'])) {
+                $data = $list->paginate($params['limit']);
+            } else {
+                $data = $list->get();
+            }
+
             return $data;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -34,12 +48,11 @@ class TextbookRepository extends Controller
         }
     }
 
-    public function getTextbookByID($id){
-        
+    public function getTextbookByID($id)
+    {
         try {
             $data = Textbooks::where('id', $id)->first();
             return $data;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -50,12 +63,25 @@ class TextbookRepository extends Controller
         }
     }
 
-    public function getTextbookStatuses(){
-        
+    public function getTextbookStatuses($params)
+    {
         try {
-            $data = TextbookStatuses::get();
+            $data = [];
+
+            $list = new TextbookStatuses;
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
+            if (isset($params['limit'])) {
+                $data = $list->paginate($params['limit']);
+            } else {
+                $data = $list->get();
+            }
+
             return $data;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -66,12 +92,25 @@ class TextbookRepository extends Controller
         }
     }
 
-    public function getTextbookDimensions(){
-        
+    public function getTextbookDimensions($params)
+    {
         try {
-            $data = TextbookDimensions::get();
+            $data = [];
+
+            $list = new TextbookDimensions;
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
+            if (isset($params['limit'])) {
+                $data = $list->paginate($params['limit']);
+            } else {
+                $data = $list->get();
+            }
+
             return $data;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',

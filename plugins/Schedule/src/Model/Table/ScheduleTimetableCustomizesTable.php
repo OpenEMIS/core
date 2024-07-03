@@ -13,9 +13,9 @@ use Cake\Validation\Validator;
 
 class ScheduleTimetableCustomizesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_schedule_timetable_customizes');
+        $this->setTable('institution_schedule_timetable_customizes');
         parent::initialize($config);        
         $this->addBehavior('Schedule.Schedule');
         $this->addBehavior('Restful.RestfulAccessControl', [

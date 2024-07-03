@@ -19,7 +19,7 @@ $this->start('toolbar');
 </button>
 <?php endif; ?>
 
-<?php if ($_edit) : ?>
+<?php if ($_edit && $_isActive) : ?>
     <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1" ng-click="$ctrl.onEditClick()">
         <i class="fa kd-edit"></i> 
     </button>
@@ -38,7 +38,7 @@ $session = $this->getRequest()->getSession();
 $superAdmin = $session->read('Auth.User.super_admin');
 $is_connection_is_online = $session->read('is_connection_stablished');
 ?>
-<?php if(($is_connection_is_online == 1 && $is_button_accesible == 1)) :  ?>
+<!-- <?php //if(($is_connection_is_online == 1 && $is_button_accesible == 1)) :  ?> -->
 <?php if ($archiveUrl) : ?>
     <a href="<?=$archiveUrl ?>" ng-show="$ctrl.action == 'view'">
         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Archive') ?>" >
@@ -47,7 +47,7 @@ $is_connection_is_online = $session->read('is_connection_stablished');
     </a>
 </button>
 <?php endif; ?>
-<?php endif; ?>
+<?php //endif; ?>
 <?php /*************** Start POCOR-5188 */ ?>
     <?php 
         if(!empty($is_manual_exist)):

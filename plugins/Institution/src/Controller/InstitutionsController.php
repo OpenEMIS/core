@@ -846,7 +846,7 @@ class InstitutionsController extends AppController
         // POCOR-8115;
         // institution_id should always be in query string, if not, die as an error
         $institution_id = $this->getQueryString('institution_id');
-        
+
         if (empty($institution_id) && $this->request->getQuery('institution_id') != null) {
             $institution_id =  $this->request->getQuery('institution_id');
         }
@@ -1336,6 +1336,9 @@ class InstitutionsController extends AppController
     {
         $timetableId = $this->getQueryString('timetable_id');
         $params = $this->getQueryString();
+        if(empty($timetableId)) {
+            $timetableId = $params['id'];
+        }
         $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         $params['id'] = $timetableId;
         $encodedQueryString = $this->ControllerAction->paramsEncode($params);
@@ -1373,12 +1376,12 @@ class InstitutionsController extends AppController
             $institutionClassIds = $this->getInstitutionClasses($institutionId);
             $where = ['institution_id' => $institutionId];
             $whereClasses = ['institution_class_id IN' => $institutionClassIds];
-            $table_name = 'institution_class_attendance_records';
-            $_archive_1 = ArchiveConnections::hasArchiveRecords($table_name, $whereClasses);
-            $table_name = 'institution_student_absences';
-            $_archive_2 = ArchiveConnections::hasArchiveRecords($table_name, $where);
-            $table_name = 'institution_student_absence_details';
-            $_archive_3 = ArchiveConnections::hasArchiveRecords($table_name, $where);
+            // $table_name = 'institution_class_attendance_records';
+            // $_archive_1 = ArchiveConnections::hasArchiveRecords($table_name, $whereClasses);
+            // $table_name = 'institution_student_absences';
+            // $_archive_2 = ArchiveConnections::hasArchiveRecords($table_name, $where);
+            // $table_name = 'institution_student_absence_details';
+            // $_archive_3 = ArchiveConnections::hasArchiveRecords($table_name, $where);
             // POCOR-7895: end
             $excelUrl = [
                 'plugin' => 'Institution',
@@ -1440,6 +1443,21 @@ class InstitutionsController extends AppController
 
             $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
 
+            //POCOR-8148:Start Check if institution is active
+            $Institutions = TableRegistry::get('Institution.Institutions');
+            $data = $Institutions->find()
+            ->where(['id' => $institutionId])
+            ->first();
+            //echo "<pre>";print_r($data);exit;
+            $_isActive = 1;
+            if ($data->offsetExists('date_closed') && !empty($data['date_closed'])) {
+                $todayDate = new Date();
+                $dateClosed = new Date($data['date_closed']);
+                if ($dateClosed < $todayDate) {
+                    $_isActive = 0;
+                }
+            }
+            //POCOR-8148:End
 
             // issue
             $excelUrl = [
@@ -1447,7 +1465,8 @@ class InstitutionsController extends AppController
                 'controller' => 'Institutions',
                 'action' => 'StudentAttendances',
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-                'excel'
+                'excel',
+                $this->ControllerAction->paramsEncode(['institution_id' => $institutionId])
             ];
 
             $importUrl = [
@@ -1462,12 +1481,14 @@ class InstitutionsController extends AppController
             $archiveUrl['plugin'] = 'Institution';
             $archiveUrl['controller'] = 'Institutions';
             $archiveUrl['action'] = 'InstitutionStudentAbsencesArchived';
+            $archiveUrl[] = $this->ControllerAction->paramsEncode(['institution_id' => $institutionId]);
             $_archive = $_excel = 1;
 
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
             $this->Navigation->addCrumb($crumbTitle);
 
             $this->set('_edit', $_edit);
+            $this->set('_isActive', $_isActive);//POCOR-8148
             $this->set('_excel', $_excel);
             $this->set('_import', $_import);
             $this->set('_archive', $_archive);
@@ -1629,7 +1650,7 @@ class InstitutionsController extends AppController
         $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
         if ($hasTemplate) {
-            
+
             $customUrl = Router::url([
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -1637,7 +1658,7 @@ class InstitutionsController extends AppController
                 'add',
                 $queryString
             ]);
-            
+
             $this->set('reportCardGenerate', $customUrl);
 
             $exportPDF_Url = $this->ControllerAction->url('index');
@@ -1835,7 +1856,7 @@ class InstitutionsController extends AppController
             $param = array_merge($queryString,$param);
             $viewUrl['1'] = $this->ControllerAction->paramsEncode($param);
             $viewUrl['queryString'] = $this->ControllerAction->paramsEncode($queryString);
-            
+
             $alertUrl = [
                 'plugin' => 'Configuration',
                 'controller' => 'Configurations',
@@ -1943,8 +1964,8 @@ class InstitutionsController extends AppController
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'Classes';
             $viewUrl[0] = 'view';
-            $viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $classId['id'], 'institution_id' => $institutionId]);
-
+            //$viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $classId['id'], 'institution_id' => $institutionId]);//POCOR-8323
+            $viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $classId['id'], 'institution_id' => $institutionId, 'institution_class_id' => $classId['id']]);//POCOR-8323
             //POCOR-8107
             $configItems = TableRegistry::get('Configuration.ConfigItems');
             $configItemsData = $configItems->find()->where(['type' => 'Fields for Institutions Classes Details Page'])->toArray();
@@ -1962,13 +1983,26 @@ class InstitutionsController extends AppController
             }
             $viewUrl['unit_field'] = $unitEnable;
             $viewUrl['course_field'] = $courseEnable;
+            //POCOR-8323 Starts
+            $requestQuery = $this->request->getQuery();
+            if(isset($requestQuery)){
+                if($requestQuery['academic_period_id']){
+                    $viewUrl['academic_period_id'] = $requestQuery['academic_period_id'];
+                }
+                if($requestQuery['education_grade_id']){
+                    $viewUrl['education_grade_id'] = $requestQuery['education_grade_id'];
+                }
+            } //POCOR-8323 Ends
+            
             //POCOR-8107
 
             $indexUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'Classes',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+                'index',//POCOR-8323
+                //'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+                $this->ControllerAction->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId])//POCOR-8323
             ];
 
             $alertUrl = [
@@ -2016,12 +2050,15 @@ class InstitutionsController extends AppController
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'Subjects';
             $viewUrl[0] = 'view';
-            $viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $institutionSubjectId, 'institution_id' => $institutionId]);
+            //$viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $institutionSubjectId, 'institution_id' => $institutionId]);
+            $viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $institutionSubjectId['institution_subject_id'], 'institution_id' => $institutionId, 'institution_subject_id' => $institutionSubjectId['institution_subject_id']]);//POCOR-8324
             $indexUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'Subjects',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+                'index',//POCOR-8324
+                //'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+                $this->ControllerAction->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId])//POCOR-8324
             ];
             $alertUrl = [
                 'plugin' => 'Configuration',
@@ -2663,13 +2700,13 @@ class InstitutionsController extends AppController
         if ($pass[0] == 'download' && ($action == 'Expenditure' || $action == 'Visits' || $action = 'Attachments') && ($plugin == 'Institution') && ($controller == 'Institutions')) {
             return true;
         }
-        if (($pass[0] == 'view' || $pass[0] == 'edit') && $action == 'Institutions' && $plugin == 'Institution' && $controller == 'Institutions') {
+        if (($pass[0] == 'view' || $pass[0] == 'edit' || $pass[0] == 'remove') && $action == 'Institutions' && $plugin == 'Institution' && $controller == 'Institutions') {
             return true;
         }
         if ($furtherAction == 'image' || $furtherAction == 'download') {
             return true;
         }
-        if ($pass[0] == 'add' && $action == 'ImportInstitutions') {
+        if (($pass[0] == 'add' && $action == 'ImportInstitutions') || ($action == 'ComponentAction' && $pass[0] == 'add')) {
             return true;
         }
         if ($pass[0] == 'ajaxInstitutionsAutocomplete' && $action == 'Shifts') {
@@ -2812,7 +2849,7 @@ class InstitutionsController extends AppController
         if($alias == 'StudentHistories'){
             $humanTitle = __(Inflector::humanize(Inflector::underscore('History')));
         }//POCOR-8333 ends
-        
+
         $crumbOptions = [];
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->ControllerAction->paramsEncode($queryString);
@@ -2900,10 +2937,26 @@ class InstitutionsController extends AppController
                     '1' => $encodedQueryString]);
             $this->set('contentHeader', $tranlatedInstitutionName);
         }
+        //POCOR-8324 Starts
+        if($alias == 'Subjects' ){
+            if($action == 'index'){
+                $this->Navigation->addCrumb($humanTitle);
+            } else{
+                $crumbOptions = [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => $alias,
+                    '0' => 'index',
+                    '1' => $encodedQueryString];
+                $this->Navigation->addCrumb($humanTitle, $crumbOptions);
+            }
+            $header = $tranlatedInstitutionName;
+            $this->set('contentHeader', $header);
+        }//POCOR-8324 Ends
 
         $modelsWithChangedName = ['CommitteeAttachments',
             'InstitutionMaps',
-            'InstitutionAssociations'];
+            'InstitutionAssociations','Subjects'];//POCOR-8324 add Subjects
         if (!in_array($alias, $modelsWithChangedName)) {
             $this->Navigation->addCrumb($humanTitle, $crumbOptions);
             $header = $tranlatedInstitutionName;
@@ -3001,6 +3054,11 @@ class InstitutionsController extends AppController
 
                 if (in_array($alias, ['StaffTransferOut', 'StudentTransferOut'])) {
                     $params[$model->aliasField('previous_institution_id IS')] = $institutionID;
+                    $pass = $this->getRequest()->getParam('pass');
+                    $furtherAction = $pass[0];
+                    if ($furtherAction == 'add') {
+                        return true;
+                    }
                     $exists = $model->exists($params);
                 } elseif (in_array($alias, ['InstitutionShifts'])) { //this is to show information for the occupier
                     $params['OR'] = [
@@ -9383,6 +9441,27 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserHistories']);
     }//POCOR -8333 ends
+
+    public function History()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionHistories']);
+    }
+
+    private static function debug($something)
+    {
+        if (is_null($something)) {
+            $message = 'NULL';
+        } elseif (is_bool($something)) {
+            $message = $something ? 'TRUE' : 'FALSE';
+        } elseif (is_array($something) || is_object($something)) {
+            $message = json_encode($something, JSON_PRETTY_PRINT);
+        } else {
+            $message = (string)$something;
+        }
+
+        \Cake\Log\Log::debug($message);
+    }
+
 }
 
 

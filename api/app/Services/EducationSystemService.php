@@ -451,19 +451,28 @@ class EducationSystemService extends Controller
 
 
 
-    public function reportCardLists($systemId, $levelId, $cycleId, $programmeId, $gradeId)
+    public function reportCardLists($params, $systemId, $levelId, $cycleId, $programmeId, $gradeId)
     {
         try {
-            $data = $this->educationSystemRepository->reportCardLists($systemId, $levelId, $cycleId, $programmeId, $gradeId)->map(
-                function ($item, $key) {
-                    return [
-                        "id" => $item->id,
-                        "name" => $item->code.' - '.$item->name,
-                    ];
-                }
-            );
+            $data = $this->educationSystemRepository->reportCardLists($params, $systemId, $levelId, $cycleId, $programmeId, $gradeId);
             
-            return $data;
+            //For POCOR-8215/8216 start...
+            $resp = [];
+            if(count($data) > 0){
+                foreach($data['data'] as $k => $d){
+                    $resp[$k]['id'] = $d['id'];
+                    $resp[$k]['name'] = $d['code']. ' - '.$d['name'];
+                }
+            }
+
+            if(isset($params['limit'])){
+                $data['data'] = $resp;
+                return $data;
+            } else {
+                return $resp;
+
+            }
+            //For POCOR-8215/8216 end...
             
         } catch (\Exception $e) {
             Log::error(

@@ -1345,14 +1345,12 @@ class ProfilesController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
-    public
-    function ScheduleTimetable()
+    public function ScheduleTimetable()
     {
         $userId = $this->Auth->user('id');
 
         $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
         $Institutions = TableRegistry::get('Institution.Institutions');
-
 
         $InstitutionStaff = $InstitutionStaff
             ->find()
@@ -1373,12 +1371,19 @@ class ProfilesController extends AppController
             ->select([
                 'id' => $Institutions->aliasField('id'),
                 'name' => $Institutions->aliasField('name'),
-            ])
-            ->where([
+            ]);
+
+        if ($institutionId === null) {
+            $selectedInstitutionOptions = $selectedInstitutionOptions->where([
+                $Institutions->aliasField('id IS') => null,
+            ]);
+        } else {
+            $selectedInstitutionOptions = $selectedInstitutionOptions->where([
                 $Institutions->aliasField('id') => $institutionId,
-            ])
-            ->enableHydration(false)
-            ->toArray();
+            ]);
+        }
+
+        $selectedInstitutionOptions = $selectedInstitutionOptions->enableHydration(false)->toArray();
 
         $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
             ->getCurrent();
@@ -1388,12 +1393,20 @@ class ProfilesController extends AppController
         $shiftOptions = TableRegistry::get('Schedule.ScheduleIntervals')
             ->getStaffShiftOptions($academicPeriodId, false, $institutionId);
         $intervals = TableRegistry::get('Schedule.ScheduleIntervals');
+        
+        $conditions = [
+            $intervals->aliasField('academic_period_id') => $academicPeriodId,
+        ];
+
+        if ($institutionId === null) {
+            $conditions[$intervals->aliasField('institution_id IS')] = null;
+        } else {
+            $conditions[$intervals->aliasField('institution_id')] = $institutionId;
+        }
+
         $scheduleIntervals = $intervals->find('list')
-            ->where([
-                $intervals->aliasField('academic_period_id') => $academicPeriodId,
-                //$intervals->aliasField('institution_id') => $institutionId
-                $institutionId !== null ? $intervals->aliasField('institution_id IS NULL') : $intervals->aliasField('institution_id IS NULL')
-            ])->toArray();
+            ->where($conditions)
+            ->toArray();
 
         $this->set('userId', $userId);
         $this->set('selectedInstitutionOptions', $selectedInstitutionOptions);
@@ -1408,6 +1421,7 @@ class ProfilesController extends AppController
         $this->set('institutionDefaultId', key($selectedInstitutionOptions));
         $this->set('ngController', 'TimetableCtrl as $ctrl');
     }
+
 
     public
     function StudentScheduleTimetable()
