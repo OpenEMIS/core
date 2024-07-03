@@ -299,7 +299,22 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
     this.displayEditTable = !this.displayEditTable;
     this.child.setStudentMeal(this.displayEditTable);
     this.displayMiniDashboard = true;
-    if (this.mealHelpUrl) {
+    this._row.forEach((item) => {
+      const indexInArray2: any = this.findIndexInArray2(item.meal_received_id, item.user.openemis_no, item.meal_benefit_id);
+      if (indexInArray2.index != -1 && indexInArray2.data == 'notNull') {
+        this.callPostMealAPI(item);
+        this.setDashboard();
+      } else if (indexInArray2.index != -1 && indexInArray2.data == null) {
+        item.meal_received_id = 1;
+        this.callPostMealAPI(item);
+        this.setDashboard();
+      }
+    });
+    this.oldRow = JSON.parse(JSON.stringify(this._row));
+    setTimeout(() => {
+      this.displayLoading = false;
+    }, 1000);
+    if (this.mealHelpUrl != '') {
       this.pageheader = {
         leftBtn: [{
           type: "export",
@@ -362,21 +377,6 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
         searchEvent: ['change', 'keyup']
       }
     }
-    this._row.forEach((item) => {
-      const indexInArray2: any = this.findIndexInArray2(item.meal_received_id, item.user.openemis_no, item.meal_benefit_id);
-      if (indexInArray2.index != -1 && indexInArray2.data == 'notNull') {
-        this.callPostMealAPI(item);
-        this.setDashboard();
-      } else if (indexInArray2.index != -1 && indexInArray2.data == null) {
-        item.meal_received_id = 1;
-        this.callPostMealAPI(item);
-        this.setDashboard();
-      }
-    });
-    this.oldRow = JSON.parse(JSON.stringify(this._row));
-    setTimeout(() => {
-      this.displayLoading = false;
-    }, 1000);
 
     let academic_Period = this.academicPeriod;
     academic_Period[0].disabled = false;
@@ -837,7 +837,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
               this.setDashboard();
               this.displayLoading = false;
             });
-            // this.oldRow = JSON.parse(JSON.stringify(newDataRow));
+            this.oldRow = JSON.parse(JSON.stringify(newDataRow));
             let tokenData = localStorage.getItem('meal_url_data');
             let tokenArray = tokenData.split(".");
             this.mealImportUrl = tokenArray[1];
