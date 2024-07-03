@@ -135,24 +135,27 @@ class MoodleApi
     }
 
     private function _apiLog($action, $param, $response, $callback, $callbackData)
-    {
-        $apiLogTable = TableRegistry::get("MoodleApi.MoodleApiLog");
-        $apiInstance = $apiLogTable->newEntity();
+{
+    $apiLogTable = TableRegistry::get("MoodleApi.MoodleApiLog");
+    // Pass an empty array to newEntity() if you don't have initial data to populate
+    $apiInstance = $apiLogTable->newEntity([]);
 
-        if ($response->isOk()) {
-            $status = MoodleApiLogTable::STATUS_SUCCESS;
-        } else {
-            $status = MoodleApiLogTable::STATUS_FAILED;
-        }
-        $apiInstance->action = $action;
-        $apiInstance->params = json_encode($param);
-        $apiInstance->response = json_encode($response);
-        $apiInstance->status = $status;
-        $apiInstance->callback = $callback;
-        $apiInstance->callback_param = serialize($callbackData);
-
-        $apiLogTable->save($apiInstance);
+    if ($response->isOk()) {
+        $status = MoodleApiLogTable::STATUS_SUCCESS;
+    } else {
+        $status = MoodleApiLogTable::STATUS_FAILED;
     }
+
+    $apiInstance->action = $action;
+    $apiInstance->params = json_encode($param);
+    $apiInstance->response = json_encode($response);
+    $apiInstance->status = $status;
+    $apiInstance->callback = $callback;
+    $apiInstance->callback_param = serialize($callbackData);
+
+    $apiLogTable->save($apiInstance);
+}
+
 
     private function _loadConfig()
     {
