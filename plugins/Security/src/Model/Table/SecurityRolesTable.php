@@ -373,7 +373,6 @@ class SecurityRolesTable extends ControllerActionTable
         }
     }
 
-
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         if ($entity->has('security_group_id') && $entity->security_group_id == self::FIXED_SYSTEM_GROUP_ID) {
