@@ -79,7 +79,7 @@ class StudentTemplatesTable extends ControllerActionTable
                     'rule' => ['compareDateReverse', 'generate_start_date', false]
                 ]
             ])
-            ->allowEmpty('excel_template');
+            ->allowEmptyFile('excel_template');
     }
 
     public function validationSubjects(Validator $validator) {
@@ -123,13 +123,12 @@ class StudentTemplatesTable extends ControllerActionTable
         }
         // End POCOR-5188
     }
-
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // Academic Period filter
         $serverRequest = $this->request;
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($serverRequest->getAttribute('query')['academic_period_id']) ? $serverRequest->getAttribute('query')['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($serverRequest->getQuery('academic_period_id')) ? $serverRequest->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
@@ -415,5 +414,15 @@ class StudentTemplatesTable extends ControllerActionTable
         return $attr;
     }
 
+    public function onGetGenerateStartDate(Event $event, Entity $entity)
+    {
+        // Debugging output
+        debug($entity->generate_start_date);
+
+        if ($entity->generate_start_date !== null) {
+            $entity->generate_start_date = $entity->generate_start_date->setTimezone('UTC');
+        }
+       
+    }
     
 }
