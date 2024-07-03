@@ -296,8 +296,8 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
 
         getPeriods: function (assessmentId, academicTerm = undefined) {
             var success = function (response, deferred) {
-                console.log('getPeriods');
-                console.log(response);
+                // console.log('getPeriods');
+                // console.log(response);
                 var periods = response.data.data;
 
                 if (angular.isObject(periods) && periods.length > 0) {
@@ -1098,9 +1098,9 @@ function InstitutionsResultsSvc($http, $q, $filter, KdDataSvc, KdSessionSvc, KdA
                             currentStudentId = parseInt(subjectStudent.student_id);
                             totalMarks = parseInt(subjectStudent.total_mark);
                             assessmentPeriodId = subjectStudent.assessment_period_id;
-                            // if (assessmentPeriodId != null && angular.isDefined(gradingTypes[assessmentPeriodId])) {
-                            //     resultType = grading_types[assessmentPeriodId].assessment_grading_type.result_type;
-                            // }
+                            if (assessmentPeriodId != null && angular.isDefined(gradingTypes[assessmentPeriodId])) {
+                                resultType = grading_types[assessmentPeriodId].assessment_grading_type.result_type;
+                            }
 
                             isMarksType = (resultType == resultTypes.MARKS);
                             isGradesType = (resultType == resultTypes.GRADES);
