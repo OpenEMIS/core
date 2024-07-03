@@ -24,7 +24,7 @@ class GuardianRelationsTable extends ControllerActionTable
 
     public function validationDefault(Validator $validator): Validator
     {
-  
+
         $validator = parent::validationDefault($validator);
 
         return $validator
@@ -32,7 +32,7 @@ class GuardianRelationsTable extends ControllerActionTable
                 ->add('gender_id', 'ruleCheckGuardianGender', [
     				'rule' => ['checkGuardianGender'],
     				'provider' => 'table',
-    				'on' => function ($context) {  
+    				'on' => function ($context) {
     					 //trigger validation only when gender is set and is in edit
                         return ($context['data']['gender_id'] && !$context['newRecord']);
     			   }
@@ -52,9 +52,13 @@ class GuardianRelationsTable extends ControllerActionTable
         $list = [];
 
         if (!is_null($guardianGenderId)) {
-            $list = $this->find('list')  
-                ->where([$this->aliasField('gender_id') => $guardianGenderId])
-                ->orWhere([$this->aliasField('gender_id') . ' IS NULL'])
+            $list = $this->find('list')
+                ->where([
+                    'OR' => [
+                        $this->aliasField('gender_id') => $guardianGenderId,
+                        $this->aliasField('gender_id') . ' IS NULL'
+                    ]
+                ])
                 ->toArray();
         } else {
              $list = $this->find('list')->toArray();
