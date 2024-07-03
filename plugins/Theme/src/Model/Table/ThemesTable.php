@@ -79,6 +79,19 @@ class ThemesTable extends ControllerActionTable
             $this->field('default_value', [
                 'visible' => 'false'
             ]);
+        }else if($dbId == 3){
+            $this->field('default_content', [
+                'type' => 'readonly',
+            ]);
+            $this->field('name', [
+                'type' => 'readonly'
+            ]);
+            $this->field('value', [
+                'visible' => 'false'
+            ]);
+            $this->field('default_value', [
+                'visible' => 'false'
+            ]);
         }else if($dbId == 5){
             $this->field('name', [
                 'type' => 'readonly'
@@ -109,7 +122,7 @@ class ThemesTable extends ControllerActionTable
     }
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if($entity->id == 2){
+        if($entity->id == 2 || $entity->id == 3){
             $filePath = $entity->content->getStream()->getMetadata('uri');
 
             if (file_exists($filePath)) {
@@ -121,6 +134,9 @@ class ThemesTable extends ControllerActionTable
             } else {
                 echo "File does not exist or could not be accessed.";
             }
+        }
+        if($entity->id == 3){
+            $entity->value = $entity->default_value;
         }
     }
 
