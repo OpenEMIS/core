@@ -12,9 +12,9 @@ use Cake\Validation\Validator;
 
 class ScheduleLessonRoomsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config):void
     {
-        $this->table('institution_schedule_lesson_rooms');
+        $this->setTable('institution_schedule_lesson_rooms');
         parent::initialize($config);
 
         $this->belongsTo('ScheduleLessonDetails', [
@@ -28,14 +28,14 @@ class ScheduleLessonRoomsTable extends ControllerActionTable
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
         return $validator;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;

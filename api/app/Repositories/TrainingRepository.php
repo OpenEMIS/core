@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use JWTAuth;
 
-class TrainingRepository
+class TrainingRepository  extends Controller
 {
 
     //POCOR-8100 start...
@@ -179,6 +179,7 @@ class TrainingRepository
             return $data;
 
         } catch (\Exception $e) {
+            
             Log::error(
                 'Failed to fetch Training Sessions List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]

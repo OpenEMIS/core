@@ -23,7 +23,7 @@ class MealService extends Controller
             return $data;
             
         } catch (\Exception $e) {
-            dd($e);
+
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
