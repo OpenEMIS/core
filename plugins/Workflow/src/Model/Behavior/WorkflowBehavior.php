@@ -1268,11 +1268,12 @@ class WorkflowBehavior extends Behavior
             } else {
                 $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
                 try {
-                    $institutionId = $table->getQueryString('institution_id');
+                    $institutionId = $model->getQueryString('institution_id');
                 } catch (\Exception $exception) {
                     Log::debug($exception->getMessage() . __CLASS__ . __FUNCTION__);
-                    $institutionId = $table->paramsDecode('institution_id');
+                    $institutionId = $model->paramsDecode('institution_id');
                 }
+                $params['institution_id'] = $institutionId;
 
             }
         }
