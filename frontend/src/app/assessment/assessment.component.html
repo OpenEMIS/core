@@ -2,12 +2,14 @@
 <!-- <kd-breadcrumb [config]="breadcrumbList"></kd-breadcrumb> -->
 <kd-pageheader [config]='pageheader'></kd-pageheader>
 <!-- <div class="academic-term-section"> -->
-    <!-- <select class="select-academic-term" (change)="changeTermData($event)">
+<!-- <select class="select-academic-term" (change)="changeTermData($event)">
         <option [ngValue]="null" disabled>-- Select Academic Term --</option>
         <option [value]="term?.id" *ngFor="let term of academicTerm">{{ term?.name }}</option>
     </select> -->
-    <kd-view displayType="stacked-form" [inputData]="academicPeriod" [button]="filterButtons"
+<div class="m-3">
+    <kd-view displayType="form" [inputData]="academicPeriod" [button]="filterButtons"
         *ngIf="academicPeriod[0]?.options?.length > 0" (change)="changeTermData($event)"></kd-view>
+</div>
 <!-- </div> -->
 <div class="m-3">
     <kd-tabs [config]="tabsListHtml" type="html" (activeState)="_selectTabs($event)" *ngIf="tabsListHtml.length > 0">
