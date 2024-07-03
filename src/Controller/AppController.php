@@ -255,7 +255,7 @@ class AppController extends Controller
             $colour = $themes['colour'];
             $secondaryColour = $this->darkenColour($colour);
             $customPath = ROOT . DS . 'plugins' . DS . 'OpenEmis' . DS . 'webroot' . DS . 'css' . DS . 'themes' . DS . 'custom' . DS;
-            $basePath = Router::url(['controller' => '', 'action' => 'index', 'plugin' => false]) === '/' ? '/' : Router::url(['controller' => 'false', 'action' => 'index', 'plugin' => false]) . '/';
+            $basePath = Router::url(['controller' => '', 'action' => 'index', 'plugin' => false]) === '/' ? '/' : Router::url(['controller' => '', 'action' => 'index', 'plugin' => false]) . '/';
 
             $loginBackground = $basePath . Configure::read('App.imageBaseUrl') . $themes['login_page_image'];
             // echo "<pre>";print_r($loginBackground);die;
