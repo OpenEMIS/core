@@ -282,8 +282,10 @@ class StudentWithdrawTable extends ControllerActionTable
 
     public function editOnInitialize(Event $event, Entity $entity)
     {
-        $this->request->data[$this->getAlias()]['status_id'] = $entity->status_id;
-        $this->request->data[$this->getAlias()]['effective_date'] = $entity->start_date;
+        $alias = $this->getAlias();
+        $this->request = $this->request->withData($alias,
+            ['status_id' =>  $entity->status_id,
+                'effective_date' => $entity->start_date]);
     }
 
     public function afterAction($event, ArrayObject $extra)
@@ -331,7 +333,7 @@ class StudentWithdrawTable extends ControllerActionTable
                 $toolbarButtons['back']['url'][1] = $encodedQueryString;
                 unset($toolbarButtons['back']['url'][0]);
             }
-            unset($toolbarButtons['back']['url'][1]);
+//            unset($toolbarButtons['back']['url'][1]);
         }
     }
 
