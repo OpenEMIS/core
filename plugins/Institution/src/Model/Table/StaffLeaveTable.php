@@ -202,10 +202,12 @@ class StaffLeaveTable extends ControllerActionTable
         $this->field('staff_id', ['type' => 'hidden']);
         $this->field('end_academic_period_id', ['visible' => false]);
         $institutionId = $this->getInstitutionID();
+        $staffId = $this->getStaffId();
+//        die(print_r($staffId, true));
+        $this->setInstitutionStaffIDs();
         $this->field('institution_id', ['type' => 'hidden', 'value' => $institutionId]);
         $this->setFieldOrder(['staff_leave_type_id', 'date_from', 'date_to', 'time', 'start_time', 'full_day', 'end_time', 'number_of_days', 'comments', 'file_name', 'file_content']);
 
-        $this->setInstitutionStaffIDs();
 
     }
 
@@ -1054,12 +1056,8 @@ class StaffLeaveTable extends ControllerActionTable
      */
     private function setInstitutionStaffIDs()
     {
-        $decodedQueryString = $this->getQueryString();
-        $institutionId = $decodedQueryString['institution_id'];
-        $staffId = $decodedQueryString['user_id'];
-        if(!$staffId){
-            $decodedQueryString['staff_id'];
-        }
+        $institutionId = $this->getInstitutionID();
+        $staffId = $this->getStaffId();
         $this->institutionId = $institutionId;
         $this->staffId = $staffId;
     }
