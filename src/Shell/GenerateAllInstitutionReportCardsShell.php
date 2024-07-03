@@ -41,7 +41,7 @@ class GenerateAllInstitutionReportCardsShell extends Shell
                 ->order([
                     $this->InstitutionReportCardProcesses->aliasField('created'),
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->first();
 
             if (!empty($recordToProcess)) {

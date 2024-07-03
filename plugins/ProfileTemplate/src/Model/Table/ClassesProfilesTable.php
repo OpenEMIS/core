@@ -99,9 +99,10 @@ class ClassesProfilesTable extends ControllerActionTable
     { 
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         // check if report card request is valid
-        $reportCardId = $this->request->getQuery['class_profile_template_id'];
-        $academicPeriodId = $this->request->getQuery['academic_period_id'];
-        $areaId = $this->request->getQuery['area_id'];//POCOR-7382
+        $reportCardId = $this->request->getQuery('class_profile_template_id');
+        $academicPeriodId = $this->request->getQuery('academic_period_id');
+        $areaId = $this->request->getQuery('area_id');//POCOR-7382
+        $institution_id = $this->request->getQuery('institution_id');//POCOR-7382
         //START:POCOR-6667
         unset($buttons['view']);
         //END:POCOR-6667
@@ -109,7 +110,7 @@ class ClassesProfilesTable extends ControllerActionTable
             $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
             $params = [
                 'class_profile_template_id' => $reportCardId,
-				'institution_id' => $entity->id,
+				'institution_id' => $institution_id,
 				'academic_period_id' => $academicPeriodId,
                 'institution_class_id' => $entity->institution_class_id,
                 'area_id' => $areaId//POCOR-7382
@@ -282,8 +283,9 @@ class ClassesProfilesTable extends ControllerActionTable
             ->order([
                 $this->ClassProfileProcesses->aliasField('created'),
             ])
-            // ->hydrate(false)
+            ->enableHydration(false)
             ->toArray();
+            // echo "<pre>";print_r($this->reportProcessList);die;
 		$this->setupTabElements();	
     }
 
@@ -635,15 +637,14 @@ class ClassesProfilesTable extends ControllerActionTable
             $reportCardId = $this->request->getQuery['class_profile_template_id'];
         }
 		
-		$academicPeriodId = $this->request->getQuery['academic_period_id'];
-
+		$academicPeriodId = $this->request->getQuery('academic_period_id');
+        $institution_id = $this->request->getQuery('institution_id');
         $search = [
             'class_profile_template_id' => $reportCardId,
             'institution_class_id' => $entity->institution_class_id,
-            'institution_id' => $entity->id,
+            'institution_id' => $institution_id,
             'academic_period_id' => $academicPeriodId
         ];
-
         $resultIndex = array_search($search, $this->reportProcessList);
 
         if ($resultIndex !== false) {
@@ -741,7 +742,7 @@ class ClassesProfilesTable extends ControllerActionTable
     {
 		$model = $this->ClassProfiles;
         $ids = $this->getQueryString();
-		
+        unset($ids['area_id']);
         if ($model->exists($ids)) {
             $data = $model->get($ids);
             $fileName = $data->file_name;
@@ -797,11 +798,11 @@ class ClassesProfilesTable extends ControllerActionTable
                 ->where([
                     $InstitutionReportCardProcesses->aliasField('class_profile_template_id') => $params['class_profile_template_id'],
                     $InstitutionReportCardProcesses->aliasField('institution_id') => $params['institution_id'],
-                    $InstitutionReportCardProcesses->aliasField('institution_class_id') => $params['institution_class_id'],
+                    // $InstitutionReportCardProcesses->aliasField('institution_class_id') => $params['institution_class_id'],
                     $InstitutionReportCardProcesses->aliasField('academic_period_id') => $params['academic_period_id']
                 ])
-                ->count();      
-            
+                ->count();
+
             if (!$inProgress) {                   
                 $this->addReportCardsToProcesses($params['academic_period_id'], $params['class_profile_template_id'], $params['institution_id'], $params['institution_class_id']);
 				$this->triggerGenerateAllReportCardsShell($params['academic_period_id'], $params['class_profile_template_id'], $params['institution_id'], $params['institution_class_id'], $params['area_id']);//POCOR-7382 add area_id
@@ -863,6 +864,7 @@ class ClassesProfilesTable extends ControllerActionTable
 
             // delete file after download
             unlink($filepath);
+            exit();
         } else {
             $event->stopPropagation();
             $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
@@ -911,6 +913,7 @@ class ClassesProfilesTable extends ControllerActionTable
 
             // delete file after download
             unlink($filepath);
+            exit();
         } else {
             $event->stopPropagation();
             $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
@@ -984,8 +987,8 @@ class ClassesProfilesTable extends ControllerActionTable
         Log::write('debug', 'Initialize Add All Class Report Cards '.$reportCardId.' for Institution '.$institutionId.' to processes ('.Time::now().')');
 		
         $ClassProfileProcesses = TableRegistry::get('ReportCard.ClassProfileProcesses');
-        $InstitutionTable = TableRegistry::get('institutions');
-        $InstitutionClasses = TableRegistry::get('institution_classes');
+        $InstitutionTable = TableRegistry::get('Institution.Institutions');
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
         $where = [];
         if (!is_null($institutionId)) {
             $where[$InstitutionTable->aliasField('id')] = $institutionId;
@@ -998,7 +1001,7 @@ class ClassesProfilesTable extends ControllerActionTable
 				$InstitutionTable->aliasField('id'),
                 'institution_class_id' => $InstitutionClasses->aliasField('id'),
 			])
-            ->innerJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()],
+            ->innerJoin([$InstitutionClasses->getAlias() => $InstitutionClasses->getTable()],
                 [
                     $InstitutionClasses->aliasField('institution_id = ') . $InstitutionTable->aliasField('id'),
                     $InstitutionClasses->aliasField('academic_period_id = ') . $academicPeriodId,
@@ -1064,7 +1067,7 @@ class ClassesProfilesTable extends ControllerActionTable
     private function triggerGenerateAllReportCardsShell($academicPeriodId, $reportCardId, $institutionId = null, $institutionClassId = null, $areaId =null)
     {
         $SystemProcesses = TableRegistry::get('SystemProcesses');
-        $runningProcess = $SystemProcesses->getRunningProcesses($this->registryAlias());
+        $runningProcess = $SystemProcesses->getRunningProcesses($this->getRegistryAlias());
 
         foreach ($runningProcess as $key => $processData) {
             $systemProcessId = $processData['id'];
@@ -1082,7 +1085,7 @@ class ClassesProfilesTable extends ControllerActionTable
         }
 
         if (count($runningProcess) <= self::MAX_PROCESSES) {
-            $processModel = $this->registryAlias();
+            $processModel = $this->getRegistryAlias();
             $passArray = [
                 'institution_id' => $institutionId,
                 'class_profile_template_id' => $reportCardId,
@@ -1096,6 +1099,7 @@ class ClassesProfilesTable extends ControllerActionTable
             $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllClassProfiles '.$args;
             $logs = ROOT . DS . 'logs' . DS . 'GenerateAllClassProfiles.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
+            // echo "<pre>";print_r($shellCmd );die;
             try {
                 $pid = exec($shellCmd);
                 Log::write('debug', $shellCmd);

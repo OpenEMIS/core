@@ -608,12 +608,17 @@ class ReportCardRepository extends Controller
             }
 
             $list = $list->groupBy('institution_subjects.name')
-                    ->orderBy('education_subjects.order')
-                    ->get()
-                    ->toArray();
+                    ->orderBy('education_subjects.order');
 
-            return $list;
-                
+            $resp = [];
+            if (isset($params['limit'])) {
+                $list = $list->paginate($params['limit'])->toArray();
+                $resp = $list;
+            } else {
+                $list = $list->get()->toArray();
+                $resp = $list;
+            }
+            return $resp;
 
         } catch (\Exception $e) {
             Log::error(
@@ -694,4 +699,3 @@ class ReportCardRepository extends Controller
     //For pocor-8270 end...
 
 }
-

@@ -75,7 +75,7 @@ class RemoveBehavior extends Behavior
             $cells = $extra['cells'];
 
             $model->fields = [];
-            $primaryKey = $model->primaryKey();
+            $primaryKey = $model->getPrimaryKey();
             if (is_array($primaryKey)) {
                 foreach ($primaryKey as $key) {
                     $model->field($key, ['type' => 'hidden']);
@@ -172,7 +172,7 @@ class RemoveBehavior extends Behavior
             // Logic for restrict delete
             $entity = $model->newEntity([]);
             $controller = $model->controller;
-            $modelNameArray = ['institution_students', 'institution_staff'];//POCOR-8333
+            $modelNameArray = ['institution_students', 'institution_staff', 'institution_classes' , 'institution_subjects'];//POCOR-8333
             if(in_array($model->getTable(), $modelNameArray)){//POCOR-8333 starts
                 $ids = empty($model->paramsPass(1)) ? [] : $model->paramsDecode($model->paramsPass(1));
             }else{ // POCOR-8333 ends
@@ -340,7 +340,7 @@ class RemoveBehavior extends Behavior
         $request = $model->request;
         $extra['config']['form'] = ['type' => 'DELETE'];
         $extra['options'] = [
-            'keyField' => $model->primaryKey(),
+            'keyField' => $model->getPrimaryKey(),
             'valueField' => 'name'
         ];
 
@@ -377,7 +377,7 @@ class RemoveBehavior extends Behavior
                     ->toArray();
 
                 $convertOptions = [];
-                $primaryKey = $model->primaryKey();
+                $primaryKey = $model->getPrimaryKey();
 
                 foreach ($convertOptions as $value) {
                     $keysToEncode = $model->getIdKeys($model, $value, false);
