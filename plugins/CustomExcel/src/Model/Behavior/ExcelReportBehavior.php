@@ -61,7 +61,7 @@ class ExcelReportBehavior extends Behavior
         $folder = WWW_ROOT . $this->getConfig('folder');
         $subfolder = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder');
         if (!isset($config['filename'])) {
-            $this->getConfig('filename', $model->getAlias());
+            $this->setConfig('filename', $model->getAlias());
         }
 
         new Folder($folder, true, 0777);
@@ -91,10 +91,10 @@ class ExcelReportBehavior extends Behavior
     public function onRenderExcelTemplate(Event $event, ArrayObject $extra)
     {
         ini_set('max_execution_time', 360);
-        $this->renderExcelTemplate($extra);
+        $this->renderExcelTemplate($extra, $event);
     }
 
-    public function renderExcelTemplate(ArrayObject $extra)
+    public function renderExcelTemplate(ArrayObject $extra, Event $event)
     {
         $model = $this->_table;
         $format = $this->getConfig('format');
@@ -105,9 +105,11 @@ class ExcelReportBehavior extends Behavior
         } else {
             Log::write('debug', 'ExcelReportBehavior2 >>> filepath2: ');
             $params = $model->getQueryString();
+            if(empty($params)){
+                $params = $model->paramsDecode($event->getSubject()->getRequest()->getQuery('queryString'));
+            }
             $paramVal = $params['assessment_id']; //POCOR-6908
         }
-
 
         $extra['params'] = $params;
         $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateBeforeGenerate', [$params, $extra], $this); // POCOR-7443
@@ -121,7 +123,7 @@ class ExcelReportBehavior extends Behavior
         $extra['file_path'] = $temppath;
 
 
-        $objSpreadsheet = $this->loadExcelTemplate($extra);
+        $objSpreadsheet = $this->loadExcelTemplate($extra, $event);
         $this->generateExcel($objSpreadsheet, $extra);
 
         Log::write('debug', 'ExcelReportBehavior >>> renderExcelTemplate');
@@ -180,14 +182,18 @@ class ExcelReportBehavior extends Behavior
         gc_collect_cycles();
     }
 
-    public function loadExcelTemplate(ArrayObject $extra)
+    public function loadExcelTemplate(ArrayObject $extra, Event $event)
     {
         $model = $this->_table;
-
         if (isset($extra['requestQuery']) && isset($extra['requestQuery'][$this->getConfig('templateTableKey')])) {
             $recordId = $extra['requestQuery'][$this->getConfig('templateTableKey')];
         } else {
-            $recordId = $model->getQueryString($this->getConfig('templateTableKey'));
+            //$recordId = $model->getQueryString($this->getConfig('templateTableKey'));
+            $params = $model->getQueryString();
+            if(empty($params)){
+                $params = $model->paramsDecode($event->getSubject()->getRequest()->getQuery('queryString'));
+            }
+            $recordId = $params[$this->getConfig('templateTableKey')];
         }
 
         $Table = TableRegistry::get($this->getConfig('templateTable'));
