@@ -147,7 +147,7 @@ function TimetableSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
             .where({
                 institution_schedule_interval_id: scheduleIntervalId
             })
-            .order(['order'])
+            //.order(['order'])
             .ajax({
                 success: success,
                 defer: true

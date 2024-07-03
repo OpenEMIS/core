@@ -22,10 +22,8 @@ class AttendanceService extends Controller
     {
         try {
             $data = $this->attendanceRepository->getAcademicPeriods($request);
-            $resp = [];
-            $resp = $data['list'];
             
-            return $resp;
+            return $data;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Academic Periods List from DB',

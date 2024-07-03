@@ -42,13 +42,27 @@ class MealRepository extends Controller
             $list = MealProgrammes::select('meal_institution_programmes.id', 'meal_programmes.id as meal_programme_id', 'meal_programmes.name')
                 ->join('meal_institution_programmes', 'meal_institution_programmes.meal_programme_id', '=', 'meal_programmes.id')
                 ->where('meal_institution_programmes.institution_id', $institutionId)
-                ->where('meal_programmes.academic_period_id', $academic_period_id)
-                ->get()
-                ->toArray();
-            $total = count($list);
+                ->where('meal_programmes.academic_period_id', $academic_period_id);
 
-            $resp['data'] = $list;
-            $resp['total'] = $total;
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
+            if (isset($params['limit'])) {
+                $list = $list->paginate($params['limit']);
+            } else {
+                $list = $list->get();
+            }
+
+            $list = $list->toArray();
+
+            if (isset($params['limit'])) {
+                $resp = $list;
+            } else {
+                $resp['data'] = $list;
+            }
 
             return $resp;
         } catch (\Exception $e) {
@@ -67,12 +81,21 @@ class MealRepository extends Controller
         try {
             $params = $request->all();
 
-            $mealBenefits = MealBenefits::get();
-            
-            $total = count($mealBenefits);
-            
-            $resp['data'] = $mealBenefits;
-            $resp['total'] = $total;
+            $list = new MealBenefits;
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $list = $list->orderBy($col, $orderBy);
+            }
+
+            if (isset($params['limit'])) {
+                $mealBenefits = $list->paginate($params['limit']);
+                $resp = $mealBenefits;
+            } else {
+                $mealBenefits = $list->get();
+                $resp['data'] = $mealBenefits;
+            }
 
             return $resp;
         } catch (\Exception $e) {
@@ -121,7 +144,7 @@ class MealRepository extends Controller
 
             if (!empty($ID)) {
                 if (intval($ID) > 0) {
-                    $query = $query->where('id', $ID);
+                    $query = $query->where('institution_class_students.id', $ID);
                 }
             }
 
@@ -166,23 +189,39 @@ class MealRepository extends Controller
                     'institution_class_students.student_id as student_id',
                 )
                 //->select(DB::raw("$default_meal_receive_id as default_meal_receive_id"))
-                ->groupby('institution_class_students.student_id')
-                ->get()
-                ->toArray();
+                ->groupby('institution_class_students.student_id');
 
-                $total = 0;
-                
+
+                if(isset($options['order'])){
+                    $orderBy = $options['order_by']??"ASC";
+                    $col = $options['order'];
+                    $query = $query->orderBy($col, $orderBy);
+                }
+    
+                if (isset($options['limit'])) {
+                    $query = $query->paginate($options['limit']);
+                } else {
+                    $query = $query->get();
+                }
                 if(count($query) > 0){
-                    $total = count($query);
-                    foreach($query as $key => $q){
-                        $resp['data'][$key] = $q;
-                        $resp['data'][$key]['default_meal_receive_id'] = $default_meal_receive_id??0;
-                        
+
+                    if (isset($options['limit'])) {
+                        $query->getCollection()->transform(function ($item, $key) use ($default_meal_receive_id) {
+                           $item->default_meal_receive_id = $default_meal_receive_id;
+                           return  $item;
+                        });
+                        $resp  = $query->toArray();
+                    } else {
+                        $query = $query->map(
+                            function ($item, $key) use ($default_meal_receive_id) {
+                                $item->default_meal_receive_id = $default_meal_receive_id;
+                                return  $item;
+                            }
+                        );
+                        $resp['data'] = $query;
                     }
                 }
-                $resp['total'] = $total;
-
-
+                
                 //For POCOR-8210 Start...
                 $helpUrl = "";
                 $getHelpUrl = $this->getHelpUrl();
@@ -193,13 +232,13 @@ class MealRepository extends Controller
                 $insId = '{"id":'.$institutionId.'}';
                 $encodedInstitutionID = base64_encode($insId);
                 $encodedInstitutionID = rtrim($encodedInstitutionID, "=");
-                
-                $resp['url'] = [
+                $urls = [
                     'import' => 'Institution/Institutions/'.$encodedInstitutionID.'.cake_session_id/ImportStudentMeals/add',
 
                     'export' => 'Institution/Institutions/'.$encodedInstitutionID.'.cake_session_id/StudentMeals/excel?institution_id='.$institutionId.'&institution_class_id='.$institutionClassId.'&education_grade_id=undefined&academic_period_id='.$academicPeriodId.'&day_id='.$day.'&attendance_period_id=undefined&week_start_day='.$weekStartDay.'&week_end_day='.$weekEndDay.'&subject_id=undefined&week_id='.$weekId,
                     'help' => $helpUrl
                 ];
+                $resp['url'] = $urls;
                 //For POCOR-8210 End...
 
                 return $resp;
@@ -208,6 +247,7 @@ class MealRepository extends Controller
             }
             
         } catch (\Exception $e) {
+
             Log::error(
                 'Failed to fetch Student Meals List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -241,15 +281,25 @@ class MealRepository extends Controller
     public function getMealDistributions($options, $institutionId)
     {
         try {
-            $list = MealReceived::get()->toArray();
-            $total = 0;
+
             $resp = [];
 
-            if(count($list) > 0){
-                $total = count($list);
-                $resp['data'] = $list;
-                $resp['total'] = $total;
+            $list = new MealReceived;
+
+            if(isset($options['order'])){
+                $orderBy = $options['order_by']??"ASC";
+                $col = $options['order'];
+                $list = $list->orderBy($col, $orderBy);
             }
+        
+            if (isset($options['limit'])) {
+                $list = $list->paginate($options['limit'])->toArray();
+                $resp = $list;
+            } else {
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
             return $resp;
         } catch (\Exception $e) {
             Log::error(
@@ -284,17 +334,25 @@ class MealRepository extends Controller
     public function getMealTargets($options)
     {
         try {
-            $list = MealTargetType::get()->toArray();
-            $total = 0;
             $resp = [];
 
-            if(count($list) > 0){
-                $total = count($list);
-                $resp['data'] = $list;
-                $resp['total'] = $total;
+            $list = new MealTargetType;
+
+            if(isset($options['order'])){
+                $orderBy = $options['order_by']??"ASC";
+                $col = $options['order'];
+                $list = $list->orderBy($col, $orderBy);
             }
+
+            if (isset($options['limit'])) {
+                $list = $list->paginate($options['limit'])->toArray();
+                $resp = $list;
+            } else {
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
             return $resp;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Meal Targets List from DB',
@@ -309,17 +367,25 @@ class MealRepository extends Controller
     public function getMealImplementers($options)
     {
         try {
-            $list = MealImplementer::get()->toArray();
-            $total = 0;
             $resp = [];
 
-            if(count($list) > 0){
-                $total = count($list);
-                $resp['data'] = $list;
-                $resp['total'] = $total;
+            $list = new MealImplementer;
+
+            if(isset($options['order'])){
+                $orderBy = $options['order_by']??"ASC";
+                $col = $options['order'];
+                $list = $list->orderBy($col, $orderBy);
             }
+
+            if (isset($options['limit'])) {
+                $list = $list->paginate($options['limit'])->toArray();
+                $resp = $list;
+            } else {
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
             return $resp;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Meal Implementers List from DB',
@@ -335,17 +401,25 @@ class MealRepository extends Controller
     public function getMealNutritions($options)
     {
         try {
-            $list = MealNutrition::get()->toArray();
-            $total = 0;
             $resp = [];
 
-            if(count($list) > 0){
-                $total = count($list);
-                $resp['data'] = $list;
-                $resp['total'] = $total;
+            $list = new MealNutrition;
+
+            if(isset($options['order'])){
+                $orderBy = $options['order_by']??"ASC";
+                $col = $options['order'];
+                $list = $list->orderBy($col, $orderBy);
             }
+
+            if (isset($options['limit'])) {
+                $list = $list->paginate($options['limit'])->toArray();
+                $resp = $list;
+            } else {
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
             return $resp;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Meal Nutritions List from DB',
@@ -360,17 +434,25 @@ class MealRepository extends Controller
     public function getMealRatings($options)
     {
         try {
-            $list = MealRating::get()->toArray();
-            $total = 0;
             $resp = [];
 
-            if(count($list) > 0){
-                $total = count($list);
-                $resp['data'] = $list;
-                $resp['total'] = $total;
+            $list = new MealRating;
+
+            if(isset($options['order'])){
+                $orderBy = $options['order_by']??"ASC";
+                $col = $options['order'];
+                $list = $list->orderBy($col, $orderBy);
             }
+
+            if (isset($options['limit'])) {
+                $list = $list->paginate($options['limit'])->toArray();
+                $resp = $list;
+            } else {
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
             return $resp;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Meal Ratings List from DB',
@@ -385,17 +467,25 @@ class MealRepository extends Controller
     public function getMealStatusTypes($options)
     {
         try {
-            $list = MealStatusType::get()->toArray();
-            $total = 0;
             $resp = [];
 
-            if(count($list) > 0){
-                $total = count($list);
-                $resp['data'] = $list;
-                $resp['total'] = $total;
+            $list = new MealStatusType;
+
+            if(isset($options['order'])){
+                $orderBy = $options['order_by']??"ASC";
+                $col = $options['order'];
+                $list = $list->orderBy($col, $orderBy);
             }
+
+            if (isset($options['limit'])) {
+                $list = $list->paginate($options['limit'])->toArray();
+                $resp = $list;
+            } else {
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
             return $resp;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Meal Status Types List from DB',
@@ -410,17 +500,25 @@ class MealRepository extends Controller
     public function getMealFoodTypes($options)
     {
         try {
-            $list = FoodType::get()->toArray();
-            $total = 0;
             $resp = [];
 
-            if(count($list) > 0){
-                $total = count($list);
-                $resp['data'] = $list;
-                $resp['total'] = $total;
+            $list = new FoodType;
+
+            if(isset($options['order'])){
+                $orderBy = $options['order_by']??"ASC";
+                $col = $options['order'];
+                $list = $list->orderBy($col, $orderBy);
             }
+
+            if (isset($options['limit'])) {
+                $list = $list->paginate($options['limit'])->toArray();
+                $resp = $list;
+            } else {
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
             return $resp;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Meal Food Types List from DB',
@@ -503,8 +601,8 @@ class MealRepository extends Controller
 
             $rowsCount = count($results[0]) - 2;
             
-            if ($rowsCount > config('constantvalues.importExcelRules.noRows')) {
-                return 5; //File can not have more than 2000 records.
+            if ($rowsCount > config('constantvalues.importExcelRules.maxRows')) {
+                return 7; //File can not have more than 2000 records.
             }
 
             $import = $this->importStudentMeals($results,  $params, $currentAcademicPeriod);
@@ -538,7 +636,7 @@ class MealRepository extends Controller
                 if ($i < 2) {
                     continue;
                 }
-
+                
                 if (!$row[0]) { //Date
                     $label = $results[0][1][0];
                     $errors[$label] = 'Date is required.';
@@ -572,9 +670,11 @@ class MealRepository extends Controller
                     $errors[$label] = 'Meal received code is required.';
                 }
 
-                if (!$row[4]) { //Meal benefit name
-                    $label = $results[0][1][4];
-                    $errors[$label] = 'Meal benefit name is required.';
+                if(isset($row[3]) && $row[3] == "Received"){
+                    if (!$row[4]) { //Meal benefit name
+                        $label = $results[0][1][4];
+                        $errors[$label] = 'Meal benefit name is required.';
+                    }
                 }
 
 
@@ -599,7 +699,20 @@ class MealRepository extends Controller
                     $institutionStudent = InstitutionStudent::where('student_id', $user->id??0)->where('institution_id', $params['institution_id'])->first();
                     $mealProgramme = MealProgrammes::where('code', $row[2])->first();
                     $mealReceived = MealReceived::where('code', $row[3])->first();
-                    $mealBenefit = MealBenefits::where('id', $row[4])->first();
+
+                    if(isset($mealReceived) && $mealReceived->code == "Received"){
+                        $mealBenefit = MealBenefits::where('id', $row[4])->first();
+                        if(!$mealBenefit){
+                            $label = $results[0][1][4];
+                            $errors[$label] = 'Meal benefit code does not exist.';
+                            $validation[] = [
+                                'row_number' => $i,
+                                'data' => $allRows,
+                                'errors' => $errors
+                            ];
+                        }
+                    }
+                    
 
                     if(!$user){
                         $label = $results[0][1][1];
@@ -641,17 +754,9 @@ class MealRepository extends Controller
                             ];
                     }
 
-                    if(!$mealBenefit){
-                        $label = $results[0][1][4];
-                            $errors[$label] = 'Meal benefit code does not exist.';
-                            $validation[] = [
-                                'row_number' => $i,
-                                'data' => $allRows,
-                                'errors' => $errors
-                            ];
-                    }
+                    
 
-                    if($user && $institutionStudent && $mealProgramme && $mealReceived && $mealBenefit){
+                    if($user && $institutionStudent && $mealProgramme && $mealReceived){
                         
                         $date = str_replace('/', '-', $row[0]);
                         $date = date('Y-m-d', strtotime($date));

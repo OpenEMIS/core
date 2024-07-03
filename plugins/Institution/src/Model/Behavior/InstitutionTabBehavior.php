@@ -222,8 +222,16 @@ class InstitutionTabBehavior extends Behavior
                             if($url_action == 'Classes' && $additionalParam == 'institution_class_id'){
                                 $queryString['id'] = $entity->{$additionalParam};
                             }else if($url_action == 'Subjects' && $additionalParam == 'institution_subject_id'){
+                                //PCOOR-8324 starts
+                                if($this->_table->getAlias() == 'InstitutionSubjects'){
+                                    $queryString['id'] = $entity->id;
+                                }else if($this->_table->getAlias() == 'StaffSubjects'){
+                                    $queryString['id'] = $entity->institution_subject->id;
+                                }else if($this->_table->getAlias() == 'StudentSubjects'){
+                                    $queryString['id'] = $entity->institution_subject_id;
+                                }
                                 $queryString['institution_subject_id'] = $entity->id;
-                            }
+                            }//PCOOR-8324 ends
                             // else if($url_action == 'Textbooks' && $additionalParam == 'academic_period_id'){
                             //     $queryString['academic_period_id'] = $entity->academic_period->id;
                             // }
@@ -390,22 +398,41 @@ class InstitutionTabBehavior extends Behavior
         return $studentID;
     }
 
-    public function getAcademicTabElements($options = [])
+    public function getAcademicTabElements($options = [], $modelName = null)
     {
         //$id = (array_key_exists('id', $options)) ? $options['id'] : 0;
         $model = $this->_table;
+        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
+        //PCOOR-8388 starts
+        if(!empty($modelName)){
+            $pluginName = $modelName->getPlugin();
+            $controllerName = $modelName->getName();
+            $studentID = $modelName->getStudentID('student_id'); 
+            $institutionID = $modelName->getQueryString('institution_id');
+        } else {
+            $maincontroller = $model->controller;
+            $controllerName = $maincontroller->getName();
+            $studentID = $this->getStudentID();
+            $institutionID = $this->getInstitutionID();
+        }
+        $params = ['id' => $studentID,
+                'student_id' => $studentID,
+                'user_id' => $studentID,
+                'institution_id' => $institutionID,
+                'type' => $type];
+        if(!empty($modelName)){
+            $queryString = $modelName->paramsEncode($params);
+        }else{
+            $queryString = $model->paramsEncode($params);
+        }//PCOOR-8388 ends
+
         // POCOR-8074-QueryStringProfile start
-        $maincontroller = $model->controller;
-        $controllerName = $maincontroller->getName();
         $labels_tbl = TableRegistry::get('System.Labels');   //POCOR-8056
         $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();//POCOR-8056
         if(empty($curricular_label_Data->name)){
             $curricular_label_Data->name = "Institution Curriculars";
         }
-
-        $studentID = $this->getStudentID();
-        $institutionID = $this->getInstitutionID();
-        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
+        
         $tabElements = [];
         $studentTabElements = [
             'Programmes' => ['text' => __('Programmes')],
@@ -428,12 +455,6 @@ class InstitutionTabBehavior extends Behavior
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
-        $params = ['id' => $studentID,
-            'student_id' => $studentID,
-            'user_id' => $studentID,
-            'institution_id' => $institutionID,
-            'type' => $type];
-        $queryString = $model->paramsEncode($params);
         // Programme & Textbooks will use institution controller, other will be still using student controller
         $institutionControllerAction = [
             'Programmes',
@@ -463,7 +484,11 @@ class InstitutionTabBehavior extends Behavior
                 }
             }
         }
-        $tabElements = $maincontroller->TabPermission->checkTabPermission($tabElements);
+        if(!empty($modelName)){
+            $tabElements = $modelName->TabPermission->checkTabPermission($tabElements);
+        }else{
+            $tabElements = $maincontroller->TabPermission->checkTabPermission($tabElements);
+        }
         return $tabElements;
     }
 }

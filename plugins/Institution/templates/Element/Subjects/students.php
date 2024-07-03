@@ -122,10 +122,10 @@
 									'controller' => 'Institutions',
 									'action' => 'StudentUser',
 									'view',
-									$this->ControllerAction->paramsEncode(['id' => $obj->student_user_id])
+									$this->ControllerAction->paramsEncode(['id' => $obj->student_user_id, 'institution_id' => $obj->institution_id, 'student_id' => $obj->student_user_id])
 								];
 
-								$newUrl = $this->ControllerAction->setQueryString($url, ['institution_id' => $obj->institution_id]);
+								$newUrl = $this->ControllerAction->setQueryString($url, ['institution_id' => $obj->institution_id, 'student_id' => $obj->student_user_id]);
 							?>
 							<?= $this->html->link($obj->student_openemis_no, $newUrl) ?>
 						</td>

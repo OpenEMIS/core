@@ -431,7 +431,11 @@ class MessagingTable extends ControllerActionTable
         ) {
             $recipient_level_id =$request->getData()['Messaging']['recipient_level_id'];
             if($action == "edit"){
-                $entity = $this->get($this->paramsDecode($request->getAttribute('params')['pass'][1])['id']);
+                if(!empty($request->getAttribute('params')['pass'][1])){
+                    $entity = $this->get($this->paramsDecode($request->getAttribute('params')['pass'][1])['id']);
+                }else{
+                    $entity = $this->get($this->paramsDecode($this->request->getAttribute('params')['?']['queryString'])['id']);
+                }
                 $recipient_level_id = $entity->recipient_level_id;
             }
             $attr['type'] = 'select';
