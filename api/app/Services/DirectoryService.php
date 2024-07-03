@@ -105,7 +105,8 @@ class DirectoryService extends Controller
                 $arr['description'] = $d['staff_custom_field']['description']??Null;
 
 
-                $resp[$section][] = $arr;
+                //$resp[$section][] = $arr;
+                $resp[] = $arr;
             }
 
             return $resp;

@@ -131,6 +131,11 @@ class RestfulController extends AppController
         $translateItem = function (&$item, $key) {
             $item = __($item);
         };
+        $url = $this->request->getServerParams()['HTTP_REFERER'];
+        $searchString = "/Institutions/Institutions/edit/";
+        if (strpos($url, $searchString) !== false) {
+            dd("This need to be change for Institution Edit");
+        }
         array_walk_recursive($translated, $translateItem);
         $this->set([
             'translated' => $translated,

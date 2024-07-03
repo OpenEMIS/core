@@ -10,11 +10,11 @@ $this->start('toolbar');
     <a ng-href="{{$ctrl.excelExportAUrl}}" ng-show="$ctrl.action == 'view'" class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Export"><i class="fa kd-export"></i></a>
 <?php endif; ?>
 <?php 
-$session = $this->Session;
-$superAdmin = $session->read('Auth.User.super_admin');
-$is_connection_is_online = $session->read('is_connection_stablished');
+// $session = $this->Session;
+// $superAdmin = $session->read('Auth.User.super_admin');
+// $is_connection_is_online = $session->read('is_connection_stablished');
 ?>
-<!-- <?php if(($is_connection_is_online == 1 && $is_button_accesible == 1)) :  ?>
+<!-- <?php //if(($is_connection_is_online == 1 && $is_button_accesible == 1)) :  ?>
 <?php if ($archiveUrl) : ?>
     <a href="<?=$archiveUrl ?>" ng-show="$ctrl.action == 'view'">
         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Archive') ?>" >
@@ -23,7 +23,7 @@ $is_connection_is_online = $session->read('is_connection_stablished');
     </a>
 </button>
 <?php endif; ?>
-<?php endif; ?> -->
+<?php //endif; ?> -->
 
 <?php
 $this->end();

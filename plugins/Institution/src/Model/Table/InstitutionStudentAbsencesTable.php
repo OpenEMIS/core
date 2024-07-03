@@ -289,7 +289,6 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         $entityEnd = clone $endDate;
         $entityEnd->addDay(1);
         $InstitutionStudentAbsenceDays = $this->InstitutionStudentAbsenceDays;
-
         $days = [
             0 => 'Sunday',
             1 => 'Monday',
@@ -307,7 +306,6 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             $key = (($start + $a) % 7);
             $workingDays[$key] = $key;
         }
-
         $days = array_diff_key($days, $workingDays);
         $s = clone $entityStart;
         $tmp = clone $s;
@@ -320,7 +318,6 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         if ($changeStart) {
             $s = $tmp;
         }
-
         $e = clone $entityEnd;
         $tmp = clone $e;
         $tmp->addDay(1);
@@ -332,7 +329,6 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         if ($changeEnd) {
             $e = $tmp;
         }
-
 
         $consecutiveRecords = $InstitutionStudentAbsenceDays
             ->find('inDateRange', [
@@ -348,10 +344,11 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             ])
             ->order([$InstitutionStudentAbsenceDays->aliasField('start_date')]);
         $count = $consecutiveRecords->count();
-
+        
         switch ($count) {
             // There is no record, we will add the entry
             case 0:
+                $i = 0;
                 $s = clone $startDate;
                 $daysAbsent = 0;
                 do {
@@ -359,8 +356,10 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                         $daysAbsent++;
                     }
                     $s->addDay(1);
+                    if ($i++ == 7) {
+                        break;
+                    }
                 } while ($s->lte($endDate));
-
                 $dayEntity = $InstitutionStudentAbsenceDays->newEntity([
                     'student_id' => $entity->student_id,
                     'institution_id' => $entity->institution_id,
@@ -375,6 +374,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 break;
             // When there is one record found
             case 1:
+                $i = 0;
                 $recordEntity = $consecutiveRecords->first();
                 $recordStartDate = $recordEntity->start_date;
                 $recordEndDate = $recordEntity->end_date;
@@ -392,6 +392,9 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                         $daysAbsent++;
                     }
                     $s->addDay(1);
+                    if ($i++ == 7) {
+                        break;
+                    }
                 } while ($s->lte($recordEndDate));
                 //POCOR-7035[START]
 
@@ -409,6 +412,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 break;
             // When there is two records found, it means this record happen to fall in between the two record
             case 2:
+                $i = 0;
                 $recordEntities = $consecutiveRecords->toArray();
                 $recordStartDate = $recordEntities[0]->start_date;
                 $recordEndDate = $recordEntities[1]->end_date;
@@ -422,6 +426,9 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                         $daysAbsent++;
                     }
                     $s->addDay(1);
+                    if ($i++ == 7) {
+                        break;
+                    }
                 } while ($s->lte($recordEndDate));
 
                 //POCOR-7035[START]
@@ -904,6 +911,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
 
 
         $codeList = array_flip($this->absenceCodeList);
+        $validator->setProvider('custom', $this);
         $validator
             ->add('date', [
                 // 'ruleCompareJoinDate' => [
