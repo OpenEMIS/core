@@ -1312,7 +1312,7 @@ class WorkflowBehavior extends Behavior
                 $assigneeOptions = [self::AUTO_ASSIGN => __('Auto Assign')];
                 $attr['select'] = false;
             } else {
-                $model = $this->_table;
+                $table = $this->_table;
                 try {
                     $institutionId = $table->getQueryString('institution_id');
                 } catch (\Exception $exception) {
