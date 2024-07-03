@@ -12,6 +12,7 @@ use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
 use App\Model\Traits\HtmlTrait;
 use App\Model\Table\ControllerActionTable;
+use Cake\Datasource\EntityInterface;
 
 class SystemGroupsTable extends ControllerActionTable
 {

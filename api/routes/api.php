@@ -74,7 +74,7 @@ Route::group(
         Route::get('institutions/areas', 'InstitutionController@getInstitutionAreas');
         Route::get('institutions/summaries', 'InstitutionController@getSummariesList');
         Route::get('institutions/staff', 'InstitutionController@getStaffList');
-        Route::get('institutions/positions', 'InstitutionController@getPositionsList');
+        Route::get('institutions/positions/list', 'InstitutionController@getPositionsList');
         Route::get('institutions/room-type-summaries', 'InstitutionController@roomTypeSummaries');
         Route::get('institutions/grades/summaries', 'InstitutionController@getGradeSummariesList');
         Route::get('institutions/{id}/grades/summaries', 'InstitutionController@getInstitutionGradeSummariesList');
@@ -350,7 +350,6 @@ Route::group(
         Route::post('schedules/timetables/lessons', 'ScheduleController@addLesson');
         Route::delete('institutions/{institutionId}/schedules/timetables/lessons/{id}', 'ScheduleController@deleteTimeTableLessonById');
         Route::get('schedules/timetables/statuses', 'ScheduleController@getTimeTableStatus');
-        Route::get('schedules/timetables/{id}', 'ScheduleController@getTimeTableById');
         Route::get('schedules/timetables/{id}/lessons', 'ScheduleController@getLessonsByTimeTableId');
         Route::get('schedules/lessons/types', 'ScheduleController@getLessonType');
         Route::get('schedules/timeslots/{intervalId}', 'ScheduleController@getTimeSlotsByIntervalId');
@@ -448,7 +447,7 @@ Route::group(
 
         //POCOR-8259 start...
         Route::get('themes', 'ThemeController@getAllThemes');
-        Route::get('themes/{themeId}', 'ThemeController@getThemeId');
+        Route::get('themes/{themeId}', 'ThemeController@getThemeViaId');
         //POCOR-8259 end...
 
 
@@ -476,7 +475,13 @@ Route::group(
 
 
 
-        //POCOR-8348 start...
+        //POCOR-8295 start...
+        Route::get('/institutions/schedule-timetables', 'ScheduleController@getScheduleTimetables');
+        Route::get('/institutions/{institutionId}/schedule-timetables', 'ScheduleController@getScheduleTimetablesViaInstitutionId');
+        Route::get('/institutions/schedule-timetables/{scheduleTimetableId}', 'ScheduleController@getScheduleTimetableData');
+        //POCOR-8295 end...
+        
+        //POCOR-8438 start...
         Route::post('/institutions/students/meals/import', 'MealController@getStudentMealImport');
         Route::get('/institutions/students/meals/export', 'MealController@getStudentMealExport');
         Route::get('/institutions/students/meals/import/template', 'MealController@getStudentMealImportTemplate');

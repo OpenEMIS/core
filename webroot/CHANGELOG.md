@@ -1,3 +1,38 @@
+### [4.0.3] - 2024-07-02
+- Implemented: Develop changes to all existing v4 APIs to include Swagger annotations in API file headers
+- Implemented: Develop changes to all existing v4 APIs for parameter and response behaviour
+- Bug Fixed: Institutions > Attendance > Students: User is able to mark attendance for inactive school
+- Bug Fixed: Institutions > Messaging > Edit: The page give 404 error.
+- Bug Fixed: Directory>Student/Staff>Health/Special Needs: User is unable to add
+- Bug Fixed: API: User is not getting "mark" key in response
+- Bug Fixed: Institutions > Infrastructure > Overview > Floor > Add: When adding floor, they face a 404 error.
+- Bug Fixed: Administration > Survey > Forms: 404 error when deleting the survey even though there are no associated records
+- Bug Fixed: Institutions>List>Add: User is unable to add institutions
+- Bug Fixed: Institutions>Attendance>Students(Automation): Students are not appearing
+- Bug Fixed: Institutions>Students>Academic>Classes: Homeroom teacher and secondary not populating
+- Bug Fixed: Institutions>Students>Academic>Subjects: Record is not added and teacher column is empty
+- Bug Fixed: Institutions>Students>General>Overview>Export(Automation): User is getting blank page
+- Bug Fixed: Administration>Profile>Institution: User should be able to generate or generate all
+- Bug Fixed: Institutions>Schedules>Timetable>Timetable tab: Timetable not showing
+- Bug Fixed: Administration > Security > Users: The page gives 404 error when creating users in Core
+- Bug Fixed: Institutions>Students>Academic>Report Cards(Automation): Getting blank page
+- Bug Fixed: Personal>Staff>Timetables(Automation): Getting blank page(Login as superrole)
+
+### [4.0.2] - 2024-06-27
+- Bug Fixed: OpenEMIS Core Training v4 APIs is not working due to changes in table structure
+- Bug Fixed: API: When retrieving the institution schedule timetable using API v4, it gives a 404 error status
+- Bug Fixed: Institutions>Attendance>Staff: Late is not showing correctly
+- Bug Fixed: Institutions>Performance>Report Cards(Automation): User should be able to generate report cards
+- Bug Fixed: Institutions>Report Cards>Comments: User should be able to view and edit homeroom teacher, Principal and subject teacher tabs
+- Bug Fixed: Administration(Automation): User is getting blank page and left menu not collapsed part two
+- Bug Fixed: Institutions>Staff(Automation): User is getting blank page
+- Bug Fixed: Institution>Finance>Institution Fees(Automation): User is getting blank page
+- Bug Fixed: Personal>General>History(Automation): Left menu is not collapsed
+- Bug Fixed: When running "composer dump-autoload", having error
+- Bug Fixed: Institutions>Attendance>Students: No scheduled class button is taking very long to load and the query takes a long time to run.
+- Bug Fixed: Institutions>Attendance>Students(Automation): Login as homeroom teacher and attendance is not showing
+- Bug Fixed: Meals Benefits Api-Not received and none should not have mandatory meal benefits for import
+
 ### [4.0.1] - 2024-06-24
 - Implemented: Develop a PHP file to display the server IP address
 - Implemented: Develop OpenEMIS Core Assessment v4 APIs

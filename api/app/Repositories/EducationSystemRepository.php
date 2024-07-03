@@ -26,12 +26,6 @@ class EducationSystemRepository extends Controller
         try {
             $params = $request->all();
 
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
-
 
             $systems = EducationSystem::with(
                     'levels', 
@@ -45,13 +39,22 @@ class EducationSystemRepository extends Controller
                 $systems = $systems->where('academic_period_id', $params['academic_period_id']);
             }
 
+            //For POCOR-8215/8216 start...
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $systems = $systems->orderBy($col);
+                $systems = $systems->orderBy($col, $orderBy);
             }
 
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $systems->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $systems->get()->toArray();
 
-            $list = $systems->paginate($limit)->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
             return $list;
 
         } catch (\Exception $e) {
@@ -70,13 +73,6 @@ class EducationSystemRepository extends Controller
         try {
             $params = $request->all();
 
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
-
-
             $systems = EducationSystem::with(
                     'levels', 
                     'levels.cycles',
@@ -89,13 +85,24 @@ class EducationSystemRepository extends Controller
                 $systems = $systems->where('academic_period_id', $params['academic_period_id']);
             }
 
+
+            //For POCOR-8215/8216 start...
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $systems = $systems->orderBy($col);
+                $systems = $systems->orderBy($col, $orderBy);
             }
 
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $systems->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $systems->get()->toArray();
 
-            $list = $systems->paginate($limit)->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
+
             return $list;
 
         } catch (\Exception $e) {
@@ -113,13 +120,6 @@ class EducationSystemRepository extends Controller
     {
         try {
             $params = $request->all();
-            //dd($systemId, $levelId);
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
-
 
             $systems = EducationSystem::with([
                 'levels' => function ($q) use ($levelId) {
@@ -141,12 +141,23 @@ class EducationSystemRepository extends Controller
                 $systems = $systems->where('academic_period_id', $params['academic_period_id']);
             }
 
+            //For POCOR-8215/8216 start...
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $systems = $systems->orderBy($col);
+                $systems = $systems->orderBy($col, $orderBy);
             }
 
-            $list = $systems->paginate($limit)->toArray();
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $systems->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $systems->get()->toArray();
+
+            }
+            //For POCOR-8215/8216 end...
+
+
             return $list;
 
         } catch (\Exception $e) {
@@ -164,12 +175,6 @@ class EducationSystemRepository extends Controller
     {
         try {
             $params = $request->all();
-
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $systems = EducationSystem::with([
                 'levels' => function ($q) use ($levelId, $cycleId) {
@@ -199,12 +204,24 @@ class EducationSystemRepository extends Controller
                 $systems = $systems->where('academic_period_id', $params['academic_period_id']);
             }
 
+
+            //For POCOR-8215/8216 start...
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $systems = $systems->orderBy($col);
+                $systems = $systems->orderBy($col, $orderBy);
             }
 
-            $list = $systems->paginate($limit)->toArray();
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $systems->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $systems->get()->toArray();
+
+            }
+            //For POCOR-8215/8216 end...
+
+
             return $list;
 
         } catch (\Exception $e) {
@@ -222,12 +239,6 @@ class EducationSystemRepository extends Controller
     {
         try {
             $params = $request->all();
-            
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $systems = EducationSystem::with([
                 'levels' => function ($q) use ($levelId, $cycleId, $programmeId) {
@@ -264,12 +275,24 @@ class EducationSystemRepository extends Controller
                 $systems = $systems->where('academic_period_id', $params['academic_period_id']);
             }
 
+            
+
+            //For POCOR-8215/8216 start...
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $systems = $systems->orderBy($col);
+                $systems = $systems->orderBy($col, $orderBy);
             }
 
-            $list = $systems->paginate($limit)->toArray();
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $systems->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $systems->get()->toArray();
+
+            }
+            //For POCOR-8215/8216 end...
+
             return $list;
 
         } catch (\Exception $e) {
@@ -289,11 +312,6 @@ class EducationSystemRepository extends Controller
         try {
             $params = $request->all();
             
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
 
             $systems = EducationSystem::with([
                 'levels' => function ($q) use ($levelId, $cycleId, $programmeId, $gradeId) {
@@ -338,16 +356,26 @@ class EducationSystemRepository extends Controller
                 $systems = $systems->where('academic_period_id', $params['academic_period_id']);
             }
 
+
+            //For POCOR-8215/8216 start...
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $systems = $systems->orderBy($col);
+                $systems = $systems->orderBy($col, $orderBy);
             }
 
-            $list = $systems->paginate($limit)->toArray();
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $systems->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $systems->get()->toArray();
+
+            }
+            //For POCOR-8215/8216 end...
+
             return $list;
 
         } catch (\Exception $e) {
-            dd($e);
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -363,12 +391,7 @@ class EducationSystemRepository extends Controller
     {
         try {
             $params = $request->all();
-            
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
+         
 
             $systems = EducationSystem::with([
                 'levels' => function ($q) use ($levelId, $cycleId, $programmeId, $gradeId, $subjectId) {
@@ -419,12 +442,23 @@ class EducationSystemRepository extends Controller
                 $systems = $systems->where('academic_period_id', $params['academic_period_id']);
             }
 
+
+            //For POCOR-8215/8216 start...
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $systems = $systems->orderBy($col);
+                $systems = $systems->orderBy($col, $orderBy);
             }
 
-            $list = $systems->paginate($limit)->toArray();
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $systems->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $systems->get()->toArray();
+
+            }
+            //For POCOR-8215/8216 end...
+
             return $list;
 
         } catch (\Exception $e) {
@@ -439,10 +473,27 @@ class EducationSystemRepository extends Controller
 
 
 
-    public function reportCardLists($systemId, $levelId, $cycleId, $programmeId, $gradeId)
+    public function reportCardLists($params, $systemId, $levelId, $cycleId, $programmeId, $gradeId)
     {
         try {
-            $list = ReportCard::where('education_grade_id', $gradeId)->get();
+            $reportCards = ReportCard::where('education_grade_id', $gradeId);
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $reportCards = $reportCards->orderBy($col, $orderBy);
+            }
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $reportCards->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $reportCards->get()->toArray();
+
+            }
+            //For POCOR-8215/8216 end...
+
             return $list;
             
         } catch (\Exception $e) {
@@ -450,7 +501,6 @@ class EducationSystemRepository extends Controller
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Room Type Summaries List Not Found');
         }
     }
@@ -461,13 +511,6 @@ class EducationSystemRepository extends Controller
     {
         try {
             $params = $request->all();
-            
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
-
 
             $comptencies = CompetencyTemplates::with('competencyCriteria', 'competencyCriteria.competencyItem', 'competencyCriteria.competencyItem.competencyPeriods', 'competencyCriteria.competencyGradingtype')->where('education_grade_id', $gradeId);
 
@@ -476,12 +519,23 @@ class EducationSystemRepository extends Controller
                 $comptencies = $comptencies->where('academic_period_id', $params['academic_period_id']);
             }
 
+
+            //For POCOR-8215/8216 start...
             if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $comptencies = $comptencies->orderBy($col);
+                $comptencies = $comptencies->orderBy($col, $orderBy);
             }
 
-            $list = $comptencies->paginate($limit)->toArray();
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $comptencies->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $comptencies->get()->toArray();
+
+            }
+            //For POCOR-8215/8216 end...
+
             
             return $list;
             
