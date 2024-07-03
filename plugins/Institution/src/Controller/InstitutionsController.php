@@ -220,7 +220,7 @@ class InstitutionsController extends AppController
             'InstitutionStatistics' => ['className' => 'Institution.InstitutionStatistics', 'actions' => ['index', 'add']],
             'InstitutionStandards' => ['className' => 'Institution.InstitutionStandards', 'actions' => ['index', 'add', 'remove']],
             'ImportStudentCurriculars' => ['className' => 'Institution.ImportStudentCurriculars', 'actions' => ['add']],//POCOR-6673
-            'InfrastructureUtilityTelephones' => ['className' => 'Institution.InfrastructureUtilityTelephones', 'actions' => ['index', 'view', 'add', 'edit', 'remove']],
+            // 'InfrastructureUtilityTelephones' => ['className' => 'Institution.InfrastructureUtilityTelephones', 'actions' => ['index', 'view', 'add', 'edit', 'remove']],
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -1244,6 +1244,11 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureUtilityInternets']);
     }
 
+    public function InfrastructureUtilityTelephones()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureUtilityTelephones']);
+    }
+
     public function InfrastructureUtilityElectricities()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureUtilityElectricities']);
@@ -1274,6 +1279,12 @@ class InstitutionsController extends AppController
                 $this->Navigation->addCrumb(__('Waste'));
                 $this->set('contentHeader', $header);
             } else if ($this->request->getParam('action') == 'InfrastructureUtilityInternets') {
+                //$institutionName = $session->read('Institution.Institutions.name');
+                $header = $institutionName . ' - ' . __('Internet');
+                $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
+                $this->Navigation->addCrumb(__('Internet'));
+                $this->set('contentHeader', $header);
+            } else if ($this->request->getParam('action') == 'InfrastructureUtilityTelephones') {
                 //$institutionName = $session->read('Institution.Institutions.name');
                 $header = $institutionName . ' - ' . __('Internet');
                 $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
@@ -3629,14 +3640,14 @@ class InstitutionsController extends AppController
             ->first();
 
         //Utilities Telephone
-        $institutionUtilitiesTelephone = TableRegistry::getTableLocator()->get('Institution.InfrastructureUtilityInternets');
+        $institutionUtilitiesTelephone = TableRegistry::getTableLocator()->get('Institution.InfrastructureUtilityTelephones');
         $institutionUtilitiesTelephoneData = $institutionUtilitiesTelephone->find()
             ->select([
-                'created' => 'InfrastructureUtilityInternets.created',
-                'modified' => 'InfrastructureUtilityInternets.modified',
+                'created' => 'InfrastructureUtilityTelephones.created',
+                'modified' => 'InfrastructureUtilityTelephones.modified',
             ])
             ->where([$institutionUtilitiesTelephone->aliasField('institution_id') => $institutionId])
-            ->order(['InfrastructureUtilityInternets.modified' => 'desc'])
+            ->order(['InfrastructureUtilityTelephones.modified' => 'desc'])
             ->limit(1)
             ->first();
 
