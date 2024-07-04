@@ -68,6 +68,7 @@ class StaffTabBehavior extends Behavior
     public function getCareerTabElements($options = [], $modelName = null)
     {
         $model = $this->_table;
+        $type = (array_key_exists('type', $options)) ? $options['type'] : null;//POCOR-8401
         //POCOR-8359 starts
         //if conditition used for  Institution > Staff > Career > Attandance Tab 
         if(!empty($modelName)){
@@ -136,7 +137,7 @@ class StaffTabBehavior extends Behavior
                     if(in_array($key, $changeKeyArray)){
                         $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString]);
                     }else{
-                        $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff'.$key, 'index', $encodedQueryString]);
+                        $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff'.$key, 'index', $encodedQueryString, 'type' => $type]);//POCOR-8401 add type
                     }
                 }else{
                     $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString]);
