@@ -22,7 +22,7 @@ class StudentBehavioursTable extends AppTable {
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);//POCOR-7488
 		$this->belongsTo('StudentBehaviourClassifications', ['className' => 'Student.StudentBehaviourClassifications']);//POCOR-7557
 		$this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['StudentBehaviours' =>['id', 'institution_id']
+            'appliedAction' => ['StudentBehaviours' =>['id', 'institution_id','student_id', 'student_behaviour_category_id']
             ]
         ]);
 	}

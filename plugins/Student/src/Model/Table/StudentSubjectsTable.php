@@ -156,8 +156,14 @@ class StudentSubjectsTable extends ControllerActionTable
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
         $queryString = $this->getQueryString();
-
+        //POCOR-8413 starts
         $studentId = $queryString['student_id'];
+        if(empty($studentId)){
+            $studentId = $this->Session->read('Student.Students.id');
+            if(empty($studentId)){
+                $studentId = 0;
+            }
+        }//POCOR-8413 ends
         $encodedQueryString = $this->paramsEncode($queryString);
         // Institution and Grade filter
         $InstitutionStudents = TableRegistry::get('Institution.Students');
