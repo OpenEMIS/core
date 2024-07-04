@@ -11,6 +11,10 @@ use App\Http\Requests\StudentMealExportRequest;
 use App\Http\Requests\StudentMealImportTemplateRequest;
 use App\Exports\StudentMealExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\StudentMealImport;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class MealController extends Controller
 {
@@ -1035,16 +1039,44 @@ class MealController extends Controller
     {
         try {
             $params = $request->all();
-            $data = $this->mealService->getStudentMealImportTemplate($params);
 
-            return $this->sendSuccessResponse("Student meal import template data found.", $data);
+
+            $filePath = public_path('templates\OpenEMIS_Core_Import_Institution_Meal_Students_Template.xlsx');
+
+            $spreadsheet = IOFactory::load($filePath);
+            
+            // Select the 'References' sheet (assuming it's the second sheet)
+            $sheet = $spreadsheet->getSheetByName('References');
+            
+            if (!$sheet) {
+                return 2;
+            }  
+
+            $getDataForSheet = $this->mealService->getDataForSheet($params);
+
+            // Write data to the sheet
+            $row = 4; // Assuming the first row contains headings
+            foreach ($getDataForSheet as $rowData) {
+                $column = 'A';
+                foreach ($rowData as $cellData) {
+                    $sheet->setCellValue($column . $row, $cellData);
+                    $column++;
+                }
+                $row++;
+            }
+
+            // Save the modified Excel file
+            $writer = new Xlsx($spreadsheet);
+            $writer->save($filePath);
+
+            return response()->download($filePath);
             
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch student meals import template data from DB.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
+            dd($e);
             return $this->sendErrorResponse('Failed to fetch student meals import template data from DB.');
         }
     }

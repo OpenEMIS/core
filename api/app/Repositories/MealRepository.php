@@ -865,6 +865,9 @@ class MealRepository extends Controller
             $institution_class_id = $params['institution_class_id'];
             $institution_id = $params['institution_id'];
 
+            
+
+
             $outputData['Data']['header'] = [
                 "Date ( DD/MM/YYYY )",
                 "OpenEMIS ID",
@@ -902,7 +905,83 @@ class MealRepository extends Controller
                 'Failed to fetch student meals import template data from DB.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
+            dd($e);
             return $this->sendErrorResponse('Failed to fetch student meals import template data from DB.');
+        }
+    }
+
+
+    public function getDataForSheet($params)
+    {
+        try {
+            $institution_class_id = $params['institution_class_id'];
+            $institution_id = $params['institution_id'];
+
+            $getClassStudents = getClassStudents($institution_id, $institution_class_id);
+            $getMealProgrammes = getMealProgrammes();
+
+            $getMealReceived = getMealReceived();
+
+            $getMealBenefits = getMealBenefits();
+            
+            $getNewArray = $this->getNewArray($getClassStudents, $getMealProgrammes, $getMealReceived, $getMealBenefits);
+            return $getNewArray;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in getDataForSheet.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return [];
+        }
+    }
+
+
+    public function getNewArray($array1, $array2, $array3, $array4)
+    {
+        try {
+            $newArray = [];
+
+            for ($i = 0; $i < count($array1); $i++) {
+                $newRow = [];
+                $newRow[] = $array1[$i]['Name'];
+                $newRow[] = $array1[$i]['OpenEMIS ID'];
+
+                // Meal Programme data
+                if (isset($array2[$i])) {
+                    $newRow[] = $array2[$i]['Name'];
+                    $newRow[] = $array2[$i]['Code'];
+                } else {
+                    $newRow[] = null;
+                    $newRow[] = null;
+                }
+
+                // Meal Received data
+                if (isset($array3[$i])) {
+                    $newRow[] = $array3[$i]['Name'];
+                    $newRow[] = $array3[$i]['Code'];
+                } else {
+                    $newRow[] = null;
+                    $newRow[] = null;
+                }
+
+                // Meal Benefit data
+                if (isset($array4[$i])) {
+                    $newRow[] = $array4[$i]['Name'];
+                    $newRow[] = $array4[$i]['Id'];
+                } else {
+                    $newRow[] = null;
+                    $newRow[] = null;
+                }
+
+                $newArray[] = $newRow;
+            }
+            return $newArray;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in getNewArray.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return [];
         }
     }
     //For POCOR-8348 End...
