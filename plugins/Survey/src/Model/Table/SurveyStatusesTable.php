@@ -209,12 +209,12 @@ class SurveyStatusesTable extends ControllerActionTable
     //POCOR-8096::Start
     public function deleteBeforeAction(Event $event, ArrayObject $extra)
     {
-        $data = $this->paramsDecode($this->request->data('primaryKey'));
+        $data = $this->paramsDecode($this->request->getData('primaryKey'));
         $surveyStatusId = $data['id'];
         $surveyStatusData = $this->get($surveyStatusId);
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $apData = $AcademicPeriods->find('all',['conditions'=>['start_date'=> $surveyStatusData->date_enabled, 'end_date'=> $surveyStatusData->date_disabled  ]])->first();
-        $surveyStatusPeriods = TableRegistry::get('survey_status_periods');
+        $surveyStatusPeriods = TableRegistry::get('Survey.SurveyStatusPeriods');
         $surveyStatusPeriodsData = $surveyStatusPeriods->find('all', ['conditions' => ['survey_status_id' => $surveyStatusData->id]])->toArray();
         foreach($surveyStatusPeriodsData as $surveyStatusPeriodsData1){
             $apId = $surveyStatusPeriodsData1->academic_period_id;
@@ -222,19 +222,19 @@ class SurveyStatusesTable extends ControllerActionTable
             $insSurveyData = $insSurveyTbl->find('all', ['conditions' =>['survey_form_id'=> $surveyStatusData->survey_form_id, 'academic_period_id'=> $apId]])->toArray();
             
             foreach($insSurveyData as $insSurvey1){
-                $institutionSurveyTableCellsTbl = TableRegistry::get('institution_survey_table_cells');
-                $institutionSurveyAnswersTbl = TableRegistry::get('institution_survey_answers');
-                $institutionStudentSurveysTbl = TableRegistry::get('institution_student_surveys');
-                $institutionStaffSurveysTbl = TableRegistry::get('institution_staff_surveys');
-                $institutionRepeaterSurveysTbl = TableRegistry::get('institution_repeater_surveys');
+                $institutionSurveyTableCellsTbl = TableRegistry::get('Institution.InstitutionSurveyTableCells');
+                $institutionSurveyAnswersTbl = TableRegistry::get('Institution.InstitutionSurveyAnswers');
+                $institutionStudentSurveysTbl = TableRegistry::get('Student.StudentSurveys');
+                $institutionStaffSurveysTbl = TableRegistry::get('Staff.StaffSurveys');
+                $institutionRepeaterSurveysTbl = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
 
-                $institution_repeater_survey_answers_tbl = TableRegistry::get('institution_repeater_survey_answers');
-                $institution_staff_survey_answers_tbl = TableRegistry::get('institution_staff_survey_answers');
-                $institution_student_survey_answers_tbl = TableRegistry::get('institution_student_survey_answers');
+                $institution_repeater_survey_answers_tbl = TableRegistry::get('InstitutionRepeater.RepeaterSurveyAnswers');
+                $institution_staff_survey_answers_tbl = TableRegistry::get('Staff.StaffSurveyAnswers');
+                $institution_student_survey_answers_tbl = TableRegistry::get('Student.StudentSurveyAnswers');
 
-                $institution_repeater_survey_table_cells_tbl = TableRegistry::get('institution_repeater_survey_table_cells');
-                $institution_staff_survey_table_cells_tbl = TableRegistry::get('institution_staff_survey_table_cells');
-                $institution_student_survey_table_cells_tbl = TableRegistry::get('institution_student_survey_table_cells');
+                $institution_repeater_survey_table_cells_tbl = TableRegistry::get('InstitutionRepeater.RepeaterSurveyTableCells');
+                $institution_staff_survey_table_cells_tbl = TableRegistry::get('Staff.StaffSurveyTableCells');
+                $institution_student_survey_table_cells_tbl = TableRegistry::get('Student.StudentSurveyTableCells');
 
                 $institutionSurveyTableCells = $institutionSurveyTableCellsTbl->find('all',['conditions' =>['institution_survey_id' => $insSurvey1->id]])->first();
                 if(!empty($institutionSurveyTableCells)){

@@ -6,9 +6,9 @@ use CustomField\Model\Table\CustomTableCellsTable;
 
 class StaffSurveyTableCellsTable extends CustomTableCellsTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff_survey_table_cells');
+        $this->setTable('institution_staff_survey_table_cells');
 
         parent::initialize($config);
         $this->belongsTo('CustomFields', ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id']);
