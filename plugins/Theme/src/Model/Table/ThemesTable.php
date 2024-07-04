@@ -79,6 +79,19 @@ class ThemesTable extends ControllerActionTable
             $this->field('default_value', [
                 'visible' => 'false'
             ]);
+        }else if($dbId == 3){
+            $this->field('default_content', [
+                'type' => 'readonly',
+            ]);
+            $this->field('name', [
+                'type' => 'readonly'
+            ]);
+            $this->field('value', [
+                'visible' => 'false'
+            ]);
+            $this->field('default_value', [
+                'visible' => 'false'
+            ]);
         }else if($dbId == 5){
             $this->field('name', [
                 'type' => 'readonly'
@@ -115,9 +128,26 @@ class ThemesTable extends ControllerActionTable
             if (file_exists($filePath)) {
                 // Read the file contents
                 $fileContent = file_get_contents($filePath);
+                $fileName = $entity->content->getClientFilename();
                 
                 // Now $fileContent contains the content of the uploaded file
                 $entity->content =  $fileContent;
+                $entity->value = $fileName;
+            } else {
+                echo "File does not exist or could not be accessed.";
+            }
+        }
+        if($entity->id == 3){
+            $filePath = $entity->content->getStream()->getMetadata('uri');
+
+            if (file_exists($filePath)) {
+                // Read the file contents
+                $fileContent = file_get_contents($filePath);
+                $fileName = $entity->content->getClientFilename();
+                
+                // Now $fileContent contains the content of the uploaded file
+                $entity->content =  $fileContent;
+                $entity->value = $fileName;
             } else {
                 echo "File does not exist or could not be accessed.";
             }
