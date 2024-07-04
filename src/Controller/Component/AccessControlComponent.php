@@ -245,7 +245,7 @@ class AccessControlComponent extends Component
         }
         //POCOR-8379 Starts use if condition only
         if($this->controller->getName() != 'GuardianNavs'){
-            $superUser = $this->isSuperRole();//this code wrote by Ehsan because to show Infrastructure > Utlities > telephone menu
+            $superUser = $this->isSuperRole();//V4 POCOR-8385
             if ($superUser || !is_array($url)) { // if $url is a string, then skip checking of permission
                 return true;
             }
