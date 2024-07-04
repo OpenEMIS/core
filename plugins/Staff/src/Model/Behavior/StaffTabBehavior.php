@@ -72,6 +72,7 @@ class StaffTabBehavior extends Behavior
         //if conditition used for  Institution > Staff > Career > Attandance Tab 
         if(!empty($modelName)){
             //$options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+            $controller = $modelName;
             $pluginName = $modelName->getPlugin();
             $controllerName = $modelName->getName();
             $staffID = $modelName->getQueryString('staff_id'); 
