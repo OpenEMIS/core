@@ -1685,7 +1685,8 @@ class NavigationComponent extends Component
                     'Staff.SpecialNeedsAssessments',
                     'Staff.SpecialNeedsServices',
                     'Staff.SpecialNeedsDevices',
-                    'Staff.SpecialNeedsPlans']
+                    'Staff.SpecialNeedsPlans',
+                    'Staff.SpecialNeedsDiagnostics']
             ],
             'Staff.Staff.Profiles.index' => [
                 'title' => 'Profiles',
