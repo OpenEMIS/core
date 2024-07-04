@@ -1665,7 +1665,8 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'report_card_id' => $reportCardId,
                 'student_id' => $student->student_id,
                 'academic_period_id' => $student->academic_period_id,
-                'education_grade_id' => $student->education_grade_id
+                'education_grade_id' => $student->education_grade_id,
+                'institution_id' => $student->institution_id //POCOR-8285
             ];
             if ($this->StudentsReportCards->exists($recordIdKeys)) {
                 $studentsReportCardEntity = $this->StudentsReportCards->find()

@@ -24,9 +24,6 @@ class UserService extends Controller
             //dd('data', $data);
             $resp = [];
             foreach($data['data'] as $k => $d){
-                /*if($d['id'] == 8815){
-                    dd($d);
-                }*/
                 $resp[$k]['id'] = $d['id'];
                 $resp[$k]['username'] = $d['username'];
                 $resp[$k]['password'] = $d['password'];
@@ -62,6 +59,16 @@ class UserService extends Controller
                 $resp[$k]['is_student'] = $d['is_student'];
                 $resp[$k]['is_staff'] = $d['is_staff'];
                 $resp[$k]['is_guardian'] = $d['is_guardian'];
+
+                // For POCOR-8398 start...
+                $resp[$k]['staff_position_grade_id'] = null;
+                $resp[$k]['staff_position_grade_name'] = null;
+                if(isset($d['institution_staff'])){
+                    $resp[$k]['staff_position_grade_id'] = $d['institution_staff']['staff_position_grade']['id'];
+                    $resp[$k]['staff_position_grade_name'] = $d['institution_staff']['staff_position_grade']['name'];
+                }
+                // For POCOR-8398 end...
+
                 $resp[$k]['modified_user_id'] = $d['modified_user_id'];
                 $resp[$k]['modified'] = $d['modified'];
                 $resp[$k]['created_user_id'] = $d['created_user_id'];
@@ -95,6 +102,16 @@ class UserService extends Controller
                     } else {
                         $photo_content = Null;
                     }
+
+
+                    // For POCOR-8398 start...
+                    $staff_position_grade_id = null;
+                    $staff_position_grade_name = null;
+                    if(isset($item['institutionStaff'])){
+                        $staff_position_grade_id = $item['institutionStaff']['staffPositionGrade']['id'];
+                        $staff_position_grade_name = $item['institutionStaff']['staffPositionGrade']['name'];
+                    }
+                    // For POCOR-8398 end...
 
 
                     return [
@@ -156,7 +173,9 @@ class UserService extends Controller
                         "studentStatus" => [
                             "key" => (!empty($item["institutionStudent"]["studentStatus"]["id"]))?$item["institutionStudent"]["studentStatus"]["id"]:'',
                             "value" => (!empty($item["institutionStudent"]["studentStatus"]["name"]))?$item["institutionStudent"]["studentStatus"]["name"]:'',
-                        ]
+                        ],
+                        "staff_position_grade_id" => $staff_position_grade_id,
+                        "staff_position_grade_name" => $staff_position_grade_name,
                     ];
                     
                 });

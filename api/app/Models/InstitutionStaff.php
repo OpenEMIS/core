@@ -45,4 +45,10 @@ class InstitutionStaff extends Model
     {
         return $this->hasMany(InstitutionClasses::class, 'staff_id', 'staff_id');
     }
+
+
+    public function staffPositionGrade()
+    {
+        return $this->belongsTo(StaffPositionGrades::class, 'staff_position_grade_id', 'id');
+    }
 }

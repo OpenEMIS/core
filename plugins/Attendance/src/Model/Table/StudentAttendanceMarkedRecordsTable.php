@@ -328,7 +328,8 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $educationGradeId = $options['education_grade_id'];        
         $day = $options['day_id'];
 
-
+        $query->where([$this->aliasField('institution_id') => $institutionId, $this->aliasField('academic_period_id') => $academicPeriodId,$this->aliasField('institution_class_id') => $institutionClassId,$this->aliasField('education_grade_id') => $educationGradeId,$this->aliasField('date') => $day]); //POCOR-8372 taking long time in load
+        
         $row = [];
         
         return $query

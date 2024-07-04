@@ -1,3 +1,10 @@
+### [3.107.3] - 2024-07-04
+- Bug Fixed: API : Institution Positions endpoint are missing required data
+- Bug Fixed: API: Apis are not working properly
+
+### [3.107.2] - 2024-06-25
+- Bug Fixed: Institutions>Attendance>Students: No scheduled class button is taking very long to load and the query takes a long time to run.
+
 ### [3.107.1] - 2024-06-14
 - Bug Fixed: OpenEMIS Core Training v4 APIs is not working due to changes in table structure
 - Bug Fixed: Institutions > Infrastructure > Overview > Floor > Add: When adding buildings, they face a 404 error.
