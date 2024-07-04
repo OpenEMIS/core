@@ -50,6 +50,34 @@ class InstitutionController extends Controller
      *         @OA\Schema(type="integer", example="id")
      *     ),
      *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="query",
+     *         required=false,
+     *         description="Institution Id.",
+     *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="typeId",
+     *         in="query",
+     *         required=false,
+     *         description="Institution Type Id.",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="classificationId",
+     *         in="query",
+     *         required=false,
+     *         description="Classification Id.",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="institutionCode",
+     *         in="query",
+     *         required=false,
+     *         description="Institution Code.",
+     *         @OA\Schema(type="integer", example="K0001")
+     *     ),
+     *     @OA\Parameter(
      *         name="limit",
      *         in="query",
      *         required=false,
@@ -154,7 +182,6 @@ class InstitutionController extends Controller
     }
 
 
-
     /**
      * @OA\Get(
      *     path="/api/v4/institutions/{institutionId}",
@@ -167,6 +194,27 @@ class InstitutionController extends Controller
      *         required=true,
      *         description="Institution Id.",
      *         @OA\Schema(type="integer", example=6)
+     *     ),
+     *     @OA\Parameter(
+     *         name="typeId",
+     *         in="query",
+     *         required=false,
+     *         description="Institution Type Id.",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="classificationId",
+     *         in="query",
+     *         required=false,
+     *         description="Classification Id.",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="institutionCode",
+     *         in="query",
+     *         required=false,
+     *         description="Institution Code.",
+     *         @OA\Schema(type="integer", example="K0001")
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -237,11 +285,11 @@ class InstitutionController extends Controller
      *     )
      * )
      */
-    public function getInstitutionData(int $id)
+    public function getInstitutionData(Request $request, int $id)
     {
         try {
-
-            $data = $this->institutionService->getInstitutionData($id);
+            $params = $request->all();
+            $data = $this->institutionService->getInstitutionData($params, $id);
             return $this->sendSuccessResponse("Institutions Data Found", $data);
             
         } catch (\Exception $e) {
@@ -1623,11 +1671,18 @@ class InstitutionController extends Controller
      *     description="Returns list of all institution summary",
      *     tags={"Institutions"},
      *     @OA\Parameter(
-     *         name="academic_period_id",
+     *         name="academicPeriodId",
      *         in="query",
      *         required=false,
      *         description="Academic period id",
      *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="institutionId",
+     *         in="query",
+     *         required=false,
+     *         description="Institution Id",
+     *         @OA\Schema(type="integer", example=6)
      *     ),
      *     @OA\Parameter(
      *         name="order",
@@ -1726,7 +1781,7 @@ class InstitutionController extends Controller
      *         @OA\Schema(type="integer", example=10)
      *     ),
      *     @OA\Parameter(
-     *         name="academic_period_id",
+     *         name="academicPeriodId",
      *         in="query",
      *         required=false,
      *         description="Academic period id",

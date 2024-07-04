@@ -123,10 +123,10 @@ class InstitutionService extends Controller
     }
 
 
-    public function getInstitutionData(int $id)
+    public function getInstitutionData($params, int $id)
     {
         try {
-            $data = $this->institutionRepository->getInstitutionData($id);
+            $data = $this->institutionRepository->getInstitutionData($params, $id);
 
             $resp = [];
             if($data){
@@ -661,7 +661,6 @@ class InstitutionService extends Controller
             $list = [];
             if(count($data['data']) > 0){
                 foreach($data['data'] as $k => $d){
-                    //dd($d);
                     // For POCOR-8251 start...
                     $classData = [];
                     foreach ($d['classes'] as $c => $class) {
@@ -696,6 +695,12 @@ class InstitutionService extends Controller
                     // For POCOR-8251 start...
                     $list[$k]['classes'] = $classData;
                     // For POCOR-8251 end...
+
+
+                    // For POCOR-8398 start...
+                    $list[$k]['staff_position_grade_id'] = $d['staff_position_grade']['id'];
+                    $list[$k]['staff_position_grade_name'] = $d['staff_position_grade']['name'];
+                    // For POCOR-8398 end...
 
                     $list[$k]['security_group_user_id'] = $d['security_group_user_id'];
                     $list[$k]['modified_user_id'] = $d['modified_user_id'];
@@ -769,6 +774,11 @@ class InstitutionService extends Controller
                     $list[$k]['classes'] = $classData;
                     // For POCOR-8251 end...
 
+                    // For POCOR-8398 start...
+                    $list[$k]['staff_position_grade_id'] = $d['staff_position_grade']['id'];
+                    $list[$k]['staff_position_grade_name'] = $d['staff_position_grade']['name'];
+                    // For POCOR-8398 end...
+
                     $list[$k]['security_group_user_id'] = $d['security_group_user_id'];
                     $list[$k]['modified_user_id'] = $d['modified_user_id'];
                     $list[$k]['modified'] = $d['modified'];
@@ -840,6 +850,11 @@ class InstitutionService extends Controller
                 // For POCOR-8251 start...
                 $list['classes'] = $classData;
                 // For POCOR-8251 end...
+
+                // For POCOR-8398 start...
+                $list['staff_position_grade_id'] = $data['staffPositionGrade']['id'];
+                $list['staff_position_grade_name'] = $data['staffPositionGrade']['name'];
+                // For POCOR-8398 end...
 
                 $list['security_group_user_id'] = $data['security_group_user_id'];
                 $list['modified_user_id'] = $data['modified_user_id'];
