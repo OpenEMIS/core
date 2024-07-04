@@ -122,22 +122,35 @@ class ThemesTable extends ControllerActionTable
     }
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if($entity->id == 2 || $entity->id == 3){
+        if($entity->id == 2){
             $filePath = $entity->content->getStream()->getMetadata('uri');
 
             if (file_exists($filePath)) {
                 // Read the file contents
                 $fileContent = file_get_contents($filePath);
+                $fileName = $entity->content->getClientFilename();
                 
                 // Now $fileContent contains the content of the uploaded file
                 $entity->content =  $fileContent;
-                $entity->value = $entity->default_value;
+                $entity->value = $fileName;
             } else {
                 echo "File does not exist or could not be accessed.";
             }
         }
         if($entity->id == 3){
-            $entity->value = $entity->default_value;
+            $filePath = $entity->content->getStream()->getMetadata('uri');
+
+            if (file_exists($filePath)) {
+                // Read the file contents
+                $fileContent = file_get_contents($filePath);
+                $fileName = $entity->content->getClientFilename();
+                
+                // Now $fileContent contains the content of the uploaded file
+                $entity->content =  $fileContent;
+                $entity->value = $fileName;
+            } else {
+                echo "File does not exist or could not be accessed.";
+            }
         }
     }
 
