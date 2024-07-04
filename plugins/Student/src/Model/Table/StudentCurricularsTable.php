@@ -39,9 +39,12 @@ class StudentCurricularsTable extends ControllerActionTable
     //POCOR-8056
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $modelAlias = 'StudentCurriculars';
-        $userType = 'StudentUser';
-        $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
+        //POCOR-8413 starts
+        if($this->controller->getName() != 'Profiles'){
+            $modelAlias = 'StudentCurriculars';
+            $userType = 'StudentUser';
+            $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
+        }//POCOR-8413 ends     
     }
     //POCOR-8056
 
