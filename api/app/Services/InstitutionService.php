@@ -873,17 +873,28 @@ class InstitutionService extends Controller
             $list = [];
             if(count($data['data']) > 0){
                 foreach($data['data'] as $k => $d){
+                    //For POCOR-8384 Start...
+                    $getStaffPositionGrade = $this->institutionRepository->getStaffPositionGrade($d['staff_position_title_id']);
+                    //For POCOR-8384 End...
+
+
                     $list[$k]['position_id'] = $d['id'];
                     $list[$k]['status_id'] = $d['status_id'];
                     $list[$k]['status_name'] = $d['status']['status_name'];
                     $list[$k]['position_no'] = $d['position_no'];
                     $list[$k]['staff_position_title_id'] = $d['staff_position_title_id'];
                     $list[$k]['staff_position_title_name'] = $d['staff_position_title']['staff_position_title_name'];
-                    /*$list[$k]['staff_position_grade_id'] = $d['staff_position_grade_id'];
-                    $list[$k]['staff_position_grade_name'] = $d['staff_position_grades']['staff_position_grade_name'];*/
+                    if($getStaffPositionGrade){
+                        $list[$k]['staff_position_grade_id'] = $getStaffPositionGrade->id;
+                        $list[$k]['staff_position_grade_name'] = $getStaffPositionGrade->name;
+                    } else {
+                        $list[$k]['staff_position_grade_id'] = Null;
+                        $list[$k]['staff_position_grade_name'] = Null;
+                    }
+                    
                     $list[$k]['institution_id'] = $d['institution_id'];
                     $list[$k]['assignee_id'] = $d['assignee_id'];
-                    //$list[$k]['is_homeroom'] = $d['is_homeroom'];
+                    $list[$k]['is_homeroom'] = $d['institution_staff']['is_homeroom']??0;
                     $list[$k]['modified_user_id'] = $d['modified_user_id'];
                     $list[$k]['modified'] = $d['modified'];
                     $list[$k]['created_user_id'] = $d['created_user_id'];
@@ -900,7 +911,6 @@ class InstitutionService extends Controller
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Institutions Positions List Not Found');
         }
     }
@@ -915,17 +925,27 @@ class InstitutionService extends Controller
             $list = [];
             if(count($data['data']) > 0){
                 foreach($data['data'] as $k => $d){
+
+                    //For POCOR-8384 Start...
+                    $getStaffPositionGrade = $this->institutionRepository->getStaffPositionGrade($d['staff_position_title_id']);
+                    //For POCOR-8384 End...
+
                     $list[$k]['position_id'] = $d['id'];
                     $list[$k]['status_id'] = $d['status_id'];
                     $list[$k]['status_name'] = $d['status']['status_name'];
                     $list[$k]['position_no'] = $d['position_no'];
                     $list[$k]['staff_position_title_id'] = $d['staff_position_title_id'];
                     $list[$k]['staff_position_title_name'] = $d['staff_position_title']['staff_position_title_name'];
-                    /*$list[$k]['staff_position_grade_id'] = $d['staff_position_grade_id'];
-                    $list[$k]['staff_position_grade_name'] = $d['staff_position_grades']['staff_position_grade_name'];*/
+                    if($getStaffPositionGrade){
+                        $list[$k]['staff_position_grade_id'] = $getStaffPositionGrade->id;
+                        $list[$k]['staff_position_grade_name'] = $getStaffPositionGrade->name;
+                    } else {
+                        $list[$k]['staff_position_grade_id'] = Null;
+                        $list[$k]['staff_position_grade_name'] = Null;
+                    }
                     $list[$k]['institution_id'] = $d['institution_id'];
                     $list[$k]['assignee_id'] = $d['assignee_id'];
-                    //$list[$k]['is_homeroom'] = $d['is_homeroom'];
+                    $list[$k]['is_homeroom'] = $d['institution_staff']['is_homeroom']??0;
                     $list[$k]['modified_user_id'] = $d['modified_user_id'];
                     $list[$k]['modified'] = $d['modified'];
                     $list[$k]['created_user_id'] = $d['created_user_id'];
@@ -956,17 +976,27 @@ class InstitutionService extends Controller
             
             $list = [];
             if($data){
+
+                //For POCOR-8384 Start...
+                $getStaffPositionGrade = $this->institutionRepository->getStaffPositionGrade($data['staff_position_title_id']);
+                //For POCOR-8384 End...
+
                 $list['position_id'] = $data['id'];
                 $list['status_id'] = $data['status_id'];
                 $list['status_name'] = $data['status']['status_name'];
                 $list['position_no'] = $data['position_no'];
                 $list['staff_position_title_id'] = $data['staff_position_title_id'];
                 $list['staff_position_title_name'] = $data['staffPositionTitle']['staff_position_title_name']??"";
-                /*$list['staff_position_grade_id'] = $data['staff_position_grade_id'];
-                $list['staff_position_grade_name'] = $data['staffPositionGrades']['staff_position_grade_name']??"";*/
+                if($getStaffPositionGrade){
+                    $list['staff_position_grade_id'] = $getStaffPositionGrade->id;
+                    $list['staff_position_grade_name'] = $getStaffPositionGrade->name;
+                } else {
+                    $list['staff_position_grade_id'] = Null;
+                    $list['staff_position_grade_name'] = Null;
+                }
                 $list['institution_id'] = $data['institution_id'];
                 $list['assignee_id'] = $data['assignee_id'];
-                $list['is_homeroom'] = $data['is_homeroom'];
+                $list['is_homeroom'] = $data['institution_staff']['is_homeroom']??0;;
                 $list['modified_user_id'] = $data['modified_user_id'];
                 $list['modified'] = $data['modified'];
                 $list['created_user_id'] = $data['created_user_id'];
