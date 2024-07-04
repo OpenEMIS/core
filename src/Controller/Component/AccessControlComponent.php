@@ -240,15 +240,16 @@ class AccessControlComponent extends Component
     public function check($url = [], $roleIds = [])
     {
         $superAdmin = $this->Auth->user('super_admin');
-        $superUser = $this->isSuperRole();
-
         if ($superAdmin || !is_array($url)) { // if $url is a string, then skip checking of permission
             return true;
         }
-
-        if ($superUser || !is_array($url)) { // if $url is a string, then skip checking of permission
-            return true;
-        }
+        //POCOR-8379 Starts use if condition only
+        if($this->controller->getName() != 'GuardianNavs'){
+            $superUser = $this->isSuperRole();//this code wrote by Ehsan because to show Infrastructure > Utlities > telephone menu
+            if ($superUser || !is_array($url)) { // if $url is a string, then skip checking of permission
+                return true;
+            }
+        }//POCOR-8379 Ends
 
         // we only need controller and action
         foreach ($url as $i => $val) {

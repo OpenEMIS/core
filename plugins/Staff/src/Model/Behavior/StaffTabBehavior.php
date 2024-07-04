@@ -71,7 +71,7 @@ class StaffTabBehavior extends Behavior
         //POCOR-8359 starts
         //if conditition used for  Institution > Staff > Career > Attandance Tab 
         if(!empty($modelName)){
-            //$options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+            $controller = $modelName;//POCOR-8379
             $pluginName = $modelName->getPlugin();
             $controllerName = $modelName->getName();
             $staffID = $modelName->getQueryString('staff_id'); 
