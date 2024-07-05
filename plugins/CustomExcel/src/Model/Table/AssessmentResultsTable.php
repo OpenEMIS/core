@@ -8,7 +8,8 @@ use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Datasource\ResultSetInterface;
-use Cake\Utility\Inflector;
+//use Cake\Utility\Inflector;
+use Cake\Utility\Text;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
@@ -806,7 +807,7 @@ class AssessmentResultsTable extends AppTable
         foreach ($marksWithSubjectClassificationWeight as $record) {
             $studentId = $record['student_id'];
             $academic_term = $record['academic_term'];
-            $subjectClassification = Inflector::slug($record['subject_classification']);
+            $subjectClassification = Text::slug($record['subject_classification']);//Inflector::slug($record['subject_classification']);
             $marksPerStudent[$studentId][$subjectClassification][$academic_term][] = $record;
         }
 //        $functionName = __FUNCTION__;
@@ -967,7 +968,7 @@ class AssessmentResultsTable extends AppTable
 
         foreach ($marksWithSubjectClassificationWeight as $record) {
             $studentId = $record['student_id'];
-            $subjectClassification = Inflector::slug($record['subject_classification']);
+            $subjectClassification = Text::slug($record['subject_classification']);//Inflector::slug($record['subject_classification']);
             $academicTermTotalWeightedMarks = $record['weighted_mark'];
 
             if (isset($averageStudentSubjectResults[$studentId])
