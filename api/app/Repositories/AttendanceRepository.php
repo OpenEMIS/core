@@ -690,7 +690,6 @@ class AttendanceRepository extends Controller
                 'Failed to fetch Staff Attendances List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            dd($e);
             return $this->sendErrorResponse('Staff Attendances List Not Found');
         }
     }
@@ -1492,6 +1491,10 @@ class AttendanceRepository extends Controller
                             'institution_class_students.student_id',
                             'institution_class_students.student_status_id',
                             'institution_classes.name as class_name',
+                            'institution_classes.modified_user_id',
+                            'institution_classes.modified as modified_date',
+                            'institution_classes.created_user_id',
+                            'institution_classes.created as created_date',
                             'security_users.id',
                             'security_users.openemis_no',
                             'security_users.first_name',
@@ -1500,7 +1503,7 @@ class AttendanceRepository extends Controller
                             'security_users.last_name',
                             'security_users.preferred_name'
                         )
-                        ->with('user', 'institutionClass', 'studentStatus')
+                        ->with('user', 'institutionClass', 'studentStatus', 'createdUser:id,first_name,middle_name,third_name,last_name,openemis_no', 'modifiedUser:id,first_name,middle_name,third_name,last_name,openemis_no')
                         ->leftjoin('institution_students', 'institution_students.student_id', '=', 'institution_class_students.student_id')
                         ->join('security_users', 'security_users.id', '=', 'institution_class_students.student_id')
                         ->join('institution_classes', 'institution_classes.id', '=', 'institution_class_students.institution_class_id')
@@ -1550,6 +1553,10 @@ class AttendanceRepository extends Controller
                             'institution_class_students.student_id',
                             'institution_class_students.student_status_id',
                             'institution_classes.name as class_name',
+                            'institution_classes.modified_user_id',
+                            'institution_classes.modified as modified_date',
+                            'institution_classes.created_user_id',
+                            'institution_classes.created as created_date',
                             'security_users.id',
                             'security_users.openemis_no',
                             'security_users.first_name',
@@ -1558,7 +1565,7 @@ class AttendanceRepository extends Controller
                             'security_users.last_name',
                             'security_users.preferred_name'
                         )
-                        ->with('user', 'institutionClass', 'studentStatus')
+                        ->with('user', 'institutionClass', 'studentStatus', 'createdUser:id,first_name,middle_name,third_name,last_name,openemis_no', 'modifiedUser:id,first_name,middle_name,third_name,last_name,openemis_no')
                         ->leftjoin('institution_students', 'institution_students.student_id', '=', 'institution_class_students.student_id')
                         ->join('security_users', 'security_users.id', '=', 'institution_class_students.student_id')
                         ->join('institution_classes', 'institution_classes.id', '=', 'institution_class_students.institution_class_id')
@@ -1622,7 +1629,11 @@ class AttendanceRepository extends Controller
                 $list[$k]['student_id'] = $q['student_id'];
                 $list[$k]['academic_period_id'] = $q['academic_period_id'];
                 $list[$k]['student_id'] = $q['student_id'];
+                $list[$k]['created_date'] = $q['created_date'];
+                $list[$k]['modified_date'] = $q['modified_date'];
                 $list[$k]['user'] = $q['user'];
+                $list[$k]['created_user'] = $q['created_user'];
+                $list[$k]['modified_user'] = $q['modified_user'];
 
 
                 if ($day != -1) {
@@ -1952,7 +1963,6 @@ class AttendanceRepository extends Controller
                 'Failed to fetch Student Attendance List from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            
             return $this->sendErrorResponse('Student Attendance List Not Found');
         }
     }
@@ -2370,10 +2380,13 @@ class AttendanceRepository extends Controller
                     $errors[$label] = 'Absence type code is required.';
                 }
 
-                if (!$row[6]) { //Student Absence Reason Code
-                    $label = $results[0][1][6];
-                    $errors[$label] = 'Student absence reason code is required.';
+                if(isset($row[5]) && $row[5] == "EXCUSED"){
+                    if (!$row[6]) { //Student Absence Reason Code
+                        $label = $results[0][1][6];
+                        $errors[$label] = 'Student absence reason code is required.';
+                    }
                 }
+                
 
 
                 $allRows = [
@@ -2493,6 +2506,11 @@ class AttendanceRepository extends Controller
                         $insert = [];
                         $updateArr = [];
                         $storeArr = [];
+
+                        $student_absence_reason_id = Null;
+                        if($row[5] == "EXCUSED"){
+                            $student_absence_reason_id = $row[6];
+                        }
                         if(!$check){
 
                             $insert['education_grade_id'] = (int)$institutionClassGrade->education_grade_id??0;
@@ -2504,7 +2522,7 @@ class AttendanceRepository extends Controller
                             $insert['subject_id'] = $row[3];
                             $insert['student_id'] = $user->id;
                             $insert['absence_type_id'] = $absenceType->id;
-                            $insert['student_absence_reason_id'] = $row[6];
+                            $insert['student_absence_reason_id'] = $student_absence_reason_id;
                             $insert['comment'] = $row[7];
                             $insert['created_user_id'] = JWTAuth::user()->id;
                             $insert['created'] = Carbon::now()->toDateTimeString();
@@ -2526,7 +2544,7 @@ class AttendanceRepository extends Controller
                             $updateArr['subject_id'] = $row[3];
                             $updateArr['student_id'] = $user->id;
                             $updateArr['absence_type_id'] = $absenceType->id;
-                            $updateArr['student_absence_reason_id'] = $row[6];
+                            $updateArr['student_absence_reason_id'] = $student_absence_reason_id;
                             $updateArr['comment'] = $row[7];
                             $updateArr['modified_user_id'] = JWTAuth::user()->id;
                             $updateArr['modified'] = Carbon::now()->toDateTimeString();

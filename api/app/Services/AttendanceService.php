@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Repositories\AttendanceRepository;
 use JWTAuth;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class AttendanceService extends Controller
 {
@@ -216,8 +217,8 @@ class AttendanceService extends Controller
             $data = $this->attendanceRepository->getStudentAttendancesExport($params);
             
             $resp = [];
-            if(isset($data['list'])){
-                foreach ($data['list'] as $key => $d) {
+            if(isset($data['data'])){
+                foreach ($data['data'] as $key => $d) {
                     $resp[$key]['Openemis ID'] = $d['user']['openemis_no'];
                     $resp[$key]['Name'] = $d['user']['full_name'];
                     if($d['institution_student_absences']['absence_type_name'] != ""){
@@ -226,14 +227,42 @@ class AttendanceService extends Controller
                         $resp[$key]['Attendance'] = "Present";
                     }
                     
-                    $resp[$key]['Date'] = $d['institution_student_absences']['date'];
+                    $resp[$key]['Date'] = Null;
+                    if($d['institution_student_absences']['date']){
+                        $date1 = date('d/m/Y', strtotime($d['institution_student_absences']['date']));
+
+                        $resp[$key]['Date'] = $date1;
+                    }
                     $resp[$key]['Student Statuses'] = "";
                     $resp[$key]['Class'] = $d['institution_class_name'];
                     $resp[$key]['Absent Reasons'] = $d['institution_student_absences']['student_absence_reason_name'];
                     $resp[$key]['Comment'] = $d['institution_student_absences']['comment'];
+                    $resp[$key]['Modified User'] = Null;
+                    if($d['modified_user']){
+                        $resp[$key]['Modified User'] = $d['modified_user']['full_name'];
+                    }
+
+                    $resp[$key]['Modified'] = Null;
+                    if($d['modified_date']){
+                        $date2 = date('Y-m-d', strtotime($d['modified_date']));
+                        $formattedDate = Carbon::createFromFormat('Y-m-d', $date2)->format('F d, Y');
+
+                        $resp[$key]['Modified'] = $formattedDate;
+                    }
+
+                    $resp[$key]['Created User'] = Null;
+                    if($d['created_user']){
+                        $resp[$key]['Created User'] = $d['created_user']['full_name'];
+                    }
+
+                    $resp[$key]['Created'] = Null;
+                    if($d['created_date']){
+                        $date3 = date('Y-m-d', strtotime($d['created_date']));
+                        $formattedDate = Carbon::createFromFormat('Y-m-d', $date3)->format('F d, Y');
+                        $resp[$key]['Created'] = $formattedDate;
+                    }
                 }
             }
-            
             return $resp;
             
         } catch (\Exception $e) {
