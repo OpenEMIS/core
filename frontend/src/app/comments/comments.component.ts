@@ -77,6 +77,7 @@ export class CommentsComponent extends KdPageBase implements OnInit, OnDestroy {
   institution_name: any;
   userId: number;
   commentArray: any[];
+  displayTabs: boolean = false;
 
   constructor(
     private _router: Router,
@@ -126,7 +127,7 @@ export class CommentsComponent extends KdPageBase implements OnInit, OnDestroy {
   }
 
   loginData() {
-    // this.Rest.setSession();
+    this.Rest.setSession();
     let token = localStorage.getItem("loginToken");
     if (!token) {
       let userName = sessionStorage.getItem('username');
@@ -192,7 +193,10 @@ export class CommentsComponent extends KdPageBase implements OnInit, OnDestroy {
       },
       error: (error: any) => {
         if (error) {
-          this.loginData();
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
         }
       }
     })
@@ -379,7 +383,7 @@ export class CommentsComponent extends KdPageBase implements OnInit, OnDestroy {
           });
         }
         this.displayLoading = false;
-
+        this.displayTabs = true;
         this.oldRowData = JSON.parse(JSON.stringify(this._row));
       },
       error: (error: any) => {
@@ -523,6 +527,8 @@ export class CommentsComponent extends KdPageBase implements OnInit, OnDestroy {
         pageheaderText: "Avory Primary School - Comments",
         searchBtn: false
       }
+    } else {
+      this.displayLoading = false;
     }
   }
 

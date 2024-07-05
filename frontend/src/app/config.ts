@@ -155,8 +155,6 @@ function getEditCommentElement(data: any, commentTypes: any) {
     eSelect.appendChild(eOption);
   });
   eSelect.addEventListener('change', () => {
-    console.log("data received topa");
-
     let oldValue = data.comment_code;
     let newValue = eSelect.value;
     console.log(commentTypes, newValue, "commentTypes");
@@ -212,8 +210,6 @@ function getViewCommentElement(data: any, commentType: any) {
     } else {
       html = '';
     }
-    console.log(html, "html Topa");
-
     return html;
   }
 }

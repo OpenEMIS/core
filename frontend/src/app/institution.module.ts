@@ -33,7 +33,7 @@ import { StudentMealResultComponent } from './student-meal-result/student-meal-r
 
 export const appRoutes: Routes = [
   { path: 'Dashboard', component: WorkbenchComponent },
-  { path: 'Institution/Institutions/Comments', component: CommentsComponent },
+  { path: `Institution/Institutions/Comments/${setEncodedId()}`, component: CommentsComponent },
   { path: 'Institution/Institutions/Results', component: AssessmentComponent },
   { path: 'Institution/Institutions/ResultsReport', component: AssessmentReportComponent },
   { path: `Institution/Institutions/${setEncodedId()}/StudentAttendances/index`, component: StudentAttendanceComponent },

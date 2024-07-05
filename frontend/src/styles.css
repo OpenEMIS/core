@@ -324,3 +324,11 @@ button.btn.btn-icon.btn-xs {
 a.btn {
   padding: 6px 10px !important;
 }
+
+/* .kdx-tabs .scroll-left, .kdx-tabs .scroll-right {
+  position: absolute !important;
+  width: 25px !important;
+  height: 35px !important;
+  font-size: 0 !important;
+  z-index: 1 !important;
+} */

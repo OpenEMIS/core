@@ -1682,7 +1682,11 @@ class InstitutionsController extends AppController
     {
         // POCOR-3983 check institution status
         $institutionId = $this->getQueryString('institution_id');
-
+        $institutionClassId = $this->getQueryString('institution_class_id');
+        $reportCardId = $this->getQueryString('report_card_id');
+        $encodedUrl = $this->request->getParam('pass')[0];
+        $institutionName = $this->Institutions->get($institutionId)->name;
+        
         $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $isActive = $Institutions->isActive($institutionId);
         if ($isActive) {
@@ -1698,6 +1702,11 @@ class InstitutionsController extends AppController
         $this->set('loginUserId', $userId);
         $this->set('queryString', $queryString);
         $this->set('_edit', $_edit);
+        $this->set('encodedUrl', $encodedUrl);
+        $this->set('institutionClassId', $institutionClassId);
+        $this->set('reportCardId', $reportCardId);
+        $this->set('institutionName', $institutionName);
+        $this->set('institutionId', $institutionId);
         $this->set('ngController', 'InstitutionCommentsCtrl as InstitutionCommentsController');
     }
 
