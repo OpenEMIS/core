@@ -256,7 +256,7 @@ class NavigationComponent extends Component
                         $userInfo = TableRegistry::getTableLocator()->get('Guardian.Students')->get($securityUserId);
                     } else if ($action == 'StudentGuardians') {
                         $requestData = $this->request->getAttribute('params')['pass'][1];
-                        $securityUserId = $this->controller->paramsDecode($requestData);
+                        $securityUserId = $this->controller->paramsDecode($requestData)['id'];
                         $userInfo = TableRegistry::getTableLocator()->get('Student.StudentGuardians')->get($securityUserId);//POCOR-6453 ends
                         $securityUserId = $userInfo->guardian_id;
                         $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($securityUserId);//POCOR-6453 ends
@@ -825,7 +825,7 @@ class NavigationComponent extends Component
                     'Institutions.WithdrawRequests',
                     'Institutions.StudentUser.add',
                     'Institutions.ImportStudentAdmission',
-                    'Institutions.Students', 
+                    'Institutions.Students',
                     'Institutions.StudentHistories.index',//POCOR-8333
                     'Institutions.BulkStudentAdmission',
                     'Institutions.ImportStudentBodyMasses',
@@ -1685,7 +1685,8 @@ class NavigationComponent extends Component
                     'Staff.SpecialNeedsAssessments',
                     'Staff.SpecialNeedsServices',
                     'Staff.SpecialNeedsDevices',
-                    'Staff.SpecialNeedsPlans']
+                    'Staff.SpecialNeedsPlans',
+                    'Staff.SpecialNeedsDiagnostics']
             ],
             'Staff.Staff.Profiles.index' => [
                 'title' => 'Profiles',
@@ -2674,7 +2675,7 @@ class NavigationComponent extends Component
                 'Configurations.index' => [
                     'title' => 'System Configurations',
                     'parent' => 'SystemSetup',
-                    'selected' => ['Configurations.index',
+                    'selected' => ['Configurations.Themes',
                         'Configurations.add',
                         'Configurations.view',
                         'Configurations.edit',
