@@ -75,30 +75,21 @@ class StaffAccountTable extends AppTable {
         $save =  $userActivities->save($entity);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    //POCOR-8356
+    public function afterAction(Event $event, ArrayObject $options)
     {
-        if ($field == 'last_login') {
-            return __('Last Login');
-        } elseif ($field == 'roles') {
-            return __('Roles');
-        } elseif ($field == 'username') {
-            return __('Username');
-        } elseif ($field == 'middle_name') {
-            return __('Middle Name');
-        } elseif ($field == 'third_name') {
-            return __('Third Name');
-        } elseif ($field == 'last_name') {
-            return __('Last Name');
-        } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
-        } elseif ($field == 'modified') {
-            return __('Modified On');
-        } elseif ($field == 'created_user_id') {
-            return __('Created By');
-        } elseif ($field == 'created') {
-            return __('Created On');
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        $users = TableRegistry::get('Security.Users');
+        $plugin = __($this->controller->getPlugin());
+        $id = $this->request->getAttribute('params')['pass'][1];
+        $DecodedQueryString = $this->paramsDecode($id);
+        $staffId = $DecodedQueryString['staff_id'];
+        $data = $users->find()->select(['first_name'=>$users->aliasField('first_name'),'middle_name'=>$users->aliasField('middle_name'),'third_name'=>$users->aliasField('third_name'),'last_name'=>$users->aliasField('last_name')])
+                ->where([$users->aliasField('id') => $staffId ])->first();
+        $StaffName = $data->first_name.' '.$data->middle_name.' '.$data->third_name.' '.$data->last_name;
+        try {
+            $this->controller->set('contentHeader', $StaffName . ' - ' . 'Account');
+        } catch (RecordNotFoundException $e) {
+            Log::write('error', $e->getMessage());
         }
     }
 }
