@@ -775,9 +775,10 @@ class StudentsTable extends ControllerActionTable
 
         $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID();
-        $assignedStudentToInstitution = $this->find()->where(['institution_id' => $institutionId])->count();
-        $session->write('is_any_student', $assignedStudentToInstitution);
-
+        if ($institutionId) {
+            $assignedStudentToInstitution = $this->find()->where(['institution_id' => $institutionId])->count();
+            $session->write('is_any_student', $assignedStudentToInstitution);
+        }
         // Start POCOR-5188
         $is_manual_exist = $this->getManualUrl('Personal', 'Students', 'Students - Overview');
         if (!empty($is_manual_exist)) {
