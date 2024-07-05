@@ -515,6 +515,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 if ($existingReportCard && $existingClass) {
                     $generatedCount = 0;
                     $publishedCount = 0;
+                    $dataCount = count($data);//POCOR-8300
                     // count statuses to determine which buttons are shown
                     foreach ($data as $student) {
                         if ($student->has('report_card_status')) {
@@ -602,7 +603,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                         ])
                         ->count();
 
-                    if ($generatedCount > 0 || $publishedCount > 0) {
+                        if (($dataCount == $generatedCount) && ($generatedCount > 0 || $publishedCount > 0)) { //POCOR-8300
                         if ($this->AccessControl->isAdmin()) {
                             $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
                             $downloadButtonPdf['type'] = 'button';
@@ -762,6 +763,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 if ($existingReportCard && $existingClass) {
                     $generatedCount = 0;
                     $publishedCount = 0;
+                    $dataCount = count($data);//POCOR-8300
                     // count statuses to determine which buttons are shown
                     foreach ($data as $student) {
                         if ($student->has('report_card_status')) {
@@ -850,7 +852,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                             //$SecurityRoleFunctionsTable->aliasField('_execute') => 1,/
                         ])
                         ->count();
-                    if ($generatedCount > 0 || $publishedCount > 0) {
+                    if (($dataCount == $generatedCount) && ($generatedCount > 0 || $publishedCount > 0)) { //POCOR-8300
                         if ($this->AccessControl->isAdmin()) {
                             $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
                             $downloadButtonPdf['type'] = 'button';
