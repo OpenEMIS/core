@@ -859,7 +859,7 @@ class MealRepository extends Controller
     }
 
 
-    public function getStudentMealImportTemplate($params)
+    /*public function getStudentMealImportTemplate($params)
     {
         try {
             $institution_class_id = $params['institution_class_id'];
@@ -905,10 +905,9 @@ class MealRepository extends Controller
                 'Failed to fetch student meals import template data from DB.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            dd($e);
             return $this->sendErrorResponse('Failed to fetch student meals import template data from DB.');
         }
-    }
+    }*/
 
 
     public function getDataForSheet($params)

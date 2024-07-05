@@ -238,7 +238,7 @@ class MealService extends Controller
     }
 
 
-    public function getStudentMealImportTemplate($params)
+    /*public function getStudentMealImportTemplate($params)
     {
         try {
             $data = $this->mealRepository->getStudentMealImportTemplate($params);
@@ -253,7 +253,7 @@ class MealService extends Controller
 
             return $this->sendErrorResponse('Failed to fetch student meals import template data from DB.');
         }
-    }
+    }*/
 
 
     public function getDataForSheet($params)
