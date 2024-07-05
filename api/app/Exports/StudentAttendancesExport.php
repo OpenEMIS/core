@@ -35,6 +35,10 @@ class StudentAttendancesExport implements FromArray, WithHeadings, WithEvents
             'Class',
             'Absent Reasons',
             'Comment',
+            'Modified User',
+            'Modified',
+            'Created User',
+            'Created'
         ];
     }
 

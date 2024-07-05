@@ -1185,7 +1185,6 @@ class AttendanceController extends Controller
 
             $data = $this->attendanceService->getStudentAttendancesExport($params);
             
-
             $str = time();
             $fileName = 'StudentAttendances_'.$str.'.xlsx';
             return Excel::download(new StudentAttendancesExport($data), $fileName);
