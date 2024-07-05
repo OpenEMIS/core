@@ -64,7 +64,6 @@ class InfrastructureUtilityTelephonesTable extends ControllerActionTable
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
-
         $extra['elements']['control'] = [
             'name' => 'Risks/controls',
             'data' => [
@@ -123,4 +122,30 @@ class InfrastructureUtilityTelephonesTable extends ControllerActionTable
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    // public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    // {
+    //     $encodedString = $this->request->getAttribute('params')['pass'][1];
+    //     $query = $this->request->getQuery();
+        
+    //     $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+    //     $buttons['remove'] = [
+    //         'url' => [
+    //             'plugin' => 'Institution',
+    //             'controller' => 'Institutions',
+    //             'action' => 'InfrastructureUtilityTelephones',
+    //             '0' => 'remove',
+    //             '1' => $encodedString,
+    //             '2' => $this->ControllerAction->paramsEncode(['id' => $entity->id]),
+    //         ],
+    //         'type' => 'button',
+    //         'label' => '<i class="fa fa-trash"></i>' . __('Delete'),
+    //         'attr' => [
+    //                 'role' => 'menuitem',
+    //                 'tabindex' => -1,
+    //                 'escape' => false,
+    //             ]
+    //     ];
+    //     return $buttons;
+    // }
 }
