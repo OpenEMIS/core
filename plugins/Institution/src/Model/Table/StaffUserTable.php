@@ -25,21 +25,21 @@ class StaffUserTable extends ControllerActionTable
         $this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' => ['Identities', 'Nationalities', 'Contacts']]);
         $this->addBehavior('AdvanceSearch');
 
-//        $this->addBehavior('CustomField.Record', [
-//            'model' => 'Staff.Staff',
-//            'behavior' => 'Staff',
-//            'fieldKey' => 'staff_custom_field_id',
-//            'tableColumnKey' => 'staff_custom_table_column_id',
-//            'tableRowKey' => 'staff_custom_table_row_id',
-//            'fieldClass' => ['className' => 'StaffCustomField.StaffCustomFields'],
-//            'formKey' => 'staff_custom_form_id',
-//            'filterKey' => 'staff_custom_filter_id',
-//            'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
-//             'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
-//            'recordKey' => 'staff_id',
-////            'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
-//            'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
-//        ]);
+       $this->addBehavior('CustomField.Record', [
+           'model' => 'Staff.Staff',
+           'behavior' => 'Staff',
+           'fieldKey' => 'staff_custom_field_id',
+           'tableColumnKey' => 'staff_custom_table_column_id',
+           'tableRowKey' => 'staff_custom_table_row_id',
+           'fieldClass' => ['className' => 'StaffCustomField.StaffCustomFields'],
+           'formKey' => 'staff_custom_form_id',
+           'filterKey' => 'staff_custom_filter_id',
+           'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
+            'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
+           'recordKey' => 'staff_id',
+           'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
+           'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+       ]);
 
         $this->addBehavior('Excel', [
             'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian', 'super_admin', 'date_of_death'],
@@ -566,7 +566,7 @@ class StaffUserTable extends ControllerActionTable
     public function editAfterSave(Event $event, Entity $entity)
     {
         //POCOR-5070:start
-        $staffT = TableRegistry::get('institution_staff');
+        $staffT = TableRegistry::get('Institution.Staff');//POCOR-8364
         $entityData = $staffT->find('all', ['conditions' => ['staff_id' => $entity->id]])->first();
         $entityData->is_homeroom = $entity->is_homeroom;
         $saveData = $staffT->save($entityData);
@@ -650,10 +650,12 @@ class StaffUserTable extends ControllerActionTable
 
                 }
             }
-            $institutionShifts = TableRegistry::get('institution_shifts');
-            $shiftOptions = TableRegistry::get('shift_options');
-            $institutionStaffShifts = TableRegistry::get('institution_staff_shifts');
-            $res = $institutionShifts->find()->select(['name' => 'shift_options.name'])
+            //POCOR-8364
+            $institutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+            $shiftOptions = TableRegistry::get('Institution.ShiftOptions');
+            $institutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
+            //POCOR-8364
+            $res = $institutionShifts->find()->select(['name' => 'name'])
                 ->leftJoin(
                     [$shiftOptions->getAlias() => $shiftOptions->getTable()],
                     [
@@ -666,7 +668,7 @@ class StaffUserTable extends ControllerActionTable
                         $institutionStaffShifts->aliasField('shift_id = ') . $institutionShifts->aliasField('id')
                     ]
                 )
-                ->where([$institutionStaffShifts->aliasField('staff_id') => $entity->id])->order($institutionShifts->aliasField('id'))->group('shift_options.name')->order('shift_options.name')->toArray();
+                ->where([$institutionStaffShifts->aliasField('staff_id') => $entity->id])->order($institutionShifts->aliasField('id'))->group('name')->order('name')->toArray();
             $shift = '';
             foreach ($res as $key => $value) {
                 $shift .= $value['name'] . ',';
@@ -713,11 +715,14 @@ class StaffUserTable extends ControllerActionTable
                 'role_name' => ($role == 1) ? 'staff' : NULL
             ];
             //POCOR-6805 start
-            $Guardians = TableRegistry::get('staff_custom_field_values');
-            $staffCustomFieldOptions = TableRegistry::get('staff_custom_field_options');
-            $staffCustomFields = TableRegistry::get('staff_custom_fields');
-            $staffCustomFormsFields = TableRegistry::get('staff_custom_forms_fields');
+            //POCOR-8364
+            $Guardians = TableRegistry::get('StaffCustomField.StaffCustomFieldValues');
+            $staffCustomFieldOptions = TableRegistry::get('StaffCustomField.StaffCustomFieldOptions');
+            $staffCustomFields = TableRegistry::get('StaffCustomField.StaffCustomFields');
+            $staffCustomFormsFields = TableRegistry::get('StaffCustomField.StaffCustomFormsFields');
+            //POCOR-8364
             //POCOR-6805 start
+            
             $guardianData = $Guardians->find()
                 ->select([
                     'id' => $Guardians->aliasField('id'),
@@ -733,12 +738,14 @@ class StaffUserTable extends ControllerActionTable
                     'name' => 'staffCustomField.name',
                     'staff_custom_id' => 'staffCustomField.id',
                     'field_type' => 'staffCustomField.field_type',
-                ])->leftJoin(
+                ])
+                ->leftJoin(
                     ['staffCustomField' => 'staff_custom_fields'],
                     [
                         'staffCustomField.id = ' . $Guardians->aliasField('staff_custom_field_id')
                     ]
-                )->leftJoin(
+                )
+                ->leftJoin(
                     ['staffCustomFieldOptions' => 'staff_custom_field_options'],
                     [
                         'staffCustomFieldOptions.id = ' . $Guardians->aliasField('number_value')
@@ -746,7 +753,9 @@ class StaffUserTable extends ControllerActionTable
                 )
                 ->where([
                     $Guardians->aliasField('staff_id') => $user_id,
-                ])->hydrate(false)->toArray();
+                ])
+                ->toArray();
+
             $custom_field = array();
             $count = 0;
             if (!empty($guardianData)) {
@@ -1138,54 +1147,22 @@ class StaffUserTable extends ControllerActionTable
         return $query;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function afterAction(Event $event, ArrayObject $options)
     {
-        if ($field == 'photo_content') {
-            return __('Photo Content');
-        } elseif ($field == 'openemis_id') {
-            return __('OpenEMIS ID');
-        } elseif ($field == 'first_name') {
-            return __('First Name');
-        } elseif ($field == 'middle_name') {
-            return __('Middle Name');
-        } elseif ($field == 'third_name') {
-            return __('Third Name');
-        } elseif ($field == 'last_name') {
-            return __('Last Name');
-        } elseif ($field == 'preferred_name') {
-            return __('Preferred Name');
-        } elseif ($field == 'gender_id') {
-            return __('Gender');
-        } elseif ($field == 'date_of_birth') {
-            return __('Date Of Birth');
-        } elseif ($field == 'email') {
-            return __('Email');
-        } elseif ($field == 'details') {
-            return __('Details');
-        } elseif ($field == 'address') {
-            return __('Address');
-        } elseif ($field == 'staff_id') {
-            return __('Staff');
-        } elseif ($field == 'start_date') {
-            return __('Start Date');
-        } elseif ($field == 'end_date') {
-            return __('End Date');
-        } elseif ($field == 'staff_status_id') {
-            return __('Staff Status');
-        } elseif ($field == 'passport_no') {
-            return __('Passport');
-        } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
-        } elseif ($field == 'modified') {
-            return __('Modified On');
-        } elseif ($field == 'created_user_id') {
-            return __('Created By');
-        } elseif ($field == 'created') {
-            return __('Created On');
-        } elseif ($field == 'failed_logins') {
-            return __('Failed Logins');
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        $users = TableRegistry::get('Security.Users');
+        $plugin = __($this->controller->getPlugin());
+        $id = $this->request->getAttribute('params')['pass'][1];
+        $DecodedQueryString = $this->paramsDecode($id);
+        $staffId = $DecodedQueryString['staff_id'];
+        $data = $users->find()->select(['first_name'=>$users->aliasField('first_name'),'middle_name'=>$users->aliasField('middle_name'),'third_name'=>$users->aliasField('third_name'),'last_name'=>$users->aliasField('last_name')])
+                ->where([$users->aliasField('id') => $staffId ])->first();
+        $StaffName = $data->first_name.' '.$data->middle_name.' '.$data->third_name.' '.$data->last_name;
+        try {
+            
+            $this->controller->set('contentHeader', $StaffName . ' - ' . 'Overview');
+        } catch (RecordNotFoundException $e) {
+            Log::write('error', $e->getMessage());
         }
     }
+
 }

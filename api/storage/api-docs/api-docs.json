@@ -8842,6 +8842,46 @@
                         }
                     },
                     {
+                        "name": "institutionId",
+                        "in": "query",
+                        "description": "Institution Id.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 6
+                        }
+                    },
+                    {
+                        "name": "typeId",
+                        "in": "query",
+                        "description": "Institution Type Id.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "classificationId",
+                        "in": "query",
+                        "description": "Classification Id.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "institutionCode",
+                        "in": "query",
+                        "description": "Institution Code.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "K0001"
+                        }
+                    },
+                    {
                         "name": "limit",
                         "in": "query",
                         "description": "Number of items to return per page",
@@ -9344,6 +9384,36 @@
                         "schema": {
                             "type": "integer",
                             "example": 6
+                        }
+                    },
+                    {
+                        "name": "typeId",
+                        "in": "query",
+                        "description": "Institution Type Id.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "classificationId",
+                        "in": "query",
+                        "description": "Classification Id.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "institutionCode",
+                        "in": "query",
+                        "description": "Institution Code.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "K0001"
                         }
                     }
                 ],
@@ -12234,13 +12304,23 @@
                 "operationId": "7e8dcca95cde7177b8deb78ac41dc092",
                 "parameters": [
                     {
-                        "name": "academic_period_id",
+                        "name": "academicPeriodId",
                         "in": "query",
                         "description": "Academic period id",
                         "required": false,
                         "schema": {
                             "type": "integer",
                             "example": 10
+                        }
+                    },
+                    {
+                        "name": "institutionId",
+                        "in": "query",
+                        "description": "Institution Id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 6
                         }
                     },
                     {
@@ -12430,7 +12510,7 @@
                         }
                     },
                     {
-                        "name": "academic_period_id",
+                        "name": "academicPeriodId",
                         "in": "query",
                         "description": "Academic period id",
                         "required": false,
@@ -25360,6 +25440,462 @@
                                         "data": {
                                             "type": "array",
                                             "items": {}
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v1/institutions/schedule-timetables": {
+            "get": {
+                "tags": [
+                    "Institution time table"
+                ],
+                "summary": "Get schedule timetables for institutions",
+                "operationId": "a4427360c157a8925da6234a8a2ea804",
+                "parameters": [
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order of the results",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "id"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "P1A"
+                                                            },
+                                                            "status": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "academic_period_id": {
+                                                                "type": "integer",
+                                                                "example": 29
+                                                            },
+                                                            "academic_period_name": {
+                                                                "type": "string",
+                                                                "example": "2020"
+                                                            },
+                                                            "institution_class_id": {
+                                                                "type": "integer",
+                                                                "example": 496
+                                                            },
+                                                            "institution_class_name": {
+                                                                "type": "string",
+                                                                "example": "Primary 1-A"
+                                                            },
+                                                            "institution_id": {
+                                                                "type": "integer",
+                                                                "example": 6
+                                                            },
+                                                            "institution_code": {
+                                                                "type": "string",
+                                                                "example": "P1002"
+                                                            },
+                                                            "institution_name": {
+                                                                "type": "string",
+                                                                "example": "Avory Primary School"
+                                                            },
+                                                            "institution_schedule_interval_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "institution_schedule_interval_name": {
+                                                                "type": "string",
+                                                                "example": "APS Morning Shift"
+                                                            },
+                                                            "institution_schedule_term_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "institution_schedule_term_name": {
+                                                                "type": "string",
+                                                                "example": "Semester 1"
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": null
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "example": "2020-02-11 07:36:56"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v1/institutions/{institutionId}/schedule-timetables": {
+            "get": {
+                "tags": [
+                    "Institution time table"
+                ],
+                "summary": "Get schedule timetables for institutions",
+                "operationId": "5b9ad3d452725939b516d08f333e65a0",
+                "parameters": [
+                    {
+                        "name": "institutionId",
+                        "in": "path",
+                        "description": "Institution Id",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "6"
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order of the results",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "id"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "P1A"
+                                                            },
+                                                            "status": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "academic_period_id": {
+                                                                "type": "integer",
+                                                                "example": 29
+                                                            },
+                                                            "academic_period_name": {
+                                                                "type": "string",
+                                                                "example": "2020"
+                                                            },
+                                                            "institution_class_id": {
+                                                                "type": "integer",
+                                                                "example": 496
+                                                            },
+                                                            "institution_class_name": {
+                                                                "type": "string",
+                                                                "example": "Primary 1-A"
+                                                            },
+                                                            "institution_id": {
+                                                                "type": "integer",
+                                                                "example": 6
+                                                            },
+                                                            "institution_code": {
+                                                                "type": "string",
+                                                                "example": "P1002"
+                                                            },
+                                                            "institution_name": {
+                                                                "type": "string",
+                                                                "example": "Avory Primary School"
+                                                            },
+                                                            "institution_schedule_interval_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "institution_schedule_interval_name": {
+                                                                "type": "string",
+                                                                "example": "APS Morning Shift"
+                                                            },
+                                                            "institution_schedule_term_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "institution_schedule_term_name": {
+                                                                "type": "string",
+                                                                "example": "Semester 1"
+                                                            },
+                                                            "modified_user_id": {
+                                                                "type": "integer",
+                                                                "example": null
+                                                            },
+                                                            "modified": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "created_user_id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "created": {
+                                                                "type": "string",
+                                                                "example": "2020-02-11 07:36:56"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v1/institutions/schedule-timetables/{scheduleTimeTableId}": {
+            "get": {
+                "tags": [
+                    "Institution time table"
+                ],
+                "summary": "Get schedule timetables data for institutions",
+                "operationId": "f6e2fbe5945563c5c5905264191d11bc",
+                "parameters": [
+                    {
+                        "name": "scheduleTimeTableId",
+                        "in": "path",
+                        "description": "Schedule Time Table Id",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "1"
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Order of the results",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "id"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "P1A"
+                                                    },
+                                                    "status": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "academic_period_id": {
+                                                        "type": "integer",
+                                                        "example": 29
+                                                    },
+                                                    "academic_period_name": {
+                                                        "type": "string",
+                                                        "example": "2020"
+                                                    },
+                                                    "institution_class_id": {
+                                                        "type": "integer",
+                                                        "example": 496
+                                                    },
+                                                    "institution_class_name": {
+                                                        "type": "string",
+                                                        "example": "Primary 1-A"
+                                                    },
+                                                    "institution_id": {
+                                                        "type": "integer",
+                                                        "example": 6
+                                                    },
+                                                    "institution_code": {
+                                                        "type": "string",
+                                                        "example": "P1002"
+                                                    },
+                                                    "institution_name": {
+                                                        "type": "string",
+                                                        "example": "Avory Primary School"
+                                                    },
+                                                    "institution_schedule_interval_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "institution_schedule_interval_name": {
+                                                        "type": "string",
+                                                        "example": "APS Morning Shift"
+                                                    },
+                                                    "institution_schedule_term_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "institution_schedule_term_name": {
+                                                        "type": "string",
+                                                        "example": "Semester 1"
+                                                    },
+                                                    "modified_user_id": {
+                                                        "type": "integer",
+                                                        "example": null
+                                                    },
+                                                    "modified": {
+                                                        "type": "string",
+                                                        "example": null
+                                                    },
+                                                    "created_user_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "created": {
+                                                        "type": "string",
+                                                        "example": "2020-02-11 07:36:56"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
                                         }
                                     },
                                     "type": "object"
