@@ -49,7 +49,8 @@ class PermissionsTable extends ControllerActionTable
         $id = $this->request->getAttribute('params')['pass'][1];
         try {
             $name = $this->SecurityRoles->get($this->paramsDecode($id));
-            $this->controller->set('contentHeader', $plugin . ' - ' . $name);
+            //$this->controller->set('contentHeader', $plugin . ' - ' . $name);
+            $this->controller->set('contentHeader', $plugin);
         } catch (RecordNotFoundException $e) {
             Log::write('error', $e->getMessage());
         }
@@ -88,22 +89,23 @@ class PermissionsTable extends ControllerActionTable
     {
         $query = $extra['query'];
         $controller = $this->controller;
-        if (count($this->request->getParam('pass')) != 2) { //POCOR-8074
+        if (count($this->request->getParam('pass')) != 2) { // POCOR-8074
             $event->stopPropagation();
             return $this->controller->redirect(['action' => 'Roles']);
         }
-      // echo "<pre>"; print_r($this->request->getAttribute('params')['pass']);die;
+
         $roleId = $this->paramsDecode($this->request->getAttribute('params')['pass'][1]);
         if (!$this->checkRolesHierarchy($roleId)) {
-            $action = array_merge(['
-            plugin' => 'Security',
+            $action = [
+                'plugin' => 'Security',
                 'controller' => 'Securities',
-                'action' => $this->getAlias(), //POCOR-8074
-                '0' => 'index']);
+                'action' => $this->getAlias(), // POCOR-8074
+                '0' => 'index'
+            ];
             $event->stopPropagation();
             return $this->controller->redirect($action);
         }
-       
+
         $module = $this->request->getQuery('module');
         $extra['pagination'] = false;
         $extra['auto_contain'] = false;
@@ -127,7 +129,30 @@ class PermissionsTable extends ControllerActionTable
         $toolbarButtons['edit']['attr'] = $attr;
         $toolbarButtons['edit']['attr']['title'] = __('Edit');
 
+        // Log roleId and module
+        Log::write('debug', 'Role ID: ' . print_r($roleId, true));
+        Log::write('debug', 'Module: ' . print_r($module, true));
+
+        // Ensure roleId and module are strings
+        //POCOR-8345 start
+        if (is_array($roleId)) {
+            Log::write('error', 'Role ID is an array: ' . print_r($roleId, true));
+            $roleId = json_encode($roleId); // Convert array to JSON string
+        } else {
+            $roleId = (string)$roleId;
+        }
+
+        if (is_array($module)) {
+            Log::write('error', 'Module is an array: ' . print_r($module, true));
+            $module = json_encode($module); // Convert array to JSON string
+        } else {
+            $module = (string)$module;
+        }
+        //POCOR-8345 end
+        // Correct query construction
         $query = $this->SecurityFunctions->find('permissions', ['roleId' => $roleId, 'module' => $module]);
+        $extra['query'] = $query;
+
         return $query;
     }
 
@@ -155,7 +180,7 @@ class PermissionsTable extends ControllerActionTable
                 $obj->Permissions[$op] = $icons[$flag];
             }
 
-            $obj->name = __($obj->name);
+            $obj->name = __( (string)$obj->name);
 
             // if the permission have description, it will display the description tooltip next to the permission name.
             if (!empty($obj['description'])) {
@@ -238,4 +263,5 @@ class PermissionsTable extends ControllerActionTable
 
         return $tooltipMessage;
     }
+
 }
