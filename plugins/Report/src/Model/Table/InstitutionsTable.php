@@ -1563,13 +1563,16 @@ class InstitutionsTable extends AppTable
                     } else {
                         // Start POCOR-7479
                         $area_level_id = $data['area_level_id'];
-                        if (in_array($area_level_id, [1, 2])) {
+                        if (in_array($area_level_id, [1, 2, 3])) {
                             $areaId = $this->getAllAreaID($areaId);
+                            if(empty($areaId)){
+                                $areaId = [$areaId];
+                            }
                         } else {
                             $areaId = [$areaId];
                         }
                         // END POCOR-7479
-                        die(print_r($areaId, true));
+
                         $institutionQuery = $InstitutionsTable
                             ->find('list', [
                                 'keyField' => 'id',
