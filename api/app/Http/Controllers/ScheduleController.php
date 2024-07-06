@@ -691,7 +691,7 @@ class ScheduleController extends Controller
      *         description="Institution Id",
      *         required=true,
      *         @OA\Schema(type="string", example="6")
-     *     )
+     *     ),
      *     @OA\Parameter(
      *         name="order",
      *         in="query",
@@ -786,7 +786,7 @@ class ScheduleController extends Controller
      *         description="Schedule Time Table Id",
      *         required=true,
      *         @OA\Schema(type="string", example="1")
-     *     )
+     *     ),
      *     @OA\Parameter(
      *         name="order",
      *         in="query",

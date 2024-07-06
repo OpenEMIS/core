@@ -489,16 +489,19 @@ class WorkflowBehavior extends Behavior
                 $params = [];
                 if ($workflowModel->is_school_based) {
                     $table = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-                    try {
-                        $institutionId = $table->getQueryString('institution_id');
-                    } catch (\Exception $exception) {
-                        Log::debug($exception->getMessage() . __CLASS__ . __FUNCTION__);
-                        $institutionId = $table->paramsDecode('institution_id');
-                    }
+                    //POCOR-8401,POCOR-8402 starts
+                    if ($this->controller->getName() != 'Profiles') {
+                        try {
+                            $institutionId = $table->getQueryString('institution_id');
+                        } catch (\Exception $exception) {
+                            Log::debug($exception->getMessage() . __CLASS__ . __FUNCTION__);
+                            $institutionId = $table->paramsDecode($this->_table->request->getAttribute('params')['pass'][1]);
+                        }
                         $params = [
                             'institution_id' => $institutionId
                         ];
-//                    }
+                    }
+                    //POCOR-8401,POCOR-8402 stop
                 }
 
                 $newEvent = $subject->dispatchEvent('Workflow.getFilterOptions', [$params], $subject);
@@ -514,7 +517,7 @@ class WorkflowBehavior extends Behavior
                 $url = $_SERVER['QUERY_STRING'];
                 $data = explode('=', $url);
                 $filterOne = $data[1];
-                $filterTwo = $data[2];
+                // $filterTwo = $data[2];
                 $firstVal = preg_replace('/\D/', '', $filterOne);
                 $selectedFilter = $firstVal;
                 //POCOR-7263::End
@@ -594,6 +597,7 @@ class WorkflowBehavior extends Behavior
                 $this->_table->controller->set(compact('monthOptions','selectedMonth'));
                 // End
             }
+            // echo "<pre>";print_r($selectedFilter);die;
             //POCOR-5695 ends
         }
     }
