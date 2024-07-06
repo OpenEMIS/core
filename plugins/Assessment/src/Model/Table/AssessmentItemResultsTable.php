@@ -45,7 +45,7 @@ class AssessmentItemResultsTable extends AppTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->requirePresence('student_id')
             ->requirePresence('assessment_id')
@@ -72,7 +72,7 @@ class AssessmentItemResultsTable extends AppTable
         //POCOR-6824 start
         $institutionId = $entity->institution_id;
         $InstitutionClassId = $entity->institution_classes_id;
-        $institutionClass = TableRegistry::get('institution_classes');
+        $institutionClass = TableRegistry::get('Institution.InstitutionClasses');
         $findclass =
             $institutionClass->find()->select([
                 'id' => $institutionClass->aliasField('id')
@@ -86,7 +86,7 @@ class AssessmentItemResultsTable extends AppTable
             return false;
         } else { //POCOR-6824 end add if else condition
             //POCOR-6947
-            $institutionStudents = TableRegistry::get('institution_students');
+            $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
             $institutionStudentsData = $institutionStudents
                 ->find()
                 ->where([
@@ -103,7 +103,7 @@ class AssessmentItemResultsTable extends AppTable
                 if ($entity->isNew()) {
                     //POCOR-7536-KHINDOL
                     //AS the ID is not the KEY do shadow save and delete new entity
-                    $assessmentItemResults = TableRegistry::get('assessment_item_results');
+                    $assessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
                     $previousAssessment = $assessmentItemResults->find()
                         ->where([
                             $assessmentItemResults->aliasField('student_id') => $entity->student_id,
@@ -296,7 +296,7 @@ class AssessmentItemResultsTable extends AppTable
             ->group([
                 $this->aliasField('assessment_period_id')
             ])//POCOR-6479 ends
-            ->hydrate(false);
+            ->enableHydration(false);
         $results = $query->toArray();
         //
         $returnArray = [];
@@ -470,7 +470,7 @@ class AssessmentItemResultsTable extends AppTable
         //POCOR-6479 starts
         $sumMarks = [];
         foreach ($totalMarks as $result) {
-            $assessmentItemResults = TableRegistry::get('assessment_item_results');
+            $assessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
             $assessmentItemResultsData = $assessmentItemResults->find()
                 ->select([
                     $assessmentItemResults->aliasField('marks')
