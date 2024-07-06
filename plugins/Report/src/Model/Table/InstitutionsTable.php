@@ -1562,7 +1562,8 @@ class InstitutionsTable extends AppTable
                     } else {
                         // Start POCOR-7479
                         $area_level_id = $data['area_level_id'];
-                        if (in_array($area_level_id, [1, 2])) {
+                        die(strval($area_level_id));
+                        if (in_array($area_level_id, [1, 2, 3])) {
                             $areaId = $this->getAllAreaID($areaId);
                         } else {
                             $areaId = [$areaId];
