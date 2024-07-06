@@ -1,5 +1,4 @@
 <?php
-
 namespace Report\Model\Table;
 
 use ArrayObject;
@@ -13,10 +12,8 @@ use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
 
-class InstitutionSubjectsTable extends AppTable
-{
-    public function initialize(array $config): void
-    {
+class InstitutionSubjectsTable extends AppTable  {
+    public function initialize(array $config): void {
         $this->setTable('institution_subjects');
         parent::initialize($config);
 
@@ -25,7 +22,7 @@ class InstitutionSubjectsTable extends AppTable
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
-        $this->addBehavior('Excel', [
+    $this->addBehavior('Excel', [
             'autoFields' => false
         ]);
         $this->addBehavior('Report.ReportList');
@@ -33,8 +30,7 @@ class InstitutionSubjectsTable extends AppTable
         $this->addBehavior('Report.AreaList');//POCOR-7794
     }
 
-    public function beforeAction(Event $event)
-    {
+    public function beforeAction(Event $event) {
         $this->fields = [];
         $this->ControllerAction->field('feature');
         $this->ControllerAction->field('format');
@@ -100,7 +96,7 @@ class InstitutionSubjectsTable extends AppTable
             ->leftJoin(
                 ['AreaLevels' => $AreaLevels->getTable()],
                 ['ParentAreas.area_level_id = AreaLevels.id',
-                    'AreaLevels.level != 1']
+                 'AreaLevels.level != 1']
             )
             ->where([
                 $conditions,
@@ -113,55 +109,6 @@ class InstitutionSubjectsTable extends AppTable
             ]);
         Log::debug($query->sql());
         $query->formatResults([$this, 'formatQueryResults']);
-    }
-
-    /**
-     * POCOR-8391 added
-     * Get a dynamic table instance with all associations.
-     *
-     * @param string $tableName
-     * @return \Cake\ORM\Table
-     */
-    private static function getDynamicTableInstance(string $tableName): Table
-    {
-        // Parse plugin and table names if dot notation is used
-        $locator = TableRegistry::getTableLocator();
-        try {
-            return $locator->get($tableName);
-        } catch (\Exception $exception) {
-
-        }
-        $parts = explode('.', $tableName);
-        $plugin = count($parts) > 1 ? $parts[0] : null;
-        $table = count($parts) > 1 ? $parts[1] : $parts[0];
-
-        // Convert the table name to camel case as expected by CakePHP conventions
-        $tableFullAlias = Inflector::camelize($tableName);
-        $tableAlias = Inflector::camelize($table);
-
-        // Create the fully qualified class name if a plugin is specified
-        if ($plugin) {
-            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
-        } else {
-            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
-        }
-        // Check if the table instance already exists
-        if (!$locator->exists($tableFullAlias)) {
-            // Check if the specific table class exists
-            if (!class_exists($className)) {
-                $className = Table::class; // Fallback to generic Table class
-            }
-
-            // Configure a new table instance
-            $locator->setConfig($tableAlias, [
-                'className' => $className,
-                'table' => $table,
-                'alias' => $tableAlias,
-            ]);
-        }
-
-        // Return the table instance
-        return $locator->get($tableFullAlias);
     }
 
     private function buildConditions($academicPeriodId, $institutionId, $educationSubjectId, $areaLevelId, $areaId)
@@ -179,9 +126,7 @@ class InstitutionSubjectsTable extends AppTable
 
         $areaList = $this->getAreaList($areaLevelId, $areaId);
         if (!empty($areaList)) {
-            if (sizeof($areaList) > 1) {
-                $conditions['Institutions.area_id IN'] = $areaList;
-            }
+            $conditions['Institutions.area_id IN'] = $areaList;
         }
 
         return $conditions;
@@ -263,10 +208,9 @@ class InstitutionSubjectsTable extends AppTable
         });
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
-    {
-        $attr['options'] = $this->controller->getFeatureOptions('Institutions');
-        return $attr;
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
+            $attr['options'] = $this->controller->getFeatureOptions('Institutions');
+            return $attr;
     }
 
     public function onExcelGetStaffName(Event $event, Entity $entity)
@@ -282,35 +226,36 @@ class InstitutionSubjectsTable extends AppTable
             $this->aliasField('education_grade_id') => $entity->education_grade_id,
             $this->aliasField('academic_period_id') => $entity->academic_period_id,
             $InstitutionClassSubjects->aliasField('institution_class_id =') => $entity->institution_class_id,
-        ];
+            ];
 
         $staffResult = $InstitutionSubjects
-            ->find()
-            ->select([
-                'staff_id' => 'InstitutionSubjectStaff.staff_id',
-                'Users.openemis_no',
-                'Users.first_name',
-                'Users.last_name'
-            ])
-            ->leftJoin([$InstitutionClassSubjects->getAlias() => $InstitutionClassSubjects->getTable()], [
-                $this->aliasField('id =') . $InstitutionClassSubjects->aliasField('institution_subject_id')
-            ])
-            ->leftJoin([$InstitutionClasses->getAlias() => $InstitutionClasses->getTable()], [
-                $InstitutionClassSubjects->aliasField('institution_class_id =') . $InstitutionClasses->aliasField('id')
-            ])
-            ->leftJoin([$InstitutionSubjectStaff->getAlias() => $InstitutionSubjectStaff->getTable()], [
-                $InstitutionSubjectStaff->aliasField('institution_subject_id =') . $InstitutionClassSubjects->aliasField('institution_subject_id')
-            ])
-            ->leftJoin([$Staff->getAlias() => $Staff->getTable()], [
-                $Staff->aliasField('id =') . $InstitutionSubjectStaff->aliasField('staff_id')
-            ])
-            ->where($conditions)
-            ->disableHydration()
-            ->toArray();
+                ->find()
+                ->select([
+                    'staff_id' => 'InstitutionSubjectStaff.staff_id',
+                    'Users.openemis_no',
+                    'Users.first_name',
+                    'Users.last_name'
+                ])
+                ->leftJoin([$InstitutionClassSubjects->getAlias() => $InstitutionClassSubjects->getTable()], [
+                    $this->aliasField('id =') . $InstitutionClassSubjects->aliasField('institution_subject_id')
+                ])
+                ->leftJoin([$InstitutionClasses->getAlias() => $InstitutionClasses->getTable()], [
+                    $InstitutionClassSubjects->aliasField('institution_class_id =') . $InstitutionClasses->aliasField('id')
+                ])
+                ->leftJoin([$InstitutionSubjectStaff->getAlias() => $InstitutionSubjectStaff->getTable()], [
+                    $InstitutionSubjectStaff->aliasField('institution_subject_id =') . $InstitutionClassSubjects->aliasField('institution_subject_id')
+                ])
+                ->leftJoin([$Staff->getAlias() => $Staff->getTable()], [
+                    $Staff->aliasField('id =') . $InstitutionSubjectStaff->aliasField('staff_id')
+                ])
+                ->where($conditions)
+                ->disableHydration()
+                ->toArray()
+                ;
         $staffName = [];
-        foreach ($staffResult as $result) {
-            if (!empty($result['Users']['openemis_no'])) {
-                $staffName[] = $result['Users']['openemis_no'] . ' - ' . $result['Users']['first_name'] . ' ' . $result['Users']['last_name'];
+        foreach($staffResult as $result){
+            if(!empty($result['Users']['openemis_no'])){
+                $staffName[] = $result['Users']['openemis_no'].' - '.$result['Users']['first_name'].' '.$result['Users']['last_name'];
             }
         }
 
@@ -334,8 +279,8 @@ class InstitutionSubjectsTable extends AppTable
         foreach ($cloneFields as $key => $value) {
 
             if (in_array($value['field'], ['academic_period_id'])) {
-                unset($cloneFields[$key]);
-                break;
+                    unset($cloneFields[$key]);
+                    break;
             }
 
             if ($value['field'] == 'class_name') {
@@ -356,8 +301,8 @@ class InstitutionSubjectsTable extends AppTable
                 $AreaLevelTbl = self::getDynamicTableInstance('area_levels');
                 $AreaLevelArr = $AreaLevelTbl
                     ->find()
-                    ->select(['id', 'name'])
-                    ->order(['id' => 'DESC'])
+                    ->select(['id','name'])
+                    ->order(['id'=>'DESC'])
                     ->limit(2)
                     ->disableHydration()
                     ->toArray();
@@ -443,6 +388,55 @@ class InstitutionSubjectsTable extends AppTable
         }
 
         $fields->exchangeArray($newFields);
+    }
+
+    /**
+     * POCOR-8391 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
     }
 
 }
