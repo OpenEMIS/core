@@ -1491,8 +1491,9 @@ class InstitutionsTable extends AppTable
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $alias = $this->getAlias();
-        $data = $request->getData($alias);
-        $areaId = $data['area_education_id'] ?? -1;
+        $data = $this->request->getData($alias);
+        $areaId = $data['area_education_id'];
+        $institutionTypeId = $data['institution_type_id'] ?? -1;
         $InstitutionsTable = self::getDynamicTableInstance('Institution.Institutions');
         if (isset($data['feature'])) {
             $feature = $data['feature'];
@@ -1568,9 +1569,7 @@ class InstitutionsTable extends AppTable
                             $areaId = [$areaId];
                         }
                         // END POCOR-7479
-                        if(empty($areaId)){
-                            $areaId = ['-1'];
-                        }
+                        die(print_r($areaId, true));
                         $institutionQuery = $InstitutionsTable
                             ->find('list', [
                                 'keyField' => 'id',
