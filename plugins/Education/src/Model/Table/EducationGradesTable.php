@@ -3,10 +3,13 @@ namespace Education\Model\Table;
 
 use ArrayObject;
 
+use Cake\Log\Log;
+use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
+use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\Http\ServerRequest;
@@ -1008,8 +1011,8 @@ class EducationGradesTable extends ControllerActionTable
         $educationGradeName = $this->get($educationGradeId)->code;
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $UsersData = TableRegistry::get('User.Users');
-        $studentStatuses = TableRegistry::get('student_statuses');
-        $institutionStudents = TableRegistry::get('institution_students');
+        $studentStatuses = self::getDynamicTableInstance('student_statuses'); // POCOR-8231
+        $institutionStudents = self::getDynamicTableInstance('institution_students'); // POCOR-8231
         $EducationGradesData = $EducationGrades->find()
         ->where([
             $EducationGrades->aliasField('code') => $educationGradeName
@@ -1049,22 +1052,84 @@ class EducationGradesTable extends ControllerActionTable
         }
         echo json_encode($validation);die;
     }
+    /**
+     * POCOR-8231
+     * Gets a dynamic table instance with all associations.
+     *
+     * @param string $tableName The name of the table.
+     * @return \Cake\ORM\Table The table instance.
+     * @throws \Exception If the table instance cannot be retrieved.
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        // Create a TableLocator instance
+        $locator = TableRegistry::getTableLocator();
+
+        try {
+            // Try to get the table instance directly
+            return $locator->get($tableName);
+        } catch (\Exception $e) {
+//            Log::debug('Error: ' . $e->getMessage());
+        }
+
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
 
     public function findRepeaterEducationGradeAddStudent(Query $query, array $options)
     {
+        $validation = 'no';
+        echo json_encode($validation);die;
         $educationGradeId = $options['education_grade_id'];
         $openemis_no = $options['openemis_no'];
         $first_name = $options['first_name'];
         $last_name = $options['last_name'];
-        $educationGradeName = $this->get($educationGradeId)->code;
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        if(!$educationGradeId){
+            $validation = 'no';
+            echo json_encode($validation);die;
+        }
+        $educationGrade = $this->get($educationGradeId);
+        if($educationGrade){
+            $educationGradeName = $educationGrade->code;
+        }else{
+            $educationGradeName = "0";
+        }
+
         $UsersData = TableRegistry::get('User.Users');
-        $studentStatuses = TableRegistry::get('Student.StudentStatuses');
-        $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
-        $EducationGradesData = $EducationGrades->find()
-        ->where([
-            $EducationGrades->aliasField('code') => $educationGradeName
-        ])
+
+        $institutionStudents = TableRegistry::get('Institution.InstitutionStudents')
         ->extract('id')
         ->toArray();
         if(!empty($openemis_no)){
@@ -1323,7 +1388,7 @@ class EducationGradesTable extends ControllerActionTable
     // Start POCOR-5188
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-		$is_manual_exist = $this->getManualUrl('Administration','Education Grades','Education');       
+		$is_manual_exist = $this->getManualUrl('Administration','Education Grades','Education');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
