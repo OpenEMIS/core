@@ -1490,10 +1490,12 @@ class InstitutionsTable extends AppTable
 
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $areaId = $this->request->getData($this->getAlias())['area_education_id'];
+        $alias = $this->getAlias();
+        $data = $request->getData($alias);
+        $areaId = $data['area_education_id'] ?? -1;
         $InstitutionsTable = self::getDynamicTableInstance('Institution.Institutions');
-        if (isset($this->request->getData($this->getAlias())['feature'])) {
-            $feature = $this->request->getData($this->getAlias())['feature'];
+        if (isset($data['feature'])) {
+            $feature = $data['feature'];
 
             $reportModels = [
                 'Report.InstitutionSubjects',
@@ -1534,8 +1536,8 @@ class InstitutionsTable extends AppTable
 
             if (in_array($feature, $reportModels)) {
                 $institutionList = [];
-                if (array_key_exists('institution_type_id', $this->request->getData($this->getAlias())) && !empty($this->request->getData($this->getAlias())['institution_type_id'])) {
-                    $institutionTypeId = $this->request->getData($this->getAlias())['institution_type_id'];
+                if (array_key_exists('institution_type_id', $data) && !empty($data['institution_type_id'])) {
+                    $institutionTypeId = $data['institution_type_id'];
                     if ($institutionTypeId > 0 && $areaId == -1) {
                         $institutionQuery = $InstitutionsTable
                             ->find('list', [
@@ -1559,14 +1561,16 @@ class InstitutionsTable extends AppTable
                         $institutionList = $institutionQuery->toArray();
                     } else {
                         // Start POCOR-7479
-                        $area_level_id = $this->request->getData($this->getAlias())['area_level_id'];
+                        $area_level_id = $data['area_level_id'];
                         if (in_array($area_level_id, [1, 2])) {
                             $areaId = $this->getAllAreaID($areaId);
                         } else {
                             $areaId = [$areaId];
                         }
                         // END POCOR-7479
-
+                        if(empty($areaId)){
+                            $areaId = ['-1'];
+                        }
                         $institutionQuery = $InstitutionsTable
                             ->find('list', [
                                 'keyField' => 'id',
@@ -1590,7 +1594,7 @@ class InstitutionsTable extends AppTable
 
                         $institutionList = $institutionQuery->toArray();
                     }
-                } elseif (!$institutionTypeId && array_key_exists('area_education_id', $this->request->getData($this->getAlias())) && !empty($this->request->getData($this->getAlias())['area_education_id']) && $areaId != -1) {
+                } elseif (!$institutionTypeId && array_key_exists('area_education_id', $data) && !empty($data['area_education_id']) && $areaId != -1) {
                     /**POCOR-6896 starts - updated condition to fetch Institutions query on that bases of selected area level and area education*/
                     $areaIds = [];
                     $lft = $this->Areas->get($areaId)->lft;
