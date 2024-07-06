@@ -1564,15 +1564,16 @@ class InstitutionsTable extends AppTable
                         // Start POCOR-7479
                         $area_level_id = $data['area_level_id'];
                         if (in_array($area_level_id, [1, 2, 3])) {
-                            $areaId = $this->getAllAreaID($areaId);
+                            $areasId = $this->getAllAreaID($areaId);
                             if(empty($areaId)){
-                                $areaId = [$areaId];
+                                $areasId = [$areaId];
                             }
                         } else {
-                            $areaId = [$areaId];
+                            $areasId = [$areaId];
                         }
                         // END POCOR-7479
-                        die(print_r($areaId, true));
+                        die(print_r($areasId, true));
+
                         $institutionQuery = $InstitutionsTable
                             ->find('list', [
                                 'keyField' => 'id',
@@ -1580,7 +1581,7 @@ class InstitutionsTable extends AppTable
                             ])
                             ->where([
                                 $InstitutionsTable->aliasField('institution_type_id') => $institutionTypeId,
-                                $InstitutionsTable->aliasField('area_id IN') => $areaId    //POCOR-7479
+                                $InstitutionsTable->aliasField('area_id IN') => $areasId    //POCOR-7479
                             ])
                             ->order([
                                 $InstitutionsTable->aliasField('code') => 'ASC',
