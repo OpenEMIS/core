@@ -60,9 +60,9 @@ trait SecurityTrait
                         $request = $this->getController()->getRequest();
                     }
                 } catch (\Exception $exception) {
-                    $class = __CLASS__;
-                    $line = __LINE__;
-                    $queryString = $queryString ?? "";
+//                    $class = __CLASS__;
+//                    $line = __LINE__;
+//                    $queryString = $queryString ?? "";
 
 //                    Log::debug("Could not process query {query} in {class}, {line}", ['query' => $queryString, 'class' => $class, 'line' => $line]);
 //                    Log::debug($exception->getMessage());
@@ -92,11 +92,11 @@ trait SecurityTrait
                     }
                 }
             } else {
-                $class = __CLASS__;
-                $line = __LINE__;
-                if ($queryString == null) {
-                    $queryString = "";
-                }
+//                $class = __CLASS__;
+//                $line = __LINE__;
+//                if ($queryString == null) {
+//                    $queryString = "";
+//                }
 //                Log::debug('Could not process query {query} in {class}, {line}', ['query' => $queryString, 'class' => $class, 'line' => $line]);
                 return null;
             }
