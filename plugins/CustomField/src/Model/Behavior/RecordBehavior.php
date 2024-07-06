@@ -802,7 +802,7 @@ class RecordBehavior extends Behavior
             foreach ($customFields as $key => $obj) {
                 $customField = $obj->custom_field;
                 $fieldTypeCode = $customField->field_type;
-                $section = $obj->section;
+                $section = $obj->section ?? "Section";
                 $slug = Text::slug($section);
 
                 // only apply for field type store in custom_field_values
