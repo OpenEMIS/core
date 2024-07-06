@@ -105,7 +105,6 @@ class InstitutionRepository extends Controller
         try {
             
             $params = $request->all();
-
             //For POCOR-7772 Start
 
             $permissions = checkAccess();
@@ -135,6 +134,26 @@ class InstitutionRepository extends Controller
                 $institutions = $institutions->whereIn('institutions.id', $institution_Ids);
             }
             //For POCOR-7772 End
+
+
+            //For POCOR-8398 Start...
+            if(isset($params['typeId'])){
+                $institutions = $institutions->where('institutions.institution_type_id', $params['typeId']);
+            }
+
+            if(isset($params['classificationId'])){
+                $institutions = $institutions->where('institutions.classification', $params['classificationId']);
+            }
+
+            if(isset($params['institutionId'])){
+                $institutions = $institutions->where('institutions.id', $params['institutionId']);
+            }
+
+
+            if(isset($params['institutionCode'])){
+                $institutions = $institutions->where('institutions.code', $params['institutionCode']);
+            }
+            //For POCOR-8398 End...
 
 
             if(isset($params['order'])){
@@ -172,13 +191,12 @@ class InstitutionRepository extends Controller
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Institution List Not Found');
         }
     }
 
 
-    public function getInstitutionData($id)
+    public function getInstitutionData($params, $id)
     {
         try {
             //For POCOR-7772 Start
@@ -203,6 +221,26 @@ class InstitutionRepository extends Controller
                 $institution = $institution->whereIn('institutions.id', $institution_Ids);
             }
             //For POCOR-7772 End
+
+
+            //For POCOR-8398 Start...
+            if(isset($params['typeId'])){
+                $institution = $institution->where('institutions.institution_type_id', $params['typeId']);
+            }
+
+            if(isset($params['classificationId'])){
+                $institution = $institution->where('institutions.classification', $params['classificationId']);
+            }
+
+            if(isset($params['institutionId'])){
+                $institution = $institution->where('institutions.id', $params['institutionId']);
+            }
+
+
+            if(isset($params['institutionCode'])){
+                $institution = $institution->where('institutions.code', $params['institutionCode']);
+            }
+            //For POCOR-8398 End...
             
             $institution = $institution->first();
             return $institution;
@@ -1122,10 +1160,23 @@ class InstitutionRepository extends Controller
 
             $summaries = new SummaryInstitutions();
             
-            if(isset($params['academic_period_id'])){
+            //For POCOR-8398 Start...
+            /*if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
                 $summaries = $summaries->where('academic_period_id', $academic_period_id);
+            }*/
+
+
+            if(isset($params['academicPeriodId'])){
+                $academic_period_id = $params['academicPeriodId'];
+                $summaries = $summaries->where('academic_period_id', $academic_period_id);
             }
+
+
+            if(isset($params['institutionId'])){
+                $summaries = $summaries->where('institution_id', $params['institutionId']);
+            }
+            //For POCOR-8398 End...
 
 
             //For POCOR-7772 Start
@@ -1184,17 +1235,31 @@ class InstitutionRepository extends Controller
             //For POCOR-7772 End
 
             $summaries = new SummaryInstitutions();
-            
-            if(isset($params['academic_period_id'])){
-                $academic_period_id = $params['academic_period_id'];
-                $summaries = $summaries->where('academic_period_id', $academic_period_id);
-            }
 
             //For POCOR-7772 Start
             if(isset($institution_Ids)){
                 $summaries = $summaries->whereIn('summary_institutions.institution_id', $institution_Ids);
             }
             //For POCOR-7772 End
+
+
+            //For POCOR-8398 Start...
+            /*if(isset($params['academic_period_id'])){
+                $academic_period_id = $params['academic_period_id'];
+                $summaries = $summaries->where('academic_period_id', $academic_period_id);
+            }*/
+
+
+            if(isset($params['academicPeriodId'])){
+                $academic_period_id = $params['academicPeriodId'];
+                $summaries = $summaries->where('academic_period_id', $academic_period_id);
+            }
+
+
+            if(isset($params['institutionId'])){
+                $summaries = $summaries->where('institution_id', $params['institutionId']);
+            }
+            //For POCOR-8398 End...
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -1744,7 +1809,8 @@ class InstitutionRepository extends Controller
                 'institutionPosition:id,staff_position_title_id', 
                 'institutionPosition.staffPositionTitle:id,name', 
                 'staffType:id,name as staff_type_name',
-                'classes:id,name,staff_id');
+                'classes:id,name,staff_id',
+                'staffPositionGrade:id,name');
             
 
             //For POCOR-7772 Start
@@ -1805,7 +1871,8 @@ class InstitutionRepository extends Controller
                     'institutionPosition:id,staff_position_title_id', 
                     'institutionPosition.staffPositionTitle:id,name', 
                     'staffType:id,name as staff_type_name',
-                    'classes:id,name,staff_id');
+                    'classes:id,name,staff_id',
+                    'staffPositionGrade:id,name');
             
 
             //For POCOR-7772 Start
@@ -1865,7 +1932,8 @@ class InstitutionRepository extends Controller
                     'staffStatus:id,name as staff_status_name', 
                     'institutionPosition:id,staff_position_title_id', 
                     'institutionPosition.staffPositionTitle:id,name', 'staffType:id,name as staff_type_name',
-                    'classes:id,name,staff_id')
+                    'classes:id,name,staff_id',
+                    'staffPositionGrade:id,name')
                 ->where('institution_staff.institution_id', $institutionId)
                 ->where('institution_staff.staff_id', $staffId);
 
@@ -1885,7 +1953,6 @@ class InstitutionRepository extends Controller
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            dd($e);
             return $this->sendErrorResponse('Institution Staff Data Not Found');
         }
     }
@@ -1910,7 +1977,7 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
-            $positions = InstitutionPositions::with('staffPositionTitle:id,name as staff_position_title_name', 'status:id,name as status_name');
+            $positions = InstitutionPositions::with('staffPositionTitle:id,name as staff_position_title_name', 'status:id,name as status_name', 'institutionStaff');
             
 
             //For POCOR-7772 Start
@@ -1968,7 +2035,7 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
-            $positions = InstitutionPositions::with('staffPositionTitle:id,name as staff_position_title_name', 'status:id,name as status_name');
+            $positions = InstitutionPositions::with('staffPositionTitle:id,name as staff_position_title_name', 'status:id,name as status_name', 'institutionStaff');
             
 
             //For POCOR-7772 Start
@@ -2030,7 +2097,7 @@ class InstitutionRepository extends Controller
 
             $positions = InstitutionPositions::with(
                     'staffPositionTitle:id,name as staff_position_title_name', 
-                    'status:id,name as status_name'
+                    'status:id,name as status_name', 'institutionStaff'
                 )
                 ->where('institution_id', $institutionId)
                 ->where('id', $positionId);
@@ -5158,5 +5225,26 @@ class InstitutionRepository extends Controller
         }
     }
     //For POCOR-8251 End...
+
+
+    //For POCOR-8384 Start...
+    public function getStaffPositionGrade($staffPositionTitleId = 0)
+    {
+        try {   
+            $getStaffPositionGrade = DB::table('staff_position_titles_grades')->join('staff_position_grades', 'staff_position_grades.id', '=', 'staff_position_titles_grades.staff_position_grade_id')
+                    ->where('staff_position_titles_grades.staff_position_title_id', $staffPositionTitleId)
+                    ->select('staff_position_grades.id', 'staff_position_grades.name')
+                    ->first();
+            return $getStaffPositionGrade;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in getStaffPositionGrade.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            dd($e);
+            return false;
+        }
+    }
+    //For POCOR-8384 End...
 
 }

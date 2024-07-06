@@ -240,8 +240,13 @@ class AccessControlComponent extends Component
     public function check($url = [], $roleIds = [])
     {
         $superAdmin = $this->Auth->user('super_admin');
+        $superUser = $this->isSuperRole();
 
         if ($superAdmin || !is_array($url)) { // if $url is a string, then skip checking of permission
+            return true;
+        }
+
+        if ($superUser || !is_array($url)) { // if $url is a string, then skip checking of permission
             return true;
         }
 
@@ -412,6 +417,18 @@ class AccessControlComponent extends Component
     {
         $superAdmin = $this->Auth->user('super_admin');
         return $superAdmin == 1;
+    }
+
+    public function isSuperRole()
+    {
+        $superUser = 0;
+        $isStudent = $_SESSION['Auth']['User']['is_student'];
+        $isStaff = $_SESSION['Auth']['User']['is_student'];
+        $isGuardian = $_SESSION['Auth']['User']['is_student'];
+        if(($isStudent == 1 && $isStaff == 1 && $isGuardian)){
+            $superUser = 1;
+        }
+        return $superUser == 1;
     }
 
     public function getRolesByUser($userId = null)
