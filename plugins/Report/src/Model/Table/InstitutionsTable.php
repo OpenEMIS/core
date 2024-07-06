@@ -1572,7 +1572,7 @@ class InstitutionsTable extends AppTable
                             $areasId = [$areaId];
                         }
                         // END POCOR-7479
-                        die(print_r($areasId, true));
+//                        die(print_r($areasId, true));
 
                         $institutionQuery = $InstitutionsTable
                             ->find('list', [
