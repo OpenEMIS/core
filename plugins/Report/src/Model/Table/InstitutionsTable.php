@@ -1565,7 +1565,7 @@ class InstitutionsTable extends AppTable
                         $area_level_id = $data['area_level_id'];
                         if (in_array($area_level_id, [1, 2, 3])) {
                             $areasId = $this->getAllAreaID($areaId);
-                            if(empty($areaId)){
+                            if(empty($areasId)){
                                 $areasId = [$areaId];
                             }
                         } else {
