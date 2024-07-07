@@ -439,7 +439,7 @@ trait StudentPdfReportTrait
                     $mpdf->AddPage($orientation);
                     $mpdf->UseTemplate($tplId);
                     // Apply CSS styling for font size and right border
-                    $mpdf->WriteHTML('<div style="font-size: 10px; border-right: 1px solid black;"></div>', \Mpdf\HTMLParserMode::HTML_BODY);
+                    $mpdf->WriteHTML('<div style="font-size: 10pt; border-right: 1px solid black;"></div>', \Mpdf\HTMLParserMode::HTML_BODY);
                 }
             }
         }

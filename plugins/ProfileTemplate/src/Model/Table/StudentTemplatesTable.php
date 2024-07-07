@@ -10,7 +10,7 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use Cake\I18n\FrozenDate;
-use Cake\I18n\Time;
+use Cake\I18n\FrozenTime;
 use App\Model\Table\ControllerActionTable;
 use Cake\Http\ServerRequest;
 
@@ -244,9 +244,7 @@ class StudentTemplatesTable extends ControllerActionTable
         $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'generate_start_date', 'generate_end_date', 'excel_template']);
     }
 
-    // public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action)
-    {
+    public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, ServerRequest $request) {
         if ($action == 'index' || $action == 'view') {
             $attr['type'] = 'string';
         } else {
@@ -376,16 +374,42 @@ class StudentTemplatesTable extends ControllerActionTable
 
     public function onUpdateFieldGenerateStartDate(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if ($action == 'add' || $action == 'edit') {
-            return $this->updateDateRangeField('start_date', $attr, $request);
+        
+        if ($action == 'add') {
+            return $this->updateDateRangeField('generate_start_date', $attr, $request);
         }
+        if ($action == 'edit') {
+            $queryString = $this->request->getParam('pass')[1];
+            $DecodedQueryString = $this->paramsDecode($queryString);
+            $id = $DecodedQueryString['id'];
+            $selectDate = $this->find()->where([$this->aliasField('id') => $id])->first()->generate_start_date;
+            $entity = $attr['entity'];
+            $attr['value'] = (new FrozenDate($selectDate))->modify('+1 day')->format('Y-m-d');
+            $attr['attr']['value'] = (new FrozenDate($selectDate))->modify('+1 day')->format('Y-m-d');
+            return $attr;
+            
+        }
+        
     }
 
     public function onUpdateFieldGenerateEndDate(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if ($action == 'add' || $action == 'edit') {
-            return $this->updateDateRangeField('end_date', $attr, $request);
+        if ($action == 'add') {
+            return $this->updateDateRangeField('generate_end_date', $attr, $request);
         }
+
+        if ($action == 'edit') {
+            $queryString = $this->request->getParam('pass')[1];
+            $DecodedQueryString = $this->paramsDecode($queryString);
+            $id = $DecodedQueryString['id'];
+            $selectDate = $this->find()->where([$this->aliasField('id') => $id])->first()->generate_end_date;
+            $entity = $attr['entity'];
+            $attr['value'] = (new FrozenDate($selectDate))->modify('+1 day')->format('Y-m-d');
+            $attr['attr']['value'] = (new FrozenDate($selectDate))->modify('+1 day')->format('Y-m-d');
+            return $attr;
+            
+        }
+        
     }
 
     // Misc
@@ -400,14 +424,13 @@ class StudentTemplatesTable extends ControllerActionTable
 
         $selectedPeriod = $this->AcademicPeriods->get($selectedPeriodId);
         $attr['type'] = 'date';
-        $attr['date_options']['startDate'] = $selectedPeriod->start_date->format('d-m-Y');
-        $attr['date_options']['endDate'] = $selectedPeriod->end_date->format('d-m-Y');
-        
+        $attr['date_options']['generateStartDate'] = $selectedPeriod->generate_start_date;
+        $attr['date_options']['generateEndDate'] = $selectedPeriod->generate_end_date;
         if (!array_key_exists($this->getAlias(), $requestData) || !array_key_exists($key, $requestData[$this->getAlias()])) {
             if ($selectedPeriodId != $this->AcademicPeriods->getCurrent()) {
-                $attr['value'] = $selectedPeriod->start_date;
+                $attr['value'] = $selectedPeriod->generate_start_date;
             } else {
-                $attr['value'] = Time::now();
+                $attr['value'] = FrozenTime::now();
             }
         }
 
@@ -416,13 +439,15 @@ class StudentTemplatesTable extends ControllerActionTable
 
     public function onGetGenerateStartDate(Event $event, Entity $entity)
     {
-        // Debugging output
-        debug($entity->generate_start_date);
-
-        if ($entity->generate_start_date !== null) {
-            $entity->generate_start_date = $entity->generate_start_date->setTimezone('UTC');
+        $generate_start_date = $entity->generate_start_date;
+        $generate_end_date = $entity->generate_end_date;
+        if (!empty($generate_start_date)) {
+            $entity->generate_start_date = (new FrozenDate($generate_start_date))->modify('+1 day')->format('Y-m-d');
         }
-       
+
+        if (!empty($generate_end_date)) {
+            $entity->generate_end_date = (new FrozenDate($generate_end_date))->modify('+1 day')->format('Y-m-d');
+        }
     }
-    
+
 }
