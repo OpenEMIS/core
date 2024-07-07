@@ -1177,7 +1177,7 @@ class StudentReportCardsTable extends AppTable
       
         if (array_key_exists('student_id', $params)&& array_key_exists('institution_id', $params) ){
             
-            $SubjectStudents = TableRegistry::get('Institution.SubjectStudents');
+            $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
             $Assessments=TableRegistry::get('Assessment.Assessments');
             $subjectObj = $SubjectStudents->find()
     ->select([

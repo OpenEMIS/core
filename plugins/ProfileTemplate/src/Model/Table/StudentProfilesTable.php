@@ -1326,7 +1326,7 @@ class StudentProfilesTable extends ControllerActionTable
             $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllStudentReportCards '.$args;
             $logs = ROOT . DS . 'logs' . DS . 'GenerateAllStudentReportCards.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
-//echo "<pre>"; print_r($shellCmd);die;
+            //echo "<pre>"; print_r($shellCmd);die;
             try {
                 $pid = exec($shellCmd);
                 //echo "<pre>"; print_r($pid);die;
