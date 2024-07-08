@@ -238,7 +238,7 @@ class MealService extends Controller
     }
 
 
-    public function getStudentMealImportTemplate($params)
+    /*public function getStudentMealImportTemplate($params)
     {
         try {
             $data = $this->mealRepository->getStudentMealImportTemplate($params);
@@ -253,6 +253,24 @@ class MealService extends Controller
 
             return $this->sendErrorResponse('Failed to fetch student meals import template data from DB.');
         }
+    }*/
+
+
+    public function getDataForSheet($params)
+    {
+        try {
+            $data = $this->mealRepository->getDataForSheet($params);
+
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in getDataForSheet.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed in getDataForSheet.');
+        }
     }
+
     //For POCOR-8348 End...
 }

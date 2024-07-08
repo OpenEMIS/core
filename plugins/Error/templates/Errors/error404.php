@@ -1,7 +1,7 @@
 <?php
-$this->extend('OpenEmis./Layout/Container');
-$this->assign('contentHeader', '404 Forbidden');
-$this->start('contentBody');
+// $this->extend('OpenEmis./Layout/Container');
+// $this->assign('contentHeader', '404 Forbidden');
+// $this->start('contentBody');
 
 $baseUrl = $this->Url->build('/');
 $baseUrl .= 'Dashboard';
@@ -32,5 +32,3 @@ $baseUrl .= 'Dashboard';
 		display: none;
 	}
 </style>
-
-<?php echo $this->end() ?>
