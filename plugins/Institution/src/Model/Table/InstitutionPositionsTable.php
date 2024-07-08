@@ -759,6 +759,15 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
         $extra['options']['sortWhitelist'] = $sortList;
+//        Log::debug(print_r($extra['options'], true));
+        // POCOR-7799
+        $params = $this->request->getQuery();
+        if(empty($params)){
+            $extra['options']['direction'] = 'desc';
+            $extra['options']['limit'] = 10;
+            $extra['options']['sort'] = 'position_no';
+        }
+//        Log::debug(print_r($params, true));
     }
 
     /******************************************************************************************************************
