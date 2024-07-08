@@ -490,7 +490,7 @@ class WorkflowBehavior extends Behavior
                 if ($workflowModel->is_school_based) {
                     $table = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
                     //POCOR-8401,POCOR-8402 starts
-                    if ($this->controller->getName() != 'Profiles') {
+                    if($this->controller->getName() != 'Profiles'){
                         try {
                             $institutionId = $table->getQueryString('institution_id');
                         } catch (\Exception $exception) {
@@ -500,8 +500,13 @@ class WorkflowBehavior extends Behavior
                         $params = [
                             'institution_id' => $institutionId
                         ];
-                    }
-                    //POCOR-8401,POCOR-8402 stop
+                    }//POCOR-8401,POCOR-8402 ends
+                    //$session = $this->controller->request->session();
+                    // if ($session->check('Institution.Institutions.id')) {
+                        // $params = [
+                        //     'institution_id' => $institutionId
+                        // ];
+                    // }
                 }
 
                 $newEvent = $subject->dispatchEvent('Workflow.getFilterOptions', [$params], $subject);
@@ -1270,21 +1275,26 @@ class WorkflowBehavior extends Behavior
             if ($entity->has('institution_id')) {
                 $params['institution_id'] = $entity->institution_id;
             } else {
-                $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-                try {
-                    $institutionId = $model->getQueryString('institution_id');
-                } catch (\Exception $exception) {
-                    Log::debug($exception->getMessage() . __CLASS__ . __FUNCTION__);
-                    $institutionId = $model->paramsDecode('institution_id');
+                $table = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+                //POCOR-8401,POCOR-8402 starts
+                if ($this->controller->getName() != 'Profiles') {
+                    try {
+                        $institutionId = $table->getQueryString('institution_id');
+                    } catch (\Exception $exception) {
+                        Log::debug($exception->getMessage() . __CLASS__ . __FUNCTION__);
+                        $institutionId = $table->paramsDecode($this->_table->request->getAttribute('params')['pass'][1]);
+                    }
+                    $params = [
+                        'institution_id' => $institutionId
+                    ];
                 }
                 $params['institution_id'] = $institutionId;
-
             }
         }
+            $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+            $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
+            return $assigneeOptions;
 
-        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
-        $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
-        return $assigneeOptions;
     }
 
     public function getFirstWorkflowStep($registryAlias, Entity $entity)

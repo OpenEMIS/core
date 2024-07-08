@@ -41,21 +41,21 @@ class StudentUserTable extends ControllerActionTable
         $this->addBehavior('User.User');
         // this code is commented in POCOR-6130 because custome fields were coming in every tab so now custome fields function has been changed to custome
         if (!in_array('Custom Fields', (array)Configure::read('School.excludedPlugins'))) {
-//            $this->addBehavior('CustomField.Record', [
-//                'model' => 'Student.Students',
-//                'behavior' => 'Student',
-//                'fieldKey' => 'student_custom_field_id',
-//                'tableColumnKey' => 'student_custom_table_column_id',
-//                'tableRowKey' => 'student_custom_table_row_id',
-//                'fieldClass' => ['className' => 'StudentCustomField.StudentCustomFields'],
-//                'formKey' => 'student_custom_form_id',
-//                'filterKey' => 'student_custom_filter_id',
-//                'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
-//                // 'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
-//                'recordKey' => 'student_id',
-////                'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
-//                'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
-//            ]);
+           $this->addBehavior('CustomField.Record', [
+               'model' => 'Student.Students',
+               'behavior' => 'Student',
+               'fieldKey' => 'student_custom_field_id',
+               'tableColumnKey' => 'student_custom_table_column_id',
+               'tableRowKey' => 'student_custom_table_row_id',
+               'fieldClass' => ['className' => 'StudentCustomField.StudentCustomFields'],
+               'formKey' => 'student_custom_form_id',
+               'filterKey' => 'student_custom_filter_id',
+               'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
+               // 'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
+               'recordKey' => 'student_id',
+                'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
+               'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+           ]);
         }
 
         $this->addBehavior('Excel', [
