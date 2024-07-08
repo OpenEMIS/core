@@ -1,3 +1,9 @@
+### [4.0.5] - 2024-07-08
+- Bug Fixed: Institutions > Performance > Report Cards > Merge and Download PDF: When merging and downloading PDF for students report card, the page gives a 404 error.
+- Bug Fixed: Institutions>Staff>Career>Attendance(Automation): User is getting blank page Part 3
+- Administrations > Surveys > Forms > Filters/Status : Feature returns blank page
+- Institutions > Surveys > Forms : Questions configured in Survey Forms are not showing
+
 ### [4.0.4] - 2024-07-05
 - Bug Fixed: Institutions>Students>Add(Automation): Unable to add students by OpenEMIS or Identity Number
 - Bug Fixed: Institutions>Students>Guardian>Add: Relation type is empty
