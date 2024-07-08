@@ -186,9 +186,6 @@ class InstitutionTabBehavior extends Behavior
         $institutionID = $this->getInstitutionID();
 
         $actions = ['view', 'edit'];
-        // if($appliedAction == 'Textbooks') {
-        //     $actions = ['view', 'edit','remove'];
-        // }
         
         foreach ($actions as $action) {
             if (isset($buttons[$action])) {
@@ -232,9 +229,9 @@ class InstitutionTabBehavior extends Behavior
                                 }
                                 $queryString['institution_subject_id'] = $entity->id;
                             }//PCOOR-8324 ends
-                            // else if($url_action == 'Textbooks' && $additionalParam == 'academic_period_id'){
-                            //     $queryString['academic_period_id'] = $entity->academic_period->id;
-                            // }
+                            else if($url_action == 'Textbooks' && $additionalParam == 'academic_period_id'){
+                                $queryString['academic_period_id'] = $entity->academic_period->id;
+                            }
                             else{
                                 $queryString[$additionalParam] = $entity->{$additionalParam};
                             }
