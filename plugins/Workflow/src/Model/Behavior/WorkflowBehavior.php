@@ -1291,9 +1291,9 @@ class WorkflowBehavior extends Behavior
                 $params['institution_id'] = $institutionId;
             }
         }
-            $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
-            $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
-            return $assigneeOptions;
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
+        return $assigneeOptions;
 
     }
 
