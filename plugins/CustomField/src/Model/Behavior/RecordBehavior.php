@@ -297,8 +297,9 @@ class RecordBehavior extends Behavior
         $this->setupCustomFields($entity);
         // check if the query string contains tab_section if tab_section exists for a particular survey
         $modelTabSection = $model->request->getQuery('tab_section');
-        if (!(isset($modelTabSection)) && $this->firstTabName) {
-            $model->request->getQuery['tab_section'] = $this->firstTabName;
+        if (!is_null($modelTabSection) && $this->firstTabName) {
+            $tabSection = $model->request->getQuery('tab_section');
+            $model->request->Query['tab_section'] = $this->firstTabName;
         }
     }
 
@@ -853,7 +854,11 @@ class RecordBehavior extends Behavior
         $ControllerAction = $this->isCAv4() ? $model : $model->ControllerAction;
         $session = $model->request->getSession();
         $query = $this->getCustomFieldQuery($entity);
-
+        if (!$query) {
+            // Log an error message or handle the null query case
+            Log::error('Custom field query returned null.');
+            return;
+        }
         // If tabSection is set, setup Tab Section
         if ($this->getConfig('tabSection')) {
             $customFields = $query->toArray();
@@ -882,17 +887,20 @@ class RecordBehavior extends Behavior
                             unset( $url['?'] );
                         }
                         $url['tab_section'] = $tabName;
+                        $moduleUrl = $url; 
+                        $moduleUrl['?']['tab_section'] = $tabName;
                         $tabElements[$tabName] = [
-                            'url' => $url,
+                            'url' => $moduleUrl,
                             'text' => $sectionName,
                         ];
+
+                         
                     }
                 }
             }
-
             if (!empty($tabElements)) {
                 $selectedAction = !is_null($model->request->getQuery('tab_section')) ? $model->request->getQuery('tab_section') : $selectedAction;
-                // $model->controller->TabPermission->checkTabPermission($tabElements);
+                //$model->controller->TabPermission->checkTabPermission($tabElements);
                 $model->controller->set('tabElements', $tabElements);
                 $model->controller->set('selectedAction', $selectedAction);
 
