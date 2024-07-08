@@ -35,18 +35,15 @@ class StudentBehavioursTable extends AppTable {
 
 		$this->ControllerAction->setFieldOrder(['institution_id', 'date_of_behaviour', 'time_of_behaviour', 'title', 'student_behaviour_category_id']);
 	}
-        
-	public function beforeFind(Event $event, Query $query, $options) 
+
+	public function beforeFind(Event $event, Query $query, $options)
 	{
-		if (isset($options['skipBeforeFind']) && $options['skipBeforeFind'] === true) {
-            return;
-        }
 		//$userData = $this->Session->read();
 		if ($this->controller->getName() != null && $this->controller->getName() == 'Profiles' && $this->request->getQuery('type' == 'student')) {
 			//if ($this->Session->read('Auth.User.is_guardian') == 1) {
 			if ($_SESSION['Auth']['User']['is_guardian'] == 1) {
 				$userData = $this->Session->read();
-				$sId = $this->Session->read('Student.ExaminationResults.student_id'); 
+				$sId = $this->Session->read('Student.ExaminationResults.student_id');
 				//$sId = $_SESSION['Student']['ExaminationResults']['student_id'];
 				/**
                  * Need to add current login id as param when no data found in existing variable
@@ -64,28 +61,28 @@ class StudentBehavioursTable extends AppTable {
 				//$studentId = $this->Session->read('Auth.User.id');
 				$studentId = $_SESSION['Auth']['User']['id'];
 			}
-		} 
+		}
 
 		/*POCOR-6267 starts*/
 	    if ($this->controller->getName()!= null && $this->controller->getName() == 'GuardianNavs') {
 	    	$session = $this->request->getSession();
 	        $studentId = $session->read('Student.Students.id');
-	    }/*POCOR-6267 ends*/ 
+	    }/*POCOR-6267 ends*/
 		if($this->controller->getName()!= null && ($this->controller->getName() == 'Students' || $this->controller->getName() == 'Directories')) {
 			$studentId = $this->getQueryString('student_id');
 		}
 	    if(!empty($studentId)){ //POCOR-7196
 		    $conditions[$this->aliasField('student_id')] = $studentId;
-			$query->where($conditions, [], true); 
+			$query->where($conditions, [], true);
 		}else{ // POCOR-7196
 			$query ;
 		}
-		     
+
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		parent::onUpdateActionButtons($event, $entity, $buttons);
-                
+
 		if (array_key_exists('view', $buttons)) {
 			$url = [
 				'plugin' => 'Institution',

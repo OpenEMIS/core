@@ -1,3 +1,23 @@
+### [4.0.5] - 2024-07-08
+- Bug Fixed: Institutions > Performance > Report Cards > Merge and Download PDF: When merging and downloading PDF for students report card, the page gives a 404 error.
+- Bug Fixed: Institutions>Staff>Career>Attendance(Automation): User is getting blank page Part 3
+- Administrations > Surveys > Forms > Filters/Status : Feature returns blank page
+- Institutions > Surveys > Forms : Questions configured in Survey Forms are not showing
+
+### [4.0.4] - 2024-07-05
+- Bug Fixed: Institutions>Students>Add(Automation): Unable to add students by OpenEMIS or Identity Number
+- Bug Fixed: Institutions>Students>Guardian>Add: Relation type is empty
+- Bug Fixed: Institutions>Performance>Assessment>View: Edit button is missing
+- Bug Fixed: Administration>Security>Roles>Permissions: User is unable to see permission page
+- Bug Fixed: Institutions>Staff>List>Edit(Automation): When saving, user is getting blank page
+- Bug Fixed: API : Institution Positions endpoint are missing required data
+- Bug Fixed: Institution>Utilities>Telephone(Automation): User is getting blank page
+- Bug Fixed: Administrations > System Setup > System Configurations > System : Changes in System
+- Bug Fixed: API: Apis are not working properly
+- Bug Fixed: Personal>Staff>Career>Appraisals: Showing blank page
+- Bug Fixed: Institutions>Staff(Automation): User is getting blank page Part 2
+- Bug Fixed: Administrations > System Setup > System Configurations > Themes : Login Page is not updated with the configured settings for themes.
+
 ### [4.0.3] - 2024-07-02
 - Implemented: Develop changes to all existing v4 APIs to include Swagger annotations in API file headers
 - Implemented: Develop changes to all existing v4 APIs for parameter and response behaviour

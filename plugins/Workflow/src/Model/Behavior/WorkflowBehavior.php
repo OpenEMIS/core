@@ -489,11 +489,19 @@ class WorkflowBehavior extends Behavior
                 $params = [];
                 if ($workflowModel->is_school_based) {
                     $table = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-                    $institutionId = $table->paramsDecode('institution_id');
+                    //POCOR-8401,POCOR-8402 starts
+                    if($this->controller->getName() != 'Profiles'){
+                        $institutionId = $table->paramsDecode($this->_table->request->getAttribute('params')['pass'][1]);;
                         $params = [
                             'institution_id' => $institutionId
                         ];
-//                    }
+                    }//POCOR-8401,POCOR-8402 ends
+                    //$session = $this->controller->request->session();
+                    // if ($session->check('Institution.Institutions.id')) {
+                        // $params = [
+                        //     'institution_id' => $institutionId
+                        // ];
+                    // }
                 }
 
                 $newEvent = $subject->dispatchEvent('Workflow.getFilterOptions', [$params], $subject);
@@ -509,7 +517,7 @@ class WorkflowBehavior extends Behavior
                 $url = $_SERVER['QUERY_STRING'];
                 $data = explode('=', $url);
                 $filterOne = $data[1];
-                $filterTwo = $data[2];
+                // $filterTwo = $data[2];
                 $firstVal = preg_replace('/\D/', '', $filterOne);
                 $selectedFilter = $firstVal;
                 //POCOR-7263::End
@@ -518,7 +526,7 @@ class WorkflowBehavior extends Behavior
                 $this->_table->controller->set(compact('filterOptions', 'selectedFilter'));
                 // End
             }
-
+            
             if ($filterConfig['category']) {
                 // Categories Options
                 $categoryOptions = ['-1' => '-- ' . __('All Categories') . ' --'] + $this->getSelectOptions('WorkflowSteps.category');
@@ -589,6 +597,7 @@ class WorkflowBehavior extends Behavior
                 $this->_table->controller->set(compact('monthOptions','selectedMonth'));
                 // End
             }
+            // echo "<pre>";print_r($selectedFilter);die;
             //POCOR-5695 ends
         }
     }
@@ -1261,13 +1270,22 @@ class WorkflowBehavior extends Behavior
             if ($entity->has('institution_id')) {
                 $params['institution_id'] = $entity->institution_id;
             } else {
-                $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
-                $institutionId = $model->paramsDecode('institution_id');
-//                $session = $request->getSession();
-//                if ($session->check('Institution.Institutions.id')) {
-//                    $institutionId = $session->read('Institution.Institutions.id');
-//                    $params['institution_id'] = $institutionId;
-//                }
+                if ($workflowModel->is_school_based) {
+                    $table = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+                    //POCOR-8401,POCOR-8402 starts
+                    if($this->controller->getName() != 'Profiles'){
+                        $institutionId = $table->paramsDecode($this->_table->request->getAttribute('params')['pass'][1]);;
+                        $params = [
+                            'institution_id' => $institutionId
+                        ];
+                    }//POCOR-8401,POCOR-8402 ends
+                    //$session = $this->controller->request->session();
+                    // if ($session->check('Institution.Institutions.id')) {
+                        // $params = [
+                        //     'institution_id' => $institutionId
+                        // ];
+                    // }
+                }
             }
         }
 
