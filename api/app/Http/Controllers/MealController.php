@@ -11,6 +11,12 @@ use App\Http\Requests\StudentMealExportRequest;
 use App\Http\Requests\StudentMealImportTemplateRequest;
 use App\Exports\StudentMealExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\StudentMealImport;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 class MealController extends Controller
 {
@@ -1035,16 +1041,62 @@ class MealController extends Controller
     {
         try {
             $params = $request->all();
-            $data = $this->mealService->getStudentMealImportTemplate($params);
 
-            return $this->sendSuccessResponse("Student meal import template data found.", $data);
+            $fileName='OpenEMIS_Core_Import_Institution_Meal_Students_Template.xlsx';
+
+            $filePath = public_path('templates').'/'.$fileName;
+
+            if(file_exists($filePath)){
+                $templatePath = public_path('storage/templates');
+                $templateFile = $templatePath.'/'.$fileName;
+                
+
+                if(!File::exists($templatePath)){
+                    File::makeDirectory($templatePath, 0775, true, true);
+                }
+
+                if (!File::exists($templateFile)) {
+                    File::copy($filePath, $templateFile);
+                }
+
+            } else {
+                return $this->sendErrorResponse('Import template not found.');
+            }
+
+            $spreadsheet = IOFactory::load($templateFile);
+            
+            // Select the 'References' sheet (assuming it's the second sheet)
+            $sheet = $spreadsheet->getSheetByName('References');
+            
+            if (!$sheet) {
+                return $this->sendErrorResponse('Reference sheet not found in import template.');
+            }  
+
+            $getDataForSheet = $this->mealService->getDataForSheet($params);
+
+            // Write data to the sheet
+            $row = 4; // Assuming the first row contains headings
+            foreach ($getDataForSheet as $rowData) {
+                $column = 'A';
+                foreach ($rowData as $cellData) {
+                    $sheet->setCellValue($column . $row, $cellData);
+                    $column++;
+                }
+                $row++;
+            }
+
+            // Save the modified Excel file
+            $writer = new Xlsx($spreadsheet);
+            $writer->save($filePath);
+
+            return response()->download($filePath);
             
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch student meals import template data from DB.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
+            
             return $this->sendErrorResponse('Failed to fetch student meals import template data from DB.');
         }
     }
