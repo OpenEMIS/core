@@ -144,7 +144,6 @@ class StaffTabBehavior extends Behavior
                         }
                         $tabElements[$key]['url'] = array_merge($staffUrl, $paramsData);
                     }else{
-<<<<<<< HEAD
                         if(!empty($encodedQueryString)){
                             $paramsData = ['action' => 'Staff'.$key, 'index', $encodedQueryString];
                         }else{
@@ -152,9 +151,7 @@ class StaffTabBehavior extends Behavior
                         }
                         $tabElements[$key]['url'] = array_merge($staffUrl, $paramsData);
                         //POCOR-8379 ends
-=======
-                        $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff'.$key, 'index', $encodedQueryString, 'type' => $type]);//POCOR-8401 add type
->>>>>>> master
+                        //$tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff'.$key, 'index', $encodedQueryString, 'type' => $type]);//POCOR-8401 add type
                     }
                 }else{
                     $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString]);
