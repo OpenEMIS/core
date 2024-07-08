@@ -43,6 +43,7 @@ use DatePeriod;
 use App\Imports\StudentAttendanceImport;
 use File;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class AttendanceRepository extends Controller
 {
@@ -2336,7 +2337,11 @@ class AttendanceRepository extends Controller
                 if ($i < 2) {
                     continue;
                 }
-
+                
+                if(is_numeric($row[0])){
+                    $row[0] = Date::excelToDateTimeObject($row[0])->format('d/m/Y');
+                }
+                
                 if (!$row[0]) { //Date
                     $label = $results[0][1][0];
                     $errors[$label] = 'Date is required.';
