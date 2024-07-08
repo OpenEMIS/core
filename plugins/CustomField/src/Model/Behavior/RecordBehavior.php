@@ -878,6 +878,9 @@ class RecordBehavior extends Behavior
                         if (empty($tabElements)) {
                             $selectedAction = $tabName;
                         }
+                        if(isset($url['?'])) {
+                            unset( $url['?'] );
+                        }
                         $url['tab_section'] = $tabName;
                         $tabElements[$tabName] = [
                             'url' => $url,
@@ -1224,6 +1227,10 @@ class RecordBehavior extends Behavior
             $answer = '';
             $type = strtolower($attr['customField']['field_type']);
             if (method_exists($this, $type)) {
+                $request = $this->_table->request; //POCOR-8409
+                if($request->getParam('controller') == 'Institutions' && $request->getParam('action') == 'Surveys') {
+                    $type = 'getCustomField';
+                }
                 $ans = $this->$type($this->_fieldValues, $attr['customField'], $this->_customFieldOptions);
                 if (!(is_null($ans))) {
                     $answer = $ans;
@@ -1457,17 +1464,27 @@ class RecordBehavior extends Behavior
         return null;
     }
  
-    // private function table($data, $fieldInfo, $options = [])
-    // {
-    //     $id = $fieldInfo['id'];
-    //     $colId = $fieldInfo['col_id'];
-    //     $rowId = $fieldInfo['row_id'];
-    //     if (isset($data[$id][$colId][$rowId])) {
-    //         return $data[$id][$colId][$rowId];
-    //     }
-    //     return '';
-    // }
+    public function table($data, $fieldInfo, $options = []): table
+    {
+        $id = $fieldInfo['id'];
+        $colId = $fieldInfo['col_id'];
+        $rowId = $fieldInfo['row_id'];
+        if (isset($data[$id][$colId][$rowId])) {
+            return $data[$id][$colId][$rowId];
+        }
+        return '';
+    }
 
+    public function getCustomField($data, $fieldInfo, $options = []) //POCOR8409
+    {
+        $id = $fieldInfo['id'];
+        $colId = $fieldInfo['col_id'];
+        $rowId = $fieldInfo['row_id'];
+        if (isset($data[$id][$colId][$rowId])) {
+            return $data[$id][$colId][$rowId];
+        }
+        return '';
+    }
     private function coordinates($data, $fieldInfo, $options = [])
     {
         $coordinates = '';
