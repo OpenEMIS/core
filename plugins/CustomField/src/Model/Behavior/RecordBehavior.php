@@ -694,7 +694,7 @@ class RecordBehavior extends Behavior
                             'alias' => $this->CustomFormsFilters->getAlias(),
                             'conditions' => $conditions
                         ]);
-                         
+
                 }
             }
         }
@@ -803,10 +803,10 @@ class RecordBehavior extends Behavior
                 $customField = $obj->custom_field;
                 $fieldTypeCode = $customField->field_type;
 				$section = Text::slug($obj->section);
-				
+
                 // only apply for field type store in custom_field_values
                 if (in_array($fieldTypeCode, $this->fieldValueArray)) {
-					if(empty($tabSection) || ($section == $tabSection)) {
+					if(empty($tabSection) || ($slug == $tabSection)) {
 						$fieldId = $customField->id;
 
 						if (array_key_exists($fieldId, $values)) {
@@ -1013,7 +1013,7 @@ class RecordBehavior extends Behavior
                         if (!in_array($obj->section, $sectionName)) {
                             $sectionName[$key] = $obj->section;
                             $fieldName = "section_".$key."_header";
-                            
+
                             if (!empty($sectionName)&&$model->request->getParam('action')!="Surveys") {
                                 $ControllerAction->field($fieldName, ['type' => 'section', 'title' => $sectionName[$key]]);
                                 $fieldOrder[++$order] = $fieldName;
@@ -1027,7 +1027,7 @@ class RecordBehavior extends Behavior
                                     $fieldType = $customField->field_type;
                                     $fieldName = "custom_".$we."_field";
                                     $valueClass = strtolower($fieldType) == 'table' || strtolower($fieldType) == 'student_list' ? 'table-full-width' : '';
-            
+
                                     $attr = [
                                         'type' => 'custom_'. strtolower($fieldType),
                                         'attr' => [
@@ -1042,19 +1042,19 @@ class RecordBehavior extends Behavior
                                         'customFieldValues' => $valuesArray,
                                         'customTableCells' => $cellsArray
                                     ];
-            
+
                                     // for label of mandatory *
                                     if ($customField->is_mandatory == 1) {
                                         $attr['attr']['required'] = 'required';
                                     }
-            
+
                                     // seq is very important for validation errors
                                     if (in_array($fieldType, $this->fieldValueArray)) {
                                         $attr['attr']['seq'] = $count++;
                                     }
-            
+
                                     $renderField = true;
-            
+
                                     // For survey only
                                     // To show the field in the view page base on the rules
                                     if (is_null($this->getConfig('moduleKey')) && $this->_table->action == 'view') {
@@ -1072,20 +1072,20 @@ class RecordBehavior extends Behavior
                                             $renderField = $forRender;
                                         }
                                     }
-            
+
                                     if ($renderField) {
                                         $ControllerAction->field($fieldName, $attr);
                                         $fieldOrder[++$order] = $fieldName;
                                     }
                                 }
-                            
-                                
+
+
                             }
                         }
                     }
                 }//POCOR-7600
                 // End
-                
+
             }
 
             foreach ($ignoreFields as $key => $field) {
@@ -1463,7 +1463,7 @@ class RecordBehavior extends Behavior
     {
         return null;
     }
- 
+
     public function table($data, $fieldInfo, $options = []): table
     {
         $id = $fieldInfo['id'];
