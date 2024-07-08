@@ -790,7 +790,7 @@ class RecordBehavior extends Behavior
             if ($entity->survey_form['custom_module_id'] == 1 && isset($model->request->getQuery['tab_section'])){
                 $tabSection = $model->request->getQuery['tab_section'];
                 //POCOR-4850[START]
-                // $where[] = $query->newExpr('REPLACE(REPLACE(' . $this->CustomFormsFields->aliasField('slug') . ', " ", "-" ), ".","") = "'.$tabSection.'"');
+                // $where[] = $query->newExpr('REPLACE(REPLACE(' . $this->CustomFormsFields->aliasField('section') . ', " ", "-" ), ".","") = "'.$tabSection.'"');
                 //POCOR-4850[END]
             }
             $customFields = $query
@@ -802,8 +802,7 @@ class RecordBehavior extends Behavior
             foreach ($customFields as $key => $obj) {
                 $customField = $obj->custom_field;
                 $fieldTypeCode = $customField->field_type;
-                $section = $obj->section ?? "Section";
-                $slug = Text::slug($section);
+				$section = Text::slug($obj->section);
 
                 // only apply for field type store in custom_field_values
                 if (in_array($fieldTypeCode, $this->fieldValueArray)) {
@@ -878,6 +877,9 @@ class RecordBehavior extends Behavior
                         }
                         if (empty($tabElements)) {
                             $selectedAction = $tabName;
+                        }
+                        if(isset($url['?'])) {
+                            unset( $url['?'] );
                         }
                         $url['tab_section'] = $tabName;
                         $tabElements[$tabName] = [
@@ -1225,6 +1227,10 @@ class RecordBehavior extends Behavior
             $answer = '';
             $type = strtolower($attr['customField']['field_type']);
             if (method_exists($this, $type)) {
+                $request = $this->_table->request; //POCOR-8409
+                if($request->getParam('controller') == 'Institutions' && $request->getParam('action') == 'Surveys') {
+                    $type = 'getCustomField';
+                }
                 $ans = $this->$type($this->_fieldValues, $attr['customField'], $this->_customFieldOptions);
                 if (!(is_null($ans))) {
                     $answer = $ans;
@@ -1458,17 +1464,27 @@ class RecordBehavior extends Behavior
         return null;
     }
 
-    // private function table($data, $fieldInfo, $options = [])
-    // {
-    //     $id = $fieldInfo['id'];
-    //     $colId = $fieldInfo['col_id'];
-    //     $rowId = $fieldInfo['row_id'];
-    //     if (isset($data[$id][$colId][$rowId])) {
-    //         return $data[$id][$colId][$rowId];
-    //     }
-    //     return '';
-    // }
+    public function table($data, $fieldInfo, $options = []): table
+    {
+        $id = $fieldInfo['id'];
+        $colId = $fieldInfo['col_id'];
+        $rowId = $fieldInfo['row_id'];
+        if (isset($data[$id][$colId][$rowId])) {
+            return $data[$id][$colId][$rowId];
+        }
+        return '';
+    }
 
+    public function getCustomField($data, $fieldInfo, $options = []) //POCOR8409
+    {
+        $id = $fieldInfo['id'];
+        $colId = $fieldInfo['col_id'];
+        $rowId = $fieldInfo['row_id'];
+        if (isset($data[$id][$colId][$rowId])) {
+            return $data[$id][$colId][$rowId];
+        }
+        return '';
+    }
     private function coordinates($data, $fieldInfo, $options = [])
     {
         $coordinates = '';
