@@ -237,18 +237,25 @@ class AccessControlComponent extends Component
         }
     }
 
+    /**
+     * need to investigate this function for the permission of super role
+     * and other role POCOR-8379
+    */
     public function check($url = [], $roleIds = [])
     {
         $superAdmin = $this->Auth->user('super_admin');
-        $superUser = $this->isSuperRole();
 
         if ($superAdmin || !is_array($url)) { // if $url is a string, then skip checking of permission
             return true;
         }
 
-        if ($superUser || !is_array($url)) { // if $url is a string, then skip checking of permission
-            return true;
-        }
+        //POCOR-8379 Starts use if condition only
+        if($this->controller->getName() != 'GuardianNavs'){
+            $superUser = $this->isSuperRole();//V4 POCOR-8385
+            if ($superUser || !is_array($url)) { // if $url is a string, then skip checking of permission
+                return true;
+            }
+        }//POCOR-8379 Ends
 
         // we only need controller and action
         foreach ($url as $i => $val) {
@@ -423,12 +430,17 @@ class AccessControlComponent extends Component
     {
         $superUser = 0;
         $isStudent = $_SESSION['Auth']['User']['is_student'];
-        $isStaff = $_SESSION['Auth']['User']['is_student'];
-        $isGuardian = $_SESSION['Auth']['User']['is_student'];
-        if(($isStudent == 1 && $isStaff == 1 && $isGuardian)){
+        $isStaff = $_SESSION['Auth']['User']['is_staff'];
+        $isGuardian = $_SESSION['Auth']['User']['is_guardian'];
+        $superAdmin = $_SESSION['Auth']['User']['super_admin']; //POCOR-8339
+        if(($isStudent == 1 && $isStaff == 1 && $isGuardian == 1)){
             $superUser = 1;
+        } 
+        //POCOR-8339
+        if(($isStudent == 1 && $isStaff == 1 && $isGuardian == 1 && $superAdmin == 0)){
+            $superUser = 0;
         }
-        return $superUser == 1;
+        return $superUser;
     }
 
     public function getRolesByUser($userId = null)
