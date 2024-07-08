@@ -341,7 +341,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
             if(!empty($criteriaRecord)){
                 foreach ($criteriaRecord as $criteriaDataKey => $criteriaDataObj) {
                     // to get the risks criteria to get the value on the student_risk_criterias
-                    $risksCriteriaResults = $RiskCriterias->find('ActiveRiskCriteria', ['criteria_key' => $criteriaDataKey, 'institution_id' => $institutionId]);
+                    $risksCriteriaResults = $RiskCriterias->find('ActiveRiskCriteria', ['criteria_key' => $criteriaDataKey, 'institution_id' => $institutionId, 'academic_period_id' => $academicPeriodId]);
 
                     if (!$risksCriteriaResults->isEmpty()) {
                         foreach ($risksCriteriaResults as $key => $risksCriteriaData) {
