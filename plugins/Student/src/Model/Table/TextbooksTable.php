@@ -6,6 +6,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
 use App\Model\Table\ControllerActionTable;
+use Cake\ORM\TableRegistry;
 
 class TextbooksTable extends ControllerActionTable {
     public function initialize(array $config): void
@@ -167,6 +168,27 @@ class TextbooksTable extends ControllerActionTable {
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->setupTabElements();
+        //POCOR-8414 start
+        $plugin = __($this->controller->getPlugin());
+        $id = $this->request->getAttribute('params')['pass'][1];
+        $DecodedQueryString = $this->paramsDecode($id);
+        $userId = $DecodedQueryString['user_id'];
+        $Users = TableRegistry::get('User.Users');
+        $result = $Users
+            ->find()
+            ->select(['first_name','last_name'])
+            ->where(['id' =>  $userId])
+            ->first();
+
+        $fullName = $result->first_name.' '.$result->last_name;
+        try {
+            
+            $gettabName = 'Student Textbooks';
+            $this->controller->set('contentHeader', $fullName . ' - ' . $gettabName);
+            //$this->controller->set('contentHeader', $plugin);
+        } catch (RecordNotFoundException $e) {
+            Log::write('error', $e->getMessage());
+        }
     }
 
     private function setupTabElements()
@@ -198,37 +220,5 @@ class TextbooksTable extends ControllerActionTable {
         return $entity->institution->code_name;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
-    {
-        if ($field == 'academic_period_id') {
-            return __('Academic Period');
-        } elseif ($field == 'institution_id') {
-            return __('Institution');
-        } elseif ($field == 'code') {
-            return __('Code');
-        } elseif ($field == 'textbook_id') {
-            return __('Textbook');
-        } elseif ($field == 'education_grade_id') {
-            return __('Education Grade');
-        } elseif ($field == 'education_subject_id') {
-            return __('Education Subject');
-        } elseif ($field == 'textbook_condition_id') {
-            return __('Textbook Condition');
-        } elseif ($field == 'textbook_status_id') {
-            return __('Textbook Status');
-        } elseif ($field == 'security_user_id') {
-            return __('Security User');
-        } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
-        } elseif ($field == 'modified') {
-            return __('Modified On');
-        } elseif ($field == 'created_user_id') {
-            return __('Created By');
-        } elseif ($field == 'created') {
-            return __('Created On');
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
-    }
 
 }
