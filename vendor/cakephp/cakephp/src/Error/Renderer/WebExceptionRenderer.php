@@ -383,15 +383,23 @@ class WebExceptionRenderer implements ExceptionRendererInterface
      */
     protected function _template(Throwable $exception, string $method, int $code): string
     {
-        if ($exception instanceof HttpException || !Configure::read('debug')) {
-            return $this->template = $code < 500 ? 'error400' : 'error500';
-        }
+        //Code for version 4
+        if ($code!=403) {
+    		$this->controller->redirect(['controller' => 'Errors', 'action' => 'error404', 'plugin'=>'Error']);
+    		return 'default';
+    	}
+    	return false;
 
-        if ($exception instanceof PDOException) {
-            return $this->template = 'pdo_error';
-        }
+        //Code of version 3[Start]
+        // if ($exception instanceof HttpException || !Configure::read('debug')) {
+        //     return $this->template = $code < 500 ? 'error400' : 'error500';
+        // }
 
-        return $this->template = $method;
+        // if ($exception instanceof PDOException) {
+        //     return $this->template = 'pdo_error';
+        // }
+        // return $this->template = $method;
+        //Code of version 3[End]
     }
 
     /**
