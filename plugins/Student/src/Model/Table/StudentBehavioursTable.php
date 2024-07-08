@@ -6,14 +6,17 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use App\Model\Table\AppTable;
-use Cake\Http\ServerRequest;
+use Cake\Network\Request;
 use Cake\ORM\Behavior;
-use Cake\Http\Session;
+use Cake\Network\Session;
+use App\Model\Table\ControllerActionTable;
 
-class StudentBehavioursTable extends AppTable {
+class StudentBehavioursTable extends ControllerActionTable
+{
 
 	public function initialize(array $config): void {
 		parent::initialize($config);
+
 		$this->belongsTo('Students', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('StudentBehaviourCategories', ['className' => 'Student.StudentBehaviourCategories']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
@@ -22,24 +25,25 @@ class StudentBehavioursTable extends AppTable {
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);//POCOR-7488
 		$this->belongsTo('StudentBehaviourClassifications', ['className' => 'Student.StudentBehaviourClassifications']);//POCOR-7557
 		$this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['StudentBehaviours' =>['id', 'institution_id','student_id', 'student_behaviour_category_id']
+            'appliedAction' => ['StudentBehaviours' =>['id']
             ]
         ]);
 	}
+    
+    public function indexBeforeAction(Event $event, ArrayObject $settings) {
+		$this->field('student_id', ['visible' => false]);
+		$this->field('student_behaviour_category_id', ['type' => 'select']);
+		$this->field('description', ['visible' => false]);
+		$this->field('action', ['visible' => false]);
 
-	public function indexBeforeAction(Event $event, ArrayObject $settings) {
-		$this->ControllerAction->field('student_id', ['visible' => false]);
-		$this->ControllerAction->field('student_behaviour_category_id', ['type' => 'select']);
-		$this->ControllerAction->field('description', ['visible' => false]);
-		$this->ControllerAction->field('action', ['visible' => false]);
-
-		$this->ControllerAction->setFieldOrder(['institution_id', 'date_of_behaviour', 'time_of_behaviour', 'title', 'student_behaviour_category_id']);
+		$this->setFieldOrder(['institution_id', 'date_of_behaviour', 'time_of_behaviour', 'title', 'student_behaviour_category_id']);
 	}
+
 
 	public function beforeFind(Event $event, Query $query, $options)
 	{
 		//$userData = $this->Session->read();
-		if ($this->controller->getName() != null && $this->controller->getName() == 'Profiles' && $this->request->getQuery('type' == 'student')) {
+		if ($this->controller->getName() != null && $this->controller->getName() == 'Profiles' && $this->request->getQuery('type') == 'student') {
 			//if ($this->Session->read('Auth.User.is_guardian') == 1) {
 			if ($_SESSION['Auth']['User']['is_guardian'] == 1) {
 				$userData = $this->Session->read();
@@ -54,7 +58,7 @@ class StudentBehavioursTable extends AppTable {
                 if ($sId == null || empty($sId) || $sId == '') {
                     $studentId = $userData['Student']['ExaminationResults']['student_id'];
                 } else {
-				$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+					$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
                 }
                 //# END: [POCOR-6548] Check if user data not found then add current login user data
 			} else {
@@ -150,5 +154,6 @@ class StudentBehavioursTable extends AppTable {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-
 }
+
+
