@@ -527,7 +527,7 @@ class RecordBehavior extends Behavior
                                 $all[] = $surveyEntity;
                                 if ($RepeaterSurveys->save($surveyEntity)) {
                                 } else {
-                                    Log::write('debug', $surveyEntity->getErrors());
+                                    Log::write('debug', print_r($surveyEntity->getErrors()));
                                     $repeaterErrors = true;
                                     $repeaterSuccess = false;
                                 }
