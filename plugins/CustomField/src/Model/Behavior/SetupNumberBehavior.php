@@ -16,7 +16,7 @@ class SetupNumberBehavior extends SetupBehavior
         parent::initialize($config);
 
         $this->ruleOptions = [
-            'min_value' => __('Should not be lesser than'),
+            'min_value' => __('Should not be less than'),
             'max_value' => __('Should not be greater than'),
             'range' => __('In between (inclusive)')
         ];
