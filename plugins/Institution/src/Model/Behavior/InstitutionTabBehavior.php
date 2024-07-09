@@ -459,17 +459,29 @@ class InstitutionTabBehavior extends Behavior
             'Associations',
             'Curriculars',
             'Risks'];
-        foreach ($studentTabElements as $key => $tab) {
-            if (in_array($key, $institutionControllerAction)) {
-                $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', '0' => 'index',
-                '1' => $queryString];
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'type' => $type]);
-            } else {
-                $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
-                $urlParams = ['action' => $key, '0' => 'index','1' => $queryString];
-                $tabElements[$key]['url'] = array_merge($studentUrl, $urlParams);
+            foreach ($studentTabElements as $key => $tab) {
+                if (in_array($key, $institutionControllerAction)) {
+                    //POCOR-8413 starts
+                    if($controllerName == 'Profiles'){
+                        $studentUrl = ['plugin' => 'Profile', 'controller' => 'Profiles', '0' => 'index'];
+                    }else{
+                        $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', '0' => 'index',
+                    '1' => $queryString];
+                    }
+                    
+                    $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'type' => $type]);
+                } else {
+                    if($controllerName == 'Profiles'){
+                        $studentUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
+                        $urlParams = ['action' => 'Student' . $key, '0' => 'index', 'type' => $type];
+                    }else{
+                        $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
+                        $urlParams = ['action' => $key, '0' => 'index','1' => $queryString];
+                    }
+                    //POCOR-8413 ends
+                    $tabElements[$key]['url'] = array_merge($studentUrl, $urlParams);
+                }
             }
-        }
 
         if (Configure::read('schoolMode')) {
             if (isset($tabElements['ExaminationResults'])) {

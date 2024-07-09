@@ -42,4 +42,18 @@ class InstitutionClassStudents extends Model
         return $this->belongsTo(StudentStatuses::class, 'student_status_id', 'id');
     }
 
+
+    //For POCOR-8363 Start...
+    public function createdUser()
+    {
+        return $this->belongsTo(SecurityUsers::class, 'created_user_id', 'id');
+    }
+
+
+    public function modifiedUser()
+    {
+        return $this->belongsTo(SecurityUsers::class, 'modified_user_id', 'id');
+    }
+    //For POCOR-8363 End...
+
 }
