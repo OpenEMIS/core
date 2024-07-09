@@ -398,4 +398,29 @@ class StudentRisksTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    //POCOR-8414 start
+    public function afterAction(Event $event, ArrayObject $options)
+    {
+        $plugin = __($this->controller->getPlugin());
+        $id = $this->request->getAttribute('params')['pass'][1];
+        $DecodedQueryString = $this->paramsDecode($id);
+        $userId = $DecodedQueryString['user_id'];
+        $Users = TableRegistry::get('User.Users');
+        $result = $Users
+            ->find()
+            ->select(['first_name','last_name'])
+            ->where(['id' =>  $userId])
+            ->first();
+
+        $fullName = $result->first_name.' '.$result->last_name;
+        try {
+            
+            $gettabName = 'Risks';
+            $this->controller->set('contentHeader', $fullName . ' - ' . $gettabName);
+            //$this->controller->set('contentHeader', $plugin);
+        } catch (RecordNotFoundException $e) {
+            Log::write('error', $e->getMessage());
+        }
+    }
 }
