@@ -1,8 +1,22 @@
+### [4.0.7] - 2024-07-09
+- Implemented: Develop APIs for student attendance import, export, no scheduled and class
+- Bug Fixed: Administration > System Setup > Custom Fields > Institution/Student/Staff/Infrastructure: The phrase is "Should not be lesser than"
+- Bug Fixed: Administration > Profiles > Students: PDF Template not formatted correctly
+- Bug Fixed: Personal>Staff>Career>Institution Curricular(Automation): User is getting blank page
+- Bug Fixed: Institutions>Students>Academic>Programmes(Automation): It should show Student Name - Tab Name
+- Bug Fixed: Administration > Surveys > Forms : Sections are not appearing in Question tab when viewed
+
+### [4.0.6] - 2024-07-08
+- Implemented: Develop changes to API for meals import template
+- Bug Fixed: Institutions>Students>List>Overview: Custom fields are not showing
+- Bug Fixed: Institutions>Academic>Subjects: Added subjects not showing unassigned students and export is not showing correctly
+- Bug Fixed: 404 error page not displayed and debug not working
+
 ### [4.0.5] - 2024-07-08
 - Bug Fixed: Institutions > Performance > Report Cards > Merge and Download PDF: When merging and downloading PDF for students report card, the page gives a 404 error.
 - Bug Fixed: Institutions>Staff>Career>Attendance(Automation): User is getting blank page Part 3
-- Administrations > Surveys > Forms > Filters/Status : Feature returns blank page
-- Institutions > Surveys > Forms : Questions configured in Survey Forms are not showing
+- Bug Fixed: Administrations > Surveys > Forms > Filters/Status : Feature returns blank page
+- Bug Fixed: Institutions > Surveys > Forms : Questions configured in Survey Forms are not showing
 
 ### [4.0.4] - 2024-07-05
 - Bug Fixed: Institutions>Students>Add(Automation): Unable to add students by OpenEMIS or Identity Number
