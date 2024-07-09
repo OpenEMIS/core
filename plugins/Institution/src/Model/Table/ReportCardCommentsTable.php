@@ -321,7 +321,6 @@ class ReportCardCommentsTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
         if (isset($buttons['view']['url'])) {
             $url = [
                 'plugin' => $this->controller->getPlugin(),
