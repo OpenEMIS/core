@@ -40,9 +40,9 @@ class RenderStaffListBehavior extends RenderBehavior
         $staffsurveyAnswers = TableRegistry::get('Staff.StaffSurveyAnswers');
 
         $model = $this->_table;
-        $session = $model->request->session();
-        $registryAlias = $model->registryAlias();
-        $debugInfo = $model->alias() . ' #' . $entity->id . ' (Institution ID: ' . $entity->institution_id . ', Academic Period ID: ' . $entity->academic_period_id . ', Survey Form ID: ' . $entity->survey_form_id . ')';
+        $session = $model->request->getSession();
+        $registryAlias = $model->getRegistryAlias();
+        $debugInfo = $model->getAlias() . ' #' . $entity->id . ' (Institution ID: ' . $entity->institution_id . ', Academic Period ID: ' . $entity->academic_period_id . ', Survey Form ID: ' . $entity->survey_form_id . ')';
 
         $value = '';
 
@@ -52,7 +52,7 @@ class RenderStaffListBehavior extends RenderBehavior
         $formKey = $attr['attr']['formKey'];
         $fieldId = $customField->id;
 
-        $form = $event->subject()->Form;
+        $form = $event->getSubject()->Form;
         $fieldPrefix = $attr['model'] . '.institution_staff_surveys.' . $fieldId;
         $unlockFields = [];
         $tableHeaders = [];
@@ -77,7 +77,7 @@ class RenderStaffListBehavior extends RenderBehavior
                 $questions = $CustomFormsFields
                     ->find('all')
                     ->innerJoin(
-                        [$CustomFields->alias() => $CustomFields->table()],
+                        [$CustomFields->getAlias() => $CustomFields->getTable()],
                         [
                             $CustomFields->aliasField('id = ') . $CustomFormsFields->aliasField($fieldKey),
                         ]
@@ -142,12 +142,12 @@ class RenderStaffListBehavior extends RenderBehavior
                             $rowInput = "";
 
                             if ($action == 'view') {
-                                $rowData[] = $event->subject->Html->link($staff->user->openemis_no, [
+                                $rowData[] = $event->getSubject()->Html->link($staff->user->openemis_no, [
                                     'plugin' => 'Institution',
                                     'controller' => 'Institutions',
                                     'action' => 'StaffUser',
                                     'view',
-                                    $model->paramsEncode(['id' => $staff->user->id])
+                                    $model->paramsEncode(['id' => $staff->user->id, 'staff_id' => $staff->user->id,'institution_id' => $institutionId])
                                 ]);
                                 $rowData[] = $staff->user->name;
                             } else if ($action == 'edit') {
@@ -309,8 +309,8 @@ class RenderStaffListBehavior extends RenderBehavior
 
                                         $attr['null'] = !$attr['customField']['is_mandatory'];
 
-                                        $event->subject()->viewSet('datepicker', $attr);
-                                        $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
+                                        $event->getSubject()->viewSet('datepicker', $attr);
+                                        $cellInput = $event->getSubject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
                                         $cellValue = !is_null($answerValue) ? $this->_table->formatDate($answerValue) : '';
                                         unset($attr['value']); // Need to unset so that it will not effect other Date or Time elements.
                                         break;
@@ -349,7 +349,7 @@ class RenderStaffListBehavior extends RenderBehavior
                 $questions = $CustomFormsFields
                     ->find('all')
                     ->innerJoin(
-                        [$CustomFields->alias() => $CustomFields->table()],
+                        [$CustomFields->getAlias() => $CustomFields->getTable()],
                         [
                             $CustomFields->aliasField('id = ') . $CustomFormsFields->aliasField($fieldKey),
                         ]
@@ -413,12 +413,12 @@ class RenderStaffListBehavior extends RenderBehavior
                             $rowInput = "";
 
                             if ($action == 'view') {
-                                $rowData[] = $event->subject->Html->link($staff->user->openemis_no, [
+                                $rowData[] = $event->getSubject()->Html->link($staff->user->openemis_no, [
                                     'plugin' => 'Institution',
                                     'controller' => 'Institutions',
                                     'action' => 'StaffUser',
                                     'view',
-                                    $model->paramsEncode(['id' => $staff->user->id])
+                                    $model->paramsEncode(['id' => $staff->user->id, 'staff_id' => $staff->user->id,'institution_id' => $institutionId])
                                 ]);
                                 $rowData[] = $staff->user->name;
                             } else if ($action == 'edit') {
@@ -594,8 +594,8 @@ class RenderStaffListBehavior extends RenderBehavior
 
                                         $attr['null'] = !$attr['customField']['is_mandatory'];
 
-                                        $event->subject()->viewSet('datepicker', $attr);
-                                        $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
+                                        $event->getSubject()->viewSet('datepicker', $attr);
+                                        $cellInput = $event->getSubject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
                                         $cellValue = !is_null($answerValue) ? $this->_table->formatDate($answerValue) : '';
                                         unset($attr['value']); // Need to unset so that it will not effect other Date or Time elements.
                                         break;
@@ -636,9 +636,9 @@ class RenderStaffListBehavior extends RenderBehavior
         $attr['tableCells'] = $tableCells;
 
         if ($action == 'view') {
-            $value = $event->subject()->renderElement('CustomField.Render/' . $fieldType, ['attr' => $attr]);
+            $value = $event->getSubject()->renderElement('CustomField.Render/' . $fieldType, ['attr' => $attr]);
         } else if ($action == 'edit') {
-            $value = $event->subject()->renderElement('CustomField.Render/' . $fieldType, ['attr' => $attr]);
+            $value = $event->getSubject()->renderElement('CustomField.Render/' . $fieldType, ['attr' => $attr]);
             $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
         }
 
@@ -705,8 +705,8 @@ class RenderStaffListBehavior extends RenderBehavior
         }
 
         $model = $this->_table;
-        $session = $model->request->session();
-        $registryAlias = $model->registryAlias();
+        $session = $model->request->getSession();
+        $registryAlias = $model->getRegistryAlias();
         $sessionKey = "$registryAlias.staff_surveys";
         $session->write($sessionKey, $surveysArray);
 
@@ -762,6 +762,7 @@ class RenderStaffListBehavior extends RenderBehavior
                     foreach ($fieldObj as $staffId => $staffObj) {
                         if (is_array($staffObj)) {
                             $surveyData = [
+                                'id' => $entity->id,
                                 'status_id' => $status,
                                 'institution_id' => $institutionId,
                                 'academic_period_id' => $periodId,
@@ -806,7 +807,7 @@ class RenderStaffListBehavior extends RenderBehavior
                             // save staff by staff
                             if ($staffsurveys->save($surveyEntity)) {
                             } else {
-                                Log::write('debug', $surveyEntity->errors());
+                                Log::write('debug', $surveyEntity->getErrors());
                             }
                         }
                     }
@@ -858,6 +859,7 @@ class RenderStaffListBehavior extends RenderBehavior
                     foreach ($fieldObj as $staffId => $staffObj) {
                         if (is_array($staffObj)) {
                             $surveyData = [
+                                'id' => $entity->id,
                                 'status_id' => $status,
                                 'institution_id' => $institutionId,
                                 'academic_period_id' => $periodId,
