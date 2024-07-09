@@ -16,7 +16,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 	    $this->belongsTo('EmploymentStatusTypes', ['className' => 'FieldOption.EmploymentStatusTypes', 'foreignKey' => 'status_type_id']);
 
-		$this->behaviors()->get('ControllerAction')->getConfig('actions.search', false);
+		$this->behaviors()->get('ControllerAction')->setConfig('actions.search', false);
 		$this->addBehavior('ControllerAction.FileUpload', [
 			// 'name' => 'file_name',
 			// 'content' => 'file_content',

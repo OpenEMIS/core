@@ -245,7 +245,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         }
         //POCOR-5852 starts
         if (empty($this->request->getQuery('academic_period_id'))) {
-            $this->request = $this->request->withQueryParams(['academic_period_id' => $this->AcademicPeriods->getCurrent()]);
+            $this->request = $this->request->withQueryParams( array_merge( $this->request->getQueryParams(), ['academic_period_id' => $this->AcademicPeriods->getCurrent()] ));//POCOR-8394
             //$this->request->getQuery('academic_period_id') = $this->AcademicPeriods->getCurrent();
             //$Classes = $this->Classes;
             $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
@@ -256,7 +256,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 ])
                 ->toArray();
             $selectedClassId = $this->queryString('class_id', $classOptions);
-            $this->request->withQueryParams(['class_id' => $selectedClassId]);
+            $this->request = $this->request->withQueryParams( array_merge( $this->request->getQueryParams(), ['class_id' => $selectedClassId] ));//POCOR-8394
             //$this->request->getQuery('class_id') = $selectedClassId;
         }
         //POCOR-5852 ends
