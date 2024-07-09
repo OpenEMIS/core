@@ -762,7 +762,6 @@ class RenderStaffListBehavior extends RenderBehavior
                     foreach ($fieldObj as $staffId => $staffObj) {
                         if (is_array($staffObj)) {
                             $surveyData = [
-                                'id' => $entity->id,
                                 'status_id' => $status,
                                 'institution_id' => $institutionId,
                                 'academic_period_id' => $periodId,
@@ -787,7 +786,7 @@ class RenderStaffListBehavior extends RenderBehavior
                                 $dateValue = isset($answerObj['date_value']) && strlen($answerObj['date_value']) > 0 ? $answerObj['date_value'] : null;
                                 $timeValue = isset($answerObj['time_value']) && strlen($answerObj['time_value']) > 0 ? $answerObj['time_value'] : null;
                                 
-                                $duplicateData11 = $staffsurveyAnswers->find()->where(['survey_question_id' => $questionId, 'parent_survey_question_id' => $parentIdd, 'institution_staff_survey_id' => $surveyData['id']])->toArray();
+                                $duplicateData11 = $staffsurveyAnswers->find()->where(['survey_question_id' => $questionId, 'parent_survey_question_id' => $parentIdd, 'institution_staff_survey_id IS' => $surveyData['id']])->toArray();
                                 foreach ($duplicateData11 as $dup) {
                                     $staffsurveyAnswers->delete($dup);
                                 }
@@ -859,7 +858,6 @@ class RenderStaffListBehavior extends RenderBehavior
                     foreach ($fieldObj as $staffId => $staffObj) {
                         if (is_array($staffObj)) {
                             $surveyData = [
-                                'id' => $entity->id,
                                 'status_id' => $status,
                                 'institution_id' => $institutionId,
                                 'academic_period_id' => $periodId,
@@ -884,7 +882,7 @@ class RenderStaffListBehavior extends RenderBehavior
                                 $dateValue = isset($answerObj['date_value']) && strlen($answerObj['date_value']) > 0 ? $answerObj['date_value'] : null;
                                 $timeValue = isset($answerObj['time_value']) && strlen($answerObj['time_value']) > 0 ? $answerObj['time_value'] : null;
                                 
-                                $duplicateData11 = $staffsurveyAnswers->find()->where(['survey_question_id' => $questionId, 'parent_survey_question_id' => $parentIdd, 'institution_staff_survey_id' => $surveyData['id']])->toArray();
+                                $duplicateData11 = $staffsurveyAnswers->find()->where(['survey_question_id' => $questionId, 'parent_survey_question_id' => $parentIdd, 'institution_staff_survey_id IS' => $surveyData['id']])->toArray();
                                 foreach ($duplicateData11 as $dup) {
                                     $staffsurveyAnswers->delete($dup);
                                 }
