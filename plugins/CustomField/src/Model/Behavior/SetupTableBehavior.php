@@ -28,7 +28,7 @@ class SetupTableBehavior extends SetupBehavior
 
         $this->numberValidationOptions = [
             1 => __('No Validation'),
-            'min_value' => __('Should not be lesser than'),
+            'min_value' => __('Should not be less than'),
             'max_value' => __('Should not be greater than'),
             'range' => __('In between (inclusive)')
         ];
@@ -260,7 +260,7 @@ class SetupTableBehavior extends SetupBehavior
                             ]
                         ]);
                         break;
-                    
+
                     default:
                         break;
                 }
@@ -503,7 +503,7 @@ class SetupTableBehavior extends SetupBehavior
                                     case 1:
                                         $params['number'] = 1;
                                         break;
-                                    
+
                                     default:
                                         break;
                                 }
