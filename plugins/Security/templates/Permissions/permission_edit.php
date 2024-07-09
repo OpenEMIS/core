@@ -62,7 +62,7 @@ $this->start('panelBody');
                         <tbody ng-repeat="function in section.items">
                             <tr>
                                 <td>{{function.name}}
-                                <i class="fa fa-info-circle fa-lg fa-right icon-blue" tooltip-placement="right" uib-tooltip={{function.description}} tooltip-append-to-body="true" tooltip-class="tooltip-blue" ng-hide="function.description==null;"></i>
+                                <!-- <i class="fa fa-info-circle fa-lg fa-right icon-blue" tooltip-placement="right" uib-tooltip={{function.description}} tooltip-append-to-body="true" tooltip-class="tooltip-blue" ng-hide="function.description==null;"></i> --> 
                                 <td class="center"><input class="no-selection-label" kd-checkbox-radio type="checkbox" ng-true-value="1" ng-false-value="0" ng-model="function.Permissions._view" ng-disabled="function._view==null;" ng-change="SecurityPermissionEditController.changePermission(function, 'view', function.Permissions._view);"></td>
                                 <td class="center"><input class="no-selection-label" kd-checkbox-radio type="checkbox" ng-true-value="1" ng-false-value="0" ng-model="function.Permissions._edit" ng-disabled="function._edit==null;" ng-change="SecurityPermissionEditController.changePermission(function, 'edit', function.Permissions._edit);"></td>
                                 <td class="center"><input class="no-selection-label" kd-checkbox-radio type="checkbox" ng-true-value="1" ng-false-value="0" ng-model="function.Permissions._add" ng-disabled="function._add==null;" ng-change="SecurityPermissionEditController.changePermission(function, 'add', function.Permissions._add);"></td>
