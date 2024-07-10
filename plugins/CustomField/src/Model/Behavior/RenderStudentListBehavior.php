@@ -32,9 +32,9 @@ class RenderStudentListBehavior extends RenderBehavior
         $StudentSurveyAnswers = TableRegistry::get('Student.StudentSurveyAnswers');
 
         $model = $this->_table;
-        $session = $model->request->session();
-        $registryAlias = $model->registryAlias();
-        $debugInfo = $model->alias() . ' #'.$entity->id.' (Institution ID: ' . $entity->institution_id . ', Academic Period ID: ' . $entity->academic_period_id . ', Survey Form ID: ' . $entity->survey_form_id . ')';
+        $session = $model->request->getSession();
+        $registryAlias = $model->getRegistryAlias();
+        $debugInfo = $model->getAlias() . ' #'.$entity->id.' (Institution ID: ' . $entity->institution_id . ', Academic Period ID: ' . $entity->academic_period_id . ', Survey Form ID: ' . $entity->survey_form_id . ')';
 
         $value = '';
 
@@ -44,7 +44,7 @@ class RenderStudentListBehavior extends RenderBehavior
         $formKey = $attr['attr']['formKey'];
         $fieldId = $customField->id;
 
-        $form = $event->subject()->Form;
+        $form = $event->getSubject()->Form;
         $fieldPrefix = $attr['model'] . '.institution_student_surveys.' . $fieldId;
         $unlockFields = [];
         $unlockFields[] = $fieldPrefix.".institution_class";
@@ -71,7 +71,7 @@ class RenderStudentListBehavior extends RenderBehavior
             if (!is_null($formId)) {
                 $questions = $CustomFormsFields
                     ->find('all')
-                    ->innerJoin([$CustomFields->alias() => $CustomFields->table()],
+                    ->innerJoin([$CustomFields->getAlias() => $CustomFields->getTable()],
                         [
                             $CustomFields->aliasField('id = ') . $CustomFormsFields->aliasField($fieldKey),
                         ]
@@ -135,18 +135,18 @@ class RenderStudentListBehavior extends RenderBehavior
     
                         if ($model->request->is(['get'])) {
                             // Clear session if is not redirect from save
-                            $requestQuery = $model->request->query;
+                            $requestQuery = $model->request->getQuery();
                             if (array_key_exists('field_id', $requestQuery) && array_key_exists('class_id', $requestQuery)) {
                                 if ($requestQuery['field_id'] == $fieldId) {
                                     $session->write($sessionKey, $requestQuery['class_id']);
                                 }
                             }
                         } else if ($model->request->is(['post', 'put'])) {
-                            $requestData = $model->request->data;
+                            $requestData = $model->request->getData();
                             $submit = isset($requestData['submit']) ? $requestData['submit'] : 'save';
     
-                            if (isset($requestData[$model->alias()]['institution_student_surveys'][$fieldId]['institution_class'])) {
-                                $session->write($sessionKey, $requestData[$model->alias()]['institution_student_surveys'][$fieldId]['institution_class']);
+                            if (isset($requestData[$model->getAlias()]['institution_student_surveys'][$fieldId]['institution_class'])) {
+                                $session->write($sessionKey, $requestData[$model->getAlias()]['institution_student_surveys'][$fieldId]['institution_class']);
                             }
     
                             if ($submit == 'save') {
@@ -194,7 +194,7 @@ class RenderStudentListBehavior extends RenderBehavior
                                 $rowInput = "";
     
                                 if ($action == 'view') {
-                                    $rowData[] = $event->subject->Html->link($student->user->openemis_no, [
+                                    $rowData[] = $event->getSubject()->Html->link($student->user->openemis_no, [
                                         'plugin' => 'Institution',
                                         'controller' => 'Institutions',
                                         'action' => 'StudentUser',
@@ -374,8 +374,8 @@ class RenderStudentListBehavior extends RenderBehavior
     
                                             $attr['null'] = !$attr['customField']['is_mandatory'];
     
-                                            $event->subject()->viewSet('datepicker', $attr);
-                                            $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
+                                            $event->getSubject()->viewSet('datepicker', $attr);
+                                            $cellInput = $event->getSubject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
                                             $cellValue = !is_null($answerValue) ? $this->_table->formatDate($answerValue) : '';
                                             unset($attr['value']); // Need to unset so that it will not effect other Date or Time elements.
                                             break;
@@ -417,7 +417,7 @@ class RenderStudentListBehavior extends RenderBehavior
             if (!is_null($formId)) {
                 $questions = $CustomFormsFields
                     ->find('all')
-                    ->innerJoin([$CustomFields->alias() => $CustomFields->table()],
+                    ->innerJoin([$CustomFields->getAlias() => $CustomFields->getTable()],
                         [
                             $CustomFields->aliasField('id = ') . $CustomFormsFields->aliasField($fieldKey),
                         ]
@@ -491,8 +491,8 @@ class RenderStudentListBehavior extends RenderBehavior
                             $requestData = $model->request->data;
                             $submit = isset($requestData['submit']) ? $requestData['submit'] : 'save';
     
-                            if (isset($requestData[$model->alias()]['institution_student_surveys'][$fieldId]['institution_class'])) {
-                                $session->write($sessionKey, $requestData[$model->alias()]['institution_student_surveys'][$fieldId]['institution_class']);
+                            if (isset($requestData[$model->getAlias()]['institution_student_surveys'][$fieldId]['institution_class'])) {
+                                $session->write($sessionKey, $requestData[$model->getAlias()]['institution_student_surveys'][$fieldId]['institution_class']);
                             }
     
                             if ($submit == 'save') {
@@ -734,8 +734,8 @@ class RenderStudentListBehavior extends RenderBehavior
     
                                             $attr['null'] = !$attr['customField']['is_mandatory'];
     
-                                            $event->subject()->viewSet('datepicker', $attr);
-                                            $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
+                                            $event->getSubject()->viewSet('datepicker', $attr);
+                                            $cellInput = $event->getSubject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
                                             $cellValue = !is_null($answerValue) ? $this->_table->formatDate($answerValue) : '';
                                             unset($attr['value']); // Need to unset so that it will not effect other Date or Time elements.
                                             break;
@@ -781,9 +781,9 @@ class RenderStudentListBehavior extends RenderBehavior
         $attr['tableCells'] = $tableCells;
 
         if ($action == 'view') {
-            $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
+            $value = $event->getSubject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
         } else if ($action == 'edit') {
-            $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
+            $value = $event->getSubject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
             $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
         }
 
@@ -845,8 +845,8 @@ class RenderStudentListBehavior extends RenderBehavior
         }
 
         $model = $this->_table;
-        $session = $model->request->session();
-        $registryAlias = $model->registryAlias();
+        $session = $model->request->getSession();
+        $registryAlias = $model->getRegistryAlias();
         $sessionKey = "$registryAlias.student_surveys";
         $session->write($sessionKey, $surveysArray);
 
@@ -926,7 +926,7 @@ class RenderStudentListBehavior extends RenderBehavior
                                 $dateValue = isset($answerObj['date_value']) && strlen($answerObj['date_value']) > 0 ? $answerObj['date_value'] : null;
                                 $timeValue = isset($answerObj['time_value']) && strlen($answerObj['time_value']) > 0 ? $answerObj['time_value'] : null;
                                 //POCOR-7730
-                                $duplicateData11 = $StudentSurveyAnswers->find()->where(['survey_question_id'=> $questionId,'parent_survey_question_id'=> $parentIdd,'institution_student_survey_id'=> $surveyData['id']])->toArray();
+                                $duplicateData11 = $StudentSurveyAnswers->find()->where(['survey_question_id'=> $questionId,'parent_survey_question_id'=> $parentIdd,'institution_student_survey_id IS'=> $surveyData['id']])->toArray();
                                 foreach($duplicateData11 as $dup){
                                     $StudentSurveyAnswers->delete($dup);
                                 }
@@ -947,7 +947,7 @@ class RenderStudentListBehavior extends RenderBehavior
                             // save student by student
                             if ($StudentSurveys->save($surveyEntity)) {
                             } else {
-                                Log::write('debug', $surveyEntity->errors());
+                                Log::write('debug', $surveyEntity->getErrors());
                             }
                         }
                     }
@@ -1044,7 +1044,7 @@ class RenderStudentListBehavior extends RenderBehavior
                             // save student by student
                             if ($StudentSurveys->save($surveyEntity)) {
                             } else {
-                                Log::write('debug', $surveyEntity->errors());
+                                Log::write('debug', $surveyEntity->getErrors());
                             }
                         }
                     }
