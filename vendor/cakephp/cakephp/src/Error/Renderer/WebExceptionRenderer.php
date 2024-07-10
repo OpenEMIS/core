@@ -44,6 +44,7 @@ use Cake\View\Exception\MissingTemplateException;
 use PDOException;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
+use Cake\ORM\TableRegistry;
 
 /**
  * Web Exception Renderer.
@@ -309,6 +310,7 @@ class WebExceptionRenderer implements ExceptionRendererInterface
         $emitter = new ResponseEmitter();
         $emitter->emit($output);
     }
+    
 
     /**
      * Render a custom error method/template.
@@ -383,12 +385,23 @@ class WebExceptionRenderer implements ExceptionRendererInterface
      */
     protected function _template(Throwable $exception, string $method, int $code): string
     {
-        //Code for version 4
+        //POCOR-8422[START]
+        if(!empty($exception->getMessage())){
+            try {
+                $ErrorTable = TableRegistry::getTableLocator()->get('System.SystemErrors');
+                $ErrorTable->insertError($exception);
+            } catch (Exception $ex) {
+                
+            }
+        }
+        //POCOR-8422[END]
+        //POCOR-8412[START]
         if ($code!=403) {
     		$this->controller->redirect(['controller' => 'Errors', 'action' => 'error404', 'plugin'=>'Error']);
     		return 'default';
     	}
     	return false;
+        //POCOR-8412[END]
 
         //Code of version 3[Start]
         // if ($exception instanceof HttpException || !Configure::read('debug')) {
