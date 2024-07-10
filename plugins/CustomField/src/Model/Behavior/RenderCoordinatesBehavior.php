@@ -52,7 +52,7 @@ class RenderCoordinatesBehavior extends RenderBehavior {
                 $values = null;
             }
         } else if ($action == 'edit') {
-            $form = $event->subject()->Form;
+            $form = $event->getSubject()->Form;
             $html = '';
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
             $attr['fieldPrefix'] = $fieldPrefix;
@@ -85,7 +85,7 @@ class RenderCoordinatesBehavior extends RenderBehavior {
             }
         }
 
-        $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['action' => $action, 'values' => $values, 'errors' => $errors, 'id' => $savedId, 'attr' => $attr]);
+        $value = $event->getSubject()->renderElement('CustomField.Render/'.$fieldType, ['action' => $action, 'values' => $values, 'errors' => $errors, 'id' => $savedId, 'attr' => $attr]);
         if ($action == 'edit') {
             $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
         }

@@ -26,7 +26,7 @@ class SetupNumberBehavior extends SetupBehavior
     {
         $model = $this->_table;
         $fieldTypes = $model->getFieldTypes();
-        $selectedFieldType = isset($model->request->data[$model->getAlias()]['field_type']) ? $model->request->data[$model->alias()]['field_type'] : key($fieldTypes);
+        $selectedFieldType = isset($model->request->getData($model->getAlias())['field_type']) ? $model->request->getData($model->getAlias())['field_type'] : key($fieldTypes);
 
         if ($selectedFieldType == $this->fieldTypeCode) {
             $this->buildNumberValidator();
@@ -111,27 +111,35 @@ class SetupNumberBehavior extends SetupBehavior
     public function onSetNumberElements(Event $event, Entity $entity)
     {
         $model = $this->_table;
-
+        $request = $model->request;
         if ($model->request->is(['get'])) {
             if (isset($entity->id)) {
                 // view / edit
                 if ($entity->has('params') && !empty($entity->params)) {
                     $params = json_decode($entity->params, true);
                     if (array_key_exists('min_value', $params)) {
-                        $model->request->query['number_rule'] = 'min_value';
+                        //$model->request->query['number_rule'] = 'min_value';
+                        $request = $request->withQueryParams(array_merge($request->getQueryParams(), ['number_rule' => 'min_value'])); 
                         $entity->minimum_value = $params['min_value'];
                     } else if (array_key_exists('max_value', $params)) {
-                        $model->request->query['number_rule'] = 'max_value';
+                        //$model->request->query['number_rule'] = 'max_value';
+                        $request = $request->withQueryParams(array_merge($request->getQueryParams(), ['number_rule' => 'max_value'])); 
                         $entity->maximum_value = $params['max_value'];
                     } else if (array_key_exists('range', $params)) {
-                        $model->request->query['number_rule'] = 'range';
+                        //$model->request->query['number_rule'] = 'range';
+                        $request = $request->withQueryParams(array_merge($request->getQueryParams(), ['number_rule' => 'range'])); 
                         $entity->lower_limit = $params['range']['lower'];
                         $entity->upper_limit = $params['range']['upper'];
                     }
+                    $model->request = $request;
                 }
             } else {
                 // add
-                unset($model->request->query['number_rule']);
+                $queryParams = $request->getQueryParams();
+                //unset($model->request->query['number_rule']);
+                unset($queryParams['number_rule']);
+                $request = $request->withQueryParams($queryParams);
+                $model->request = $request;
             }
 
             if ($model->action == 'view') {
@@ -190,7 +198,9 @@ class SetupNumberBehavior extends SetupBehavior
 
                 if (!empty($data['validation_rule'])) {
                     $selectedRule = $data['validation_rule'];
-                    $request->query['number_rule'] = $selectedRule;
+                    //$request->query['number_rule'] = $selectedRule;
+                    $request = $request->withQueryParams(array_merge($request->getQueryParams(), ['number_rule' => $selectedRule]));
+                    $model->request = $request;
                     $params = [];
 
                     switch ($selectedRule) {
