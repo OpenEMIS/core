@@ -6,7 +6,7 @@ use CustomField\Model\Table\CustomFieldsTable;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Text;
 
 class SurveyQuestionsTable extends CustomFieldsTable
@@ -60,11 +60,10 @@ class SurveyQuestionsTable extends CustomFieldsTable
         $this->field('code');
     }
 
-    // public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldCode(Event $event, array $attr, $action)
+    public function onUpdateFieldCode(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if ($this->request->getAttribute('params')['pass'][0] == 'add') {
-            if (!$_SERVER['REQUEST_METHOD'] == 'POST') {
+        if ($action == 'add') {
+            if (!$request->is('post')) {
                 $textValue = substr(Text::uuid(), 0, 8);
                 $attr['attr']['value'] = $textValue;
             }
@@ -76,6 +75,9 @@ class SurveyQuestionsTable extends CustomFieldsTable
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
        $surveyQuestionId = $requestData['SurveyQuestions']['id'];
+        if(empty($surveyQuestionId) && isset($this->request->getParam('pass')[1])) {
+            $surveyQuestionId = $this->paramsDecode($this->request->getParam('pass')[1])['id'];
+        }
         if (!empty($requestData['SurveyQuestions']['custom_field_options'])) {
             $data = $requestData['SurveyQuestions']['custom_field_options'];
             $removeData = $this->CustomFieldOptions->deleteAll([
@@ -83,7 +85,9 @@ class SurveyQuestionsTable extends CustomFieldsTable
                             ]);
             foreach ($data as $key => $value) {
                 if ($value['visible'] == 1) {
-                    $newRecords = $this->CustomFieldOptions->newEntity();
+                    $connection = $this->getConnection();
+                    $connection->getDriver()->enableAutoQuoting();
+                    $newRecords = $this->CustomFieldOptions->newEntity([]);
                     $newRecords->name = $value['name'];
                     $newRecords->visible = 1;
                     $newRecords->is_default = $entity->custom_field_options[$key]->is_default;
@@ -121,6 +125,10 @@ class SurveyQuestionsTable extends CustomFieldsTable
 			$helpBtn['attr']['title'] = __('Help');
 			$extra['toolbarButtons']['help'] = $helpBtn;
 		}
+        if($this->action == 'edit' && isset($this->request->getParam('pass')[1])) {
+            $surveyQuestionId = $this->paramsDecode($this->request->getParam('pass')[1])['id'];
+            $this->field('id', ['value' => $surveyQuestionId]);
+        }
     }
     // End POCOR-5188
 
