@@ -23,6 +23,7 @@ use Cake\Utility\Text;
 use ControllerAction\Model\Traits\UtilityTrait;
 use Exception;
 use PHPExcel_IOFactory;
+use Cake\Event\EventInterface;
 
 //POCOR-5672
 
@@ -2518,7 +2519,7 @@ class InstitutionsController extends AppController
         }
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
         $header = __('Institutions');
@@ -7487,7 +7488,7 @@ class InstitutionsController extends AppController
     }
 
     public
-    function beforeRender(Event $event)
+    function beforeRender(EventInterface $event)
     {
 
         parent::beforeRender($event);

@@ -49,7 +49,9 @@ if ($session->check('System.User.roles')) {
 					if ($name != '_divider') {
 						$target = isset($attr['target']) ? $attr['target'] : '_self';
 						echo '<li>';
-						echo $this->Html->link('<i class="fa ' . $attr['icon'] . '"></i><span> ' . __($name) . '</span>', $attr['url'], $attr);
+						if(isset( $attr['icon']) && isset($attr['url'])) {
+							echo $this->Html->link('<i class="fa ' . $attr['icon'] . '"></i><span> ' . __($name) . '</span>', $attr['url'], $attr);
+						}
 						echo '</li>';
 					} else {
 						echo '<li class="divider"></li>';

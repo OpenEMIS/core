@@ -1018,7 +1018,7 @@ class RecordBehavior extends Behavior
                 //POCOR-7600
                 if ((!$this->getConfig('tabSection'))|| $model->request->getParam('action')=="Surveys") {
                     if (isset($obj->section)) {
-                        if (!in_array($obj->section, $sectionName)) {
+                        if (is_array($sectionName) && !in_array($obj->section, $sectionName)) {
                             $sectionName[$key] = $obj->section;
                             $fieldName = "section_".$key."_header";
 
@@ -1472,16 +1472,16 @@ class RecordBehavior extends Behavior
         return null;
     }
 
-    public function table($data, $fieldInfo, $options = []): table
-    {
-        $id = $fieldInfo['id'];
-        $colId = $fieldInfo['col_id'];
-        $rowId = $fieldInfo['row_id'];
-        if (isset($data[$id][$colId][$rowId])) {
-            return $data[$id][$colId][$rowId];
-        }
-        return '';
-    }
+    // public function table($data, $fieldInfo, $options = []):  Table|string
+    // {
+    //     $id = $fieldInfo['id'];
+    //     $colId = $fieldInfo['col_id'];
+    //     $rowId = $fieldInfo['row_id'];
+    //     if (isset($data[$id][$colId][$rowId])) {
+    //         return $data[$id][$colId][$rowId];
+    //     }
+    //     return '';
+    // }
 
     public function getCustomField($data, $fieldInfo, $options = []) //POCOR8409
     {
