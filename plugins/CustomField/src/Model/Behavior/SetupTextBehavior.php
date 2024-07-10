@@ -37,7 +37,7 @@ class SetupTextBehavior extends SetupBehavior
     {
         $model = $this->_table;
         $fieldTypes = $model->getFieldTypes();
-        $selectedFieldType = isset($model->request->data[$model->getAlias()]['field_type']) ? $model->request->data[$model->alias()]['field_type'] : key($fieldTypes);
+        $selectedFieldType = isset($model->request->getData($model->getAlias())['field_type']) ? $model->request->getData($model->getAlias())['field_type'] : key($fieldTypes);
 
         if ($selectedFieldType == $this->fieldTypeCode) {
             $this->buildTextValidator();

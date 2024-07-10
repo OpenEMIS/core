@@ -97,10 +97,10 @@ class RenderTimeBehavior extends RenderBehavior {
 			}
 
 			$attr['null'] = !$attr['customField']['is_mandatory'];
-			$event->subject()->viewSet('timepicker', $attr);
-			$value = $event->subject()->renderElement('ControllerAction.bootstrap-timepicker/timepicker_input', ['attr' => $attr]);
+			$event->getSubject()->viewSet('timepicker', $attr);
+			$value = $event->getSubject()->renderElement('ControllerAction.bootstrap-timepicker/timepicker_input', ['attr' => $attr]);
 
-			$form = $event->subject()->Form;
+			$form = $event->getSubject()->Form;
 			
 			$value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
 			$unlockFields[] = $fieldPrefix.".".$attr['attr']['fieldKey'];

@@ -40,7 +40,7 @@ class RenderNoteBehavior extends RenderBehavior
                 $value = nl2br($displayValue);
             }
         } else if ($action == 'edit') {
-            $form = $event->subject()->Form;
+            $form = $event->getSubject()->Form;
             $unlockFields = [];
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
