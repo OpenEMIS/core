@@ -903,7 +903,7 @@ class RenderStaffListBehavior extends RenderBehavior
                             // save staff by staff
                             if ($staffsurveys->save($surveyEntity)) {
                             } else {
-                                Log::write('debug', $surveyEntity->errors());
+                                Log::write('debug', $surveyEntity->getErrors());
                             }
                         }
                     }

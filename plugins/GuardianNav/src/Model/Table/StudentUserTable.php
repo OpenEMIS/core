@@ -638,10 +638,10 @@ class StudentUserTable extends ControllerActionTable
 
             // Check if the student is enrolled
             if ($studentEntity->student_status_id == $enrolledStatus) {
-                $StudentStatusUpdates = self::getDynamicTableInstance('Institution.StudentStatusUpdates');
-                $WithdrawRequests = self::getDynamicTableInstance('Institution.WithdrawRequests');
-                $session->write($WithdrawRequests->registryAlias().'.id', $institutionStudentId);
-                $WorkflowModels = self::getDynamicTableInstance('Workflow.WorkflowModels');
+                $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
+                $WithdrawRequests = TableRegistry::get('Institution.WithdrawRequests');
+                $session->write($WithdrawRequests->getRegistryAlias().'.id', $institutionStudentId);
+                $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
                 $approvedStatus = $WorkflowModels->getWorkflowStatusSteps('Institution.StudentWithdraw', 'APPROVED');
 
                 $rejectedStatus = $WorkflowModels->getWorkflowStatusSteps('Institution.StudentWithdraw', 'REJECTED');

@@ -122,7 +122,7 @@ class SecurityRolesTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         $validator
             ->add('name', 'ruleUnique', [
                 'rule' => 'validateUnique',
@@ -298,93 +298,79 @@ class SecurityRolesTable extends ControllerActionTable
             'visible' => false
         ]);
     }
-public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-{
-    $selectedAction = $extra['selectedAction'];
 
-    $userId = $this->Auth->user('id');
-    $isSuperAdmin = $this->Auth->user('super_admin');
-    $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
-
-    switch ($selectedAction) 
+    //POCOR-8407 change in query
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        case 'user':
-            $selectedGroup = $extra['selectedGroup'];
+        $selectedAction = $extra['selectedAction'];
+        $userId = $this->Auth->user('id');
+        $isSuperAdmin = $this->Auth->user('super_admin');
+        $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
 
-            $conditions = [$this->aliasField('security_group_id') => $selectedGroup];
+        switch ($selectedAction) {
+            case 'user':
+                $selectedGroup = $extra['selectedGroup'];
 
-            if (!$isSuperAdmin) 
-            {
-                $userRole = $GroupRoles
-                    ->find()
-                    ->contain('SecurityRoles')
-                    ->order(['SecurityRoles.order'])
-                    ->where([
-                        $GroupRoles->aliasField('security_user_id') => $userId,
-                        'SecurityRoles.security_group_id' => $selectedGroup
-                    ])
-                    ->first();
-                    $order = [];
-                    if($userRole['security_role']['order'] != null){
-                        $order[$this->aliasField('order')] = $userRole['security_role']['order'];
-                    }else{
-                        $order[$this->aliasField('order IS')] = null;
-                    }
-                $conditions = [
-                    'OR' => [
-                        // show roles that are lower privileges than the current user role in the selected group
-                        [
-                            $this->aliasField('security_group_id') => $selectedGroup,
-                           $order
-                        ],
-                        // also show roles that are created by the current user
-                        [
-                            $this->aliasField('security_group_id') => $selectedGroup,
-                            $this->aliasField('created_user_id') => $userId,
+                $conditions = [$this->aliasField('security_group_id') => $selectedGroup];
+
+                if (!$isSuperAdmin) {
+                    $userRole = $GroupRoles
+                        ->find()
+                        ->contain('SecurityRoles')
+                        ->order(['SecurityRoles.order'])
+                        ->where([
+                            $GroupRoles->aliasField('security_user_id') => $userId,
+                            'SecurityRoles.security_group_id' => $selectedGroup
+                        ])
+                        ->first();
+
+                    $conditions = [
+                        'OR' => [
+                            // show roles that are lower privileges than current user role in selected group
+                            [
+                                $this->aliasField('security_group_id') => $selectedGroup,
+                                $this->aliasField('order').' > ' => $userRole['security_role']['order'],
+                            ],
+                            // also show roles that are created by current user
+                            [
+                                $this->aliasField('security_group_id') => $selectedGroup,
+                                $this->aliasField('created_user_id') => $userId
+                            ]
                         ]
-                    ]
-                ];
+                    ];
+                }
 
                 $query->where($conditions);
-            }
-            break;
+                break;
 
-        case 'system':
-            //POCOR-8074 start
-            $conditions = [
-                'OR' => [
-                    // custom system-defined roles
-                    [
-                        $this->aliasField('security_group_id') => self::CUSTOM_SYSTEM_GROUP_ID,
-                    ],
-                    // fixed system-defined roles
-                    [
-                        $this->aliasField('security_group_id') => self::FIXED_SYSTEM_GROUP_ID
-                    ]
-                ]
-            ];
-            $query->where($conditions);
-            //POCOR-8074 end
-            if (!$isSuperAdmin) {
-                $userRole = $GroupRoles
-                    ->find()
-                    ->contain('SecurityRoles')
-                    ->order(['SecurityRoles.order'])
-                    ->where([
-                        $GroupRoles->aliasField('security_user_id') => $userId,
-                        'SecurityRoles.security_group_id IN ' => [self::FIXED_SYSTEM_GROUP_ID, self::CUSTOM_SYSTEM_GROUP_ID]
-                    ])
-                    ->first();
+            case 'system':
+                    $query
+                        ->where(function ($exp, $q) {
+                            return $exp->or_([
+                                $this->aliasField('security_group_id') => self::CUSTOM_SYSTEM_GROUP_ID,
+                                $this->aliasField('security_group_id') => self::FIXED_SYSTEM_GROUP_ID
+                            ]);
+                        });
 
-                $query->andWhere([$this->aliasField('order').' > ' => $userRole['security_role']['order']]);
-            }
-            break;
+                if (!$isSuperAdmin) {
+                    $userRole = $GroupRoles
+                        ->find()
+                        ->contain('SecurityRoles')
+                        ->order(['SecurityRoles.order'])
+                        ->where([
+                            $GroupRoles->aliasField('security_user_id') => $userId,
+                            'SecurityRoles.security_group_id IN ' => [self::FIXED_SYSTEM_GROUP_ID, self::CUSTOM_SYSTEM_GROUP_ID]
+                        ])
+                        ->first();
 
-        default:
-            break;
+                    $query->andWhere([$this->aliasField('order').' > ' => $userRole['security_role']['order']]);
+                }
+                break;
+
+            default:
+                break;
+        }
     }
-}
-
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {

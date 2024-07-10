@@ -12,7 +12,13 @@ use App\Http\Requests\StudentAttendanceMarkedRecordListRequest;
 use App\Http\Requests\StudentAttendanceTypeListRequest;
 use App\Http\Requests\SubjectsByClassPerAcademicPeriodRequest;
 use App\Http\Requests\StudentAttendanceMarkTypeListRequest;
+use App\Http\Requests\StudentAttendancesExportRequest;
+use App\Http\Requests\StudentAttendancesImportTemplateRequest;
+use App\Http\Requests\StudentAttendanceImportRequest;
+use App\Http\Requests\StudentAttendancesNoScheduledClassRequest;
 use Illuminate\Support\Facades\Log;
+use App\Exports\StudentAttendancesExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AttendanceController extends Controller
 {
@@ -1169,4 +1175,116 @@ class AttendanceController extends Controller
         }
     }
     //For POCOR-7854 Ends...
+
+
+    //For POCOR-8363 Starts...
+    public function getStudentAttendancesExport(StudentAttendancesExportRequest $request)
+    {
+        try {
+            $params = $request->all();
+
+            $data = $this->attendanceService->getStudentAttendancesExport($params);
+            
+            $str = time();
+            $fileName = 'StudentAttendances_'.$str.'.xlsx';
+            return Excel::download(new StudentAttendancesExport($data), $fileName);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to export students attendances from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to export students attendances from DB.');
+        }
+    }
+
+
+    public function getStudentAttendancesImportTemplate(StudentAttendancesImportTemplateRequest $request)
+    {
+        try {
+            $params = $request->all();
+
+            $data = $this->attendanceService->getStudentAttendancesImportTemplate($params);
+            
+            if(!empty($data)){
+                return $this->sendSuccessResponse("Student attendance import template data found.", $data);
+            } else {
+                return $this->sendErrorResponse("Student attendance import not template data found.", $data);
+            }
+
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch students attendances import template data from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to fetch students attendances import template data from DB.');
+        }
+    }
+
+
+
+    public function studentAttendancesImport(StudentAttendanceImportRequest $request)
+    {
+        try {
+            $params = $request->all();
+            //dd($params);
+            $data = $this->attendanceService->studentAttendancesImport($params);
+            
+            if(!is_array($data)){
+                if(isset($data) && $data == 1){
+                    return $this->sendErrorResponse('Invalid file extension.');
+                } elseif(isset($data) && $data == 2){
+                    return $this->sendErrorResponse('Header is not present.');
+                } elseif(isset($data) && $data == 3){
+                    return $this->sendErrorResponse('Imported file is empty.');
+                } elseif(isset($data) && $data == 4){
+                    return $this->sendErrorResponse('Not a valid heading.');
+                } elseif(isset($data) && $data == 5){
+                    return $this->sendErrorResponse('Institution is not linked with Institution Class.');
+                } elseif(isset($data) && $data == 6){
+                    return $this->sendErrorResponse('No current Academic Period is set in DB.');
+                } elseif(isset($data) && $data == 7){
+                    return $this->sendErrorResponse('Uploaded file exceeds maximum no of records limit ('.config("constantvalues.importExcelRules.maxRows").').');
+                } else {
+                    return $this->sendErrorResponse('Student attendance not imported.');
+                }
+            } else {
+                return $this->sendSuccessResponse("Student attendance imported.", $data);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to import students attendance in DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to import students attendance in DB.');
+        }
+    }
+
+
+    public function studentAttendancesNoScheduledClass(StudentAttendancesNoScheduledClassRequest $request)
+    {
+        try {
+            $params = $request->all();
+
+            $data = $this->attendanceService->studentAttendancesNoScheduledClass($params);
+            
+            if(!empty($data)){
+                return $this->sendSuccessResponse("Student attendance set for no-schedules class.", $data);
+            } else {
+                return $this->sendErrorResponse("Failed to set Student attendance for no-schedules class.");
+            }
+
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to set Student attendance for no-schedules class.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to set Student attendance for no-schedules class.');
+        }
+    }
+    //For POCOR-8363 Ends...
 }
