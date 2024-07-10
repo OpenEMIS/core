@@ -39,9 +39,12 @@ class StudentCurricularsTable extends ControllerActionTable
     //POCOR-8056
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $modelAlias = 'StudentCurriculars';
-        $userType = 'StudentUser';
-        $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
+        //POCOR-8413 starts
+        if($this->controller->getName() != 'Profiles'){
+            $modelAlias = 'StudentCurriculars';
+            $userType = 'StudentUser';
+            $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
+        }//POCOR-8413 ends     
     }
     //POCOR-8056
 
@@ -270,46 +273,30 @@ class StudentCurricularsTable extends ControllerActionTable
         $connection->execute($updateQuery);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    //POCOR-8414
+    public function afterAction(Event $event, ArrayObject $options)
     {
-        if ($field == 'academic_period_id') {
-            return __('Academic Period');
-        } elseif ($field == 'student_name') {
-            return __('Student Name');
-        } elseif ($field == 'education_grade') {
-            return __('Education Grade');
-        } elseif ($field == 'institution_class') {
-            return __('Institution Class');
-        } elseif ($field == 'curricular_category') {
-            return __('Curricular Category');
-        } elseif ($field == 'curricular_type') {
-            return __('Curricular Type');
-        } elseif ($field == 'institution_curricular_id') {
-            return __('Institution Curricular');
-        } elseif ($field == 'curricular_position_id') {
-            return __('Curricular Position');
-        } elseif ($field == 'start_date') {
-            return __('Start Date');
-        } elseif ($field == 'end_date') {
-            return __('End Date');
-        } elseif ($field == 'hours') {
-            return __('Hour');
-        } elseif ($field == 'points') {
-            return __('Point');
-        } elseif ($field == 'location') {
-            return __('Location');
-        } elseif ($field == 'comments') {
-            return __('Comment');
-        } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
-        } elseif ($field == 'modified') {
-            return __('Modified On');
-        } elseif ($field == 'created_user_id') {
-            return __('Created By');
-        } elseif ($field == 'created') {
-            return __('Created On');
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        $plugin = __($this->controller->getPlugin());
+        if($plugin != 'Profile' && $plugin != 'GuardianNav'){
+            $id = $this->request->getAttribute('params')['pass'][1];
+            $DecodedQueryString = $this->paramsDecode($id);
+            $userId = $DecodedQueryString['user_id'];
+            $Users = TableRegistry::get('User.Users');
+            $result = $Users
+                ->find()
+                ->select(['first_name','last_name'])
+                ->where(['id' =>  $userId])
+                ->first();
+
+            $fullName = $result->first_name.' '.$result->last_name;
+            try {
+                
+                $gettabName = 'Institution Curriculars';
+                $this->controller->set('contentHeader', $fullName . ' - ' . $gettabName);
+                //$this->controller->set('contentHeader', $plugin);
+            } catch (RecordNotFoundException $e) {
+                Log::write('error', $e->getMessage());
+            }
         }
     }
 

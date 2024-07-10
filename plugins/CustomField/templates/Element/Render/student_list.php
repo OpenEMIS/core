@@ -1,5 +1,5 @@
 <?php
-	$fieldPrefix = $ControllerAction['table']->alias() . '.institution_student_surveys.' . $attr['customField']->id;
+	$fieldPrefix = $ControllerAction['table']->getAlias() . '.institution_student_surveys.' . $attr['customField']->id;
 	$classOptions = isset($attr['attr']['classOptions']) ? $attr['attr']['classOptions'] : [];
 	$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
 	$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
@@ -13,13 +13,13 @@
 		    'controller' => $this->request->getParam('controller'),
 		    'action' => $this->request->getParam('action')
 		];
-		if (!empty($this->request->pass)) {
-			$url = array_merge($url, $this->request->pass);
+		if (!empty($this->request->getParam('pass'))) {
+			$url = array_merge($url, $this->request->getParam('pass'));
 		}
 
 		$dataNamedGroup = [];
-		if (!empty($this->request->query)) {
-			foreach ($this->request->query as $key => $value) {
+		if (!empty($this->request->getQuery())) {
+			foreach ($this->request->getQuery() as $key => $value) {
 				if (in_array($key, ['field_id', 'class_id'])) continue;
 				echo $this->Form->hidden($key, [
 					'value' => $value,

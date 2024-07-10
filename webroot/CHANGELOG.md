@@ -1,3 +1,19 @@
+### [4.0.8] - 2024-07-10
+- Bug Fixed: Institutions > Staff > Career > Leave: When applying for leave for staff for the previous academic period, the page got refreshed upon selecting the assignee
+- Bug Fixed: Administration > Surveys > Forms > Filters/Recipient: When giving permission for user to view Survey Filters and Recipients, the user is not able to see it in their account
+- Bug Fixed: Administration>Security>Roles>Permissions: It does not show security role name and cannot save
+- Bug Fixed: Personal>Student>Academic(Automation): Showing blank page for all tabs
+- Bug Fixed: Institutions>Surveys>Forms: Student list is not showing correctly
+- Bug Fixed: 404 error page is displayed but system errors is not updated
+
+### [4.0.7] - 2024-07-09
+- Implemented: Develop APIs for student attendance import, export, no scheduled and class
+- Bug Fixed: Administration > System Setup > Custom Fields > Institution/Student/Staff/Infrastructure: The phrase is "Should not be lesser than"
+- Bug Fixed: Administration > Profiles > Students: PDF Template not formatted correctly
+- Bug Fixed: Personal>Staff>Career>Institution Curricular(Automation): User is getting blank page
+- Bug Fixed: Institutions>Students>Academic>Programmes(Automation): It should show Student Name - Tab Name
+- Bug Fixed: Administration > Surveys > Forms : Sections are not appearing in Question tab when viewed
+
 ### [4.0.6] - 2024-07-08
 - Implemented: Develop changes to API for meals import template
 - Bug Fixed: Institutions>Students>List>Overview: Custom fields are not showing

@@ -184,6 +184,7 @@ class CustomFormsTable extends ControllerActionTable
         $CustomFields = TableRegistry::get($this->extra['fieldClass']['className']);
         $formKey = $this->extra['fieldClass']['foreignKey'];
         $fieldKey = $this->extra['fieldClass']['targetForeignKey'];
+        $alias = $CustomFormsFields->getAlias();
 
         return $CustomFormsFields
             ->find('all')
@@ -192,7 +193,7 @@ class CustomFormsTable extends ControllerActionTable
                 'field_type' => $CustomFields->aliasField('field_type'),
                 $fieldKey => $CustomFormsFields->aliasField($fieldKey),
                 $formKey => $CustomFormsFields->aliasField($formKey),
-               // 'section' => $CustomFormsFields->aliasField('section'), //comment cakephp4 not found column
+                'section' => $CustomFormsFields->aliasField($alias.'.section'), //comment cakephp4 not found column // Again change for this POCOR-8419
                 'id' => $CustomFormsFields->aliasField('id')
             ])
             ->innerJoin(
