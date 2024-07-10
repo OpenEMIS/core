@@ -150,11 +150,11 @@ class SetupTimeBehavior extends SetupBehavior
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
-        if (array_key_exists('validation_rules_time', $data)) {
+        if ($data->offsetExists('validation_rules_time')) {
             if ($data['field_type'] == $this->fieldTypeCode) {
                 $paramsArray = [];
-                $start_time = (array_key_exists('start_time', $data))? $data['start_time']: null;
-                $end_time = (array_key_exists('end_time', $data))? $data['end_time']: null;
+                $start_time = $data->offsetExists('start_time') ? $data->offsetGet('start_time') : null;
+                $end_time = $data->offsetExists('end_time') ? $data->offsetGet('end_time') : null;
 
                 if (!empty($start_time)) {
                     $paramsArray['start_time'] = $start_time;

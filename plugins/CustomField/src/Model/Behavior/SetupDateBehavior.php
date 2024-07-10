@@ -149,11 +149,13 @@ class SetupDateBehavior extends SetupBehavior
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
-        if (array_key_exists('validation_rules_date', $data)) {
+        if ($data->offsetExists('validation_rules_date')) {
             if ($data['field_type'] == $this->fieldTypeCode) {
                 $paramsArray = [];
-                $start_date = (array_key_exists('start_date', $data))? $data['start_date']: null;
-                $end_date = (array_key_exists('end_date', $data))? $data['end_date']: null;
+                // $start_date = (array_key_exists('start_date', $data))? $data['start_date']: null;
+                // $end_date = (array_key_exists('end_date', $data))? $data['end_date']: null;
+                $start_date = $data->offsetExists('start_date') ? $data->offsetGet('start_date') : null;
+                $end_date = $data->offsetExists('end_date') ? $data->offsetGet('end_date') : null;
 
                 if (!empty($start_date)) {
                     $paramsArray['start_date'] = $start_date;

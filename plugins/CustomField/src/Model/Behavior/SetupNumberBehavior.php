@@ -205,22 +205,22 @@ class SetupNumberBehavior extends SetupBehavior
 
                     switch ($selectedRule) {
                         case 'min_value':
-                            $minValue = array_key_exists('minimum_value', $data) ? $data['minimum_value']: null;
+                            $minValue = $data->offsetExists('minimum_value') ? $data->offsetGet('minimum_value'): null;
 
                             if (!is_null($minValue)) {
-                                $params['min_value'] = $data['minimum_value'];
+                                $params['min_value'] = $data->offsetGet('minimum_value');
                             }
                             break;
                         case 'max_value':
-                            $maxValue = array_key_exists('maximum_value', $data) ? $data['maximum_value']: null;
+                            $maxValue = $data->offsetExists('maximum_value') ? $data->offsetGet('maximum_value'): null;
 
                             if (!is_null($maxValue)) {
-                                $params['max_value'] = $data['maximum_value'];
+                                $params['max_value'] =  $data->offsetGet('maximum_value');
                             }
                             break;
                         case 'range':
-                            $lowerLimit = array_key_exists('lower_limit', $data) ? $data['lower_limit']: null;
-                            $upperLimit = array_key_exists('upper_limit', $data) ? $data['upper_limit']: null;
+                            $lowerLimit = $data->offsetExists('lower_limit') ? $data->offsetGet('lower_limit'): null;
+                            $upperLimit = $data->offsetExists('upper_limit') ? $data->offsetGet('upper_limit'): null;
 
                             if (!is_null($lowerLimit) && !is_null($upperLimit)) {
                                 $params['range'] = [

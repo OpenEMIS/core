@@ -307,7 +307,7 @@ class SetupTextBehavior extends SetupBehavior
                                 $selectedLengthValidation = $data['text_length_validation'];
                                 switch ($selectedLengthValidation) {
                                     case 'min_length':
-                                        $minLength = array_key_exists('text_minimum_length', $data) ? $data['text_minimum_length']: null;
+                                        $minLength = $data->offsetExists('text_minimum_length') ? $data->offsetGet('text_minimum_length') : null;
 
                                         if (!is_null($minLength)) {
                                             $params['min_length'] = $minLength;
@@ -315,7 +315,7 @@ class SetupTextBehavior extends SetupBehavior
                                         break;
 
                                     case 'max_length':
-                                        $maxLength = array_key_exists('text_maximum_length', $data) ? $data['text_maximum_length']: null;
+                                        $maxLength = $data->offsetExists('text_maximum_length') ? $data->offsetGet('text_maximum_length') : null;
 
                                         if (!is_null($maxLength)) {
                                             $params['max_length'] = $maxLength;
@@ -323,8 +323,8 @@ class SetupTextBehavior extends SetupBehavior
                                         break;
 
                                     case 'range':
-                                        $lowerLimit = array_key_exists('text_lower_limit', $data) ? $data['text_lower_limit']: null;
-                                        $upperLimit = array_key_exists('text_upper_limit', $data) ? $data['text_upper_limit']: null;
+                                        $lowerLimit = $data->offsetExists('text_lower_limit') ? $data->offsetGet('text_lower_limit'): null;
+                                        $upperLimit = $data->offsetExists('text_upper_limit') ? $data->offsetGet('text_upper_limit'): null;
 
                                         if (!is_null($lowerLimit) && !is_null($upperLimit)) {
                                             $params['range'] = [
@@ -344,8 +344,8 @@ class SetupTextBehavior extends SetupBehavior
                             $params['url'] = 1;
                             break;
                         case 'input_mask':
-                            if (array_key_exists('validation_format', $data) && !empty($data['validation_format'])) {
-                                $params['input_mask'] = $data['validation_format'];
+                            if ($data->offsetExists('validation_format') && !empty($data->offsetGet('validation_format'))) {
+                                $params['input_mask'] = $data->offsetGet('validation_format');
                             }
                             break;
                         default:
