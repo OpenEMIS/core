@@ -98,8 +98,8 @@ class SearchBehavior extends Behavior {
 					}
 				}
 			} //POCOR-8176 end
-
-			if (array_key_exists('OR', $extra instanceof \ArrayObject ? $extra->getArrayCopy() : $extra)) {
+			
+			if ($extra->offsetExists('OR')) {
 				$OR = array_merge($OR, $extra['OR']);
 			}
 

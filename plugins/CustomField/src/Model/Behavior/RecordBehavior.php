@@ -528,7 +528,7 @@ class RecordBehavior extends Behavior
                                 $all[] = $surveyEntity;
                                 if ($RepeaterSurveys->save($surveyEntity)) {
                                 } else {
-                                    Log::write('debug', $surveyEntity->getErrors());
+                                    Log::write('debug', print_r($surveyEntity->getErrors()));
                                     $repeaterErrors = true;
                                     $repeaterSuccess = false;
                                 }
@@ -1018,7 +1018,7 @@ class RecordBehavior extends Behavior
                 //POCOR-7600
                 if ((!$this->getConfig('tabSection'))|| $model->request->getParam('action')=="Surveys") {
                     if (isset($obj->section)) {
-                        if (!in_array($obj->section, $sectionName)) {
+                        if (is_array($sectionName) && !in_array($obj->section, $sectionName)) {
                             $sectionName[$key] = $obj->section;
                             $fieldName = "section_".$key."_header";
 
@@ -1472,7 +1472,7 @@ class RecordBehavior extends Behavior
         return null;
     }
 
-    // public function table($data, $fieldInfo, $options = []): table
+    // public function table($data, $fieldInfo, $options = []):  Table|string
     // {
     //     $id = $fieldInfo['id'];
     //     $colId = $fieldInfo['col_id'];

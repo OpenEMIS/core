@@ -1,6 +1,7 @@
 <?php
 	$model = $ControllerAction['table'];
 	$alias = $model->getAlias();
+	$this->Form->create();
 	$this->Form->unlockField("$alias.custom_field_options");
 	$this->Form->unlockField("$alias.is_default");
 ?>
@@ -79,7 +80,7 @@
 												if(isset($obj->id)) {
 													echo $this->Form->hidden("$alias.custom_field_options.$key.id");
 												}
-												echo $this->Form->input("$alias.custom_field_options.$key.name", ['label' => false]);
+												echo $this->Form->input("$alias.custom_field_options.$key.name", ['label' => false, 'value' => $obj->name]);
 												echo $this->Form->hidden("$alias.custom_field_options.$key.is_default", ['value' => 0]);
 											?>
 										</td>
