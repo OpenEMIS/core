@@ -186,7 +186,7 @@ class RecordBehavior extends Behavior
         $model = $this->_table;
         $alias = $model->getAlias();
 
-        if (array_key_exists($alias, $data)) {
+        if (array_key_exists($alias, $data instanceof \ArrayObject ? $data->getArrayCopy() : $data)) {
             $CustomFields = TableRegistry::get($this->getConfig('fieldClass.className'));
 
             // patch custom_field_values
@@ -361,7 +361,7 @@ class RecordBehavior extends Behavior
                         'deleteFieldIds' => []
                     ]);
 
-                    if (array_key_exists($model->getAlias(), $data)) {
+                    if (array_key_exists($model->getAlias(), $data instanceof \ArrayObject ? $data->getArrayCopy() : $data)) {
                         if (array_key_exists('custom_field_values', $data[$model->getAlias()])) {
                             $values = $data[$model->getAlias()]['custom_field_values'];
                             foreach ($values as $key => $obj) {
@@ -378,7 +378,7 @@ class RecordBehavior extends Behavior
 
                     //calling processRepeaterValues() in RenderRepeaterBehavior
                     if ($this->_table->hasBehavior('RenderRepeater')) {
-                        if (array_key_exists($model->getAlias(), $data)) {
+                        if (array_key_exists($model->getAlias(), $data instanceof \ArrayObject ? $data->getArrayCopy() : $data)) {
                             if (array_key_exists('institution_repeater_surveys', $data[$model->getAlias()])) {
                                 $event = $model->dispatchEvent('Render.processRepeaterValues', [$entity, $data, $settings], $model);
                                 if ($event->isStopped()) {
@@ -1018,7 +1018,7 @@ class RecordBehavior extends Behavior
                 //POCOR-7600
                 if ((!$this->getConfig('tabSection'))|| $model->request->getParam('action')=="Surveys") {
                     if (isset($obj->section)) {
-                        if (!in_array($obj->section, $sectionName)) {
+                        if (is_array($sectionName) && !in_array($obj->section, $sectionName)) {
                             $sectionName[$key] = $obj->section;
                             $fieldName = "section_".$key."_header";
 
@@ -1472,16 +1472,16 @@ class RecordBehavior extends Behavior
         return null;
     }
 
-    public function table($data, $fieldInfo, $options = []): table
-    {
-        $id = $fieldInfo['id'];
-        $colId = $fieldInfo['col_id'];
-        $rowId = $fieldInfo['row_id'];
-        if (isset($data[$id][$colId][$rowId])) {
-            return $data[$id][$colId][$rowId];
-        }
-        return '';
-    }
+    // public function table($data, $fieldInfo, $options = []):  Table|string
+    // {
+    //     $id = $fieldInfo['id'];
+    //     $colId = $fieldInfo['col_id'];
+    //     $rowId = $fieldInfo['row_id'];
+    //     if (isset($data[$id][$colId][$rowId])) {
+    //         return $data[$id][$colId][$rowId];
+    //     }
+    //     return '';
+    // }
 
     public function getCustomField($data, $fieldInfo, $options = []) //POCOR8409
     {

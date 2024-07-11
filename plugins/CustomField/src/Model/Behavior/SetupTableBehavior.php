@@ -63,7 +63,7 @@ class SetupTableBehavior extends SetupBehavior
         $minPrecision = $this->inputLimits['decimal_value']['precision']['min'];
         $maxPrecision = $this->inputLimits['decimal_value']['precision']['max'];
 
-        $validator = $this->_table->validator();
+        $validator = $this->_table->getValidator();
         $validator
             // NUMBER
             ->notEmpty('table_minimum_value')

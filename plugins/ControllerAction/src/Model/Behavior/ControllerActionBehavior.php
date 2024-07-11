@@ -496,7 +496,7 @@ class ControllerActionBehavior extends Behavior
         $contain = [];
         $containFields = [];
 
-        if (array_key_exists('auto_contain_fields', $extra)) {
+        if ($extra->offsetExists('auto_contain_fields')) {
             $containFields = $extra['auto_contain_fields'];
         }
 

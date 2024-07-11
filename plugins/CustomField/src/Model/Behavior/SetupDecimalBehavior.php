@@ -142,8 +142,8 @@ class SetupDecimalBehavior extends SetupBehavior
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['field_type']) && $data['field_type'] == $this->fieldTypeCode) {
-            $length = array_key_exists('decimal_length', $data) ? $data['decimal_length'] : null;
-            $precision = array_key_exists('decimal_precision', $data) ? $data['decimal_precision'] : null;
+            $length = $data->offsetExists('decimal_length') ?  $data['decimal_length'] : null;
+            $precision = $data->offsetExists('decimal_precision') ? $data['decimal_precision'] : null;
 
             $params = [
                 'length' => $length,
