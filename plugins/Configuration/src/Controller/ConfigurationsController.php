@@ -7,6 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Http\Client;
 use Cake\Http\ServerRequest;
 use Page\Traits\EncodingTrait;
+use Cake\Event\EventInterface;
 
 class ConfigurationsController extends AppController
 {
@@ -20,7 +21,7 @@ class ConfigurationsController extends AppController
         $this->ControllerAction->model('Configuration.ConfigItems', ['index', 'view', 'edit']);
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
         $header = 'System Configurations';
