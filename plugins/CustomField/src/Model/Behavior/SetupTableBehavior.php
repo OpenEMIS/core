@@ -38,7 +38,7 @@ class SetupTableBehavior extends SetupBehavior
     {
         $model = $this->_table;
         $fieldTypes = $model->getFieldTypes();
-        $selectedFieldType = isset($model->request->data[$model->getAlias()]['field_type']) ? $model->request->data[$model->alias()]['field_type'] : key($fieldTypes);
+        $selectedFieldType = isset($model->request->getData($model->getAlias())['field_type']) ? $model->request->getData($model->getAlias())['field_type'] : key($fieldTypes);
 
         if ($selectedFieldType == $this->fieldTypeCode) {
             $this->buildTableValidator();
@@ -63,7 +63,7 @@ class SetupTableBehavior extends SetupBehavior
         $minPrecision = $this->inputLimits['decimal_value']['precision']['min'];
         $maxPrecision = $this->inputLimits['decimal_value']['precision']['max'];
 
-        $validator = $this->_table->validator();
+        $validator = $this->_table->getValidator();
         $validator
             // NUMBER
             ->notEmpty('table_minimum_value')

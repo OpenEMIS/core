@@ -29,9 +29,9 @@ class RenderRepeaterBehavior extends RenderBehavior {
         $RepeaterSurveyAnswers = TableRegistry::get('InstitutionRepeater.RepeaterSurveyAnswers');
 
         $model = $this->_table;
-        $session = $model->request->session();
-        $registryAlias = $model->registryAlias();
-        $debugInfo = $model->alias() . ' #'.$entity->id.' (Institution ID: ' . $entity->institution_id . ', Academic Period ID: ' . $entity->academic_period_id . ', Survey Form ID: ' . $entity->survey_form_id . ')';
+        $session = $model->request->getSession();
+        $registryAlias = $model->getRegistryAlias();
+        $debugInfo = $model->getAlias() . ' #'.$entity->id.' (Institution ID: ' . $entity->institution_id . ', Academic Period ID: ' . $entity->academic_period_id . ', Survey Form ID: ' . $entity->survey_form_id . ')';
 
         $value = '';
 
@@ -41,8 +41,9 @@ class RenderRepeaterBehavior extends RenderBehavior {
         $formKey = $attr['attr']['formKey'];
         $fieldId = $customField->id;
 
-        $form = $event->subject()->Form;
+        $form = $event->getSubject()->Form;
         $fieldPrefix = $attr['model'] . '.institution_repeater_surveys.' . $fieldId;
+        $form->create($entity, ['type' => 'post']);
         $form->unlockField($fieldPrefix);
         $unlockFields = [$attr['model'] . '.repeater_question_id'];
         $form->unlockField($attr['model'] . '.repeater_question_id');
@@ -63,7 +64,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
         if (!is_null($formId)) {
             $questions = $CustomFormsFields
                 ->find('all')
-                ->innerJoin([$CustomFields->alias() => $CustomFields->table()],
+                ->innerJoin([$CustomFields->getAlias() => $CustomFields->getTable()],
                     [
                         $CustomFields->aliasField('id = ') . $CustomFormsFields->aliasField($fieldKey),
                     ]
@@ -105,7 +106,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                         $session->delete($sessionKey);
                     }
                 } else if ($model->request->is(['post', 'put'])) {
-                    $requestData = $model->request->data;
+                    $requestData = $model->request->getData();
                     $submit = isset($requestData['submit']) ? $requestData['submit'] : 'save';
 
                     if ($submit == 'save') {
@@ -115,10 +116,10 @@ class RenderRepeaterBehavior extends RenderBehavior {
                         // from existing rows
                         $repeaters = $this->getRepeaters($model, $requestData, $fieldId);
 
-                        if (array_key_exists($model->alias(), $requestData)) {
+                        if (array_key_exists($model->getAlias(), $requestData)) {
                             // rely on repeater_question_id field added to InstitutionSurveys
-                            if (array_key_exists('repeater_question_id', $requestData[$model->alias()])) {
-                                $selectedFieldId = $requestData[$model->alias()]['repeater_question_id'];
+                            if (array_key_exists('repeater_question_id', $requestData[$model->getAlias()])) {
+                                $selectedFieldId = $requestData[$model->getAlias()]['repeater_question_id'];
                                 if ($fieldId == $selectedFieldId) {
                                     // add one more rows
                                     $repeaters[] = Text::uuid();
@@ -180,7 +181,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                             if($repeaterErrorObj){
                                 foreach ($repeaterErrorObj as $repeaterKey => $repeaterValue) {
                                     if($repeaterValue['survey_question_id'] == $questionId){
-                                        $fieldErrors = $repeaterValue->errors();
+                                        $fieldErrors = $repeaterValue->getErrors();
                                         foreach ($fieldErrors as $fieldErrorRule => $fieldErrorMessage) {
                                             foreach ($fieldErrorMessage as $key => $value) {
                                                 $errors = $value;
@@ -208,7 +209,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
                                     if ($question['custom_field']->has('params') && !empty($question['custom_field']->params)) {
                                         $params = json_decode($question['custom_field']->params, true);
                                         if (array_key_exists('input_mask', $params) && !empty($params['input_mask'])) {
-                                            $HtmlField = $event->subject();
+                                            $HtmlField = $event->getSubject();
                                             $HtmlField->includes['jasny']['include'] = true;
                                             $cellOptions['data-mask'] = $params['input_mask'];
                                         }
@@ -344,8 +345,8 @@ class RenderRepeaterBehavior extends RenderBehavior {
 
                                     $attr['null'] = !$attr['customField']['is_mandatory'];
 
-                                    $event->subject()->viewSet('datepicker', $attr);
-                                    $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
+                                    $event->getSubject()->viewSet('datepicker', $attr);
+                                    $cellInput = $event->getSubject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
                                     $cellValue = !is_null($answerValue) ? $this->_table->formatDate($answerValue) : '';
                                     if($errorInput){
                                         $cellInput .= $errorInput;
@@ -395,8 +396,8 @@ class RenderRepeaterBehavior extends RenderBehavior {
 
                                     $attr['null'] = !$attr['customField']['is_mandatory'];
 
-                                    $event->subject()->viewSet('timepicker', $attr);
-                                    $cellInput = $event->subject()->renderElement('ControllerAction.bootstrap-timepicker/timepicker_input', ['attr' => $attr]);
+                                    $event->getSubject()->viewSet('timepicker', $attr);
+                                    $cellInput = $event->getSubject()->renderElement('ControllerAction.bootstrap-timepicker/timepicker_input', ['attr' => $attr]);
                                     $cellValue = !is_null($answerValue) ? $this->_table->formatTime($answerValue) : '';
                                     if($errorInput){
                                         $cellInput .= $errorInput;
@@ -448,9 +449,9 @@ class RenderRepeaterBehavior extends RenderBehavior {
         $attr['tableCells'] = $tableCells;
 
         if ($action == 'view') {
-            $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
+            $value = $event->getSubject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
         } else if ($action == 'edit') {
-            $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
+            $value = $event->getSubject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
             $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
         }
 
@@ -515,8 +516,8 @@ class RenderRepeaterBehavior extends RenderBehavior {
         }
 
         $model = $this->_table;
-        $session = $model->request->session();
-        $registryAlias = $model->registryAlias();
+        $session = $model->request->getSession();
+        $registryAlias = $model->getRegistryAlias();
         $sessionKey = "$registryAlias.repeater_surveys";
         $session->write($sessionKey, $surveysArray);
         $repeaterSessionKey = "$registryAlias.repeaters";
@@ -663,10 +664,10 @@ class RenderRepeaterBehavior extends RenderBehavior {
     private function getRepeaters($model, $requestData, $fieldId) {
         $repeaters = [];
 
-        if (array_key_exists($model->alias(), $requestData)) {
-            if (array_key_exists('institution_repeater_surveys', $requestData[$model->alias()])) {
-                if (array_key_exists($fieldId, $requestData[$model->alias()]['institution_repeater_surveys'])) {
-                    foreach ($requestData[$model->alias()]['institution_repeater_surveys'][$fieldId] as $repeaterKey => $repeaterObj) {
+        if (array_key_exists($model->getAlias(), $requestData)) {
+            if (array_key_exists('institution_repeater_surveys', $requestData[$model->getAlias()])) {
+                if (array_key_exists($fieldId, $requestData[$model->getAlias()]['institution_repeater_surveys'])) {
+                    foreach ($requestData[$model->getAlias()]['institution_repeater_surveys'][$fieldId] as $repeaterKey => $repeaterObj) {
                         if ($repeaterKey == 'survey_form_id') { continue; }
                         $repeaters[] = $repeaterKey;
                     }

@@ -6,7 +6,7 @@ if (isset($_navigations)) {
 
 
 $selectedLink = '';
-if (isset($ControllerAction) && array_key_exists('selectedLink', $ControllerAction)) {
+if (isset($ControllerAction) && array_key_exists('selectedLink', $ControllerAction instanceof \ArrayObject ? $ControllerAction->getArrayCopy() : $ControllerAction)) {
 	$selectedLink = implode('-', $ControllerAction['selectedLink']);
 }
 ?>
