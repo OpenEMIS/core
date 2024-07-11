@@ -1287,4 +1287,29 @@ class AttendanceController extends Controller
         }
     }
     //For POCOR-8363 Ends...
+
+
+
+    //For POCOR-8397 Starts...
+    public function getArchiveAcademicPeriods(Request $request)
+    {
+        try {
+            $params = $request->all();
+
+            $data = $this->attendanceService->getArchiveAcademicPeriods($params);
+            
+            if(!empty($data)){
+                return $this->sendSuccessResponse("Archive academic periods found.", $data);
+            } else {
+                return $this->sendErrorResponse("Archive academic periods not found.");
+            }
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get archive academic periods.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to get archive academic periods.');
+        }
+    }
+    //For POCOR-8397 Ends...
 }
