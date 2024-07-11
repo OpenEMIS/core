@@ -102,7 +102,7 @@ class CustomFieldsTable extends ControllerActionTable
      * @param ArrayObject $options
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $options)
     {
 
         $paramsPass = $this->request->getAttribute('params')['pass'][1];
