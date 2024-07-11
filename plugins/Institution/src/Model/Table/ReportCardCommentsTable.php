@@ -321,7 +321,6 @@ class ReportCardCommentsTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
         if (isset($buttons['view']['url'])) {
             $url = [
                 'plugin' => $this->controller->getPlugin(),
@@ -335,6 +334,8 @@ class ReportCardCommentsTable extends ControllerActionTable
                 'institution_id' => $entity->institution_id
             ];
 
+            $backEncodedUrl = $buttons['view']['url'][1];
+            
             $buttons['view']['url'] = $this->setQueryString($url, $params);
         }
 

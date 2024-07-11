@@ -1681,6 +1681,7 @@ class InstitutionsController extends AppController
     public function Comments()
     {
         // POCOR-3983 check institution status
+        $baseUrl = Router::fullBaseUrl();
         $institutionId = $this->getQueryString('institution_id');
         $institutionClassId = $this->getQueryString('institution_class_id');
         $reportCardId = $this->getQueryString('report_card_id');
@@ -1707,6 +1708,7 @@ class InstitutionsController extends AppController
         $this->set('reportCardId', $reportCardId);
         $this->set('institutionName', $institutionName);
         $this->set('institutionId', $institutionId);
+        $this->set('baseUrl', $baseUrl);
         $this->set('ngController', 'InstitutionCommentsCtrl as InstitutionCommentsController');
     }
 
