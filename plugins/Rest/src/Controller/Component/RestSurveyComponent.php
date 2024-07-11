@@ -1652,7 +1652,7 @@ class RestSurveyComponent extends Component
         $tableHeader = $tableNode->addChild("tr", null, NS_XHTML);
         $tableBody = $tableNode->addChild("tbody", null, NS_XHTML);
         $repeatNode = $tableBody->addChild("repeat", null, NS_XF);
-        $repeatNode->addAttribute("ref", $this->getRef($instanceId, array_merge($extra['references'], [$this->TableRow->alias()])));
+        $repeatNode->addAttribute("ref", $this->getRef($instanceId, array_merge($extra['references'], [$this->TableRow->getAlias()])));
         $tbodyRow = $repeatNode->addChild("tr", null, NS_XHTML);
 
         $tableColumnResults = $this->TableColumn
@@ -1776,18 +1776,18 @@ class RestSurveyComponent extends Component
             // end validation constraint
 
             foreach ($tableRows as $row => $tableRow) {
-                $rowNode = $fieldNode->addChild($this->TableRow->alias(), null, NS_OE);
+                $rowNode = $fieldNode->addChild($this->TableRow->getAlias(), null, NS_OE);
                 $rowNode->addAttribute("id", $tableRow->id);
 
                 foreach ($tableColumns as $col => $tableColumn) {
                     if ($col == 0) {
-                        $columnNode = $rowNode->addChild($this->TableColumn->alias() . $col, htmlspecialchars($tableRow->name, ENT_QUOTES), NS_OE);
+                        $columnNode = $rowNode->addChild($this->TableColumn->getAlias() . $col, htmlspecialchars($tableRow->name, ENT_QUOTES), NS_OE);
                         $columnNode->addAttribute("id", $col);
                         $cellType = 'output';
                         $cellLabel = $tableRow->name;
                         $cellHint = null;
                     } else {
-                        $columnNode = $rowNode->addChild($this->TableColumn->alias() . $col, null, NS_OE);
+                        $columnNode = $rowNode->addChild($this->TableColumn->getAlias() . $col, null, NS_OE);
                         $columnNode->addAttribute("id", $tableColumn->id);
                         $cellType = 'input';
                         $cellLabel = $tableRow->name;
@@ -1798,14 +1798,14 @@ class RestSurveyComponent extends Component
                         $tableHeader->addChild("th", htmlspecialchars($tableColumn->name, ENT_QUOTES), NS_XHTML);
                         $tbodyColumn = $tbodyRow->addChild("td", null, NS_XHTML);
                         $tbodyCell = $tbodyColumn->addChild($cellType, null, NS_XF);
-                        $tbodyCell->addAttribute("ref", $this->getRef($instanceId, array_merge($extra['references'], [$this->TableColumn->alias() . $col])));
+                        $tbodyCell->addAttribute("ref", $this->getRef($instanceId, array_merge($extra['references'], [$this->TableColumn->getAlias() . $col])));
 
                         $tbodyCell->addChild("label", htmlspecialchars($cellLabel, ENT_QUOTES), NS_XF);
                         if (!empty($cellHint)) {
                             $tbodyCell->addChild("hint", htmlspecialchars($cellHint, ENT_QUOTES), NS_XF);
                         }
 
-                        $this->setBindNode($extra['model'], $instanceId, array_merge($extra['references'], [$this->TableColumn->alias() . $col]), $extra);
+                        $this->setBindNode($extra['model'], $instanceId, array_merge($extra['references'], [$this->TableColumn->getAlias() . $col]), $extra);
                     }
                 }
             }
@@ -1915,7 +1915,7 @@ class RestSurveyComponent extends Component
                     $extra['subIndex'] = $index;
                     // must reset to null
                     $extra['default_value'] = null;
-                    $extra['references'] = [$this->Form->alias(), $this->Field->alias() . "[" . $extra['index'] . "]", 'RepeatBlock', $this->Field->alias() . $index];
+                    $extra['references'] = [$this->Form->getAlias(), $this->Field->getAlias() . "[" . $extra['index'] . "]", 'RepeatBlock', $this->Field->getAlias() . $index];
                     $extra['hint'] = null; // reset hint
 
                     $fieldTypeFunction = strtolower($field->field_type);
@@ -1923,7 +1923,7 @@ class RestSurveyComponent extends Component
                         $this->$fieldTypeFunction($field, $repeaterNode, $instanceId, $extra);
 
                         // add to Head > Model > Instance > RepeatBlock here
-                        $repeatBlockNode = $repeatNode->addChild($this->Field->alias() . $index, $extra['default_value'], NS_OE);
+                        $repeatBlockNode = $repeatNode->addChild($this->Field->getAlias() . $index, $extra['default_value'], NS_OE);
                         $repeatBlockNode->addAttribute("id", $field->field_id);
                     }
                 }
@@ -1946,8 +1946,8 @@ class RestSurveyComponent extends Component
 
     private function setCommonNode($field, $parentNode, $instanceId, $extra)
     {
-        $tagName = array_key_exists('tagName', $extra) ? $extra['tagName'] : 'input';
-        $bindType = array_key_exists('bindType', $extra) ? $extra['bindType'] : 'string';
+        $tagName = array_key_exists('tagName', $extra instanceof \ArrayObject ? $extra->getArrayCopy() : $extra) ? $extra['tagName'] : 'input';
+        $bindType = array_key_exists('bindType', $extra instanceof \ArrayObject ? $extra->getArrayCopy() : $extra) ? $extra['bindType'] : 'string';
 
         $this->setBodyNode($field, $parentNode, $instanceId, $tagName, $extra);
         $extra['type'] = $bindType;
@@ -1975,9 +1975,9 @@ class RestSurveyComponent extends Component
 
     private function setBindNode($modelNode, $instanceId, $references = [], $attr = [])
     {
-        $bindType = array_key_exists('type', $attr) ? $attr['type'] : 'string';
-        $required = array_key_exists('required', $attr) ? $attr['required'] : false;
-        $constraint = array_key_exists('constraint', $attr) ? $attr['constraint'] : null;
+        $bindType = array_key_exists('type', $attr instanceof \ArrayObject ? $attr->getArrayCopy() : $attr) ? $attr['type'] : 'string';
+        $required = array_key_exists('required', $attr instanceof \ArrayObject ? $attr->getArrayCopy() : $attr) ? $attr['required'] : false;
+        $constraint = array_key_exists('constraint',$attr instanceof \ArrayObject ? $attr->getArrayCopy() : $attr) ? $attr['constraint'] : null;
 
         $bindNode = $modelNode->addChild("bind", null, NS_XF);
         $bindNode->addAttribute("ref", $this->getRef($instanceId, $references));
