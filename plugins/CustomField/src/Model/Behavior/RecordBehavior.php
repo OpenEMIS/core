@@ -186,7 +186,7 @@ class RecordBehavior extends Behavior
         $model = $this->_table;
         $alias = $model->getAlias();
 
-        if (array_key_exists($alias, $data)) {
+        if (array_key_exists($alias, $data instanceof \ArrayObject ? $data->getArrayCopy() : $data)) {
             $CustomFields = TableRegistry::get($this->getConfig('fieldClass.className'));
 
             // patch custom_field_values
@@ -361,7 +361,7 @@ class RecordBehavior extends Behavior
                         'deleteFieldIds' => []
                     ]);
 
-                    if (array_key_exists($model->getAlias(), $data)) {
+                    if (array_key_exists($model->getAlias(), $data instanceof \ArrayObject ? $data->getArrayCopy() : $data)) {
                         if (array_key_exists('custom_field_values', $data[$model->getAlias()])) {
                             $values = $data[$model->getAlias()]['custom_field_values'];
                             foreach ($values as $key => $obj) {
@@ -378,7 +378,7 @@ class RecordBehavior extends Behavior
 
                     //calling processRepeaterValues() in RenderRepeaterBehavior
                     if ($this->_table->hasBehavior('RenderRepeater')) {
-                        if (array_key_exists($model->getAlias(), $data)) {
+                        if (array_key_exists($model->getAlias(), $data instanceof \ArrayObject ? $data->getArrayCopy() : $data)) {
                             if (array_key_exists('institution_repeater_surveys', $data[$model->getAlias()])) {
                                 $event = $model->dispatchEvent('Render.processRepeaterValues', [$entity, $data, $settings], $model);
                                 if ($event->isStopped()) {
@@ -528,7 +528,7 @@ class RecordBehavior extends Behavior
                                 $all[] = $surveyEntity;
                                 if ($RepeaterSurveys->save($surveyEntity)) {
                                 } else {
-                                    Log::write('debug', $surveyEntity->getErrors());
+                                    Log::write('debug', print_r($surveyEntity->getErrors()));
                                     $repeaterErrors = true;
                                     $repeaterSuccess = false;
                                 }
@@ -630,18 +630,17 @@ class RecordBehavior extends Behavior
     public function getCustomFieldQuery($entity, $params = [])
     {
         $query = null;
-        $withContain = array_key_exists('withContain', $params) ? $params['withContain'] : true;
-        $generalOnly = array_key_exists('generalOnly', $params) ? $params['generalOnly'] : false;
+        $withContain = array_key_exists('withContain', $params instanceof \ArrayObject ? $params->getArrayCopy() : $params) ? $params['withContain'] : true;
+        $generalOnly = array_key_exists('generalOnly', $params instanceof \ArrayObject ? $params->getArrayCopy() : $params) ? $params['generalOnly'] : false;
         // For Institution Survey
         if (is_null($this->getConfig('moduleKey'))) {
             if ($entity->has($this->getConfig('formKey'))) {
                 $customFormId = $entity->{$this->getConfig('formKey')};
-
-                if (isset($customFormId)) {
+                // if (isset($customFormId)) {
                     $customFormQuery = $this->CustomForms
                         ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
                         ->where([$this->CustomForms->aliasField('id') => $customFormId]);
-                }
+                // }
             }
         } else {
             //cakephp4 start
@@ -854,6 +853,7 @@ class RecordBehavior extends Behavior
         $ControllerAction = $this->isCAv4() ? $model : $model->ControllerAction;
         $session = $model->request->getSession();
         $query = $this->getCustomFieldQuery($entity);
+        // echo "<pre>";print_r($entity);die;
         if (!$query) {
             // Log an error message or handle the null query case
             Log::error('Custom field query returned null.');
@@ -1012,7 +1012,7 @@ class RecordBehavior extends Behavior
             // End
 
             $count = 0;
-            $sectionName = null;
+            $sectionName = [];
             foreach ($customFields as $key => $obj) {
                 // If tabSection is not set, setup Section Header
                 //POCOR-7600
@@ -1472,16 +1472,16 @@ class RecordBehavior extends Behavior
         return null;
     }
 
-    public function table($data, $fieldInfo, $options = []): table
-    {
-        $id = $fieldInfo['id'];
-        $colId = $fieldInfo['col_id'];
-        $rowId = $fieldInfo['row_id'];
-        if (isset($data[$id][$colId][$rowId])) {
-            return $data[$id][$colId][$rowId];
-        }
-        return '';
-    }
+    // public function table($data, $fieldInfo, $options = []):  Table|string
+    // {
+    //     $id = $fieldInfo['id'];
+    //     $colId = $fieldInfo['col_id'];
+    //     $rowId = $fieldInfo['row_id'];
+    //     if (isset($data[$id][$colId][$rowId])) {
+    //         return $data[$id][$colId][$rowId];
+    //     }
+    //     return '';
+    // }
 
     public function getCustomField($data, $fieldInfo, $options = []) //POCOR8409
     {

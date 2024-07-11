@@ -82,9 +82,17 @@ class AcademicPeriodBehavior extends Behavior {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		//dd($entity);
 		if ($entity->has('academic_period_id')) {
 			$AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-			$this->request->data[$this->_table->getAlias()]['editable'] = $AcademicPeriodTable->getEditable($entity->academic_period_id);
+			$requestData = $this->_table->request->getData();
+			$alias = $this->_table->getAlias();
+			//$this->request->data[$this->_table->getAlias()]['editable'] = $AcademicPeriodTable->getEditable($entity->academic_period_id);
+			if(isset($requestData[$alias])) {
+				$requestData[$this->_table->getAlias()]['editable'] = $AcademicPeriodTable->getEditable($entity->academic_period_id);
+				$requestData->withData($requestData);
+				$this->_table->request = $requestData;
+			}
 		}
 	}
 

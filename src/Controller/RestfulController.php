@@ -15,6 +15,7 @@ use Cake\Core\Configure;
 use Firebase\JWT\JWT;
 use Restful\Controller\RestfulController as BaseController;
 use Page\Traits\EncodingTrait;
+use Cake\Event\EventInterface;
 
 class RestfulController extends BaseController
 {
@@ -52,7 +53,7 @@ class RestfulController extends BaseController
         }
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
 
