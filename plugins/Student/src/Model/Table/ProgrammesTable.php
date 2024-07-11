@@ -180,8 +180,13 @@ class ProgrammesTable extends ControllerActionTable
 			$queryString = $this->getQueryString();
 			$studentId = $queryString['student_id'];
 			if($this->controller->getName() == 'GuardianNavs' && isset($this->request->getQueryParams()['studentId'])) {
-				$encodeStudentId = $this->request->getQueryParams()['studentId'];
-				$studentId = $this->paramsDecode($encodeStudentId);
+				//POCOR-8379 starts
+				$session = $this->request->getSession();
+				$studentId = $session->read('Student.Students.id');
+				if(empty($studentId)){
+					$encodeStudentId = $this->request->getQueryParams()['studentId'];
+					$studentId = $this->paramsDecode($encodeStudentId);
+				}//POCOR-8379 ends				
 			}
 		}
 		if(empty($studentId)){ //POCOR-8316
@@ -383,6 +388,33 @@ class ProgrammesTable extends ControllerActionTable
             $this->Session->write('Student.Students.name', $entity->user->name);
             $this->setupTabElements($entity);
         }
+    }
+
+    //POCOR-8414 start
+    public function afterAction(Event $event, ArrayObject $options)
+    {
+        $plugin = __($this->controller->getPlugin());
+		if($plugin != 'Profile' && $plugin != 'GuardianNav'){
+			$id = $this->request->getAttribute('params')['pass'][1];
+			$DecodedQueryString = $this->paramsDecode($id);
+			$userId = $DecodedQueryString['user_id'];
+			$Users = TableRegistry::get('User.Users');
+			$result = $Users
+				->find()
+				->select(['first_name','last_name'])
+				->where(['id' =>  $userId])
+				->first();
+
+			$fullName = $result->first_name.' '.$result->last_name;
+			try {
+				
+				$gettabName = 'Student Programmes';
+				$this->controller->set('contentHeader', $fullName . ' - ' . $gettabName);
+				//$this->controller->set('contentHeader', $plugin);
+			} catch (RecordNotFoundException $e) {
+				Log::write('error', $e->getMessage());
+			}
+		}		
     }
 	
 }

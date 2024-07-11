@@ -269,8 +269,13 @@ class GuardianNavsController extends AppController
         //$studentId = $session->read('Student.Students.id');
         $action = $this->request->getParam('action');
         if($action == 'StudentProgrammes' && isset($this->request->getQueryParams()['studentId'])) {
-            $studentId = $this->request->getQueryParams()['studentId'];
-            $studentId = $this->ControllerAction->paramsDecode($studentId);
+            //POCOR-8379 starts
+            $session = $this->request->getSession();
+            $studentId = $session->read('Student.Students.id');
+            if(empty($studentId)){
+                $studentId = $this->request->getQueryParams()['studentId'];
+                $studentId = $this->ControllerAction->paramsDecode($studentId);
+            }//POCOR-8379 ends
             if(!empty($studentId)) {
                 $StudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
                 $Student = $StudentsTable

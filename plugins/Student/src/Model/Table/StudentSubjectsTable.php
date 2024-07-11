@@ -156,8 +156,14 @@ class StudentSubjectsTable extends ControllerActionTable
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
         $queryString = $this->getQueryString();
-
+        //POCOR-8413 starts
         $studentId = $queryString['student_id'];
+        if(empty($studentId)){
+            $studentId = $this->Session->read('Student.Students.id');
+            if(empty($studentId)){
+                $studentId = 0;
+            }
+        }//POCOR-8413 ends
         $encodedQueryString = $this->paramsEncode($queryString);
         // Institution and Grade filter
         $InstitutionStudents = TableRegistry::get('Institution.Students');
@@ -220,8 +226,9 @@ class StudentSubjectsTable extends ControllerActionTable
         $userData = $this->Session->read();
         $session = $this->request->getSession();//POCOR-6267
         if ($userData['Auth']['User']['is_guardian'] == 1) {
-            $sId = $userData['Student']['ExaminationResults']['student_id'];//POCOR-6267
-            $studentId = $this->ControllerAction->paramsDecode($sId)['id'];//POCOR-6267
+            //$sId = $userData['Student']['ExaminationResults']['student_id'];//POCOR-6267
+            //$studentId = $this->ControllerAction->paramsDecode($sId)['id'];//POCOR-6267
+            $studentId = $session->read('Student.Students.id');//POCOR-8323
         } else {
             $studentId = $userData['Auth']['User']['id'];
         }
@@ -344,7 +351,7 @@ class StudentSubjectsTable extends ControllerActionTable
         $options = ['type' => 'student'];
         //$tabElements = $this->controller->getAcademicTabElements($options);
         $tabElements = $this->getAcademicTabElements($options);
-        if ($this->controller->getName() == 'Directories') {
+        if ($this->controller->getName() == 'GuardianNavs' || $this->controller->getName() == 'Directories') {//POCOR-8323
             $tabElements = $this->controller->getAcademicTabElements($options);
         }
         $this->controller->set('tabElements', $tabElements);

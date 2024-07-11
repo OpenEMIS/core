@@ -22,7 +22,6 @@ class ReorderBehavior extends Behavior
             $filter = $this->getConfig('filter');
             $filterValues = $this->getConfig('filterValues');
             $order = 0;
-
             if (is_null($filter)) {
                 $order = $this->_table->find()->count();
             } else {
@@ -35,10 +34,18 @@ class ReorderBehavior extends Behavior
                     $filterValue = $entity->{$filter};
                 }
                 $table = $this->_table;
-                $order = $table
-                    ->find()
-                    ->where([$table->aliasField($filter).' IN ' => $filterValue])
-                    ->count();
+                $filterValue = (array)$filterValue; 
+                //POCOR-8407 add if else condition
+                if (!empty($filterValue)) {
+                    $order = $table
+                        ->find()
+                        ->where([$table->aliasField($filter) . ' IN' => $filterValue])
+                        ->count();
+                } else {
+                    // Handle the case when $filterValue is empty
+                    $order = 0; // or any other appropriate action
+                }
+
             }
             $entity->{$orderField} = $order + 1;
         }
