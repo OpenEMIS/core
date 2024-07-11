@@ -630,18 +630,17 @@ class RecordBehavior extends Behavior
     public function getCustomFieldQuery($entity, $params = [])
     {
         $query = null;
-        $withContain = array_key_exists('withContain', $params) ? $params['withContain'] : true;
-        $generalOnly = array_key_exists('generalOnly', $params) ? $params['generalOnly'] : false;
+        $withContain = array_key_exists('withContain', $params instanceof \ArrayObject ? $params->getArrayCopy() : $params) ? $params['withContain'] : true;
+        $generalOnly = array_key_exists('generalOnly', $params instanceof \ArrayObject ? $params->getArrayCopy() : $params) ? $params['generalOnly'] : false;
         // For Institution Survey
         if (is_null($this->getConfig('moduleKey'))) {
             if ($entity->has($this->getConfig('formKey'))) {
                 $customFormId = $entity->{$this->getConfig('formKey')};
-
-                if (isset($customFormId)) {
+                // if (isset($customFormId)) {
                     $customFormQuery = $this->CustomForms
                         ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
                         ->where([$this->CustomForms->aliasField('id') => $customFormId]);
-                }
+                // }
             }
         } else {
             //cakephp4 start
@@ -854,6 +853,7 @@ class RecordBehavior extends Behavior
         $ControllerAction = $this->isCAv4() ? $model : $model->ControllerAction;
         $session = $model->request->getSession();
         $query = $this->getCustomFieldQuery($entity);
+        // echo "<pre>";print_r($entity);die;
         if (!$query) {
             // Log an error message or handle the null query case
             Log::error('Custom field query returned null.');
@@ -1012,13 +1012,13 @@ class RecordBehavior extends Behavior
             // End
 
             $count = 0;
-            $sectionName = null;
+            $sectionName = [];
             foreach ($customFields as $key => $obj) {
                 // If tabSection is not set, setup Section Header
                 //POCOR-7600
                 if ((!$this->getConfig('tabSection'))|| $model->request->getParam('action')=="Surveys") {
                     if (isset($obj->section)) {
-                        if (is_array($sectionName) && !in_array($obj->section, $sectionName)) {
+                        if (!in_array($obj->section, $sectionName)) {
                             $sectionName[$key] = $obj->section;
                             $fieldName = "section_".$key."_header";
 
