@@ -31,6 +31,10 @@ use App\Models\InstitutionClasses;
 use App\Models\InstitutionClassStudent;
 use App\Models\SecurityUsers;
 use App\Models\InstitutionSubjects;
+use App\Models\InstitutionClassAttendanceRecordsArchive;
+use App\Models\InstitutionStudentAbsencesArchived;
+use App\Models\InstitutionStudentAbsenceDetailsArchived;
+use App\Models\StudentAttendanceMarkedRecordsArchived;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -2734,6 +2738,49 @@ class AttendanceRepository extends Controller
         }
     }
     //For POCOR-8363 Ends...
+
+
+    //For POCOR-8397 Starts...
+    public function getArchiveAcademicPeriods($params)
+    {
+        try {
+            $institution_id = $params['institution_id']??0;
+            $institutionClassIds = InstitutionClasses::where('institution_id', $institution_id)->pluck('id')->toArray();
+            
+            $academicPeriodArrayOne = InstitutionClassAttendanceRecordsArchive::whereIn('institution_class_id', $institutionClassIds)->pluck('academic_period_id')->toArray();
+
+            $academicPeriodArrayTwo = InstitutionStudentAbsencesArchived::where('institution_id', $institution_id)->pluck('academic_period_id')->toArray();
+
+
+            $academicPeriodArrayThree = InstitutionStudentAbsenceDetailsArchived::where('institution_id', $institution_id)->pluck('academic_period_id')->toArray();
+
+            $academicPeriodArrayFour = StudentAttendanceMarkedRecordsArchived::where('institution_id', $institution_id)->pluck('academic_period_id')->toArray();
+
+
+            $academicPeriodWithArchiveArrayId = [0];
+            $academicPeriodWithArchiveArray = array_unique(
+                array_merge($academicPeriodArrayOne,
+                    $academicPeriodArrayTwo,
+                    $academicPeriodArrayThree,
+                    $academicPeriodArrayFour)
+            );
+
+            if (sizeof($academicPeriodWithArchiveArray) > 0) {
+                $academicPeriodWithArchiveArrayId = $academicPeriodWithArchiveArray;
+            }
+
+            $academicPeriods = AcademicPeriod::where('current', '!=', 1)->whereIn('id', $academicPeriodWithArchiveArrayId)->get()->toArray();
+
+            return $academicPeriods;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get archive academic periods.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to get archive academic periods.');
+        }
+    }
+    //For POCOR-8397 Ends...
 
 }
 

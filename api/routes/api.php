@@ -498,5 +498,10 @@ Route::group(
         Route::post('/institutions/students/attendances/import', 'AttendanceController@studentAttendancesImport');
         Route::get('/institutions/students/attendances/no-scheduled-class', 'AttendanceController@studentAttendancesNoScheduledClass');
         //POCOR-8363 end...
+
+
+        //POCOR-8397 start...
+        Route::get('/academic-period/archive', 'AttendanceController@getArchiveAcademicPeriods');
+        //POCOR-8397 end...
     }
 );
