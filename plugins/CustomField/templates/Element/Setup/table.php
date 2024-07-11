@@ -71,9 +71,9 @@
 														if(isset($obj->id)) {
 															echo $this->Form->hidden("$alias.custom_table_columns.$key.id");
 														}
-														echo $this->Form->input("$alias.custom_table_columns.$key.name", ['label' => false]);
+														echo $this->Form->input("$alias.custom_table_columns.$key.name", ['label' => false, 'value' => $obj->name]);
 														echo $this->Form->hidden("$alias.custom_table_columns.$key.order", ['value' => $columnOrder]);
-														echo $this->Form->hidden("$alias.custom_table_columns.$key.visible");
+														echo $this->Form->hidden("$alias.custom_table_columns.$key.visible",['value' => $obj->visible]);
 													?>
 													<button type="button" class="btn btn-xs btn-reset" onclick="jsTable.doRemoveColumn(this);"><i class="fa fa-close"></i></button>
 												</div>
@@ -99,9 +99,9 @@
 														if(isset($obj->id)) {
 															echo $this->Form->hidden("$alias.custom_table_rows.$key.id");
 														}
-														echo $this->Form->input("$alias.custom_table_rows.$key.name", ['label' => false]);
+														echo $this->Form->input("$alias.custom_table_rows.$key.name", ['label' => false, 'value' => $obj->name]);
 														echo $this->Form->hidden("$alias.custom_table_rows.$key.order", ['value' => $rowOrder]);
-														echo $this->Form->hidden("$alias.custom_table_rows.$key.visible");
+														echo $this->Form->hidden("$alias.custom_table_rows.$key.visible",['value' => $obj->visible]);
 													?>
 													<button type="button" class="btn btn-xs btn-reset" onclick="jsTable.doRemove(this);"><i class="fa fa-close"></i></button>
 												</td>
@@ -190,9 +190,9 @@
 														if(isset($obj->id)) {
 															echo $this->Form->hidden("$alias.custom_table_columns.$key.id");
 														}
-														echo $this->Form->input("$alias.custom_table_columns.$key.name", ['label' => false]);
+														echo $this->Form->input("$alias.custom_table_columns.$key.name", ['label' => false, 'value' => $obj->name]);
 														echo $this->Form->hidden("$alias.custom_table_columns.$key.order", ['value' => $columnOrder]);
-														echo $this->Form->hidden("$alias.custom_table_columns.$key.visible");
+														echo $this->Form->hidden("$alias.custom_table_columns.$key.visible",['value' => $obj->visible]);
 													?>
 													<?php if ($data->editable) : ?>
 														<button type="button" class="btn btn-xs btn-reset" onclick="jsTable.doRemoveColumn(this);"><i class="fa fa-close"></i></button>
@@ -220,9 +220,9 @@
 														if(isset($obj->id)) {
 															echo $this->Form->hidden("$alias.custom_table_rows.$key.id");
 														}
-														echo $this->Form->input("$alias.custom_table_rows.$key.name", ['label' => false]);
+														echo $this->Form->input("$alias.custom_table_rows.$key.name", ['label' => false, 'value' => $obj->name]);
 														echo $this->Form->hidden("$alias.custom_table_rows.$key.order", ['value' => $rowOrder]);
-														echo $this->Form->hidden("$alias.custom_table_rows.$key.visible");
+														echo $this->Form->hidden("$alias.custom_table_rows.$key.visible", ['value' => $obj->visible]);
 													?>
 													<?php if ($data->editable) : ?>
 														<button type="button" class="btn btn-xs btn-reset" onclick="jsTable.doRemove(this);"><i class="fa fa-close"></i></button>
