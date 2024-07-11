@@ -57,13 +57,13 @@ use Cake\Utility\Inflector;
                     </div>
     <?php
                 }
-            } else if (array_key_exists($field, $searchables) || array_key_exists($field, $includedFields)) {
+            } else if (array_key_exists($field, $searchables instanceof \ArrayObject ? $searchables->getArrayCopy() : $searchables) || array_key_exists($field, $includedFields instanceof \ArrayObject ? $includedFields->getArrayCopy() : $includedFields)) {
 
                 //to be used both by $searchable and $includedFields
-                if (array_key_exists($field, $searchables)) {
+                if (array_key_exists($field, $searchables instanceof \ArrayObject ? $searchables->getArrayCopy() : $searchables)) {
                     $varName = $searchables;
                     $indexName = 'hasMany';
-                } else if (array_key_exists($field, $includedFields)) {
+                } else if (array_key_exists($field, $includedFields instanceof \ArrayObject ? $includedFields->getArrayCopy() : $includedFields)) {
                     $varName = $includedFields;
                     $indexName = 'tableField';
                 }

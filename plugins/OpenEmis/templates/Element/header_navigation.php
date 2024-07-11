@@ -46,13 +46,15 @@ if ($session->check('System.User.roles')) {
 			<div class="more-menu-item">
 				<?php
 				foreach ($headerMenu as $name => $attr) {
-					if ($name != '_divider') {
-						$target = isset($attr['target']) ? $attr['target'] : '_self';
-						echo '<li>';
-						echo $this->Html->link('<i class="fa ' . $attr['icon'] . '"></i><span> ' . __($name) . '</span>', $attr['url'], $attr);
-						echo '</li>';
-					} else {
-						echo '<li class="divider"></li>';
+					if(!empty($name)){
+						if ($name != '_divider') {
+							$target = isset($attr['target']) ? $attr['target'] : '_self';
+							echo '<li>';
+							echo $this->Html->link('<i class="fa ' . $attr['icon'] . '"></i><span> ' . __($name) . '</span>', $attr['url'], $attr);
+							echo '</li>';
+						} else {
+							echo '<li class="divider"></li>';
+						}
 					}
 				}
 				?>
