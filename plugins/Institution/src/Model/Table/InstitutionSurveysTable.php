@@ -749,12 +749,15 @@ class InstitutionSurveysTable extends ControllerActionTable
         $institutionSurvey = $this->get($institutionSurveyId);
         $SurveyStatusData = $SurveyStatusTable->find('all',['conditions'=>['survey_form_id'=>$institutionSurvey->survey_form_id,'date_disabled >' => date('Y-m-d')]])->order(['date_disabled'=>'DESC'])->first();//POCOR-7343
         $SurveyStatusPeriodData = $SurveyStatusPeriodTable->find('all',['conditions'=>['survey_status_id'=>$SurveyStatusData->id]])->toArray();
-        $SurveyStatusPeriodDataIds=[];
+        $SurveyStatusPeriodDataIds='';
+        $totalSurveyStatusPeriodData = count($SurveyStatusPeriodData);
         foreach($SurveyStatusPeriodData as $SurveyStatusPeriodData1){
-            $SurveyStatusPeriodDataIds[] .= $SurveyStatusPeriodData1->academic_period_id.",";
+            $SurveyStatusPeriodDataIds .= $SurveyStatusPeriodData1->academic_period_id . ",";
         }
-        //$SurveyStatusPeriodDataIds = rtrim($SurveyStatusPeriodDataIds,',');
-        if(in_array($institutionSurvey->academic_period_id, $SurveyStatusPeriodDataIds)){
+
+        $SurveyStatusPeriodDataIds = rtrim($SurveyStatusPeriodDataIds, ",");
+        $SurveyStatusPeriodDataIdsArray = explode(",", $SurveyStatusPeriodDataIds);
+        if(in_array($institutionSurvey->academic_period_id, $SurveyStatusPeriodDataIdsArray)){
 
         }else{
             unset($extra['toolbarButtons']['edit']);
