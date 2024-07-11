@@ -180,7 +180,7 @@ class AreapickerBehavior extends Behavior
     {
         // to prevent html injection on area_id
         if ($entity->has('area_restricted') && $entity->area_restricted == true) {
-           if ($data->offsetExists('Institutions')) {
+            if ($data->offsetExists('Institutions')) {
                 $data['Institutions']['area_id'] = $entity->area_id;
                 $data['Institutions']['isSystemGroup'] = true; // this flag is to be used in ValidationBehavior->checkAuthorisedArea
             }
