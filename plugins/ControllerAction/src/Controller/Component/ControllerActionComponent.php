@@ -650,7 +650,7 @@ class ControllerActionComponent extends Component
             $reorderUrl = array_merge($reorderUrl, $named, $pass);
             $buttons['reorder'] = array('url' => $reorderUrl);
         } else {
-            if ($buttons->offsetExists('reorder')) {
+            if (array_key_exists('reorder', $buttons instanceof \ArrayObject ? $buttons->getArrayCopy() : $buttons)) {
                 unset($buttons['reorder']);
             }
         }
