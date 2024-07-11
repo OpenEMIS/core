@@ -9,7 +9,7 @@
         <kd-table #changetable [row]="_row" [column]="_column" [config]="_config" [api]="_tableApi" class="student-table-data" *ngIf="_row.length > 0">
         </kd-table>
     </div>
-    <div style="width:20%; display:flex; flex-flow:column; gap:10px 0; padding-inline:15px">
+    <div style="width:20%; display:flex; flex-flow:column; gap:0px 0; padding-inline:15px">
         <h3>Filter</h3>
         <kd-view displayType="stacked-form" [inputData]="academicPeriod" [button]="filterButtons"
             *ngIf="academicPeriod[0]?.options?.length >= 0"

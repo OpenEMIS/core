@@ -56,7 +56,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
     id: "normalTable",
     rowIdKey: "id",
     gridHeight: "auto",
-    rowContentHeight: 25,
+    rowContentHeight: 60,
     loadType: "normal",
     externalFilter: false,
     paginationConfig: {
@@ -337,7 +337,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
         {
           custom: true,
           icon: 'fa fa-question-circle',
-          tooltip: 'Overview',
+          tooltip: 'Help',
           callback: (): void => {
             this.helpData();
           }
@@ -872,7 +872,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
                 {
                   custom: true,
                   icon: 'fa fa-question-circle',
-                  tooltip: 'Overview',
+                  tooltip: 'Help',
                   callback: (): void => {
                     this.helpData();
                   }
@@ -888,7 +888,15 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
 
             console.log(this.mealImportUrl, "result", this.mealExportUrl);
           } else {
+            this._row = [];
             this.displayLoading = false;
+            let toasterConfig: any = {
+              title: 'No data found',
+              showCloseButton: true,
+              tapToDismiss: true,
+            };
+      
+            this._kdAlertEvent.warn(toasterConfig);
           }
 
         },
