@@ -19,6 +19,8 @@ var sessionData = {
 	localStorage.setItem('institutionClassId', '<?php echo $institutionClassId;?>');
 	localStorage.setItem('reportCardId', '<?php echo $reportCardId;?>');
 	localStorage.setItem('institutionName', '<?php echo $institutionName;?>');
+	localStorage.setItem('baseUrl', '<?php echo $baseUrl;?>');
+
 </script>
 
 <div>
