@@ -7,6 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use Cake\Event\EventInterface;
 
 class SurveysController extends AppController
 {
@@ -44,7 +45,7 @@ class SurveysController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Survey.SurveyRecipients']);
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         if ($this->getPlugin() == 'Survey') {
             $this->Security->setConfig('validatePost', false);
