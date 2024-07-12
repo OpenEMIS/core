@@ -521,9 +521,13 @@ class RecordBehavior extends Behavior
                                 ]);
                             }
                         }
-
-                        if(array_key_exists('repeaterValues', $settings)){
-                            foreach ($settings['repeaterValues'] as $key => $value) {
+                        if(is_array($settings)){
+                            $settingsArray = $settings;
+                        }else{
+                            $settingsArray = $settings->getArrayCopy();
+                        }
+                        if(isset($settingsArray['repeaterValues'])){
+                            foreach ($settingsArray['repeaterValues'] as $key => $value) {
                                 $surveyEntity = $RepeaterSurveys->newEntity($value);
                                 $all[] = $surveyEntity;
                                 if ($RepeaterSurveys->save($surveyEntity)) {
@@ -887,14 +891,14 @@ class RecordBehavior extends Behavior
                             unset( $url['?'] );
                         }
                         $url['tab_section'] = $tabName;
-                        $moduleUrl = $url; 
+                        $moduleUrl = $url;
                         $moduleUrl['?']['tab_section'] = $tabName;
                         $tabElements[$tabName] = [
                             'url' => $moduleUrl,
                             'text' => $sectionName,
                         ];
 
-                         
+
                     }
                 }
             }
