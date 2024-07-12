@@ -731,8 +731,9 @@ class UsersTable extends ControllerActionTable
         $openemisID = $this->request->getData()['AdvanceSearch']['Users']['tableField']['openemis_no'];
         $username = $this->request->getData()['AdvanceSearch']['Users']['tableField']['username'];
         if ($firstName === "" && $openemisID === "" && $lastName === "" && $username === ""){
-            $this->Alert->error("Please type in the First or Last or User name or Openemis No. Otherwise only users created/modified within 1 month are shown", ['type' => 'string', 'reset' => true]);
-                $currentDate = FrozenTime::now();
+            $this->Alert->error("Please enter either the First Name, Last Name, Username, or OpenEMIS ID. Otherwise, only users created or modified within the last month will be displayed.", ['type' => 'string', 'reset' => true]);
+
+            $currentDate = FrozenTime::now();
                 $pastDate = $currentDate->subDays(31);
 
 // Format the dates to 'Y-m-d'
