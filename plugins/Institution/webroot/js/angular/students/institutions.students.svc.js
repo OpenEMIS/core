@@ -43,13 +43,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         resetExternalVariable: resetExternalVariable,
         getGenders: getGenders,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
-        getAddNewStudentConfig: getAddNewStudentConfig,
-        //start POCOR-6172-HINDOL
-        getMultipleInstitutionsStudentEnrollmentConfig: getMultipleInstitutionsStudentEnrollmentConfig,
-        //end POCOR-6172-HINDOL
-        //start POCOR-7933
-        getMaxFileSizeConfig: getMaxFileSizeConfig,
-        //end POCOR-7933
+        getConfigItemValue: getConfigItemValue,
         getContactTypes: getContactTypes,
         getIdentityTypes: getIdentityTypes,
         getIdentityTypesExternalSave: getIdentityTypesExternalSave,
@@ -166,6 +160,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         let url = angular.baseUrl + '/Directories/directoryInternalSearch';
         $http.post(url, {params: param})
         .then(function(response){
+            // console.log(response);
             deferred.resolve(response);
         }, function(error) {
             deferred.reject(error);
@@ -238,31 +233,76 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
 
     function getAddressAreaId () {
         selectedAddressAreaId = $window.localStorage.getItem('address_area_id');
+        if (selectedAddressAreaId !== null) {  // localStorage returns null if the item is not found
+            try {
         return JSON.parse(selectedAddressAreaId);
+            } catch (e) {
+                console.error('Error parsing JSON from localStorage', e);
+                return null; // or handle the error as needed
+            }
+        } else {
+            // Handle the case where selectedBirthplaceAreaId is not found in localStorage
+            return null; // or any default value you prefer
+        }
+        return null;
     }
 
     function getAddressArea () {
         selectedAddressArea = $window.localStorage.getItem('address_area');
+        if (selectedAddressArea !== null) {  // localStorage returns null if the item is not found
+            try {
         return JSON.parse(selectedAddressArea);
+            } catch (e) {
+                console.error('Error parsing JSON from localStorage', e);
+                return null; // or handle the error as needed
+            }
+        } else {
+            // Handle the case where selectedBirthplaceAreaId is not found in localStorage
+            return null; // or any default value you prefer
+        }
+        return null;
     }
 
     function getBirthplaceAreaId () {
-        selectedBirthplcaeAreaId = $window.localStorage.getItem('birthplace_area_id');
-        return JSON.parse(selectedBirthplcaeAreaId);
+        selectedBirthplaceAreaId = $window.localStorage.getItem('birthplace_area_id');
+        if (selectedBirthplaceAreaId !== null) {  // localStorage returns null if the item is not found
+            try {
+                return JSON.parse(selectedBirthplaceAreaId);
+            } catch (e) {
+                console.error('Error parsing JSON from localStorage', e);
+                return null; // or handle the error as needed
+            }
+        } else {
+            // Handle the case where selectedBirthplaceAreaId is not found in localStorage
+            return null; // or any default value you prefer
+        }
+        return null;
     }
 
     function getBirthplaceArea () {
-        selectedBirthplcaeArea = $window.localStorage.getItem('birthplace_area');
-        return JSON.parse(selectedBirthplcaeArea);
+        selectedBirthplaceArea = $window.localStorage.getItem('birthplace_area');
+        if (selectedBirthplaceArea !== null) {  // localStorage returns null if the item is not found
+            try {
+                return JSON.parse(selectedBirthplaceArea);
+            } catch (e) {
+                console.error('Error parsing JSON from localStorage', e);
+                return null; // or handle the error as needed
+            }
+        } else {
+            // Handle the case where selectedBirthplaceAreaId is not found in localStorage
+            return null; // or any default value you prefer
+        }
+        return null;
     }
 
     function saveStudentDetails(param) {
+        // console.log(param);
         var deferred = $q.defer();
         let url = angular.baseUrl + '/Institutions/saveStudentData';
         $http.post(url, param)
         .then(function(response){
-            console.log('saveStudentDetails');
-            console.log(response);
+            // console.log('saveStudentDetails OK');
+            // console.log(response);
             deferred.resolve(response);
         }, function(error) {
             deferred.reject(error);
@@ -992,7 +1032,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
 
     function getUniqueOpenEmisId() {
         var deferred = $q.defer();
-        let url = angular.baseUrl + '/Institutions/getUniqueOpenemisId/Student';
+        let url = angular.baseUrl + '/Directories/getUniqueOpenemisId';
         $http.get(url)
         .then(function(response){
             deferred.resolve(response.data.openemis_no);
@@ -1004,7 +1044,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
 
     function generatePassword() {
         var deferred = $q.defer();
-        let url = angular.baseUrl + '/Institutions/getAutoGeneratedPassword';
+        let url = angular.baseUrl + '/Directories/getAutoGeneratedPassword';
         $http.get(url)
         .then(function(response){
             deferred.resolve(response.data.password);
@@ -1056,24 +1096,6 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         return deferred.promise;
     }
     //POCOR-7716 end
-    //POCOR-6172-HINDOL[START]
-    function getMultipleInstitutionsStudentEnrollmentConfig() {
-        return ConfigItems
-            .select()
-            .where({code: 'multiple_institutions_student_enrollment'})
-            .ajax({defer: true});
-    }
-    //POCOR-6172-HINDOL[END]
-
-    //POCOR-7716 end
-    //POCOR-7993-HINDOL[START]
-    function getMaxFileSizeConfig() {
-        return ConfigItems
-            .select()
-            .where({code: 'dashboard_img_size_limit'})
-            .ajax({defer: true});
-    }
-    //POCOR-7993-HINDOL[END]
 
     function getContactTypes() {
         var deferred = $q.defer();
@@ -1224,4 +1246,26 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
             });
         return deferred.promise;
     }
+
+    function getConfigItemValue(code) {
+        var success = function(response, deferred) {
+            var results = response.data.data;
+            if (angular.isObject(results) && results.length > 0) {
+                var configItemValue = (results[0].value.length > 0) ? results[0].value : results[0].default_value;
+                deferred.resolve(configItemValue);
+            } else {
+                deferred.reject('There is no ' + code + ' configured');
+            }
+        };
+
+        return ConfigItems
+            .where({
+                code: code
+            })
+            .ajax({
+                success: success,
+                defer: true
+            });
+    }
+
 };

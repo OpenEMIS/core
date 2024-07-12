@@ -49,13 +49,13 @@ h2, h3, h4, h5, h6 {
         margin-bottom: 0px;
     }
 
-    
+
 </style>
 <body>
-    
+
 <ul class="bdcm breadcrumb panel-breadcrumb">
 	<li><a href="/Dashboard"><i class="fa fa-home"></i></a></li>
-	
+
 		<li>
 		<a href="/Institutions/Institutions/index">Institutions</a>	</li>
 		<li>
@@ -71,7 +71,7 @@ h2, h3, h4, h5, h6 {
 
     <div class="page-header">
 		<h2 id="main-header"><?php echo $UserData->first_name.' '.$UserData->last_name ?> - Student Guardians</h2>
-					
+
 			</div>
 
             </body>
@@ -85,7 +85,7 @@ h2, h3, h4, h5, h6 {
     localStorage.setItem('login_user_id', '<?php echo $loginUserId;?>');
     localStorage.setItem('student_id', '<?php echo $studentId;?>');
 </script>
-<div class="pd-10" ng-controller = 'DirectoryaddguardianCtrl'>
+<div class="pd-10" ng-controller = 'DirectoryaddguardianCtrl' ng-init="studentOpenEmisId='<?php echo $UserData->openemis_no; ?>'">
     <div class="alert {{messageClass}}" ng-if="message">
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
     </div>
@@ -187,14 +187,10 @@ h2, h3, h4, h5, h6 {
                         </div>
                     </div>
                     <!-- Always show Identity Number POCOR-7245 -->
-                    <!-- <div ng-class="identity_class" class="input select">
-                        <label><?php //echo __('{{selectedUserData.identity_type_name ? selectedUserData.identity_type_name : "Identity Number"}}') ?></label>
+                    <div ng-class="identity_class" class="input select">
+                        <label><?= __('{{selectedUserData.identity_type_name ? selectedUserData.identity_type_name : "Identity Number"}}') ?></label>
                         <input ng-model="selectedUserData.identity_number" type="string">
                     </div>
-                    <div ng-class="identity_class" ng-show="selectedUserData.identity_type_name" class="input select required">
-                        <label><?php //echo __('{{selectedUserData.identity_type_name ? selectedUserData.identity_type_name : "Identity Number"}}') ?></label>
-                        <input ng-model="selectedUserData.identity_number" type="string">
-                    </div>  -->
                     <div class="row section-header header-space-lg">Search By Basic Information</div>
                     <div class="input string">
                         <label><?= __('OpenEMIS ID') ?></label>
@@ -251,7 +247,7 @@ h2, h3, h4, h5, h6 {
                             <p>{{ error.date_of_birth }}</p>
                         </div>
                     </div>
-                   
+
                 </form>
             </div>
             <div class="step-pane sample-pane" ng-if="step === 'internal_search'">
@@ -292,10 +288,10 @@ h2, h3, h4, h5, h6 {
                                 * Format Supported: .jpg, .jpeg, .png, .gif</p>
                                 <span class="btn btn-default btn-file" style="font-size: 12px !important;">
                                     <span class="fileinput-new">
-                                        <i class="fa fa-folder"></i> 
+                                        <i class="fa fa-folder"></i>
                                         <span style="font-size: 12px;">Select File</span>
                                     </span>
-                                    <input id="image-file" class="file-input" type="file" onchange="savePhoto(this)" >    
+                                    <input id="image-file" class="file-input" type="file" onchange="savePhoto(this)" >
                                 </span>
                             </div>
                         </div>
@@ -413,7 +409,7 @@ h2, h3, h4, h5, h6 {
                             <p>{{ error.relation_type_id }}</p>
                         </div>
                     </div>
-                    <div class="input password required">
+                    <div class="input password" ng-show="!disableFields.password">
                         <label><?=
                             __('Password') . '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $tooltipMessage . '"></i>'
                         ?></label>
@@ -501,7 +497,7 @@ h2, h3, h4, h5, h6 {
                                                                     <td class="vertical-align-top">{{selectedUserData.nationality_name}}</td>
                                                                     <td class="vertical-align-top">No</td>
                                                                 </tr>
-                                                            </tbody>				
+                                                            </tbody>
                                                         </table>
                                                     </div>
                                                 </div>
@@ -599,11 +595,11 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
         font-size: 16px !important;
     }
     .input-hidden{
-        opacity: 0; 
-        position: absolute; 
-        width: 100% !important; 
+        opacity: 0;
+        position: absolute;
+        width: 100% !important;
         height: 100% !important;
-        left: 0; 
+        left: 0;
         top: 0;
     }
     .row-content{
@@ -643,7 +639,7 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
         border-bottom: none;
     }
     /* steps */
-    
+
     .stepper-content-wrapper > ul.steps li,
     .stepper-content-wrapper > .steps-container > ul.steps li {
         float: left;
@@ -837,7 +833,7 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
     }
     @media (min-width: 800px) {
         .row-content{
-            display: flex; 
+            display: flex;
             align-items: flex-start;
         }
     }
@@ -989,7 +985,7 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
         height: 40px !important;
         padding-left: 0px !important;
     }
-    
+
     .alert {
         color: #FFF !important;
         padding: 10px !important;

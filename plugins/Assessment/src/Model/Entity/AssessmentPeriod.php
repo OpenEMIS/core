@@ -3,7 +3,7 @@ namespace Assessment\Model\Entity;
 
 use DateTimeInterface;
 
-use Cake\I18n\Date;
+use Cake\I18n\FrozenDate;
 use Cake\ORM\Entity;
 use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
@@ -14,7 +14,7 @@ class AssessmentPeriod extends Entity
 
     protected function _getEditable()
     {
-        $today = new Date();
+        $today = new FrozenDate();
         $dateEnabled = $this->getOriginal('date_enabled');
         $dateDisabled = $this->getOriginal('date_disabled');
 

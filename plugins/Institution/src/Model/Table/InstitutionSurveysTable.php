@@ -7,7 +7,6 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\Log\Log;
 use Cake\Http\ServerRequest;
 use Cake\Datasource\ResultSetInterface;
@@ -35,9 +34,7 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
-
         parent::initialize($config);
-
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
@@ -46,22 +43,22 @@ class InstitutionSurveysTable extends ControllerActionTable
         $this->addBehavior('Survey.Survey', [
             'module' => $this->module
         ]);
-//        $this->addBehavior('CustomField.Record', [
-//            'tabSection' => true,
-//            'moduleKey' => null,
-//            'fieldKey' => 'survey_question_id',
-//            'tableColumnKey' => 'survey_table_column_id',
-//            'tableRowKey' => 'survey_table_row_id',
-//            'fieldClass' => ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id'],
-//            'formKey' => 'survey_form_id',
-//            // 'filterKey' => 'custom_filter_id',
-//            'formClass' => ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id'],
-//            'formFieldClass' => ['className' => 'Survey.SurveyFormsQuestions'],
-//            // 'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
-//            'recordKey' => 'institution_survey_id',
-////            'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
-//            'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true,]
-//        ]);
+       $this->addBehavior('CustomField.Record', [
+           'tabSection' => true,
+           'moduleKey' => null,
+           'fieldKey' => 'survey_question_id',
+           'tableColumnKey' => 'survey_table_column_id',
+           'tableRowKey' => 'survey_table_row_id',
+           'fieldClass' => ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id'],
+           'formKey' => 'survey_form_id',
+           // 'filterKey' => 'custom_filter_id',
+           'formClass' => ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id'],
+           'formFieldClass' => ['className' => 'Survey.SurveyFormsQuestions'],
+            'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
+           'recordKey' => 'institution_survey_id',
+           'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
+           'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true,]
+       ]);
         $this->addBehavior('Excel', ['pages' => ['view']]);
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Import.ImportLink');
@@ -156,6 +153,7 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
+
         $tabSection = null;
         $newData = [];
         $conditions = [];
@@ -222,6 +220,8 @@ class InstitutionSurveysTable extends ControllerActionTable
 			$helpBtn['attr']['title'] = __('Help');
 			$extra['toolbarButtons']['help'] = $helpBtn;
 		}
+
+
 		// End POCOR-5188
 	}
 
@@ -749,12 +749,15 @@ class InstitutionSurveysTable extends ControllerActionTable
         $institutionSurvey = $this->get($institutionSurveyId);
         $SurveyStatusData = $SurveyStatusTable->find('all',['conditions'=>['survey_form_id'=>$institutionSurvey->survey_form_id,'date_disabled >' => date('Y-m-d')]])->order(['date_disabled'=>'DESC'])->first();//POCOR-7343
         $SurveyStatusPeriodData = $SurveyStatusPeriodTable->find('all',['conditions'=>['survey_status_id'=>$SurveyStatusData->id]])->toArray();
-        $SurveyStatusPeriodDataIds=[];
+        $SurveyStatusPeriodDataIds='';
+        $totalSurveyStatusPeriodData = count($SurveyStatusPeriodData);
         foreach($SurveyStatusPeriodData as $SurveyStatusPeriodData1){
-            $SurveyStatusPeriodDataIds[] .= $SurveyStatusPeriodData1->academic_period_id.",";
+            $SurveyStatusPeriodDataIds .= $SurveyStatusPeriodData1->academic_period_id . ",";
         }
-        //$SurveyStatusPeriodDataIds = rtrim($SurveyStatusPeriodDataIds,',');
-        if(in_array($institutionSurvey->academic_period_id, $SurveyStatusPeriodDataIds)){
+
+        $SurveyStatusPeriodDataIds = rtrim($SurveyStatusPeriodDataIds, ",");
+        $SurveyStatusPeriodDataIdsArray = explode(",", $SurveyStatusPeriodDataIds);
+        if(in_array($institutionSurvey->academic_period_id, $SurveyStatusPeriodDataIdsArray)){
 
         }else{
             unset($extra['toolbarButtons']['edit']);
@@ -770,6 +773,7 @@ class InstitutionSurveysTable extends ControllerActionTable
     }
 
     public function viewAfterAction(Event $event, Entity $entity) {
+
         // to get all the workflow steps for this model
         $workflow = $this->getWorkflow($this->getRegistryAlias(), $entity);
         if (!empty($workflow)) {
@@ -905,7 +909,7 @@ class InstitutionSurveysTable extends ControllerActionTable
     public function buildSurveyRecords($institutionId = null, $surveyFormId = null, $academicPeriodId = null)
     {
         if (is_null($institutionId)) {
-            $session = $this->controller->request->session();
+            $session = $this->controller->request->getSession();
             $institutionId = $this->getInstitutionID();
         }
 
@@ -1002,7 +1006,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                                 $surveyEntity = $this->newEntity($surveyData, ['validate' => false]);
                                 if ($this->save($surveyEntity)) {
                                 } else {
-                                    Log::write('debug', $surveyEntity->errors());
+                                    Log::write('debug', $surveyEntity->getErrors());
                                 }
                             } else {
                                 //POCOR-7622 for removing expire condition
@@ -1152,7 +1156,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                                 $surveyEntity = $this->newEntity($surveyData, ['validate' => false]);
                                 if ($this->save($surveyEntity)) {
                                 } else {
-                                    Log::write('debug', $surveyEntity->errors());
+                                    Log::write('debug', $surveyEntity->getErrors());
                                 }
                             } else {
                                 //POCOR-7622 for removing expire condition
@@ -1189,8 +1193,6 @@ class InstitutionSurveysTable extends ControllerActionTable
         $roleId = $userRole['security_role_id'];
         $workflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
         // $this->copyBuildSurveyRecords($controller);//POCOR-7412
-        $roleId = 2;
-        $userId = 8805;
         if(isset($roleId)){
             $query
             ->select([
@@ -1287,8 +1289,7 @@ class InstitutionSurveysTable extends ControllerActionTable
             return $this->controller->redirect($url);
         }
     }
-    // public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Institutions > Survey > Forms';

@@ -416,7 +416,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                 'class_id' => $entity->institution_class_id,
                 'assessment_id' => $entity->assessment_id,
                 'institution_id' => $entity->institution_id,
-                'academic_period_id' => $entity->academic_period_id
+                'academic_period_id' => $entity->academic_period->id
             ]);
         }
 
