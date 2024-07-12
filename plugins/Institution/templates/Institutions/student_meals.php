@@ -10,14 +10,16 @@ var sessionData = {
 };
 
 // Now you can use sessionData to set session storage values in JavaScript
-	sessionStorage.setItem('username', sessionData.username);
-	sessionStorage.setItem('password', sessionData.password);
     localStorage.removeItem('institution_id');
     localStorage.removeItem('encoded_url');
     localStorage.removeItem('institutionName');
     localStorage.removeItem('institutionIndexUrl');
     localStorage.removeItem('baseUrl');
+    sessionStorage.removeItem('username');
+    sessionStorage.removeItem('password');
 
+	sessionStorage.setItem('username', sessionData.username);
+	sessionStorage.setItem('password', sessionData.password);
 	localStorage.setItem('encoded_url', '<?php echo $meal_url;?>');
     localStorage.setItem('institutionName', '<?php echo $institutionName;?>');
     localStorage.setItem('institution_id', '<?php echo $institution_id;?>');
