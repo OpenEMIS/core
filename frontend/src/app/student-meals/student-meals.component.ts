@@ -498,7 +498,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
   }
 
   loginData() {
-    this.Rest.setSession();
+    // this.Rest.setSession();
     let token = localStorage.getItem("loginToken");
     if (!token) {
       let userName = sessionStorage.getItem('username');
