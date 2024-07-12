@@ -9,6 +9,7 @@ use Cake\Event\Event;
 use Cake\Log\Log;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
+use Cake\Event\EventInterface;
 
 class WorkflowsController extends AppController
 {
@@ -37,7 +38,7 @@ class WorkflowsController extends AppController
     // End
 
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
 
