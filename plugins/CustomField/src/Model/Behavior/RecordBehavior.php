@@ -521,6 +521,7 @@ class RecordBehavior extends Behavior
                                 ]);
                             }
                         }
+                        // POCOR-8436 if settings is an array
                         if(is_array($settings)){
                             $settingsArray = $settings;
                         }else{
