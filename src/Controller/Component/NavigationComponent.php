@@ -4253,7 +4253,7 @@ class NavigationComponent extends Component
         }
     }
 
-    public function checkPermissions(array &$navigations)
+    public function checkPermissionsOne(array &$navigations)
     {
         // $session = $this->request->session();
         // $superAdmin = $session->read('Auth.User.super_admin');
@@ -4302,6 +4302,86 @@ class NavigationComponent extends Component
                 }
                 // POCOR-8436 removed strange option
                 if (isset($url['controller'])) {
+                    if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
+                        unset($navigations[$key]);
+                    }
+                }
+            }
+        }
+
+        // unset empty links in reverse order
+        $linkOnly = array_reverse($linkOnly);
+        foreach ($linkOnly as $link) {
+            if (!array_search($link, $this->array_column($navigations, 'parent'))) {
+                unset($navigations[$link]);
+            }
+        }
+    }
+
+    public function checkPermissions(array &$navigations)
+    {
+        $user_id = $this->getCurrentUserId();
+        $superAdmin = self::isSuperUser($user_id);
+        if ($superAdmin) {
+            return;
+        }
+
+        $roles = [];
+        $restrictedTo = [];
+        $event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', null, $this);
+        if ($event->getResult()) {
+            $roles = $event->getResult('roles');
+            $restrictedTo = $event->getResult('restrictedTo');
+        }
+
+        // Unset the children
+        $linkOnly = [];
+        foreach ($navigations as $key => $value) {
+            $rolesRestrictedTo = $roles;
+
+            if (isset($value['link']) && !$value['link']) {
+                $linkOnly[] = $key;
+            } else {
+                $params = [];
+                if (isset($value['params'])) {
+                    $params = $value['params'];
+                }
+                $url = $this->getLink($key, $params);
+
+                // Ensure $url is an array and has necessary keys
+                if (!is_array($url) || !isset($url['controller'], $url['action'], $url['plugin'])) {
+                    // Log or handle the case where $url is not as expected
+                    // Example: Log error and continue or skip this navigation item
+                    unset($navigations[$key]);
+                    continue;
+                }
+
+                // Check if $restrictedTo is an array
+                if (!is_array($restrictedTo)) {
+                    // Log or handle the case where $restrictedTo is not an array
+                    // Example: Log error and continue or skip this navigation item
+                    unset($navigations[$key]);
+                    continue;
+                }
+
+                // Check if the role is only restricted to a certain page
+                $isRestricted = false;
+                foreach ($restrictedTo as $restrictedURLs) {
+                    if (!is_array($restrictedURLs)) {
+                        // Log or handle the case where $restrictedURLs is not an array
+                        // Example: Log error and continue or skip this navigation item
+                        continue;
+                    }
+
+                    $intersection = array_intersect($restrictedURLs, $url);
+                    if (count($intersection) > 0) {
+                        $isRestricted = true;
+                        break;
+                    }
+                }
+
+                // If roles are restricted, check permissions
+                if ($isRestricted) {
                     if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
                         unset($navigations[$key]);
                     }
