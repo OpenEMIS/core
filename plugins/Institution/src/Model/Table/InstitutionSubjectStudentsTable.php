@@ -180,7 +180,7 @@ class InstitutionSubjectStudentsTable extends AppTable
 
         if (!empty($totalMark)) {
             // update all records of student regardless of institution
-            $modifiedUserId = (isset($event->data()[0]->modified_user_id) && $event->data()[0]->modified_user_id) ? $event->data()[0]->modified_user_id : $event->data()[0]->created_user_id;
+            $modifiedUserId = (isset($event->getData()[0]->modified_user_id) && $event->getData()[0]->modified_user_id) ? $event->getData()[0]->modified_user_id : $event->getData()[0]->created_user_id;
 
             $this->query()
                 ->update()
@@ -965,8 +965,8 @@ class InstitutionSubjectStudentsTable extends AppTable
                 'the_student_code' => $Users->aliasField('openemis_no'),
             ])->formatResults(function ($results) {
                 return $results->map(function ($row) {
-                    // $row['the_student_name'] = $this->getUserName($row);
-                    $row['the_student_name'] = 'Only for testing';
+                    $row['the_student_name'] = $this->getUserName($row);
+                    //$row['the_student_name'] = 'Only for testing';
                     return $row;
                 });
             });
@@ -1006,8 +1006,8 @@ class InstitutionSubjectStudentsTable extends AppTable
     protected function getUserName($row) {
         $name = '';
         $separator = ' ';
-        $keys = $this->getNameKeys();
-        foreach($keys as $k=>$v){
+        //$keys = $this->getNameKeys();
+        /*foreach($keys as $k=>$v){
             if(isset($row->{$k})&&$v){
                 if($k!='last_name'){
                     if($k=='preferred_name'){
@@ -1021,7 +1021,18 @@ class InstitutionSubjectStudentsTable extends AppTable
                     $name .= $row->{$k};
                 }
             }
+        }*/
+        $keys = ['first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name'];
+        foreach ($keys as $key) {
+            if (!empty($row[$key])) {
+                if ($key == 'preferred_name') {
+                    $name .= $separator . '(' . $row[$key] . ')';
+                } else {
+                    $name .= $row[$key] . $separator;
+                }
+            }
         }
+
         return trim(sprintf('%s', $name));
     }
 

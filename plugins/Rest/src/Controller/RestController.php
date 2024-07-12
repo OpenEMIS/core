@@ -11,6 +11,7 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\ExpiredException;
 use Cake\Core\Configure;
 use Cake\Network\Exception\BadRequestException;
+use Cake\Event\EventInterface;
 
 class RestController extends AppController
 {
@@ -46,7 +47,7 @@ class RestController extends AppController
         $this->loadComponent('Cookie');
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
         $this->getEventManager()->off($this->Csrf);

@@ -67,11 +67,14 @@ class StaffCurricularsTable extends ControllerActionTable {
     }
 
     public function beforeAction(Event $event, ArrayObject $extra) {
-        //POCOR-8056
-        $modelAlias = 'StaffCurriculars';
-        $userType = 'StaffUser';
-        $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
-        //POCOR-8056
+        //POCOR-8379 Starts use if condition only
+        if($this->controller->getName() != 'Profiles'){
+            //POCOR-8056
+            $modelAlias = 'StaffCurriculars';
+            $userType = 'StaffUser';
+            $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
+            //POCOR-8056
+        } //POCOR-8379 Ends
         $this->setupTabElements();
     }
 

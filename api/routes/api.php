@@ -74,7 +74,7 @@ Route::group(
         Route::get('institutions/areas', 'InstitutionController@getInstitutionAreas');
         Route::get('institutions/summaries', 'InstitutionController@getSummariesList');
         Route::get('institutions/staff', 'InstitutionController@getStaffList');
-        Route::get('institutions/positions/list', 'InstitutionController@getPositionsList');
+        Route::get('institutions/positions', 'InstitutionController@getPositionsList');
         Route::get('institutions/room-type-summaries', 'InstitutionController@roomTypeSummaries');
         Route::get('institutions/grades/summaries', 'InstitutionController@getGradeSummariesList');
         Route::get('institutions/{id}/grades/summaries', 'InstitutionController@getInstitutionGradeSummariesList');
@@ -330,7 +330,7 @@ Route::group(
         Route::get('administration/training/applications', 'WorkbenchController@getTrainingApplications');
         Route::get('administration/scholarships/applications', 'WorkbenchController@getScholarshipApplications');
         Route::get('institutions/cases', 'WorkbenchController@getInstitutionCases');
-        Route::get('institutions/positions', 'WorkbenchController@getInstitutionPositions');
+        //Route::get('institutions/positions', 'WorkbenchController@getInstitutionPositions');
         Route::get('minidashboard', 'WorkbenchController@getMinidashboardData');
         //POCOR-7754 ends
 
@@ -485,12 +485,18 @@ Route::group(
         Route::post('/institutions/students/meals/import', 'MealController@getStudentMealImport');
         Route::get('/institutions/students/meals/export', 'MealController@getStudentMealExport');
         Route::get('/institutions/students/meals/import/template', 'MealController@getStudentMealImportTemplate');
-        //POCOR-8438 end...
+        //POCOR-8348 end...
         
         //POCOR-8292 start...
         Route::get('/assessments/{assessment_id}/periods', 'AssessmentController@getAssessmentViaAcademicTerm');
         //POCOR-8292 end...
 
-        
+
+        //POCOR-8363 start...
+        Route::get('/institutions/students/attendances/export', 'AttendanceController@getStudentAttendancesExport');
+        Route::get('/institutions/students/attendances/import/template', 'AttendanceController@getStudentAttendancesImportTemplate');
+        Route::post('/institutions/students/attendances/import', 'AttendanceController@studentAttendancesImport');
+        Route::get('/institutions/students/attendances/no-scheduled-class', 'AttendanceController@studentAttendancesNoScheduledClass');
+        //POCOR-8363 end...
     }
 );

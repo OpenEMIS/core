@@ -1,3 +1,53 @@
+### [4.0.9] - 2024-07-11
+- Implemented: Develop changes to API for attendance import template
+- Bug Fixed: Login : When logged in as Arabic, system switches back to English after navigating to another page
+- Bug Fixed: Institutions>Surveys>Forms: Repeater Form and Staff List are not showing correctly
+- Bug Fixed: Administration>Survey>Forms: User is unable to view, edit and delete and save
+- Bug Fixed: PHP 8.0: Pages cannot load
+- Bug Fixed: PHP 8.0: Pages cannot load Part two
+
+### [4.0.8] - 2024-07-10
+- Bug Fixed: Institutions > Staff > Career > Leave: When applying for leave for staff for the previous academic period, the page got refreshed upon selecting the assignee
+- Bug Fixed: Administration > Surveys > Forms > Filters/Recipient: When giving permission for user to view Survey Filters and Recipients, the user is not able to see it in their account
+- Bug Fixed: Administration>Security>Roles>Permissions: It does not show security role name and cannot save
+- Bug Fixed: Personal>Student>Academic(Automation): Showing blank page for all tabs
+- Bug Fixed: Institutions>Surveys>Forms: Student list is not showing correctly
+- Bug Fixed: 404 error page is displayed but system errors is not updated
+
+### [4.0.7] - 2024-07-09
+- Implemented: Develop APIs for student attendance import, export, no scheduled and class
+- Bug Fixed: Administration > System Setup > Custom Fields > Institution/Student/Staff/Infrastructure: The phrase is "Should not be lesser than"
+- Bug Fixed: Administration > Profiles > Students: PDF Template not formatted correctly
+- Bug Fixed: Personal>Staff>Career>Institution Curricular(Automation): User is getting blank page
+- Bug Fixed: Institutions>Students>Academic>Programmes(Automation): It should show Student Name - Tab Name
+- Bug Fixed: Administration > Surveys > Forms : Sections are not appearing in Question tab when viewed
+
+### [4.0.6] - 2024-07-08
+- Implemented: Develop changes to API for meals import template
+- Bug Fixed: Institutions>Students>List>Overview: Custom fields are not showing
+- Bug Fixed: Institutions>Academic>Subjects: Added subjects not showing unassigned students and export is not showing correctly
+- Bug Fixed: 404 error page not displayed and debug not working
+
+### [4.0.5] - 2024-07-08
+- Bug Fixed: Institutions > Performance > Report Cards > Merge and Download PDF: When merging and downloading PDF for students report card, the page gives a 404 error.
+- Bug Fixed: Institutions>Staff>Career>Attendance(Automation): User is getting blank page Part 3
+- Bug Fixed: Administrations > Surveys > Forms > Filters/Status : Feature returns blank page
+- Bug Fixed: Institutions > Surveys > Forms : Questions configured in Survey Forms are not showing
+
+### [4.0.4] - 2024-07-05
+- Bug Fixed: Institutions>Students>Add(Automation): Unable to add students by OpenEMIS or Identity Number
+- Bug Fixed: Institutions>Students>Guardian>Add: Relation type is empty
+- Bug Fixed: Institutions>Performance>Assessment>View: Edit button is missing
+- Bug Fixed: Administration>Security>Roles>Permissions: User is unable to see permission page
+- Bug Fixed: Institutions>Staff>List>Edit(Automation): When saving, user is getting blank page
+- Bug Fixed: API : Institution Positions endpoint are missing required data
+- Bug Fixed: Institution>Utilities>Telephone(Automation): User is getting blank page
+- Bug Fixed: Administrations > System Setup > System Configurations > System : Changes in System
+- Bug Fixed: API: Apis are not working properly
+- Bug Fixed: Personal>Staff>Career>Appraisals: Showing blank page
+- Bug Fixed: Institutions>Staff(Automation): User is getting blank page Part 2
+- Bug Fixed: Administrations > System Setup > System Configurations > Themes : Login Page is not updated with the configured settings for themes.
+
 ### [4.0.3] - 2024-07-02
 - Implemented: Develop changes to all existing v4 APIs to include Swagger annotations in API file headers
 - Implemented: Develop changes to all existing v4 APIs for parameter and response behaviour

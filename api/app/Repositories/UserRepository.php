@@ -76,7 +76,7 @@ class UserRepository extends Controller
         try {
             $params = $request->all();
 
-            $users = SecurityUsers::with('identityType', 'nationalities', 'identities');
+            $users = SecurityUsers::with('identityType', 'nationalities', 'identities', 'institutionStaff', 'institutionStaff.staffPositionGrade');
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
@@ -117,7 +117,9 @@ class UserRepository extends Controller
                     'institutionStudent.studentStatus',
                     'identities',
                     'nationality',
-                    'identityType'
+                    'identityType',
+                    'institutionStaff',
+                    'institutionStaff.staffPositionGrade'
                 )
                     ->where('id', $userId)
                     ->get();
