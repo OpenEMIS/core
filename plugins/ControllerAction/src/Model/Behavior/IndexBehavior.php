@@ -36,7 +36,7 @@ class IndexBehavior extends Behavior
     }
 
     public function index(Event $mainEvent, ArrayObject $extra)
-    {     
+    {
         //$serverRequest = $this->controller->request->getSession();
         $model = $this->_table;
         $extra['pagination'] = true;
@@ -57,9 +57,9 @@ class IndexBehavior extends Behavior
                             ->where([
                               $ConfigItemOptionsTable->aliasField('option_type') => 'list_page'
                                    ]);
-        $optionslist = array(); 
+        $optionslist = array();
         foreach ($ConfigItemoption->toArray() as $value) {
-        $optionslist[] =  $value['listpage']; 
+        $optionslist[] =  $value['listpage'];
         }
         $extra['config']['pageOptions'] = $optionslist;
         //ENDS: POCOR-5301 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
@@ -83,7 +83,7 @@ class IndexBehavior extends Behavior
         foreach ($ConfigItem->toArray() as $defaultval) {
                      $defaultvals = $defaultval['listvalue'];
         }
-        $defaults = 5;
+        $defaults = 0; // POCOR-8446
         if($defaultvals == 10){
             $defaults = 0;
         }elseif($defaultvals == 20){
@@ -93,12 +93,12 @@ class IndexBehavior extends Behavior
         }elseif($defaultvals == 40){
             $defaults = 3;
         }elseif($defaultvals == 50){
-            $defaults = 4; 
+            $defaults = 4;
         }elseif($defaultvals == 100){
-            $defaults = 5;        
+            $defaults = 5;
         }elseif($defaultvals == 200){
-            $defaults = 6;       
-        }  
+            $defaults = 6;
+        }
         if ($extra['pagination']) {
             $alias = $model->getRegistryAlias();
             $session = $model->request->getSession();
@@ -120,7 +120,7 @@ class IndexBehavior extends Behavior
               //  $request->data['Search']['limit'] = $limit;
             }
 
-            
+
             $extra['options']['limit'] = $pageOptions[$limit];
             $request->getData('Search')['limit'] = $limit;
         }
