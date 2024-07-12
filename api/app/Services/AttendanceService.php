@@ -344,6 +344,38 @@ class AttendanceService extends Controller
             return $this->sendErrorResponse('Failed to get archive academic periods.');
         }
     }
+
+
+    public function getStudentAttendanceMarkedRecordArchiveList($params, $institutionId, $gradeId, $classId)
+    {
+        try {
+            $data = $this->attendanceRepository->getStudentAttendanceMarkedRecordArchiveList($params, $institutionId, $gradeId, $classId);
+            
+            $resp = [];
+
+            if(count($data['data']) > 0){
+                foreach ($data['data'] as $k => $d) {
+                    $resp[$k]['institution_id'] = $d['institution_id'];
+                    $resp[$k]['academic_period_id'] = $d['academic_period_id'];
+                    $resp[$k]['institution_class_id'] = $d['institution_class_id'];
+                    $resp[$k]['education_grade_id'] = $d['education_grade_id'];
+                    $resp[$k]['date'] = date('F d, Y', strtotime($d['date']));
+                    $resp[$k]['period'] = $d['period'];
+                    $resp[$k]['subject_id'] = $d['subject_id'];
+                    $resp[$k]['no_scheduled_class'] = $d['no_scheduled_class'];
+                }
+            }
+
+            $data['data'] = $resp;
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get student attendance marked archive.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to get student attendance marked archive.');
+        }
+    }
     //For POCOR-8397 Ends...
 
 }

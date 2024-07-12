@@ -2769,15 +2769,72 @@ class AttendanceRepository extends Controller
                 $academicPeriodWithArchiveArrayId = $academicPeriodWithArchiveArray;
             }
 
-            $academicPeriods = AcademicPeriod::where('current', '!=', 1)->whereIn('id', $academicPeriodWithArchiveArrayId)->get()->toArray();
+            $academicPeriods = AcademicPeriod::where('current', '!=', 1)->whereIn('id', $academicPeriodWithArchiveArrayId);
 
-            return $academicPeriods;
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $academicPeriods = $academicPeriods->orderBy($col, $orderBy);
+            }
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $academicPeriods->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $academicPeriods->get()->toArray();
+            }
+
+            return $list;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to get archive academic periods.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
             return $this->sendErrorResponse('Failed to get archive academic periods.');
+        }
+    }
+
+
+    public function getStudentAttendanceMarkedRecordArchiveList($params, $institutionId, $gradeId, $classId)
+    {
+        try {
+            $institutionId = $institutionId;
+            $academicPeriodId = $params['academic_period_id'];
+            $day = $params['day_id'];
+            $period = $params['attendance_period_id'];
+            $subjectId = $params['subject_id'];
+
+            $archives = StudentAttendanceMarkedRecordsArchived::where([
+                'institution_id' => $institutionId,
+                'academic_period_id' => $academicPeriodId,
+                'institution_class_id' => $classId,
+                //'education_grade_id' => $gradeId,
+                'date' => $day,
+                'period' => $period,
+                'subject_id' => $subjectId,
+            ]);
+
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $archives = $archives->orderBy($col, $orderBy);
+            }
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $archives->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $archives->get()->toArray();
+            }
+
+            return $list;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get student attendance marked archive.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to get student attendance marked archive.');
         }
     }
     //For POCOR-8397 Ends...

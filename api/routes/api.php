@@ -502,6 +502,7 @@ Route::group(
 
         //POCOR-8397 start...
         Route::get('/academic-period/archive', 'AttendanceController@getArchiveAcademicPeriods');
+        Route::get('/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-marked/archive', 'AttendanceController@getStudentAttendanceMarkedRecordArchiveList');
         //POCOR-8397 end...
     }
 );

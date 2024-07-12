@@ -1311,5 +1311,28 @@ class AttendanceController extends Controller
             return $this->sendErrorResponse('Failed to get archive academic periods.');
         }
     }
+
+
+
+    public function getStudentAttendanceMarkedRecordArchiveList(StudentAttendanceMarkedRecordListRequest $request, $institutionId, $gradeId, $classId)
+    {
+        try {
+            $params = $request->all();
+
+            $data = $this->attendanceService->getStudentAttendanceMarkedRecordArchiveList($params, $institutionId, $gradeId, $classId);
+            
+            if(!empty($data)){
+                return $this->sendSuccessResponse("Student Attendance Marked Archive List Found.", $data);
+            } else {
+                return $this->sendErrorResponse("Student Attendance Marked Archive List Not Found.");
+            }
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get student attendance marked archive.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to get student attendance marked archive.');
+        }
+    }
     //For POCOR-8397 Ends...
 }
