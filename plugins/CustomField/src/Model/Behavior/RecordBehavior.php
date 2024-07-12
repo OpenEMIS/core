@@ -490,7 +490,7 @@ class RecordBehavior extends Behavior
                                     ])
                                     ->toArray();
                             }
-                            if (!empty($surveyIds) && array_key_exists('repeaterValues', $settings)) {
+                            if (!empty($surveyIds) && array_key_exists('repeaterValues', $settings instanceof \ArrayObject ? $settings->getArrayCopy() : $settings)) {
                                 // always deleted all existing answers before re-insert
                                 $RepeaterSurveyAnswers->deleteAll([
                                     $RepeaterSurveyAnswers->aliasField('institution_repeater_survey_id IN ') => $surveyIds
@@ -521,14 +521,9 @@ class RecordBehavior extends Behavior
                                 ]);
                             }
                         }
-                        // POCOR-8436 if settings is an array
-                        if(is_array($settings)){
-                            $settingsArray = $settings;
-                        }else{
-                            $settingsArray = $settings->getArrayCopy();
-                        }
-                        if(isset($settingsArray['repeaterValues'])){
-                            foreach ($settingsArray['repeaterValues'] as $key => $value) {
+
+                        if(array_key_exists('repeaterValues', $settings instanceof \ArrayObject ? $settings->getArrayCopy() : $settings)){
+                            foreach ($settings['repeaterValues'] as $key => $value) {
                                 $surveyEntity = $RepeaterSurveys->newEntity($value);
                                 $all[] = $surveyEntity;
                                 if ($RepeaterSurveys->save($surveyEntity)) {
@@ -558,7 +553,7 @@ class RecordBehavior extends Behavior
                 } else {
                     $indexedErrors = [];
                     $fields = ['text_value', 'number_value', 'decimal_value', 'textarea_value', 'date_value', 'time_value', 'file'];
-                    if (array_key_exists('custom_field_values', $errors)) {
+                    if (array_key_exists('custom_field_values', $errors instanceof \ArrayObject ? $errors->getArrayCopy() : $errors)) {
                         if ($entity->has('custom_field_values')) {
                             foreach ($entity->custom_field_values as $key => $obj) {
                                 $fieldId = $obj->{$this->getConfig('fieldKey')};
@@ -576,7 +571,7 @@ class RecordBehavior extends Behavior
                     $indexedErrors = $indexedErrors + $fileErrors;
 
                     if (!empty($indexedErrors)) {
-                        if (array_key_exists($model->getAlias(), $data)) {
+                        if (array_key_exists($model->getAlias(), $data instanceof \ArrayObject ? $data->getArrayCopy() : $data)) {
                             if (array_key_exists('custom_field_values', $data[$model->getAlias()])) {
                                 foreach ($data[$model->getAlias()]['custom_field_values'] as $key => $obj) {
                                     $fieldId = $obj[$this->getConfig('fieldKey')];
@@ -892,14 +887,14 @@ class RecordBehavior extends Behavior
                             unset( $url['?'] );
                         }
                         $url['tab_section'] = $tabName;
-                        $moduleUrl = $url;
+                        $moduleUrl = $url; 
                         $moduleUrl['?']['tab_section'] = $tabName;
                         $tabElements[$tabName] = [
                             'url' => $moduleUrl,
                             'text' => $sectionName,
                         ];
 
-
+                         
                     }
                 }
             }
