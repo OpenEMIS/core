@@ -4291,14 +4291,17 @@ class NavigationComponent extends Component
 
                 // Check if the role is only restricted to a certain page
                 foreach ($restrictedTo as $restrictedURL) {
+                    if(!$restrictedURL){
+                        $restrictedURL = [];
+                    }
                     if (count(array_intersect($restrictedURL, $url)) > 0) {
                         break;
                     } else {
                         $rolesRestrictedTo = [];
                     }
                 }
-                // $ignoredAction will be excluded from permission checking
-                if (array_key_exists('controller', $url) && !in_array($url['plugin'])) {
+                // POCOR-8436 removed strange option
+                if (isset($url['controller'])) {
                     if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
                         unset($navigations[$key]);
                     }
