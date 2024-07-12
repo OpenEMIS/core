@@ -48,6 +48,7 @@ class SurveyFormsTable extends CustomFormsTable
         ];
         parent::initialize($config);
         $this->hasMany('SurveyStatuses', ['className' => 'Survey.SurveyStatuses', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('SurveyFilters', ['className' => 'Survey.SurveyFilters', 'dependent' => true, 'cascadeCallbacks' => true]);
         // The hasMany association for InstitutionSurveys and StudentSurveys is done in onBeforeDelete() and is added based on module to avoid conflict.
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Rules' => ['index'],
@@ -280,20 +281,34 @@ class SurveyFormsTable extends CustomFormsTable
 
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $customModule = $this->CustomModules
-            ->find()
-            ->where([
-                $this->CustomModules->aliasField('id') => $entity->custom_module_id
-            ])
-            ->first();
+        $extra['excludedModels'] = [
+            $this->CustomFields->getAlias()
+        ];
+        $associations = $this->getAssociatedRecords($this, $entity, $extra);
+        $totalCount = 0;
+        foreach ($associations as $row) {
+            $totalCount += $row['count'];
+        }
+        if ($totalCount > 0) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        } else {
+            $customModule = $this->CustomModules
+                ->find()
+                ->where([
+                    $this->CustomModules->aliasField('id') => $entity->custom_module_id
+                ])
+                ->first();
 
-        $model = $customModule->model;
-        if ($model == 'Institution.Institutions') {
-            $this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
-        } elseif ($model == 'Student.Students') {
-            $this->hasMany('StudentSurveys', ['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
-        } elseif ($model == 'Staff.Staff') {
-            $this->hasMany('StaffSurveys', ['className' => 'Staff.StaffSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+            $model = $customModule->model;
+            if ($model == 'Institution.Institutions') {
+                $this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+            } elseif ($model == 'Student.Students') {
+                $this->hasMany('StudentSurveys', ['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+            } elseif ($model == 'Staff.Staff') {
+                $this->hasMany('StaffSurveys', ['className' => 'Staff.StaffSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+            }
         }
     }
 
