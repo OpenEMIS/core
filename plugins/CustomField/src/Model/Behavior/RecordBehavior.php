@@ -186,11 +186,11 @@ class RecordBehavior extends Behavior
         $model = $this->_table;
         $alias = $model->getAlias();
 
-        if (array_key_exists($alias, $data instanceof \ArrayObject ? $data->getArrayCopy() : $data)) {
+        if (isset($data[$alias])) {
             $CustomFields = TableRegistry::get($this->getConfig('fieldClass.className'));
 
             // patch custom_field_values
-            if (array_key_exists('custom_field_values', $data[$alias])) {
+            if (isset($data[$alias]['custom_field_values'])) {
                 $values = $data[$alias]['custom_field_values'];
                 $fieldValues = $model->array_column($values, $this->getConfig('fieldKey'));
                 $fieldResults = $CustomFields->find()
@@ -204,7 +204,7 @@ class RecordBehavior extends Behavior
 
                 foreach ($values as $key => $attr) {
                     $fieldId = $attr[$this->getConfig('fieldKey')];
-                    $thisField = array_key_exists($fieldId, $fields) ? $fields[$fieldId] : null;
+                    $thisField = $fields[$fieldId] ?? null;
                     if (!is_null($thisField)) {
                         $data[$alias]['custom_field_values'][$key]['field_type'] = $thisField->field_type;
                         $data[$alias]['custom_field_values'][$key]['mandatory'] = $thisField->is_mandatory;
@@ -233,7 +233,7 @@ class RecordBehavior extends Behavior
             // patch custom_table_cells
             $tableCells = [];
             $deleteTableCells = [];
-            if (array_key_exists('custom_table_cells', $data[$alias])) {
+            if (isset($data[$alias]['custom_table_cells'])) {
                 $cells = $data[$alias]['custom_table_cells'];
                 $fieldValues = array_keys($cells);
 
@@ -259,7 +259,7 @@ class RecordBehavior extends Behavior
                     'deleteTableCells' => []
                 ]);
                 foreach ($cells as $fieldId => $rows) {
-                    $thisField = array_key_exists($fieldId, $fields) ? $fields[$fieldId] : null;
+                    $thisField = $fields[$fieldId] ?? null;
                     if (!is_null($thisField)) {
                         $settings['customValue']['customField'] = $thisField;
                         $settings['customValue']['cellValues'] = $rows;
@@ -347,6 +347,7 @@ class RecordBehavior extends Behavior
                     $fileErrors = $session->read($sessionErrors);
                 }
 
+                $alias = $model->getAlias();
                 if (empty($errors) && empty($fileErrors)) {
                     $settings = new ArrayObject([
                         'recordKey' => $this->getConfig('recordKey'),
@@ -357,13 +358,13 @@ class RecordBehavior extends Behavior
                         'valueKey' => null,
                         'customValue' => null,
                         'fieldValues' => [],
-                        'tableCells' => $data[$model->getAlias()]['custom_table_cells'],
+                        'tableCells' => $data[$alias]['custom_table_cells'],
                         'deleteFieldIds' => []
                     ]);
 
-                    if (array_key_exists($model->getAlias(), $data instanceof \ArrayObject ? $data->getArrayCopy() : $data)) {
-                        if (array_key_exists('custom_field_values', $data[$model->getAlias()])) {
-                            $values = $data[$model->getAlias()]['custom_field_values'];
+                    if (isset($data[$alias])) {
+                        if (isset($data[$alias]['custom_field_values'])) {
+                            $values = $data[$alias]['custom_field_values'];
                             foreach ($values as $key => $obj) {
                                 $fieldType = Inflector::camelize(strtolower($obj['field_type']));
                                 $settings['customValue'] = $obj;
@@ -378,8 +379,8 @@ class RecordBehavior extends Behavior
 
                     //calling processRepeaterValues() in RenderRepeaterBehavior
                     if ($this->_table->hasBehavior('RenderRepeater')) {
-                        if (array_key_exists($model->getAlias(), $data instanceof \ArrayObject ? $data->getArrayCopy() : $data)) {
-                            if (array_key_exists('institution_repeater_surveys', $data[$model->getAlias()])) {
+                        if (isset($data[$alias])) {
+                            if (isset($data[$alias]['institution_repeater_surveys'])) {
                                 $event = $model->dispatchEvent('Render.processRepeaterValues', [$entity, $data, $settings], $model);
                                 if ($event->isStopped()) {
                                     return $event->getResult();
@@ -387,13 +388,13 @@ class RecordBehavior extends Behavior
                             }
                         }
                     }
-                    $data[$model->getAlias()]['custom_field_values'] = $settings['fieldValues'];
+                    $data[$alias]['custom_field_values'] = $settings['fieldValues'];
 
                     $conn = ConnectionManager::get('default');
                     $conn->begin();
 
                     // POCOR-4799 Modified to only delete all dependent answers only if the selected value is not the show_options value in SurveyRules.
-                    if ($model->getAlias() == 'InstitutionSurveys') {
+                    if ($alias == 'InstitutionSurveys') {
                         $entityCustomFieldValues = [];
                         foreach ($entity->custom_field_values as $key => $value) {
                             $entityCustomFieldValues[$value['survey_question_id']] = $value;
@@ -414,13 +415,13 @@ class RecordBehavior extends Behavior
                                         $ruleShowOptions = json_decode($rule->show_options);
                                         if (isset($entityCustomFieldValues[$rule->dependent_question_id]) && !in_array($entityCustomFieldValues[$rule->dependent_question_id]['number_value'], $ruleShowOptions)) {
                                             $settings['deleteFieldIds'][] = $rule->survey_question_id;
-                                            foreach ($data[$model->getAlias()]['custom_field_values'] as $key => $value) {
+                                            foreach ($data[$alias]['custom_field_values'] as $key => $value) {
                                                 if ($value['survey_question_id'] == $rule->survey_question_id) {
-                                                    unset($data[$model->getAlias()]['custom_field_values'][$key]);
+                                                    unset($data[$alias]['custom_field_values'][$key]);
                                                 }
                                             }
                                         }
-                                        $data[$model->getAlias()]['custom_field_values'] = array_values($data[$model->getAlias()]['custom_field_values']);
+                                        $data[$alias]['custom_field_values'] = array_values($data[$alias]['custom_field_values']);
                                     }
                                 }
                             }
@@ -473,7 +474,7 @@ class RecordBehavior extends Behavior
 
                             $originalRepeaterIds = [];
                             if ($entity->has('institution_repeaters')) {
-                                if (array_key_exists($fieldId, $entity->institution_repeaters)) {
+                                if (isset($entity->institution_repeaters[$fieldId])) {
                                     $originalRepeaterIds = array_values($entity->institution_repeaters[$fieldId]);
                                 }
                             }
@@ -490,7 +491,7 @@ class RecordBehavior extends Behavior
                                     ])
                                     ->toArray();
                             }
-                            if (!empty($surveyIds) && array_key_exists('repeaterValues', $settings)) {
+                            if (!empty($surveyIds) && isset($settings['repeaterValues'])) {
                                 // always deleted all existing answers before re-insert
                                 $RepeaterSurveyAnswers->deleteAll([
                                     $RepeaterSurveyAnswers->aliasField('institution_repeater_survey_id IN ') => $surveyIds
@@ -521,14 +522,19 @@ class RecordBehavior extends Behavior
                                 ]);
                             }
                         }
-
-                        if(array_key_exists('repeaterValues', $settings)){
-                            foreach ($settings['repeaterValues'] as $key => $value) {
+                        // POCOR-8436 if settings is an array
+                        if(is_array($settings)){
+                            $settingsArray = $settings;
+                        }else{
+                            $settingsArray = $settings->getArrayCopy();
+                        }
+                        if(isset($settingsArray['repeaterValues'])){
+                            foreach ($settingsArray['repeaterValues'] as $key => $value) {
                                 $surveyEntity = $RepeaterSurveys->newEntity($value);
                                 $all[] = $surveyEntity;
                                 if ($RepeaterSurveys->save($surveyEntity)) {
                                 } else {
-                                    Log::write('debug', print_r($surveyEntity->getErrors()));
+                                    Log::write('debug', print_r($surveyEntity->getErrors(), true));
                                     $repeaterErrors = true;
                                     $repeaterSuccess = false;
                                 }
@@ -553,12 +559,12 @@ class RecordBehavior extends Behavior
                 } else {
                     $indexedErrors = [];
                     $fields = ['text_value', 'number_value', 'decimal_value', 'textarea_value', 'date_value', 'time_value', 'file'];
-                    if (array_key_exists('custom_field_values', $errors)) {
+                    if (isset($errors['custom_field_values'])) {
                         if ($entity->has('custom_field_values')) {
                             foreach ($entity->custom_field_values as $key => $obj) {
                                 $fieldId = $obj->{$this->getConfig('fieldKey')};
 
-                                if (array_key_exists($key, $errors['custom_field_values'])) {
+                                if (isset($errors['custom_field_values'][$key])) {
                                     $indexedErrors[$fieldId] = $errors['custom_field_values'][$key];
                                     foreach ($fields as $field) {
                                         $entity->custom_field_values[$key]->getDirty($field, true);
@@ -571,14 +577,14 @@ class RecordBehavior extends Behavior
                     $indexedErrors = $indexedErrors + $fileErrors;
 
                     if (!empty($indexedErrors)) {
-                        if (array_key_exists($model->getAlias(), $data)) {
-                            if (array_key_exists('custom_field_values', $data[$model->getAlias()])) {
-                                foreach ($data[$model->getAlias()]['custom_field_values'] as $key => $obj) {
+                        if (isset($data[$alias])) {
+                            if (isset($data[$alias]['custom_field_values'])) {
+                                foreach ($data[$alias]['custom_field_values'] as $key => $obj) {
                                     $fieldId = $obj[$this->getConfig('fieldKey')];
 
-                                    if (array_key_exists($fieldId, $indexedErrors)) {
+                                    if (isset($indexedErrors[$fieldId])) {
                                         foreach ($fields as $field) {
-                                            if (array_key_exists($field, $indexedErrors[$fieldId])) {
+                                            if (isset($indexedErrors[$fieldId][$field])) {
                                                 $error = $indexedErrors[$fieldId][$field];
                                                 $entity->custom_field_values[$key]->getErrors($field, $error, true);
                                             }
@@ -630,8 +636,8 @@ class RecordBehavior extends Behavior
     public function getCustomFieldQuery($entity, $params = [])
     {
         $query = null;
-        $withContain = array_key_exists('withContain', $params instanceof \ArrayObject ? $params->getArrayCopy() : $params) ? $params['withContain'] : true;
-        $generalOnly = array_key_exists('generalOnly', $params instanceof \ArrayObject ? $params->getArrayCopy() : $params) ? $params['generalOnly'] : false;
+        $withContain = $params['withContain'] ?? true;
+        $generalOnly = $params['generalOnly'] ?? false;
         // For Institution Survey
         if (is_null($this->getConfig('moduleKey'))) {
             if ($entity->has($this->getConfig('formKey'))) {
@@ -772,7 +778,7 @@ class RecordBehavior extends Behavior
 
                     if ($customField->field_type == 'CHECKBOX') {
                         $checkboxValues = [$obj['number_value']];
-                        if (array_key_exists($fieldId, $values)) {
+                        if (isset($values[$fieldId])) {
                             $checkboxValues = array_merge($checkboxValues, $values[$fieldId]['number_value']);
                         }
                         $obj['number_value'] = $checkboxValues;
@@ -802,14 +808,15 @@ class RecordBehavior extends Behavior
             foreach ($customFields as $key => $obj) {
                 $customField = $obj->custom_field;
                 $fieldTypeCode = $customField->field_type;
-				$section = Text::slug($obj->section);
+                $section = $obj->section ?? "section";
+                $slug = Text::slug($section);
 
                 // only apply for field type store in custom_field_values
                 if (in_array($fieldTypeCode, $this->fieldValueArray)) {
 					if(empty($tabSection) || ($slug == $tabSection)) {
 						$fieldId = $customField->id;
 
-						if (array_key_exists($fieldId, $values)) {
+						if (isset($values[$fieldId])) {
 							$fieldValues[] = $values[$fieldId];
 						} else {
 							$valueData = [
@@ -887,14 +894,14 @@ class RecordBehavior extends Behavior
                             unset( $url['?'] );
                         }
                         $url['tab_section'] = $tabName;
-                        $moduleUrl = $url; 
+                        $moduleUrl = $url;
                         $moduleUrl['?']['tab_section'] = $tabName;
                         $tabElements[$tabName] = [
                             'url' => $moduleUrl,
                             'text' => $sectionName,
                         ];
 
-                         
+
                     }
                 }
             }
@@ -939,7 +946,7 @@ class RecordBehavior extends Behavior
             foreach ($modelFields as $fieldName => $field) {
                 if (!in_array($fieldName, $ignoreFields)) {
                     $order = $field['order'] > $order ? $field['order'] : $order;
-                    if (array_key_exists($order, $fieldOrder)) {
+                    if (isset($fieldOrder[$order])) {
                         $order++;
                     }
                     $fieldOrder[$order] = $fieldName;
@@ -1098,7 +1105,7 @@ class RecordBehavior extends Behavior
 
             foreach ($ignoreFields as $key => $field) {
                 // add checking (map_section, map) to append ignore fields only if exists
-                if (array_key_exists($field, $this->_table->fields)) {
+                if (isset($this->_table->fields[$field])) {
                     $fieldOrder[++$order] = $field;
                 }
             }
@@ -1328,7 +1335,7 @@ class RecordBehavior extends Behavior
             $fieldIds = $model->array_column($customFields, $fieldKey);
 
             $ignoreFields = ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
-            if (array_key_exists('custom_field_values', $requestData)) {
+            if (isset(requestData['custom_field_values'])) {
                 $newRequestData['custom_field_values'] = [];
                 foreach ($requestData['custom_field_values'] as $key => $fieldValue) {
                     if (in_array($fieldValue[$fieldKey], $fieldIds)) {
@@ -1341,7 +1348,7 @@ class RecordBehavior extends Behavior
                 }
             }
 
-            if (array_key_exists('custom_table_cells', $requestData)) {
+            if (isset(requestData['custom_table_cells'])) {
                 $newRequestData['custom_table_cells'] = [];
                 foreach ($requestData['custom_table_cells'] as $key => $fieldCell) {
                     if (in_array($fieldCell[$fieldKey], $fieldIds)) {
@@ -1364,13 +1371,13 @@ class RecordBehavior extends Behavior
         if ($this->getConfig('tabSection')) {
             if ($action == 'view') {
                 if ($toolbarButtons->offsetExists('back')) {
-                    if (array_key_exists('tab_section', $toolbarButtons['back']['url'])) {
+                    if (isset($toolbarButtons['back']['url']['tab_section'])) {
                         unset($toolbarButtons['back']['url']['tab_section']);
                     }
                 }
             }elseif ($action == 'edit') {
                 if ($toolbarButtons->offsetExists('list')) {
-                    if (array_key_exists('tab_section', $toolbarButtons['list']['url'])) {
+                    if (isset($toolbarButtons['list']['url']['tab_section'])) {
                         unset($toolbarButtons['list']['url']['tab_section']);
                     }
                 }

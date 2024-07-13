@@ -16,6 +16,7 @@ class CustomTableCellsTable extends AppTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         $validator
             // TEXT validation
             ->allowEmpty('text_value')
