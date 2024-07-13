@@ -112,4 +112,12 @@ class AccountsTable extends AppTable
         }
     }
 
+    //For POCOR-8448, POCOR-8449 PHP version 8
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $param = $this->request->getParam('pass')[1];
+        $url = ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Accounts', '0' => 'view','1' => $param ];
+        return $this->controller->redirect($url);
+    }
+
 }
