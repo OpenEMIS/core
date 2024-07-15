@@ -158,7 +158,13 @@ class ControllerActionHelper extends Helper
     public function isFieldVisible($attr, $type)
     {
         $visible = false;
-
+        if(is_array($attr)){
+            $attr = $attr;
+        }else if(!empty($attr)){
+            $attr = $attr->getArrayCopy();
+        } else if(empty($attr)) {
+            $attr = [];
+        }
         if (array_key_exists('visible', $attr)) {
             $visibleField = $attr['visible'];
 
