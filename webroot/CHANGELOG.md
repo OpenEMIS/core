@@ -1,3 +1,12 @@
+### [4.0.10] - 2024-07-12
+- Bug Fixed: Administration > Surveys > Forms > Filters: Other permissions are disabled
+- Bug Fixed: PHP 8.0: Pages cannot load Part three
+- Bug Fixed: PHP 8.0: Login as Principal and access and edit survey
+- Bug Fixed: (PHP8.0)Institutions>Survey>Forms: Edit not present in list page
+- Bug Fixed: (PHP8.0)Administration>Surveys>Forms: Download getting internal server error
+- Bug Fixed: (PHP8.0)Institutions>Survey>Forms: User getting 404 when saving survey
+- Bug Fixed: (PHP8.0)Institutions>Survey>Forms: User getting blank page when first login user
+
 ### [4.0.9] - 2024-07-11
 - Implemented: Develop changes to API for attendance import template
 - Bug Fixed: Login : When logged in as Arabic, system switches back to English after navigating to another page

@@ -15,6 +15,7 @@ use Cake\Utility\Xml;
 use Cake\Utility\Text;
 use Firebase\JWT\JWT;
 use Firebase\JWT\ExpiredException;
+use Laminas\Diactoros\Stream;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 
 define("NS_XHTML", "http://www.w3.org/1999/xhtml");
@@ -71,24 +72,37 @@ class RestSurveyComponent extends Component
                 break;
         }
         //echo "<pre>";print_r($result);die;
-
+        $this->response = $this->getController()->getResponse();
         if ($output) { // true = output to screen
             if (is_object($result)) {
-                $this->response->body($result->asXML());
+                $this->response->withBody($result->asXML());
             } else {
-                $this->response->body($result);
+                $this->response->withBody($result);
             }
-            $this->response->type('xml');
+            $this->response->withType('xml');
 
             return $this->response;
         } else { // download as file
             $fileName = $format . '_' . date('Ymdhis');
-
-            $this->response->body($result->asXML());
-            $this->response->type('xml');
+            
+            // $this->response->body($result->asXML());
+            // $this->response->type('xml');
+            
+            $this->response->getBody(function () use ($filePath) {
+                $content = file_get_contents($filePath);
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
+                return $content;
+            });
+            $stream = new Stream('php://memory', 'rw');
+            $stream->write($result->asXML());
+            $stream->rewind();
+            $this->response = $this->response->withBody($stream);
+            $this->response = $this->response->withType('xml');
 
             // Optionally force file download
-            $this->response->download($fileName . '.xml');
+            $this->response = $this->response->withDownload($fileName . '.xml');
 
             // Return response object to prevent controller from trying to render a view.
             return $this->response;
@@ -195,7 +209,7 @@ class RestSurveyComponent extends Component
                 return $generateErrorResponse(['message' => __('Do not have permission to access the server')], 500);
             }
 
-            $data = $this->request->data;
+            $data = $this->request->getData();
             Log::write('debug', 'Data:');
             Log::write('debug', $data);
 

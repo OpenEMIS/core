@@ -20,7 +20,7 @@ class CustomFieldValuesTable extends AppTable
 	{
 		$validator = parent::validationDefault($validator);
 		$scope = $this->extra['scope'];
-
+		$validator->setProvider('custom', $this);
 		$validator
 			// TEXT validation
 			->allowEmpty('text_value', function ($context) {
