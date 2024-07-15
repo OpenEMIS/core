@@ -11,6 +11,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Routing\Router;
+use Cake\Event\EventInterface;
 use App\Controller\AppController;
 
 class ProfilesController extends AppController
@@ -571,7 +572,7 @@ class ProfilesController extends AppController
         }
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
         $session = $this->request->getSession();
@@ -902,7 +903,7 @@ class ProfilesController extends AppController
         }
     }
 
-    public function beforeRender(Event $event)
+    public function beforeRender(EventInterface $event)
     {
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
