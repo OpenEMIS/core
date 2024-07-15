@@ -12,6 +12,7 @@ use Cake\Utility\Inflector;
 use App\Controller\AppController;
 use Cake\Http\Response;
 use Cake\Http\Client;
+use Cake\Event\EventInterface;
 
 class DirectoriesController extends AppController
 {
@@ -691,7 +692,7 @@ class DirectoriesController extends AppController
         return $institutionID;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
         $this->Navigation->addCrumb('Directory', ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories']);
