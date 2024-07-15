@@ -56,7 +56,7 @@ export class CommentsComponent extends KdPageBase implements OnInit, OnDestroy {
     gridHeight: "auto",
     loadType: "normal",
     externalFilter: false,
-    rowContentHeight: 35,
+    rowContentHeight: 60,
     paginationConfig: {
       pagesize: 10,
       total: 50000
@@ -127,7 +127,7 @@ export class CommentsComponent extends KdPageBase implements OnInit, OnDestroy {
   }
 
   loginData() {
-    this.Rest.setSession();
+    // this.Rest.setSession();
     let token = localStorage.getItem("loginToken");
     if (!token) {
       let userName = sessionStorage.getItem('username');
@@ -373,7 +373,7 @@ export class CommentsComponent extends KdPageBase implements OnInit, OnDestroy {
               id: element?._matchingData?.Users?.openemis_no,
               name: element?._matchingData?.Users?.full_name,
               status: element?.student_status?.code,
-              total_mark: element?.total_mark,
+              total_mark: (Math.round(element?.total_mark * 100) / 100).toFixed(2),
               student_id: element?.student_id,
               comment_code: element.comments_code,
               comments: element?.comments,
