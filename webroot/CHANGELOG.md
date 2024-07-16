@@ -1,3 +1,8 @@
+### [4.0.11] - 2024-07-16
+- Bug Fixed: Administration>System Setup>System Configuration: Display records is jumbled up
+- Bug Fixed: PHP 8.0(Administration>Security>Users)-Cannot search for student and staff
+- Bug Fixed: (PHP8.0)Institutions>Survey>Forms: User is unable to save survey answers with validations
+
 ### [4.0.10] - 2024-07-12
 - Bug Fixed: Administration > Surveys > Forms > Filters: Other permissions are disabled
 - Bug Fixed: PHP 8.0: Pages cannot load Part three
