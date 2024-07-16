@@ -132,13 +132,13 @@ class UserBehavior extends Behavior
 
                 // // Access the table schema
                 // $schema = $this->_table->getSchema();
-                
+
                 // // Get the field information
                 // $fieldInfo = $schema->getColumn('is_student');
-                
+
                 // // Modify the type to 'hidden'
                 // $fieldInfo['type'] = 'hidden';
-                
+
                 // // Update the schema
                 // $schema->addColumn('is_student', $fieldInfo);
                 // echo "<pre>"; print_r($fieldInfo);
@@ -239,7 +239,7 @@ class UserBehavior extends Behavior
                     $this->_table->ControllerAction->field('email', ['type' => 'hidden']);
                 }
             }
-  
+
             if ($this->_table->getRegistryAlias() != 'Security.Users') {
                 $language = I18n::getLocale();
                 if ($this->isCAv4()) {
@@ -459,7 +459,7 @@ class UserBehavior extends Behavior
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    { 
+    {
         $extra['auto_search'] = false;
         // $extra['auto_contain'] = false;
         $table = $query->getRepository()->getTable();
@@ -617,7 +617,7 @@ class UserBehavior extends Behavior
         $prefix = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('openemis_id_prefix');
         $prefix = explode(",", $prefix);
         $prefix = ($prefix[1] > 0)? $prefix[0]: '';
-        
+
           $latest = $this->_table->find()
             ->order($this->_table->aliasField('id').' DESC')
             ->first();
@@ -630,7 +630,7 @@ class UserBehavior extends Behavior
         } else {
             $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
         }
-        
+
          $currentStamp = time();
 
         if ($latestDbStamp >= $currentStamp) {
@@ -640,7 +640,7 @@ class UserBehavior extends Behavior
             $random = $second + $microSecond * 1000000;
             $newStamp = time() + str_pad(mt_rand(0, $random), 9, '0', STR_PAD_LEFT);
         }
-        
+
         return $prefix.$newStamp;
     }
 
@@ -675,7 +675,7 @@ class UserBehavior extends Behavior
     {
         $list = ['first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name'];
         foreach ($list as $value) {
-            if (array_key_exists($value, $data) && strlen($data[$value]) > 0) {
+            if (isset($data[$value]) && strlen($data[$value]) > 0) { // POCOR-8446
                 $data[$value] = trim($data[$value]);
             }
         }

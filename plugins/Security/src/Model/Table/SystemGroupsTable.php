@@ -121,7 +121,7 @@ class SystemGroupsTable extends ControllerActionTable
         //     'visible' => ['index' => false, 'view' => true, 'edit' => true]
         // ]);
 
-        $this->ControllerAction->setFieldOrder(['name', 'users']);
+        $this->setFieldOrder(['name', 'users']); // POCOR-8446
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -226,5 +226,5 @@ class SystemGroupsTable extends ControllerActionTable
         }
     }
 
-        
+
 }
