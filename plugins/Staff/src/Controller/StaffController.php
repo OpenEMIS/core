@@ -10,6 +10,7 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use Cake\Utility\Inflector;
+use Cake\Event\EventInterface;
 
 class StaffController extends AppController
 {
@@ -581,7 +582,7 @@ class StaffController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsPlans']);
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         $isInstitutionIndex = $this->isInstitutionIDSkipped();
         if ($isInstitutionIndex) {
