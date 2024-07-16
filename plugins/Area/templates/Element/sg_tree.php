@@ -5,17 +5,17 @@
 <?php endif; ?>
 	<?php
 	$errorMsg = '';
-	if (array_key_exists('fieldName', $attr)) {
+	if (isset($attr['fieldName'])) {
 		$errorMsg = $this->Form->error($attr['fieldName']);
 	} else {
 		$errorMsg = $this->Form->error($attr['field']);
 	}
 	$divErrorCSS = (!empty($errorMsg))? 'error': '';
 	$inputErrorCSS = (!empty($errorMsg))? 'form-error': '';
-	$inputWrapperStyle = (array_key_exists('inputWrapperStyle', $attr)) ? $attr['inputWrapperStyle'] : '';
+	$inputWrapperStyle = (isset($attr['inputWrapperStyle'])) ? $attr['inputWrapperStyle'] : '';
 	//comment in cakephp4
 	//echo $this->Form->unlockField($attr['field'].'-tree');
-	$fieldName = (array_key_exists('fieldName', $attr))? $attr['fieldName']: $attr['model'].'.'.$attr['field'];
+	$fieldName = (isset($attr['fieldName']))? $attr['fieldName']: $attr['model'].'.'.$attr['field'];
 	//comment in cakephp4
 	//echo $this->Form->unlockField($fieldName);
 	?>

@@ -25,7 +25,7 @@ class StudentCustomFieldsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'StudentCustomField.StudentCustomForms']);
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         if ($this->getPlugin() == 'StudentCustomField') {
             $this->Security->setConfig('validatePost', false);
@@ -58,7 +58,7 @@ class StudentCustomFieldsController extends AppController
         $this->set('contentHeader', $header);
     }
 
-    public function beforeRender(Event $event)
+    public function beforeRender(Event|\Cake\Event\EventInterface $event)
     {
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');

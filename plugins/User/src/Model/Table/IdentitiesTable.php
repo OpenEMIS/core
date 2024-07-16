@@ -98,12 +98,12 @@ class IdentitiesTable extends ControllerActionTable
     {
         $pattern = '';
 
-        if (array_key_exists('identity_type_id', $options) && !empty($options['identity_type_id'])) {
+        if (isset($options['identity_type_id']) && !empty($options['identity_type_id'])) {
             $identityTypeId = $options['identity_type_id'];
         } else {
             return "";
         }
-        if (array_key_exists('identity_number', $options) && !empty($options['identity_number'])) {
+        if (isset($options['identity_number']) && !empty($options['identity_number'])) {
             $identityNumber = $options['identity_number'];
         } else {
             return "";

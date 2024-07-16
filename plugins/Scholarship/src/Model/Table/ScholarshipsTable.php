@@ -177,17 +177,17 @@ class ScholarshipsTable extends ControllerActionTable
                 'scholarship_financial_assistance_type_id' => $this->aliasField('scholarship_financial_assistance_type_id'),
                 'scholarship_funding_source_id' => $this->aliasField('scholarship_funding_source_id'),
                 'academic_period_id' => $this->aliasField('academic_period_id'),
-                'financial_assistance_types' => 'FinancialAssistanceTypes.name', 
-                'funding_sources' => 'FundingSources.name', 
+                'financial_assistance_types' => 'FinancialAssistanceTypes.name',
+                'funding_sources' => 'FundingSources.name',
                 'academic_periods' => 'AcademicPeriods.name',
-                'interest_rate' => 'Loans.interest_rate', 
-                'interest_rate_type' => 'Loans.interest_rate_type', 
-                'loan_term' => 'Loans.loan_term', 
+                'interest_rate' => 'Loans.interest_rate',
+                'interest_rate_type' => 'Loans.interest_rate_type',
+                'loan_term' => 'Loans.loan_term',
                 'payment_frequency_name' => 'PaymentFrequencies.name'
             ]);
     }
 
-     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
+     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
      {
             $newArray = [];
             $newArray[] = [
@@ -195,7 +195,7 @@ class ScholarshipsTable extends ControllerActionTable
                 'field' => 'code',
                 'type' => 'string',
                 'label' =>  __('Code')
-            ];               
+            ];
             $newArray[] = [
                 'key' => 'Scholarships.name',
                 'field' => 'name',
@@ -314,7 +314,7 @@ class ScholarshipsTable extends ControllerActionTable
     }
 
     public function onExcelGetInterestRateType(Event $event, Entity $entity)
-    {   
+    {
         $value = '';
         if ($entity->has('interest_rate_type')) {
             if (isset($entity->interest_rate_type)) {
@@ -374,7 +374,7 @@ class ScholarshipsTable extends ControllerActionTable
 
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Scholarships','Scholarships - Details');       
+		$is_manual_exist = $this->getManualUrl('Administration','Scholarships','Scholarships - Details');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -489,7 +489,7 @@ class ScholarshipsTable extends ControllerActionTable
             if (!$ScholarshipsFieldOfStudies->save($ScholarshipsFieldOfStudiesEntity)) {
                 Log::write('debug', $ScholarshipsFieldOfStudiesEntity->errors());
             }
-        }   
+        }
 
         /** Start POCOR-7158 */
         $connection->execute('SET foreign_key_checks = 1');
@@ -621,7 +621,7 @@ class ScholarshipsTable extends ControllerActionTable
     //         case '':
     //             $this->field('scholarship_financial_assistance_id', [
     //                 'type' => 'hidden'
-    //             ]);   
+    //             ]);
     //             break;
     //     }
     //     return $attr;
@@ -639,7 +639,7 @@ class ScholarshipsTable extends ControllerActionTable
             } else {
                 $fieldOfStudyOptions = $this->FieldOfStudies->getList()->toArray();
                 $attr['options'] = $fieldOfStudyOptions;
-               
+
             }
         }
         return $attr;
@@ -806,7 +806,7 @@ class ScholarshipsTable extends ControllerActionTable
             'after' => 'description',
             'entity' => $entity
         ]);
-		
+
 		 $tableSFA = TableRegistry::get('Scholarship.FinancialAssistanceTypes');
          $tableSFAFirst = $tableSFA->find('all',['conditions'=>['name' => 'Grant' ]])->first();
         if($entity->scholarship_financial_assistance_type_id == $tableSFAFirst->id){
@@ -883,7 +883,7 @@ class ScholarshipsTable extends ControllerActionTable
             'after' => 'total_amount'
         ]);
         $this->field('bonded_organisation', [
-           
+
             'attr' => ['label' => __('Bonded Organisation')],
             'after' => 'duration'
         ]);
@@ -978,8 +978,8 @@ class ScholarshipsTable extends ControllerActionTable
     {
         $todayDate = date("Y-m-d");
         $availableScholarships = [];
-        $applicantId = array_key_exists('applicant_id', $options) ? $options['applicant_id'] : null;
-        $financialAssistanceTypeId = array_key_exists('financial_assistance_type_id', $options) ? $options['financial_assistance_type_id'] : null;
+        $applicantId = isset($options['applicant_id']) ? $options['applicant_id'] : null;
+        $financialAssistanceTypeId = isset($options['financial_assistance_type_id']) ? $options['financial_assistance_type_id'] : null;
 
         if (!is_null($applicantId) && !is_null($financialAssistanceTypeId)) {
             $availableScholarships = $this

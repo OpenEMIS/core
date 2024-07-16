@@ -679,7 +679,7 @@ class TrainingSessionsTable extends ControllerActionTable
         if (!array_key_exists($alias, $data)) {
             $error = $model->getMessage('Import.not_supported_format');
         }
-        if (!array_key_exists('trainees_import', $data[$alias])) {
+        if (!isset($data[$alias]['trainees_import'])) {
             $error = $model->getMessage('Import.not_supported_format');
         }
         if (empty($data[$alias]['trainees_import'])) {
@@ -1030,7 +1030,7 @@ class TrainingSessionsTable extends ControllerActionTable
                 }
 
                 $associated = $entity->extractOriginal([$fieldKey]);
-                
+
                 if (!empty($associated[$fieldKey])) {
                     foreach ($associated[$fieldKey] as $key => $obj) {
                         $evaluatorType = $this->getEvaluatorTypes($obj);
@@ -1104,7 +1104,7 @@ class TrainingSessionsTable extends ControllerActionTable
         } else {
             $evaluatorType = self::OTHERS;
         }
-        
+
         return $evaluatorType;
     }
 
@@ -1119,7 +1119,7 @@ class TrainingSessionsTable extends ControllerActionTable
         }
 
         if ($data->offsetExists($alias)) {
-            if (array_key_exists('evaluator_id', $data[$alias]) && !empty($data[$alias]['evaluator_id'])) {
+            if (isset($data[$alias]['evaluator_id']) && !empty($data[$alias]['evaluator_id'])) {
                 $id = $data[$alias]['evaluator_id'];
                 $evaluatorType = $data[$alias]['types'];
 
@@ -1196,7 +1196,7 @@ class TrainingSessionsTable extends ControllerActionTable
             $this->request = $this->request->withParsedBody($requestData);
         }
     }
- 
+
      /**
       * @param $entity
       * @param string $fieldKey
@@ -1227,7 +1227,7 @@ class TrainingSessionsTable extends ControllerActionTable
              }
          }
          $data[$alias][$fieldKey] = $trainers;
- 
+
         // else{
         //     $data[$alias][$fieldKey] = [];
         // }
@@ -1391,13 +1391,13 @@ class TrainingSessionsTable extends ControllerActionTable
                 $training_session_id = $entity->id;
                 if (isset($trainingSessionResults[$training_session_id]) && isset($trainingSessionResults[$training_session_id][$id])) {
                     $message = __('There are results for this encodedTrainee');
-                    $rowData[] = '<key class="fa fa-info-circle fa-lg icon-blue" 
-                    data-toggle="tooltip" 
-                    data-container="body" 
-                    data-placement="top" 
-                    data-animation="false" 
-                    title="" 
-                    data-html="true" 
+                    $rowData[] = '<key class="fa fa-info-circle fa-lg icon-blue"
+                    data-toggle="tooltip"
+                    data-container="body"
+                    data-placement="top"
+                    data-animation="false"
+                    title=""
+                    data-html="true"
                     data-original-title="' . $message . '"></key>';
                 } else {
                     $rowData[] = $this->getDeleteButton();

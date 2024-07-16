@@ -92,7 +92,7 @@ class StaffAbsencesTable extends ControllerActionTable
         $dateFrom = $entity['date_from']->format('Y-m-d');
         $dateTo = $entity['date_to']->format('Y-m-d');
         $entity = $this->getNumberOfDays($entity);
-        
+
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
         $staffData = $InstitutionStaff
             ->find('all')
@@ -104,17 +104,17 @@ class StaffAbsencesTable extends ControllerActionTable
                 $InstitutionStaff->aliasField('staff_id')
             ])
             ->toArray();
-            
+
             $startDate = $staffData[0]['start_date']->format('Y-m-d');
-            
+
         if ($startDate > $dateFrom) {
             $this->Alert->error('AlertRules.StaffLeave.noLeave', ['reset' => true]);
             return false;
         }
-        
+
         if (!empty($staffData[0]['end_date'])) {
             $endDate = $staffData[0]['end_date']->format('Y-m-d');
-            
+
             if ($dateFrom > $endDate) {
                 $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDate', ['reset' => true]);
                 return false;
@@ -643,7 +643,7 @@ class StaffAbsencesTable extends ControllerActionTable
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             if ($entity->is_historical) {
                 $rowEntityId = $this->getFieldEntity($entity->is_historical, $entity->id, 'id');
                 $url = [
@@ -654,10 +654,10 @@ class StaffAbsencesTable extends ControllerActionTable
                     $this->paramsEncode(['id' => $rowEntityId])
                 ];
                 $buttons['view']['url'] = $url;
-                if (array_key_exists('edit', $buttons)) {
+                if (isset($buttons['edit'])) {
                     unset($buttons['edit']);
                 }
-                if (array_key_exists('remove', $buttons)) {
+                if (isset($buttons['remove'])) {
                     unset($buttons['remove']);
                 }
             }
@@ -729,10 +729,10 @@ class StaffAbsencesTable extends ControllerActionTable
                                             $CalendarEvents->aliasField('calendar_type_id') => $CalendarTypes->aliasField('id')
                                         ]
                                     ]
-                                ])                                
+                                ])
                                 ->where([
-                                    $CalendarEvents->aliasField('institution_id') => $institutionId])                               
-                                ->orWhere([ 
+                                    $CalendarEvents->aliasField('institution_id') => $institutionId])
+                                ->orWhere([
                                     $CalendarEvents->aliasField('institution_id') => -1
                                 ])
                                 ->andWhere([
@@ -745,7 +745,7 @@ class StaffAbsencesTable extends ControllerActionTable
             return $value['calendar_event_dates'][0]['date']->format('Y-m-d');
         });
         $publicCalendarEventDates = $mapCollection->toArray();
-        
+
         $count = 0;
         $overlap = false;
         foreach ($datePeriod as $key => $date) {

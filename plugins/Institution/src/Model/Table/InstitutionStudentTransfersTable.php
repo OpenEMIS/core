@@ -129,7 +129,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
                     ['id' => $enrolledStudentRecord->id]
                 );
             } //POCOR-6230 Ends
-            
+
             //POCOR-6362 starts
             if($previousStudentRecord->student_status_id == $statuses['PROMOTED'] || $previousStudentRecord->student_status_id == $statuses['GRADUATED'] || $previousStudentRecord->student_status_id == $statuses['CURRENT']){
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -139,7 +139,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
                            $AcademicPeriods->aliasField('id') => $entity->academic_period_id
                         ])
                         ->first();
-                
+
             }//POCOR-6362 ends
             // add new student record in the new institution
             $newStudent = [
@@ -147,7 +147,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
                 'student_id' => $entity->student_id,
                 'education_grade_id' => $entity->education_grade_id,
                 'academic_period_id' => $entity->academic_period_id,
-                'start_date' => (($previousStudentRecord->student_status_id == $statuses['PROMOTED'] || $previousStudentRecord->student_status_id == $statuses['GRADUATED'] || $previousStudentRecord->student_status_id == $statuses['CURRENT']) && empty($entity->start_date)) ? $academicPeriod->start_date : $entity->start_date,//POCOR-6362 
+                'start_date' => (($previousStudentRecord->student_status_id == $statuses['PROMOTED'] || $previousStudentRecord->student_status_id == $statuses['GRADUATED'] || $previousStudentRecord->student_status_id == $statuses['CURRENT']) && empty($entity->start_date)) ? $academicPeriod->start_date : $entity->start_date,//POCOR-6362
                 'end_date' => (($previousStudentRecord->student_status_id == $statuses['PROMOTED'] || $previousStudentRecord->student_status_id == $statuses['GRADUATED'] || $previousStudentRecord->student_status_id == $statuses['CURRENT']) && empty($entity->end_date)) ? $academicPeriod->end_date : $entity->end_date,//POCOR-6362
                 'institution_id' => $entity->institution_id,
                 'previous_institution_student_id' => $previousStudentRecord->id
@@ -173,7 +173,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
                     $Students->save($previousStudentRecord);
                 } /*POCOR-6542 ends*/
             }
-        } 
+        }
     }
 
     public function onCancel(Event $event, $id, Entity $workflowTransitionEntity)
@@ -314,7 +314,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
         $parmaInstitutionId = $this->request->getParam('institutionId');
         $getInstitutionId = $this->getInstitutionID();
         $currentInstitutionId = isset($parmaInstitutionId) ? $this->paramsDecode($parmaInstitutionId)['id'] : $getInstitutionId;
-        
+
         $belongsToCurrentInstitution = ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->institution_id) || ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id);
 
         if ($belongsToCurrentInstitution) {
@@ -398,7 +398,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
             }
         }
         else{
-            $this->updateAll(['all_visible' => 1], ['id' => $entity->id]);            
+            $this->updateAll(['all_visible' => 1], ['id' => $entity->id]);
         }
 
         //POCOR-6995 start
@@ -575,7 +575,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
     {
         $institutionId = $options['institution_id'];
         $incomingInstitution = self::INCOMING;
-        $pending = array_key_exists('pending_records', $options) ? $options['pending_records'] : false;
+        $pending = isset($options['pending_records']) ? $options['pending_records'] : false;
 
         $query
             ->matching('Statuses.WorkflowStepsParams', function ($q) {
@@ -599,7 +599,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
     {
         $institutionId = $options['institution_id'];
         $outgoingInstitution = self::OUTGOING;
-        $pending = array_key_exists('pending_records', $options) ? $options['pending_records'] : false;
+        $pending = isset($options['pending_records']) ? $options['pending_records'] : false;
 
         $query
             ->matching('Statuses.WorkflowStepsParams', function ($q) {
@@ -618,7 +618,7 @@ class InstitutionStudentTransfersTable extends ControllerActionTable
             $query->where(['Statuses.category <> ' => self::DONE]);
         }
         return $query;
-    } 
+    }
 
     /**
      * common function to get institution id

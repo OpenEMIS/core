@@ -31,10 +31,10 @@ class MealsController extends AppController
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 
-		$header = 'Meal Programmes';    
+		$header = 'Meal Programmes';
         $this->Navigation->addCrumb($header, ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $this->request->getParam('action')]);
 
-        
+
         //Customize header because model name created was different and POCOR-5692 requirement was modified.
         if($this->request->getParam('action') == 'Programme'){
             $header = __('Meal Programmes') . ' - ' . __('Programmes');
@@ -46,23 +46,23 @@ class MealsController extends AppController
             $this->Navigation->addCrumb('MealProgramme');
         }
 
-        $this->set('contentHeader', $header); 
+        $this->set('contentHeader', $header);
     }
 
-    
+
 
     public function programme(){
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Meal.MealProgrammes']);
     }
 
-    public function beforeRender(Event $event)
+    public function beforeRender(Event|\Cake\Event\EventInterface $event)
     {
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 
-    public function beforeFilter(Event $event)
-    { 
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    {
         if ($this->getPlugin() == 'Meal') {
             $this->Security->setConfig('validatePost', false);
         }

@@ -44,7 +44,7 @@ class StudentsRiskAssessmentExcelBehavior extends Behavior
     public function initialize(array $config): void
     {
     	$this->setConfig('excludes', array_merge($this->setConfig('default_excludes'), $this->setConfig('excludes')));
-    	if (!array_key_exists('filename', $config)) {
+    	if (!isset($config['filename'])) {
     		$this->setConfig('filename', $this->_table->getAlias());
     	}
     	$folder = WWW_ROOT . $this->getConfig('folder');
@@ -54,7 +54,7 @@ class StudentsRiskAssessmentExcelBehavior extends Behavior
     		mkdir($folder, 0777);
     	} else {
             // $delete = true;
-            // if (array_key_exists('delete', $settings) &&  $settings['delete'] == false) {
+            // if (isset($settings['delete']) &&  $settings['delete'] == false) {
             //  $delete = false;
             // }
             // if ($delete) {
@@ -175,7 +175,7 @@ class StudentsRiskAssessmentExcelBehavior extends Behavior
 
 
 
-private function getData($settings) 
+private function getData($settings)
 {
    $requestData = json_decode($settings['process']['params']);
    $academicPeriodId = $requestData->academic_period_id;
@@ -242,7 +242,7 @@ private function getData($settings)
                 ])
                 ->leftJoin(['AcademicPeriods' => 'academic_periods'], [
                       'InstitutionStudents.academic_period_id = ' . 'AcademicPeriods.id'
-                ])           
+                ])
                 ->leftJoin(['Institutions' => 'institutions'], [
                       'InstitutionStudents.institution_id = ' . 'Institutions.id'
                 ])
@@ -266,12 +266,12 @@ private function getData($settings)
             $result[$key][] = $value->student_identity_number;
             $name = $value->first_name.' '.$value->middle_name.' '.$value->third_name.' '.$value->last_name;
             $result[$key][] = preg_replace('/^\s+|\s+$|\s+(?=\s)/', '', $name);
-        
+
             //getting risk criteria
             $data = [];
             $institutionStudentRisksData = $institutionStudentRisks
             ->find()
-            ->select([$riskCriterias->aliasField('criteria'), 
+            ->select([$riskCriterias->aliasField('criteria'),
                 $institutionStudentRisks->aliasField('total_risk')])
             ->leftJoin([$studentRisksCriterias->alias() => $studentRisksCriterias->table()], [
                 $studentRisksCriterias->aliasField('institution_student_risk_id = ') . $institutionStudentRisks->aliasField('id')
@@ -282,7 +282,7 @@ private function getData($settings)
             ->where([
                 $institutionStudentRisks->aliasField('student_id = ') . $value->student_id,
                 $newConditions])->toArray();
-            
+
             if (empty($institutionStudentRisksData)) {
                $result[$key][] =  0;
             } else {
@@ -291,14 +291,14 @@ private function getData($settings)
                     $data[] = $val['risk_criterias']['criteria'];
                 }
             }
-        
+
             $str = '';
             if (isset($data)) {
                 $str  = implode(',', $data);
             }
 
             $result[$key][] = $str;
-        } 
+        }
     }
         return $result;
 }

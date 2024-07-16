@@ -19,9 +19,9 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
         $this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes', 'cascadeCallbacks' => true]);
         $this->hasMany('StaffQualifications', ['className' => 'Staff.Qualifications', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('QualificationSpecialisations', ['className' => 'FieldOption.QualificationSpecialisations', 'dependent' => true, 'cascadeCallbacks' => true]);
-        
+
         $this->hasMany('ApplicationInstitutionChoices', ['className' => 'Scholarship.ApplicationInstitutionChoices']);
-        
+
         $this->belongsToMany('EducationSubjects', [
             'className' => 'Education.EducationSubjects',
             'joinTable' => 'education_subjects_field_of_studies',
@@ -66,7 +66,7 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
         $extra['options']['sortWhitelist'] = $sortList;
 
 
-        $sortable = array_key_exists('sort', $requestQuery) ? true : false;
+        $sortable = isset($requestQuery['sort']) ? true : false;
 
         if (!$sortable) {
             $query->find('order');
@@ -75,7 +75,7 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
 
     public function findAvailableFieldOfStudyOptionList(Query $query, array $options)
     {
-        $scholarshipId = array_key_exists('scholarship_id', $options) ? $options['scholarship_id'] : 0;
+        $scholarshipId = isset($options['scholarship_id']) ? $options['scholarship_id'] : 0;
 
         $scholarshipEntity = $this->Scholarships->get($scholarshipId);
         $isSelectAll = $this->Scholarships->checkIsSelectAll($scholarshipEntity);
@@ -85,7 +85,7 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
                 ->matching('Scholarships', function ($q) use ($scholarshipId) {
                     return $q->where(['scholarship_id' => $scholarshipId]);
                 });
-        } 
+        }
 
         return parent::findOptionList($query, $options);
     }

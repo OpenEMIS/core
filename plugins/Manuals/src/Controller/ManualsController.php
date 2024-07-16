@@ -12,7 +12,7 @@ class ManualsController extends AppController
 {
     public function initialize(): void
     {
-        parent::initialize();        
+        parent::initialize();
         $this->loadComponent('Paginator');
     }
 
@@ -28,7 +28,7 @@ class ManualsController extends AppController
 
 
     public function Institutions()
-    { 
+    {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Manuals.Institution']);
     }
 
@@ -54,7 +54,7 @@ class ManualsController extends AppController
     }
 
 
-    public function beforeFilter(Event $event) {
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event) {
         parent::beforeFilter($event);
         $selectedAction = $this->request->getParam('action');
         if ($selectedAction == 'Institutions') {
@@ -95,7 +95,7 @@ class ManualsController extends AppController
                 'url' => ['plugin' => 'Manuals', 'controller' => 'Manuals', 'action' => 'Guardian'],
                 'text' => __('Guardian')
             ],
-            
+
 
         ];
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
@@ -119,7 +119,7 @@ class ManualsController extends AppController
         } else if ($model->getAlias() == 'Guardian') {
             $header = 'Guardian';
         }
-        
+
         $this->Navigation->addCrumb('System Configuration', ['plugin' => 'Configuration', 'controller' => 'Configurations', 'action' =>'index']);
         $this->Navigation->addCrumb('Manuals');
 

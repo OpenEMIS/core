@@ -7,7 +7,7 @@ use Profile\Controller\BodyMassesController as BaseController;
 
 class ProfileBodyMassesController extends BaseController
 {
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
 
@@ -21,7 +21,7 @@ class ProfileBodyMassesController extends BaseController
 
         // set queryString
         $page->setQueryString('security_user_id', $userId);
-        
+
         $this->setBreadCrumb(['userId' => $userId, 'userName' => $userName]);
 
         // set Tabs
@@ -35,7 +35,7 @@ class ProfileBodyMassesController extends BaseController
         $page->Disable(['add', 'edit', 'delete']);
     }
 
-    public function beforeRender(Event $event)
+    public function beforeRender(Event|\Cake\Event\EventInterface $event)
     {
         // if (!array_key_exists('_serialize', $this->viewVars) &&
         //     in_array($this->response->type(), ['application/json', 'application/xml'])
@@ -50,6 +50,6 @@ class ProfileBodyMassesController extends BaseController
         $this->viewBuilder()->addHelper('OpenEmis.Navigation');
         $this->viewBuilder()->addHelper('OpenEmis.Resource');
         $this->viewBuilder()->addHelpers(['Html', 'Form', 'Paginator', 'Label', 'Url']);
-        
+
     }
 }

@@ -230,10 +230,10 @@ class WorkflowStepsTable extends AppTable {
     {
         if (isset($data['submit']) && $data['submit'] == 'save') {
             $workflowStepId = $data['id'];
-            
+
 
             // to only add validations on edit operations for the first workflow steps for any workflows with post event rules
-            if (!is_null($workflowStepId) && $workflowStepId !== '') { 
+            if (!is_null($workflowStepId) && $workflowStepId !== '') {
                 $WorkflowRuleEventsTable = TableRegistry::get('Workflow.WorkflowRuleEvents');
                 $WorkflowRulesTable = TableRegistry::get('Workflow.WorkflowRules');
                 $workflowId = $data['workflow_id'];
@@ -267,7 +267,7 @@ class WorkflowStepsTable extends AppTable {
                         $securityRoleCodes = [];
                         foreach ($ruleFeatures as $eventKey => $feature) {
                             $eventOptions = $WorkflowRulesTable->getEvents($feature, false);
-                            
+
                             if (array_key_exists($eventKey, $eventOptions)) {
                                 $roleCode = $eventOptions[$eventKey]['roleCode'];
 
@@ -292,7 +292,7 @@ class WorkflowStepsTable extends AppTable {
                             $validator->add('security_roles', 'ruleWorkflowRuleRoles', [
                                 'rule' => function ($value, $globalData) use ($roleIds) {
 
-                                    if (array_key_exists('_ids', $value)) {
+                                    if (isset($value['_ids'])) {
                                         $selectedRoleList = $value['_ids'];
 
                                         if ((is_null($selectedRoleList) || $selectedRoleList === '') && !empty($roleIds)) {

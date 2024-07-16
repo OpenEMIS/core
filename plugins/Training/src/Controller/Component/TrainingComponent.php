@@ -20,7 +20,7 @@ class TrainingComponent extends Component
         $query = $Courses->find('list', ['keyField' => 'id', 'valueField' => 'code_name']);
 
         // excludes
-        $excludes = array_key_exists('excludes', $params) ? $params['excludes'] : false;
+        $excludes = isset($params['excludes']) ? $params['excludes'] : false;
         if ($excludes) {
             $query->where([
                 $Courses->aliasField('id NOT IN') => $excludes
@@ -45,8 +45,8 @@ class TrainingComponent extends Component
 
     public function getSessionList($params = [])
     {
-        $listAll = array_key_exists('listAll', $params) ? $params['listAll'] : false;
-        $courseId = array_key_exists('training_course_id', $params) ? $params['training_course_id'] : false;
+        $listAll = isset($params['listAll']) ? $params['listAll'] : false;
+        $courseId = isset($params['training_course_id']) ? $params['training_course_id'] : false;
 
         $Sessions = TableRegistry::get('Training.TrainingSessions');
         $query = $Sessions->find('list', ['keyField' => 'id', 'valueField' => 'code_name']);

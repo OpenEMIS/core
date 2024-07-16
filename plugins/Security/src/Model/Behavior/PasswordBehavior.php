@@ -27,9 +27,9 @@ class PasswordBehavior extends Behavior {
 
 	public function initialize(array $config): void {
 		$this->targetField = $config['field'];
-		$this->checkOwnPassword = (array_key_exists('checkOwnPassword', $config))? $config['checkOwnPassword']: $this->checkOwnPassword;
-		$this->passwordAllowEmpty = (array_key_exists('passwordAllowEmpty', $config))? $config['passwordAllowEmpty']: $this->passwordAllowEmpty;
-		$this->createRetype = (array_key_exists('createRetype', $config))? $config['createRetype']: $this->createRetype;
+		$this->checkOwnPassword = (isset($config['checkOwnPassword']))? $config['checkOwnPassword']: $this->checkOwnPassword;
+		$this->passwordAllowEmpty = (isset($config['passwordAllowEmpty']))? $config['passwordAllowEmpty']: $this->passwordAllowEmpty;
+		$this->createRetype = (isset($config['createRetype']))? $config['createRetype']: $this->createRetype;
 	}
 
 
@@ -69,12 +69,12 @@ class PasswordBehavior extends Behavior {
 				]
 			])
 			;
-        
+
         $this->_table->setValidationCode('username.ruleMinLength', 'User.Accounts');
 		$this->_table->setValidationCode('username.ruleUnique', 'User.Accounts');
 		$this->_table->setValidationCode('username.ruleCheckUsername', 'User.Accounts');
 		$this->_table->setValidationCode('retype_password.ruleCompare', 'User.Accounts');
-		
+
 		if ($this->passwordAllowEmpty) {
 			$validator->allowEmpty($this->targetField);
 			$validator->allowEmpty('retype_password');
@@ -160,7 +160,7 @@ class PasswordBehavior extends Behavior {
 		if ($this->checkOwnPassword) {
 			$this->_table->ControllerAction->field($this->targetField, ['type' => 'password', 'attr' => ['value' => '']]);
 		}
-		
+
 		if ($this->createRetype) {
 			$this->_table->ControllerAction->field('retype_password', ['type' => 'password', 'attr' => ['value' => '']]);
 		}

@@ -123,7 +123,7 @@ class HistoricalBehavior extends Behavior
             $model = $this->_table;
             $removeUrl = $this->getConfig('historicalUrl');
             $removeUrl[] = 'remove';
-            
+
             if ($model->controller->getName() === 'Directories') {
                 $request = $this->_table->request;
                 $removeUrl[1] = $request->getParam('pass')[1];
@@ -198,7 +198,7 @@ class HistoricalBehavior extends Behavior
         $queryString['id'] = $id;
         $encodedId = $model->paramsEncode($queryString);
         // view
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             $viewUrl = $baseUrl;
             $viewUrl[] = 'view';
             $viewUrl[] = $encodedId;
@@ -256,7 +256,7 @@ class HistoricalBehavior extends Behavior
         $model = $this->_table;
 
         // breadcrumb update
-        $NavigationComponent = $model->controller->Navigation; 
+        $NavigationComponent = $model->controller->Navigation;
         $currentCrumb = Inflector::humanize(Inflector::underscore($model->getAlias()));
         $newCrumb = Inflector::humanize(Inflector::underscore(str_replace('Historical', '', $model->getAlias())));
         $NavigationComponent->substituteCrumb($currentCrumb, $newCrumb);
@@ -284,14 +284,14 @@ class HistoricalBehavior extends Behavior
             $originUrl['plugin'] = 'Directory';
             $originUrl['controller'] = $model->controller->getName();
             $request = $this->_table->request;
-          
+
             $decodeQueryString = $request->getParam('pass')[1];
             $queryString = $model->paramsDecode($decodeQueryString);
             if(isset($queryString['id'])) {
                 unset($queryString['id']);
             }
             $originUrl[0] = 'index';
-            $originUrl[1] = $model->paramsEncode($queryString);      
+            $originUrl[1] = $model->paramsEncode($queryString);
         } elseif ($model->controller->getName() === 'Institutions') {
             $originUrl['plugin'] = 'Institution';
             $originUrl['controller'] = $model->controller->getName();

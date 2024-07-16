@@ -18,7 +18,7 @@ class StudentTabBehavior extends Behavior
 
     public function implementedEvents(): array
     {
-        
+
 //        die('<pre>'. print_r($this->_table,true));
         $events = parent::implementedEvents();
         //$events['Model.custom.getStudentID'] = ['callable' => 'getStudentID', 'priority' => 1001];
@@ -45,7 +45,7 @@ class StudentTabBehavior extends Behavior
 
 
     public function getInstitutionID()
-    {   
+    {
         $model = $this->_table;
         $institutionID = $model->getQueryString('institution_id');
         return $institutionID;
@@ -68,15 +68,15 @@ class StudentTabBehavior extends Behavior
 
     public function getAcademicTabElements($options = [])
     {
-        //$id = (array_key_exists('id', $options)) ? $options['id'] : 0;
+        //$id = (isset($options['id'])) ? $options['id'] : 0;
         $model = $this->_table;
         // POCOR-8074-QueryStringProfile start
         $maincontroller = $model->controller;
         $controllerName = $maincontroller->getName();
-        
+
         $studentID = $this->getStudentID();
         $institutionID = $this->getInstitutionID();
-        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
+        $type = (isset($options['type'])) ? $options['type'] : null;
         $tabElements = [];
         $studentTabElements = [
             'Programmes' => ['text' => __('Programmes')],
@@ -134,11 +134,11 @@ class StudentTabBehavior extends Behavior
                 }
             }
         }
-        
+
         return $tabElements;
     }
-    
 
 
-    
+
+
 }

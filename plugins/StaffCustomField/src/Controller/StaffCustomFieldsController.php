@@ -24,7 +24,7 @@ class StaffCustomFieldsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'StaffCustomField.StaffCustomForms']);
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         if ($this->getPlugin() == 'StaffCustomField') {
             $this->Security->setConfig('validatePost', false);
@@ -57,7 +57,7 @@ class StaffCustomFieldsController extends AppController
         $this->set('contentHeader', $header);
     }
 
-    public function beforeRender(Event $event)
+    public function beforeRender(Event|\Cake\Event\EventInterface $event)
     {
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
