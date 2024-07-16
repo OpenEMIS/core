@@ -310,35 +310,38 @@ class SecurityRolesTable extends ControllerActionTable
         switch ($selectedAction) {
             case 'user':
                 $selectedGroup = $extra['selectedGroup'];
+                if (!empty($selectedGroup)) {
+                    if (!empty($selectedGroup)) {
+                        $conditions = [$this->aliasField('security_group_id') => $selectedGroup];
 
-                $conditions = [$this->aliasField('security_group_id') => $selectedGroup];
+                        if (!$isSuperAdmin) {
+                            $userRole = $GroupRoles
+                                ->find()
+                                ->contain('SecurityRoles')
+                                ->order(['SecurityRoles.order'])
+                                ->where([
+                                    $GroupRoles->aliasField('security_user_id') => $userId,
+                                    'SecurityRoles.security_group_id' => $selectedGroup
+                                ])
+                                ->first();
 
-                if (!$isSuperAdmin) {
-                    $userRole = $GroupRoles
-                        ->find()
-                        ->contain('SecurityRoles')
-                        ->order(['SecurityRoles.order'])
-                        ->where([
-                            $GroupRoles->aliasField('security_user_id') => $userId,
-                            'SecurityRoles.security_group_id' => $selectedGroup
-                        ])
-                        ->first();
-
-                    $conditions = [
-                        'OR' => [
-                            // show roles that are lower privileges than current user role in selected group
-                            [
-                                $this->aliasField('security_group_id') => $selectedGroup,
-                                $this->aliasField('order').' > ' => $userRole['security_role']['order'],
-                            ],
-                            // also show roles that are created by current user
-                            [
-                                $this->aliasField('security_group_id') => $selectedGroup,
-                                $this->aliasField('created_user_id') => $userId
-                            ]
-                        ]
-                    ];
-                }
+                            $conditions = [
+                                'OR' => [
+                                    // show roles that are lower privileges than current user role in selected group
+                                    [
+                                        $this->aliasField('security_group_id') => $selectedGroup,
+                                        $this->aliasField('order').' > ' => $userRole['security_role']['order'],
+                                    ],
+                                    // also show roles that are created by current user
+                                    [
+                                        $this->aliasField('security_group_id') => $selectedGroup,
+                                        $this->aliasField('created_user_id') => $userId
+                                    ]
+                                ]
+                            ];
+                        }
+                    }
+                    }
 
                 $query->where($conditions);
                 break;
