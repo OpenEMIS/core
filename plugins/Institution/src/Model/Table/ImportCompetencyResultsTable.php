@@ -94,7 +94,7 @@ class ImportCompetencyResultsTable extends AppTable
 
         if (isset($this->request->getData()[$this->getAlias()])) {
             $unsetFlag = false;
-            $aryRequestData = $this->request->getData()[$this->getAlias()];         
+            $aryRequestData = $this->request->getData()[$this->getAlias()];
             foreach ($aryRequestData as $requestData => $value) {
                 $query = $this->request->getQuery(); // Get the query parameters
                 $data = $this->request->getData(); // Get the request data
@@ -114,7 +114,7 @@ class ImportCompetencyResultsTable extends AppTable
             }
 
             $aryRequestData = $this->request->getData()[$this->getAlias()];
-            foreach ($aryRequestData as $requestData => $value) {               
+            foreach ($aryRequestData as $requestData => $value) {
     if (isset($this->dependency[$requestData]) && $value) {
         $aryDependencies = $this->dependency[$requestData];
         foreach ($aryDependencies as $dependency) {
@@ -143,7 +143,7 @@ class ImportCompetencyResultsTable extends AppTable
    public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        
+
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->getAlias(), $request->getData())) {
                 if (array_key_exists('academic_period', $request->getData()[$this->getAlias()])) {
@@ -248,20 +248,20 @@ class ImportCompetencyResultsTable extends AppTable
                     if (!$classPermission && !$subjectPermission) {
                         $query->where(['1 = 0'], [], true);
                     } else {
-                        
+
                         $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
                         $classData = $InstitutionClassesSecondaryStaff->find()
                         ->select([$InstitutionClassesSecondaryStaff->aliasField('institution_class_id')])
                         ->where([$InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $userId])->toArray();
-            
+
                         $classIds = [];
-                        
+
                         if (!empty($classData)) {
                             foreach ($classData as $key => $value) {
                                 $classIds[] = $value->institution_class_id;
                             }
                         }
-                        
+
                         if (!empty($classIds)) {
                             $query->where([
                                     'OR' => [
@@ -304,7 +304,7 @@ class ImportCompetencyResultsTable extends AppTable
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->getAlias(), $request->getData())) {
                 $requestData = $request->getData()[$this->getAlias()]; // Get request data for the alias
-                if (array_key_exists('academic_period', $requestData)) {
+                if (isset($requestData['academic_period'])) {
                     $requestData['period'] = $requestData['academic_period'];
                     $request->getData()[$this->getAlias()] = $requestData; // Modify request data
                 }
@@ -319,7 +319,7 @@ class ImportCompetencyResultsTable extends AppTable
 
     public function onUpdateFieldCompetencyTemplate(Event $event, array $attr, $action, ServerRequest $request)
     {
-        
+
         if ($action == 'add') {
             $academicPeriodId = !is_null($this->request->getQuery('period')) ? $this->request->getQuery('period') : $this->AcademicPeriods->getCurrent();
             $getclassId = $this->request->getData('ImportCompetencyResults')['class'];
@@ -377,7 +377,7 @@ class ImportCompetencyResultsTable extends AppTable
     {
         if ($action == 'add') {
             $competencyItemsPeriodsTable = TableRegistry::get('Competency.CompetencyItemsPeriods');
-            $competencyCriteriasTable = TableRegistry::get('Competency.CompetencyCriterias');              
+            $competencyCriteriasTable = TableRegistry::get('Competency.CompetencyCriterias');
             $conditions = [];
             if (!empty($request->getData()[$this->getAlias()]['academic_period']) && !empty($request->getData()[$this->getAlias()]['competency_template']) && !empty($request->getData()[$this->getAlias()]['competency_period'])) {
                 $conditions[] = [
@@ -386,7 +386,7 @@ class ImportCompetencyResultsTable extends AppTable
                     $competencyItemsPeriodsTable->aliasField('competency_period_id') => $request->getData()[$this->getAlias()]['competency_period']
                 ];
             }
-          
+
             $competencyItemOptions = $competencyItemsPeriodsTable->find()
                 ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
                 ->select([
@@ -462,7 +462,7 @@ class ImportCompetencyResultsTable extends AppTable
         $template = $this->request->getQuery('competency_template');
         $academicPeriod = $this->request->getQuery('academic_period');
         $competencyItem = $this->request->getQuery('competency_item');
-        $competencyTemplate = $this->request->getQuery('competency_template');     
+        $competencyTemplate = $this->request->getQuery('competency_template');
 
         $competencyCriteriasTable = TableRegistry::get('Competency.CompetencyCriterias');
         $arrayCompetencyCriterias = $competencyCriteriasTable->find()
@@ -474,6 +474,6 @@ class ImportCompetencyResultsTable extends AppTable
         ->toArray();
 
         return $arrayCompetencyCriterias;
-    }    
+    }
 }
 

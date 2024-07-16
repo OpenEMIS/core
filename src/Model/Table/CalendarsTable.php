@@ -398,7 +398,7 @@ class CalendarsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // POCOR-6122 start
-        if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
+        if (isset($extra['selectedAcademicPeriodOptions'])) {
             $query->where([
                         $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']
                     ], [], true); //this parameter will remove all where before this and replace it with new where.
@@ -421,7 +421,7 @@ class CalendarsTable extends ControllerActionTable
                         'max_date' => $query->func()->max('date')
                     ])
                     ->group([$calendarEventDates->aliasField('calendar_event_id')]);
-        
+
         $query->select([
             $this->aliasField('id') ,
             $this->aliasField('name'),
@@ -457,5 +457,5 @@ class CalendarsTable extends ControllerActionTable
                 'institution_id =' .$institutionId
             ]);
         }
-    }    
+    }
 }

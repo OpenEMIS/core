@@ -131,27 +131,27 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         $isRestricted = $ConfigStaffReleaseTable->checkStaffReleaseRestrictedBetweenSameType($entity->previous_institution_id, $entity->new_institution_id);
 
         if (!$isRestricted) {
-            
+
             if ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->new_institution_id) {
                 $canAddButtons = $this->NewInstitutions->isActive($entity->new_institution_id);
             } else if ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id) {
                 $canAddButtons = $this->PreviousInstitutions->isActive($entity->previous_institution_id);
             }
-            
+
         }
-        
+
         $isRestrictedDiffrentProvider = $ConfigStaffReleaseTable->checkStaffReleaseRestrictedBetweenDifferentProvider($entity->previous_institution_id, $entity->new_institution_id);
 
         if (!$isRestrictedDiffrentProvider) {
-            
+
             if ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->new_institution_id) {
                 $canAddButtons = $this->NewInstitutions->isActive($entity->new_institution_id);
             } else if ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id) {
                 $canAddButtons = $this->PreviousInstitutions->isActive($entity->previous_institution_id);
             }
-            
+
         }
-        
+
         return $canAddButtons;
     }
 
@@ -340,7 +340,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
     {
         $institutionId = $options['institution_id'];
         $incomingInstitution = self::INCOMING;
-        $pending = array_key_exists('pending_records', $options) ? $options['pending_records'] : false;
+        $pending = isset($options['pending_records']) ? $options['pending_records'] : false;
 
         $query
             ->matching('Statuses.WorkflowStepsParams', function ($q) {
@@ -364,7 +364,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
     {
         $institutionId = $options['institution_id'];
         $outgoingInstitution = self::OUTGOING;
-        $pending = array_key_exists('pending_records', $options) ? $options['pending_records'] : false;
+        $pending = isset($options['pending_records']) ? $options['pending_records'] : false;
 
         $query
             ->matching('Statuses.WorkflowStepsParams', function ($q) {

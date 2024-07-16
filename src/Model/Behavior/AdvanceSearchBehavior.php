@@ -78,7 +78,7 @@ class AdvanceSearchBehavior extends Behavior
                 $label = $labels->getLabel($this->_table->getAlias(), $key, $language);
                 if (!in_array($key, $this->getConfig('exclude'))) {
                     $selected = (isset($advanceSearchModelData['belongsTo']) && isset($advanceSearchModelData['belongsTo'][$key])) ? $advanceSearchModelData['belongsTo'][$key] : '' ;
-                                      
+
                     if ($this->isForeignKey($key)) {
                         $relatedModel = $this->getAssociatedBelongsToModel($key);
                         $list = $relatedModel->getList();
@@ -146,7 +146,7 @@ class AdvanceSearchBehavior extends Behavior
                 }
             }
 
-            if (array_key_exists('belongsTo', $advanceSearchModelData)) {
+            if (isset($advanceSearchModelData['belongsTo'])) {
                 foreach ($advanceSearchModelData['belongsTo'] as $field => $value) {
                     if (!empty($value) && $advancedSearch == false) {
                         $advancedSearch = true;
@@ -154,7 +154,7 @@ class AdvanceSearchBehavior extends Behavior
                 }
             }
 
-            if (array_key_exists('hasMany', $advanceSearchModelData)) {
+            if (isset($advanceSearchModelData['hasMany'])) {
                 foreach ($advanceSearchModelData['hasMany'] as $field => $value) {
                     if (strlen($value) > 0 && $advancedSearch == false) {
                         $advancedSearch = true;
@@ -162,7 +162,7 @@ class AdvanceSearchBehavior extends Behavior
                 }
             }
 
-            if (array_key_exists('tableField', $advanceSearchModelData)) {
+            if (isset($advanceSearchModelData['tableField'])) {
                 foreach ($advanceSearchModelData['tableField'] as $field => $value) {
                     if (strlen($value) > 0 && $advancedSearch == false) {
                         $advancedSearch = true;
@@ -316,7 +316,7 @@ class AdvanceSearchBehavior extends Behavior
         $areaKeys[] = 'area_administrative_id';
         $areaKeys[] = 'birthplace_area_id';
         $areaKeys[] = 'address_area_id';
-        
+
         foreach ($advancedSearchBelongsTo as $key => $value) {
             if (!empty($value) && $value>0) {
                 if (in_array($key, $areaKeys)) {

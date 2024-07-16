@@ -23,7 +23,7 @@ class SetupCoordinatesBehavior extends SetupBehavior
         $requestData = $this->_table->request->getData();
         $alias = $this->_table->getAlias();
         if (!empty($requestData)) {
-            $fieldType = (array_key_exists('field_type', $requestData[$alias]))? $requestData[$alias]['field_type']: null;
+            $fieldType = (isset($requestData[$alias]['field_type']))? $requestData[$alias]['field_type']: null;
         } else {
             if (!empty($entity)) {
                 $fieldType = $entity->field_type;

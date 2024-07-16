@@ -7,7 +7,7 @@
 
 		$found = false;
 		foreach ($toolbarButtons as $button) {
-			if ((array_key_exists('type', $button) && $button['type'] == 'button') || !array_key_exists('type', $button)) {
+			if ((isset($button['type']) && $button['type'] == 'button') || !isset($button['type'])) {
 				$found = true;
 				break;
 			}
@@ -16,7 +16,7 @@
 			$toolbarClass[] = 'btn-none';
 		}
 	}
-	if (isset($indexElements) && array_key_exists('advanced_search', $indexElements)) {
+	if (isset($indexElements) && isset($indexElements['advanced_search'])) {
 		$toolbarClass[] = 'toolbar-search-adv';
 	}
 
