@@ -7359,21 +7359,19 @@ class InstitutionController extends Controller
         }
     }
 
-    public function subjectClasses($institutionId, $academicPeriodId, $educationGradeId)
+    public function subjectClasses($institutionId, $educationGradeId, $institutionSubjectId)
     {
         try {
 
             $validateInstitution = $this->institutionService->validateInstitution($institutionId);
 
-            $validateAcademicPeriod = $this->institutionService->validateAcademicPeriod($academicPeriodId);
-
             $validateEducationGrade = $this->institutionService->validateEducationGrade($educationGradeId);
 
-            if (!$validateInstitution || !$validateAcademicPeriod || !$validateEducationGrade) {
+            if (!$validateInstitution || !$validateEducationGrade) {
                 return $this->sendErrorResponse('Unsuccessful-Invalid Parameters');
             }
 
-            $data = $this->institutionService->subjectClasses($institutionId, $academicPeriodId, $educationGradeId);
+            $data = $this->institutionService->subjectClasses($institutionId, $educationGradeId, $institutionSubjectId);
 
             return $this->sendSuccessResponse("Successful", $data);
 
