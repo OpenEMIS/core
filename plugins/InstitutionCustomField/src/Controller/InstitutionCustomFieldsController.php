@@ -6,6 +6,7 @@ use App\Controller\AppController;
 use Cake\ORM\Table;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use Cake\Event\EventInterface;
 
 class InstitutionCustomFieldsController extends AppController
 {
@@ -25,7 +26,7 @@ class InstitutionCustomFieldsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'InstitutionCustomField.InstitutionCustomForms']);
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
 
@@ -55,7 +56,7 @@ class InstitutionCustomFieldsController extends AppController
         $this->set('contentHeader', $header);
     }
 
-    public function beforeRender(Event $event)
+    public function beforeRender(EventInterface $event)
     {
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
