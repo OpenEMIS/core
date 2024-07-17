@@ -1324,12 +1324,11 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, UtilsSvc, A
     }
 
     scope.addGuardian = function(){
-        // POCOR-8014-n
-        // if($window.localStorage.getItem('studentOpenEmisId')) {
-        //     $window.localStorage.removeItem('studentOpenEmisId');
-        // }
-        var queryString = KdDataSvc.urlsafeB64Encode(JSON.stringify({student_id: scope.selectedUser, user_id: scope.selectedUserData.userId, openemis_no: scope.selectedUserData.openemis_no }));
-        $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian?queryString=' + queryString;
+        let params = {
+            openemis_no: scope.selectedUserData.openemis_no
+        };
+        var queryString = KdDataSvc.urlsafeB64Encode(JSON.stringify(params));
+        $window.location.href = angular.baseUrl + '/Directory/Directories/Addguardian/' + queryString;
     }
 
     scope.getStudentCustomFields = function() {

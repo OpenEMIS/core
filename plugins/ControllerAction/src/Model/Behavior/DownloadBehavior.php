@@ -54,7 +54,7 @@ class DownloadBehavior extends Behavior
 
         if ($model->exists($ids)) {
             $data = $model->get($ids);
-			$fileName = $data->{$this->config('name')};
+			$fileName = $data->{$this->getConfig('name')};
 			$fileNameData = explode(".",$fileName);
 			$fileName = $fileNameData[0].'.pdf';
 			$pathInfo['extension'] = 'pdf';

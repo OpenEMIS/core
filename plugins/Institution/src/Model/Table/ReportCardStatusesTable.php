@@ -14,6 +14,7 @@ use Cake\Event\Event;
 use Cake\I18n\Time;
 use Cake\I18n\Date;//POCOR-6841
 use Cake\Log\Log;
+use Cake\I18n\FrozenTime;
 use Cake\Datasource\ConnectionManager; //POCOR-6785
 use App\Model\Table\ControllerActionTable;
 
@@ -125,12 +126,12 @@ class ReportCardStatusesTable extends ControllerActionTable
         if (!$reportExists) {
             return $buttons;
         }
-
         $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
         $params = [
             'report_card_id' => $reportCardId,
             'student_id' => $entity->student_id,
-            'institution_id' => $entity->institution_id,
+            // 'institution_id' => $entity->institution_id, V4
+            'institution_id' => $entity['institution']['id'],
             'academic_period_id' => $entity->academic_period_id,
             'education_grade_id' => $entity->education_grade_id,
         ];
@@ -278,13 +279,13 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'institution_id' =>$institutionId,
                 'status !=' =>'-1'
         ]])->where([$ReportCardProcessesTable->aliasField('modified IS NOT NULL')])->toArray();
-
+        
         foreach ($entitydata as $keyy => $entity) {
             //POCOR-7067 Starts
             $now = new DateTime();
             $currentDateTime = $now->format('Y-m-d H:i:s');
             $c_timestap = strtotime($currentDateTime);
-            $modifiedDate = $entity->modified;
+            $modifiedDate = $entity->modified->timezone($timeZone)->format('Y-m-d H:i:s');
             //POCOR-6841 starts
             if ($entity->status == 2) {
                 //POCOR-6895: START
@@ -514,6 +515,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 if ($existingReportCard && $existingClass) {
                     $generatedCount = 0;
                     $publishedCount = 0;
+                    $dataCount = count($data);//POCOR-8300
                     // count statuses to determine which buttons are shown
                     foreach ($data as $student) {
                         if ($student->has('report_card_status')) {
@@ -601,7 +603,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                         ])
                         ->count();
 
-                    if ($generatedCount > 0 || $publishedCount > 0) {
+                        if (($dataCount == $generatedCount) && ($generatedCount > 0 || $publishedCount > 0)) { //POCOR-8300
                         if ($this->AccessControl->isAdmin()) {
                             $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
                             $downloadButtonPdf['type'] = 'button';
@@ -761,6 +763,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 if ($existingReportCard && $existingClass) {
                     $generatedCount = 0;
                     $publishedCount = 0;
+                    $dataCount = count($data);//POCOR-8300
                     // count statuses to determine which buttons are shown
                     foreach ($data as $student) {
                         if ($student->has('report_card_status')) {
@@ -849,7 +852,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                             //$SecurityRoleFunctionsTable->aliasField('_execute') => 1,/
                         ])
                         ->count();
-                    if ($generatedCount > 0 || $publishedCount > 0) {
+                    if (($dataCount == $generatedCount) && ($generatedCount > 0 || $publishedCount > 0)) { //POCOR-8300
                         if ($this->AccessControl->isAdmin()) {
                             $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
                             $downloadButtonPdf['type'] = 'button';
@@ -1042,7 +1045,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             if (!empty($filePaths)) {
                 $this->mergePDFFiles($filePaths);
             }
-
+            exit();
         } else {
             $event->stopPropagation();
             $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
@@ -1061,7 +1064,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         if ($filenames) {
             $filesTotal = sizeof($filenames);
-            $mpdf->SetImportUse();
+            // $mpdf->SetImportUse();
 
             for ($i = 0; $i < count($filenames); $i++) {
                 $curFile = $filenames[$i];
@@ -1253,13 +1256,12 @@ class ReportCardStatusesTable extends ControllerActionTable
             'report_card_id' => $reportCardId,
             'institution_class_id' => $entity->institution_class_id,
             'student_id' => $entity->student_id,
-            'institution_id' => $entity->institution_id,
+            // 'institution_id' => $entity->institution_id,
+            'institution_id' => $entity['institution']['id'],
             'education_grade_id' => $entity->education_grade_id,
             'academic_period_id' => $entity->academic_period_id
         ];
-
         $resultIndex = array_search($search, $this->reportProcessList);
-
         if ($resultIndex !== false) {
             $totalQueueCount = count($this->reportProcessList);
             return sprintf(__('%s of %s'), $resultIndex + 1, $totalQueueCount);
@@ -1487,6 +1489,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
             // delete file after download
             unlink($filepath);
+            exit();
         } else {
             $event->stopPropagation();
             $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
@@ -1546,6 +1549,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
             // delete file after download
             unlink($filepath);
+            exit();
         } else {
             $event->stopPropagation();
             $this->Alert->warning('ReportCardStatuses.noFilesToDownload');

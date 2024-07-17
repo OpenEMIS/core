@@ -9,6 +9,8 @@ class InstitutionClassStudents extends Model
 {
     use HasFactory;
 
+    protected $primaryKey = 'id';
+    public $incrementing = false;
     public $timestamps = false;
     protected $table = "institution_class_students";
 
@@ -44,5 +46,19 @@ class InstitutionClassStudents extends Model
     {
         return $this->belongsTo(EducationGrades::class, 'education_grade_id', 'id');
     }
+
+
+    //For POCOR-8363 Start...
+    public function createdUser()
+    {
+        return $this->belongsTo(SecurityUsers::class, 'created_user_id', 'id');
+    }
+
+
+    public function modifiedUser()
+    {
+        return $this->belongsTo(SecurityUsers::class, 'modified_user_id', 'id');
+    }
+    //For POCOR-8363 End...
 
 }

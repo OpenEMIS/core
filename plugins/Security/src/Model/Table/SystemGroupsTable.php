@@ -12,6 +12,7 @@ use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
 use App\Model\Traits\HtmlTrait;
 use App\Model\Table\ControllerActionTable;
+use Cake\Datasource\EntityInterface;
 
 class SystemGroupsTable extends ControllerActionTable
 {
@@ -120,7 +121,7 @@ class SystemGroupsTable extends ControllerActionTable
         //     'visible' => ['index' => false, 'view' => true, 'edit' => true]
         // ]);
 
-        $this->ControllerAction->setFieldOrder(['name', 'users']);
+        $this->setFieldOrder(['name', 'users']); // POCOR-8446
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -225,5 +226,5 @@ class SystemGroupsTable extends ControllerActionTable
         }
     }
 
-        
+
 }

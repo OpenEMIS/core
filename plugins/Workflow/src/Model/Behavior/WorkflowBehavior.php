@@ -488,20 +488,33 @@ class WorkflowBehavior extends Behavior
 
                 $params = [];
                 if ($workflowModel->is_school_based) {
-                    $session = $this->_table->request->getSession();
-                    if ($session->check('Institution.Institutions.id')) {
+                    $table = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+                    //POCOR-8401,POCOR-8402 starts
+                    if($this->controller->getName() != 'Profiles'){
+                        try {
+                            $institutionId = $table->getQueryString('institution_id');
+                        } catch (\Exception $exception) {
+                            Log::debug($exception->getMessage() . __CLASS__ . __FUNCTION__);
+                            $institutionId = $table->paramsDecode($this->_table->request->getAttribute('params')['pass'][1]);
+                        }
                         $params = [
-                            'institution_id' => $session->read('Institution.Institutions.id')
+                            'institution_id' => $institutionId
                         ];
-                    }
+                    }//POCOR-8401,POCOR-8402 ends
+                    //$session = $this->controller->request->session();
+                    // if ($session->check('Institution.Institutions.id')) {
+                        // $params = [
+                        //     'institution_id' => $institutionId
+                        // ];
+                    // }
                 }
 
                 $newEvent = $subject->dispatchEvent('Workflow.getFilterOptions', [$params], $subject);
                 if ($newEvent->isStopped()) {
-                    return $newEvent->result;
+                    return $newEvent->getResult();
                 }
-                if (!empty($newEvent->result)) {
-                    $filterOptions = $newEvent->result;
+                if (!empty($newEvent->getResult())) {
+                    $filterOptions = $newEvent->getResult();
                 }
                 // End
                 //POCOR-7263::Start
@@ -509,7 +522,7 @@ class WorkflowBehavior extends Behavior
                 $url = $_SERVER['QUERY_STRING'];
                 $data = explode('=', $url);
                 $filterOne = $data[1];
-                $filterTwo = $data[2];
+                // $filterTwo = $data[2];
                 $firstVal = preg_replace('/\D/', '', $filterOne);
                 $selectedFilter = $firstVal;
                 //POCOR-7263::End
@@ -589,6 +602,7 @@ class WorkflowBehavior extends Behavior
                 $this->_table->controller->set(compact('monthOptions','selectedMonth'));
                 // End
             }
+            // echo "<pre>";print_r($selectedFilter);die;
             //POCOR-5695 ends
         }
     }
@@ -1261,17 +1275,26 @@ class WorkflowBehavior extends Behavior
             if ($entity->has('institution_id')) {
                 $params['institution_id'] = $entity->institution_id;
             } else {
-                $session = $request->getSession();
-                if ($session->check('Institution.Institutions.id')) {
-                    $institutionId = $session->read('Institution.Institutions.id');
-                    $params['institution_id'] = $institutionId;
+                $table = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
+                //POCOR-8401,POCOR-8402 starts
+                if ($this->controller->getName() != 'Profiles') {
+                    try {
+                        $institutionId = $table->getQueryString('institution_id');
+                    } catch (\Exception $exception) {
+                        Log::debug($exception->getMessage() . __CLASS__ . __FUNCTION__);
+                        $institutionId = $table->paramsDecode($this->_table->request->getAttribute('params')['pass'][1]);
+                    }
+                    $params = [
+                        'institution_id' => $institutionId
+                    ];
                 }
+                $params['institution_id'] = $institutionId;
             }
         }
-
         $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $assigneeOptions = $SecurityGroupUsers->getAssigneeList($params);
         return $assigneeOptions;
+
     }
 
     public function getFirstWorkflowStep($registryAlias, Entity $entity)
@@ -1303,11 +1326,13 @@ class WorkflowBehavior extends Behavior
                 $assigneeOptions = [self::AUTO_ASSIGN => __('Auto Assign')];
                 $attr['select'] = false;
             } else {
-                $model = $this->_table;
-                $session = $model->request->getSession();
-                $requestInstitutionId = $model->request->getAttribute('params')['institutionId'];
-                $institutionId = isset($requestInstitutionId) ? $model->paramsDecode($requestInstitutionId)['id'] : $session->read('Institution.Institutions.id');
-
+                $table = $this->_table;
+                try {
+                    $institutionId = $table->getQueryString('institution_id');
+                } catch (\Exception $exception) {
+                    Log::debug($exception->getMessage() . __CLASS__ . __FUNCTION__);
+                    $institutionId = $table->paramsDecode('institution_id');
+                }
                 $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
                 $params = [
                     'is_school_based' => $actionAttr['is_school_based'],
@@ -2409,7 +2434,6 @@ class WorkflowBehavior extends Behavior
                 $this->_table->controller->Alert->error('general.edit.failed', ['reset' => true]);
             }
             // End
-
             // Redirect
             if ($this->isCAv4()) {
                 $url = $this->_table->url('view');
@@ -2417,6 +2441,9 @@ class WorkflowBehavior extends Behavior
                 $url = $this->_table->ControllerAction->url('view');
             }
 
+            $params = $this->_table->getQueryString();
+            $encodedQueryString = $this->_table->paramsEncode($params);
+            $url['1'] = $encodedQueryString;
             return $this->_table->controller->redirect($url);
             // End
         }

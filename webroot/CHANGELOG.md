@@ -1,3 +1,119 @@
+### [4.0.11] - 2024-07-16
+- Bug Fixed: Administration>System Setup>System Configuration: Display records is jumbled up
+- Bug Fixed: PHP 8.0(Administration>Security>Users)-Cannot search for student and staff
+- Bug Fixed: (PHP8.0)Institutions>Survey>Forms: User is unable to save survey answers with validations
+
+### [4.0.10] - 2024-07-12
+- Bug Fixed: Administration > Surveys > Forms > Filters: Other permissions are disabled
+- Bug Fixed: PHP 8.0: Pages cannot load Part three
+- Bug Fixed: PHP 8.0: Login as Principal and access and edit survey
+- Bug Fixed: (PHP8.0)Institutions>Survey>Forms: Edit not present in list page
+- Bug Fixed: (PHP8.0)Administration>Surveys>Forms: Download getting internal server error
+- Bug Fixed: (PHP8.0)Institutions>Survey>Forms: User getting 404 when saving survey
+- Bug Fixed: (PHP8.0)Institutions>Survey>Forms: User getting blank page when first login user
+
+### [4.0.9] - 2024-07-11
+- Implemented: Develop changes to API for attendance import template
+- Bug Fixed: Login : When logged in as Arabic, system switches back to English after navigating to another page
+- Bug Fixed: Institutions>Surveys>Forms: Repeater Form and Staff List are not showing correctly
+- Bug Fixed: Administration>Survey>Forms: User is unable to view, edit and delete and save
+- Bug Fixed: PHP 8.0: Pages cannot load
+- Bug Fixed: PHP 8.0: Pages cannot load Part two
+
+### [4.0.8] - 2024-07-10
+- Bug Fixed: Institutions > Staff > Career > Leave: When applying for leave for staff for the previous academic period, the page got refreshed upon selecting the assignee
+- Bug Fixed: Administration > Surveys > Forms > Filters/Recipient: When giving permission for user to view Survey Filters and Recipients, the user is not able to see it in their account
+- Bug Fixed: Administration>Security>Roles>Permissions: It does not show security role name and cannot save
+- Bug Fixed: Personal>Student>Academic(Automation): Showing blank page for all tabs
+- Bug Fixed: Institutions>Surveys>Forms: Student list is not showing correctly
+- Bug Fixed: 404 error page is displayed but system errors is not updated
+
+### [4.0.7] - 2024-07-09
+- Implemented: Develop APIs for student attendance import, export, no scheduled and class
+- Bug Fixed: Administration > System Setup > Custom Fields > Institution/Student/Staff/Infrastructure: The phrase is "Should not be lesser than"
+- Bug Fixed: Administration > Profiles > Students: PDF Template not formatted correctly
+- Bug Fixed: Personal>Staff>Career>Institution Curricular(Automation): User is getting blank page
+- Bug Fixed: Institutions>Students>Academic>Programmes(Automation): It should show Student Name - Tab Name
+- Bug Fixed: Administration > Surveys > Forms : Sections are not appearing in Question tab when viewed
+
+### [4.0.6] - 2024-07-08
+- Implemented: Develop changes to API for meals import template
+- Bug Fixed: Institutions>Students>List>Overview: Custom fields are not showing
+- Bug Fixed: Institutions>Academic>Subjects: Added subjects not showing unassigned students and export is not showing correctly
+- Bug Fixed: 404 error page not displayed and debug not working
+
+### [4.0.5] - 2024-07-08
+- Bug Fixed: Institutions > Performance > Report Cards > Merge and Download PDF: When merging and downloading PDF for students report card, the page gives a 404 error.
+- Bug Fixed: Institutions>Staff>Career>Attendance(Automation): User is getting blank page Part 3
+- Bug Fixed: Administrations > Surveys > Forms > Filters/Status : Feature returns blank page
+- Bug Fixed: Institutions > Surveys > Forms : Questions configured in Survey Forms are not showing
+
+### [4.0.4] - 2024-07-05
+- Bug Fixed: Institutions>Students>Add(Automation): Unable to add students by OpenEMIS or Identity Number
+- Bug Fixed: Institutions>Students>Guardian>Add: Relation type is empty
+- Bug Fixed: Institutions>Performance>Assessment>View: Edit button is missing
+- Bug Fixed: Administration>Security>Roles>Permissions: User is unable to see permission page
+- Bug Fixed: Institutions>Staff>List>Edit(Automation): When saving, user is getting blank page
+- Bug Fixed: API : Institution Positions endpoint are missing required data
+- Bug Fixed: Institution>Utilities>Telephone(Automation): User is getting blank page
+- Bug Fixed: Administrations > System Setup > System Configurations > System : Changes in System
+- Bug Fixed: API: Apis are not working properly
+- Bug Fixed: Personal>Staff>Career>Appraisals: Showing blank page
+- Bug Fixed: Institutions>Staff(Automation): User is getting blank page Part 2
+- Bug Fixed: Administrations > System Setup > System Configurations > Themes : Login Page is not updated with the configured settings for themes.
+
+### [4.0.3] - 2024-07-02
+- Implemented: Develop changes to all existing v4 APIs to include Swagger annotations in API file headers
+- Implemented: Develop changes to all existing v4 APIs for parameter and response behaviour
+- Bug Fixed: Institutions > Attendance > Students: User is able to mark attendance for inactive school
+- Bug Fixed: Institutions > Messaging > Edit: The page give 404 error.
+- Bug Fixed: Directory>Student/Staff>Health/Special Needs: User is unable to add
+- Bug Fixed: API: User is not getting "mark" key in response
+- Bug Fixed: Institutions > Infrastructure > Overview > Floor > Add: When adding floor, they face a 404 error.
+- Bug Fixed: Administration > Survey > Forms: 404 error when deleting the survey even though there are no associated records
+- Bug Fixed: Institutions>List>Add: User is unable to add institutions
+- Bug Fixed: Institutions>Attendance>Students(Automation): Students are not appearing
+- Bug Fixed: Institutions>Students>Academic>Classes: Homeroom teacher and secondary not populating
+- Bug Fixed: Institutions>Students>Academic>Subjects: Record is not added and teacher column is empty
+- Bug Fixed: Institutions>Students>General>Overview>Export(Automation): User is getting blank page
+- Bug Fixed: Administration>Profile>Institution: User should be able to generate or generate all
+- Bug Fixed: Institutions>Schedules>Timetable>Timetable tab: Timetable not showing
+- Bug Fixed: Administration > Security > Users: The page gives 404 error when creating users in Core
+- Bug Fixed: Institutions>Students>Academic>Report Cards(Automation): Getting blank page
+- Bug Fixed: Personal>Staff>Timetables(Automation): Getting blank page(Login as superrole)
+
+### [4.0.2] - 2024-06-27
+- Bug Fixed: OpenEMIS Core Training v4 APIs is not working due to changes in table structure
+- Bug Fixed: API: When retrieving the institution schedule timetable using API v4, it gives a 404 error status
+- Bug Fixed: Institutions>Attendance>Staff: Late is not showing correctly
+- Bug Fixed: Institutions>Performance>Report Cards(Automation): User should be able to generate report cards
+- Bug Fixed: Institutions>Report Cards>Comments: User should be able to view and edit homeroom teacher, Principal and subject teacher tabs
+- Bug Fixed: Administration(Automation): User is getting blank page and left menu not collapsed part two
+- Bug Fixed: Institutions>Staff(Automation): User is getting blank page
+- Bug Fixed: Institution>Finance>Institution Fees(Automation): User is getting blank page
+- Bug Fixed: Personal>General>History(Automation): Left menu is not collapsed
+- Bug Fixed: When running "composer dump-autoload", having error
+- Bug Fixed: Institutions>Attendance>Students: No scheduled class button is taking very long to load and the query takes a long time to run.
+- Bug Fixed: Institutions>Attendance>Students(Automation): Login as homeroom teacher and attendance is not showing
+- Bug Fixed: Meals Benefits Api-Not received and none should not have mandatory meal benefits for import
+
+### [4.0.1] - 2024-06-24
+- Implemented: Develop a PHP file to display the server IP address
+- Implemented: Develop OpenEMIS Core Assessment v4 APIs
+- Implemented: Develop APIs for meals import and export
+- Bug Fixed: Report>Staff: When selecting Area Level which is not All Area Level, the report is stuck in progress
+- Bug Fixed: Institutions>General>Map: User is able to delete institution while deleting map
+- Bug Fixed: Institutions>Students(Automation): Promote,Graduate, Repeat should work
+- Bug Fixed: Institutions>Students>Export: Export is giving blank page
+- Bug Fixed: Institutions>Students>General: Showing Avory Primary School instead of the student itself
+- Bug Fixed: Institutions>Performance>Competencies: User should be able to edit
+- Bug Fixed: Personal>History tab(Automation): It should collapse the left menu
+- Bug Fixed: Report>Examination>Add(Automation): Going blank page
+- Bug Fixed: Administration(Automation): User is getting blank page and left menu not collapsed
+- Bug Fixed: Institutions>Students(Automation): There is no tabs to select from the top menu
+- Bug Fixed: Institutions>Students>Promote Button: Next class is not showing in core
+- Bug Fixed: Report>Survey>Add(Automation): Getting blank page
+
 ### [4.0.0] - 2024-06-18
 - Bug Fixed: Update existing APIv4 for Student attendance Toolbar functions
 - Bug Fixed: Update existing APIv4 for Student Assessment Toolbar functions

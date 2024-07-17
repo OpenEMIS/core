@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\Event;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
@@ -61,7 +61,7 @@ class ExcelReportBehavior extends Behavior
         $folder = WWW_ROOT . $this->getConfig('folder');
         $subfolder = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder');
         if (!isset($config['filename'])) {
-            $this->getConfig('filename', $model->getAlias());
+            $this->setConfig('filename', $model->getAlias());
         }
 
         new Folder($folder, true, 0777);
@@ -91,10 +91,10 @@ class ExcelReportBehavior extends Behavior
     public function onRenderExcelTemplate(Event $event, ArrayObject $extra)
     {
         ini_set('max_execution_time', 360);
-        $this->renderExcelTemplate($extra);
+        $this->renderExcelTemplate($extra, $event);
     }
 
-    public function renderExcelTemplate(ArrayObject $extra)
+    public function renderExcelTemplate(ArrayObject $extra, Event $event)
     {
         $model = $this->_table;
         $format = $this->getConfig('format');
@@ -105,15 +105,17 @@ class ExcelReportBehavior extends Behavior
         } else {
             Log::write('debug', 'ExcelReportBehavior2 >>> filepath2: ');
             $params = $model->getQueryString();
+            if(empty($params)){
+                $params = $model->paramsDecode($event->getSubject()->getRequest()->getQuery('queryString'));
+            }
             $paramVal = $params['assessment_id']; //POCOR-6908
         }
-
 
         $extra['params'] = $params;
         $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateBeforeGenerate', [$params, $extra], $this); // POCOR-7443
         $extra['vars'] = $this->getVars($params, $extra);
 
-
+        
         $extra['file'] = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $format;
         $extra['path'] = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS;
 
@@ -121,7 +123,7 @@ class ExcelReportBehavior extends Behavior
         $extra['file_path'] = $temppath;
 
 
-        $objSpreadsheet = $this->loadExcelTemplate($extra);
+        $objSpreadsheet = $this->loadExcelTemplate($extra, $event);
         $this->generateExcel($objSpreadsheet, $extra);
 
         Log::write('debug', 'ExcelReportBehavior >>> renderExcelTemplate');
@@ -132,7 +134,7 @@ class ExcelReportBehavior extends Behavior
             Log::write('debug', 'ExcelReportBehavior1 >>> filepath2: ');
             $this->saveFile($objSpreadsheet, $temppath, $format, $params['student_id'],$params['report_card_id']);
         }
-		
+        
         if ($extra->offsetExists('temp_logo')) {
             // delete temporary logo
             $this->deleteFile($extra['temp_logo']);
@@ -150,20 +152,20 @@ class ExcelReportBehavior extends Behavior
         $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateAfterGenerate', [$params, $extra], $this);
 
         if (!empty($params['student_id'])) {
-			$pdfFilePath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $this->getConfig('filename') . '_' . $params['student_id'].'.txt';
+            $pdfFilePath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $this->getConfig('filename') . '_' . $params['student_id'].'.txt';
             $pdfFileContent = file_get_contents($pdfFilePath);
-			
-			$StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
-			// save Pdf file
-			$StudentsReportCards->updateAll([
-				'file_content_pdf' => $pdfFileContent,
+            
+            $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+            // save Pdf file
+            $StudentsReportCards->updateAll([
+                'file_content_pdf' => $pdfFileContent,
                 'status'=>3//POCOR-7530
-			], $params);
-			
-			$this->deleteFile($pdfFilePath);
+            ], $params);
+            
+            $this->deleteFile($pdfFilePath);
         }
-		
-		if ($this->getConfig('download')) {
+        
+        if ($this->getConfig('download')) {
             $tempfile = new File($temppath);
             $tempinfo = $tempfile->info();
             $tempcontent = $tempfile->read();
@@ -180,14 +182,18 @@ class ExcelReportBehavior extends Behavior
         gc_collect_cycles();
     }
 
-    public function loadExcelTemplate(ArrayObject $extra)
+    public function loadExcelTemplate(ArrayObject $extra, Event $event)
     {
         $model = $this->_table;
-
         if (isset($extra['requestQuery']) && isset($extra['requestQuery'][$this->getConfig('templateTableKey')])) {
             $recordId = $extra['requestQuery'][$this->getConfig('templateTableKey')];
         } else {
-            $recordId = $model->getQueryString($this->getConfig('templateTableKey'));
+            //$recordId = $model->getQueryString($this->getConfig('templateTableKey'));
+            $params = $model->getQueryString();
+            if(empty($params)){
+                $params = $model->paramsDecode($event->getSubject()->getRequest()->getQuery('queryString'));
+            }
+            $recordId = $params[$this->getConfig('templateTableKey')];
         }
 
         $Table = TableRegistry::get($this->getConfig('templateTable'));
@@ -387,10 +393,10 @@ class ExcelReportBehavior extends Behavior
         if ($format == 'pdf') {
             $this->savePDF($objSpreadsheet, $filepath, $student_id, $report_card_id);
         } else {
-			// pdf
-			if(!empty($student_id)) {
-				$this->savePDF($objSpreadsheet, $filepath, $student_id, $report_card_id);
-			}
+            // pdf
+            if(!empty($student_id)) {
+                $this->savePDF($objSpreadsheet, $filepath, $student_id, $report_card_id);
+            }
             // xlsx
             $objWriter->save($filepath);
         }
@@ -1045,7 +1051,7 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    public function table($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra): table
+    public function table($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra): Table
     {
         $rowValue = $attr['rowValue'];
         $columnIndex = $attr['columnIndex'];

@@ -68,7 +68,7 @@ class RestfulAccessControlBehavior extends Behavior {
     public function isAuthorized(Event $event, $scope, $action, ArrayObject $extra)
     {
         $authorisedScopes = $this->getScopes();
-        if (array_key_exists($scope, $authorisedScopes)) {
+        if (is_scalar($scope) && array_key_exists($scope, $authorisedScopes)) {
             if (in_array($action, $authorisedScopes[$scope])) {
                 return true;
             }

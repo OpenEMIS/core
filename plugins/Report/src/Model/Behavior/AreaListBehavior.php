@@ -26,6 +26,7 @@ class AreaListBehavior extends Behavior
                                $Areas->aliasField('parent_id') => $id
                             ]) 
                              ->toArray();
+        $idArray = [];
        foreach ($result as $key => $value) {
             $idArray[] = $value['id'];
            $idArray = $this->getAreaList($value['id'], $idArray);

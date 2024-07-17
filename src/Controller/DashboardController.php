@@ -11,6 +11,7 @@ use Cake\Log\Log;
 use Cake\I18n\Time;
 use App\Model\Table\AlertsTable;
 use Cake\Controller\Controller;
+use Cake\Event\EventInterface;
 
 class DashboardController extends AppController
 {
@@ -53,7 +54,7 @@ class DashboardController extends AppController
         return true;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
 

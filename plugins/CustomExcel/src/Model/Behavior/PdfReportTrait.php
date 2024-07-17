@@ -329,7 +329,7 @@ trait PdfReportTrait
         $filePaths = [];
         $basePath = $filepath;
         //POCOR-6916 start
-        $reportCard = TableRegistry::get('report_cards');
+        $reportCard = TableRegistry::get('CustomExcel.ReportCards');
         $configVal = $reportCard->find()->select(['pdf_no'=>$reportCard->aliasField('pdf_page_number')])->where([$reportCard->aliasField('id')=>$report_card_id])->first();
         if(!empty($configVal)){ //POCOR-7096
             $configValue =  $configVal['pdf_no'];
@@ -385,7 +385,7 @@ trait PdfReportTrait
 
         $this->mergePDFFiles($filePaths, $fileName, $fileName);
         // // Remove the temp file that is converted from excel object and its successfully converted to pdf
-        if ($this->config('purge')) {
+        if ($this->getConfig('purge')) {
             foreach ($filePaths as $filepath) {
                 // delete excel file after successfully converted to pdf
                 $this->deleteFile($filepath);
@@ -435,22 +435,74 @@ trait PdfReportTrait
         }
         // Merge all the pdf that belongs to one report
         if(!empty($student_id)) {
-            $fileName = $this->config('filename') . '_' . $student_id;
+            $fileName = $this->getCconfig('filename') . '_' . $student_id;
         } else {
-            $fileName = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His');
+            $fileName = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His');
         }
        
         Log::write('debug', '----------------------fileName---------------------: ');
         Log::write('debug', $fileName);
 
-        $this->mergePDFFiles($filePaths, $fileName, $fileName);
+        // $this->mergePDFFiles($filePaths, $fileName, $fileName); //V4
+        $this->mergePDFFilesAssessment($filePaths, $fileName, $fileName); 
         // // Remove the temp file that is converted from excel object and its successfully converted to pdf
-        if ($this->config('purge')) {
+        if ($this->getConfig('purge')) {
             foreach ($filePaths as $filepath) {
                 // delete excel file after successfully converted to pdf
                 $this->deleteFile($filepath);
             }
         }
+    }
+
+    private function mergePDFFilesAssessment(Array $filenames, $outFile, $title = '', $author = '', $subject = '')
+    {
+       // $mpdf = new \Mpdf\Mpdf(array('utf-8', '', 0, '', 15, 15, 16, 16, 9, 9, 'P')); //POCOR-6916
+       $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [400, 220]]); //POCOR-7090
+       $mpdf->SetTitle($title);
+       $mpdf->SetAuthor($author);
+       $mpdf->SetSubject($subject);
+       $mpdf->autoScriptToLang = true; //POCOR-7264
+       $mpdf->autoLangToFont = true; //POCOR-7264
+       if ($filenames) {
+           echo "<pre>";print_r($mpdf);die; //This is very unusual code need to debug again
+           $filesTotal = sizeof($filenames);
+           $mpdf->SetImportUse();
+
+           for ($i = 0; $i<count($filenames);$i++) {
+               $curFile = $filenames[$i];
+               if (file_exists($curFile)){
+                   $pageCount = $mpdf->SetSourceFile($curFile);
+                   for ($p = 1; $p <= $pageCount; $p++) {
+                       $tplId = $mpdf->ImportPage($p);
+                       $wh = $mpdf->getTemplateSize($tplId);
+                       if (($p==1)){
+                           $mpdf->state = 0;
+                           $mpdf->SetFontSize(1);
+                           $mpdf->SetDisplayMode('fullpage');
+                           $mpdf->AddPage('L');
+
+                           $mpdf->UseTemplate ($tplId);
+                       }
+                       else {
+                           $mpdf->state = 1;
+                           $mpdf->SetFontSize(1);
+                           $mpdf->SetDisplayMode('fullpage');
+                           $mpdf->AddPage('L');
+
+                           $mpdf->UseTemplate($tplId);
+                       }
+                   }
+               }
+           }
+       }
+       
+       $file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $outFile.'.pdf';
+       $pdf_file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS;
+       $content = $mpdf->Output($file_path, "S");
+       $fp = fopen($pdf_file_path . $outFile . ".txt","wb");
+       fwrite($fp,$content);
+       fclose($fp);
+       unset($mpdf);
     }
 
     private function mergePDFFiles(Array $filenames, $outFile, $title = '', $author = '', $subject = '')
@@ -464,7 +516,7 @@ trait PdfReportTrait
         $mpdf->autoLangToFont = true; //POCOR-7264
         if ($filenames) {
             $filesTotal = sizeof($filenames);
-            $mpdf->SetImportUse();
+            // $mpdf->SetImportUse();
 
             for ($i = 0; $i<count($filenames);$i++) {
                 $curFile = $filenames[$i];
@@ -494,8 +546,8 @@ trait PdfReportTrait
             }
         }
         
-        $file_path = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS . $outFile.'.pdf';
-        $pdf_file_path = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
+        $file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $outFile.'.pdf';
+        $pdf_file_path = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS;
         $content = $mpdf->Output($file_path, "S");
         $fp = fopen($pdf_file_path . $outFile . ".txt","wb");
         fwrite($fp,$content);

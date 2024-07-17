@@ -11,6 +11,14 @@ use App\Models\ConfigItem;
 use App\Models\SecurityUsers;
 use App\Models\OpenemisTemp;
 use App\Models\AcademicPeriod;
+use App\Models\InstitutionClassStudents;
+use App\Models\MealProgrammes;
+use App\Models\MealReceived;
+use App\Models\MealBenefits;
+use App\Models\StudentAttendanceType;
+use App\Models\InstitutionClassSubjects;
+use App\Models\AbsenceTypes;
+use App\Models\StudentAbsenceReason;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
@@ -491,5 +499,186 @@ if(!function_exists('checkAccess')){
 		}
 	}
 	//For POCOR-8208 End...
+
+
+	//For POCOR-8348 Start...
+	if(!function_exists('getClassStudents')){
+		function getClassStudents($institution_id, $institution_class_id)
+		{	
+		    $getClassStudents = getInstutionClassStudentData($institution_id, $institution_class_id);
+	    	
+	    	$resp = [];
+		    foreach($getClassStudents as $k => $student){
+		    	$resp[$k]['Name'] = $student['first_name']. ' '.$student['last_name'];
+		    	$resp[$k]['OpenEMIS ID'] = $student['openemis_no'];
+		    }
+		    return $resp;
+		}
+	}
+
+
+	if(!function_exists('getMealProgrammes')){
+		function getMealProgrammes()
+		{	
+			$currentAcademicYear = AcademicPeriod::where('current', 1)->first();
+		    $getMealProgrammes = MealProgrammes::where('academic_period_id', $currentAcademicYear->id??0)->get()->toArray();
+	    	
+	    	$resp = [];
+		    foreach($getMealProgrammes as $k => $mealProgramme){
+		    	$resp[$k]['Name'] = $mealProgramme['name'];
+		    	$resp[$k]['Code'] = $mealProgramme['code'];
+		    }
+		    return $resp;
+		}
+	}
+
+	if(!function_exists('getMealReceived')){
+		function getMealReceived()
+		{	
+		    $getMealReceived = MealReceived::get()->toArray();
+	    	
+	    	$resp = [];
+		    foreach($getMealReceived as $k => $mealReceived){
+		    	$resp[$k]['Name'] = $mealReceived['name'];
+		    	$resp[$k]['Code'] = $mealReceived['code'];
+		    }
+		    return $resp;
+		}
+	}
+
+	if(!function_exists('getMealBenefits')){
+		function getMealBenefits()
+		{	
+		    $getMealBenefits = MealBenefits::where('visible', 1)->orderBy('order', 'ASC')->get()->toArray();
+	    	
+	    	$resp = [];
+		    foreach($getMealBenefits as $k => $mealReceived){
+		    	$resp[$k]['Name'] = $mealReceived['name'];
+		    	$resp[$k]['Id'] = $mealReceived['id'];
+		    }
+		    return $resp;
+		}
+	}
+
+
+	if(!function_exists('getStudentAttendanceType')){
+		function getStudentAttendanceType()
+		{	
+		    $getStudentAttendanceType = StudentAttendanceType::get()->toArray();
+	    	
+	    	$resp = [];
+		    foreach($getStudentAttendanceType as $k => $attendanceType){
+		    	$resp[$k]['Name'] = $attendanceType['name'];
+		    	$resp[$k]['Code'] = $attendanceType['code'];
+		    }
+		    return $resp;
+		}
+	}
+
+
+	if(!function_exists('getNumberOfPeriods')){
+		function getNumberOfPeriods()
+		{	
+	    	$resp[] = [
+	    		'Number Of Periods' => "Period 1",
+	    		'Id' => "1",
+	    	];
+
+	    	return $resp;
+		}
+	}
+
+
+	if(!function_exists('getInstutionClassSubject')){
+		function getInstutionClassSubject($institution_id, $institution_class_id)
+		{	
+		    $getInstutionClassSubject = InstitutionClassSubjects::select('institution_subjects.*')
+		    		->join('institution_subjects', 'institution_subjects.id', '=', 'institution_class_subjects.institution_subject_id')
+		    		->where('institution_class_subjects.institution_class_id', $institution_class_id)
+		    		->get()
+		    		->toArray();
+	    	
+	    	$resp = [];
+		    foreach($getInstutionClassSubject as $k => $subject){
+		    	$resp[$k]['Subject'] = $subject['name'];
+		    	$resp[$k]['Id'] = $subject['id'];
+		    }
+		    return $resp;
+		}
+	}
+
+
+	if(!function_exists('getInstutionClassStudent')){
+		function getInstutionClassStudent($institution_id, $institution_class_id)
+		{	
+		    $results = getInstutionClassStudentData($institution_id, $institution_class_id);
+	    	$resp = [];
+		    foreach($results as $k => $result){
+		    	$resp[$k]['Institution'] = $result['institution_name'];
+		    	$resp[$k]['Academic Period'] = $result['academic_period_year'];
+		    	$resp[$k]['Education Grade'] = $result['education_grade_name'];
+		    	$resp[$k]['Name'] = $result['first_name']. " ".$result['last_name'];
+		    	$resp[$k]['OpenEMIS ID'] = $result['openemis_no'];
+		    }
+		    return $resp;
+		}
+	}
+
+
+	if(!function_exists('getInstutionClassStudentData')){
+		function getInstutionClassStudentData($institution_id, $institution_class_id)
+		{	
+		    $getClassStudents = InstitutionClassStudents::select(
+			    		'security_users.first_name', 
+			    		'security_users.last_name', 
+			    		'security_users.openemis_no', 
+			    		'academic_periods.name as academic_period_year',
+			    		'education_grades.name as education_grade_name',
+			    		'institutions.name as institution_name',
+		    		)
+		    		->join('security_users', 'security_users.id', '=', 'institution_class_students.student_id')
+		    		->join('academic_periods', 'academic_periods.id', '=', 'institution_class_students.academic_period_id')
+		    		->join('education_grades', 'education_grades.id', '=', 'institution_class_students.education_grade_id')
+		    		->join('institutions', 'institutions.id', '=', 'institution_class_students.institution_id')
+		    		->where("institution_id", $institution_id)
+		    		->where('institution_class_id', $institution_class_id)
+		    		->get()
+		    		->toArray();
+		    return $getClassStudents;
+		}
+	}
+
+
+	if(!function_exists('getAbsenceTypes')){
+		function getAbsenceTypes()
+		{	
+		    $getAbsenceTypes = AbsenceTypes::get()->toArray();
+		    $resp = [];
+
+		    foreach ($getAbsenceTypes as $key => $absenceType) {
+		    	$resp[$key]['Name'] = $absenceType['name'];
+		    	$resp[$key]['Code'] = $absenceType['code'];
+		    }
+
+		    return $resp;
+		}
+	}
+
+
+	if(!function_exists('getStudentAbsenceReason')){
+		function getStudentAbsenceReason()
+		{	
+		    $getStudentAbsenceReason = StudentAbsenceReason::get()->toArray();
+		    $resp = [];
+
+		    foreach ($getStudentAbsenceReason as $key => $studentAbsenceReason) {
+		    	$resp[$key]['Name'] = $studentAbsenceReason['name'];
+		    	$resp[$key]['National Code'] = $studentAbsenceReason['id'];
+		    }
+
+		    return $resp;
+		}
+	}
+	//For POCOR-8348 End...
 
 }
