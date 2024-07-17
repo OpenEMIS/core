@@ -376,6 +376,55 @@ class AttendanceService extends Controller
             return $this->sendErrorResponse('Failed to get student attendance marked archive.');
         }
     }
+
+
+    public function getStudentAttendanceArchiveList($params, $institutionId, $gradeId, $classId)
+    {
+        try {
+            $data = $this->attendanceRepository->getStudentAttendanceArchiveList($params, $institutionId, $gradeId, $classId);
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get student attendance archive list.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to get student attendance archive list.');
+        }
+    }
+
+
+    public function getStudentAttendanceArchiveExport($params)
+    {
+        try {
+            $data = $this->attendanceRepository->getStudentAttendanceArchiveExport($params);
+            
+            $resp = [];
+
+            foreach($data as $k => $d){
+                $resp[$k]['Student'] = $d['first_name']. ' '.$d['last_name'];
+                $resp[$k]['Academic Period'] = $d['academic_period_name'];
+                $resp[$k]['Institution Class'] = $d['class_name'];
+                $resp[$k]['Education Grade'] = $d['education_grade_name'];
+                $resp[$k]['Date'] = date('F d, Y', strtotime($d['date']));
+                $resp[$k]['Period'] = $d['period'];
+                $resp[$k]['Comment'] = $d['comment'];
+                $resp[$k]['Absence Type'] = $d['absence_type_name'];
+                $resp[$k]['Student Absence Reason'] = $d['student_absence_reason_name'];
+                $resp[$k]['Subject'] = $d['institution_subject_name'];
+            }
+            
+            return $resp;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to export students attendances archive from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to export students attendances archive from DB.');
+        }
+    }
     //For POCOR-8397 Ends...
 
 }
