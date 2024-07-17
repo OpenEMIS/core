@@ -462,7 +462,7 @@ class RestfulV2Component extends Component implements RestfulInterface
     private function _fields($query, $value, ArrayObject $extra)
     {
         if (!empty($value)) {
-            if (!array_key_exists('fields', $extra)) {
+            if (!$extra->offsetExists('fields')) {
                 $extra['fields'] = [];
             }
             $table = $this->model;
