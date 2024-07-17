@@ -20,7 +20,7 @@ class RecipientActivityStatusesTable extends ControllerActionTable
         $this->addBehavior('FieldOption.FieldOption');
         $this->setDeleteStrategy('restrict');
     }
-    
+
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         if($entity->international_code == 'APPLICATION_APPROVED') {
@@ -30,8 +30,8 @@ class RecipientActivityStatusesTable extends ControllerActionTable
 
             if (isset($extra['toolbarButtons']['remove'])) {
                 unset($extra['toolbarButtons']['remove']);
-            }    
-        }   
+            }
+        }
     }
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
@@ -47,7 +47,7 @@ class RecipientActivityStatusesTable extends ControllerActionTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-        if (array_key_exists('remove', $buttons) && $entity->international_code == 'APPLICATION_APPROVED') {
+        if (isset($buttons['remove']) && $entity->international_code == 'APPLICATION_APPROVED') {
             unset($buttons['remove']);
         }
 

@@ -74,11 +74,11 @@ class SetupDecimalBehavior extends SetupBehavior
                 if ($entity->has('params') && !empty($entity->params)) {
                     $params = json_decode($entity->params, true);
 
-                    if (array_key_exists('length', $params)) {
+                    if (isset($params['length'])) {
                         $entity->decimal_length = $params['length'];
                     }
 
-                    if (array_key_exists('precision', $params)) {
+                    if (isset($params['precision'])) {
                         $entity->decimal_precision = $params['precision'];
                     }
                 }

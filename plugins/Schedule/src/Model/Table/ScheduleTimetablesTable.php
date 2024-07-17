@@ -163,21 +163,21 @@ class ScheduleTimetablesTable extends ControllerActionTable
             ->contain(['ScheduleIntervals.Shifts.ShiftOptions']);
 
         // academic_period_id filter
-        if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
+        if (isset($extra['selectedAcademicPeriodOptions'])) {
             $query->where([
                 $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']
             ]);
         }
 
         // institution_schedule_term_id filter
-        if (array_key_exists('selectedTermOptions', $extra) && $extra['selectedTermOptions'] != self::DEFAULT) {
+        if (isset($extra['selectedTermOptions']) && $extra['selectedTermOptions'] != self::DEFAULT) {
             $query->where([
                 $this->aliasField('institution_schedule_term_id') => $extra['selectedTermOptions']
             ]);
         }
 
         // education_grade_id filter
-        if (array_key_exists('selectedGradeOptions', $extra) && $extra['selectedGradeOptions'] != self::DEFAULT) {
+        if (isset($extra['selectedGradeOptions']) && $extra['selectedGradeOptions'] != self::DEFAULT) {
             $educationGradeId = $extra['selectedGradeOptions'];
             $query
                 ->matching('InstitutionClasses.ClassGrades', function (Query $q) use ($educationGradeId) {
@@ -186,7 +186,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         }
 
         // status filter
-        if (array_key_exists('selectedStatusOptions', $extra) && $extra['selectedStatusOptions'] != self::DEFAULT) {
+        if (isset($extra['selectedStatusOptions']) && $extra['selectedStatusOptions'] != self::DEFAULT) {
             $query->where([
                 $this->aliasField('status') => $extra['selectedStatusOptions']
             ]);
@@ -210,7 +210,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         // academic_period_id filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
 
-        if (isset($requestQuery) && array_key_exists('period', $requestQuery)) {
+        if (isset($requestQuery) && isset($requestQuery['period'])) {
             $selectedPeriodId = $requestQuery['period'];
         } else {
             $selectedPeriodId = $this->AcademicPeriods->getCurrent();
@@ -223,7 +223,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         // institution_schedule_term_id filter
         $termOptions = $this->getTermOptions($extra['selectedAcademicPeriodOptions'], true);
 
-        if (isset($requestQuery) && array_key_exists('term', $requestQuery)) {
+        if (isset($requestQuery) && isset($requestQuery['term'])) {
             $selectedTerm = $requestQuery['term'];
         } else {
             $selectedTerm = self::DEFAULT;
@@ -235,7 +235,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         // education_grade_id filter
         $educationGradeOptions = $this->getEducationGradeOptions($extra['selectedAcademicPeriodOptions'], true);
 
-        if (isset($requestQuery) && array_key_exists('grade', $requestQuery)) {
+        if (isset($requestQuery) && isset($requestQuery['grade'])) {
             $selectedGrade = $requestQuery['grade'];
         } else {
             $selectedGrade = self::DEFAULT;
@@ -247,7 +247,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         // status filter
         $statusOptions = [self::DEFAULT => __('-- Select Status --')] + $this->_status;
 
-        if (isset($requestQuery) && array_key_exists('status', $requestQuery)) {
+        if (isset($requestQuery) && isset($requestQuery['status'])) {
             $selectedStatusId = $requestQuery['status'];
         } else {
             $selectedStatusId = self::DEFAULT;

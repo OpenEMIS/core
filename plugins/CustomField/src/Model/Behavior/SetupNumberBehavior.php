@@ -117,17 +117,17 @@ class SetupNumberBehavior extends SetupBehavior
                 // view / edit
                 if ($entity->has('params') && !empty($entity->params)) {
                     $params = json_decode($entity->params, true);
-                    if (array_key_exists('min_value', $params)) {
+                    if (isset($params['min_value'])) {
                         //$model->request->query['number_rule'] = 'min_value';
-                        $request = $request->withQueryParams(array_merge($request->getQueryParams(), ['number_rule' => 'min_value'])); 
+                        $request = $request->withQueryParams(array_merge($request->getQueryParams(), ['number_rule' => 'min_value']));
                         $entity->minimum_value = $params['min_value'];
-                    } else if (array_key_exists('max_value', $params)) {
+                    } else if (isset($params['max_value'])) {
                         //$model->request->query['number_rule'] = 'max_value';
-                        $request = $request->withQueryParams(array_merge($request->getQueryParams(), ['number_rule' => 'max_value'])); 
+                        $request = $request->withQueryParams(array_merge($request->getQueryParams(), ['number_rule' => 'max_value']));
                         $entity->maximum_value = $params['max_value'];
-                    } else if (array_key_exists('range', $params)) {
+                    } else if (isset($params['range'])) {
                         //$model->request->query['number_rule'] = 'range';
-                        $request = $request->withQueryParams(array_merge($request->getQueryParams(), ['number_rule' => 'range'])); 
+                        $request = $request->withQueryParams(array_merge($request->getQueryParams(), ['number_rule' => 'range']));
                         $entity->lower_limit = $params['range']['lower'];
                         $entity->upper_limit = $params['range']['upper'];
                     }

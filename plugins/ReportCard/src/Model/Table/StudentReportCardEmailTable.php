@@ -53,7 +53,7 @@ class StudentReportCardEmailTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        if (array_key_exists('back', $toolbarButtonsArray)) {
+        if (isset($toolbarButtonsArray['back'])) {
             $encodedParam = $this->request->params['pass'][1];
 
             $backUrl = [
@@ -146,7 +146,7 @@ class StudentReportCardEmailTable extends ControllerActionTable
         $this->field('name', ['type' => 'readonly', 'attr' => ['required' => false]]);
         $this->field('description', ['attr' => ['disabled' => 'disabled']]);
         $this->field('academic_period_id', ['entity' => $entity]);
-        
+
         $this->field('start_date', ['entity' => $entity]);
         $this->field('end_date', ['entity' => $entity]);
 
@@ -163,5 +163,5 @@ class StudentReportCardEmailTable extends ControllerActionTable
             'end_date'
         ]);
     }
-	
+
 }

@@ -201,7 +201,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
         } else if($this->controller->getName() == 'Directories' && isset($this->request->getParam('pass')[1])) {
             $param = $this->paramsDecode($this->request->getParam('pass')[1]);
             $staffId = isset($param['staff_id']) ? $param['staff_id'] : '';
-        } 
+        }
 
         $extra['auto_contain_fields'] = [
             'TrainingCourses' => ['code']
@@ -262,7 +262,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
 
     public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isCatalogue = $this->isCatalogue($entity);
 
         if ($action == 'view') {
@@ -297,7 +297,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
 
     public function onUpdateFieldCourseCode(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isCatalogue = $this->isCatalogue($entity);
 
         if ($action == 'view') {
@@ -325,7 +325,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
 
     public function onUpdateFieldCourseName(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isCatalogue = $this->isCatalogue($entity);
 
         if ($action == 'view') {
@@ -353,7 +353,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
 
     public function onUpdateFieldCourseDescription(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isCatalogue = $this->isCatalogue($entity);
 
         if ($action == 'view') {
@@ -381,7 +381,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
 
     public function onUpdateFieldTrainingRequirementId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isCatalogue = $this->isCatalogue($entity);
 
         if ($action == 'view') {
@@ -409,7 +409,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
 
     public function onUpdateFieldTrainingNeedCategoryId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isNeed = $this->isNeed($entity);
 
         if ($action == 'view') {
@@ -428,7 +428,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
 
     public function onUpdateFieldTrainingNeedCompetencyId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isNeed = $this->isNeed($entity);
 
         if ($action == 'view') {
@@ -447,7 +447,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
 
     public function onUpdateFieldTrainingNeedStandardId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isNeed = $this->isNeed($entity);
 
         if ($action == 'view') {
@@ -475,7 +475,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
 
     public function onUpdateFieldTrainingNeedSubStandardId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $entity = array_key_exists('entity', $attr) ? $attr['entity'] : null;
+        $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isNeed = $this->isNeed($entity);
 
         if ($action == 'view') {
@@ -728,7 +728,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
                     $Areas = TableRegistry::get('Area.Areas');
                     $Institutions = TableRegistry::get('Institution.Institutions');
                     if ($isSchoolBased) {
-                        if (is_null($institutionId)) {                        
+                        if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
                         } else {
                             $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
@@ -744,12 +744,12 @@ class TrainingNeedsAppTable extends ControllerActionTable
                                     ->find('userList', ['where' => $where])
                                     ->leftJoinWith('SecurityGroups.Institutions');
                             $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
-                            
+
                             // Region based assignee
                             $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                             $regionBasedAssigneeQuery = $SecurityGroupUsers
                                         ->find('UserList', ['where' => $where, 'area' => $areaObj]);
-                            
+
                             $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
                             // End
                             $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;

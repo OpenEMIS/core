@@ -15,7 +15,7 @@ if (!is_array($data)) {
         $delete = !in_array('delete', $data->disabledActions);
     }
 } else {
-    if (array_key_exists('disabledActions', $data)) {
+    if (isset($data['disabledActions'])) {
         $view = !in_array('view', $data['disabledActions']);
         $edit = !in_array('edit', $data['disabledActions']);
         $delete = !in_array('delete', $data['disabledActions']);

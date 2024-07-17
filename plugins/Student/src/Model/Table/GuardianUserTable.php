@@ -42,7 +42,7 @@ class GuardianUserTable extends UserTable {
         if ($this->Session->check($sessionKey)) {
             $guardianData = $this->Session->read($sessionKey);
 
-            if (array_key_exists('guardian_relation_id', $guardianData)) {
+            if (isset($guardianData['guardian_relation_id'])) {
                 $entity->guardian_relation_id = $guardianData['guardian_relation_id'];
             }
         }

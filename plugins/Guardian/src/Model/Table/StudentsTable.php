@@ -91,7 +91,7 @@ class StudentsTable extends ControllerActionTable
         $userId = $this->getUserId();
         $conditions[$this->aliasField('guardian_id')] = $userId;
         $query->where($conditions, [], true);
-     
+
         $search = $this->getSearchKey();
         if (!empty($search)) {
             // function from AdvancedNameSearchBehavior
@@ -126,7 +126,7 @@ class StudentsTable extends ControllerActionTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $newButtons = [];
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             $security_user_id = $this->getUserId();
             $pass = $this->paramsDecode($buttons['view']['url'][1]);
             $pass['security_user_id'] = $this->getUserId();

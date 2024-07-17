@@ -219,7 +219,7 @@ class RenderFileBehavior extends RenderBehavior
         if ($session->check($sessionKey)) {
             $parseFileData = $session->read($sessionKey);
 
-            if (array_key_exists('fileContent', $parseFileData)) {
+            if (isset($parseFileData['fileContent'])) {
                 // upload new file
                 $customValue['text_value'] = $parseFileData['fileName'];
                 $customValue['file'] = $parseFileData['fileContent'];

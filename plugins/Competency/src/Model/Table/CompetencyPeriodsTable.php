@@ -105,7 +105,7 @@ class CompetencyPeriodsTable extends ControllerActionTable
         ];
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Periods','Competencies');       
+		$is_manual_exist = $this->getManualUrl('Administration','Periods','Competencies');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -127,13 +127,13 @@ class CompetencyPeriodsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        if (array_key_exists('selectedPeriod', $extra)) {
+        if (isset($extra['selectedPeriod'])) {
             if ($extra['selectedPeriod']) {
                 $conditions[$this->aliasField('academic_period_id')] = $extra['selectedPeriod'];
             }
         }
 
-        if (array_key_exists('selectedTemplate', $extra)) {
+        if (isset($extra['selectedTemplate'])) {
             if ($extra['selectedTemplate']) {
                 $conditions[$this->aliasField('competency_template_id')] = $extra['selectedTemplate'];
             }
