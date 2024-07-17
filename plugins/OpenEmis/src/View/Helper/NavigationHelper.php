@@ -32,7 +32,7 @@ class NavigationHelper extends Helper
         $controller = $this->_View->getRequest()->getParam('controller');
         $action = $this->_View->getRequest()->getParam('action');
         $pass = [];
-        
+
         // Build all the parent nodes
         foreach ($navigations as $navigation) {
             if (isset($navigation['parent'])) {
@@ -61,7 +61,7 @@ class NavigationHelper extends Helper
         if (empty($path)) {
             $this->getPath($controllerActionLink, $navigations, $path);
         }
-        
+
         // Print each of the navigation
         foreach ($navigations as $key => $value) {
             // Root Node
@@ -154,7 +154,7 @@ class NavigationHelper extends Helper
             }
 
             // For processing icons
-            if (array_key_exists('icon', $value)) {
+            if (isset($value['icon'])) {
                 $name = $value['icon'].'<b>'.__($value['title']).'</b>';
             } else {
                 $name = __($value['title']);
@@ -166,7 +166,7 @@ class NavigationHelper extends Helper
             // If the node has children
             if ($this->hasChildren($key, $parentNodes)) {
                 // If the link flag is not set in the array, if there is a link flag then it will just be a parent without any url
-                if (!array_key_exists('link', $value)) {
+                if (!isset($value['link'])) {
                     $params = [];
                     if (isset($value['params'])) {
                         $params = $value['params'];
@@ -205,7 +205,7 @@ class NavigationHelper extends Helper
 
                 $url = $this->getLink($key, $params);
                 $id = $url;
-                if (array_key_exists('plugin', $id)) {
+                if (isset($id['plugin'])) {
                     unset($id['plugin']);
                 }
                 $aOptions['id'] = implode('-', $id);

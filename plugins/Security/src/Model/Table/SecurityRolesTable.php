@@ -65,17 +65,17 @@ class SecurityRolesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
-      
+
         // webhook create role starts
          if($entity->isNew()) {
-          
+
             $body = array();
             $createRole = [
                 'role_id' =>$entity->id,
                 'role_name' =>$entity->name,
-               
+
             ];
-          
+
             /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
             //if ($this->Auth->user()) { // creating issue while adding new permission //POCOR-6878
                 $Webhooks->triggerShell('role_create', [], $createRole);
@@ -89,9 +89,9 @@ class SecurityRolesTable extends ControllerActionTable
             $updateRole = [
                 'role_id' =>$entity->id,
                 'role_name' =>$entity->name,
-               
+
             ];
-          
+
             //$Webhooks = TableRegistry::get('Webhook.Webhooks');
             //$Webhooks->triggerShell('role_update', [], $updateRole);
             /*if ($this->Auth->user()) {
@@ -101,14 +101,14 @@ class SecurityRolesTable extends ControllerActionTable
 
         // webhook update role ends
 
-      
+
 
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
         // Webhook role delete -- Start
-       
+
         $deleteBody = [
             'role_id' => $entity->id
         ];
@@ -189,7 +189,7 @@ class SecurityRolesTable extends ControllerActionTable
         // -1 = system roles, we are not allowing users to modify system roles
         // removing all buttons from the menu
         if ($groupId == self::FIXED_SYSTEM_GROUP_ID) {
-            if (array_key_exists('remove', $buttons)) {
+            if (isset($buttons['remove'])) {
                 unset($buttons['remove']);
             }
         }
@@ -418,7 +418,7 @@ class SecurityRolesTable extends ControllerActionTable
             $this->field('security_group_id', [
                 'entity' => $entity
             ]);
-            
+
             $this->setFieldOrder([
                 'name', 'code', 'order', 'visible', 'security_group_id'
             ]);
@@ -464,7 +464,7 @@ class SecurityRolesTable extends ControllerActionTable
             case 'system':
                 if ($action == 'edit') {
                     $entity = $attr['entity'];
-                    
+
                     if ($entity->has('security_group_id') && $entity->security_group_id == self::FIXED_SYSTEM_GROUP_ID) {
                         $attr['type'] = 'readonly';
                         $attr['value'] = $entity->name;
@@ -528,7 +528,7 @@ class SecurityRolesTable extends ControllerActionTable
     public function findByInstitution(Query $query, $options)
     {
         $ids = [self::FIXED_SYSTEM_GROUP_ID, self::CUSTOM_SYSTEM_GROUP_ID];
-        if (array_key_exists('id', $options)) {
+        if (isset($options['id'])) {
             // need to get the security_group_id of the institution
             $Institution = TableRegistry::get('Institution.Institutions');
             $institutionQuery = $Institution->find()
@@ -814,7 +814,7 @@ class SecurityRolesTable extends ControllerActionTable
     /**
      * POCOR-6878,add defult order value
     */
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
 
         $connection = $this->getConnection();

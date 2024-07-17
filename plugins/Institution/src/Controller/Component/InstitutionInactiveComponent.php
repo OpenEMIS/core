@@ -18,7 +18,7 @@ class InstitutionInactiveComponent extends Component
         $this->controller = $this->_registry->getController();
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $institutionId = $this->controller->paramsDecode($this->getController()->getRequest()->getAttribute('params')['institutionId'])['id'];
 

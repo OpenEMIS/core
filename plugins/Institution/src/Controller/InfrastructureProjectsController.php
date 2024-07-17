@@ -26,7 +26,7 @@ class InfrastructureProjectsController extends PageController
         $this->Page->enable(['download']);
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $session = $this->request->session();
         $institutionId = $this->getInstitutionID();

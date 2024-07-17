@@ -143,7 +143,7 @@ class SystemGroupsTable extends ControllerActionTable
         $queryParams = $this->request->getQuery();
         $query->find('inInstitutions');
 
-        if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
+        if (!isset($queryParams['sort']) && !isset($queryParams['direction'])) {
             $query->order([$this->aliasField('name') => 'asc']);
         }
         // filter groups by users permission

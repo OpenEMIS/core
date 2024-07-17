@@ -35,20 +35,20 @@ class ScheduleIntervalsTable extends ControllerActionTable
         ]);
 
         $this->hasMany('Timeslots', [
-            'className' => 'Schedule.ScheduleTimeslots', 
-            'foreignKey' => 'institution_schedule_interval_id', 
-            'dependent' => true, 
+            'className' => 'Schedule.ScheduleTimeslots',
+            'foreignKey' => 'institution_schedule_interval_id',
+            'dependent' => true,
             'cascadeCallbacks' => true
         ]);
 
         $this->hasMany('Timetables', [
-            'className' => 'Schedule.ScheduleTimetables', 
-            'foreignKey' => 'institution_schedule_interval_id', 
-            'dependent' => true, 
+            'className' => 'Schedule.ScheduleTimetables',
+            'foreignKey' => 'institution_schedule_interval_id',
+            'dependent' => true,
             'cascadeCallbacks' => true
         ]);
 
-        
+
         $this->addBehavior('Restful.RestfulAccessControl', [
             'ScheduleTimetable' => ['index', 'view', 'edit']
         ]);
@@ -100,15 +100,15 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $query
             ->contain(['Shifts.ShiftOptions']);
 
-        if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
+        if (isset($extra['selectedAcademicPeriodOptions'])) {
             $query->where([
-                $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']  
+                $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']
             ]);
         }
 
-        if (array_key_exists('selectedShiftOptions', $extra) && $extra['selectedShiftOptions'] != -1) {
+        if (isset($extra['selectedShiftOptions']) && $extra['selectedShiftOptions'] != -1) {
             $query->where([
-                $this->aliasField('institution_shift_id') => $extra['selectedShiftOptions']  
+                $this->aliasField('institution_shift_id') => $extra['selectedShiftOptions']
             ]);
         }
     }
@@ -124,15 +124,15 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
 
         $requestQuery = $this->request->getQuery();
-        if (isset($requestQuery) && array_key_exists('period', $requestQuery)) {
+        if (isset($requestQuery) && isset($requestQuery['period'])) {
             $selectedPeriodId = $requestQuery('period');
         } else {
             $selectedPeriodId = $this->AcademicPeriods->getCurrent();
         }
-        
+
         $shiftOptions = $this->getShiftOptions($selectedPeriodId, true);
 
-        if (isset($requestQuery) && array_key_exists('shift', $requestQuery)) {
+        if (isset($requestQuery) && isset($requestQuery['shift'])) {
             $selectedShiftId = $requestQuery('shift');
         } else {
             $selectedShiftId = -1;
@@ -157,7 +157,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
 
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Intervals','Schedules');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Intervals','Schedules');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -218,7 +218,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
         $intervalId = $data['id'];
          if(empty($intervalId)){
             // for updating of the start/end time of the timeslots on render
-            if (array_key_exists('submit', $data) && in_array($data['submit'], ['changeInterval', 'addTimeslot', 'changeShiftId', 'save']) && !empty($data['timeslots'])) {
+            if (isset($data['submit']) && in_array($data['submit'], ['changeInterval', 'addTimeslot', 'changeShiftId', 'save']) && !empty($data['timeslots'])) {
                 $institutionShiftId = $data['institution_shift_id'];
                 $startTime = $this->Shifts->get($institutionShiftId)->start_time;
                 if (!($startTime instanceof DateTime)) {
@@ -228,11 +228,11 @@ class ScheduleIntervalsTable extends ControllerActionTable
                 $hasEmpty = false;
                 foreach ($data['timeslots'] as $i => $timeslot) {
                     if (!$hasEmpty) {
-                        if (array_key_exists('interval', $timeslot) && !empty($timeslot['interval'])) {
+                        if (isset($timeslot['interval']) && !empty($timeslot['interval'])) {
                             $timeslotInterval = $timeslot['interval'];
                             $data['timeslots'][$i]['start_time_add'] = $this->formatTime($startTime);
                             $modifyString = '+' . $timeslotInterval . ' minutes';
-                            $data['timeslots'][$i]['end_time_add'] = $this->formatTime($startTime->modify($modifyString));    
+                            $data['timeslots'][$i]['end_time_add'] = $this->formatTime($startTime->modify($modifyString));
                         } else {
                             $hasEmpty = true;
                         }
@@ -241,14 +241,14 @@ class ScheduleIntervalsTable extends ControllerActionTable
             }
 
             // for patching the order of the timeslots based on the array index
-            if (array_key_exists('timeslots', $data) && !empty($data['timeslots'])) {
+            if (isset($data['timeslots']) && !empty($data['timeslots'])) {
                 foreach ($data['timeslots'] as $i => $timeslot) {
                     $data['timeslots'][$i]['order'] = $i + 1;
                 }
             }
 
             // for adding timeslots end time validation as here will have all the informations needed to do the validations
-            if (array_key_exists('submit', $data) && $data['submit'] == 'save') {
+            if (isset($data['submit']) && $data['submit'] == 'save') {
                 $options['associated'] = [
                     'Timeslots' => ['validate' => true]
                 ];
@@ -262,19 +262,19 @@ class ScheduleIntervalsTable extends ControllerActionTable
                 $shiftEndTime = $shiftEntity->end_time;
 
                 $timeslotList = [];
-                if (array_key_exists('timeslots', $data) && !empty($data['timeslots'])) {
+                if (isset($data['timeslots']) && !empty($data['timeslots'])) {
 
                     $hasEmpty = false;
                     $totalInterval = 0;
                     foreach ($data['timeslots'] as $i => $timeslot) {
                         if (!$hasEmpty) {
-                            if (array_key_exists('interval', $timeslot) && !empty($timeslot['interval'])) {
+                            if (isset($timeslot['interval']) && !empty($timeslot['interval'])) {
                                 $totalInterval += $timeslot['interval'];
                                 $timeslotList[$timeslot['order']] = $totalInterval;
                             } else {
                                 $hasEmpty = true;
                             }
-                        } 
+                        }
 
                         if ($hasEmpty) {
                             $timeslotList[$timeslot['order']] = null;
@@ -295,7 +295,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
                                     $shiftEndTime = new \DateTime($shiftEndTime);
                                 }
                                 return $intervalEndTime <= $shiftEndTime;
-                            } 
+                            }
                             return true;
                         },
                         'on' => 'create',
@@ -310,7 +310,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
                 ];
             }
         }else{ //POCOR-8254
-            if (array_key_exists('submit', $data) && in_array($data['submit'], ['changeInterval', 'addTimeslot', 'changeShiftId', 'save']) && !empty($data['timeslots'])) {
+            if (isset($data['submit']) && in_array($data['submit'], ['changeInterval', 'addTimeslot', 'changeShiftId', 'save']) && !empty($data['timeslots'])) {
                 $institutionShiftId = $data['institution_shift_id'];
                 $startTime = $this->Shifts->get($institutionShiftId)->start_time;
 
@@ -318,11 +318,11 @@ class ScheduleIntervalsTable extends ControllerActionTable
                 foreach ($data['timeslots'] as $i => $timeslot) {
                     if (!$hasEmpty) {
                         $data['timeslots'][$i]['institution_schedule_interval_id'] = $intervalId;
-                        if (array_key_exists('interval', $timeslot) && !empty($timeslot['interval'])) {
+                        if (isset($timeslot['interval']) && !empty($timeslot['interval'])) {
                             $timeslotInterval = $timeslot['interval'];
                             $data['timeslots'][$i]['start_time_add'] = $this->formatTime($startTime);
                             $modifyString = '+' . $timeslotInterval . ' minutes';
-                            $data['timeslots'][$i]['end_time_add'] = $this->formatTime($startTime->modify($modifyString));    
+                            $data['timeslots'][$i]['end_time_add'] = $this->formatTime($startTime->modify($modifyString));
                         } else {
                             $hasEmpty = true;
                         }
@@ -336,7 +336,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
             // $institutionSchedule =  TableRegistry::get('institution_schedule_timeslots');
             $findRecord = $institutionSchedule->find()
                         ->where(['institution_schedule_interval_id'=>$intervalId])->toArray();
-                       
+
             foreach ($findRecord as $value) {
                 foreach ($timeslotList as $val) {
                     $institutionScheduledata = $institutionSchedule->updateAll(
@@ -345,14 +345,14 @@ class ScheduleIntervalsTable extends ControllerActionTable
                     );
                 }
             }
-            if (array_key_exists('timeslots', $data) && !empty($data['timeslots'])) {
+            if (isset($data['timeslots']) && !empty($data['timeslots'])) {
                 foreach ($data['timeslots'] as $i => $timeslot) {
                     $data['timeslots'][$i]['order'] = $i + 1;
                 }
             }
 
             // for adding timeslots end time validation as here will have all the informations needed to do the validations
-            if (array_key_exists('submit', $data) && $data['submit'] == 'save') {
+            if (isset($data['submit']) && $data['submit'] == 'save') {
                 $options['associated'] = [
                     'Timeslots' => ['validate' => true]
                     ];
@@ -363,26 +363,26 @@ class ScheduleIntervalsTable extends ControllerActionTable
                     $shiftEndTime = $shiftEntity->end_time;
 
                     $timeslotList = [];
-                    if (array_key_exists('timeslots', $data) && !empty($data['timeslots'])) {
+                    if (isset($data['timeslots']) && !empty($data['timeslots'])) {
 
                         $hasEmpty = false;
                         $totalInterval = 0;
                         foreach ($data['timeslots'] as $i => $timeslot) {
                             if (!$hasEmpty) {
-                                if (array_key_exists('interval', $timeslot) && !empty($timeslot['interval'])) {
+                                if (isset($timeslot['interval']) && !empty($timeslot['interval'])) {
                                     $totalInterval += $timeslot['interval'];
                                     $timeslotList[$timeslot['order']] = $totalInterval;
                                 } else {
                                     $hasEmpty = true;
                                 }
-                            } 
+                            }
 
                             if ($hasEmpty) {
                                 $timeslotList[$timeslot['order']] = null;
                             }
                         }
                     }
-              
+
             }
         }
        // echo "<pre>"; print_r($data);die;
@@ -492,7 +492,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
         if($institutionId == null){
             $institutionId = $this->getInstitutionID();
            }
-        
+
         $shiftOptions = $this->Shifts
             ->find('list', [
                 'keyField' => 'id',
@@ -564,7 +564,7 @@ class ScheduleIntervalsTable extends ControllerActionTable
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
          $entity['timeslots'] = array();
-            
+
     }
 
     //POCOR-8254

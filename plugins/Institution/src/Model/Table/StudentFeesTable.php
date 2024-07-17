@@ -133,7 +133,7 @@ class StudentFeesTable extends ControllerActionTable
                 'data-compute-operand' => "plus"
             ]
         ]);
-     
+
         unset($this->StudentFeesAbstract->fields['modified_user_id']);
         unset($this->StudentFeesAbstract->fields['modified']);
         $this->StudentFeesAbstract->fields['created'] = false;
@@ -141,7 +141,7 @@ class StudentFeesTable extends ControllerActionTable
         $this->StudentFeesAbstract->setFieldOrder(['payment_date', 'amount', 'comments']);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Fees','Finance');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Fees','Finance');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -225,7 +225,7 @@ class StudentFeesTable extends ControllerActionTable
             ->find()
             ->contain(['InstitutionFeeTypes.FeeTypes'])
             ->where([
-                 'InstitutionFees.education_grade_id' => $this->_selectedEducationGradeId, 
+                 'InstitutionFees.education_grade_id' => $this->_selectedEducationGradeId,
                 'InstitutionFees.academic_period_id' => $this->_selectedAcademicPeriodId,
                 'InstitutionFees.institution_id' => $this->institutionId
             ])
@@ -233,7 +233,7 @@ class StudentFeesTable extends ControllerActionTable
             ;
 
             $queryString = $this->getQueryString();
-            $encodedQueryString = $this->paramsEncode($queryString);    
+            $encodedQueryString = $this->paramsEncode($queryString);
             $extra['elements']['custom'] = [
                 'name' => 'Institution.StudentFees/controls',
                 'data' => [
@@ -347,7 +347,7 @@ class StudentFeesTable extends ControllerActionTable
         $this->fields['payments']['fields'] = $this->StudentFeesAbstract->fields;
         $this->fields['payments']['data'] = $this->_getPaymentRecords($entity);
         $this->fields['payments']['total'] = $this->onGetAmountPaid($event, $entity);
-         
+
         $this->setFieldOrder([
             'academic_period_id', 'education_programme', 'education_grade_id', 'openemis_no', 'student_id', 'fee_types', 'payments', 'outstanding_fee'
         ]);
@@ -511,7 +511,7 @@ class StudentFeesTable extends ControllerActionTable
         $institution_fee_id = $this->InstitutionFeeEntity->id;
         // die('addBeforeSave');
         $process = function ($model, $entity) use ($event, $data, $StudentFees, $student_id, $institution_fee_id) {
-            if (array_key_exists('StudentFeesAbstract', $data)) {
+            if (isset($data['StudentFeesAbstract'])) {
                 $fees = $StudentFees->newEntities($data['StudentFeesAbstract']);
                 $error = false;
                 $totalPaid = 0.00;
@@ -580,7 +580,7 @@ class StudentFeesTable extends ControllerActionTable
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
-        if (!array_key_exists('hasError', $data)) {
+        if (!isset($data['hasError'])) {
             $this->Alert->success('general.edit.success', ['reset' => true]);
             return $this->controller->redirect($this->url('view', true));
         }
@@ -739,11 +739,11 @@ class StudentFeesTable extends ControllerActionTable
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
         $newButtons = [];
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             $newButtons['view'] = $buttons['view'];
         }
         $institutionId = $this->getQueryString('institution_id');
-        if (array_key_exists('edit', $buttons)) {
+        if (isset($buttons['edit'])) {
             $addPayment = $buttons['edit'];
             $addPayment['label'] = '<i class="fa kd-add"></i>' . __('Add Payment');
             $newButtons['addPayment'] = $addPayment;
@@ -759,7 +759,7 @@ class StudentFeesTable extends ControllerActionTable
     }
     //POCOR-6165 start
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
-     {  
+     {
         //added if acacdemic_period is not received
         if (empty($this->request->getQuery('academic_period_id'))) {
             //$this->request->getQuery('academic_period_id') = $this->AcademicPeriods->getCurrent();
@@ -767,7 +767,7 @@ class StudentFeesTable extends ControllerActionTable
         }
         //$institutionId = $this->Session->read('Institution.Institutions.id');
         $institutionId  = $this->getInstitutionID();
-        $academicPeriod = $this->request->query['academic_period_id'];  
+        $academicPeriod = $this->request->query['academic_period_id'];
         $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($institutionId,  $academicPeriod);
         $educationGradeId = $this->queryString('education_grade_id', $gradeOptions);
         $this->advancedSelectOptions($gradeOptions, $this->_selectedEducationGradeId);
@@ -780,7 +780,7 @@ class StudentFeesTable extends ControllerActionTable
             ]),
             'openemis' =>$this->Users->aliasField('openemis_no')
            ])
-         
+
         ->LeftJoin([$this->Users->getAlias() => $this->Users->getTable()],[
             $this->Users->aliasField('id').' = ' . 'StudentFees.student_id'
         ])
@@ -789,10 +789,10 @@ class StudentFeesTable extends ControllerActionTable
              'StudentFees.institution_id' =>  $institutionId,
              'StudentFees.education_grade_id' =>   $educationGradeId
         ]);
-       
+
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
-                    
+
                     $InstitutionFees= TableRegistry::get('Institution.InstitutionFees');
                     $InstitutionFeeEntity = $InstitutionFees
                                              ->find()
@@ -803,7 +803,7 @@ class StudentFeesTable extends ControllerActionTable
                                                      'InstitutionFees.institution_id' => $row['institution_id']
                                              ])
                                              ->first();
-     
+
                     $StudentFees= TableRegistry::get('student_fees');
                     $StudentFeeEntity = $StudentFees
                                             ->find()
@@ -816,8 +816,8 @@ class StudentFeesTable extends ControllerActionTable
 
                                              ])
                                              ->toArray();
-                  
-                    //total fee                         
+
+                    //total fee
                     $row->total_fee='00';
                     if(isset($InstitutionFeeEntity->total)){
                         $row->total_fee=$InstitutionFeeEntity->total;
@@ -846,13 +846,13 @@ class StudentFeesTable extends ControllerActionTable
                     //outstanding fee
                     $row['outstanding_fee']="00";
                     $row['outstanding_fee']= $row['total_fee']-$row['amount_paid'];
-                  
-                return $row;  
-                    
+
+                return $row;
+
            });
         });
-  
-         
+
+
    }
 
    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -878,14 +878,14 @@ class StudentFeesTable extends ControllerActionTable
             'type' => 'integer',
             'label' => __('Total Fee')
         ];
-       
+
         $extraField[] = [
             'key' => 'StudentFees.amount',
             'field' => 'amount_paid',
             'type' => 'integer',
             'label' => __('Amount Paid')
         ];
-        
+
         $extraField[] = [
             'key' => 'outstanding_fee',
             'field' => 'outstanding_fee',
@@ -895,7 +895,7 @@ class StudentFeesTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
     //POCOR-6165 end
-    
+
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {

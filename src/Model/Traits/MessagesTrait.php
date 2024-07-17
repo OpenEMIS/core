@@ -2649,8 +2649,8 @@ trait MessagesTrait
 
     public function getMessage($code, $options = [])
     {
-        $sprintf = (array_key_exists('sprintf', $options))? $options['sprintf']: [];
-        $defaultMessage = (array_key_exists('defaultMessage', $options))? $options['defaultMessage']: true;
+        $sprintf = (isset($options['sprintf']))? $options['sprintf']: [];
+        $defaultMessage = (isset($options['defaultMessage']))? $options['defaultMessage']: true;
 
         $Labels = TableRegistry::get('Labels');
         $message = Cache::read($code, $Labels->getDefaultConfig());

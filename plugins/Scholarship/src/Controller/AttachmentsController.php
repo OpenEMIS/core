@@ -29,7 +29,7 @@ class AttachmentsController extends PageController
         return $event;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
 
@@ -106,8 +106,8 @@ class AttachmentsController extends PageController
         $plugin = $this->getPlugin();
         $name = $this->getName();
 
-        $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
-        $userId = array_key_exists('userId', $options) ? $options['userId'] : '';
+        $userName = isset($options['userName']) ? $options['userName'] : '';
+        $userId = isset($options['userId']) ? $options['userId'] : '';
 
         if ($plugin == 'Scholarship') {
             $page->addCrumb('Scholarships', [
@@ -116,7 +116,7 @@ class AttachmentsController extends PageController
                 'action' => 'Scholarships',
                 'index'
             ]);
-            
+
             $page->addCrumb('Applicants', [
                 'plugin' => 'Scholarship',
                 'controller' => 'Scholarships',
