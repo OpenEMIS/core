@@ -2495,7 +2495,7 @@ class InstitutionService extends Controller
                 $errors['academic_period_id'] = 'Invalid academic period.';
             }
 
-            $classes = $this->institutionRepository->institutionSubjectClasses($institutionId, $data['academic_period_id'], $subject->education_grade_id);
+            $classes = $this->institutionRepository->institutionSubjectClasses($institutionId, $subject->education_grade_id, $subjectId);
 
             if ($classes) {
                 foreach($data['classes'] as $class) {
@@ -2583,9 +2583,9 @@ class InstitutionService extends Controller
         return  $this->institutionRepository->institutionRooms($institutionId, $params);
     }
 
-    public function subjectClasses($institutionId, $academicPeriodId, $educationGradeId)
+    public function subjectClasses($institutionId, $educationGradeId, $institutionSubjectId)
     {
-        return  $this->institutionRepository->institutionSubjectClasses($institutionId, $academicPeriodId, $educationGradeId);
+        return  $this->institutionRepository->institutionSubjectClasses($institutionId, $educationGradeId, $institutionSubjectId);
     }
 
     public function unassignedStudentsInClass($institutionId, $classId)
@@ -2620,7 +2620,7 @@ class InstitutionService extends Controller
         if (!$subject){
             throw new Exception('Subject not found.');
         }
-        $classes = $this->institutionRepository->institutionSubjectClasses($institutionId, $subject->academic_period_id, $subject->education_grade_id);
+        $classes = $this->institutionRepository->institutionSubjectClasses($institutionId, $subject->education_grade_id, $subjectId);
 
         $classesArray = array_column($classes, 'institution_class_id');
 

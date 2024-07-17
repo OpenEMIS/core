@@ -5216,24 +5216,30 @@ class InstitutionRepository extends Controller
         return DB::select(DB::raw($sql));
     }
 
-    public function institutionSubjectClasses($institutionId, $academicPeriodId, $gradeId)
+    public function institutionSubjectClasses($institutionId, $gradeId, $institutionSubjectId)
     {
         $sql ="SELECT
-        `InstitutionClasses`.`id` AS `institution_class_id`, 
-        `InstitutionClasses`.`name` AS `institution_class_name` 
-        FROM
-            `institution_classes` `InstitutionClasses` 
-            INNER JOIN `institution_class_grades` `InstitutionClassGrades` ON (
-            InstitutionClassGrades.institution_class_id = InstitutionClasses.id
-            AND InstitutionClassGrades.education_grade_id = $gradeId
-            )
-        WHERE
-            (
-            `InstitutionClasses`.`academic_period_id` = $academicPeriodId
-            AND `InstitutionClasses`.`institution_id` = $institutionId
-            )
-        GROUP BY
-            `InstitutionClasses`.`id`";
+        institution_classes.institution_id
+        ,institution_class_grades.education_grade_id
+        ,education_grades.name education_grade_name
+        ,institution_subjects.id institution_subject_id
+        ,institution_subjects.name institution_subject_name
+        ,institution_subjects.education_subject_id
+        ,education_subjects.name education_subject_id
+        ,institution_classes.id institution_class_id
+        ,institution_classes.name institution_class_name
+        FROM institution_subjects
+        INNER JOIN education_grades_subjects ON education_grades_subjects.education_subject_id = institution_subjects.education_subject_id
+        INNER JOIN education_grades ON education_grades.id = education_grades_subjects.education_grade_id
+        INNER JOIN institution_class_grades ON institution_class_grades.education_grade_id = education_grades_subjects.education_grade_id
+        AND institution_class_grades.education_grade_id = institution_subjects.education_grade_id
+        INNER JOIN education_subjects ON education_subjects.id = institution_subjects.education_subject_id
+        INNER JOIN institution_classes ON institution_classes.id = institution_class_grades.institution_class_id
+        AND institution_classes.id = institution_class_grades.institution_class_id
+        AND institution_classes.institution_id = institution_subjects.institution_id
+        AND institution_classes.academic_period_id = institution_subjects.academic_period_id
+        WHERE institution_classes.institution_id = ".$institutionId." AND institution_class_grades.education_grade_id = ".$gradeId." AND
+        institution_subjects.id = ".$institutionSubjectId;
 
         return DB::select(DB::raw($sql));
     }
