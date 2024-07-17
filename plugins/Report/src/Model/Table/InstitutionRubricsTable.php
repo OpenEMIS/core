@@ -82,7 +82,6 @@ class InstitutionRubricsTable extends AppTable {
 				$areaId = $this->request->getData($this->getAlias())['area_education_id'];
 				$Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 				$Areas = TableRegistry::getTableLocator()->get('Institution.Institutions');
-				//echo "<pre>";print_r($areaId);die();
 				$where = [];
 				if (!empty($institutionId) && $institutionId != 0) {
 					$where[$this->aliasField('institution_id')] = $institutionId;
@@ -260,7 +259,7 @@ class InstitutionRubricsTable extends AppTable {
     {
 		$institutionList = [];
 		$areaId = $request->getData($this->getAlias())['area_education_id'];
-        if (array_key_exists('area_education_id', $request->getData($this->getAlias())) && !empty($request->getData($this->getAlias())['area_education_id']) && $areaId != -1) {
+        if (array_key_exists('area_education_id', (array)$request->getData($this->getAlias())) && !empty($request->getData($this->getAlias())['area_education_id']) && $areaId != -1) {
             $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $institutionQuery = $InstitutionsTable
                         ->find('list', [
