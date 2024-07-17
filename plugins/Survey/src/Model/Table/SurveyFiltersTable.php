@@ -195,8 +195,14 @@ class SurveyFiltersTable extends ControllerActionTable
     public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         //$entity->survey_filter_id = $_SESSION['surveyFilterId'];
-        $entity->survey_filter_id = $this->paramsDecode($this->request->getParam('pass')[1])['id'];//POCOR-8408
-        $filterId = $entity->survey_filter_id;
+        // $entity->survey_filter_id = $this->paramsDecode($this->request->getParam('pass')[1])['id'];//POCOR-8408
+        $decodedParams = $this->paramsDecode($this->request->getParam('pass')[1]);
+        if (isset($decodedParams['id'])) {
+            //echo "in";exit;
+           // $entity->survey_filter_id = $decodedParams['id'];
+            $filterId = $decodedParams['id'];
+        }
+        // $filterId = $entity->survey_filter_id;
         $tableProvider = TableRegistry::get('Institution.SurveyFilterInstitutionProviders');
         $institutionType = TableRegistry::get('Survey.SurveyFilterInstitutionTypes');
         $areaEducation = TableRegistry::get('Survey.SurveyFilterAreas');
@@ -300,7 +306,7 @@ class SurveyFiltersTable extends ControllerActionTable
         $institution_type_id = [];
         $institution_provider_id = [];
         $area_education_id = [];
-        if (array_key_exists('institution_type_id', $data) && !empty($data['institution_type_id'])) {
+        if ($data->offsetExists('institution_type_id') && !empty($data['institution_type_id'])) {
             foreach ($data['institution_type_id'] as $institution_type) {
                 $institution_type_id[] = [
                     'institution_type_id' => $institution_type
@@ -309,7 +315,7 @@ class SurveyFiltersTable extends ControllerActionTable
         }
         $data['institution_type_id'] = $institution_type_id;
 
-        if (array_key_exists('institution_provider_id', $data) && !empty($data['institution_provider_id'])) {
+        if ($data->offsetExists('institution_provider_id') && !empty($data['institution_provider_id'])) {
             foreach ($data['institution_provider_id'] as $institution_provider) {
                 $institution_provider_id[] = [
                     'institution_provider_id' => $institution_provider
@@ -319,7 +325,7 @@ class SurveyFiltersTable extends ControllerActionTable
 
         $data['institution_provider_id'] = $institution_provider_id;
 
-        if (array_key_exists('area_education_id', $data) && !empty($data['area_education_id'])) {
+        if ($data->offsetExists('area_education_id') && !empty($data['area_education_id'])) {
             foreach ($data['area_education_id'] as $area_education) {
                 $area_education_id[] = [
                     'area_education_id' => $area_education

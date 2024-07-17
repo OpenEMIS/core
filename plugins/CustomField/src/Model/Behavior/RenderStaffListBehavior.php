@@ -40,7 +40,7 @@ class RenderStaffListBehavior extends RenderBehavior
         $staffsurveyAnswers = TableRegistry::get('Staff.StaffSurveyAnswers');
 
         $model = $this->_table;
-        $session = $model->request->getsession();
+        $session = $model->request->getSession();
         $registryAlias = $model->getRegistryAlias();
         $debugInfo = $model->getAlias() . ' #' . $entity->id . ' (Institution ID: ' . $entity->institution_id . ', Academic Period ID: ' . $entity->academic_period_id . ', Survey Form ID: ' . $entity->survey_form_id . ')';
 
@@ -147,7 +147,7 @@ class RenderStaffListBehavior extends RenderBehavior
                                     'controller' => 'Institutions',
                                     'action' => 'StaffUser',
                                     'view',
-                                    $model->paramsEncode(['id' => $staff->user->id])
+                                    $model->paramsEncode(['id' => $staff->user->id, 'staff_id' => $staff->user->id,'institution_id' => $institutionId])
                                 ]);
                                 $rowData[] = $staff->user->name;
                             } else if ($action == 'edit') {
@@ -413,12 +413,12 @@ class RenderStaffListBehavior extends RenderBehavior
                             $rowInput = "";
 
                             if ($action == 'view') {
-                                $rowData[] = $event->subject->Html->link($staff->user->openemis_no, [
+                                $rowData[] = $event->getSubject()->Html->link($staff->user->openemis_no, [
                                     'plugin' => 'Institution',
                                     'controller' => 'Institutions',
                                     'action' => 'StaffUser',
                                     'view',
-                                    $model->paramsEncode(['id' => $staff->user->id])
+                                    $model->paramsEncode(['id' => $staff->user->id, 'staff_id' => $staff->user->id,'institution_id' => $institutionId])
                                 ]);
                                 $rowData[] = $staff->user->name;
                             } else if ($action == 'edit') {
@@ -882,7 +882,7 @@ class RenderStaffListBehavior extends RenderBehavior
                                 $dateValue = isset($answerObj['date_value']) && strlen($answerObj['date_value']) > 0 ? $answerObj['date_value'] : null;
                                 $timeValue = isset($answerObj['time_value']) && strlen($answerObj['time_value']) > 0 ? $answerObj['time_value'] : null;
                                 
-                                $duplicateData11 = $staffsurveyAnswers->find()->where(['survey_question_id' => $questionId, 'parent_survey_question_id' => $parentIdd, 'institution_staff_survey_id' => $surveyData['id']])->toArray();
+                                $duplicateData11 = $staffsurveyAnswers->find()->where(['survey_question_id' => $questionId, 'parent_survey_question_id' => $parentIdd, 'institution_staff_survey_id IS' => $surveyData['id']])->toArray();
                                 foreach ($duplicateData11 as $dup) {
                                     $staffsurveyAnswers->delete($dup);
                                 }

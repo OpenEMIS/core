@@ -20,6 +20,11 @@ use Illuminate\Support\Facades\Log;
 use App\Exports\StudentAttendancesExport;
 use App\Exports\StudentAttendanceArchiveExport;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 class AttendanceController extends Controller
 {
@@ -1200,19 +1205,62 @@ class AttendanceController extends Controller
     }
 
 
+
     public function getStudentAttendancesImportTemplate(StudentAttendancesImportTemplateRequest $request)
     {
         try {
             $params = $request->all();
 
-            $data = $this->attendanceService->getStudentAttendancesImportTemplate($params);
-            
-            if(!empty($data)){
-                return $this->sendSuccessResponse("Student attendance import template data found.", $data);
+            //For POCOR-8396 Start...
+            $fileName='OpenEMIS_Core_Import_Student_Absences_Period_Details_Template.xlsx';
+
+            $filePath = public_path('templates').'/'.$fileName;
+
+            if(file_exists($filePath)){
+                $templatePath = public_path('storage/templates');
+                $templateFile = $templatePath.'/'.$fileName;
+                
+
+                if(!File::exists($templatePath)){
+                    File::makeDirectory($templatePath, 0775, true, true);
+                }
+
+                if (!File::exists($templateFile)) {
+                    File::copy($filePath, $templateFile);
+                }
+
             } else {
-                return $this->sendErrorResponse("Student attendance import not template data found.", $data);
+                return $this->sendErrorResponse('Import template not found.');
             }
 
+            $spreadsheet = IOFactory::load($templateFile);
+            
+            // Select the 'References' sheet (assuming it's the second sheet)
+            $sheet = $spreadsheet->getSheetByName('References');
+            
+            if (!$sheet) {
+                return $this->sendErrorResponse('Reference sheet not found in import template.');
+            } 
+
+
+            $getDataForSheet = $this->attendanceService->getDataForSheet($params);
+
+            // Write data to the sheet
+            $row = 4; // Assuming the first row contains headings
+            foreach ($getDataForSheet as $rowData) {
+                $column = 'A';
+                foreach ($rowData as $cellData) {
+                    $sheet->setCellValue($column . $row, $cellData);
+                    $column++;
+                }
+                $row++;
+            }
+
+            // Save the modified Excel file
+            $writer = new Xlsx($spreadsheet);
+            $writer->save($filePath);
+
+            return response()->download($filePath);
             
         } catch (\Exception $e) {
             Log::error(

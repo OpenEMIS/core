@@ -841,46 +841,46 @@ class UsersController extends AppController
             ->where(
                 [$SecurityUser->aliasField('username') => $this->request->getData('username')]
             )->first();
-        // if (!$extra['loginStatus']) {
-        //     if (!$extra['status']) {
-        //         $this->Alert->error('security.login.inactive', ['reset' => true]);
-        //     } else if ($extra['fallback']) {
-        //         $url = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', 'submit' => 'retry']);
-        //         $retryMessage = 'Remote authentication failed. <br>Please try local login or <a href="' . $url . '">Click here</a> to try again';
-        //         $this->Alert->error($retryMessage, ['type' => 'string', 'reset' => true]);
-        //     } else {
-        //         //POCOR-2976 start
-        //         if ($userData->status == 0) {
-        //             if (empty($userData)) {
-        //                 $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
-        //             } else {
-        //                 $this->Alert->error('security.login.locked_account', ['reset' => true]);
-        //             }
-        //             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
-        //         }
-        //         // $this->Alert->error('security.login.fail', ['reset' => true]);
-        //         $session = $this->request->getSession();
-        //         $noOfPendingAttempts = $session->read('login.attempts');
-        //         // echo "<pre>";print_r($noOfPendingAttempts);die;
-        //         $noOfPendingAttempts--;
-        //         $session->write('login.attempts', $noOfPendingAttempts);
-        //         if ($noOfPendingAttempts <= 0) {
-        //             $SecurityUser->updateAll(['status' => 0],
-        //                 ['username' => $this->request->getData('username')]);
-        //             if (empty($userData)) {
-        //                 $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
-        //             } else {
-        //                 $this->Alert->error('security.login.locked_account', ['reset' => true]);
-        //             }
-        //         } else {
-        //             $message = "You have {$noOfPendingAttempts} more login attempts before your account will be locked.";
-        //             $this->Alert->warning($message, ['type' => 'string', 'reset' => true]);
-        //         }
-        //         //POCOR-2976 end
-        //     }
-        //     $event->stopPropagation();
-        //     return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
-        // }
+        if (!$extra['loginStatus']) {
+            if (!$extra['status']) {
+                $this->Alert->error('security.login.inactive', ['reset' => true]);
+            } else if ($extra['fallback']) {
+                $url = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', 'submit' => 'retry']);
+                $retryMessage = 'Remote authentication failed. <br>Please try local login or <a href="' . $url . '">Click here</a> to try again';
+                $this->Alert->error($retryMessage, ['type' => 'string', 'reset' => true]);
+            } else {
+                //POCOR-2976 start
+                if ($userData->status == 0) {
+                    if (empty($userData)) {
+                        $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
+                    } else {
+                        $this->Alert->error('security.login.locked_account', ['reset' => true]);
+                    }
+                    return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+                }
+                // $this->Alert->error('security.login.fail', ['reset' => true]);
+                $session = $this->request->getSession();
+                $noOfPendingAttempts = $session->read('login.attempts');
+                // echo "<pre>";print_r($noOfPendingAttempts);die;
+                $noOfPendingAttempts--;
+                $session->write('login.attempts', $noOfPendingAttempts);
+                if ($noOfPendingAttempts <= 0) {
+                    $SecurityUser->updateAll(['status' => 0],
+                        ['username' => $this->request->getData('username')]);
+                    if (empty($userData)) {
+                        $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
+                    } else {
+                        $this->Alert->error('security.login.locked_account', ['reset' => true]);
+                    }
+                } else {
+                    $message = "You have {$noOfPendingAttempts} more login attempts before your account will be locked.";
+                    $this->Alert->warning($message, ['type' => 'string', 'reset' => true]);
+                }
+                //POCOR-2976 end
+            }
+            $event->stopPropagation();
+            return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+        }
     }
 
     public function afterAuthenticate(EventInterface $event, ArrayObject $extra)

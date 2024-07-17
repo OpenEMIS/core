@@ -3230,6 +3230,129 @@ class AttendanceRepository extends Controller
     }
     //For POCOR-8397 Ends...
 
+
+    //For POCOR-8396 Start...
+    public function getDataForSheet($params)
+    {
+        try {
+            $institution_class_id = $params['institution_class_id'];
+            $institution_id = $params['institution_id'];
+
+            $currentYearData = AcademicPeriod::where("current", 1)->first();
+            $institutionData = Institutions::where('id', $institution_id)->first();
+
+            $getStudentAttendanceType = getStudentAttendanceType();
+
+            $getNumberOfPeriods = getNumberOfPeriods();
+
+            $getInstutionClassSubject = getInstutionClassSubject($institution_id, $institution_class_id);
+
+            $getInstutionClassStudent = getInstutionClassStudent($institution_id, $institution_class_id);
+
+
+
+            $getAbsenceTypes = getAbsenceTypes();
+
+            $getStudentAbsenceReason = getStudentAbsenceReason();
+
+            
+            
+            $getNewArray = $this->getNewArray($getStudentAttendanceType, $getNumberOfPeriods, $getInstutionClassSubject, $getInstutionClassStudent, $getAbsenceTypes, $getStudentAbsenceReason);
+            return $getNewArray;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in getDataForSheet in AttendanceRepository.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed in getDataForSheet in AttendanceRepository.');
+        }
+    }
+
+
+    public function getNewArray($array1, $array2, $array3, $array4, $array5, $array6)
+    {
+        try {
+            $newArray = [];
+
+            for ($i = 0; $i < count($array4); $i++) {
+                $newRow = [];
+                // Student Attendance Type data
+                if (isset($array1[$i])) {
+                    $newRow[] = $array1[$i]['Name'];
+                    $newRow[] = $array1[$i]['Code'];
+                } else {
+                    $newRow[] = null;
+                    $newRow[] = null;
+                }
+                
+
+                // Number of periods data
+                if (isset($array2[$i])) {
+                    $newRow[] = $array2[$i]['Number Of Periods'];
+                    $newRow[] = $array2[$i]['Id'];
+                } else {
+                    $newRow[] = null;
+                    $newRow[] = null;
+                }
+
+                // Instution Class Subject data
+                if (isset($array3[$i])) {
+                    $newRow[] = $array3[$i]['Subject'];
+                    $newRow[] = $array3[$i]['Id'];
+                } else {
+                    $newRow[] = null;
+                    $newRow[] = null;
+                }
+
+                // Institution Class Student data
+                if (isset($array4[$i])) {
+                    $newRow[] = $array4[$i]['Institution'];
+                    $newRow[] = $array4[$i]['Academic Period'];
+                    $newRow[] = $array4[$i]['Education Grade'];
+                    $newRow[] = $array4[$i]['Name'];
+                    $newRow[] = $array4[$i]['OpenEMIS ID'];
+                } else {
+                    $newRow[] = null;
+                    $newRow[] = null;
+                    $newRow[] = null;
+                    $newRow[] = null;
+                    $newRow[] = null;
+                }
+
+
+                // Absence Types data
+                if (isset($array5[$i])) {
+                    $newRow[] = $array5[$i]['Name'];
+                    $newRow[] = $array5[$i]['Code'];
+                } else {
+                    $newRow[] = null;
+                    $newRow[] = null;
+                }
+
+
+                // Student Absence Reason data
+                if (isset($array6[$i])) {
+                    $newRow[] = $array6[$i]['Name'];
+                    $newRow[] = $array6[$i]['National Code'];
+                } else {
+                    $newRow[] = null;
+                    $newRow[] = null;
+                }
+
+                $newArray[] = $newRow;
+            }
+            return $newArray;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in getNewArray.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return [];
+        }
+    }
+    //For POCOR-8396 End...
+
 }
 
 

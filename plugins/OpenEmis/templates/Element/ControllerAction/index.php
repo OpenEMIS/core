@@ -82,3 +82,6 @@ $baseUrl = $this->Url->build($url);
 		</table>
 	</div>
 </div>
+<?php
+echo $this->element('OpenEmis.pagination_new');
+?>

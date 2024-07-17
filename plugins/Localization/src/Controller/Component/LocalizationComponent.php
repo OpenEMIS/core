@@ -62,10 +62,12 @@ class LocalizationComponent extends Component
     public function initialize(array $config): void
     {
         $session = $this->getController()->getRequest()->getSession();
+        $lang = !empty($session->read('System.language')) ? $session->read('System.language') : 'en';
         $this->controller = $this->_registry->getController();
         $this->Cookie->name = str_replace(' ', '_', $config['productName']) . '_COOKIE';
         $this->Cookie->time = 3600 * 24 * 30; // expires after one month
-        list($this->language, $this->showLanguage) = $this->detectLanguage();
+        // list($this->language, $this->showLanguage) = $this->detectLanguage();
+        list($this->language, $this->showLanguage) = $this->detectLanguage($lang); //Version 4
         $this->Session = $session;
     }
 
@@ -107,14 +109,18 @@ class LocalizationComponent extends Component
      *
      * @return array language - Language to display, showLanguage - If the language menu is to be displayed
      */
-    private function detectLanguage()
+    private function detectLanguage($changedLanguage)
     {
         // Default language
-        $lang = $this->language;
+        //V4[Start]
+        // $lang = $this->language;
+        $session = $this->getController()->getRequest()->getSession();
+        $lang = $session->read('System.language');
+        //V4[End]
         $request = $this->request;
         $session = $this->getController()->getRequest()->getSession();
         $showLanguage = $this->showLanguage;
-        $lang = $this->language;
+        // $lang = $this->language;
         $eventManager = $this->getController()->getEventManager();
         $event = $eventManager->dispatch($this->getController()->getName(), 'Controller.Localization.getLanguageOptions', 'getLanguageOptions', [], true);
         if ($event->getResult()) {
@@ -126,7 +132,8 @@ class LocalizationComponent extends Component
         // Language menu enabled
         if (!$session->read('System.language_menu')) {
             if ($this->getController()->getRequest()->getData()) {
-                $langQuery = $this->getController()->getRequest()->getData()['System']['language'];
+                // $langQuery = $this->getController()->getRequest()->getData()['System']['language']; //V4 POCOR-8410
+                $langQuery = $lang;
                 if (isset($langQuery)) {
                     $lang = $langQuery;
                 }
@@ -160,6 +167,9 @@ class LocalizationComponent extends Component
     public function beforeFilter(EventInterface $event)
     {
         // Call to recompile the language if the translation files are affected
+        //V4 POCOR-8410
+        $session = $this->getController()->getRequest()->getSession();
+        $this->language = !empty($session->read('System.language')) ? $session->read('System.language') : 'en';
         if ($this->autoCompile()) {
             $this->updateLocaleFile($this->language);
         }
@@ -304,8 +314,10 @@ class LocalizationComponent extends Component
     public function startup(EventInterface $event)
     {
         $controller = $this->controller;
-        $htmlLang = $this->language;
-        $languages = $this->languages;
+        $session = $this->getController()->getRequest()->getSession();
+        $lang = $session->read('System.language');
+        $htmlLang = !empty($lang) ? $lang : 'en';
+        $languages = $lang;
         if ($_SERVER['REQUEST_METHOD'] == 'POST' && array_key_exists('System', $this->getController()->getRequest()->getData())) {
             if (isset($this->getController()->getRequest()->getData()['System']['language'])) {
                 $htmlLang = $this->getController()->getRequest()->getData()['System']['language'];
@@ -343,7 +355,7 @@ class LocalizationComponent extends Component
         // get direction from locales table.
         $Locales = TableRegistry::getTableLocator()->get('Locales');
         $langDir = $Locales->getLangDir($htmlLang);
-        $htmlLangDir = array_key_exists($htmlLang, $languages) ? $languages[$htmlLang]['direction'] : $langDir;
+        $htmlLangDir = array_key_exists($htmlLang, (array)$languages) ? $languages[$htmlLang]['direction'] : $langDir;
         $controller->set('showLanguage', $this->showLanguage);
         $controller->set('languageOptions', $this->getOptions());
         $controller->set(compact('htmlLang', 'htmlLangDir'));
@@ -351,6 +363,8 @@ class LocalizationComponent extends Component
 
     public function getOptions()
     {
+        $session = $this->getController()->getRequest()->getSession();
+        $this->languages = $session->read('System.language');
         $languages = $this->languages;
         $options = [];
 
