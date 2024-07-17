@@ -362,7 +362,7 @@ class ReportListBehavior extends Behavior {
 		$Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 		$AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 		$EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
-		if (array_key_exists('institution_id', $data['InstitutionStatistics'])) {
+		if (array_key_exists('institution_id', (array)$data['InstitutionStatistics'])) {
 			// $institutionId  = $this->_table->getQueryString('institution_id'); working
 			$institutionId = $data['InstitutionStatistics']['institution_id'];
 	        $institutionData = $Institutions->get($institutionId);
@@ -373,7 +373,7 @@ class ReportListBehavior extends Behavior {
 				$name = $featureList[$feature] .' - '. $academicPeriodData->name .' - '. $institutionData->code .' - '. $institutionData->name;
 			}
 		}
-		if (array_key_exists('institution_id', $data['InstitutionStandards'])) {
+		if (array_key_exists('institution_id', (array)$data['InstitutionStandards'])) {
 			$institutionId = $data['InstitutionStandards']['institution_id'];
 	        $institutionData = $Institutions->get($institutionId);
 	        $academicPeriodData = $AcademicPeriod->get($data['InstitutionStandards']['academic_period_id']);
