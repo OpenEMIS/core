@@ -214,7 +214,10 @@ class InstitutionPositionsTable extends ControllerActionTable
         if ($associatedRecordsExist) {
             $message = __('Delete operation is not allowed as there are other information linked to this record.');
             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-            $url = $this->controller->request->referer();
+            //POCOR-8457 starts
+            if (isset($this->controller) && $this->controller->getRequest()) {
+                $url = $this->controller->getRequest()->referer();
+            }//POCOR-8457 ends
             $event->stopPropagation();
             return $this->controller->redirect($url);
         }
@@ -793,7 +796,7 @@ class InstitutionPositionsTable extends ControllerActionTable
 
         $this->fields['current_staff_list']['data'] = $currentStaff;
         $totalCurrentFTE = '0.00';
-        if (count($currentStaff) > 0) {
+        if (count($currentStaff->toArray()) > 0) {//POCOR-8457
             foreach ($currentStaff as $cs) {
                 $totalCurrentFTE = number_format((floatVal($totalCurrentFTE) + floatVal($cs->FTE)), 2);
             }

@@ -193,7 +193,7 @@ class CustomFormsTable extends ControllerActionTable
                 'field_type' => $CustomFields->aliasField('field_type'),
                 $fieldKey => $CustomFormsFields->aliasField($fieldKey),
                 $formKey => $CustomFormsFields->aliasField($formKey),
-                'section' => $CustomFormsFields->aliasField($alias.'.section'), //comment cakephp4 not found column // Again change for this POCOR-8419
+                //'section' => $CustomFormsFields->aliasField($alias.'.section'), //comment cakephp4 not found column // Again change for this POCOR-8419
                 'id' => $CustomFormsFields->aliasField('id')
             ])
             ->innerJoin(
