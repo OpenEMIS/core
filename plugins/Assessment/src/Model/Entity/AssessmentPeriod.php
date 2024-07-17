@@ -3,7 +3,7 @@ namespace Assessment\Model\Entity;
 
 use DateTimeInterface;
 
-use Cake\I18n\Date;
+use Cake\I18n\FrozenDate;
 use Cake\ORM\Entity;
 use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
@@ -14,13 +14,14 @@ class AssessmentPeriod extends Entity
 
     protected function _getEditable()
     {
-        $today = new Date();
+        $today = new FrozenDate();
         $dateEnabled = $this->getOriginal('date_enabled');
         $dateDisabled = $this->getOriginal('date_disabled');
 
         //POCOR-7400 start
         $assessment_period_id=$this->getOriginal('id');
-        $user_id=$_SESSION['Auth']['User']['id'];
+        // $user_id=$_SESSION['Auth']['User']['id'];
+        $user_id= $this->created_user_id;
         $SecurityGroupUsersTable=TableRegistry::get('Security.SecurityGroupUsers');
         $securityGroupUserData=$SecurityGroupUsersTable->
                                find('all')->where([$SecurityGroupUsersTable->aliasField('security_user_id') => $user_id])

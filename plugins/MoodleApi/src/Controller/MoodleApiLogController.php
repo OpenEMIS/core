@@ -6,17 +6,17 @@ use App\Controller\AppController;
 use Cake\Event\Event;
 use Cake\ORM\Table;
 
-class MoodleApiController extends AppController
+class MoodleApiLogController extends AppController
 {
 	public function initialize(): void {
-        echo "asffs";die;   
+        //echo "asffs";die;   
 		parent::initialize();
 
     }
 
     public function Alerts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.Alerts']); }
     public function AlertRules() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.AlertRules']); }
-    public function mlog() { echo "safgs";die;$this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.AlertLogs']); }
+    public function mlog() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'MoodleApi.MoodleApiLog']); }
 
     public function beforeFilter(Event $event) {
         if ($this->getPlugin() == $this->getPlugin()) {

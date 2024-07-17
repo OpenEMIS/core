@@ -130,10 +130,10 @@ class InstitutionService extends Controller
     }
 
 
-    public function getInstitutionData(int $id)
+    public function getInstitutionData($params, int $id)
     {
         try {
-            $data = $this->institutionRepository->getInstitutionData($id);
+            $data = $this->institutionRepository->getInstitutionData($params, $id);
 
             $resp = [];
             if($data){
@@ -602,10 +602,10 @@ class InstitutionService extends Controller
 
 
 
-    public function getInstitutionGradeSummariesData(int $institutionId, int $gradeId)
+    public function getInstitutionGradeSummariesData($params, int $institutionId, int $gradeId)
     {
         try {
-            $data = $this->institutionRepository->getInstitutionGradeSummariesData($institutionId, $gradeId);
+            $data = $this->institutionRepository->getInstitutionGradeSummariesData($params, $institutionId, $gradeId);
             return $data;
             
         } catch (\Exception $e) {
@@ -712,7 +712,6 @@ class InstitutionService extends Controller
             $list = [];
             if(count($data['data']) > 0){
                 foreach($data['data'] as $k => $d){
-                    //dd($d);
                     // For POCOR-8251 start...
                     $classData = [];
                     foreach ($d['classes'] as $c => $class) {
@@ -747,6 +746,12 @@ class InstitutionService extends Controller
                     // For POCOR-8251 start...
                     $list[$k]['classes'] = $classData;
                     // For POCOR-8251 end...
+
+
+                    // For POCOR-8398 start...
+                    $list[$k]['staff_position_grade_id'] = $d['staff_position_grade']['id'];
+                    $list[$k]['staff_position_grade_name'] = $d['staff_position_grade']['name'];
+                    // For POCOR-8398 end...
 
                     $list[$k]['security_group_user_id'] = $d['security_group_user_id'];
                     $list[$k]['modified_user_id'] = $d['modified_user_id'];
@@ -820,6 +825,11 @@ class InstitutionService extends Controller
                     // For POCOR-8251 start...
                     $list[$k]['classes'] = $classData;
                     // For POCOR-8251 end...
+
+                    // For POCOR-8398 start...
+                    $list[$k]['staff_position_grade_id'] = $d['staff_position_grade']['id'];
+                    $list[$k]['staff_position_grade_name'] = $d['staff_position_grade']['name'];
+                    // For POCOR-8398 end...
 
                     $list[$k]['security_group_user_id'] = $d['security_group_user_id'];
                     $list[$k]['modified_user_id'] = $d['modified_user_id'];
@@ -899,6 +909,11 @@ class InstitutionService extends Controller
                 $list['classes'] = $classData;
                 // For POCOR-8251 end...
 
+                // For POCOR-8398 start...
+                $list['staff_position_grade_id'] = $data['staffPositionGrade']['id'];
+                $list['staff_position_grade_name'] = $data['staffPositionGrade']['name'];
+                // For POCOR-8398 end...
+
                 $list['security_group_user_id'] = $data['security_group_user_id'];
                 $list['modified_user_id'] = $data['modified_user_id'];
                 $list['modified'] = $data['modified'];
@@ -931,17 +946,28 @@ class InstitutionService extends Controller
             $list = [];
             if(count($data['data']) > 0){
                 foreach($data['data'] as $k => $d){
+                    //For POCOR-8384 Start...
+                    $getStaffPositionGrade = $this->institutionRepository->getStaffPositionGrade($d['staff_position_title_id']);
+                    //For POCOR-8384 End...
+
+
                     $list[$k]['position_id'] = $d['id'];
                     $list[$k]['status_id'] = $d['status_id'];
                     $list[$k]['status_name'] = $d['status']['status_name'];
                     $list[$k]['position_no'] = $d['position_no'];
                     $list[$k]['staff_position_title_id'] = $d['staff_position_title_id'];
                     $list[$k]['staff_position_title_name'] = $d['staff_position_title']['staff_position_title_name'];
-                    /*$list[$k]['staff_position_grade_id'] = $d['staff_position_grade_id'];
-                    $list[$k]['staff_position_grade_name'] = $d['staff_position_grades']['staff_position_grade_name'];*/
+                    if($getStaffPositionGrade){
+                        $list[$k]['staff_position_grade_id'] = $getStaffPositionGrade->id;
+                        $list[$k]['staff_position_grade_name'] = $getStaffPositionGrade->name;
+                    } else {
+                        $list[$k]['staff_position_grade_id'] = Null;
+                        $list[$k]['staff_position_grade_name'] = Null;
+                    }
+                    
                     $list[$k]['institution_id'] = $d['institution_id'];
                     $list[$k]['assignee_id'] = $d['assignee_id'];
-                    //$list[$k]['is_homeroom'] = $d['is_homeroom'];
+                    $list[$k]['is_homeroom'] = $d['institution_staff']['is_homeroom']??0;
                     $list[$k]['modified_user_id'] = $d['modified_user_id'];
                     $list[$k]['modified'] = $d['modified'];
                     $list[$k]['created_user_id'] = $d['created_user_id'];
@@ -958,7 +984,6 @@ class InstitutionService extends Controller
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Institutions Positions List Not Found');
         }
     }
@@ -973,17 +998,27 @@ class InstitutionService extends Controller
             $list = [];
             if(count($data['data']) > 0){
                 foreach($data['data'] as $k => $d){
+
+                    //For POCOR-8384 Start...
+                    $getStaffPositionGrade = $this->institutionRepository->getStaffPositionGrade($d['staff_position_title_id']);
+                    //For POCOR-8384 End...
+
                     $list[$k]['position_id'] = $d['id'];
                     $list[$k]['status_id'] = $d['status_id'];
                     $list[$k]['status_name'] = $d['status']['status_name'];
                     $list[$k]['position_no'] = $d['position_no'];
                     $list[$k]['staff_position_title_id'] = $d['staff_position_title_id'];
                     $list[$k]['staff_position_title_name'] = $d['staff_position_title']['staff_position_title_name'];
-                    /*$list[$k]['staff_position_grade_id'] = $d['staff_position_grade_id'];
-                    $list[$k]['staff_position_grade_name'] = $d['staff_position_grades']['staff_position_grade_name'];*/
+                    if($getStaffPositionGrade){
+                        $list[$k]['staff_position_grade_id'] = $getStaffPositionGrade->id;
+                        $list[$k]['staff_position_grade_name'] = $getStaffPositionGrade->name;
+                    } else {
+                        $list[$k]['staff_position_grade_id'] = Null;
+                        $list[$k]['staff_position_grade_name'] = Null;
+                    }
                     $list[$k]['institution_id'] = $d['institution_id'];
                     $list[$k]['assignee_id'] = $d['assignee_id'];
-                    //$list[$k]['is_homeroom'] = $d['is_homeroom'];
+                    $list[$k]['is_homeroom'] = $d['institution_staff']['is_homeroom']??0;
                     $list[$k]['modified_user_id'] = $d['modified_user_id'];
                     $list[$k]['modified'] = $d['modified'];
                     $list[$k]['created_user_id'] = $d['created_user_id'];
@@ -1014,17 +1049,27 @@ class InstitutionService extends Controller
             
             $list = [];
             if($data){
+
+                //For POCOR-8384 Start...
+                $getStaffPositionGrade = $this->institutionRepository->getStaffPositionGrade($data['staff_position_title_id']);
+                //For POCOR-8384 End...
+
                 $list['position_id'] = $data['id'];
                 $list['status_id'] = $data['status_id'];
                 $list['status_name'] = $data['status']['status_name'];
                 $list['position_no'] = $data['position_no'];
                 $list['staff_position_title_id'] = $data['staff_position_title_id'];
                 $list['staff_position_title_name'] = $data['staffPositionTitle']['staff_position_title_name']??"";
-                /*$list['staff_position_grade_id'] = $data['staff_position_grade_id'];
-                $list['staff_position_grade_name'] = $data['staffPositionGrades']['staff_position_grade_name']??"";*/
+                if($getStaffPositionGrade){
+                    $list['staff_position_grade_id'] = $getStaffPositionGrade->id;
+                    $list['staff_position_grade_name'] = $getStaffPositionGrade->name;
+                } else {
+                    $list['staff_position_grade_id'] = Null;
+                    $list['staff_position_grade_name'] = Null;
+                }
                 $list['institution_id'] = $data['institution_id'];
                 $list['assignee_id'] = $data['assignee_id'];
-                $list['is_homeroom'] = $data['is_homeroom'];
+                $list['is_homeroom'] = $data['institution_staff']['is_homeroom']??0;;
                 $list['modified_user_id'] = $data['modified_user_id'];
                 $list['modified'] = $data['modified'];
                 $list['created_user_id'] = $data['created_user_id'];
@@ -1301,14 +1346,14 @@ class InstitutionService extends Controller
     }
 
 
-    public function getStudentAssessmentItemResult($request, $institutionId, $studentId)
+    public function getStudentAssessmentItemResult($params, $institutionId, $studentId)
     {
         try {
-            $lists = $this->institutionRepository->getStudentAssessmentItemResult($request, $institutionId, $studentId);
+            $lists = $this->institutionRepository->getStudentAssessmentItemResult($params, $institutionId, $studentId);
             $resp = [];
 
             if(count($lists) > 0){
-                foreach($lists as $k => $l){
+                foreach($lists['data'] as $k => $l){
                     $resp[$k]['id'] = $l['id'];
                     $resp[$k]['academic_period_id'] = $l['academic_period_id'];
                     $resp[$k]['assessment_grading_option_id'] = $l['assessment_grading_option_id'];
@@ -1327,7 +1372,14 @@ class InstitutionService extends Controller
                 }
             }
 
-            return $resp;
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $lists['data'] = $resp;
+                return $lists;
+            } else {
+                return $resp;
+            }
+            //For POCOR-8215/8216 end...
             
         } catch (\Exception $e) {
             Log::error(
@@ -1339,19 +1391,29 @@ class InstitutionService extends Controller
         }
     }
 
-    public function displayAddressAreaLevel($request)
+    public function displayAddressAreaLevel($params)
     {
         try {
-            $data = $this->institutionRepository->displayAddressAreaLevel($request)->map(
-                function ($item, $key) {
-                    return [
-                        "id" => $item->id,
-                        "name" => $item->name,
-                    ];
-                }
-            );
+            $data = $this->institutionRepository->displayAddressAreaLevel($params);
 
-            return $data;
+            $resp = [];
+            if(!empty($data)){
+                foreach($data['data'] as $k => $d){
+                    $resp[$k]['id'] = $d['id'];
+                    $resp[$k]['name'] = $d['name'];
+                }
+            }
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $data['data'] = $resp;
+                return $data;
+            } else {
+                return $resp;
+            }
+            //For POCOR-8215/8216 end...
+
+            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to get address area level area.',
@@ -1363,19 +1425,27 @@ class InstitutionService extends Controller
     }
 
 
-    public function displayBirthplaceAreaLevel($request)
+    public function displayBirthplaceAreaLevel($params)
     {
         try {
-            $data = $this->institutionRepository->displayBirthplaceAreaLevel($request)->map(
-                function ($item, $key) {
-                    return [
-                        "id" => $item->id,
-                        "name" => $item->name,
-                    ];
+            $data = $this->institutionRepository->displayBirthplaceAreaLevel($params);
+            
+            $resp = [];
+            if(!empty($data)){
+                foreach($data['data'] as $k => $d){
+                    $resp[$k]['id'] = $d['id'];
+                    $resp[$k]['name'] = $d['name'];
                 }
-            );
+            }
 
-            return $data;
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $data['data'] = $resp;
+                return $data;
+            } else {
+                return $resp;
+            }
+            //For POCOR-8215/8216 end...
         } catch (\Exception $e) {
             Log::error(
                 'Failed to get birthplace area level area.',
@@ -1387,51 +1457,51 @@ class InstitutionService extends Controller
     }
 
     
-    public function getSubjectsStaffList($request)
+    public function getSubjectsStaffList($params)
     {
         try {
-            $data = $this->institutionRepository->getSubjectsStaffList($request);
+            $data = $this->institutionRepository->getSubjectsStaffList($params);
             
             //dd($data);
 
             $resp = [];
             if($data){
-                foreach($data as $k => $d){
-                    
-                    $resp[$k]['education_systems_name'] = $d['institutionSubject']['educationGrades']['educationProgramme']['educationCycle']['educationLevel']['educationSystem']['name'];
+                foreach($data['data'] as $k => $d){
+                    //dd($d['institution_subject']['education_grades']['education_programme']['education_cycle']['education_level']);
+                    $resp[$k]['education_systems_name'] = $d['institution_subject']['education_grades']['education_programme']['education_cycle']['education_level']['education_system']['name'];
 
-                    $resp[$k]['education_levels_name'] = $d['institutionSubject']['educationGrades']['educationProgramme']['educationCycle']['educationLevel']['name'];
+                    $resp[$k]['education_levels_name'] = $d['institution_subject']['education_grades']['education_programme']['education_cycle']['education_level']['name'];
 
-                    $resp[$k]['education_cycles_name'] = $d['institutionSubject']['educationGrades']['educationProgramme']['educationCycle']['name'];
+                    $resp[$k]['education_cycles_name'] = $d['institution_subject']['education_grades']['education_programme']['education_cycle']['name'];
 
-                    $resp[$k]['education_programmes_code'] = $d['institutionSubject']['educationGrades']['educationProgramme']['code'];
+                    $resp[$k]['education_programmes_code'] = $d['institution_subject']['education_grades']['education_programme']['code'];
 
-                    $resp[$k]['education_programmes_name'] = $d['institutionSubject']['educationGrades']['educationProgramme']['name'];
+                    $resp[$k]['education_programmes_name'] = $d['institution_subject']['education_grades']['education_programme']['name'];
 
-                    $resp[$k]['education_grades_code'] = $d['institutionSubject']['educationGrades']['code'];
-                    $resp[$k]['education_grades_name'] = $d['institutionSubject']['educationGrades']['name'];
-                    $resp[$k]['education_subjects_code'] = $d['institutionSubject']['educationSubjects']['code'];
-                    $resp[$k]['education_subjects_name'] = $d['institutionSubject']['educationSubjects']['name'];
+                    $resp[$k]['education_grades_code'] = $d['institution_subject']['education_grades']['code'];
+                    $resp[$k]['education_grades_name'] = $d['institution_subject']['education_grades']['name'];
+                    $resp[$k]['education_subjects_code'] = $d['institution_subject']['education_subjects']['code'];
+                    $resp[$k]['education_subjects_name'] = $d['institution_subject']['education_subjects']['name'];
                     $resp[$k]['institutions_id'] = $d['institution']['id'];
                     $resp[$k]['institutions_code'] = $d['institution']['code'];
                     $resp[$k]['institutions_name'] = $d['institution']['name'];
 
-                    $resp[$k]['institution_classes_name'] = $d['institutionSubject']['classes'][0]['institutionClass']['name']??"";
+                    $resp[$k]['institution_classes_name'] = $d['institution_subject']['classes'][0]['institutionClass']['name']??"";
 
-                    $resp[$k]['academic_periods_code'] = $d['institutionSubject']['academicPeriod']['code'];
-                    $resp[$k]['academic_periods_name'] = $d['institutionSubject']['academicPeriod']['name'];
-                    $resp[$k]['institution_subjects_id'] = $d['institutionSubject']['id'];
-                    $resp[$k]['institution_subjects_name'] = $d['institutionSubject']['name'];
+                    $resp[$k]['academic_periods_code'] = $d['institution_subject']['academic_period']['code'];
+                    $resp[$k]['academic_periods_name'] = $d['institution_subject']['academic_period']['name'];
+                    $resp[$k]['institution_subjects_id'] = $d['institution_subject']['id'];
+                    $resp[$k]['institution_subjects_name'] = $d['institution_subject']['name'];
 
                     $resp[$k]['security_users_openemis_no_subject_teachers'] = $d['staff']['openemis_no'];
 
                     $openEmisNo = [];
 
-                    if(count($d['institutionSubject']['students']) > 0){
-                        $students = $d['institutionSubject']['students'];
+                    if(count($d['institution_subject']['students']) > 0){
+                        $students = $d['institution_subject']['students'];
 
                         foreach($students as $s){
-                            $openEmisNo[] = $s['securityUser']['openemis_no'];
+                            $openEmisNo[] = $s['security_user']['openemis_no'];
                         }
                     }
 
@@ -1439,13 +1509,22 @@ class InstitutionService extends Controller
                 }
                 
             }
-            return $resp;
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $data['data'] = $resp;
+                return $data;
+            } else {
+                return $resp;
+            }
+            //For POCOR-8215/8216 end...
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
+            dd($e);
             return $this->sendErrorResponse('Subjects Staff List Not Found');
         }
     }
@@ -1555,15 +1634,15 @@ class InstitutionService extends Controller
         }
     }
     
-    public function getInstitutionGenders()
+    public function getInstitutionGenders($params)
     {
         try {
 
-            $data = $this->institutionRepository->getInstitutionGenders();
-            // dd($data);
+            $data = $this->institutionRepository->getInstitutionGenders($params);
+            
             $list = [];
             if(count($data) > 0){
-                foreach($data as $k => $d){
+                foreach($data['data'] as $k => $d){
                     $list[$k]['id'] = $d['id'];
                     $list[$k]['name'] = $d['name'];
                     $list[$k]['code'] = $d['code'];
@@ -1572,8 +1651,15 @@ class InstitutionService extends Controller
                     $list[$k]['created'] = $d['created'];
                 }
             }
-            
-            return $list;
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $data['data'] = $list;
+                return $data;
+            } else {
+                return $list;
+            }
+            //For POCOR-8215/8216 end...
 
         } catch (\Exception $e) {
             Log::error(
@@ -1878,10 +1964,10 @@ class InstitutionService extends Controller
         }
     }
 
-    public function getInstitutionStudentBehaviour($institutionId, $studentId)
+    public function getInstitutionStudentBehaviour($params, $institutionId, $studentId)
     {
         try {
-            $data = $this->institutionRepository->getInstitutionStudentBehaviour($institutionId, $studentId);
+            $data = $this->institutionRepository->getInstitutionStudentBehaviour($params, $institutionId, $studentId);
             if($data){
                 return $data; 
             }
@@ -1932,15 +2018,15 @@ class InstitutionService extends Controller
         }
     }
 
-    public function getInstitutionClassEducationGradeStudents($institutionId, $institutionClassId, $educationGradeId)
+    public function getInstitutionClassEducationGradeStudents($params, $institutionId, $institutionClassId, $educationGradeId)
     {
         try {
-            $data = $this->institutionRepository->getInstitutionClassEducationGradeStudents($institutionId, $institutionClassId, $educationGradeId);
+            $data = $this->institutionRepository->getInstitutionClassEducationGradeStudents($params, $institutionId, $institutionClassId, $educationGradeId);
 
             $resp = [];
 
             if(count($data) > 0){
-                foreach($data as $k => $l){
+                foreach($data['data'] as $k => $l){
                     $resp[$k]['institution_class_id'] = $l['id'];
                     $resp[$k]['institution_class_name'] = $l['name'];
                     $resp[$k]['institution_id'] = $l['institution_id'];
@@ -1960,9 +2046,15 @@ class InstitutionService extends Controller
                 }
             }
 
-            return $resp;
-            
-            
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $data['data'] = $resp;
+                return $data;
+            } else {
+                return $resp;
+            }
+            //For POCOR-8215/8216 end...
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to get Students List.',
@@ -1972,16 +2064,16 @@ class InstitutionService extends Controller
         }
     }
 
-    public function getInstitutionEducationSubjectStudents($institutionId, $educationGradeId)
+    public function getInstitutionEducationSubjectStudents($params, $institutionId, $educationGradeId)
     {
         try {
-            $data = $this->institutionRepository->getInstitutionEducationSubjectStudents($institutionId, $educationGradeId);
+            $data = $this->institutionRepository->getInstitutionEducationSubjectStudents($params, $institutionId, $educationGradeId);
             // return $data;
 
             $resp = [];
 
             if(count($data) > 0){
-                foreach($data as $k => $l){
+                foreach($data['data'] as $k => $l){
                     $resp[$k]['institution_subject_id'] = $l['id'];
                     $resp[$k]['institution_subject_name'] = $l['name'];
                     $resp[$k]['education_subject_code'] = $l['education_subjects']['code'];
@@ -2003,7 +2095,14 @@ class InstitutionService extends Controller
                 }
             }
 
-            return $resp;
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $data['data'] = $resp;
+                return $data;
+            } else {
+                return $resp;
+            }
+            //For POCOR-8215/8216 end...
             
             
         } catch (\Exception $e) {
@@ -2101,14 +2200,14 @@ class InstitutionService extends Controller
         }
     }
 
-    public function getStudentsMealsByInstitutionId($institutionId)
+    public function getStudentsMealsByInstitutionId($params, $institutionId)
     {
         try {
 
-            $data = $this->institutionRepository->getStudentsMealsByInstitutionId($institutionId);
+            $data = $this->institutionRepository->getStudentsMealsByInstitutionId($params, $institutionId);
             $list = [];
             if(count($data) > 0){
-                foreach($data as $k => $d){
+                foreach($data['data'] as $k => $d){
                     $list[$k]['institution_id'] = $d['institution_id'];
                     $list[$k]['institution_class_id'] = $d['institution_class_id'];
                     $list[$k]['academic_period_id'] = $d['academic_period_id'];
@@ -2121,7 +2220,15 @@ class InstitutionService extends Controller
                 }
             }
 
-            return $list;
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $data['data'] = $list;
+                return $data;
+                
+            } else {
+                return $list;
+            }
+            //For POCOR-8215/8216 end...
 
         } catch (\Exception $e) {
             Log::error(
@@ -2133,24 +2240,29 @@ class InstitutionService extends Controller
         }
     }
 
-    public function getInstitutionStudentStatusByStudentId($studentId)
+    public function getInstitutionStudentStatusByStudentId($studentId, $params)
     {
         try {
 
-            $data = $this->institutionRepository->getInstitutionStudentStatusByStudentId($studentId);
+            $data = $this->institutionRepository->getInstitutionStudentStatusByStudentId($studentId, $params);
             $list = [];
-            if(count($data) > 0){
-                foreach($data as $k => $d){
+
+            $record = isset($params['limit']) ? $data['data'] : $data;
+            if(count($record) > 0){
+                foreach($record as $k => $d){
                     $list[$k]['id'] = $d['id'];
                     $list[$k]['security_user_id'] = $d['student_id'];
                     $list[$k]['student_status_id'] = $d['student_status_id'];
                     $list[$k]['created_user_id'] = $d['created_user_id'];
                     $list[$k]['created'] = $d['created'];
-                    
                 }
             }
-
-            return $list;
+            if(isset($params['limit'])){
+                $data['data'] = $list;
+                return $data;
+            } else {
+                return $list;
+            }
 
         } catch (\Exception $e) {
             Log::error(

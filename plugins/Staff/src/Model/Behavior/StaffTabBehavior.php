@@ -65,22 +65,41 @@ class StaffTabBehavior extends Behavior
     }
 
 
-    public function getCareerTabElements($options = [])
+    public function getCareerTabElements($options = [], $modelName = null)
     {
-        $model = $this->_table;        
-//         echo "<pre>"; print_r(strval($model->getQueryString('institution_id'))); die;
-        $controller = $model->controller;
-        $pluginName = $controller->getPlugin();
-        $controllerName = $controller->getName();
-        $institutionID = $this->getInstitutionID();
-//        $staffID = $this->getStaffID();
-//        if(!$staffID){
-//            $staffID = $this->getUserID();
-//        }
-        $queryString = $model->getQueryString();
+        $model = $this->_table;
+        $type = (array_key_exists('type', $options)) ? $options['type'] : null;//POCOR-8401
+        //POCOR-8359 starts
+        //if conditition used for  Institution > Staff > Career > Attandance Tab 
+        if(!empty($modelName)){
+            $controller = $modelName;//POCOR-8379
+            $pluginName = $modelName->getPlugin();
+            $controllerName = $modelName->getName();
+            $staffID = $modelName->getQueryString('staff_id'); 
+            $institutionID = $modelName->getQueryString('institution_id');
+            $queryString = $modelName->getQueryString();
+            $encodedQueryString = $modelName->paramsEncode($queryString);
+        } else {//POCOR-8359 ends
+            //         echo "<pre>"; print_r(strval($model->getQueryString('institution_id'))); die;
+            $controller = $model->controller;
+            $pluginName = $controller->getPlugin();
+            $controllerName = $controller->getName();
+            $institutionID = $this->getInstitutionID();
+            //$staffID = $this->getStaffID();
+            //
+            // if(!$staffID){
+            //     $staffID = $this->getUserID();
+            // }
+            $queryString = $model->getQueryString();
+            $encodedQueryString = $model->paramsEncode($queryString);
+        }
+        
+        $labels_tbl = TableRegistry::get('System.Labels');   //POCOR-8056
+        $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();//POCOR-8056
+        if(empty($curricular_label_Data->name)){
+            $curricular_label_Data->name = "Institution Curriculars";
+        }
 
-        // echo "<pre>"; print_r($queryString); die;
-        $encodedQueryString = $model->paramsEncode($queryString);
         $tabElements = [];
         $staffUrl = [
             'plugin' => $pluginName,
@@ -97,11 +116,11 @@ class StaffTabBehavior extends Behavior
             'StaffAppraisals' => ['text' => __('Appraisals')],
             'Duties' => ['text' => __('Duties')],
             'StaffAssociations' => ['text' => __('Houses')], //POCOR-7938
-            'StaffCurriculars' => ['text' => __('Curriculars')] //POCOR-6673 staff career tab section
+            //'StaffCurriculars' => ['text' => __('Curriculars')] //POCOR-6673 staff career tab section
+            'StaffCurriculars' => ['text' => __($curricular_label_Data->name)]//POCOR-8359
         ];
 
         // unset classes and subjects if institution is non-academic
-
         if ($institutionID) {
             $InstitutionTable = TableRegistry::get('Institution.Institutions');
             $classification = $InstitutionTable->get($institutionID)->classification;
@@ -115,10 +134,24 @@ class StaffTabBehavior extends Behavior
         foreach ($staffTabElements as $key => $tab) {
                 $changeKeyArray = ['StaffLeave', 'StaffAttendances','StaffAppraisals','StaffAssociations','StaffCurriculars'];
                 if($controllerName == "Profiles" || $controllerName == "Directories"){
+                    $type = (array_key_exists('type', $options)) ? $options['type'] : null;//POCOR-8379 
                     if(in_array($key, $changeKeyArray)){
-                        $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString]);
+                        //POCOR-8379 starts
+                        if(!empty($encodedQueryString)){
+                            $paramsData = ['action' => $key, 'index', $encodedQueryString];
+                        }else{
+                            $paramsData = ['action' => $key, 'index', '?' => ['type' => $type]];
+                        }
+                        $tabElements[$key]['url'] = array_merge($staffUrl, $paramsData);
                     }else{
-                        $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff'.$key, 'index', $encodedQueryString]);
+                        if(!empty($encodedQueryString)){
+                            $paramsData = ['action' => 'Staff'.$key, 'index', $encodedQueryString];
+                        }else{
+                            $paramsData = ['action' => 'Staff'.$key, 'index', '?' => ['type' => $type]];
+                        }
+                        $tabElements[$key]['url'] = array_merge($staffUrl, $paramsData);
+                        //POCOR-8379 ends
+                        //$tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff'.$key, 'index', $encodedQueryString, 'type' => $type]);//POCOR-8401 add type
                     }
                 }else{
                     $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', $encodedQueryString]);
@@ -127,7 +160,7 @@ class StaffTabBehavior extends Behavior
         if($controllerName == "Directories") {
             unset($tabElements['StaffCurriculars']);
         }
-        return $tabElements;
+        return $controller->TabPermission->checkTabPermission($tabElements);//POCOR-8379 
     }
 
 

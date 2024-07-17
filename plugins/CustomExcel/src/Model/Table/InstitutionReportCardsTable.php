@@ -543,7 +543,7 @@ class InstitutionReportCardsTable extends AppTable
                     ]
                 )
                 ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $totalArray = [];
@@ -1004,7 +1004,7 @@ class InstitutionReportCardsTable extends AppTable
                     ]
                 )
                 ->innerJoin(
-                    [$SpecialNeedsServices->alias() => $SpecialNeedsServices->table()],
+                    [$SpecialNeedsServices->getAlias() => $SpecialNeedsServices->getTable()],
                     [
                         $SpecialNeedsServices->aliasField('security_user_id = ') . $InstitutionStudents->aliasField('student_id')
                     ]
@@ -1042,7 +1042,7 @@ class InstitutionReportCardsTable extends AppTable
                     ]
                 )
                 ->innerJoin(
-                    [$SpecialNeedsServices->alias() => $SpecialNeedsServices->table()],
+                    [$SpecialNeedsServices->getAlias() => $SpecialNeedsServices->getTable()],
                     [
                         $SpecialNeedsServices->aliasField('security_user_id = ') . $InstitutionStudents->aliasField('student_id')
                     ]
@@ -1079,7 +1079,7 @@ class InstitutionReportCardsTable extends AppTable
                     ]
                 )
                 ->innerJoin(
-                    [$SpecialNeedsServices->alias() => $SpecialNeedsServices->table()],
+                    [$SpecialNeedsServices->getAlias() => $SpecialNeedsServices->getTable()],
                     [
                         $SpecialNeedsServices->aliasField('security_user_id = ') . $InstitutionStudents->aliasField('student_id')
                     ]
@@ -1195,7 +1195,7 @@ class InstitutionReportCardsTable extends AppTable
                     ]
                 )
                 ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $totalArray = [];
@@ -1225,7 +1225,7 @@ class InstitutionReportCardsTable extends AppTable
                     ]
                 )
                 ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
             $total_count = 0;
             foreach ($EducationGradesData as $value) {
@@ -1237,7 +1237,7 @@ class InstitutionReportCardsTable extends AppTable
                     ->where([$InstitutionStudents->aliasField('institution_id') => $params['institution_id']])
                     ->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
                     ->where([$InstitutionStudents->aliasField('student_status_id') => 1])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->toArray();
 
                 $result = [];
@@ -1341,7 +1341,7 @@ class InstitutionReportCardsTable extends AppTable
                 ->order($InstitutionSubjects->aliasField('id'))
                 ->where([$InstitutionSubjects->aliasField('institution_id') => $params['institution_id']])
                 ->where([$InstitutionSubjects->aliasField('academic_period_id') => $params['academic_period_id']])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $result = [];
@@ -1405,7 +1405,7 @@ class InstitutionReportCardsTable extends AppTable
                     $QualificationTitles->aliasField('id'),
                     $QualificationTitles->aliasField('name'),
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
             return $entity;
         }
@@ -1423,7 +1423,7 @@ class InstitutionReportCardsTable extends AppTable
                     $QualificationTitles->aliasField('id'),
                     $QualificationTitles->aliasField('name'),
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $init = 1;
@@ -1449,7 +1449,7 @@ class InstitutionReportCardsTable extends AppTable
                     ->where(['StaffQualifications.qualification_title_id' => $value['id']])
                     ->where([$InstitutionSubjects->aliasField('institution_id') => $params['institution_id']])
                     ->where([$InstitutionSubjects->aliasField('academic_period_id') => $params['academic_period_id']])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->first();
 
                 $InstitutionSubjectsData = $InstitutionSubjects->find()
@@ -1471,7 +1471,7 @@ class InstitutionReportCardsTable extends AppTable
                     ->where(['StaffQualifications.qualification_title_id' => $value['id']])
                     ->where([$InstitutionSubjects->aliasField('institution_id') => $params['institution_id']])
                     ->where([$InstitutionSubjects->aliasField('academic_period_id') => $params['academic_period_id']])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->toArray();
                 $result = [];
                 if (!empty($InstitutionSubjectsData)) {
@@ -1523,7 +1523,7 @@ class InstitutionReportCardsTable extends AppTable
                     $QualificationTitles->aliasField('id'),
                     $QualificationTitles->aliasField('name'),
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $init = 1;
@@ -1549,7 +1549,7 @@ class InstitutionReportCardsTable extends AppTable
                     ->where(['StaffQualifications.qualification_title_id' => $value['id']])
                     ->where(['InstitutionStaffDuties.institution_id' => $params['institution_id']])
                     ->where(['InstitutionStaffDuties.academic_period_id' => $params['academic_period_id']])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->first();
 
                 $StaffDutiesData = $StaffDuties->find()
@@ -1571,7 +1571,7 @@ class InstitutionReportCardsTable extends AppTable
                     ->where(['StaffQualifications.qualification_title_id' => $value['id']])
                     ->where(['InstitutionStaffDuties.institution_id' => $params['institution_id']])
                     ->where(['InstitutionStaffDuties.academic_period_id' => $params['academic_period_id']])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->toArray();
                 $result = [];
                 if (!empty($StaffDutiesData)) {
@@ -1623,7 +1623,7 @@ class InstitutionReportCardsTable extends AppTable
                     $QualificationTitles->aliasField('id'),
                     $QualificationTitles->aliasField('name'),
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $init = 1;
@@ -1654,7 +1654,7 @@ class InstitutionReportCardsTable extends AppTable
                     )
                     ->where(['StaffQualifications.qualification_title_id' => $value['id']])
                     ->where(['InstitutionStaff.institution_id' => $params['institution_id']])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->first();
 
                 $StaffPositionTitlesData = $StaffPositionTitles->find()
@@ -1681,7 +1681,7 @@ class InstitutionReportCardsTable extends AppTable
                     )
                     ->where(['StaffQualifications.qualification_title_id' => $value['id']])
                     ->where(['InstitutionStaff.institution_id' => $params['institution_id']])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->toArray();
                 $result = [];
                 if (!empty($StaffPositionTitlesData)) {
@@ -1733,7 +1733,7 @@ class InstitutionReportCardsTable extends AppTable
                     $QualificationTitles->aliasField('id'),
                     $QualificationTitles->aliasField('name'),
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $init = 1;
@@ -1758,7 +1758,7 @@ class InstitutionReportCardsTable extends AppTable
                     )
                     ->where(['StaffQualifications.qualification_title_id' => $value['id']])
                     ->where(['InstitutionStaff.institution_id' => $params['institution_id']])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->first();
 
                 $StaffTypesData = $StaffTypes->find()
@@ -1779,7 +1779,7 @@ class InstitutionReportCardsTable extends AppTable
                     )
                     ->where(['StaffQualifications.qualification_title_id' => $value['id']])
                     ->where(['InstitutionStaff.institution_id' => $params['institution_id']])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->toArray();
                 $result = [];
                 if (!empty($StaffTypesData)) {
@@ -1838,7 +1838,7 @@ class InstitutionReportCardsTable extends AppTable
                     ->where([$InstitutionRooms->aliasField('room_type_id') => $value->id])
                     ->where([$InstitutionRooms->aliasField('institution_id') => $params['institution_id']])
                     ->where([$InstitutionRooms->aliasField('academic_period_id') => $params['academic_period_id']])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->toArray();
 
                 $result = [];
@@ -1891,7 +1891,7 @@ class InstitutionReportCardsTable extends AppTable
                 ->where([$StaffPositionTitles->aliasField('security_role_id') => 2])
                 ->where(['InstitutionStaff.institution_id' => $params['institution_id']])
                 ->where(['InstitutionPositions.institution_id' => $params['institution_id']])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
             $result = [];
             foreach ($entity as $key => $value) {
@@ -1911,7 +1911,7 @@ class InstitutionReportCardsTable extends AppTable
                 ->find()
                 ->where([$InstitutionCommittees->aliasField('academic_period_id') => $params['academic_period_id']])
                 ->where([$InstitutionCommittees->aliasField('institution_id') => $params['institution_id']])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->first();
             return $entity;
         }
@@ -1996,7 +1996,7 @@ class InstitutionReportCardsTable extends AppTable
                     'EducationSystems.academic_period_id' => $params['academic_period_id']
                 ])
                 ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
             //POCOR-6330 starts
             $enrolledStudentsData = 0;
@@ -2043,7 +2043,7 @@ class InstitutionReportCardsTable extends AppTable
                     ->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
                     ->where([$InstitutionStudents->aliasField('student_status_id') => 1])
                     ->where([$InstitutionStudents->Users->aliasField('gender_id') => 1])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->count();
                 $enrolledFemaleStudentsData = $InstitutionStudents->find()
                     ->contain('Users')
@@ -2052,7 +2052,7 @@ class InstitutionReportCardsTable extends AppTable
                     ->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
                     ->where([$InstitutionStudents->aliasField('student_status_id') => 1])
                     ->where([$InstitutionStudents->Users->aliasField('gender_id') => 2])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->count();
                 $enrolledStudentsData = $enrolledMaleStudentsData + $enrolledFemaleStudentsData;
 
@@ -2063,7 +2063,7 @@ class InstitutionReportCardsTable extends AppTable
                     ->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
                     ->where([$InstitutionStudents->aliasField('student_status_id') => 4])
                     ->where([$InstitutionStudents->Users->aliasField('gender_id') => 1])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->count();
                 $dropoutFemaleStudentsData = $InstitutionStudents->find()
                     ->contain('Users')
@@ -2072,7 +2072,7 @@ class InstitutionReportCardsTable extends AppTable
                     ->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
                     ->where([$InstitutionStudents->aliasField('student_status_id') => 4])
                     ->where([$InstitutionStudents->Users->aliasField('gender_id') => 2])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->count();
                 $dropoutStudentsData = $dropoutMaleStudentsData + $dropoutFemaleStudentsData;
 
@@ -2083,7 +2083,7 @@ class InstitutionReportCardsTable extends AppTable
                     ->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
                     ->where([$InstitutionStudents->aliasField('student_status_id') => 8])
                     ->where([$InstitutionStudents->Users->aliasField('gender_id') => 1])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->count();
                 $repeatedFemaleStudentsData = $InstitutionStudents->find()
                     ->contain('Users')
@@ -2092,7 +2092,7 @@ class InstitutionReportCardsTable extends AppTable
                     ->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
                     ->where([$InstitutionStudents->aliasField('student_status_id') => 8])
                     ->where([$InstitutionStudents->Users->aliasField('gender_id') => 2])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->count();
                 $repeatedStudentsData = $repeatedMaleStudentsData + $repeatedFemaleStudentsData;
 
@@ -2106,7 +2106,7 @@ class InstitutionReportCardsTable extends AppTable
                     ->where([$InstitutionSubjects->aliasField('education_grade_id') => $value['id']])
                     ->where([$InstitutionSubjects->aliasField('institution_id') => $params['institution_id']])
                     ->where([$InstitutionSubjects->aliasField('academic_period_id') => $params['academic_period_id']])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->first();
 
                 $institutionStaffData = $InstitutionSubjects->find()
@@ -2119,7 +2119,7 @@ class InstitutionReportCardsTable extends AppTable
                     ->where([$InstitutionSubjects->aliasField('education_grade_id') => $value['id']])
                     ->where([$InstitutionSubjects->aliasField('institution_id') => $params['institution_id']])
                     ->where([$InstitutionSubjects->aliasField('academic_period_id') => $params['academic_period_id']])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->count();
                 $secondaryTeacherData = $InstitutionClasses->find()
                     ->innerJoin(
@@ -2137,7 +2137,7 @@ class InstitutionReportCardsTable extends AppTable
                     ->where(['InstitutionClassGrades.education_grade_id' => $value['id']])
                     ->where([$InstitutionClasses->aliasField('institution_id') => $params['institution_id']])
                     ->where([$InstitutionClasses->aliasField('academic_period_id') => $params['academic_period_id']])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->count();
                 $maleSpecialNeedData = $InstitutionStudents
                     ->find()
@@ -2210,7 +2210,7 @@ class InstitutionReportCardsTable extends AppTable
                     ->where([$InstitutionSubjects->aliasField('education_grade_id') => $value['id']])
                     ->where([$InstitutionSubjectStaff->aliasField('institution_id') => $params['institution_id']])
                     ->where([$InstitutionSubjects->aliasField('academic_period_id') => $params['academic_period_id']])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->count();
 
                 /*Secondary Staff Temporary*/
@@ -2256,7 +2256,7 @@ class InstitutionReportCardsTable extends AppTable
                     ->where(['InstitutionClassGrades.education_grade_id' => $value['id']])
                     ->where(['institutionClasses.institution_id' => $params['institution_id']])
                     ->where(['institutionClasses.academic_period_id' => $params['academic_period_id']])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->count();
 
                 /*Homeroom Staff Temporary*/
@@ -2289,7 +2289,7 @@ class InstitutionReportCardsTable extends AppTable
                     ->where(['InstitutionClassGrades.education_grade_id' => $value['id']])
                     ->where([$institutionClasses->aliasField('institution_id') => $params['institution_id']])
                     ->where([$institutionClasses->aliasField('academic_period_id') => $params['academic_period_id']])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->count();
                 $temporary_staff = $secondaryStaffData + $homeroomStaffData;
 
@@ -2323,7 +2323,7 @@ class InstitutionReportCardsTable extends AppTable
                     ->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
                     ->where([$InstitutionStudents->aliasField('student_status_id') => 7])
                     ->where([$InstitutionStudents->Users->aliasField('gender_id') => 1])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->count();
                 $femaleStudentPromoted = $InstitutionStudents->find()
                     ->contain('Users')
@@ -2332,7 +2332,7 @@ class InstitutionReportCardsTable extends AppTable
                     ->where([$InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id']])
                     ->where([$InstitutionStudents->aliasField('student_status_id') => 7])
                     ->where([$InstitutionStudents->Users->aliasField('gender_id') => 2])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->count();
                 $totalStudentPromoted = $maleStudentPromoted + $femaleStudentPromoted;
                 //POCOR-7272 Male/Female/Total Student Promotion Rate End
@@ -2464,7 +2464,7 @@ class InstitutionReportCardsTable extends AppTable
                 ->group([
                     'EducationGrades.id'
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $addEducationheading[] = [
@@ -2495,7 +2495,7 @@ class InstitutionReportCardsTable extends AppTable
                     'area_name' => $areasTbl->aliasField('name')
                 ])
                 ->innerJoin(
-                    [$areasTbl->alias() => $areasTbl->table()],
+                    [$areasTbl->getAlias() => $areasTbl->getTable()],
                     [
                         $areasTbl->aliasField('id') . ' = ' . $institutionsTbl->aliasField('area_id')
                     ]
@@ -2510,7 +2510,7 @@ class InstitutionReportCardsTable extends AppTable
                     'area_parent_id' => $areasTbl->aliasField('parent_id')
                 ])
                 ->innerJoin(
-                    [$areasTbl->alias() => $areasTbl->table()],
+                    [$areasTbl->getAlias() => $areasTbl->getTable()],
                     [
                         $areasTbl->aliasField('id') . ' = ' . $institutionsTbl->aliasField('area_id')
                     ]
@@ -2534,7 +2534,7 @@ class InstitutionReportCardsTable extends AppTable
                     'area_parent_id' => $areasTbl->aliasField('parent_id')
                 ])
                 ->innerJoin(
-                    [$areasTbl->alias() => $areasTbl->table()],
+                    [$areasTbl->getAlias() => $areasTbl->getTable()],
                     [
                         $areasTbl->aliasField('id') . ' = ' . $institutionsTbl->aliasField('area_id')
                     ]
@@ -2760,7 +2760,7 @@ class InstitutionReportCardsTable extends AppTable
                 ->group([
                     'EducationGrades.id'
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $addEducationheading[] = [
@@ -2985,7 +2985,7 @@ class InstitutionReportCardsTable extends AppTable
                 ->group([
                     'EducationGrades.id'
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $addEducationheading[] = [
@@ -3183,7 +3183,7 @@ class InstitutionReportCardsTable extends AppTable
                 ->group([
                     'EducationGrades.id'
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $addEducationheading[] = [
@@ -3276,7 +3276,7 @@ class InstitutionReportCardsTable extends AppTable
                 ->group([
                     'EducationGrades.id'
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $addEducationheading[] = [
@@ -3431,7 +3431,7 @@ class InstitutionReportCardsTable extends AppTable
                     $RoomTypes->aliasField('id'),
                     $RoomTypes->aliasField('name')
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $addRoomheading[] = [
@@ -3632,7 +3632,7 @@ class InstitutionReportCardsTable extends AppTable
                 ])
                 ->where([$areasTbl->aliasField('id IN') => $levelArr])
                 ->order([$areasTbl->aliasField('id') => 'DESC'])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $totalArray = [];
@@ -3734,14 +3734,14 @@ class InstitutionReportCardsTable extends AppTable
                     'name' => $InstitutionCustomFields->aliasField('name')
                 ])
                 ->leftJoin(
-                    [$InstitutionCustomFields->alias() => $InstitutionCustomFields->table()],
+                    [$InstitutionCustomFields->getAlias() => $InstitutionCustomFields->getTable()],
                     [
                         $InstitutionCustomFields->aliasField('id =') . $InstitutionCustomFieldValues->aliasField('institution_custom_field_id')
                     ]
                 )
                 ->where([$InstitutionCustomFieldValues->aliasField('institution_id') => $params['institution_id']])
                 ->group([$InstitutionCustomFields->aliasField('id')])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
             return $entity;
         }
@@ -3765,14 +3765,14 @@ class InstitutionReportCardsTable extends AppTable
                     'name' => $InstitutionCustomFields->aliasField('name')
                 ])
                 ->leftJoin(
-                    [$InstitutionCustomFields->alias() => $InstitutionCustomFields->table()],
+                    [$InstitutionCustomFields->getAlias() => $InstitutionCustomFields->getTable()],
                     [
                         $InstitutionCustomFields->aliasField('id =') . $InstitutionCustomFieldValues->aliasField('institution_custom_field_id')
                     ]
                 )
                 ->where([$InstitutionCustomFieldValues->aliasField('institution_id') => $params['institution_id']])
                 ->group([$InstitutionCustomFields->aliasField('id')])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $field_arr = [];
@@ -3793,7 +3793,7 @@ class InstitutionReportCardsTable extends AppTable
                                     'name' => $institutionCustomFieldOptions->aliasField('name')
                                 ])
                                 ->where([$institutionCustomFieldOptions->aliasField('id IN') => $f_v['number_value']])
-                                ->hydrate(false)
+                                ->enableHydration(false)
                                 ->toArray();
                             $check_num[] = $check_data[0]['name'];
                         }
@@ -3814,7 +3814,7 @@ class InstitutionReportCardsTable extends AppTable
                                 'name' => $institutionCustomFieldOptions->aliasField('name')
                             ])
                             ->where([$institutionCustomFieldOptions->aliasField('id IN') => $field_val[0]['number_value']])
-                            ->hydrate(false)
+                            ->enableHydration(false)
                             ->toArray();
                         $result[$field_key]['name'] = !empty($check_data[0]['name']) ? $check_data[0]['name'] : '';
                     } else if ($field_val[0]['field_type'] == 'DATE') {
@@ -3866,14 +3866,14 @@ class InstitutionReportCardsTable extends AppTable
                 'field_type' => $InstitutionCustomFields->aliasField('field_type')
             ])
             ->leftJoin(
-                [$InstitutionCustomFields->alias() => $InstitutionCustomFields->table()],
+                [$InstitutionCustomFields->getAlias() => $InstitutionCustomFields->getTable()],
                 [
                     $InstitutionCustomFields->aliasField('id =') . $InstitutionCustomFieldValues->aliasField('institution_custom_field_id')
                 ]
             )
             ->where([$InstitutionCustomFieldValues->aliasField('institution_id') => $institution_id])
             ->where([$InstitutionCustomFieldValues->aliasField('institution_custom_field_id') => $institution_custom_field_id])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->toArray();
         return $InstitutionCustomFieldValues;
     }
@@ -3910,7 +3910,7 @@ class InstitutionReportCardsTable extends AppTable
                 ])
                 ->where([$ReportStudentAssessmentSummary->aliasField('institution_id') => $params['institution_id']])
                 ->where([$ReportStudentAssessmentSummary->aliasField('academic_period_id') => $params['academic_period_id']])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
             $entity = [];
             if (empty($AssessmentSummaryData)) {
@@ -3963,12 +3963,12 @@ class InstitutionReportCardsTable extends AppTable
                     'area' => $InstitutionRooms->aliasField('area'),
                     'room_type' => $RoomTypes->aliasField('name')
                 ])
-                ->LeftJoin([$RoomTypes->alias() => $RoomTypes->table()], [
+                ->LeftJoin([$RoomTypes->getAlias() => $RoomTypes->getTable()], [
                     $InstitutionRooms->aliasField('room_type_id') . '= ' . $RoomTypes->aliasField('id')
                 ])
                 ->where([$InstitutionRooms->aliasField('institution_id') => $params['institution_id']])
                 ->where([$InstitutionRooms->aliasField('academic_period_id') => $params['academic_period_id']])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $entity = [];
@@ -3983,12 +3983,12 @@ class InstitutionReportCardsTable extends AppTable
                         'infrastructure_custom_field_id' => $RoomCustomFieldValues->aliasField('infrastructure_custom_field_id'),
                         'custom_field_name' => $InfrastructureCustomFields->aliasField('name')
                     ])
-                    ->LeftJoin([$InfrastructureCustomFields->alias() => $InfrastructureCustomFields->table()], [
+                    ->LeftJoin([$InfrastructureCustomFields->getAlias() => $InfrastructureCustomFields->getTable()], [
                         $RoomCustomFieldValues->aliasField('infrastructure_custom_field_id') . '= ' . $InfrastructureCustomFields->aliasField('id')
                     ])
                     ->where([$RoomCustomFieldValues->aliasField('institution_room_id') => $e_val['id']])
                     ->group([$RoomCustomFieldValues->aliasField('infrastructure_custom_field_id')])
-                    ->hydrate(false)
+                    ->enableHydration(false)
                     ->toArray();
                 if (!empty($RoomCustomFieldValuesData)) {
                     foreach ($RoomCustomFieldValuesData as $r_key => $r_val) {
@@ -4048,12 +4048,12 @@ class InstitutionReportCardsTable extends AppTable
                 'id' => $InfrastructureCustomFields->aliasField('id'),
                 'field_type' => $InfrastructureCustomFields->aliasField('field_type'),
             ])
-            ->LeftJoin([$InfrastructureCustomFields->alias() => $InfrastructureCustomFields->table()], [
+            ->LeftJoin([$InfrastructureCustomFields->getAlias() => $InfrastructureCustomFields->getTable()], [
                 $RoomCustomFieldTbl->aliasField('infrastructure_custom_field_id') . '= ' . $InfrastructureCustomFields->aliasField('id')
             ])
             ->where([$RoomCustomFieldTbl->aliasField('institution_room_id') => $room_id])
             ->where([$RoomCustomFieldTbl->aliasField('infrastructure_custom_field_id') => $room_custom_field_id])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->toArray();
         $result = [];
         if (!empty($RoomCustomFieldValues)) {
@@ -4067,7 +4067,7 @@ class InstitutionReportCardsTable extends AppTable
                                 'name' => $InfrastructureCustomFieldOptions->aliasField('name')
                             ])
                             ->where([$InfrastructureCustomFieldOptions->aliasField('id IN') => $f_v['number_value']])
-                            ->hydrate(false)
+                            ->enableHydration(false)
                             ->toArray();
                         $check_num[] = $check_data[0]['name'];
                     }
@@ -4088,7 +4088,7 @@ class InstitutionReportCardsTable extends AppTable
                             'name' => $InfrastructureCustomFieldOptions->aliasField('name')
                         ])
                         ->where([$InfrastructureCustomFieldOptions->aliasField('id IN') => $field_val[0]['number_value']])
-                        ->hydrate(false)
+                        ->enableHydration(false)
                         ->toArray();
                     $result['name'] = !empty($check_data[0]['name']) ? $check_data[0]['name'] : '';
                 } else if ($field_val[0]['field_type'] == 'DATE') {
@@ -4136,7 +4136,7 @@ class InstitutionReportCardsTable extends AppTable
                     'institution_average_mark' => $studentAssessmentSummary->aliasField('institution_average_mark'),//POCOR-6742- added new column into the report
                     'area_average_mark' => $studentAssessmentSummary->aliasField('area_average_mark'),//POCOR-6742- added new column into the report
                 ])
-                ->innerJoin([$Users->alias() => $Users->table()], [
+                ->innerJoin([$Users->getAlias() => $Users->getTable()], [
                     $studentAssessmentSummary->aliasField('student_id =') . $Users->aliasField('id')
                 ])
                 ->order([$studentAssessmentSummary->aliasField('student_name')])
@@ -4144,7 +4144,7 @@ class InstitutionReportCardsTable extends AppTable
                     $studentAssessmentSummary->aliasField('academic_period_id') => $params['academic_period_id'],
                     $studentAssessmentSummary->aliasField('institution_id') => $params['institution_id']
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $result = [];
@@ -4158,7 +4158,7 @@ class InstitutionReportCardsTable extends AppTable
                             'IdentityTypes.default =' . 1
                         ])
                         ->where([$userIdentity->aliasField('security_user_id') => $data['student_id']])
-                        ->hydrate(false)
+                        ->enableHydration(false)
                         ->first();
                     $absenceDays = $studentAbsencesDay->find()
                         ->select(['absent_days' => $studentAbsencesDay->aliasField('absent_days')])
@@ -4166,7 +4166,7 @@ class InstitutionReportCardsTable extends AppTable
                             $studentAbsencesDay->aliasField('institution_id') => $params['institution_id'],
                             $studentAbsencesDay->aliasField('student_id') => $data['student_id']
                         ])
-                        ->hydrate(false)
+                        ->enableHydration(false)
                         ->toArray();
                     $absenceDaysArr = [];
                     if (!empty($absenceDays)) {
@@ -4227,7 +4227,7 @@ class InstitutionReportCardsTable extends AppTable
                 ->group([
                     'EducationGrades.id'
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $addEducationheading[] = [
@@ -4485,7 +4485,7 @@ class InstitutionReportCardsTable extends AppTable
                 ->group([
                     'EducationGrades.id'
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $addEducationheading[] = [
@@ -4884,7 +4884,7 @@ class InstitutionReportCardsTable extends AppTable
                 ->group([
                     'EducationGrades.id'
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $addEducationheading[] = [
@@ -5228,7 +5228,7 @@ class InstitutionReportCardsTable extends AppTable
                     'EducationSystems.academic_period_id' => $LastYearPeriodId
                 ])
                 ->where([$InstitutionGrades->aliasField('institution_id') => $params['institution_id']])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray()
             ; 
             $enrolledStudentsData = 0;
@@ -5292,7 +5292,7 @@ class InstitutionReportCardsTable extends AppTable
                     'EducationGrades.id'
                 ])
                 ->order(['EducationGrades.id ASC'])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $addEducationheading[] = ['id' => 0, 'name' => 'Grade'];
@@ -5383,7 +5383,7 @@ class InstitutionReportCardsTable extends AppTable
                     'EducationGrades.id'
                 ])
                 ->order(['EducationGrades.id ASC'])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $addEducationheading[] = ['id' => 0, 'name' => 'Grade'];
@@ -5468,7 +5468,7 @@ class InstitutionReportCardsTable extends AppTable
                     'EducationGrades.id'
                 ])
                 ->order(['EducationGrades.id ASC'])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $addEducationheading[] = ['id' => 0, 'name' => 'Grade'];
@@ -5553,7 +5553,7 @@ class InstitutionReportCardsTable extends AppTable
                     'EducationGrades.id'
                 ])
                 ->order(['EducationGrades.id ASC'])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
 
             $addEducationheading[] = ['id' => 0, 'name' => 'Grade'];

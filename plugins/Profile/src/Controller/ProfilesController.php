@@ -11,6 +11,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Routing\Router;
+use Cake\Event\EventInterface;
 use App\Controller\AppController;
 
 class ProfilesController extends AppController
@@ -533,7 +534,7 @@ class ProfilesController extends AppController
 
     private function attachAngularModules()
     {
-        $action = $this->request->action;
+        $action = $this->request->getAttribute('params')['action'];//POCOR-8379
 
         switch ($action) {
             case 'StudentResults':
@@ -571,7 +572,7 @@ class ProfilesController extends AppController
         }
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
         $session = $this->request->getSession();
@@ -798,7 +799,7 @@ class ProfilesController extends AppController
                     return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
                 }
             }
-        } else if ($model->hasField('staff_id')) {
+        } else if ($model->hasField('staff_id') && $this->getPlugin('Profile') != 'Profile') {
             $model->fields['staff_id']['type'] = 'hidden';
             $model->fields['staff_id']['value'] = $userId;
 
@@ -902,7 +903,7 @@ class ProfilesController extends AppController
         }
     }
 
-    public function beforeRender(Event $event)
+    public function beforeRender(EventInterface $event)
     {
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
@@ -1345,14 +1346,12 @@ class ProfilesController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
-    public
-    function ScheduleTimetable()
+    public function ScheduleTimetable()
     {
         $userId = $this->Auth->user('id');
 
         $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
         $Institutions = TableRegistry::get('Institution.Institutions');
-
 
         $InstitutionStaff = $InstitutionStaff
             ->find()
@@ -1373,12 +1372,19 @@ class ProfilesController extends AppController
             ->select([
                 'id' => $Institutions->aliasField('id'),
                 'name' => $Institutions->aliasField('name'),
-            ])
-            ->where([
+            ]);
+
+        if ($institutionId === null) {
+            $selectedInstitutionOptions = $selectedInstitutionOptions->where([
+                $Institutions->aliasField('id IS') => null,
+            ]);
+        } else {
+            $selectedInstitutionOptions = $selectedInstitutionOptions->where([
                 $Institutions->aliasField('id') => $institutionId,
-            ])
-            ->enableHydration(false)
-            ->toArray();
+            ]);
+        }
+
+        $selectedInstitutionOptions = $selectedInstitutionOptions->enableHydration(false)->toArray();
 
         $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
             ->getCurrent();
@@ -1388,12 +1394,20 @@ class ProfilesController extends AppController
         $shiftOptions = TableRegistry::get('Schedule.ScheduleIntervals')
             ->getStaffShiftOptions($academicPeriodId, false, $institutionId);
         $intervals = TableRegistry::get('Schedule.ScheduleIntervals');
+        
+        $conditions = [
+            $intervals->aliasField('academic_period_id') => $academicPeriodId,
+        ];
+
+        if ($institutionId === null) {
+            $conditions[$intervals->aliasField('institution_id IS')] = null;
+        } else {
+            $conditions[$intervals->aliasField('institution_id')] = $institutionId;
+        }
+
         $scheduleIntervals = $intervals->find('list')
-            ->where([
-                $intervals->aliasField('academic_period_id') => $academicPeriodId,
-                //$intervals->aliasField('institution_id') => $institutionId
-                $institutionId !== null ? $intervals->aliasField('institution_id IS NULL') : $intervals->aliasField('institution_id IS NULL')
-            ])->toArray();
+            ->where($conditions)
+            ->toArray();
 
         $this->set('userId', $userId);
         $this->set('selectedInstitutionOptions', $selectedInstitutionOptions);
@@ -1408,6 +1422,7 @@ class ProfilesController extends AppController
         $this->set('institutionDefaultId', key($selectedInstitutionOptions));
         $this->set('ngController', 'TimetableCtrl as $ctrl');
     }
+
 
     public
     function StudentScheduleTimetable()

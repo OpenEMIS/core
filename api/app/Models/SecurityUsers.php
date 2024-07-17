@@ -90,8 +90,16 @@ class SecurityUsers extends Authenticatable implements JWTSubject
         return $this->attributes['openemis_no']. ' - ' .$this->attributes['first_name'] . ' ' . $this->attributes['middle_name'] . $this->attributes['third_name']  . ' ' . $this->attributes['last_name'];
     }
 
+
     public function specialNeed()
     {
         return $this->hasOne(UserSpecialNeedsAssessment::class, 'security_user_id', 'id');
+
+    }
+
+    public function institutionStaff()
+    {
+        return $this->belongsTo(InstitutionStaff::class, 'id', 'staff_id');
+
     }
 }

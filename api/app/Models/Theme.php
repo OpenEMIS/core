@@ -9,4 +9,13 @@ class Theme extends Model
 {
     use HasFactory;
     protected $table = "themes";
+
+    public function getdefaultContentAttribute($value)
+    {
+        if(isset($this->default_value)){
+            $value = json_encode($value, true);
+        }
+
+        return $value;
+    }
 }

@@ -22,6 +22,7 @@ use Cake\Http\ServerRequest;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use App\Model\Table\ControllerActionTable;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
+use Cake\Utility\Inflector;
 
 class StaffLeaveTable extends ControllerActionTable
 {
@@ -85,8 +86,8 @@ class StaffLeaveTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
-        
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+
+        $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
         $allowOutAcademicYear = $ConfigItems->value('allow_out_academic_year');
 
         if ($allowOutAcademicYear == 1) {
@@ -131,8 +132,8 @@ class StaffLeaveTable extends ControllerActionTable
         $dateTo = $entity['date_to']->format('Y-m-d');
         $entity = $this->getNumberOfDays($entity);
 
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
-        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+        $InstitutionStaff = self::getDynamicTableInstance('Institution.Staff');
+        $StaffStatuses = self::getDynamicTableInstance('Staff.StaffStatuses');
         $staffData = $InstitutionStaff
             ->find('all')
             ->select([$StaffStatuses->aliasField('code')])
@@ -202,15 +203,16 @@ class StaffLeaveTable extends ControllerActionTable
         $this->field('staff_id', ['type' => 'hidden']);
         $this->field('end_academic_period_id', ['visible' => false]);
         $institutionId = $this->getInstitutionID();
-        $this->field('institution_id', ['type' => 'hidden', 'value' => $institutionId]);        
+        $this->setInstitutionStaffIDs();
+        $this->field('institution_id', ['type' => 'hidden', 'value' => $institutionId]);
         $this->setFieldOrder(['staff_leave_type_id', 'date_from', 'date_to', 'time', 'start_time', 'full_day', 'end_time', 'number_of_days', 'comments', 'file_name', 'file_content']);
 
-        $this->setInstitutionStaffIDs();
 
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+
         $this->field('start_time', ['visible' => false]);
         $this->field('end_time', ['visible' => false]);
         $this->field('time', ['after' => 'date_to']);
@@ -221,9 +223,15 @@ class StaffLeaveTable extends ControllerActionTable
 
     public function indexHistoricalBeforeQuery(Event $event, Query $mainQuery, Query $historicalQuery, ArrayObject $selectList, ArrayObject $defaultOrder, ArrayObject $extra)
     {
-        $institutionId = $this->institutionId;
-        $staffId = $this->staffId;
-        
+        $decodedQueryString = $this->getQueryString();
+//        echo "<pre>"; print_r($decodedQueryString);
+//        die;
+        $institutionId = $decodedQueryString['institution_id'];
+        $staffId = $decodedQueryString['user_id'];
+        if(!$staffId){
+            $decodedQueryString['staff_id'];
+        }
+
         //POCOR-5364 starts
         $requestFilter = $this->request->getQuery('filter');
         if (isset($extra['toolbarButtons']['search']['data']['url']['filter'])) {
@@ -470,15 +478,31 @@ class StaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
+    /**
+     * Handles the update of the academic period ID field during add or edit actions.
+     *
+     * POCOR-8091
+     *
+     * @param Event $event The event triggering this function.
+     * @param array $attr The attributes of the field being updated.
+     * @param string $action The action being performed ('add' or 'edit').
+     * @param ServerRequest $request The request object containing data.
+     * @return array The updated attributes.
+     * @throws \RuntimeException If there is an issue retrieving the current academic period ID.
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
+        $alias = $this->getAlias();
+        $data = $request->getData($alias);
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
 
             if ($entity->isNew()) {
                 $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
-                $attr['value'] = $currentAcademicPeriodId;
-                $attr['attr']['value'] = $currentAcademicPeriodId;
+                $academic_period_id = $data['academic_period_id'] ?? $currentAcademicPeriodId;
+                $attr['value'] = $academic_period_id;
+                $attr['attr']['value'] = $academic_period_id;
             }
 
             $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -782,8 +806,8 @@ class StaffLeaveTable extends ControllerActionTable
         $endDate = $endDate->modify('+1 day');
         $interval = new DateInterval('P1D');
         $datePeriod = new DatePeriod($startDate, $interval, $endDate);
-        $CalendarEvents = TableRegistry::get('Calendars');
-        $CalendarTypes = TableRegistry::get('CalendarTypes');
+        $CalendarEvents = self::getDynamicTableInstance('Calendars');
+        $CalendarTypes = self::getDynamicTableInstance('CalendarTypes');
         $publicCalendarEvents = $CalendarEvents
             ->find('all')
             ->contain(['CalendarTypes', 'CalendarEventDates'])
@@ -804,7 +828,7 @@ class StaffLeaveTable extends ControllerActionTable
                 'AND' => [
                     $CalendarTypes->aliasField('code') => 'PUBLICHOLIDAY'
                 ]
-            ]) 
+            ])
             // ->orWhere([
             //     $CalendarEvents->aliasField('institution_id') => -1
             // ])
@@ -890,11 +914,11 @@ class StaffLeaveTable extends ControllerActionTable
             return $attr;
         }
         $assigneesOptions = $this->getAssigneesOptions($request);
-        $attr['type'] = 'chosenSelect';
+        $attr['type'] = 'select'; //POCOR-8091 no restart
             $attr['attr']['multiple'] = false;
             $attr['select'] = false;
             $attr['options'] = $assigneesOptions;
-            $attr['onChangeReload'] = 'changeStatus';
+//            $attr['onChangeReload'] = false;  //POCOR-8091 no restart
             return $attr;
     }
 
@@ -1047,31 +1071,8 @@ class StaffLeaveTable extends ControllerActionTable
      */
     private function setInstitutionStaffIDs()
     {
-
-        $institutionId = $staffId = null;
-        $session = $this->controller->getRequest()->getSession();
-        // if ($session->check('Institution.Institutions.id')) {
-        //     $institutionId = $session->read('Institution.Institutions.id');
-        // }
-        if ($this->getInstitutionID()) {
-            $institutionId = $this->getInstitutionID();
-        }
-        if (!is_null($this->request->getQuery('user_id'))) {
-            $staffId = $this->request->getQuery('user_id');
-        }
-        if (!$staffId & !is_null($this->request->getQuery('staff_id'))) {
-            $staffId = $this->request->getQuery('staff_id');
-        }
-        if (!$staffId) {
-            $staffId = $session->read('Staff.Staff.id');
-        }
-        if (!$staffId) {
-            $staffId = $session->read('Institution.Staff.id');
-        }
-        if($staffId == ''){
-            $staffId = $this->getQueryString('user_id'); 
-        }
-
+        $institutionId = $this->getInstitutionID();
+        $staffId = $this->getStaffId();
         $this->institutionId = $institutionId;
         $this->staffId = $staffId;
     }
@@ -1127,12 +1128,13 @@ class StaffLeaveTable extends ControllerActionTable
     private function findAssigneeOptions($filter_id, $institutionId)
     {
         $workflowModel = 'Staff > Career > Leave';
-        $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-        $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
-        $workflowFiltersTable = TableRegistry::get('Workflow.WorkflowsFilters');
-        $Workflows = TableRegistry::get('Workflow.Workflows');
+        $workflowModelsTable = self::getDynamicTableInstance('Workflow.WorkflowModels');
+        $workflowStepsTable = self::getDynamicTableInstance('Workflow.WorkflowSteps');
+        $workflowFiltersTable = self::getDynamicTableInstance('Workflow.WorkflowsFilters');
+        $Workflows = self::getDynamicTableInstance('Workflow.Workflows');
         $stepId = '';
-        $workModelId = $Workflows
+        $filter_id = is_numeric($filter_id) ? intval($filter_id) : 0;
+        $workModelQuery = $Workflows
             ->find()
             ->select(['id' => $workflowModelsTable->aliasField('id'),
                 'workflow_id' => $Workflows->aliasField('id'),
@@ -1142,12 +1144,14 @@ class StaffLeaveTable extends ControllerActionTable
                     $workflowFiltersTable->aliasField('workflow_id') . ' = ' . $Workflows->aliasField('id'),
                     $workflowFiltersTable->aliasField('filter_id') . ' = ' . $filter_id
                 ])
-            ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
+            ->leftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                 [
                     $workflowModelsTable->aliasField('id') . ' = ' . $Workflows->aliasField('workflow_model_id')
                 ])
-            ->where([$workflowModelsTable->aliasField('name') => $workflowModel])->first();
-            
+            ->where([$workflowModelsTable->aliasField('name = "') . $workflowModel . '"']);
+
+        $workModelId = $workModelQuery->first();
+//        Log::debug(print_r($workModelId, true));
         if(!empty($workModelId)) {
             $workflowId = $workModelId->workflow_id;
             $isSchoolBased = $workModelId->is_school_based;
@@ -1160,16 +1164,16 @@ class StaffLeaveTable extends ControllerActionTable
                 ->first();
             $stepId = $workflowStepsOptions->stepId;
         }
-        
+
 
         $assigneeOptions = [];
         if (!is_null($stepId)) {
-            $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+            $WorkflowStepsRoles = self::getDynamicTableInstance('Workflow.WorkflowStepsRoles');
             $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
             if (!empty($stepRoles)) {
-                $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                $Areas = TableRegistry::get('Area.Areas');
-                $Institutions = TableRegistry::get('Institution.Institutions');
+                $SecurityGroupUsers = self::getDynamicTableInstance('Security.SecurityGroupUsers');
+                $Areas = self::getDynamicTableInstance('Area.Areas');
+                $Institutions = self::getDynamicTableInstance('Institution.Institutions');
                 if ($isSchoolBased) {
                     if (is_null($institutionId)) {
                         Log::write('debug', 'Institution Id not found.');
@@ -1208,4 +1212,59 @@ class StaffLeaveTable extends ControllerActionTable
         }
         return $assigneeOptions;
     }
+
+    /**
+     * Get a dynamic table instance with all associations.
+     *
+     * POCOR-8091
+     *
+     * @param string $tableName The name of the table.
+     * @return \Cake\ORM\Table The table instance.
+     * @throws \RuntimeException If there is an issue retrieving the table instance.
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getDynamicTableInstance(string $tableName): \Cake\ORM\Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+            throw new \RuntimeException('Failed to get table instance', 0, $exception);
+        }
+
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
 }

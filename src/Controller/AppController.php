@@ -30,6 +30,7 @@ use Cake\Filesystem\File;
 use Cake\Filesystem\Folder;
 use Cake\ORM\Table;
 use Cake\Http\ServerRequest;
+use Cake\Event\EventInterface;
 
 /**
  * Application Controller
@@ -255,7 +256,7 @@ class AppController extends Controller
             $colour = $themes['colour'];
             $secondaryColour = $this->darkenColour($colour);
             $customPath = ROOT . DS . 'plugins' . DS . 'OpenEmis' . DS . 'webroot' . DS . 'css' . DS . 'themes' . DS . 'custom' . DS;
-            $basePath = Router::url(['controller' => '', 'action' => 'index', 'plugin' => false]) === '/' ? '/' : Router::url(['controller' => 'false', 'action' => 'index', 'plugin' => false]) . '/';
+            $basePath = Router::url(['controller' => '', 'action' => 'index', 'plugin' => false]) === '/' ? '/' : Router::url(['controller' => '', 'action' => 'index', 'plugin' => false]) . '/';
 
             $loginBackground = $basePath . Configure::read('App.imageBaseUrl') . $themes['login_page_image'];
             // echo "<pre>";print_r($loginBackground);die;
@@ -281,7 +282,7 @@ class AppController extends Controller
      * @param \Cake\Event\Event $event The beforeRender event.
      * @return void
      */
-    public function beforeRender(Event $event)
+    public function beforeRender(EventInterface $event)
     {
         // if (!array_key_exists('_serialize', $this->viewVars) &&
         //     in_array($this->response->type(), ['application/json', 'application/xml'])
@@ -324,7 +325,7 @@ class AppController extends Controller
     }
 
     //POCOR-7534 Starts
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         try{
         if ($this->getPlugin() == $this->getPlugin()) { // POCOR-8080-1

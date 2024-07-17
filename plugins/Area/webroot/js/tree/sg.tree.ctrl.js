@@ -25,8 +25,8 @@ function SgTreeController($scope, $window, SgTreeSvc) {
         var counter = 0;
         SgTreeSvc.getRecords(Controller.model ? Controller.model : 'Area.AreaAdministratives', userId, Controller.displayCountry, Controller.outputValue, true)
             .then(function(response) {
-                if (angular.isDefined(response) && angular.isDefined(response.name)) {
-                    $scope.textConfig['noSelection'] = response.name;
+                if (angular.isDefined(response[1]) && angular.isDefined(response[1].name)) {
+                    $scope.textConfig['noSelection'] = response[1].name;
                 }
                 return SgTreeSvc.translate($scope.textConfig);
             }, function(error){
@@ -34,11 +34,11 @@ function SgTreeController($scope, $window, SgTreeSvc) {
             })
             .then(function(res) {
                 $scope.textConfig = res;
-                console.log('document ready res', res);
+                // console.log('document ready res', res);
             }, function (error) {
                 console.log(error);
             });
-        console.log('document ready');
+        // console.log('document ready');
     });
 
     function triggerLoad(refreshList) {

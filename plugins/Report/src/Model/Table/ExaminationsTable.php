@@ -145,7 +145,7 @@ class ExaminationsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldExaminationId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldExaminationId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $selectedAcademicPeriod = !empty($this->request->getData($this->getAlias())['academic_period_id']) ? $this->request->getData($this->getAlias())['academic_period_id']: $this->AcademicPeriods->getCurrent();
@@ -229,7 +229,7 @@ class ExaminationsTable extends AppTable
     }
     //POCOR-6637::END
 
-    public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];

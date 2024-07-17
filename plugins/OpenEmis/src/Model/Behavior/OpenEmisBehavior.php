@@ -162,7 +162,8 @@ class OpenEmisBehavior extends Behavior
                 if ($isDeleteButtonEnabled && $isNotTransferOperation && $isNotRestrictOperation) {
                     // not checking existence of entity in $extra so that errors will be shown if entity is removed unexpectedly
                     // to attach primary key to the button attributes for delete operation
-                    if (array_key_exists('remove', $toolbarButtons)) {
+                    
+                    if ( $toolbarButtons->offsetExists('remove')) {
                         $toolbarButtons['remove']['attr']['field-value'] = $encodedIds;
                     }
                 }

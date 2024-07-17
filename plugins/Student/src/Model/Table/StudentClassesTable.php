@@ -37,7 +37,7 @@ class StudentClassesTable extends ControllerActionTable
 
         $this->addBehavior('Restful.RestfulAccessControl');
         $this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['Classes' =>['id', 'institution_id']
+            'appliedAction' => ['Classes' =>['id', 'institution_id', 'institution_class_id']
             ]
         ]);
         // $this->addBehavior('Student.StudentTab', [
@@ -231,7 +231,7 @@ class StudentClassesTable extends ControllerActionTable
         $options = ['type' => 'student'];
         //$tabElements = $this->controller->getAcademicTabElements($options);
         $tabElements = $this->getAcademicTabElements($options);
-        if($this->controller->getName() == 'Directories') {
+        if($this->controller->getName() == 'GuardianNavs' || $this->controller->getName() == 'Directories') {
             $tabElements = $this->controller->getAcademicTabElements($options);
         }
         $this->controller->set('tabElements', $tabElements);

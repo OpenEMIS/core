@@ -39,7 +39,7 @@ class GenerateAllStaffReportCardsShell extends Shell
                 ->order([
                     $this->StaffReportCardProcesses->aliasField('created'),
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->first();
 
             if (!empty($recordToProcess)) {

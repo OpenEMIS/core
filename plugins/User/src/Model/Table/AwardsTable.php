@@ -51,6 +51,10 @@ class AwardsTable extends ControllerActionTable
             $queryString = $this->getQueryString();
             $userId = isset($queryString['staff_id']) ? $queryString['staff_id'] : $queryString['student_id'] ;
         }
+        if(empty($userId)){ //POCOR-8316
+            $userId = $this->Auth->user('id');
+        }
+
         $query->where([$this->aliasField('security_user_id') => $userId]);
 
         // Start POCOR-5188

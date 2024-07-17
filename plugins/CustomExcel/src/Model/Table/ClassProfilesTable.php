@@ -24,7 +24,7 @@ class ClassProfilesTable extends AppTable
 
     public function initialize(array $config): void
     {
-        $this->table('institutions');
+        $this->setTable('institutions');
         parent::initialize($config);
         ini_set("pcre.backtrack_limit", "5000000"); //POCOR-6996
 
@@ -273,7 +273,7 @@ class ClassProfilesTable extends AppTable
                 ->where([$StaffPositionTitles->aliasField('security_role_id') => 2])
                 ->where(['InstitutionStaff.institution_id' => $params['institution_id']])
                 ->where(['InstitutionPositions.institution_id' => $params['institution_id']])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray()
             ;
             $result = [];
@@ -294,7 +294,7 @@ class ClassProfilesTable extends AppTable
                 ->find()
                 ->where([$InstitutionCommittees->aliasField('academic_period_id') => $params['academic_period_id']])
                 ->where([$InstitutionCommittees->aliasField('institution_id') => $params['institution_id']])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->first()
             ;
             return $entity;
@@ -333,7 +333,7 @@ class ClassProfilesTable extends AppTable
                 ])
                 ->where([$ReportStudentAssessmentSummary->aliasField('institution_id') => $params['institution_id']])    
                 ->where([$ReportStudentAssessmentSummary->aliasField('academic_period_id') => $params['academic_period_id']])    
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray(); 
             $entity = [];
             if(empty($AssessmentSummaryData)){
@@ -386,12 +386,12 @@ class ClassProfilesTable extends AppTable
                     'area' => $InstitutionRooms->aliasField('area'),
                     'room_type' => $RoomTypes->aliasField('name')
                 ])
-                ->LeftJoin([$RoomTypes->alias() => $RoomTypes->table()], [
+                ->LeftJoin([$RoomTypes->getAlias() => $RoomTypes->getTable()], [
                     $InstitutionRooms->aliasField('room_type_id') . '= ' . $RoomTypes->aliasField('id')
                 ])
                 ->where([$InstitutionRooms->aliasField('institution_id') => $params['institution_id']])    
                 ->where([$InstitutionRooms->aliasField('academic_period_id') => $params['academic_period_id']])  
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray()
                 ;
             
@@ -407,12 +407,12 @@ class ClassProfilesTable extends AppTable
                             'infrastructure_custom_field_id' => $RoomCustomFieldValues->aliasField('infrastructure_custom_field_id'),
                             'custom_field_name' => $InfrastructureCustomFields->aliasField('name')
                         ])
-                        ->LeftJoin([$InfrastructureCustomFields->alias() => $InfrastructureCustomFields->table()], [
+                        ->LeftJoin([$InfrastructureCustomFields->getAlias() => $InfrastructureCustomFields->getTable()], [
                             $RoomCustomFieldValues->aliasField('infrastructure_custom_field_id') . '= ' . $InfrastructureCustomFields->aliasField('id')
                         ])
                         ->where([$RoomCustomFieldValues->aliasField('institution_room_id') => $e_val['id']])
                         ->group([$RoomCustomFieldValues->aliasField('infrastructure_custom_field_id')]) 
-                        ->hydrate(false)
+                        ->enableHydration(false)
                         ->toArray(); 
                 if(!empty($RoomCustomFieldValuesData)){
                     foreach ($RoomCustomFieldValuesData as $r_key => $r_val) {
@@ -470,12 +470,12 @@ class ClassProfilesTable extends AppTable
                                 'id' => $InfrastructureCustomFields->aliasField('id'),
                                 'field_type' => $InfrastructureCustomFields->aliasField('field_type'),
                             ])
-                        ->LeftJoin([$InfrastructureCustomFields->alias() => $InfrastructureCustomFields->table()], [
+                        ->LeftJoin([$InfrastructureCustomFields->getAlias() => $InfrastructureCustomFields->getTable()], [
                             $RoomCustomFieldTbl->aliasField('infrastructure_custom_field_id') . '= ' . $InfrastructureCustomFields->aliasField('id')
                         ])
                         ->where([$RoomCustomFieldTbl->aliasField('institution_room_id') => $room_id])
                         ->where([$RoomCustomFieldTbl->aliasField('infrastructure_custom_field_id') => $room_custom_field_id])
-                        ->hydrate(false)
+                        ->enableHydration(false)
                         ->toArray();
         $result = [];
         if(!empty($RoomCustomFieldValues)){
@@ -489,7 +489,7 @@ class ClassProfilesTable extends AppTable
                                             'name' => $InfrastructureCustomFieldOptions->aliasField('name')
                                         ])
                                     ->where([$InfrastructureCustomFieldOptions->aliasField('id IN') => $f_v['number_value']])
-                                    ->hydrate(false)
+                                    ->enableHydration(false)
                                     ->toArray();
                         $check_num[] = $check_data[0]['name'];
                     }
@@ -510,7 +510,7 @@ class ClassProfilesTable extends AppTable
                                             'name' => $InfrastructureCustomFieldOptions->aliasField('name')
                                         ])
                                     ->where([$InfrastructureCustomFieldOptions->aliasField('id IN') => $field_val[0]['number_value']])
-                                    ->hydrate(false)
+                                    ->enableHydration(false)
                                     ->toArray();
                     $result['name'] = !empty($check_data[0]['name']) ? $check_data[0]['name'] : '';
                 }else if($field_val[0]['field_type'] == 'DATE'){
