@@ -256,7 +256,9 @@ class StudentAttendanceMarkTypesTable extends AppTable
                 
                 $periodsDataId = array_filter($periodsDataId);
                 asort($periodsDataId);
-                $periodsDataId = array_combine(range(1, count($periodsDataId)), array_values($periodsDataId));
+                if($periodsDataId != NULL){
+                    $periodsDataId = array_combine(range(1, count($periodsDataId)), array_values($periodsDataId));
+                }
                 $periodsDataId = array_flip($periodsDataId);  
                 for ($i = 1; $i <= $attendencePerDay; ++$i) {
                     $options[] = [

@@ -5460,10 +5460,13 @@ class InstitutionsController extends AppController
             $institutionPositionsTable->aliasField('id = ') . $StaffTable->aliasField('institution_position_id'),
         ])->where([
             $StaffTable->aliasField('institution_id') => $institution_id,
-            $StaffTable->aliasField('staff_id') => $staff_id,
+            //$StaffTable->aliasField('staff_id') => $staff_id,
             $StaffTable->aliasField('staff_status_id') => $StaffStatusesTable->getIdByCode('ASSIGNED'),
-        ])
-            ->enableHydration(false)->toArray();
+        ]);
+        if(!empty($staff_id)) {
+            $alreadyAssignedStaffs = $alreadyAssignedStaffs->where([$StaffTable->aliasField('staff_id') => $staff_id]);
+        }
+        $alreadyAssignedStaffs = $alreadyAssignedStaffs->enableHydration(false)->toArray();
         $expectedStaffStatuses = [];
         foreach ($alreadyAssignedStaffs as $staff) {
             $expectedStaffStatuses[$staff['staff_position_title_id']] = $staff['staff_position_title_id'];
@@ -5496,7 +5499,7 @@ class InstitutionsController extends AppController
                     'type' => 'StaffPositionTitles.type',
                     'position_name' => 'StaffPositionTitles.name',
                     'StaffPositionTitles.name',
-                    'order' => 'StaffPositionTitles.order',
+                    'order_name' => 'StaffPositionTitles.order',
                     // Add other fields as needed
                 ])
                 ->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order']);
