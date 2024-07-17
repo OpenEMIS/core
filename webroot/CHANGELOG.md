@@ -1,3 +1,25 @@
+### [4.0.11] - 2024-07-16
+- Bug Fixed: Administration>System Setup>System Configuration: Display records is jumbled up
+- Bug Fixed: PHP 8.0(Administration>Security>Users)-Cannot search for student and staff
+- Bug Fixed: (PHP8.0)Institutions>Survey>Forms: User is unable to save survey answers with validations
+
+### [4.0.10] - 2024-07-12
+- Bug Fixed: Administration > Surveys > Forms > Filters: Other permissions are disabled
+- Bug Fixed: PHP 8.0: Pages cannot load Part three
+- Bug Fixed: PHP 8.0: Login as Principal and access and edit survey
+- Bug Fixed: (PHP8.0)Institutions>Survey>Forms: Edit not present in list page
+- Bug Fixed: (PHP8.0)Administration>Surveys>Forms: Download getting internal server error
+- Bug Fixed: (PHP8.0)Institutions>Survey>Forms: User getting 404 when saving survey
+- Bug Fixed: (PHP8.0)Institutions>Survey>Forms: User getting blank page when first login user
+
+### [4.0.9] - 2024-07-11
+- Implemented: Develop changes to API for attendance import template
+- Bug Fixed: Login : When logged in as Arabic, system switches back to English after navigating to another page
+- Bug Fixed: Institutions>Surveys>Forms: Repeater Form and Staff List are not showing correctly
+- Bug Fixed: Administration>Survey>Forms: User is unable to view, edit and delete and save
+- Bug Fixed: PHP 8.0: Pages cannot load
+- Bug Fixed: PHP 8.0: Pages cannot load Part two
+
 ### [4.0.8] - 2024-07-10
 - Bug Fixed: Institutions > Staff > Career > Leave: When applying for leave for staff for the previous academic period, the page got refreshed upon selecting the assignee
 - Bug Fixed: Administration > Surveys > Forms > Filters/Recipient: When giving permission for user to view Survey Filters and Recipients, the user is not able to see it in their account

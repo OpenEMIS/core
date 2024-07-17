@@ -45,7 +45,10 @@ class ClassExcelBehavior extends Behavior
 
     public function initialize(array $config): void
     {
-        $this->setConfig('excludes', array_merge($this->setConfig('default_excludes'), $this->setConfig('excludes')));
+        $defaultExcludes = $this->getConfig('default_excludes', []);
+        $excludes = $this->getConfig('excludes', []);
+        $this->setConfig('excludes', array_merge($defaultExcludes, $excludes));
+        // $this->setConfig('excludes', array_merge($this->setConfig('default_excludes'), $this->setConfig('excludes')));
         if (!array_key_exists('filename', $config)) {
             $this->setConfig('filename', $this->_table->getAlias());
         }

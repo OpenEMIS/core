@@ -165,6 +165,9 @@ trait SecurityTrait
 
     public function paramsEncode($params = [])
     {
+        if(empty($params)){
+            $params = [];
+        }
         $sessionId = Security::hash('session_id', 'sha256');
         $jsonParam = json_encode($params);
         $base64Param = $this->urlsafeB64Encode($jsonParam);

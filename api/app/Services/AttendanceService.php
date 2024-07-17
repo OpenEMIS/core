@@ -275,7 +275,7 @@ class AttendanceService extends Controller
     }
 
 
-    public function getStudentAttendancesImportTemplate($params)
+    /*public function getStudentAttendancesImportTemplate($params)
     {
         try {
             $data = $this->attendanceRepository->getStudentAttendancesImportTemplate($params);
@@ -288,7 +288,7 @@ class AttendanceService extends Controller
             );
             return $this->sendErrorResponse('Failed to fetch students attendances import template data from DB.');
         }
-    }
+    }*/
 
 
     public function studentAttendancesImport($params)
@@ -426,5 +426,23 @@ class AttendanceService extends Controller
         }
     }
     //For POCOR-8397 Ends...
+    
+    //For POCOR-8396 Start...
+    public function getDataForSheet($params)
+    {
+        try {
+            $data = $this->attendanceRepository->getDataForSheet($params);
+
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in getDataForSheet.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed in getDataForSheet.');
+        }
+    }
+    //For POCOR-8396 End...
 
 }

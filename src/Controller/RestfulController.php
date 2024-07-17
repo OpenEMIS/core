@@ -15,6 +15,7 @@ use Cake\Core\Configure;
 use Firebase\JWT\JWT;
 use Restful\Controller\RestfulController as BaseController;
 use Page\Traits\EncodingTrait;
+use Cake\Event\EventInterface;
 
 class RestfulController extends BaseController
 {
@@ -52,7 +53,7 @@ class RestfulController extends BaseController
         }
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
 
@@ -60,9 +61,8 @@ class RestfulController extends BaseController
         $queryDatasource = true;
         $authorisationHeader = $this->request->getHeader('authorization');
         $token = '';
-        if ($authorisationHeader) {
-            $token = str_ireplace('Bearer ', '', $authorisationHeader);
-
+        if ($authorisationHeader && is_string($authorisationHeader)) {
+// POCOR-8436 if authorisationHeader is a string, and not an empty array
             $tks = explode('.', $token);
             if (count($tks) == 3) {
                 list($headb64, $bodyb64, $cryptob64) = $tks;
@@ -74,7 +74,7 @@ class RestfulController extends BaseController
                 if (property_exists($payload, 'scope')) {
                     $this->controllerAction = $payload->scope;
                 }
-                
+
                 $isBearer = true;
             }
         }

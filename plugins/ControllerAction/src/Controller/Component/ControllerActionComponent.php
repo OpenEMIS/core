@@ -453,7 +453,7 @@ class ControllerActionComponent extends Component
     public function params()
     {
         $params = $this->paramsPass();
-        return array_merge($params, $this->paramsQuery());
+        return array_merge((array)$params, $this->paramsQuery());
     }
 
     private function mergeRequestParams(array &$url)
@@ -650,7 +650,7 @@ class ControllerActionComponent extends Component
             $reorderUrl = array_merge($reorderUrl, $named, $pass);
             $buttons['reorder'] = array('url' => $reorderUrl);
         } else {
-            if (array_key_exists('reorder', $buttons)) {
+            if ($buttons->offsetExists('reorder')) {
                 unset($buttons['reorder']);
             }
         }
@@ -737,7 +737,7 @@ class ControllerActionComponent extends Component
             $this->config['table'] = $this->model;
             $this->config['fields'] = $this->model->fields;
             $this->config['buttons'] = $this->buttons;
-            if (!array_key_exists('formButtons', $this->config)) {
+            if (!array_key_exists('formButtons', $this->config instanceof \ArrayObject ? $this->config->getArrayCopy() : $this->config)) {
                 $this->config['formButtons'] = true; // need better solution
             }
 

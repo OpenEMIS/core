@@ -29,8 +29,8 @@ class SetupDateBehavior extends SetupBehavior
     public function editAfterQuery(Event $event, Entity $entity, ArrayObject $extra)
     {
         $fieldType = '';
-        if (!empty($this->_table->request->data)) {
-            $fieldType = (array_key_exists('field_type', $this->_table->request->data[$this->_table->alias()]))? $this->_table->request->data[$this->_table->alias()]['field_type']: null;
+        if (!empty($this->_table->request->getData())) {
+            $fieldType = (array_key_exists('field_type', $this->_table->request->getData($this->_table->getAlias())))? $this->_table->request->getData($this->_table->getAlias())['field_type']: null;
         } else {
             if (!empty($entity)) {
                 $fieldType = $entity->field_type;
@@ -45,7 +45,7 @@ class SetupDateBehavior extends SetupBehavior
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         if ($this->_table->request->is('POST')) {
-            $fieldType = (array_key_exists('field_type', $this->_table->request->getData()[$this->_table->getAlias()]))? $this->_table->request->getData[$this->_table->getAlias()]['field_type']: null;
+            $fieldType = (array_key_exists('field_type', $this->_table->request->getData()[$this->_table->getAlias()]))? $this->_table->request->getData($this->_table->getAlias())['field_type']: null;
             if ($fieldType == 'DATE') {
                 $this->addDateValidation();
             }
@@ -54,7 +54,7 @@ class SetupDateBehavior extends SetupBehavior
 
     private function addDateValidation()
     {
-        $validator = $this->_table->validator();
+        $validator = $this->_table->getValidator();
         $validator->notEmpty('validation_rules_date');
         $validator->notEmpty('start_date');
         $validator->notEmpty('end_date');
@@ -74,13 +74,13 @@ class SetupDateBehavior extends SetupBehavior
 
         $paramsArray = [];
         if ($this->_table->action == 'edit') {
-            if (empty($this->_table->request->data)) {
+            if (empty($this->_table->request->getData())) {
                 $paramsArray = (!empty($entity->params))? json_decode($entity->params, true): [];
             }
         }
 
-        if (!empty($this->_table->request->data)) {
-            $selectedRangeValidation = (array_key_exists($this->_table->alias(), $this->_table->request->data) && array_key_exists('validation_rules_date', $this->_table->request->data[$this->_table->alias()]))? $this->_table->request->data[$this->_table->alias()]['validation_rules_date']: null;
+        if (!empty($this->_table->request->getData())) {
+            $selectedRangeValidation = (array_key_exists($this->_table->getAlias(), $this->_table->request->getData()) && array_key_exists('validation_rules_date', $this->_table->request->getData($this->_table->getAlias())))? $this->_table->request->getData($this->_table->getAlias())['validation_rules_date']: null;
         } else {
             if (array_key_exists('start_date', $paramsArray) && array_key_exists('end_date', $paramsArray)) {
                 $selectedRangeValidation = 'between';
@@ -133,7 +133,7 @@ class SetupDateBehavior extends SetupBehavior
 
     public function onGetValidationRulesDate(Event $event, Entity $entity)
     {
-        $decodedParams = $event->subject()->HtmlField->decodeEscapeHtmlEntity($entity->params);
+        $decodedParams = $event->getSubject()->HtmlField->decodeEscapeHtmlEntity($entity->params);
         $paramsArray = (!empty($decodedParams))? json_decode($decodedParams, true): [];
         if (array_key_exists('start_date', $paramsArray) && array_key_exists('end_date', $paramsArray)) {
             return $this->rangeValidationOptions['between'].' '.$paramsArray['start_date'].' - '.$paramsArray['end_date'];
@@ -149,11 +149,13 @@ class SetupDateBehavior extends SetupBehavior
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
-        if (array_key_exists('validation_rules_date', $data)) {
+        if ($data->offsetExists('validation_rules_date')) {
             if ($data['field_type'] == $this->fieldTypeCode) {
                 $paramsArray = [];
-                $start_date = (array_key_exists('start_date', $data))? $data['start_date']: null;
-                $end_date = (array_key_exists('end_date', $data))? $data['end_date']: null;
+                // $start_date = (array_key_exists('start_date', $data))? $data['start_date']: null;
+                // $end_date = (array_key_exists('end_date', $data))? $data['end_date']: null;
+                $start_date = $data->offsetExists('start_date') ? $data->offsetGet('start_date') : null;
+                $end_date = $data->offsetExists('end_date') ? $data->offsetGet('end_date') : null;
 
                 if (!empty($start_date)) {
                     $paramsArray['start_date'] = $start_date;
