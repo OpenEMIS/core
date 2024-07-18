@@ -525,7 +525,7 @@ class RisksTable extends ControllerActionTable
         $alias = $this->getAlias();
         $fieldKey = 'risk_criterias';
 
-        if (array_key_exists($alias, $data) && isset($data[$alias]['criteria_type'])) {
+        if (isset($data[$alias]) && isset($data[$alias]['criteria_type'])) {
             $criteriaType = $data[$alias]['criteria_type'];
             $operator = $this->getCriteriasDetails($criteriaType)['operator'];
 
