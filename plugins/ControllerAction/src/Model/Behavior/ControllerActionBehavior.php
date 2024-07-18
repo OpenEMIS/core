@@ -81,10 +81,10 @@ class ControllerActionBehavior extends Behavior
                     }
 
                 } else {
-                    if (array_key_exists('null', $attr)) {
+                    if (isset($attr['null'])) {
                         $ignoreFields = $this->getConfig('fields.excludes');
                         if ($attr['null'] === false // not nullable
-                            && (array_key_exists('default', $attr) && strlen($attr['default']) == 0) // don't have a default value in database
+                            && (isset($attr['default']) && strlen($attr['default']) == 0) // don't have a default value in database
                             && $col !== 'id' // not a primary key
                             && !in_array($col, $ignoreFields) // fields not excluded
                         ) {
@@ -159,7 +159,7 @@ class ControllerActionBehavior extends Behavior
         if (!is_array($primaryKey) && array_key_exists($primaryKey, $fields)) { // not composite primary keys
             $fields[$primaryKey]['type'] = 'hidden';
         } else {
-            if (array_key_exists('id', $fields)) {
+            if (isset($fields['id'])) {
                 $fields['id']['type'] = 'hidden';
             }
             foreach ($primaryKey as $value) {
@@ -190,7 +190,7 @@ class ControllerActionBehavior extends Behavior
     }
 
     public function actions($action = null)
-    { 
+    {
         $actions = $this->getConfig('actions');
 
         $data = false;
@@ -293,7 +293,7 @@ class ControllerActionBehavior extends Behavior
             0 => $action
         ];
         $this->mergeRequestParams($url);
-        
+
         if ($params === true) {
             $url = array_merge($url, $this->params());
 
@@ -339,10 +339,10 @@ class ControllerActionBehavior extends Behavior
         }
         $order = $model->fieldOrder++;
 
-        if (array_key_exists('after', $attr)) {
+        if (isset($attr['after'])) {
             $after = $attr['after'];
             $order = $this->getOrderValue($after, 'after');
-        } elseif (array_key_exists('before', $attr)) {
+        } elseif (isset($attr['before'])) {
             $before = $attr['before'];
             $order = $this->getOrderValue($before, 'before');
         }

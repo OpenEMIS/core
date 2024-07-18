@@ -1,7 +1,7 @@
 <?php
 $this->start('toolbar');
     foreach ($toolbarButtons as $key => $btn) {
-        if (!array_key_exists('type', $btn) || $btn['type'] == 'button') {
+        if (!isset($btn['type']) || $btn['type'] == 'button') {
             echo $this->Html->link($btn['label'], $btn['url'], $btn['attr']);
         } else if ($btn['type'] == 'element') {
             echo $this->element($btn['element'], $btn['data'], $btn['options']);
@@ -18,7 +18,7 @@ $this->start('panelBody');
 
     if ($ControllerAction['form']) {
         $formOptions = $this->ControllerAction->getFormOptions();
-        if (array_key_exists('class', $formOptions)) {
+        if (isset($formOptions['class'])) {
             unset($formOptions['class']);
         }
         if (isset($ControllerAction['url'])) {

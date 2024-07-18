@@ -29,7 +29,7 @@ class StudentBehavioursTable extends ControllerActionTable
             ]
         ]);
 	}
-    
+
     public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$this->field('student_id', ['visible' => false]);
 		$this->field('student_behaviour_category_id', ['type' => 'select']);
@@ -87,7 +87,7 @@ class StudentBehavioursTable extends ControllerActionTable
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		parent::onUpdateActionButtons($event, $entity, $buttons);
 
-		if (array_key_exists('view', $buttons)) {
+		if (isset($buttons['view'])) {
 			$url = [
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',

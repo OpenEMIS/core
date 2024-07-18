@@ -10,7 +10,7 @@ class BodyMassesController extends PageController
 {
     public function initialize(): void
     {
-        parent::initialize();    
+        parent::initialize();
         $this->loadModel('AcademicPeriod.AcademicPeriods');
         $this->loadModel('User.UserBodyMasses');
         $this->Page->loadElementsFromTable($this->UserBodyMasses);
@@ -25,7 +25,7 @@ class BodyMassesController extends PageController
         $page->exclude(['comment', 'security_user_id', 'file_name', 'file_content']);//POCOR-6255
 
         $requestQuery = $this->request->getQuery();
-        if (array_key_exists('sort', $requestQuery)) {
+        if (isset($requestQuery['sort'])) {
             $page->setQueryOption('sort', $requestQuery['sort']);
             $page->setQueryOption('direction', $requestQuery['direction']);
         }
@@ -33,7 +33,7 @@ class BodyMassesController extends PageController
         parent::index();
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
         parent::beforeFilter($event);
@@ -95,15 +95,15 @@ class BodyMassesController extends PageController
         $page = $this->Page;
         $plugin = $this->getPlugin();
 
-        $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
-        $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
+        $userId = isset($options['userId']) ? $options['userId'] : 0;
+        $userName = isset($options['userName']) ? $options['userName'] : '';
         $encodedUserId = $this->paramsEncode(['id' => $userId]);
 
         // for Institution Staff and Institution Students
         if ($plugin == 'Institution') {
-            $userRole = array_key_exists('userRole', $options) ? $options['userRole'] : '';
-            $encodedInstitutionId = array_key_exists('institutionId', $options) ? $options['institutionId'] : 0;
-            $institutionName = array_key_exists('institutionName', $options) ? $options['institutionName'] : '';
+            $userRole = isset($options['userRole']) ? $options['userRole'] : '';
+            $encodedInstitutionId = isset($options['institutionId']) ? $options['institutionId'] : 0;
+            $institutionName = isset($options['institutionName']) ? $options['institutionName'] : '';
             $pluralUserRole = Inflector::pluralize($userRole);
 
             $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
@@ -129,8 +129,8 @@ class BodyMassesController extends PageController
     {
         $page = $this->Page;
         $plugin = $this->getPlugin();
-        $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
-        $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
+        $userId = isset($options['userId']) ? $options['userId'] : 0;
+        $userName = isset($options['userName']) ? $options['userName'] : '';
 
         $encodedUserId = $this->paramsEncode(['security_user_id' => $userId]);
         $pluralPlugin = Inflector::pluralize($plugin);
@@ -183,10 +183,10 @@ class BodyMassesController extends PageController
     {
         $page = $this->Page;
         $plugin = $this->getPlugin();
-        $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
-        $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
-        $userRole = array_key_exists('userRole', $options) ? $options['userRole'] : '';
-        $encodedInstitutionId = array_key_exists('institutionId', $options) ? $options['institutionId'] : 0;
+        $userId = isset($options['userId']) ? $options['userId'] : 0;
+        $userName = isset($options['userName']) ? $options['userName'] : '';
+        $userRole = isset($options['userRole']) ? $options['userRole'] : '';
+        $encodedInstitutionId = isset($options['institutionId']) ? $options['institutionId'] : 0;
 
         $encodedUserId = $this->paramsEncode(['security_user_id' => $userId]);
         $pluralUserRole = Inflector::pluralize($userRole);
@@ -270,7 +270,7 @@ class BodyMassesController extends PageController
         return $tooltipMessage;
     }
 
-    public function beforeRender(Event $event)
+    public function beforeRender(Event|\Cake\Event\EventInterface $event)
     {
         // if (!array_key_exists('_serialize', $this->viewVars) &&
         //     in_array($this->response->type(), ['application/json', 'application/xml'])
@@ -285,6 +285,6 @@ class BodyMassesController extends PageController
         $this->viewBuilder()->addHelper('OpenEmis.Navigation');
         $this->viewBuilder()->addHelper('OpenEmis.Resource');
         $this->viewBuilder()->addHelpers(['Html', 'Form', 'Paginator', 'Label', 'Url']);
-        
+
     }
 }

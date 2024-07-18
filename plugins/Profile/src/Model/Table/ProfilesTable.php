@@ -45,7 +45,7 @@ class ProfilesTable extends ControllerActionTable
         $this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
         $this->hasMany('SpecialNeeds',      ['className' => 'SpecialNeeds.SpecialNeedsAssessments', 'foreignKey' => 'security_user_id', 'dependent' => true]);
-        
+
         $this->addBehavior('User.User');
         $this->addBehavior('User.UserTab');
 
@@ -83,12 +83,12 @@ class ProfilesTable extends ControllerActionTable
         $BaseUsers = TableRegistry::getTableLocator()->get('User.Users');
         return $BaseUsers->setUserValidation($validator, $this);
     }
-    
+
 
     // POCOR-5684
     public function onGetIdentityNumber(Event $event, Entity $entity){
 
-        // Case 1: if user has only one identity, show the same, 
+        // Case 1: if user has only one identity, show the same,
         // Case 2: if user has more than one identity and also has more than one nationality, and no one is linked to any nationality, then, check, if any nationality has default identity, then show that identity else show the first identity.
         // Case 3: if user has more than one identity (no one is linked to nationality), show the first
 
@@ -99,11 +99,11 @@ class ProfilesTable extends ControllerActionTable
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->all();
-        
+
         $users_ids = TableRegistry::getTableLocator()->get('user_identities');
         $user_id_data = $users_ids->find()
         ->select(['number'])
-        ->where([                
+        ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->first();
@@ -132,14 +132,14 @@ class ProfilesTable extends ControllerActionTable
             $nat_ids = [];
             foreach ($nationalities_ids as $item) {
                 array_push($nat_ids, ['nationality_id' => $item->id, 'identity_type_id' => $item->identity_type_id]);
-            }     
+            }
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
                 $users_ids = TableRegistry::get('user_identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number'])
-                ->where([                
+                ->where([
                     $users_ids->aliasField('security_user_id') => $entity->id,
                     $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
                 ])
@@ -148,7 +148,7 @@ class ProfilesTable extends ControllerActionTable
                     array_push($nationality_based_ids, $user_id_data_nat);
                 }
             }
-            
+
             if(count($nationality_based_ids) > 0){
                 // Case 2 - returning value
                 return $entity->identity_number = $nationality_based_ids[0]['number'];
@@ -169,11 +169,11 @@ class ProfilesTable extends ControllerActionTable
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->all();
-        
+
         $users_ids = TableRegistry::get('user_identities');
         $user_id_data = $users_ids->find()
         ->select(['number', 'identity_type_id'])
-        ->where([                
+        ->where([
             $users_ids->aliasField('security_user_id') => $entity->id,
         ])
         ->first();
@@ -209,14 +209,14 @@ class ProfilesTable extends ControllerActionTable
             $nat_ids = [];
             foreach ($nationalities_ids as $item) {
                 array_push($nat_ids, ['nationality_id' => $item->id, 'identity_type_id' => $item->identity_type_id]);
-            }     
+            }
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
                 $users_ids = TableRegistry::get('user_identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number','identity_type_id'])
-                ->where([                
+                ->where([
                     $users_ids->aliasField('security_user_id') => $entity->id,
                     $users_ids->aliasField('identity_type_id') => $nat_id['identity_type_id']
                 ])
@@ -247,7 +247,7 @@ class ProfilesTable extends ControllerActionTable
                 return $entity->identity_type_id = $user_id_name->name;
             }
         }
-    }    
+    }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
@@ -274,7 +274,7 @@ class ProfilesTable extends ControllerActionTable
         // remove the list toolbarButton
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
 
-        if (array_key_exists('list', $toolbarButtonsArray)) {
+        if (isset($toolbarButtonsArray['list'])) {
             unset($toolbarButtonsArray['list']);
         }
 

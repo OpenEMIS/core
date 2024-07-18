@@ -485,7 +485,7 @@ class GuardiansTable extends ControllerActionTable
             $params['user_id'] = $queryParams['user_id'];
         }
         $encodedParams = $this->paramsEncode($params);
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             $viewUrl = $buttons['view']['url'];
             $viewUrl[1] = $encodedParams;
             if (isset($viewUrl['?'])) {
@@ -498,7 +498,7 @@ class GuardiansTable extends ControllerActionTable
             $newButtons['view']['url'] = $viewUrl;
 //            die(print_r( $newButtons['view'], true));
         }
-        if (array_key_exists('edit', $buttons)) {
+        if (isset($buttons['edit'])) {
             $editUrl = $buttons['view']['url'];
             $editUrl['1'] = $encodedParams;
             $editUrl['0'] = 'edit';
@@ -519,7 +519,7 @@ class GuardiansTable extends ControllerActionTable
             $newButtons['editRelation']['url'] = $editUrl;
 //            die(print_r( $newButtons['view'], true));
         }
-        if (array_key_exists('edit', $buttons)) {
+        if (isset($buttons['edit'])) {
             $params = ['id' => $entity->_matchingData['Users']->id];
             $encodedParams = $this->paramsEncode($params);
             $editUrl = $buttons['view']['url'];
@@ -546,7 +546,7 @@ class GuardiansTable extends ControllerActionTable
 //            die(print_r( $newButtons['view'], true));
         }
 
-        if (array_key_exists('remove', $buttons)) {
+        if (isset($buttons['remove'])) {
             $newButtons['remove'] = $buttons['remove'];
         }
 

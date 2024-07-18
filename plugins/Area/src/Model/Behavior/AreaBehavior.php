@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace Area\Model\Behavior;
 
 use Cake\ORM\Behavior;
@@ -10,14 +10,14 @@ class AreaBehavior extends Behavior {
 	}
 
 	public function findAreas(Query $query, array $options) {
-		if (array_key_exists('id', $options) && array_key_exists('columnName', $options) && array_key_exists('table', $options)) {
+		if (isset($options['id']) && isset($options['columnName']) && isset($options['table'])) {
 			$Table = '';
 			if ($options['table'] == 'areas') {
 				$Table = TableRegistry::get('Area.Areas');
 			}else if ($options['table'] == 'area_administratives') {
 				$Table = TableRegistry::get('Area.AreaAdministratives');;
 			}
-			
+
 			if (!empty($options['table'])) {
 				$lft = $Table->get($options['id'])->lft;
 				$rgt = $Table->get($options['id'])->rght;
@@ -40,7 +40,7 @@ class AreaBehavior extends Behavior {
 	*/
 
 	public function findShiftOptions(Query $query, array $options) {
-		if (array_key_exists('shift_option_id', $options) && array_key_exists('columnName', $options) && array_key_exists('table', $options)) {
+		if (isset($options['shift_option_id']) && isset($options['columnName']) && isset($options['table'])) {
 			$Table = '';
 			if ($options['table'] == 'institution_shifts') {
 				$Table = TableRegistry::get('Institution.InstitutionShifts');
@@ -77,8 +77,8 @@ class AreaBehavior extends Behavior {
 							$institutionId [] =$value->location_institution_id;
 						}
 					}
-			
-					$institutionId = !empty($institutionId) ? $institutionId : 0; 
+
+					$institutionId = !empty($institutionId) ? $institutionId : 0;
 					$query->LeftJoin([ $tableAlias => $options['table']], [
 						$tableAlias.'.location_institution_id = '. $this->_table->getAlias().'.id'
 					])
@@ -90,7 +90,7 @@ class AreaBehavior extends Behavior {
 								$tableAlias.'.location_institution_id IN' => $institutionId
 							])
 					->group($tableAlias.'.location_institution_id');
-					
+
 				}//end POCOR-6797
 				else{
 					$tableAlias = $options['columnName'].'institution_shifts';
@@ -102,7 +102,7 @@ class AreaBehavior extends Behavior {
 						$tableAlias.'.shift_option_id =' => $options['shift_option_id'],
 					])
 					->where([$tableAlias.'.shift_option_id =' => $options['shift_option_id']])
-					->group($tableAlias.'.institution_id');					
+					->group($tableAlias.'.institution_id');
 				}
 			}
 		} else {
@@ -117,8 +117,8 @@ class AreaBehavior extends Behavior {
 	*/
 
 	public function findShiftOwnership(Query $query, array $options) {
-		
-		if (array_key_exists('shift_ownership', $options) && array_key_exists('columnName', $options) && array_key_exists('table', $options)) {
+
+		if (isset($options['shift_ownership']) && isset($options['columnName']) && isset($options['table'])) {
 			$Table = '';
 			if ($options['table'] == 'institution_shifts') {
 				$Table = TableRegistry::get('Institution.InstitutionShifts');
