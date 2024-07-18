@@ -30,7 +30,7 @@ class DefaultValidationBehavior extends Behavior {
 	{
 		$this->importValidationFailed = true;
 	}
-        
+
         public function setImportValidationPassed()
 	{
 		$this->importValidationFailed = false;
@@ -57,7 +57,7 @@ class DefaultValidationBehavior extends Behavior {
 					}
 				}
 			} else { // field not presence in validator
-				if (array_key_exists('null', $columnInfo)) {
+				if (isset($columnInfo['null'])) {
 					if ($columnInfo['null'] === false && $col !== 'id' && !in_array($col, $ignoreFields)) {
 						$validator->add($col, 'notBlank', ['rule' => 'notBlank']);
 						if ($this->_isForeignKey($col)) {

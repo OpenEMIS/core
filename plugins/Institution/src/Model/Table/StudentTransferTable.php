@@ -455,7 +455,7 @@ class StudentTransferTable extends ControllerActionTable
         }
         $attr['onChangeReload'] = 'changeGrade';
         $attr['options'] = $gradeOptions;
-        
+
         return $attr;
     }
 
@@ -472,7 +472,7 @@ class StudentTransferTable extends ControllerActionTable
             $nexteducationgradeforenrolledStatus= false;
 
             $selectedStudentStatus = $request->getData()['StudentTransfer']['student_status_id'];
-            
+
             if($selectedStudentStatus == 1){//student_status_id is Enrolled
                 $where = [
                     $this->AcademicPeriods->aliasField('id') => $selectedPeriod,
@@ -642,7 +642,7 @@ class StudentTransferTable extends ControllerActionTable
 
         $next_period_id = !empty($request->getQuery('next_academic_period_id')) ? $request->getQuery('next_academic_period_id') : $request->getData('StudentTransfer.next_academic_period_id');
         $next_grade_id = !empty($request->getQuery('next_education_grade_id')) ? $request->getQuery('next_education_grade_id') : $request->getData('StudentTransfer.next_education_grade_id');
-        
+
         //$next_period_id = $request->getQuery('next_academic_period_id');
         //$next_grade_id = $request->getQuery('next_education_grade_id');
         $areaOptions = [];
@@ -896,7 +896,7 @@ class StudentTransferTable extends ControllerActionTable
                     'ClassGrades.education_grade_id' => $educationGradeId
                 ])
                 ->toArray();
-            
+
             $options = ['-1' => __('Students without Class')] + $classes;
 
             $selectedClass = $request->getQuery('institution_class');
@@ -964,7 +964,7 @@ class StudentTransferTable extends ControllerActionTable
     }
 
     public function findByNotCompletedGrade(Query $query, array $options) {
-        $gradeId = array_key_exists('gradeId', $options)? $options['gradeId']: null;
+        $gradeId = isset($options['gradeId'])? $options['gradeId']: null;
         if (empty($gradeId)) {
             return $query;
         }
@@ -987,7 +987,7 @@ class StudentTransferTable extends ControllerActionTable
     public function findByStatus(Query $query, array $options)
     {
         $studentStatusId = $this->request->getData()['StudentTransfer']['student_status_id'];//POCOR-6230
-        $statuses = array_key_exists('statuses', $options)? $options['statuses']: null;
+        $statuses = isset($options['statuses'])? $options['statuses']: null;
         if (empty($statuses)) {
             return $query;
         }

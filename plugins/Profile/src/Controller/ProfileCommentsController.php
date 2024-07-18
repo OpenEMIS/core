@@ -24,7 +24,7 @@ class ProfileCommentsController extends BaseController
         return true;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
         $userId = $this->Auth->user('id');

@@ -23,7 +23,7 @@ class UserBodyMassesTable extends ControllerActionTable
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
-        
+
         $this->addBehavior('Health.Health');
 
         $this->toggle('search', false);
@@ -146,7 +146,7 @@ class UserBodyMassesTable extends ControllerActionTable
 
     public function findIndex(Query $query, array $options)
     {
-        if (array_key_exists('sort', $options) && $options['sort'] == 'date') {
+        if (isset($options['sort']) && $options['sort'] == 'date') {
             $direction = $options['direction'];
             $query->order([$this->aliasField($options['sort']) => $direction, $this->aliasField('created') => 'desc']);
 
@@ -180,7 +180,7 @@ class UserBodyMassesTable extends ControllerActionTable
         $this->controller->changeStudentHealthHeader($this, $modelAlias, $userType);
 
 		// Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Student Body Mass','Students - Health');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Student Body Mass','Students - Health');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',

@@ -25,7 +25,7 @@ class MealProgrammesTable extends ControllerActionTable
      * @return void
      */
     public function initialize(array $config): void
-    { 
+    {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('MealProgrammeTypes', ['className' => 'Meal.MealProgrammeTypes','foreignKey' => 'type']);
@@ -43,7 +43,7 @@ class MealProgrammesTable extends ControllerActionTable
             'dependent' => true
         ]);
        $this->hasMany('MealFoodRecords', ['className' => 'Meal.MealFoodRecords', 'foreignKey' => 'meal_programmes_id']); //POCOR-7363
-        
+
         // $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         // $this->addBehavior('Area.Areapicker');
         // $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -85,7 +85,7 @@ class MealProgrammesTable extends ControllerActionTable
         $this->field('implementer',['visible' => false]);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Meals Programme','Meals');       
+		$is_manual_exist = $this->getManualUrl('Administration','Meals Programme','Meals');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -108,7 +108,7 @@ class MealProgrammesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
+        if (isset($extra['selectedAcademicPeriodOptions'])) {
             $query->where([
                         $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']
                     ], [], true); //this parameter will remove all where before this and replace it with new where.
@@ -151,7 +151,7 @@ class MealProgrammesTable extends ControllerActionTable
                             'area_id'=> $areaIdsData,
                             'created_user_id' => $this->Auth->user('id') //POCOR-7652
                         ]);
-            
+
                         $saveData = $MealInstitutionProgrammes->save($data);
                     }
                 }
@@ -174,7 +174,7 @@ class MealProgrammesTable extends ControllerActionTable
                     ->first();
                     if(!empty($MealInstitutionProgrammesData)){
                         // $MealInstitutionProgrammes->updateAll(
-                        //     ['area_id' => $institutionData->area_id],    
+                        //     ['area_id' => $institutionData->area_id],
                         //     ['meal_programme_id' => $record_id, 'institution_id'=> $value]
                         // );
                     }else{
@@ -204,7 +204,7 @@ class MealProgrammesTable extends ControllerActionTable
 
         if($areaIdsData[0] == -1){
             $MealInstitutionProgrammes->updateAll(
-                ['area_id' => $areaIdsData[0]],    
+                ['area_id' => $areaIdsData[0]],
                 ['meal_programme_id' => $record_id]
             );
         }else{
@@ -217,7 +217,7 @@ class MealProgrammesTable extends ControllerActionTable
                 ->where($where)
                 ->first();
                 $MealInstitutionProgrammes->updateAll(
-                    ['area_id' => $institutionData->area_id],    
+                    ['area_id' => $institutionData->area_id],
                     ['meal_programme_id' => $record_id, 'institution_id'=> $value]
                 );
             }
@@ -238,7 +238,7 @@ class MealProgrammesTable extends ControllerActionTable
             ];
             $MealFood = $MealFoodRecordsTable->newEntity($MealFoodRecordsEntity);
             if($MealFoodResult =  $MealFoodRecordsTable ->save($MealFood)){
-               
+
             }
         }
          //POCOR-7363 end
@@ -293,22 +293,22 @@ class MealProgrammesTable extends ControllerActionTable
         //     // 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
         // ]);
         $this->field('area_id', ['title' => __('Area Education'), 'source_model' => 'Area.Areas', 'displayCountry' => false,'attr' => ['label' => __('Area Education')]]);
-        
+
     }
-   
+
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'add') {
             list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('period')));
 
             $attr['options'] = $periodOptions;
-           
+
             $attr['default'] = $selectedPeriod;
         } else if ($action == 'edit') {
 
             list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('period')));
 
             $attr['options'] = $periodOptions;
-           
+
             $attr['default'] = $selectedPeriod;
             $attr['type'] = 'readonly';
 
@@ -340,7 +340,7 @@ class MealProgrammesTable extends ControllerActionTable
         $levelOptions = $MealTypes
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->toArray();
-           
+
          $selectedLevel = !is_null($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
 
          return compact('levelOptions', 'selectedLevel');
@@ -382,7 +382,7 @@ class MealProgrammesTable extends ControllerActionTable
         $levelOptions = $MealTrageting
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->toArray();
-           
+
          $selectedLevel = !is_null($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
 
          return compact('levelOptions', 'selectedLevel');
@@ -398,7 +398,7 @@ class MealProgrammesTable extends ControllerActionTable
         }
         return $attr;
     }
-    
+
      public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
        //POCOR-7363 start
@@ -410,11 +410,11 @@ class MealProgrammesTable extends ControllerActionTable
                     $arr[$key] = ['id'=>$food['food_type_id']];
                 }
                 $row['food_type_id'] = $arr;
-                
+
                 return $row;
             });
         });
-     
+
         //POCOR-7363 end
         $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
         $MealsProgrammeId = $this->paramsDecode($this->request->getParam('pass')[1]);
@@ -436,7 +436,7 @@ class MealProgrammesTable extends ControllerActionTable
                                 ->contain(['Institutions'])
                                 ->where([$MealInstitutionProgrammes->aliasField('meal_programme_id')=>$row->id])
                                 ->all();
-    
+
                     $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
                     foreach($MealInstitutionProgrammesData AS $institutionData){
                         $institutionArr[] = $institutionData->institution_id;
@@ -451,7 +451,7 @@ class MealProgrammesTable extends ControllerActionTable
                             $InstitutionsData[] =  $InstitutionsResultData;
                         }
                         $row['institution_id'] = $InstitutionsResult;
-    
+
                         $AreaResult = $MealInstitutionProgrammes
                             ->find()
                             ->select([$MealInstitutionProgrammes->aliasField('area_id')])
@@ -488,17 +488,17 @@ class MealProgrammesTable extends ControllerActionTable
             ]);
             return $query ;
         }
-        
+
         //END : POCOR-6608
     }
 
     public function viewAfterAction(Event $event, Entity $entity) {
- 
+
         $this->setupFields($entity);
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {   $this->fields['id']['type'] = 'hidden';  
+    {   $this->fields['id']['type'] = 'hidden';
         $this->setupFields($entity);
     }
 
@@ -509,11 +509,11 @@ class MealProgrammesTable extends ControllerActionTable
         $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
         $conditions1 = [
             $MealInstitutionProgrammes->aliasField('meal_programme_id') => $extra['MealProgrammes']['id']
-        ];    
+        ];
 
         $MealInstitutionProgrammes->deleteAll($conditions1);
         $MealInstitutionProgrammesNew = TableRegistry::get('Meal.MealInstitutionProgrammes');
-        
+
         $areaIdsData = $entity['area_id']['_ids'];
         $areaIdsData = $areaIdsData[0];//POCOR-6882
         $institutionIds = $entity->institution_id;
@@ -525,9 +525,9 @@ class MealProgrammesTable extends ControllerActionTable
             ->where($where)
             ->toArray();
         if($institutionIdsData[0] == 0 || $institutionIdsData[0] == ''){
-            
+
             foreach ($institutionData as $institution) {
-                try{ 
+                try{
                     $existData = $MealInstitutionProgrammesNew->find('all',['conditions'=>[
                         'meal_programme_id' => $extra['MealProgrammes']['id'],
                             'institution_id' => $institution->id,
@@ -540,10 +540,10 @@ class MealProgrammesTable extends ControllerActionTable
                             'area_id' => $institution->area_id,
                             'created_user_id' => $this->Auth->user('id')
                         ]);
-                        
+
                         $saveData = $MealInstitutionProgrammesNew->save($data);
-                    }  
-                    
+                    }
+
                 }
                 catch (PDOException $e) {
                     echo "<pre>";print_r($e);die;
@@ -574,13 +574,13 @@ class MealProgrammesTable extends ControllerActionTable
                 }
             }
         }
-        
+
         if($areaIdsData == -1){  //update $areaIdsData[0] to $areaIdsData
             $MealInstitutionProgrammesNew->updateAll(
-                ['area_id' => $areaIdsData],    
+                ['area_id' => $areaIdsData],
                 ['meal_programme_id' =>  $extra['MealProgrammes']['id']]
             );
-            
+
         }else{
             foreach($institutionIdsData AS $key => $value){
                 $where[$InstitutionTable->aliasField('id')] = $value;
@@ -591,7 +591,7 @@ class MealProgrammesTable extends ControllerActionTable
                 ->where($where)
                 ->first();
                 $MealInstitutionProgrammes->updateAll(
-                    ['area_id' => $institutionData->area_id],    
+                    ['area_id' => $institutionData->area_id],
                     ['meal_programme_id' =>  $extra['MealProgrammes']['id'], 'institution_id'=> $value]
                 );
             }
@@ -600,8 +600,8 @@ class MealProgrammesTable extends ControllerActionTable
         $MealNutritions = TableRegistry::get('Meal.MealNutritionalRecords');
         $conditions = [
             $MealNutritions->aliasField('meal_programmes_id') => $extra['MealProgrammes']['id']
-        ];    
-        
+        ];
+
         $MealNutritions->deleteAll($conditions);
        // $MealNutritions->newEntity(); //POCOR-7485
     }
@@ -620,11 +620,11 @@ class MealProgrammesTable extends ControllerActionTable
         $this->field('start_date');
         $this->field('end_date');
         $this->field('amount');
-        $this->field('area_administrative_id', [    
-            'attr' => [ 
-                'label' => __('Area Education') 
-            ],  
-            'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true] 
+        $this->field('area_administrative_id', [
+            'attr' => [
+                'label' => __('Area Education')
+            ],
+            'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true]
         ]);
         $this->field('area_id', ['type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => false]);
         $this->field('institution_id', [
@@ -645,11 +645,11 @@ class MealProgrammesTable extends ControllerActionTable
                 'label' => __('Food Type')
             ],
             'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
-            
+
         ]);
         //POCOR-7363 end
         $this->field('implementer');
-     
+
     }
 
     public function getNutritionalOptions()
@@ -659,7 +659,7 @@ class MealProgrammesTable extends ControllerActionTable
         $levelOptions = $MealNutritions
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->toArray();
-           
+
          $selectedLevel = !is_null($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
 
          return compact('levelOptions', 'selectedLevel');
@@ -684,7 +684,7 @@ class MealProgrammesTable extends ControllerActionTable
         $levelOptions = $MealImplementers
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->toArray();
-           
+
          $selectedLevel = !is_null($serverRequest->getAttribute('query')['level']) ? $serverRequest->getAttribute('query')['level'] : key($levelOptions);
 
          return compact('levelOptions', 'selectedLevel');
@@ -718,7 +718,7 @@ class MealProgrammesTable extends ControllerActionTable
         }
 
         return $selectedAcademicPeriod;
-    } 
+    }
 
     public function getMealProgrammesOptions($options)
     {
@@ -737,16 +737,16 @@ class MealProgrammesTable extends ControllerActionTable
             ])
             ->toArray();
         return $list;
-    } 
+    }
 
     public function findMealInstitutionProgrammes(Query $query, array $options){
-        $institutionId = $options['institution_id'];  
+        $institutionId = $options['institution_id'];
         return $query
         ->where([
             $this->aliasField('institution_id') => $institutionId])
-        ->orWhere([ 
+        ->orWhere([
             $this->aliasField('institution_id') => 0 ]);
-    } 
+    }
 
      public function onGetAreaId(Event $event, Entity $entity)
     {
@@ -816,7 +816,7 @@ class MealProgrammesTable extends ControllerActionTable
         }
     }
 
-    /* 
+    /*
     *Get the list of area field to show in view and edit page
     * @auther Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
     * return array
@@ -831,7 +831,7 @@ class MealProgrammesTable extends ControllerActionTable
             ->select([$MealInstitutionProgrammes->aliasField('area_id')])
             ->where(['meal_programme_id' => $entity->id])
             ->all();
-        
+
         foreach($result AS $AreaData){
             $areaArr[] = $AreaData->area_id;
         }
@@ -878,7 +878,7 @@ class MealProgrammesTable extends ControllerActionTable
         }
         return (!empty($InstitutionsData))? implode(', ', $InstitutionsData): ' ';
         // END: POCOR-6608
-    } 
+    }
 
     /*
     * Function is get area_level_id
@@ -890,7 +890,7 @@ class MealProgrammesTable extends ControllerActionTable
     // public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request)
     // {
     //     $attr['onChangeReload'] = true;
-    //     $areaLevelId = isset($request->data) ? $request->data['MealProgrammes']['area_level_id']['_ids'] : 0; 
+    //     $areaLevelId = isset($request->data) ? $request->data['MealProgrammes']['area_level_id']['_ids'] : 0;
     //     return $attr;
     // }
 
@@ -900,7 +900,7 @@ class MealProgrammesTable extends ControllerActionTable
         // START: POCOR-6608
         $areaId = isset($request->data) ? $request->data['MealProgrammes']['area_id']['_ids'] : 0;
         // $areaLevelId = isset($request->data) ? $request->data['MealProgrammes']['area_level_id']['_ids'] : 0; //POCOR-6920
-        
+
         $flag = 1;
         if(!isset($areaId[1])){
             $flag = 0;
@@ -950,7 +950,7 @@ class MealProgrammesTable extends ControllerActionTable
         } else {
             $attr['type'] = 'hidden';
         }
-           
+
         return $attr;
         //END: POCOR-6608
 
@@ -969,7 +969,7 @@ class MealProgrammesTable extends ControllerActionTable
                     ->select([$MealInstitutionProgrammes->aliasField('area_id')])
                     ->where(['meal_programme_id' => $MealsProgrammeId['id']])
                     ->all();
-                
+
                 foreach($result AS $AreaData){
                     $AreaDataArr[] = $AreaData->area_id;
                 }
@@ -981,7 +981,7 @@ class MealProgrammesTable extends ControllerActionTable
                                     ->find('list')
                                     ->toArray();
                     $string_version = implode(',', $areaId);
-                    $AreaT = TableRegistry::get('Area.Areas');                    
+                    $AreaT = TableRegistry::get('Area.Areas');
                     //Level-1
                     $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $string_version])->toArray();
                     $childArea =[];
@@ -992,7 +992,7 @@ class MealProgrammesTable extends ControllerActionTable
                         $childArea[$kkk] = $AreaData11->id;
                     }
                     //level-2
-                    foreach($childArea as $kyy =>$AreaDatal2 ){ 
+                    foreach($childArea as $kyy =>$AreaDatal2 ){
                         $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
                         foreach($AreaDatas as $ky =>$AreaDatal22 ){
                             $childAreaMain[$kyy.$ky] = $AreaDatal22->id;
@@ -1000,14 +1000,14 @@ class MealProgrammesTable extends ControllerActionTable
                     }
                     //level-3
                     if(!empty($childAreaMain)){
-                        foreach($childAreaMain as $kyy =>$AreaDatal3 ){ 
+                        foreach($childAreaMain as $kyy =>$AreaDatal3 ){
                             $AreaDatass = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal3])->toArray();
                             foreach($AreaDatass as $ky =>$AreaDatal222 ){
                                 $childArea3[$kyy.$ky] = $AreaDatal222->id;
                             }
                         }
                     }
-                    
+
                     //level-4
                     if(!empty($childAreaMain)){
                         foreach($childArea3 as $kyy =>$AreaDatal4 ){
@@ -1017,7 +1017,7 @@ class MealProgrammesTable extends ControllerActionTable
                             }
                         }
                     }
-                    
+
                     $mergeArr = array_merge($childAreaMain,$childArea,$childArea3,$childArea4);
                     array_push($mergeArr,$string_version);
                     $mergeArr = array_unique($mergeArr);
@@ -1072,7 +1072,7 @@ class MealProgrammesTable extends ControllerActionTable
                if($string_version == null){
                 $string_version = 1;
                }
-                $AreaT = TableRegistry::get('Area.Areas');                    
+                $AreaT = TableRegistry::get('Area.Areas');
                 //Level-1
                 $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $string_version])->toArray();
                 $childArea =[];
@@ -1083,7 +1083,7 @@ class MealProgrammesTable extends ControllerActionTable
                     $childArea[$kkk] = $AreaData11->id;
                 }
                 //level-2
-                foreach($childArea as $kyy =>$AreaDatal2 ){ 
+                foreach($childArea as $kyy =>$AreaDatal2 ){
                     $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
                     foreach($AreaDatas as $ky =>$AreaDatal22 ){
                         $childAreaMain[$kyy.$ky] = $AreaDatal22->id;
@@ -1091,14 +1091,14 @@ class MealProgrammesTable extends ControllerActionTable
                 }
                 //level-3
                 if(!empty($childAreaMain)){
-                    foreach($childAreaMain as $kyy =>$AreaDatal3 ){ 
+                    foreach($childAreaMain as $kyy =>$AreaDatal3 ){
                         $AreaDatass = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal3])->toArray();
                         foreach($AreaDatass as $ky =>$AreaDatal222 ){
                             $childArea3[$kyy.$ky] = $AreaDatal222->id;
                         }
                     }
                 }
-                
+
                 //level-4
                 if(!empty($childAreaMain)){
                     foreach($childArea3 as $kyy =>$AreaDatal4 ){
@@ -1108,14 +1108,14 @@ class MealProgrammesTable extends ControllerActionTable
                         }
                     }
                 }
-                
+
                 $mergeArr = array_merge($childAreaMain,$childArea,$childArea3,$childArea4);
                 array_push($mergeArr,$string_version);
                 $mergeArr = array_unique($mergeArr);
                 $finalIds = implode(',',$mergeArr);
                 $areaId = explode(',',$finalIds);
-          
-            }else  { 
+
+            }else  {
                 $areaId = isset($request->data) ? $request->data['MealProgrammes']['area_id']['_ids'] : 0;
                 //POCOR-6903: Start
                 $AreaLevelsTable = TableRegistry::get('Area.AreaLevels');
@@ -1127,7 +1127,7 @@ class MealProgrammesTable extends ControllerActionTable
                 }else{
                     $string_version = $areaId;
                 }
-                $AreaT = TableRegistry::get('Area.Areas');                    
+                $AreaT = TableRegistry::get('Area.Areas');
                 //Level-1
                 $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $string_version])->toArray();
                 $childArea =[];
@@ -1138,7 +1138,7 @@ class MealProgrammesTable extends ControllerActionTable
                     $childArea[$kkk] = $AreaData11->id;
                 }
                 //level-2
-                foreach($childArea as $kyy =>$AreaDatal2 ){ 
+                foreach($childArea as $kyy =>$AreaDatal2 ){
                     $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
                     foreach($AreaDatas as $ky =>$AreaDatal22 ){
                         $childAreaMain[$kyy.$ky] = $AreaDatal22->id;
@@ -1146,14 +1146,14 @@ class MealProgrammesTable extends ControllerActionTable
                 }
                 //level-3
                 if(!empty($childAreaMain)){
-                    foreach($childAreaMain as $kyy =>$AreaDatal3 ){ 
+                    foreach($childAreaMain as $kyy =>$AreaDatal3 ){
                         $AreaDatass = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal3])->toArray();
                         foreach($AreaDatass as $ky =>$AreaDatal222 ){
                             $childArea3[$kyy.$ky] = $AreaDatal222->id;
                         }
                     }
                 }
-                
+
                 //level-4
                 if(!empty($childAreaMain)){
                     foreach($childArea3 as $kyy =>$AreaDatal4 ){
@@ -1163,7 +1163,7 @@ class MealProgrammesTable extends ControllerActionTable
                         }
                     }
                 }
-                
+
                 $mergeArr = array_merge($childAreaMain,$childArea,$childArea3,$childArea4);
                 array_push($mergeArr,$string_version);
                 $mergeArr = array_unique($mergeArr);
@@ -1211,7 +1211,7 @@ class MealProgrammesTable extends ControllerActionTable
 
 
 
-                
+
                 //POCOR-6903: End
 
                 // if($areaId[0] == 1){
@@ -1265,7 +1265,7 @@ class MealProgrammesTable extends ControllerActionTable
                 //                 ->find('list')
                 //                 ->where(['id' => $areaId[0]])
                 //                 ->toArray();
-                    
+
                 //     foreach($AreasResult as $k => $v){
                 //         $newarr[] = $k;
                 //     }
@@ -1300,7 +1300,7 @@ class MealProgrammesTable extends ControllerActionTable
             }else{
                 $flag = 1;
             }
-           
+
             if($areaId[0] != -1 || count($areaId) > 1){
                 $AreaArray = [];
                 $i=0;
@@ -1314,7 +1314,7 @@ class MealProgrammesTable extends ControllerActionTable
                     $InstitutionsTable->aliasField('area_id IN') => $AreaArray,
                     $InstitutionsTable->aliasField('institution_status_id') => $activeStatus
                 ];
-            }else{ 
+            }else{
                 $conditions = [$InstitutionsTable->aliasField('institution_status_id') => $activeStatus];
             }
             //END: POCOR-6608
@@ -1331,7 +1331,7 @@ class MealProgrammesTable extends ControllerActionTable
                     $InstitutionsTable->aliasField('code') => 'ASC',
                     $InstitutionsTable->aliasField('name') => 'ASC'
                 ]);
-            } 
+            }
 
             else{
                 $institutionQuery = $InstitutionsTable
@@ -1366,11 +1366,11 @@ class MealProgrammesTable extends ControllerActionTable
         $attr['attr']['multiple'] = true;
         $attr['options'] = $institutionOptions;
         $attr['attr']['required'] = true;
-        
+
         return $attr;
     }
 
-    /* 
+    /*
     * Get the list Meals Programmes
     * @auther Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
     * return array
@@ -1394,13 +1394,13 @@ class MealProgrammesTable extends ControllerActionTable
             ])
              ->toArray();
          return $list;
-     } 
+     }
 
-    /* 
+    /*
     * Delete data from `institution_meal_programmes` which is related to `meal_programmes` table
     * @auther Anubhav Jain <anubhav.jain@mail.valuecoders.com>
     * ticket POCOR-6681
-    */ 
+    */
     public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $MealInstitutionProgrammes = TableRegistry::get('Institution.InstitutionDistributions');
@@ -1410,19 +1410,19 @@ class MealProgrammesTable extends ControllerActionTable
                     $MealInstitutionProgrammes->aliasField('meal_programmes_id') => $entity->id
                 ])->toArray();
         if(!empty($InstitutionProgrammes)){
-            foreach ($InstitutionProgrammes as $key => $Programmes) { 
+            foreach ($InstitutionProgrammes as $key => $Programmes) {
                 $MealInstitutionProgrammes->delete($Programmes);
             }
         }
         //POCOR-7363 start
         $MealFoodTable = TableRegistry::get('Meal.MealFoodRecords');
-        $MealFoodRecords =  $MealFoodTable 
+        $MealFoodRecords =  $MealFoodTable
                 ->find('all')->select(['id'])
                 ->where([
                     $MealFoodTable->aliasField('meal_programmes_id') => $entity->id
                 ])->toArray();
         if(!empty($MealFoodRecords)){
-            foreach ($MealFoodRecords as $key => $mealFood) { 
+            foreach ($MealFoodRecords as $key => $mealFood) {
                 $MealFoodTable->delete($mealFood);
             }
         }
@@ -1432,16 +1432,16 @@ class MealProgrammesTable extends ControllerActionTable
         $table=TableRegistry::get('Meal.FoodTypes');
         $obj = [];
         if ($entity->has('food_type_id')) {
-           
+
             foreach ($entity->food_type_id as $role) {
                $res= $table->find('list')->where(['id'=>$role['id']])->first();
                $obj[] = $res;
             }
         }
-          
+
         $values = !empty($obj) ? implode(', ', $obj) : __('No Excluded Security Roles ');
         return $values;
-       
+
     }//POCOR-7363 end
 
 }

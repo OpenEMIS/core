@@ -243,13 +243,13 @@ class GuardiansTable extends ControllerActionTable
             'action' => 'ProfileGuardianUser'
         ];
 
-        if (array_key_exists('view', $buttons) && $entity->has('_matchingData')) {
+        if (isset($buttons['view']) && $entity->has('_matchingData')) {
             $buttons['view']['url'] = $urlButtons;
             $buttons['view']['url'][0] = 'view';
             $buttons['view']['url'][1] = $this->paramsEncode(['id' =>  $entity->_matchingData['Users']->id, 'ProfileGuardians.id' => $entity->id]);
         }
 
-        if (array_key_exists('edit', $buttons) && $entity->has('_matchingData')) {
+        if (isset($buttons['edit']) && $entity->has('_matchingData')) {
             $buttons['edit']['url'] = $urlButtons;
             $buttons['edit']['url'][0] = 'edit';
             $buttons['edit']['url'][1] = $this->paramsEncode(['id' =>  $entity->_matchingData['Users']->id, 'ProfileGuardians.id' => $entity->id]);

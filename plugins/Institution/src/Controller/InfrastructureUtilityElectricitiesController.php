@@ -20,7 +20,7 @@ class InfrastructureUtilityElectricitiesController extends PageController
         $this->Page->disable(['search']); // to disable the search function
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $session = $this->request->session();
         $institutionId = $this->getInstitutionID();
@@ -83,7 +83,7 @@ class InfrastructureUtilityElectricitiesController extends PageController
         // set queryString
         $requestQuery = $this->request->query;
         $queryString = $page->decode($requestQuery['querystring']);
-        $academicPeriodId = array_key_exists('academic_period_id', $queryString) ? $queryString['academic_period_id']: $this->AcademicPeriods->getCurrent();
+        $academicPeriodId = isset($queryString['academic_period_id']) ? $queryString['academic_period_id']: $this->AcademicPeriods->getCurrent();
         $page->setQueryString('academic_period_id', $academicPeriodId);
 
         parent::index();

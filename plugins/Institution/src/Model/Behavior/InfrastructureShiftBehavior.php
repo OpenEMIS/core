@@ -47,11 +47,11 @@ class InfrastructureShiftBehavior extends Behavior
         $buttons = $model->onUpdateActionButtons($event, $entity, $buttons);
         // Occupier is not allow to edit/delete regardless permission
         if ($this->isOccupier) {
-            if (array_key_exists('edit', $buttons)) {
+            if (isset($buttons['edit'])) {
                 unset($buttons['edit']);    //remove edit action from the action button
             }
 
-            if (array_key_exists('remove', $buttons)) {
+            if (isset($buttons['remove'])) {
                 unset($buttons['remove']);  // remove delete action from the action button
             }
         }

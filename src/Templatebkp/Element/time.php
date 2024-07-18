@@ -10,7 +10,7 @@
             $fieldName = $name;
             echo $this->Form->input($fieldName, $options);
         ?>
-        <?php if (!array_key_exists('disabled', $options)) : ?>
+        <?php if (!isset($options['disabled'])) : ?>
         <span class="input-group-addon"><i class="glyphicon glyphicon-time"></i></span>
         <?php endif; ?>
     </div>

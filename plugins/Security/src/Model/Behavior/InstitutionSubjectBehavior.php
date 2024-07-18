@@ -256,11 +256,11 @@ class InstitutionSubjectBehavior extends Behavior
 
     public function findByAccess(Query $query, array $options)
     {
-        if (array_key_exists('accessControl', $options)) {
+        if (isset($options['accessControl'])) {
             $AccessControl = $options['accessControl'];
             $userId = $options['userId'];
             $roles = [];
-            if (array_key_exists('controller', $options)) {
+            if (isset($options['controller'])) {
                 $controller = $options['controller'];
                 $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
                 if (is_array($event->getResult())) {

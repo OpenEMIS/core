@@ -134,8 +134,8 @@ die;*/
         }
     }
 
-    public function beforeFilter(Event $event)
-    { 
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    {
         if ($this->getPlugin() == 'Scholarship') {
             $this->Security->setConfig('validatePost', false);
         }

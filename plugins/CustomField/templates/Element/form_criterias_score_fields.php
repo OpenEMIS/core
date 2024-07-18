@@ -36,16 +36,16 @@
 			<?php
 				$attr['model'] = $alias;
 				echo $this->HtmlField->chosenSelectInput($attr, [
-					'label' => $attr['add_field'], 
-					'multiple' => false, 
+					'label' => $attr['add_field'],
+					'multiple' => false,
 					'onchange' => "$('#reload').val('addField').click();"
 				]);
 
-				if(array_key_exists('add_steps_field', $attr2)) {
+				if(isset($attr2['add_steps_field'])) {
 					echo $this->HtmlField->chosenSelectInput($attr2, [
-						'label' => $attr2['add_steps_field'], 
+						'label' => $attr2['add_steps_field'],
 						'options' => $attr2['options'],
-						'multiple' => false, 
+						'multiple' => false,
 						'value' => $attr2['attr']['value']
 					]);
 				}

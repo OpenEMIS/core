@@ -216,12 +216,12 @@ class CompetencyGradingTypesTable extends ControllerActionTable
 
     public function getCustomList($params = [])
     {
-        if (array_key_exists('keyField', $params)) {
+        if (isset($params['keyField'])) {
             $keyField = $params['keyField'];
         } else {
             $keyField = 'id';
         }
-        if (array_key_exists('valueField', $params)) {
+        if (isset($params['valueField'])) {
             $valueField = $params['valueField'];
         } else {
             $valueField = 'name';
