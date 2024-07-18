@@ -38,7 +38,7 @@ class StaffTrainingCategoriesTable extends ControllerActionTable
                             ->all();
 
                         $recordCount = 0;
-                        if (!$records->isEmpty() && array_key_exists('type', $attr)) {
+                        if (!$records->isEmpty() && isset($attr['type'])) {
                             if ($attr['type'] == 'select') {
                                 foreach ($records as $obj) {
                                     $thresholdData = json_decode($obj->threshold, true);

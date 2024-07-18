@@ -62,7 +62,7 @@ class GuardianUserTable extends UserTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $userType = $this->request->getQuery('user_type');
-        $userType = UserTable::GUARDIAN; 
+        $userType = UserTable::GUARDIAN;
         $this->field('guardian_relation_id', ['before' => 'openemis_no']);
     }
 
@@ -128,8 +128,8 @@ class GuardianUserTable extends UserTable
         if (!empty($request->getParam('pass')[1]) && ($action == 'add' || $action == 'edit')) {
             $params = $this->paramsDecode($request->getParam('pass')[1]);
 
-            $guardianRelationId = array_key_exists('guardian_relation_id', $params) ? $params['guardian_relation_id']: null;
-            $guardianId = array_key_exists('id', $params) ? $params['id']: null;
+            $guardianRelationId = isset($params['guardian_relation_id']) ? $params['guardian_relation_id']: null;
+            $guardianId = isset($params['id']) ? $params['id']: null;
             $profileGuardianId = array_key_exists('ProfileGuardians.id', $params) ? $params['ProfileGuardians.id']: null;
 
             if (is_null($guardianRelationId) && !is_null($profileGuardianId)) {

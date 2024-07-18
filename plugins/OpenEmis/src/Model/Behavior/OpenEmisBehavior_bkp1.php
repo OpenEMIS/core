@@ -101,7 +101,7 @@ class OpenEmisBehavior extends Behavior
         $access = $model->AccessControl;
         $toolbarButtons = $extra['toolbarButtons'];
         foreach ($toolbarButtons->getArrayCopy() as $key => $buttons) {
-            if (array_key_exists('url', $buttons)) {
+            if (isset($buttons['url'])) {
                 if ($buttons['url'] != '#' && !$access->check($buttons['url'])) {
                     $toolbarButtons->offsetUnset($key);
                 }
@@ -110,7 +110,7 @@ class OpenEmisBehavior extends Behavior
 
         $indexButtons = $extra['indexButtons'];
         foreach ($indexButtons->getArrayCopy() as $key => $buttons) {
-            if ($buttons['url'] != '#' && array_key_exists('url', $buttons)) {
+            if ($buttons['url'] != '#' && isset($buttons['url'])) {
                 if (!$access->check($buttons['url'])) {
                     $indexButtons->offsetUnset($key);
                 }
@@ -161,7 +161,7 @@ class OpenEmisBehavior extends Behavior
                 if ($isDeleteButtonEnabled && $isNotTransferOperation && $isNotRestrictOperation) {
                     // not checking existence of entity in $extra so that errors will be shown if entity is removed unexpectedly
                     // to attach primary key to the button attributes for delete operation
-                    if (array_key_exists('remove', $toolbarButtons)) {
+                    if (isset($toolbarButtons['remove'])) {
                         $toolbarButtons['remove']['attr']['field-value'] = $encodedIds;
                     }
                 }

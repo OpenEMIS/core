@@ -6,7 +6,7 @@ use Profile\Controller\CommentsController as BaseController;
 
 class StudentCommentsController extends BaseController
 {
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
         $session = $this->request->session();

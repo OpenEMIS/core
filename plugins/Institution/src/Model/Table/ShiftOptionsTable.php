@@ -51,7 +51,7 @@ class ShiftOptionsTable extends ControllerActionTable
 
     public function findAvailableShifts(Query $query, array $options)
     {
-        if (array_key_exists('institution_id', $options) && array_key_exists('academic_period_id', $options)) {
+        if (isset($options['institution_id']) && isset($options['academic_period_id'])) {
             $conditions = [
                 $this->Shifts->aliasField('shift_option_id = ') . $this->aliasField('id'),
                 $this->Shifts->aliasField('institution_id') => $options['institution_id'],
@@ -72,7 +72,7 @@ class ShiftOptionsTable extends ControllerActionTable
 
     public function findAvailableShiftsOccupier(Query $query, array $options)
     {
-        if (array_key_exists('institution_id', $options) && array_key_exists('academic_period_id', $options)) {
+        if (isset($options['institution_id']) && isset($options['academic_period_id'])) {
             $conditions = [
                 $this->Shifts->aliasField('shift_option_id = ') . $this->aliasField('id'),
                 $this->Shifts->aliasField('location_institution_id') => $options['institution_id'],

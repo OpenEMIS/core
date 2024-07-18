@@ -152,7 +152,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         //Start:POCOR-6693
-        $this->field('area', ['attr' => ['label' => __('Size')]]); 
+        $this->field('area', ['attr' => ['label' => __('Size')]]);
         //End:POCOR-6693
         $this->Navigation->substituteCrumb(__('Institution Buildings'), __('Institution Buildings'));
     }
@@ -165,7 +165,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
             $InstitutionLand = $InstitutionLands->get($entity['institution_land_id']);
         }
         if($entity['area'] >= $InstitutionLand['area']){
-           
+
             if(Router::getRequest()->params['action']=="CopyData"){}
             else{//POCOR_7657
             $this->Alert->warning('InstitutionBuildings.sizeGreater', ['reset' => true]);
@@ -258,7 +258,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
         // unset edit_type so that will always default to Update Details
         foreach ($buttons as $action => $attr) {
-            if (array_key_exists('url', $attr) && array_key_exists('edit_type', $attr['url'])) {
+            if (isset($attr['url']) && array_key_exists('edit_type', $attr['url'])) {
                 unset($buttons[$action]['url']['edit_type']);
             }
         }
@@ -669,13 +669,13 @@ class InstitutionBuildingsTable extends ControllerActionTable
             $attr['date_options']['endDate'] = $endDate;
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
-            /**POCOR-6904 starts - modified condition to get start date at the time of edit*/ 
+            /**POCOR-6904 starts - modified condition to get start date at the time of edit*/
             $sDate = '';
             if (!empty($entity->start_date)) {
                 $sDate = $entity->start_date;
             } else {
                 $sDate = $this->currentAcademicPeriod->start_date;
-            } 
+            }
             $attr['type'] = 'readonly';
             $attr['value'] = $sDate->format('Y-m-d');
             $attr['attr']['value'] = $this->formatDate($sDate);
@@ -1037,7 +1037,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
     {
         $periodOptions = $this->AcademicPeriods->getYearList();
         $periodId = $this->request->getQuery('period_id');
-        
+
         if (is_null($periodId)) {
             $periodId = $this->AcademicPeriods->getCurrent();
         }
@@ -1052,7 +1052,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
     public function getTypeOptions($params = [])
     {
-        $withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
+        $withAll = isset($params['withAll']) ? $params['withAll'] : false;
 
         $typeOptions = $this->BuildingTypes
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
@@ -1073,8 +1073,8 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
     public function getStatusOptions($params = [])
     {
-        $conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
-        $withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
+        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
+        $withAll = isset($params['withAll']) ? $params['withAll'] : false;
 
         $statusOptions = $this->BuildingStatuses
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
@@ -1169,8 +1169,8 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
     public function findInUse(Query $query, array $options)
     {
-        $institutionId = array_key_exists('institution_id', $options) ? $options['institution_id'] : null;
-        $academicPeriodId = array_key_exists('academic_period_id', $options) ? $options['academic_period_id'] : null;
+        $institutionId = isset($options['institution_id']) ? $options['institution_id'] : null;
+        $academicPeriodId = isset($options['academic_period_id']) ? $options['academic_period_id'] : null;
         $inUseId = $this->BuildingStatuses->getIdByCode('IN_USE');
 
         $query->where([

@@ -55,7 +55,7 @@ class AccessControlComponent extends Component
     }
 
     // Is called after the controller executes the requested action’s logic, but before the controller renders views and layout.
-    public function beforeRender(Event $event)
+    public function beforeRender(Event|\Cake\Event\EventInterface $event)
     {
         if ($this->controller instanceof \Page\Controller\PageController) {
             $page = $this->Page;
@@ -141,7 +141,7 @@ class AccessControlComponent extends Component
 
     public function buildPermissions()
     {
-        
+
         $this->Session->delete('Permissions'); // remove all permission first
         $operations = $this->getConfig('operations');
         $separator = $this->getConfig('separator');
@@ -244,7 +244,7 @@ class AccessControlComponent extends Component
     public function check($url = [], $roleIds = [])
     {
         $superAdmin = $this->Auth->user('super_admin');
-        
+
         if ($superAdmin || !is_array($url)) { // if $url is a string, then skip checking of permission
             return true;
         }
@@ -303,7 +303,7 @@ class AccessControlComponent extends Component
                /*'ProfileInsurances', 'Profiles', */
                'ScholarshipsDirectory'];//POCOR-6292 ends
         }else{
-            //For POCOR-6202 uncomment the profile module  
+            //For POCOR-6202 uncomment the profile module
             $excludedController = ['ProfileApplicationAttachments',
                 'ProfileApplicationInstitutionChoices' /*'ProfileBodyMasses'*/,
                 'ProfileComments',
@@ -320,7 +320,7 @@ class AccessControlComponent extends Component
             unset($url['action']);
         }
         $controller = $checkUrl[0];
-        $action = $checkUrl[1]; 
+        $action = $checkUrl[1];
         $url = array_merge($checkUrl, $url);
         $url = array_merge(['Permissions'], $url);
         $permissionKey = implode('.', $url);
@@ -434,7 +434,7 @@ class AccessControlComponent extends Component
         $superAdmin = $_SESSION['Auth']['User']['super_admin']; //POCOR-8339
         if(($isStudent == 1 && $isStaff == 1 && $isGuardian == 1)){
             $superUser = 1;
-        } 
+        }
         //POCOR-8339
         if(($isStudent == 1 && $isStaff == 1 && $isGuardian == 1 && $superAdmin == 0)){
             $superUser = 0;
