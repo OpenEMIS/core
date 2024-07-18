@@ -21,7 +21,7 @@
 		]);
 		$alias = $ControllerAction['table']->getAlias();
 
-		
+
 		echo $this->Form->input("$alias.types", [
 			'label' => __('Type'),
 			'type' => 'select',
@@ -30,7 +30,7 @@
 		]);
 
 		$requestData = $this->request->getData($alias);
-		$evaluatorType = (array_key_exists('types', $requestData)) ? $requestData['types']: 'Staff';
+		$evaluatorType = (isset($requestData['types'])) ? $requestData['types']: 'Staff';
 		echo $this->Form->input("$alias.evaluator_search", [
 			'label' => __('Add Evaluator'),
 			'type' => 'text',

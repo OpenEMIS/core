@@ -286,143 +286,167 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                                             $alertRuleMessage = str_replace($searchKey22, $threshold, $alertRuleMessage);
                                         }
 
-                                        $searchKey3 = "/${user.openemis_no}/i";
-                                        $searchKey33 = '${user.openemis_no}';
+                                        // $searchKey3 = "/${user.openemis_no}/i";
+                                        // $searchKey33 = '${user.openemis_no}';  //Commented for php 8 working with php 7.4 but not working with php version 8
+                                        $searchKey3 = "/{$userData->openemis_no}/i";
+                                        $searchKey33 = $userData->openemis_no;
                                         if (preg_match($searchKey3, $alertRuleMessage)) {
                                             $alertRuleMessage = str_replace($searchKey33, $StudentOpenemis_no, $alertRuleMessage);
                                         }
 
-                                        $searchKey4 = "/${user.first_name}/i";
-                                        $searchKey44 = '${user.first_name}';
+                                        // $searchKey4 = "/${user.first_name}/i";
+                                        // $searchKey44 = '${user.first_name}';
+                                        $searchKey4 = "/{$userData->first_name}/i";
+                                        $searchKey44 = $userData->first_name;
                                         if (preg_match($searchKey4, $alertRuleMessage)) {
                                             $alertRuleMessage = str_replace($searchKey44, $StudentFirstName, $alertRuleMessage);
                                         }
 
-                                        $searchKey5 = "/${user.middle_name}/i";
-                                        $searchKey55 = '${user.middle_name}';
+                                        // $searchKey5 = "/${user.middle_name}/i";
+                                        // $searchKey55 = '${user.middle_name}';
+                                        $searchKey5 = "/{$userData->middle_name}/i";
+                                        $searchKey55 = $userData->middle_name;
                                         if (preg_match($searchKey5, $alertRuleMessage)) {
                                             $alertRuleMessage = str_replace($searchKey55, $StudentMiddleName, $alertRuleMessage);
                                         }
 
-                                        $searchKey6 = "/${user.third_name}/i";
-                                        $searchKey66 = '${user.third_name}';
+                                        // $searchKey6 = "/${user.third_name}/i";
+                                        // $searchKey66 = '${user.third_name}';
+                                        $searchKey6 = "/{$userData->third_name}/i";
+                                        $searchKey66 = $userData->third_name;
                                         if (preg_match($searchKey6, $alertRuleMessage)) {
                                             $alertRuleMessage = str_replace($searchKey66, $StudentThirdName, $alertRuleMessage);
                                         }
 
-                                        $searchKey7 = "/${user.last_name}/i";
-                                        $searchKey77 = '${user.last_name}';
+                                        // $searchKey7 = "/${user.last_name}/i";
+                                        // $searchKey77 = '${user.last_name}';
+                                        $searchKey7 = "/{$userData->last_name}/i";
+                                        $searchKey77 = $userData->last_name;
                                         if (preg_match($searchKey7, $alertRuleMessage)) {
                                             $alertRuleMessage = str_replace($searchKey77, $StudentLastName, $alertRuleMessage);
                                         }
 
-                                        $searchKey8 = "/${user.preferred_name}/i";
-                                        $searchKey88 = '${user.preferred_name}';
+                                        // $searchKey8 = "/${user.preferred_name}/i";
+                                        // $searchKey88 = '${user.preferred_name}';
+                                        $searchKey8 = "/{$userData->preferred_name}/i";
+                                        $searchKey88 = $userData->preferred_name;
                                         if (preg_match($searchKey8, $alertRuleMessage)) {
                                             $alertRuleMessage = str_replace($searchKey88, $StudentPreferredName, $alertRuleMessage);
                                         }
 
-                                        $searchEmail = "/${user.email}/i";
-                                        $searchKeyEmail = '${user.email}';
+                                        // $searchEmail = "/${user.email}/i";
+                                        // $searchKeyEmail = '${user.email}';
+                                        $searchEmail = "/{$userData->email}/i";
+                                        $searchKeyEmail = $userData->email;
                                         if (preg_match($searchEmail, $alertRuleMessage)) {
                                             $alertRuleMessage = str_replace($searchKeyEmail, $StudentEmail, $alertRuleMessage);
                                         }
 
-                                        $searchAddress = "/${user.address}/i";
-                                        $searchKeyAddress = '${user.address}';
+                                        // $searchAddress = "/${user.address}/i";
+                                        // $searchKeyAddress = '${user.address}';
+                                        $searchAddress = "/{$userData->address}/i";
+                                        $searchKeyAddress = $userData->address;
                                         if (preg_match($searchAddress, $alertRuleMessage)) {
                                             $alertRuleMessage = str_replace($searchKeyAddress, $StudentAddress, $alertRuleMessage);
                                         }
 
-                                        $searchPC = "/${user.postal_code}/i";
-                                        $searchKeyPC = '${user.postal_code}';
+                                        // $searchPC = "/${user.postal_code}/i";
+                                        // $searchKeyPC = '${user.postal_code}';
+                                        $searchPC = "/{$userData->postal_code}/i";
+                                        $searchKeyPC = $userData->postal_code;
                                         if (preg_match($searchPC, $alertRuleMessage)) {
                                             $alertRuleMessage = str_replace($searchKeyPC, $StudentPostalCode, $alertRuleMessage);
                                         }
 
-                                        $searchDOB = "/${user.date_of_birth}/i";
-                                        $searchKeyDOB = '${user.date_of_birth}';
+                                        // $searchDOB = "/${user.date_of_birth}/i";
+                                        // $searchKeyDOB = '${user.date_of_birth}';
+                                        $searchDOB = "/{$userData->date_of_birth}/i";
+                                        $searchKeyDOB = $userData->date_of_birth;
                                         if (preg_match($searchDOB, $alertRuleMessage)) {
                                             $alertRuleMessage = str_replace($searchKeyDOB, $StudentDOB, $alertRuleMessage);
                                         }
-
-                                        $searchIDNO = "/${user.identity_number}/i";
-                                        $searchKeyIDNO = '${user.identity_number}';
+                                        
+                                        // $searchIDNO = "/${user.identity_number}/i";
+                                        // $searchKeyIDNO = '${user.identity_number}';
+                                        $searchIDNO = "/{$userData->identity_number}/i";
+                                        $searchKeyIDNO = $userData->identity_number;
                                         if (preg_match($searchIDNO, $alertRuleMessage)) {
                                             $alertRuleMessage = str_replace($searchKeyIDNO, $StudentIDNO, $alertRuleMessage);
                                         }
 
-                                        $searchIDTypeName = "/${user.main_identity_type.name}/i";
-                                        $searchKeyIDTypeName = '${user.main_identity_type.name}';
-                                        if (preg_match($searchIDTypeName, $alertRuleMessage)) {
-                                            $alertRuleMessage = str_replace($searchKeyIDTypeName, $idTypeName, $alertRuleMessage);
-                                        }
+                                        // Need to cross verfiy for php version 8[START]
+                                        // $searchIDTypeName = "/${user.main_identity_type.name}/i";
+                                        // $searchKeyIDTypeName = '${user.main_identity_type.name}';
+                                        // if (preg_match($searchIDTypeName, $alertRuleMessage)) {
+                                        //     $alertRuleMessage = str_replace($searchKeyIDTypeName, $idTypeName, $alertRuleMessage);
+                                        // }
 
-                                        $searchNationality = "/${user.main_nationality.name}/i";
-                                        $searchKeyNationality = '${user.main_nationality.name}';
-                                        if (preg_match($searchNationality, $alertRuleMessage)) {
-                                            $alertRuleMessage = str_replace($searchKeyNationality, $nationalName, $alertRuleMessage);
-                                        }
+                                        // $searchNationality = "/${user.main_nationality.name}/i";
+                                        // $searchKeyNationality = '${user.main_nationality.name}';
+                                        // if (preg_match($searchNationality, $alertRuleMessage)) {
+                                        //     $alertRuleMessage = str_replace($searchKeyNationality, $nationalName, $alertRuleMessage);
+                                        // }
 
-                                        $searchGender = "/${user.gender.name}/i";
-                                        $searchKeyGender = '${user.gender.name}';
-                                        if (preg_match($searchGender, $alertRuleMessage)) {
-                                            $alertRuleMessage = str_replace($searchKeyGender, $genderName, $alertRuleMessage);
-                                        }
+                                        // $searchGender = "/${user.gender.name}/i";
+                                        // $searchKeyGender = '${user.gender.name}';
+                                        // if (preg_match($searchGender, $alertRuleMessage)) {
+                                        //     $alertRuleMessage = str_replace($searchKeyGender, $genderName, $alertRuleMessage);
+                                        // }
 
-                                        $searchName = "/${institution.name}/i";
-                                        $searchKeyInsName = '${institution.name}';
-                                        if (preg_match($searchName, $alertRuleMessage)) {
-                                            $alertRuleMessage = str_replace($searchKeyInsName, $insName, $alertRuleMessage);
-                                        }
+                                        // $searchName = "/${institution.name}/i";
+                                        // $searchKeyInsName = '${institution.name}';
+                                        // if (preg_match($searchName, $alertRuleMessage)) {
+                                        //     $alertRuleMessage = str_replace($searchKeyInsName, $insName, $alertRuleMessage);
+                                        // }
 
-                                        $searchCode = "/${institution.code}/i";
-                                        $searchKeyCode = '${institution.code}';
-                                        if (preg_match($searchCode, $alertRuleMessage)) {
-                                            $alertRuleMessage = str_replace($searchKeyCode, $insCode, $alertRuleMessage);
-                                        }
+                                        // $searchCode = "/${institution.code}/i";
+                                        // $searchKeyCode = '${institution.code}';
+                                        // if (preg_match($searchCode, $alertRuleMessage)) {
+                                        //     $alertRuleMessage = str_replace($searchKeyCode, $insCode, $alertRuleMessage);
+                                        // }
 
-                                        $searchInsAddress = "/${institution.address}/i";
-                                        $searchKeyInsAddress = '${institution.address}';
-                                        if (preg_match($searchInsAddress, $alertRuleMessage)) {
-                                            $alertRuleMessage = str_replace($searchKeyInsAddress, $InsAddress, $alertRuleMessage);
-                                        }
+                                        // $searchInsAddress = "/${institution.address}/i";
+                                        // $searchKeyInsAddress = '${institution.address}';
+                                        // if (preg_match($searchInsAddress, $alertRuleMessage)) {
+                                        //     $alertRuleMessage = str_replace($searchKeyInsAddress, $InsAddress, $alertRuleMessage);
+                                        // }
 
-                                        $searchPCode = "/${institution.postal_code}/i";
-                                        $searchKeyPCode = '${institution.postal_code}';
-                                        if (preg_match($searchPCode, $alertRuleMessage)) {
-                                            $alertRuleMessage = str_replace($searchKeyPCode, $InsPostalCode, $alertRuleMessage);
-                                        }
+                                        // $searchPCode = "/${institution.postal_code}/i";
+                                        // $searchKeyPCode = '${institution.postal_code}';
+                                        // if (preg_match($searchPCode, $alertRuleMessage)) {
+                                        //     $alertRuleMessage = str_replace($searchKeyPCode, $InsPostalCode, $alertRuleMessage);
+                                        // }
 
-                                        $searchContactPerson = "/${institution.contact_person}/i";
-                                        $searchKeyContactPerson = '${institution.contact_person}';
-                                        if (preg_match($searchContactPerson, $alertRuleMessage)) {
-                                            $alertRuleMessage = str_replace($searchKeyContactPerson, $InsContactPerson, $alertRuleMessage);
-                                        }
+                                        // $searchContactPerson = "/${institution.contact_person}/i";
+                                        // $searchKeyContactPerson = '${institution.contact_person}';
+                                        // if (preg_match($searchContactPerson, $alertRuleMessage)) {
+                                        //     $alertRuleMessage = str_replace($searchKeyContactPerson, $InsContactPerson, $alertRuleMessage);
+                                        // }
 
-                                        $searchPhone = "/${institution.telephone}/i";
-                                        $searchKeyPhone = '${institution.telephone}';
-                                        if (preg_match($searchPhone, $alertRuleMessage)) {
-                                            $alertRuleMessage = str_replace($searchKeyPhone, $InsPhone, $alertRuleMessage);
-                                        }
+                                        // $searchPhone = "/${institution.telephone}/i";
+                                        // $searchKeyPhone = '${institution.telephone}';
+                                        // if (preg_match($searchPhone, $alertRuleMessage)) {
+                                        //     $alertRuleMessage = str_replace($searchKeyPhone, $InsPhone, $alertRuleMessage);
+                                        // }
 
-                                        $searchFax = "/${institution.fax}/i";
-                                        $searchKeyFax = '${institution.fax}';
-                                        if (preg_match($searchFax, $alertRuleMessage)) {
-                                            $alertRuleMessage = str_replace($searchKeyFax, $InsFax, $alertRuleMessage);
-                                        }
+                                        // $searchFax = "/${institution.fax}/i";
+                                        // $searchKeyFax = '${institution.fax}';
+                                        // if (preg_match($searchFax, $alertRuleMessage)) {
+                                        //     $alertRuleMessage = str_replace($searchKeyFax, $InsFax, $alertRuleMessage);
+                                        // }
 
-                                        $searchInsEmail = "/${institution.email}/i";
-                                        $searchKeyInsEmail = '${institution.email}';
-                                        if (preg_match($searchInsEmail, $alertRuleMessage)) {
-                                            $alertRuleMessage = str_replace($searchKeyInsEmail, $InsEmail, $alertRuleMessage);
-                                        }
+                                        // $searchInsEmail = "/${institution.email}/i";
+                                        // $searchKeyInsEmail = '${institution.email}';
+                                        // if (preg_match($searchInsEmail, $alertRuleMessage)) {
+                                        //     $alertRuleMessage = str_replace($searchKeyInsEmail, $InsEmail, $alertRuleMessage);
+                                        // }
 
-                                        $searchWebsite = "/${institution.website}/i";
-                                        $searchKeyWebsite = '${institution.website}';
-                                        if (preg_match($searchWebsite, $alertRuleMessage)) {
-                                            $alertRuleMessage = str_replace($searchKeyWebsite, $InsWebsite, $alertRuleMessage);
-                                        }
+                                        // $searchWebsite = "/${institution.website}/i";
+                                        // $searchKeyWebsite = '${institution.website}';
+                                        // if (preg_match($searchWebsite, $alertRuleMessage)) {
+                                        //     $alertRuleMessage = str_replace($searchKeyWebsite, $InsWebsite, $alertRuleMessage);
+                                        // }
+                                        // Need to cross verfiy for php version 8[END]
 
                                         //Comment for V4[START]
                                         //POCOR-7266::End

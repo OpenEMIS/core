@@ -24,14 +24,14 @@ class InsurancesController extends PageController
         $page->exclude(['comment', 'security_user_id', 'file_name', 'file_content']);//POCOR-6255
 
         $requestQuery = $this->request->getQuery();;
-        if (array_key_exists('sort', $requestQuery)) {
+        if (isset($requestQuery['sort'])) {
             $page->setQueryOption('sort', $requestQuery['sort']);
             $page->setQueryOption('direction', $requestQuery['direction']);
         }
         parent::index();
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
         parent::beforeFilter($event);
@@ -89,7 +89,7 @@ class InsurancesController extends PageController
             ->setControlType('select');
         // end Insurance Providers Field
 
-        // Insurance Types Field    
+        // Insurance Types Field
         $page->get('insurance_type_id')
             ->setLabel('Type')
             ->setControlType('select');
@@ -108,15 +108,15 @@ class InsurancesController extends PageController
 
         $page = $this->Page;
         $plugin = $this->getPlugin();
-        $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
-        $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
+        $userId = isset($options['userId']) ? $options['userId'] : 0;
+        $userName = isset($options['userName']) ? $options['userName'] : '';
         $encodedUserId = $this->paramsEncode(['id' => $userId]);
 
         // for Institution Staff and Institution Students
         if ($plugin == 'Institution') {
-            $userRole = array_key_exists('userRole', $options) ? $options['userRole'] : '';
-            $encodedInstitutionId = array_key_exists('institutionId', $options) ? $options['institutionId'] : 0;
-            $institutionName = array_key_exists('institutionName', $options) ? $options['institutionName'] : '';
+            $userRole = isset($options['userRole']) ? $options['userRole'] : '';
+            $encodedInstitutionId = isset($options['institutionId']) ? $options['institutionId'] : 0;
+            $institutionName = isset($options['institutionName']) ? $options['institutionName'] : '';
             $pluralUserRole = Inflector::pluralize($userRole);
 
             $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
@@ -141,8 +141,8 @@ class InsurancesController extends PageController
 //        $institutionId = null;
 //        $page = $this->Page;
 //        $plugin = $this->getPlugin();
-//        $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
-//        $userRole = array_key_exists('userRole', $options) ? $options['userRole'] : '';
+//        $userId = isset($options['userId']) ? $options['userId'] : 0;
+//        $userRole = isset($options['userRole']) ? $options['userRole'] : '';
 //
 //        $pluralUserRole = Inflector::pluralize($userRole);
 //
@@ -171,16 +171,16 @@ class InsurancesController extends PageController
 
 
 
-    public function beforeRender(Event $event)
+    public function beforeRender(Event|\Cake\Event\EventInterface $event)
     {
 
         $this->set('_serialize', true);
-        
+
         $this->viewBuilder()->addHelper('Page.Page');
         $this->viewBuilder()->addHelper('Page.Navigation');
 
-        
-        
+
+
     }
 
     /**

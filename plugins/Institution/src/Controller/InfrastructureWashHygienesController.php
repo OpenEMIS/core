@@ -12,12 +12,12 @@ class InfrastructureWashHygienesController extends PageController
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('AcademicPeriod.AcademicPeriods');        
-        $this->Page->loadElementsFromTable($this->InfrastructureWashHygienes);        
+        $this->loadModel('AcademicPeriod.AcademicPeriods');
+        $this->Page->loadElementsFromTable($this->InfrastructureWashHygienes);
         $this->Page->disable(['search']); // to disable the search function
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $session = $this->request->session();
         $institutionId = $this->getInstitutionID();
@@ -129,7 +129,7 @@ class InfrastructureWashHygienesController extends PageController
     }
 
     private function addEdit()
-    {   
+    {
         $page = $this->Page;
 
         $page->exclude(['infrastructure_wash_hygiene_total_male', 'infrastructure_wash_hygiene_total_female', 'infrastructure_wash_hygiene_total_mixed']);
@@ -178,7 +178,7 @@ class InfrastructureWashHygienesController extends PageController
 
     public function view($id)
     {
-        parent::view($id); 
+        parent::view($id);
         $page = $this->Page;
         $entity = $page->getData();
         $quantity = $this->getHygieneQuantity($entity);
@@ -194,7 +194,7 @@ class InfrastructureWashHygienesController extends PageController
                  ['label' => __('Non-functional'), 'key' => 'nonfunctional']
              ])
              ->setAttributes('row', $quantity);
-        $page->move('quantities')->after('infrastructure_wash_hygiene_education_id'); 
+        $page->move('quantities')->after('infrastructure_wash_hygiene_education_id');
 
     }
 

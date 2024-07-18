@@ -31,7 +31,7 @@ class ScholarshipRecipientsController extends AppController
         return $event;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
     	$page = $this->Page;
         parent::beforeFilter($event);
@@ -48,7 +48,7 @@ class ScholarshipRecipientsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.SecurityRoles']);
     }
 
-    // public function beforeRender(Event $event)
+    // public function beforeRender(Event|\Cake\Event\EventInterface $event)
     // {
     //     $page = $this->Page;
     //     parent::beforeRender($event);
@@ -241,11 +241,11 @@ class ScholarshipRecipientsController extends AppController
     //         'scholarship_id' => $scholarshipId
     //     ]);
 
-    //     if (array_key_exists('view', $rowActions)) {
+    //     if (isset($rowActions['view'])) {
     //         $rowActionsArray['view']['url']['queryString'] = $queryString;
     //     }
 
-    //     if (array_key_exists('edit', $rowActions)) {
+    //     if (isset($rowActions['edit'])) {
     //         $rowActionsArray['edit']['url']['queryString'] = $queryString;
     //     }
 
@@ -282,7 +282,7 @@ class ScholarshipRecipientsController extends AppController
     //     return $rows;
     // }
 
-    // private function getLastActivityDate(Entity $entity) 
+    // private function getLastActivityDate(Entity $entity)
     // {
     //     $lastActivityDate = [];
 

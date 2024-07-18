@@ -36,10 +36,10 @@ class AppraisalCriteriasTable extends ControllerActionTable
         ]);
 
         // Added
-        $this->hasOne('AppraisalScores', ['className' => 'StaffAppraisal.AppraisalFormsCriteriasScores', 
-            'foreignKey' => 'appraisal_criteria_id', 
+        $this->hasOne('AppraisalScores', ['className' => 'StaffAppraisal.AppraisalFormsCriteriasScores',
+            'foreignKey' => 'appraisal_criteria_id',
             'saveStrategy' => 'replace',
-            'dependent' => true, 
+            'dependent' => true,
             'cascadeCallbacks' => true]);
 
         $this->setDeleteStrategy('restrict');
@@ -191,13 +191,13 @@ class AppraisalCriteriasTable extends ControllerActionTable
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
-        if (array_key_exists('field_type_id', $data) && !empty($data['field_type_id'])) {
+        if (isset($data['field_type_id']) && !empty($data['field_type_id'])) {
             $fieldTypeCode = $this->FieldTypes->get($data['field_type_id'])->code;
             if ($fieldTypeCode == 'DROPDOWN') {
-                if (!array_key_exists('appraisal_dropdown_options', $data)) {
+                if (!isset($data['appraisal_dropdown_options'])) {
                     $data['appraisal_dropdown_options'] = []; // enables all options to be deleted
                 }
-                if (!empty($data['appraisal_dropdown_options']) && array_key_exists('is_default', $data)) {
+                if (!empty($data['appraisal_dropdown_options']) && isset($data['is_default'])) {
                     $defaultKey = $data['is_default'];
                     $data['appraisal_dropdown_options'][$defaultKey]['is_default'] = 1; // set default option
                 }
@@ -303,7 +303,7 @@ class AppraisalCriteriasTable extends ControllerActionTable
     // Start POCOR-5188
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-		$is_manual_exist = $this->getManualUrl('Administration','Criterias','Staff Appraisals');       
+		$is_manual_exist = $this->getManualUrl('Administration','Criterias','Staff Appraisals');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',

@@ -237,7 +237,7 @@ class LandsTable extends ControllerActionTable
 
         // unset edit_type so that will always default to Update Details
         foreach ($buttons as $action => $attr) {
-            if (array_key_exists('url', $attr) && array_key_exists('edit_type', $attr['url'])) {
+            if (isset($attr['url']) && array_key_exists('edit_type', $attr['url'])) {
                 unset($buttons[$action]['url']['edit_type']);
             }
         }
@@ -968,7 +968,7 @@ class LandsTable extends ControllerActionTable
     {
         $periodOptions = $this->AcademicPeriods->getYearList();
         $periodId = $this->request->getQuery('period_id');
-        
+
         if (is_null($periodId)) {
             $periodId = $this->AcademicPeriods->getCurrent();
         }
@@ -983,7 +983,7 @@ class LandsTable extends ControllerActionTable
 
     public function getTypeOptions($params = [])
     {
-        $withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
+        $withAll = isset($params['withAll']) ? $params['withAll'] : false;
         $typeOptions = $this->LandTypes
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->find('visible')
@@ -1000,8 +1000,8 @@ class LandsTable extends ControllerActionTable
 
     public function getStatusOptions($params = [])
     {
-        $conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
-        $withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
+        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
+        $withAll = isset($params['withAll']) ? $params['withAll'] : false;
 
         $statusOptions = $this->LandStatuses
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
@@ -1092,8 +1092,8 @@ class LandsTable extends ControllerActionTable
 
     public function findInUse(Query $query, array $options)
     {
-        $institutionId = array_key_exists('institution_id', $options) ? $options['institution_id'] : null;
-        $academicPeriodId = array_key_exists('academic_period_id', $options) ? $options['academic_period_id'] : null;
+        $institutionId = isset($options['institution_id']) ? $options['institution_id'] : null;
+        $academicPeriodId = isset($options['academic_period_id']) ? $options['academic_period_id'] : null;
         $inUseId = $this->LandStatuses->getIdByCode('IN_USE');
 
         $query->where([
@@ -1198,7 +1198,7 @@ class LandsTable extends ControllerActionTable
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
         $requestData = json_decode($settings['process']['params']);
-        $infrastructureLevel  = $requestData->infrastructure_level; 
+        $infrastructureLevel  = $requestData->infrastructure_level;
         $newFields = [];
 
         $newFields[] = [
@@ -1374,10 +1374,10 @@ class LandsTable extends ControllerActionTable
                         ->innerJoin(['InfrastructureCustomFormsFields' => 'infrastructure_custom_forms_fields'],[
                             'InfrastructureCustomFormsFields.infrastructure_custom_field_id = '. $InfrastructureCustomFields->aliasField('id')
                         ])->innerJoin(['InfrastructureCustomForms' => 'infrastructure_custom_forms'],[
-                            'InfrastructureCustomForms.id = InfrastructureCustomFormsFields.infrastructure_custom_form_id' 
+                            'InfrastructureCustomForms.id = InfrastructureCustomFormsFields.infrastructure_custom_form_id'
                         ])
                         ->innerJoin(['CustomModules' => 'custom_modules'],[
-                            'CustomModules.id = InfrastructureCustomForms.custom_module_id' 
+                            'CustomModules.id = InfrastructureCustomForms.custom_module_id'
                         ])->where(['CustomModules.name' => 'Institution > Land'])->group([$InfrastructureCustomFields->aliasfield('id')])->toArray();
         }
         if ($landType->name == 'Floor') {
@@ -1389,10 +1389,10 @@ class LandsTable extends ControllerActionTable
                         ->innerJoin(['InfrastructureCustomFormsFields' => 'infrastructure_custom_forms_fields'],[
                             'InfrastructureCustomFormsFields.infrastructure_custom_field_id = '. $InfrastructureCustomFields->aliasField('id')
                         ])->innerJoin(['InfrastructureCustomForms' => 'infrastructure_custom_forms'],[
-                            'InfrastructureCustomForms.id = InfrastructureCustomFormsFields.infrastructure_custom_form_id' 
+                            'InfrastructureCustomForms.id = InfrastructureCustomFormsFields.infrastructure_custom_form_id'
                         ])
                         ->innerJoin(['CustomModules' => 'custom_modules'],[
-                            'CustomModules.id = InfrastructureCustomForms.custom_module_id' 
+                            'CustomModules.id = InfrastructureCustomForms.custom_module_id'
                         ])->where(['CustomModules.name' => 'Institution > Floor'])
                         ->group([$InfrastructureCustomFields->aliasfield('id')])->toArray();
         }
@@ -1405,10 +1405,10 @@ class LandsTable extends ControllerActionTable
                         ->innerJoin(['InfrastructureCustomFormsFields' => 'infrastructure_custom_forms_fields'],[
                             'InfrastructureCustomFormsFields.infrastructure_custom_field_id = '. $InfrastructureCustomFields->aliasField('id')
                         ])->innerJoin(['InfrastructureCustomForms' => 'infrastructure_custom_forms'],[
-                            'InfrastructureCustomForms.id = InfrastructureCustomFormsFields.infrastructure_custom_form_id' 
+                            'InfrastructureCustomForms.id = InfrastructureCustomFormsFields.infrastructure_custom_form_id'
                         ])
                         ->innerJoin(['CustomModules' => 'custom_modules'],[
-                            'CustomModules.id = InfrastructureCustomForms.custom_module_id' 
+                            'CustomModules.id = InfrastructureCustomForms.custom_module_id'
                         ])->where(['CustomModules.name' => 'Institution > Building'])
                         ->group([$InfrastructureCustomFields->aliasfield('id')])->toArray();
         }
@@ -1421,14 +1421,14 @@ class LandsTable extends ControllerActionTable
                         ->innerJoin(['InfrastructureCustomFormsFields' => 'infrastructure_custom_forms_fields'],[
                             'InfrastructureCustomFormsFields.infrastructure_custom_field_id = '. $InfrastructureCustomFields->aliasField('id')
                         ])->innerJoin(['InfrastructureCustomForms' => 'infrastructure_custom_forms'],[
-                            'InfrastructureCustomForms.id = InfrastructureCustomFormsFields.infrastructure_custom_form_id' 
+                            'InfrastructureCustomForms.id = InfrastructureCustomFormsFields.infrastructure_custom_form_id'
                         ])
                         ->innerJoin(['CustomModules' => 'custom_modules'],[
-                            'CustomModules.id = InfrastructureCustomForms.custom_module_id' 
+                            'CustomModules.id = InfrastructureCustomForms.custom_module_id'
                         ])->where(['CustomModules.name' => 'Institution > Room'])
                         ->group([$InfrastructureCustomFields->aliasfield('id')])
                         ->toArray();
-        } 
+        }
         if(!empty($customFieldData)) {
                 foreach($customFieldData as $data) {
                     $custom_field_id = $data->custom_field_id;
@@ -1460,7 +1460,7 @@ class LandsTable extends ControllerActionTable
         $institutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
         $institutionRooms = TableRegistry::get('Institution.InstitutionRooms');
         $buildingTypes = TableRegistry::get('Infrastructure.BuildingTypes');
-        $roomTypes = TableRegistry::get('Infrastructure.RoomTypes');//POCOR-6263 
+        $roomTypes = TableRegistry::get('Infrastructure.RoomTypes');//POCOR-6263
         $infrastructureCondition = TableRegistry::get('FieldOption.InfrastructureConditions');
         $infrastructureStatus = TableRegistry::get('Infrastructure.InfrastructureStatuses');
         $institutionStatus = TableRegistry::get('Institution.Statuses');
@@ -1474,7 +1474,7 @@ class LandsTable extends ControllerActionTable
 
         $conditions = [];
         $ownerInstitutionIds = $this->getOwnerInstitutionId();//POCOR-7423
-        
+
         if ($landType->name == 'Land') {
             //POCOR-7423 start
             if (!empty($ownerInstitutionIds)) {
@@ -1562,7 +1562,7 @@ class LandsTable extends ControllerActionTable
             }
             //POCOR-7423 end
             //POCOR-6263 start
-            if($landType->name == 'Room') { 
+            if($landType->name == 'Room') {
                 $query
                     ->select([
                         'room_type'=> $roomTypes->aliasField('name'),
@@ -1578,7 +1578,7 @@ class LandsTable extends ControllerActionTable
                     'area_id' => 'Institutions.area_id',
                     'area_code' => $areas->aliasField('code'),
                     'area_name' => $areas->aliasField('name'),
-                    'level_id'=> 'Institution'.$level.'.'.'id', 
+                    'level_id'=> 'Institution'.$level.'.'.'id',
                     'land_start_date'=>'Institution'.$level.'.'.'start_date',
                     'land_infrastructure_type'=>$buildingTypes->aliasField('name'),
                     'land_infrastructure_condition'=>$infrastructureCondition->aliasField('name'),
@@ -1626,12 +1626,12 @@ class LandsTable extends ControllerActionTable
                     $query->LeftJoin([$roomTypes->getAlias() => $roomTypes->getTable()], [
                         'Institution'.$level.'.'.$type.'_type_id = ' . $roomTypes->aliasField('id')
                     ]);
-                } //POCOR-6263 end 
+                } //POCOR-6263 end
                 /*POCOR-6628 starts - adding condition to get on In Use room status id records*/
                 if($landType->name == 'Room') {
                     $query->where(['Institution'.$level.'.'.$type.'_status_id' => 1]);
                 }
-                /*POCOR-6628 ends*/   
+                /*POCOR-6628 ends*/
             $query->where($conditions);
             /*POCOR-6628 starts - filter result on the bases institution's shift*/
             $query->group([
@@ -1683,7 +1683,7 @@ class LandsTable extends ControllerActionTable
                         $row['region_name'] = $val->name;
                     }
                 }
-                
+
                 $InfrastructureCustomFields = TableRegistry::get('Infrastructure.LandCustomFields');
 
                 if (!empty($landType->name)) {
@@ -1710,7 +1710,7 @@ class LandsTable extends ControllerActionTable
                     foreach($customFieldData as $data) {
                         if(!empty($data->text_value)) {
                             $row[(string)$data->custom_field_id] = $data->text_value;
-                        } 
+                        }
                         if(!empty($data->number_value) && $data->field_type == 'CHECKBOX') {
                             $infrastructureCustomFieldOptions = TableRegistry::get('Infrastructure.InfrastructureCustomFieldOptions');
                             $infrastructureCustomFields = TableRegistry::get('Infrastructure.InfrastructureCustomFields');
@@ -1739,7 +1739,7 @@ class LandsTable extends ControllerActionTable
                                 $row[(string)$data->custom_field_id] = $str;
                             }
                             unset($optVal);
-                        } 
+                        }
                         if (!empty($data->number_value) && $data->field_type != 'CHECKBOX') {
                             $optvalue = TableRegistry::get('Infrastructure.InfrastructureCustomFieldOptions');
                             if($optvalue->exists(['id'=>$data->number_value])){
@@ -1760,7 +1760,7 @@ class LandsTable extends ControllerActionTable
                         }
                         if(!empty($data->textarea_value)) {
                             $row[(string)$data->custom_field_id] = $data->textarea_value;
-                        }   
+                        }
                         if(!empty($data->date_value)) {
                             $row[(string)$data->custom_field_id] = $data->date_value;
                         }

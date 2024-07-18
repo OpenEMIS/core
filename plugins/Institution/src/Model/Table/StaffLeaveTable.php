@@ -733,7 +733,7 @@ class StaffLeaveTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             if ($entity->is_historical) {
                 $rowEntityId = $this->getFieldEntity($entity->is_historical, $entity->id, 'id');
                 $url = [
@@ -744,10 +744,10 @@ class StaffLeaveTable extends ControllerActionTable
                     $this->paramsEncode(['id' => $rowEntityId])
                 ];
                 $buttons['view']['url'] = $url;
-                if (array_key_exists('edit', $buttons)) {
+                if (isset($buttons['edit'])) {
                     unset($buttons['edit']);
                 }
-                if (array_key_exists('remove', $buttons)) {
+                if (isset($buttons['remove'])) {
                     unset($buttons['remove']);
                 }
             }
@@ -1045,16 +1045,16 @@ class StaffLeaveTable extends ControllerActionTable
             $btnAttr = $this->getButtonAttr();
         }
         $customButton = [];
-        if (array_key_exists('_ext', $url)) {
+        if (isset($url['_ext'])) {
             unset($customButton['url']['_ext']);
         }
-        if (array_key_exists('pass', $url)) {
+        if (isset($url['pass'])) {
             unset($customButton['url']['pass']);
         }
-        if (array_key_exists('paging', $url)) {
+        if (isset($url['paging'])) {
             unset($customButton['url']['paging']);
         }
-        if (array_key_exists('filter', $url)) {
+        if (isset($url['filter'])) {
             unset($customButton['url']['filter']);
         }
         $customButton['type'] = 'button';

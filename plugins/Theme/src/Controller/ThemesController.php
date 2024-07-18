@@ -12,7 +12,7 @@ class ThemesController extends AppController
         // $this->loadComponent('Paginator');
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         parent::beforeFilter($event);
         $name = $this->name;

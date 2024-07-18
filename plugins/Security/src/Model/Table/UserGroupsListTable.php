@@ -39,7 +39,7 @@ class UserGroupsListTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles', 'foreignKey' => 'security_role_id']);
 
-        $this->addBehavior('OpenEmis.Autocomplete');  
+        $this->addBehavior('OpenEmis.Autocomplete');
         $this->addBehavior('User.AdvancedNameSearch');
         $this->toggle('view', false);
         $this->toggle('edit', true); //POCOR-7323
@@ -62,7 +62,7 @@ class UserGroupsListTable extends ControllerActionTable
         $this->field('security_group_id', [
             'visible' => false]);
         $this->field('security_user_id', [
-            'visible' => ['index' => true, 'view' => true, 'edit' => true, 'add' => true]]);      
+            'visible' => ['index' => true, 'view' => true, 'edit' => true, 'add' => true]]);
         $this->field('security_role_id', ['source_model' => 'Security.SecurityRoles']);
 
         $this->setFieldOrder([
@@ -137,7 +137,7 @@ class UserGroupsListTable extends ControllerActionTable
         $queryParams = $this->request->getQuery();
         $search = $this->getSearchKey();
 
-        // CUSTOM SEACH - 
+        // CUSTOM SEACH -
         $extra['auto_search'] = false; // it will append an AND
         if (!empty($search)) {
             $query->find('byUserNameRole', ['search' => $search]);
@@ -188,7 +188,7 @@ class UserGroupsListTable extends ControllerActionTable
             $attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
             $attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
             $attr['onSelect'] = "$('#reload').click();";
-        } 
+        }
         return $attr;
     }
 
@@ -242,17 +242,17 @@ class UserGroupsListTable extends ControllerActionTable
         }
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
 //        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-        $userGroupId = $this->request->getQuery('userGroupId');    
+        $userGroupId = $this->request->getQuery('userGroupId');
         $entity->security_group_id = $userGroupId;
     }
 
     //POCOR-7175
     public function findByUserNameRole(Query $query, array $options)
     {
-        if (array_key_exists('search', $options)) {
+        if (isset($options['search'])) {
             $search = $options['search'];
             $query
             ->join([
@@ -265,7 +265,7 @@ class UserGroupsListTable extends ControllerActionTable
                     'conditions' => [
                         'security_roles.id = ' . $this->aliasField('security_role_id')]
                 ],
-                
+
             ])
             ->where([
                     'OR' => [
@@ -291,7 +291,7 @@ class UserGroupsListTable extends ControllerActionTable
         $securityGroupData = $securityGroup->find()
         ->where([$securityGroup->aliasField('id') =>$entity->security_group_id])
         ->first();
-        
+
         $securityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
         $securityGroupUsers = $securityGroupUsersTbl->find()
         ->where([
@@ -308,7 +308,7 @@ class UserGroupsListTable extends ControllerActionTable
             return __('To Be Deleted');
         } elseif ($field == 'associated_records') {
             return __('Associated Records');
-        }elseif ($field == 'security_user_id') { 
+        }elseif ($field == 'security_user_id') {
             return __('Security User');
         }elseif ($field == 'security_role_id') {
             return __('Security Role');
@@ -317,5 +317,5 @@ class UserGroupsListTable extends ControllerActionTable
         }
     }
 
-    
+
 }

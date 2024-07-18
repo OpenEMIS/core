@@ -18,8 +18,8 @@ class MandatoryBehavior extends Behavior
 
     public function initialize(array $config): void
     {
-        $this->_userRole = (array_key_exists('userRole', $config))? $config['userRole']: null;
-        $this->_roleFields = (array_key_exists('roleFields', $config))? $config['roleFields']: [];
+        $this->_userRole = (isset($config['userRole']))? $config['userRole']: null;
+        $this->_roleFields = (isset($config['roleFields']))? $config['roleFields']: [];
         if (is_null($this->_userRole)) {
             die('userRole must be set in mandatory behavior');
         }
@@ -94,7 +94,7 @@ class MandatoryBehavior extends Behavior
                     $defaultIdentityType = $defaultNationality->identity_type_id;
                 }
                 //POCOR-6047 ends
-                
+
             }
 
             if (empty($defaultIdentityType)) {
@@ -290,7 +290,7 @@ class MandatoryBehavior extends Behavior
                 'ContactTypes.order'
             ])
             ->toArray();
-            
+
         $attr['type'] = 'select';
         $attr['fieldName'] = $this->_table->alias().'.contacts.0.contact_type_id';
         $attr['options'] = $contactOptions;

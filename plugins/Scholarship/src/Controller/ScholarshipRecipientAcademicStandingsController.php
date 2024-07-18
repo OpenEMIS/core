@@ -13,7 +13,7 @@ class ScholarshipRecipientAcademicStandingsController extends PageController
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('Security.Users');        
+        $this->loadModel('Security.Users');
         $this->loadModel('AcademicPeriod.AcademicPeriods');
         $this->loadModel('Scholarship.RecipientAcademicStandings');
 
@@ -27,7 +27,7 @@ class ScholarshipRecipientAcademicStandingsController extends PageController
         return $event;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
     	$page = $this->Page;
         parent::beforeFilter($event);
@@ -42,7 +42,7 @@ class ScholarshipRecipientAcademicStandingsController extends PageController
         $page->addCrumb($recipientName);
         $page->addCrumb('Academic Standings');
 
-        $page->setHeader($recipientName . ' - ' . __('Academic Standings'));  
+        $page->setHeader($recipientName . ' - ' . __('Academic Standings'));
 
         $page->get('scholarship_semester_id')
             ->setLabel('Semester');
@@ -60,8 +60,8 @@ class ScholarshipRecipientAcademicStandingsController extends PageController
         $page->get('scholarship_id')->setControlType('hidden')->setValue($scholarshipId);
 
          // set options
-        $this->academicPeriodOptions = $this->AcademicPeriods->getYearList(); 
-        $this->setupTabElements();  
+        $this->academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        $this->setupTabElements();
     }
 
    public function index()
@@ -116,7 +116,7 @@ class ScholarshipRecipientAcademicStandingsController extends PageController
         $this->reorderFields();
     }
 
-    public function reorderFields() 
+    public function reorderFields()
     {
         $page = $this->Page;
 
