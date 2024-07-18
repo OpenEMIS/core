@@ -14,7 +14,7 @@ class ThemeRepository extends Controller
     public function getAllThemes($params)
     {
         try {
-            $list = new Theme;
+            $list = new Theme();
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -23,11 +23,12 @@ class ThemeRepository extends Controller
             }
             
             if (isset($params['limit'])) {
-                $list = $list->paginate($params['limit']);
+                $data = $list->paginate($params['limit']);
             } else {
-                $list = $list->get();
+                $data['data'] = $list->get()->toArray();
             }
-            return $list;
+            
+            return $data;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Themes List from DB',
