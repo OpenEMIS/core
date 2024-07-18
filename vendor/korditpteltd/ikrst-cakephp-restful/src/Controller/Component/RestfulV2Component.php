@@ -498,7 +498,7 @@ class RestfulV2Component extends Component implements RestfulInterface
                     if (!is_null($query)) { // for index
                         $options['_controller'] = $this->controller;
                         $query->find($name, $options);
-                    } elseif (!array_key_exists('finder', $extra)) { // for view／edit
+                    } elseif (!array_key_exists('finder', (array)$extra)) { // for view／edit
                         $extra['_controller'] = $this->controller;
                         $extra['finder'] = $name;
                     }

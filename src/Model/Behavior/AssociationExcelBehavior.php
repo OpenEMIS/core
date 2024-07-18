@@ -92,7 +92,7 @@ class AssociationExcelBehavior extends Behavior
         $break = false;
         $action = $this->_table->action;
         $pass = $this->_table->request->pass;
-        if (in_array($action, $pass)) {
+        if (in_array($action, (array)$pass)) {
             unset($pass[array_search($action, $pass)]);
             $pass = array_values($pass);
         }
