@@ -9,7 +9,7 @@ use Scholarship\Controller\InstitutionChoicesController as BaseController;
 
 class ScholarshipApplicationInstitutionChoicesController extends BaseController
 {
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
 
@@ -33,7 +33,7 @@ class ScholarshipApplicationInstitutionChoicesController extends BaseController
             $this->setBreadCrumb(['userName' => $userName]);
             $this->setupTabElements();
 
-            $page->exclude(['is_selected']); 
+            $page->exclude(['is_selected']);
         }
     }
 }

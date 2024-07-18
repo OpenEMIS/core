@@ -70,13 +70,13 @@ class CompetencyItemsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $this->fields['competency_template_id']['type'] = 'integer';
-        if (array_key_exists('selectedPeriod', $extra)) {
+        if (isset($extra['selectedPeriod'])) {
             if ($extra['selectedPeriod']) {
                 $conditions[$this->aliasField('academic_period_id')] = $extra['selectedPeriod'];
             }
         }
 
-        if (array_key_exists('selectedTemplate', $extra)) {
+        if (isset($extra['selectedTemplate'])) {
             if ($extra['selectedTemplate']) {
                 $conditions[$this->aliasField('competency_template_id')] = $extra['selectedTemplate'];
             }

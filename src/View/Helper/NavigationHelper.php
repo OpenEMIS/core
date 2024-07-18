@@ -17,7 +17,7 @@ class NavigationHelper extends Helper
     {
         $i = ++$this->menuCount;
         $menuId = 'nav-menu-' . $i;
-        $isLink = array_key_exists('href', $attr);
+        $isLink = isset($attr['href']);
         $linkAttr = ['escape' => false];
         $href = '#' . $menuId;
         $title = __($title);
@@ -35,7 +35,7 @@ class NavigationHelper extends Helper
             $linkAttr['id'] = implode('-', [$href['plugin'], $href['controller'], $href['action']]);
         }
 
-        if (array_key_exists('icon', $attr)) {
+        if (isset($attr['icon'])) {
             $title = sprintf('<span><i class="%s"></i></span><b>%s</b>', $attr['icon'], $title);
         }
 
@@ -97,5 +97,5 @@ class NavigationHelper extends Helper
         return $this->html;
     }
 
-    
+
 }

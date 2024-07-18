@@ -469,7 +469,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         $SurveyFilterType = TableRegistry::getTableLocator()->get('Survey.SurveyFilterInstitutionTypes');
         $session = $this->controller->getRequest()->getSession();
         $institutionId = $this->getInstitutionID();
-        
+
         $institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
         $institutionAreaId = $this->Institutions->get($institutionId)->area_education_id;
         $institutionProviderId = $this->Institutions->get($institutionId)->institution_provider_id;
@@ -884,7 +884,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         } elseif ($action == 'edit') {
             $attr['type'] = 'text';
             $attr['attr']['disabled'] = 'disabled';
-            if (array_key_exists('entity', $attr)) {
+            if (isset($attr['entity'])) {
                 $entity = $attr['entity'];
 
                 $surveyFormDescription = $entity->survey_form->description;
@@ -1186,7 +1186,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         $controller = $options['_controller'];
         $session = $controller->getRequest()->getSession();
         $userId = $session->read('Auth.User.id');
-        $institutionId  = $this->getInstitutionID(); 
+        $institutionId  = $this->getInstitutionID();
         $Statuses = $this->Statuses;
         $doneStatus = WorkflowSteps::DONE;
         $roles = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');

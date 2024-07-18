@@ -73,7 +73,7 @@ class ScholarshipTabsComponent extends Component
     {
         $ids = $this->controller->paramsDecode($this->queryString);
         $encodedIds = $this->Page->encode($ids);
-        
+
         $tabElements = [
             'Recipients' => [
                 'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipients', 'action' => 'view', $encodedIds, 'queryString' => $this->queryString],
@@ -102,7 +102,7 @@ class ScholarshipTabsComponent extends Component
         ];
 
         $isLoan = false;
-        if (array_key_exists('scholarship_id', $ids) && !empty($ids['scholarship_id'])) {
+        if (isset($ids['scholarship_id']) && !empty($ids['scholarship_id'])) {
             $scholarshipEntity = $this->controller->Scholarships->get($ids['scholarship_id']);
             // $isLoan = $this->controller->FinancialAssistanceTypes->is($scholarshipEntity->scholarship_financial_assistance_type_id, 'LOAN');
             // Start POCOR-7570

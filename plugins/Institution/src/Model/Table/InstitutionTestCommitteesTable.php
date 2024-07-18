@@ -30,7 +30,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
-        $this->belongsTo('InstitutionCommitteeTypes', ['className' => 'Institution.InstitutionCommitteeTypes']); 
+        $this->belongsTo('InstitutionCommitteeTypes', ['className' => 'Institution.InstitutionCommitteeTypes']);
         $this->hasMany('InstitutionCommitteeAttachments', [
             'className' => 'Institution.InstitutionCommitteeAttachments',
             'dependent' => true,
@@ -98,13 +98,13 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
+        if (isset($extra['selectedAcademicPeriodOptions'])) {
             $query->where([
                 $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']
             ]);
         }
 
-        if (array_key_exists('selectedCommiteeTypeOption', $extra) && $extra['selectedCommiteeTypeOption'] != -1) {
+        if (isset($extra['selectedCommiteeTypeOption']) && $extra['selectedCommiteeTypeOption'] != -1) {
             $query->where([
                 $this->aliasField('institution_committee_type_id') => $extra['selectedCommiteeTypeOption']
             ]);
@@ -117,7 +117,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(); //to show list of academic period for selection
         $committeeTypeOptions = $this->getCommitteeTypeOptions();
 
-        if (isset($requestQuery) && array_key_exists('type', $requestQuery)) {
+        if (isset($requestQuery) && isset($requestQuery['type'])) {
             $selectedTypeId = $requestQuery['type'];
         } else {
             $selectedTypeId = -1;
@@ -139,7 +139,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         ];
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Institution Committees','Committees');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Institution Committees','Committees');
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',
@@ -148,7 +148,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
                 'escape' => false,
                 'target'=>'_blank'
             ];
-    
+
             $helpBtn['url'] = $is_manual_exist['url'];
             $helpBtn['type'] = 'button';
             $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -165,7 +165,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
 
         if ($this->action == 'index' || $this->action == 'view' || $this->action == 'edit') {
             $requestQuery = $request->getQuery();
-            if (!is_null($requestQuery) && array_key_exists('period', $requestQuery)) {
+            if (!is_null($requestQuery) && isset($requestQuery['period'])) {
                 $selectedAcademicPeriod = $requestQuery['period'];
             } else {
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
@@ -363,12 +363,12 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
 
             foreach ($newEntities as $key => $newEntity) {
                 $textbookStudentEntity = $meetingTable->newEntity($newEntity);
-                
+
                 if (!$meetingTable->save($textbookStudentEntity)) {
                     $return = false;
                 }
             }
-            
+
             return $return;
         }
     }
@@ -417,7 +417,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
             'InstitutionTestCommittees.academic_period_id' =>  $academicPeriod,
             'InstitutionTestCommittees.institution_id' =>  $institutionId
         ]);
-       
+
         if($committeType > 0){
             $query
             ->where([

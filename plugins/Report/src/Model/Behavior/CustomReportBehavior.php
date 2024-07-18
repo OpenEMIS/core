@@ -21,7 +21,7 @@ class CustomReportBehavior extends Behavior
     public function buildQuery($jsonArray, array $params, $byaccess = false, $returnSql = false)
     {
         $result = [];
-        if (array_key_exists('model', $jsonArray)) {
+        if (isset($jsonArray['model'])) {
             $model = $jsonArray['model'];
             $this->Table = TableRegistry::get($model);
             $query = $this->Table->find();
@@ -61,8 +61,8 @@ class CustomReportBehavior extends Behavior
                 $result = $query->toArray();
             }
 
-        } else if (array_key_exists('sql', $jsonArray)) {
-            $stmtParameters = array_key_exists('parameters', $jsonArray) ? $jsonArray['parameters'] : [];
+        } else if (isset($jsonArray['sql'])) {
+            $stmtParameters = isset($jsonArray['parameters']) ? $jsonArray['parameters'] : [];
             $query = $this->_sql($params, $jsonArray['sql'], $stmtParameters);
 
             // return sql or array
@@ -82,7 +82,7 @@ class CustomReportBehavior extends Behavior
     }
 
     /**
-    * To check if the additional options should be displayed. 
+    * To check if the additional options should be displayed.
     * See CustomReportsTable@addBeforeAction
     *
     * @param array $optionsCondition - decoded json from filter.json
@@ -173,7 +173,7 @@ class CustomReportBehavior extends Behavior
     // {
     //     $query = [];
     //     if (!empty($values)) {
-    //         if (array_key_exists('id', $values)) {
+    //         if (isset($values['id'])) {
     //             $value = $values['id'];
     //             $pos = strpos($value, '${');
 
@@ -189,7 +189,7 @@ class CustomReportBehavior extends Behavior
 
     //             if (!empty($id)) {
     //                 $contain = [];
-    //                 if (array_key_exists('contain', $values) && !empty($values['contain'])) {
+    //                 if (isset($values['contain']) && !empty($values['contain'])) {
     //                     $contain = $values['contain'];
     //                 }
 
@@ -205,12 +205,12 @@ class CustomReportBehavior extends Behavior
     {
         if (!empty($values)) {
             foreach($values as $obj) {
-                if (array_key_exists('model', $obj) && array_key_exists('type', $obj)) {
+                if (isset($obj['model']) && isset($obj['type'])) {
                     $joinTable = TableRegistry::get($obj['model']);
                     $type = strtoupper($obj['type']);
 
                     $joinConditions = [];
-                    if (array_key_exists('conditions', $obj)) {
+                    if (isset($obj['conditions'])) {
                         foreach($obj['conditions'] as $field => $value) {
                             $pos = strpos($value, '${');
 
@@ -226,7 +226,7 @@ class CustomReportBehavior extends Behavior
                     }
 
                     // allow same table to be joined twice
-                    $alias = array_key_exists('alias', $obj) ? $obj['alias'] : $joinTable->alias();
+                    $alias = isset($obj['alias']) ? $obj['alias'] : $joinTable->alias();
 
                     switch ($type) {
                         case 'INNER':
@@ -349,10 +349,10 @@ class CustomReportBehavior extends Behavior
                 $placeholder = $this->extractPlaceholder($value);
                 if (array_key_exists($placeholder, $params) && !empty($params[$placeholder])) {
                     $conditions[$field] = $params[$placeholder];
-                } 
-                
-                if (array_key_exists($placeholder, $params) && empty($params[$placeholder])) { 
-                    // condition value that are using placeholders are assumed to have dependencies. 
+                }
+
+                if (array_key_exists($placeholder, $params) && empty($params[$placeholder])) {
+                    // condition value that are using placeholders are assumed to have dependencies.
                     // if no value is found, option should not be constructed.
                     return false;
                 }

@@ -354,7 +354,7 @@ class PositionsTable extends ControllerActionTable {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             if ($entity->is_historical) {
                 $rowEntityId = $this->getFieldEntity($entity->is_historical, $entity->id, 'id');
                 $buttons = $this->getHistoricalActionButtons($buttons, $rowEntityId);

@@ -50,7 +50,7 @@ class StudentRisksTable extends ControllerActionTable
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $requestQuery = $this->request->getQuery();
 
-        $selectedAcademicPeriodId = !empty($requestQuery) && array_key_exists('academic_period_id', $requestQuery) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriodId = !empty($requestQuery) && isset($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
@@ -69,7 +69,7 @@ class StudentRisksTable extends ControllerActionTable
 
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Guardian','Risks');       
+		$is_manual_exist = $this->getManualUrl('Guardian','Risks');
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',
@@ -78,7 +78,7 @@ class StudentRisksTable extends ControllerActionTable
                 'escape' => false,
                 'target'=>'_blank'
             ];
-    
+
             $helpBtn['url'] = $is_manual_exist['url'];
             $helpBtn['type'] = 'button';
             $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -205,7 +205,7 @@ class StudentRisksTable extends ControllerActionTable
         } else {
             $studentId = $this->getStudentID();
         }
-         
+
         if ($user['is_student'] == 1 && $user['is_guardian'] == 0) {
             $query = $query
             ->where([
@@ -222,8 +222,8 @@ class StudentRisksTable extends ControllerActionTable
                 ])
                 ->order(['risk_id']);
         }
-     
-        
+
+
         return $query;
     }
 
@@ -416,7 +416,7 @@ class StudentRisksTable extends ControllerActionTable
 
             $fullName = $result->first_name.' '.$result->last_name;
             try {
-                
+
                 $gettabName = 'Risks';
                 $this->controller->set('contentHeader', $fullName . ' - ' . $gettabName);
                 //$this->controller->set('contentHeader', $plugin);
