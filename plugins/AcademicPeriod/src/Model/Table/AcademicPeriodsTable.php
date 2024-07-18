@@ -807,8 +807,9 @@ class AcademicPeriodsTable extends ControllerActionTable
         return $query->where($where);
     }
 
-    public function getList($params = [])
+    public function getList($params = null)
     {
+        $params = (array)$params;
         $withLevels = isset($params['withLevels']) ? $params['withLevels'] : true;
         $withSelect = isset($params['withSelect']) ? $params['withSelect'] : false;
         $isEditable = isset($params['isEditable']) ? $params['isEditable'] : null;

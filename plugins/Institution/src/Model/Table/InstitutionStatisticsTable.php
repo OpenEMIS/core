@@ -166,7 +166,11 @@ class InstitutionStatisticsTable extends AppTable
                         }
 
                         if (!isset($this->request->getData($this->getAlias())[$field])) {
-                            $this->request->getData($this->getAlias())[$field] = key($options);
+                           // $this->request->getData($this->getAlias())[$field] = key($options); //POCOR-8485
+                            $requestData = $this->request->getData($this->getAlias());
+                            $requestData[$field] = $options;
+                            $this->request = $this->request->withData($this->getAlias(), $requestData);
+                            
                         }
                     }
 
@@ -221,8 +225,11 @@ class InstitutionStatisticsTable extends AppTable
             if (!(isset($this->request->getData($this->getAlias())['feature']))) {
                 $option = $attr['options'];
                 reset($option);
-                $firstOptionKey = key($option);
-                $this->request->getData()[$this->getAlias()]['feature'] = $firstOptionKey;
+                // $firstOptionKey = key($option);
+                // $this->request->getData()[$this->getAlias()]['feature'] = $firstOptionKey;
+                $requestData = $this->request->getData($this->getAlias());//POCOR-8485
+                $requestData = ['feature' => key($options)]; 
+                $this->request = $this->request->withData($this->getAlias(), $requestData);
 
             }
             return $attr;
