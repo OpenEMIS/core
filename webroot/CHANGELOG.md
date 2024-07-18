@@ -1,3 +1,6 @@
+### [4.0.13] - 2024-07-18
+- Bug Fixed: Fix for PHP 8.3 changes
+
 ### [4.0.12] - 2024-07-17
 - Bug Fixed: Administration>Survey>Forms>Rules: Internal server error
 - Bug Fixed: Institutions > Staff > Add Page: Dropdown for Nationality and gender is not populated
