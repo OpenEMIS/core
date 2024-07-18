@@ -39,7 +39,7 @@ class CustomFormsTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
-        if (array_key_exists('extra', $config)) {
+        if (isset($config['extra'])) {
             $this->extra = array_merge($this->extra, $config['extra']);
         }
         parent::initialize($config);
@@ -166,7 +166,7 @@ class CustomFormsTable extends ControllerActionTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-        if (array_key_exists('remove', $buttons) && !$entity->is_deletable) {
+        if (isset($buttons['remove']) && !$entity->is_deletable) {
             unset($buttons['remove']);    // remove delete action from the action button
         }
 

@@ -36,7 +36,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
     public function initialize(array $config): void
     {
         $this->setConfig('excludes', array_merge($this->setConfig('default_excludes'), $this->setConfig('excludes')));
-        if (!array_key_exists('filename', $config)) {
+        if (!isset($config['filename'])) {
             $this->setConfig('filename', $this->_table->getAlias());
         }
         $folder = WWW_ROOT . $this->getConfig('folder');
@@ -44,7 +44,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
         if (!file_exists($folder)) {
             umask(0);
             mkdir($folder, 0777);
-        } 
+        }
 
         $pages = $this->setConfig('pages');
         if ($pages !== false && empty($pages)) {
@@ -124,13 +124,13 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
         $generate($_settings);
 
         $labelArray = array("Name","Code","Academic Period","Education Grade","Gender","Number of Students","Student Status");  //POCOR-6712
-        
+
         foreach($labelArray as $label) {
             $headerRow[] = $this->getFields($this->_table, $settings, $label);
         }
 
         $data = $this->getData($settings);
-       
+
         $writer->writeSheetRow('InstitutionList', $headerRow);
         foreach($data as $row) {
             if(array_filter($row)) {
@@ -181,7 +181,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                             ->where($conditions)
                             ->All();
             }
-            
+
             if(!empty($regionAreaArr)){
                 foreach ($regionAreaArr as $reg_val) {
                     $area_id_array[$reg_val->id] = $reg_val->id;
@@ -195,11 +195,11 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                             $area_id_array[$dist_val->id] = $dist_val->id;
                         }
                     }
-                                        
+
                 }
             }
         }
-        $areaEducationId = $area_id_array;    
+        $areaEducationId = $area_id_array;
         $conditions = [];
         if($areaEducationId != -1){
             $conditions['Areas.id IN '] = $areaEducationId;
@@ -226,7 +226,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
         if(!empty($institutionsList)){
             $i = 0;
             foreach ($institutionsList as $ins_key => $ins_value) {
-               
+
                 $instStudData = $StudentsEnrollmentSummary
                                 ->find()
                                 ->select([
@@ -242,7 +242,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                     'openemis_no' => 'Users.openemis_no',
                                     'end_date' => $StudentsEnrollmentSummary->aliasField('end_date')
                                     // 'count'=> $StudentsEnrollmentSummary->find()->func()->count('DISTINCT '.$StudentsEnrollmentSummary->aliasField('student_id'))
-                                    
+
                                  ])
                                 ->leftJoin(['Users' => 'security_users'], [
                                                 'Users.id = ' . $StudentsEnrollmentSummary->aliasfield('student_id')
@@ -276,9 +276,9 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                 //->group(['EducationGrades.id', 'Genders.id', 'StudentStatuses.id'])
                                 ->enableHydration(false)
                                 ->toArray();
-                
+
                 if(!empty($instStudData)){
-                    foreach ($instStudData as $key => $value) {                        
+                    foreach ($instStudData as $key => $value) {
                         if ( isset($check_data_consitency[$value['academic_period_name']][$value['institution_name']][$value['openemis_no']]) ) {
                             $end_date_check = $check_data_consitency[$value['academic_period_name']][$value['institution_name']][$value['openemis_no']];
                             if ($end_date_check < $value['end_date']->format('Y-m-d')) {
@@ -306,7 +306,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                         }
                         $i++;
                     }
-                }                
+                }
             }
         }
 
@@ -482,7 +482,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
     {
         $language = I18n::getLocale();
         $module = $this->_table->getAlias();
-        
+
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, 'postal_code', $language], true);
         return $event;
     }

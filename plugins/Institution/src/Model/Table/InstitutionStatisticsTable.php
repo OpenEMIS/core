@@ -94,7 +94,7 @@ class InstitutionStatisticsTable extends AppTable
                 $filters = json_decode($customReportData->filter, true);
 
                 // academic period filter
-                if (array_key_exists('academic_period_id', $filters)) {
+                if (isset($filters['academic_period_id'])) {
                     // add validation
                     $validator->notEmpty('academic_period_id');
                     $this->ControllerAction->field('academic_period_id');
@@ -102,7 +102,7 @@ class InstitutionStatisticsTable extends AppTable
                 }
                 //START: POCOR-6629
                 // edication grade filter
-                if (array_key_exists('education_grade_id', $filters)) {
+                if (isset($filters['education_grade_id'])) {
                     // add validation
                     $validator->notEmpty('education_grade_id');
                     $this->ControllerAction->field('education_grade_id');
@@ -127,7 +127,7 @@ class InstitutionStatisticsTable extends AppTable
                         $toReset = true;
                     }
 
-                    $fieldType = array_key_exists('fieldType', $filterData) ? $filterData['fieldType'] : 'select';
+                    $fieldType = isset($filterData['fieldType']) ? $filterData['fieldType'] : 'select';
                     $fieldParams = [];
                     $fieldParams['type'] = $fieldType;
 
@@ -141,8 +141,8 @@ class InstitutionStatisticsTable extends AppTable
                         $options = $this->buildQuery($filterData, $queryParams, $byaccess, $toSql);
 
                         // add additional options
-                        if (array_key_exists('options', $filterData)) {
-                            if (array_key_exists('options_condition', $filterData)) {
+                        if (isset($filterData['options'])) {
+                            if (isset($filterData['options_condition'])) {
                                 // only allow options if conditions met
                                 if ($this->checkOptionCondition($filterData["options_condition"], $queryParams)) {
                                     foreach ($filterData['options'] as $value => $option) {
@@ -171,7 +171,7 @@ class InstitutionStatisticsTable extends AppTable
                     }
 
                     // add validation for fields
-                    $validate = array_key_exists('validate', $filterData) ? filter_var($filterData['validate'], FILTER_VALIDATE_BOOLEAN) : true;
+                    $validate = isset($filterData['validate']) ? filter_var($filterData['validate'], FILTER_VALIDATE_BOOLEAN) : true;
                     if ($validate) {
                         $fieldParams['required'] = true;
                         $validator->notEmpty($field);
@@ -194,7 +194,7 @@ class InstitutionStatisticsTable extends AppTable
 
             $customReports = $this
                 ->find(
-                    'list', 
+                    'list',
                     ["valueField" => function ($row) {
                             return $row;
                     }]
@@ -280,7 +280,7 @@ class InstitutionStatisticsTable extends AppTable
             $EducationGrades = TableRegistry::get('Education.EducationGrades');
             $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
             $grades = TableRegistry::get('Institution.InstitutionGrades');
-            $periodGrades = $EducationGrades->find('list', ['keyField' => 'id', 
+            $periodGrades = $EducationGrades->find('list', ['keyField' => 'id',
                                 'valueField' => 'programme_grade_name'])
                             ->find('visible')
                             ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
@@ -333,15 +333,15 @@ class InstitutionStatisticsTable extends AppTable
     {
         $params = $settings['requestQuery'];
         $customReportData = $this->get($params['feature']);
-    
+
 		if(!empty($params['start_date'])) {
-			$params['start_date'] = date("Y-m-d", strtotime($params['start_date']));	
+			$params['start_date'] = date("Y-m-d", strtotime($params['start_date']));
 		}
 		if(!empty($params['end_date'])) {
-			$params['end_date'] = date("Y-m-d", strtotime($params['end_date']));	
+			$params['end_date'] = date("Y-m-d", strtotime($params['end_date']));
 		}
-		
-        if (array_key_exists('requestQuery', $settings)) {
+
+        if (isset($settings['requestQuery'])) {
             $jsonQuery = json_decode($customReportData->query, true);
 
             // csvBehavior can only can handle one query
@@ -388,7 +388,7 @@ class InstitutionStatisticsTable extends AppTable
                 $toolbarButtons['back']['url']['0'] = 'index';
                 $toolbarButtons['back']['url']['1'] = $encodedQueryParams;
             break;
-        }  
-        
+        }
+
     }
 }

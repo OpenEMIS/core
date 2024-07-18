@@ -32,7 +32,7 @@ class InstitutionAssetsController extends PageController
         return $event;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
         $session = $this->request->session();

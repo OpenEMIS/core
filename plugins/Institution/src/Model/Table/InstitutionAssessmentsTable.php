@@ -76,7 +76,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                 $assessmentId = array_keys($assessmentOptions)[0];
             }
         }
-            
+
         $limit = 10;
         $loop_no = 0;
         do {
@@ -89,7 +89,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
             );
             $loop_no++;
         } while (count($query) == $limit);//POCOR-7268 ends
-        
+
         // For filtering all classes and my classes
         $AccessControl = $this->AccessControl;
         $userId = $this->Session->read('Auth.User.id');
@@ -140,7 +140,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         $this->field('capacity', ['visible' => false]);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Student Assessment Archive','Students');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Student Assessment Archive','Students');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -343,7 +343,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                 ->find('list')
                 ->where([$Assessments->aliasField('academic_period_id') => $selectedPeriod])
                 ->toArray();
-            $assessmentOptions = /*['-1' => __('All Assessments')] +*/ $assessmentOptions; //comment `All Assessments` option POCOR-6906 
+            $assessmentOptions = /*['-1' => __('All Assessments')] +*/ $assessmentOptions; //comment `All Assessments` option POCOR-6906
             $selectedAssessment = $this->queryString('assessment_id', $assessmentOptions);
             $this->advancedSelectOptions($assessmentOptions, $selectedAssessment, [
                 'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
@@ -426,7 +426,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
     /**
      * Function to get Total Male Students on index page - POCOR-6183
      * @param Entity $entity and Event $event
-     * @return int 
+     * @return int
      */
     public function onGetTotalMaleStudents(Event $event, Entity $entity) {
         $url = [
@@ -470,14 +470,14 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                     $Genders->aliasField('code') => 'M',
                     $InstitutionClassStudentsTable->aliasField('student_status_id') => 1 //POCOR-6566
                 ])->count();
-        
+
         return $count;
     }
 
     /**
      * Function to get Total Female Students on index page - POCOR-6183
      * @param Entity $entity and Event $event
-     * @return int 
+     * @return int
      */
     public function onGetTotalFemaleStudents(Event $event, Entity $entity) {
         $grade = $entity->education_grade_id;
@@ -502,14 +502,14 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                     $Genders->aliasField('code') => 'F',
                     $InstitutionClassStudentsTable->aliasField('student_status_id') => 1 //POCOR-6566
                 ])->count();
-        
+
         return $count;
     }
 
     /**
      * Function to get class name on index page - POCOR-6183
      * @param Entity $entity and Event $event
-     * @return string 
+     * @return string
      */
     public function onGetName(Event $event, Entity $entity) {
         $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
@@ -586,16 +586,16 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
             $btnAttr = $this->getButtonAttr();
         }
         $customButton = [];
-        if (array_key_exists('_ext', $url)) {
+        if (isset($url['_ext'])) {
             unset($customButton['url']['_ext']);
         }
-        if (array_key_exists('pass', $url)) {
+        if (isset($url['pass'])) {
             unset($customButton['url']['pass']);
         }
-        if (array_key_exists('paging', $url)) {
+        if (isset($url['paging'])) {
             unset($customButton['url']['paging']);
         }
-        if (array_key_exists('filter', $url)) {
+        if (isset($url['filter'])) {
             unset($customButton['url']['filter']);
         }
         $customButton['type'] = 'button';

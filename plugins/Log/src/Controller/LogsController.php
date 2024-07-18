@@ -9,7 +9,7 @@ class LogsController extends AppController {
 		parent::initialize();
 	}
 
-	public function beforeFilter(Event $event) {
+	public function beforeFilter(Event|\Cake\Event\EventInterface $event) {
 		parent::beforeFilter($event);
 		$this->Auth->allow(['index', 'download']);
 	}

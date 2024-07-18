@@ -71,13 +71,13 @@ class HtmlFieldHelper extends Helper
     private function patchInvalidFields($data, $field, $options)
     {
         if (!is_null($data)) {
-            
+
             $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
                 $options['value'] = $data->invalid($field);
             }
         }
-        if (array_key_exists('label', $options)) {
+        if (isset($options['label'])) {
             if (!is_array($options['label'])) {
                 $options['label'] = ['escape' => false, 'text' => $options['label']];
             }
@@ -133,7 +133,7 @@ class HtmlFieldHelper extends Helper
 
         foreach ($includes as $include) {
             if ($include['include']) {
-                if (array_key_exists('css', $include)) {
+                if (isset($include['css'])) {
                     if (is_array($include['css'])) {
                         foreach ($include['css'] as $css) {
                             echo $this->Html->css($css, ['block' => true]);
@@ -142,7 +142,7 @@ class HtmlFieldHelper extends Helper
                         echo $this->Html->css($include['css'], ['block' => true]);
                     }
                 }
-                if (array_key_exists('js', $include)) {
+                if (isset($include['js'])) {
                     if (is_array($include['js'])) {
                         foreach ($include['js'] as $js) {
                             echo $this->Html->script($js, ['block' => true]);
@@ -151,7 +151,7 @@ class HtmlFieldHelper extends Helper
                         echo $this->Html->script($include['js'], ['block' => true]);
                     }
                 }
-                if (array_key_exists('element', $include)) {
+                if (isset($include['element'])) {
                     echo $this->_View->element($include['element']);
                 }
             }
@@ -164,15 +164,15 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $fieldName = array_key_exists('fieldName', $attr) ? $attr['fieldName'] : $attr['field'];
+            $fieldName = isset($attr['fieldName']) ? $attr['fieldName'] : $attr['field'];
             $value = Hash::get($data, $fieldName, '');
         } elseif ($action == 'edit') {
             $options['type'] = 'string';
-            if (array_key_exists('length', $attr)) {
+            if (isset($attr['length'])) {
                 $options['maxlength'] = $attr['length'];
             }
             $fieldName = $attr['model'] . '.' . $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];
             }
             $options = $this->patchInvalidFields($data, $attr['field'], $options);
@@ -204,7 +204,7 @@ class HtmlFieldHelper extends Helper
         } elseif ($action == 'edit') {
             $options['type'] = 'number';
             $fieldName = $attr['model'] . '.' . $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];
             }
             $options = $this->patchInvalidFields($data, $attr['field'], $options);
@@ -217,12 +217,12 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $fieldName = array_key_exists('fieldName', $attr) ? $attr['fieldName'] : $attr['field'];
+            $fieldName = isset($attr['fieldName']) ? $attr['fieldName'] : $attr['field'];
             $value = Hash::get($data, $fieldName, '');
         } elseif ($action == 'edit') {
             $options['type'] = 'number';
             $fieldName = $attr['model'] . '.' . $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];
             }
             $options = $this->patchInvalidFields($data, $attr['field'], $options);
@@ -241,7 +241,7 @@ class HtmlFieldHelper extends Helper
         } elseif ($action == 'edit') {
             $options['type'] = 'password';
             $fieldName = $attr['model'] . '.' . $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];
             }
             $options = $this->patchInvalidFields($data, $attr['field'], $options);
@@ -254,7 +254,7 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $fieldName = array_key_exists('fieldName', $attr) ? $attr['fieldName'] : $attr['field'];
+            $fieldName = isset($attr['fieldName']) ? $attr['fieldName'] : $attr['field'];
             $selectedOption = Hash::get($data, $fieldName, '');
 
             if (!empty($attr['options'])) {
@@ -281,7 +281,7 @@ class HtmlFieldHelper extends Helper
                 $value = __($value);
             }
         } elseif ($action == 'edit') {
-            if (array_key_exists('empty', $attr)) {
+            if (isset($attr['empty'])) {
                 if ($attr['empty'] === true) {
                     $options['empty'] = '-- ' . __('Select') . ' --';
                 } else {
@@ -301,7 +301,7 @@ class HtmlFieldHelper extends Helper
             }
 
             $fieldName = $attr['model'] . '.' . $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];
             }
             $value = $this->secureSelect($fieldName, $options, $attr);
@@ -378,7 +378,7 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $fieldName = array_key_exists('fieldName', $attr) ? $attr['fieldName'] : $attr['field'];
+            $fieldName = isset($attr['fieldName']) ? $attr['fieldName'] : $attr['field'];
             $value = Hash::get($data, $fieldName, 0);
         } else {
             if (!isset($attr['min'])) {
@@ -393,7 +393,7 @@ class HtmlFieldHelper extends Helper
             $attr['rating'] = Hash::get($data, $attr['field'], $attr['min']);
 
             $fieldName = $attr['model'] . '.' . $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];
             }
             $attr['fieldName'] = $fieldName;
@@ -406,12 +406,12 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            $fieldName = array_key_exists('fieldName', $attr) ? $attr['fieldName'] : $attr['field'];
+            $fieldName = isset($attr['fieldName']) ? $attr['fieldName'] : $attr['field'];
             $value = nl2br(Hash::get($data, $fieldName, ''));
         } elseif ($action == 'edit') {
             $options['type'] = 'textarea';
             $fieldName = $attr['model'] . '.' . $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];
             }
             $options = $this->patchInvalidFields($data, $attr['field'], $options);
@@ -427,11 +427,11 @@ class HtmlFieldHelper extends Helper
             // no logic required
         } elseif ($action == 'edit') {
             $options['type'] = 'hidden';
-            if (array_key_exists('value', $attr)) {
+            if (isset($attr['value'])) {
                 $options['value'] = $attr['value'];
             }
             $fieldName = $attr['model'] . '.' . $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];
             }
             $options = $this->patchInvalidFields($data, $attr['field'], $options);
@@ -444,7 +444,7 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'view' || $action == 'index') {
-            if (array_key_exists('value', $attr)) {
+            if (isset($attr['value'])) {
                 $value = $attr['value'];
             } else {
                 $value = $data->{$attr['field']};
@@ -462,7 +462,7 @@ class HtmlFieldHelper extends Helper
     {
         $value = '';
         if ($action == 'index' || $action == 'view') {
-            if (array_key_exists('value', $attr)) {
+            if (isset($attr['value'])) {
                 $value = $attr['value'];
             } else {
                 $value = $data->{$attr['field']};
@@ -471,7 +471,7 @@ class HtmlFieldHelper extends Helper
             $options['type'] = 'text';
             $options['disabled'] = 'disabled';
             $field = $attr['field'];
-            
+
             $invalid = $data->getInvalid();
 
             if (isset($attr['options']) && !isset($attr['attr']['value'])) {
@@ -490,7 +490,7 @@ class HtmlFieldHelper extends Helper
                 }
             }
             $fieldName = $attr['model'] . '.' . $field;
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];
             }
             $value = $this->Form->input($fieldName, $options);
@@ -513,14 +513,14 @@ class HtmlFieldHelper extends Helper
                 $src = $data[$attr['field']];
             }
 
-            if (array_key_exists('ajaxLoad', $attr) && $attr['ajaxLoad']) {
+            if (isset($attr['ajaxLoad']) && $attr['ajaxLoad']) {
                 $imageUrl = '';
-                if (array_key_exists('imageUrl', $attr) && $attr['imageUrl']) {
+                if (isset($attr['imageUrl']) && $attr['imageUrl']) {
                     $imageUrl = $this->Url->build($attr['imageUrl'], true);
                     $imageUrl = str_replace('http','https',$imageUrl); //POCOR-7041 change http request to https..
-                    
+
                 }
-                $imageDefault = (array_key_exists('imageDefault', $attr) && $attr['imageDefault'])? '<i class='.$attr['imageDefault'].'></i>': '';
+                $imageDefault = (isset($attr['imageDefault']) && $attr['imageDefault'])? '<i class='.$attr['imageDefault'].'></i>': '';
                 $value= '<div class="table-thumb"
 					data-load-image=true
 					data-image-width='.$maxImageWidth.'
@@ -598,7 +598,7 @@ class HtmlFieldHelper extends Helper
         $element = $attr['element'];
 
         $attr['id'] = $attr['model'] . '_' . $attr['field'];
-        $attr['label'] = array_key_exists('label', $options) ? $options['label'] : Inflector::humanize($attr['field']);
+        $attr['label'] = isset($options['label']) ? $options['label'] : Inflector::humanize($attr['field']);
         $value = $this->_View->element($element, ['entity' => $data, 'attr' => $attr]);
         return $value;
     }
@@ -618,7 +618,7 @@ class HtmlFieldHelper extends Helper
 
         $field = $attr['field'];
         if (!is_null($data)) {
-            
+
             $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
                 $value = $data->invalid($field);
@@ -688,15 +688,15 @@ class HtmlFieldHelper extends Helper
                 }
             }
         } elseif ($action == 'edit') {
-            if (!array_key_exists('id', $attr)) {
+            if (!isset($attr['id'])) {
                 $attr['id'] = $attr['model'] . '_' . $field;
-                if (array_key_exists('fieldName', $attr)) {
+                if (isset($attr['fieldName'])) {
                     $attr['id'] = $this->_domId($attr['fieldName']);
                 }
             }
 
             $attr['date_options'] = array_merge($_options, $attr['date_options']);
-            if (!array_key_exists('value', $attr)) {
+            if (!isset($attr['value'])) {
                 if (!empty($value)) {
                     if (is_object($value)) {
                         $attr['value'] = $value->format('d-m-Y');
@@ -709,7 +709,7 @@ class HtmlFieldHelper extends Helper
             } else {
                 if (is_object($attr['value'])) {
                     $attr['value'] = $attr['value']->format('d-m-Y');
-                } elseif (!array_key_exists('special_value', $attr)) {
+                } elseif (!isset($attr['special_value'])) {
                     $attr['value'] = date('d-m-Y', strtotime($attr['value']));
                 }
                 // else $attr['value'] will be what was set before calling this function when $attr['special_value'] was set to true.
@@ -746,7 +746,7 @@ class HtmlFieldHelper extends Helper
         $field = $attr['field'];
 
         if (!is_null($data)) {
-            
+
             $invalid = $data->getInvalid();
             if (!empty($invalid) && array_key_exists($field, $invalid)) {
                 $value = $data->invalid($field);
@@ -769,12 +769,12 @@ class HtmlFieldHelper extends Helper
                 $attr['id'] = $attr['model'] . '_' . $field;
             }
 
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $attr['id'] = $this->_domId($attr['fieldName']);
             }
             $attr['time_options'] = array_merge($_options, $attr['time_options']);
 
-            if (!array_key_exists('value', $attr)) {
+            if (!isset($attr['value'])) {
                 if (!is_null($value)) {
                     $attr['value'] = date('h:i A', strtotime($value));
                     $attr['time_options']['defaultTime'] = $attr['value'];
@@ -834,14 +834,14 @@ class HtmlFieldHelper extends Helper
             'multiple' => 'true',
             'type' => 'select'
         ];
-        
+
         $Locales = TableRegistry::get('Locales');
         $langDir = $Locales->getLangDir(I18n::locale());
 
         if ($langDir == 'rtl') {
             $_options['class'] = 'chosen-select chosen-rtl';
         }
-        
+
         $_options['options'] = isset($attr['options']) ? $attr['options'] : [];
         $_options['data-placeholder'] = isset($attr['placeholder']) ? $attr['placeholder'] : '';
         $options = array_merge($_options, $options);
@@ -849,7 +849,7 @@ class HtmlFieldHelper extends Helper
         $this->includes['chosen']['include'] = true;
 
         $fieldName = $attr['model'] . '.' . $attr['field'];
-        if (array_key_exists('fieldName', $attr)) {
+        if (isset($attr['fieldName'])) {
             $fieldName = $attr['fieldName'];
         } else {
             if ($options['multiple']) {
@@ -888,7 +888,7 @@ class HtmlFieldHelper extends Helper
             // Modified logic
             // $buttons = $this->_View->get('_buttons');
             $buttons = $this->_View->get('ControllerAction');
-            if (array_key_exists('buttons', $buttons)) { // for CAv3
+            if (isset($buttons['buttons'])) { // for CAv3
                 $action = $buttons['buttons']['download']['url'];
             } else { // for CAv4
                 $action = $buttons['table']->url('download', false);
@@ -921,7 +921,7 @@ class HtmlFieldHelper extends Helper
             $options['type'] = 'color';
             $options['onchange'] = 'clickColor(0, -1, -1, 5);';
             $fieldName = $attr['model'] . '.' . $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];
             }
             $value = $this->Form->input($fieldName, $options);
@@ -937,17 +937,17 @@ class HtmlFieldHelper extends Helper
         } elseif ($action == 'edit') {
             $options['type'] = 'string';
             $options['class'] = "form-control autocomplete form-error ui-autocomplete-input";
-            if (array_key_exists('length', $attr)) {
+            if (isset($attr['length'])) {
                 $options['maxlength'] = $attr['length'];
             }
-            if (array_key_exists('placeholder', $attr)) {
+            if (isset($attr['placeholder'])) {
                 $options['placeholder'] = $attr['placeholder'];
             }
-            if (array_key_exists('url', $attr)) {
+            if (isset($attr['url'])) {
                 $options['url'] = $this->Url->build($attr['url'], true);
             }
             $fieldName = $attr['model'] . '.' . $attr['field'];
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $fieldName = $attr['fieldName'];
             }
 

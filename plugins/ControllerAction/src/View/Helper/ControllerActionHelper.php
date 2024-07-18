@@ -122,7 +122,7 @@ class ControllerActionHelper extends Helper
         if ($buttons->count() > 0) {
             $html = '<div class="form-buttons"><div class="button-label"></div>';
             foreach ($buttons as $btn) {
-                if (!array_key_exists('url', $btn)) {
+                if (!isset($btn['url'])) {
                     if (substr($btn['name'], 0, 12) === '<i class="fa') {
                         $btn['attr']['escapeTitle'] = false;
                     }
@@ -158,14 +158,8 @@ class ControllerActionHelper extends Helper
     public function isFieldVisible($attr, $type)
     {
         $visible = false;
-        if(is_array($attr)){
-            $attr = $attr;
-        }else if(!empty($attr)){
-            $attr = $attr->getArrayCopy();
-        } else if(empty($attr)) {
-            $attr = [];
-        }
-        if (array_key_exists('visible', $attr)) {
+
+        if (isset($attr['visible'])) {
             $visibleField = $attr['visible'];
 
             if (is_bool($visibleField)) {
@@ -265,19 +259,19 @@ class ControllerActionHelper extends Helper
         if ($request !== null && $request->getData('Search') !== null) {
             $searchData = $request->getData('Search');
 
-            if (array_key_exists('searchField', $searchData)) {
+            if (isset($searchData['searchField'])) {
                 $search = $request->getData('Search')['searchField'];
             }
         }
 
 
-        if (null !== $searchData && array_key_exists('searchField', $searchData)) {
+        if (null !== $searchData && isset($searchData['searchField'])) {
             $search = $request->getData('Search')['searchField'];
         }
         // display highlight value in result
         if(empty($search)) {
             $session = $request->getSession();
-            $alias = $request->getParam('plugin'). '.' .$request->getParam('action'); 
+            $alias = $request->getParam('plugin'). '.' .$request->getParam('action');
             $alias = $session->check('search.search_alias') ? $session->read('search.search_alias') : $alias;
             $search = $session->check($alias.'.search.key') ? $session->read($alias.'.search.key') : '';// dd($search);
         }
@@ -477,7 +471,7 @@ class ControllerActionHelper extends Helper
                     $label = $event->getResult();
                 }
                 if ($label !== false) {
-                    if (!array_key_exists('label', $options)) {
+                    if (!isset($options['label'])) {
                         $_fieldAttr['label'] = $label;
                         $options['label'] = __($label);
                     } else {
@@ -493,7 +487,7 @@ class ControllerActionHelper extends Helper
                     }
                 }
 
-                if (array_key_exists('autocomplete', $options) && $options['autocomplete'] == 'off') {
+                if (isset($options['autocomplete']) && $options['autocomplete'] == 'off') {
                     $html .= '<input style="display:none" type="text" name="'.$model.'['.$_field.']"/>';
                 }
                 $html .= $this->HtmlField->render($_type, 'edit', $data, $_fieldAttr, $options);
@@ -600,11 +594,11 @@ class ControllerActionHelper extends Helper
                 if (is_array($label)) {
                     $cloneLabel = $label;
                     //get the label text
-                    if (array_key_exists('text', $cloneLabel)) {
+                    if (isset($cloneLabel['text'])) {
                         $label = $label['text'];
                     }
                     //get the label class (but styling only available for edit as of now)
-                    // if (array_key_exists('class', $cloneLabel)) {
+                    // if (isset($cloneLabel['class'])) {
                     //     $_fieldAttr['labelClass'] = $cloneLabel['class'];
                     // }
                 }
@@ -660,7 +654,7 @@ class ControllerActionHelper extends Helper
                 } else { // no label
                     $rowContent = sprintf($_valueCol, $valueClass, __($value));
                 }
-                if (!array_key_exists('override', $_fieldAttr)) {
+                if (!isset($_fieldAttr['override'])) {
                     $html .= sprintf($row, $rowClass, $rowContent);
                 } else {
                     $html .= sprintf($row, $rowClass, __($value));

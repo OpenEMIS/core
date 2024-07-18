@@ -126,7 +126,7 @@ class UpdateAssigneeShell extends Shell
 							]);
 
 						if ($isSchoolBased) {
-							if (array_key_exists('institution_id', $params) && !empty($params['institution_id'])) {
+							if (isset($params['institution_id']) && !empty($params['institution_id'])) {
 								$institutionObj = $this->Institutions->find()
 									->contain(['Areas'])
 									->where([$this->Institutions->aliasField('id') => $params['institution_id']])
