@@ -312,7 +312,7 @@ class ReportListBehavior extends Behavior {
 			if (in_array($obj['type'], ['select', 'chosenSelect']) && !in_array($key, ['feature', 'format'])) {
 				$selectedOption = $data[$alias][$key];
 
-				if (array_key_exists($selectedOption, $obj['options']) && !empty($obj['options'][$selectedOption])) {
+				if (isset($obj['options'][$selectedOption]) && !empty($obj['options'][$selectedOption])) {
 					$value = $obj['options'][$selectedOption];
 
 					// used for institution rubrics
@@ -362,7 +362,7 @@ class ReportListBehavior extends Behavior {
 		$Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 		$AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 		$EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
-		if (array_key_exists('institution_id', $data['InstitutionStatistics'])) {
+		if (isset( $data['InstitutionStatistics'])) {
 			// $institutionId  = $this->_table->getQueryString('institution_id'); working
 			$institutionId = $data['InstitutionStatistics']['institution_id'];
 	        $institutionData = $Institutions->get($institutionId);
@@ -530,7 +530,9 @@ class ReportListBehavior extends Behavior {
 		$controller = $this->_table->controller->getName();
 		$table = $this->_table->getAlias();
 		$this->_table->Alert->success('general.delete.success');
-		$url = ['controller' => $controller, 'action' => $table, 'index'];
+		$institution_id = $this->_table->request->getQuery('institution_id');
+		$queryString = $this->_table->paramsEncode(['institution_id' => $institution_id]); 
+		$url = ['controller' => $controller, 'action' => $table, 'index', $queryString];
 
 		return $this->_table->controller->redirect($url);
     }

@@ -30,6 +30,8 @@ $this->start('panelBody');
 	$url = $this->Url->build($url);
 	$table = $ControllerAction['table'];
 	$downloadText = __('Downloading...');
+	$queryString = $this->request->getParam('pass')[1]; //pocor-8485
+	$institution_id = $this->ControllerAction->paramsDecode($queryString)['institution_id']
 
 ?>
 
@@ -98,11 +100,12 @@ $this->start('panelBody');
 								'action' =>  $ControllerAction['table']->getAlias(),
 								'download',$obj->id
 							];
-							if ($obj->module == 'InstitutionStandards') {
+							if ($obj->module == 'InstitutionStatistics') {
                                 $viewUrls =  http_build_query([
 								    /*'plugin' => $params['plugin'],
 								    'controller' => $params['controller'],*/
 								    //'action' => 'ViewReport',
+									'institution_id' => $institution_id,
 								    'report_process_id' => $obj->id,
 								    'file_path' => $obj->file_path,
 								    'module' => $obj->module,
@@ -114,6 +117,7 @@ $this->start('panelBody');
                                 $viewUrl = ['plugin' => $params['plugin'],
                                     'controller' => $params['controller'],
                                     'action' => 'ViewReport',
+									'institution_id' => $institution_id,
                                     'report_process_id' => $obj->id,
                                     'file_path' => $obj->file_path,
                                     'module' => $obj->module,
@@ -122,7 +126,8 @@ $this->start('panelBody');
 							$deleteUrl = ['plugin' => $params['plugin'],
 								'controller' => $params['controller'],
 								'action' =>  $ControllerAction['table']->getAlias(),
-								'removeReport',$obj->id
+								'removeReport',$obj->id,
+								'institution_id' => $institution_id
 							];
 						?>
 

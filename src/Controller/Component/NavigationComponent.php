@@ -154,7 +154,8 @@ class NavigationComponent extends Component
                 'StudentBehaviourAttachments',
                 'StaffBehaviourAttachments',
                 'Guardians',
-                'GuardianComments'
+                'GuardianComments',
+                'InstitutionStandards'
             ];
 
             $profileControllers = ['ProfileBodyMasses',
@@ -1273,7 +1274,7 @@ class NavigationComponent extends Component
             'Institutions.InstitutionStandards.index' => [
                 'title' => 'Standard',
                 'parent' => 'Institutions.Statistics',
-                'selected' => ['InstitutionStandards']
+                'selected' => ['Institutions.InstitutionStandards','Institutions.ViewReport']
             ],
             'Institutions.InstitutionStatistics.index' => [
                 'title' => 'Custom',
