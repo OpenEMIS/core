@@ -184,7 +184,7 @@ class TextbooksTable extends ControllerActionTable {
             $fullName = $result->first_name.' '.$result->last_name;
             try {
                 
-                $gettabName = 'Student Textbooks';
+                $gettabName = 'Textbooks';
                 $this->controller->set('contentHeader', $fullName . ' - ' . $gettabName);
                 //$this->controller->set('contentHeader', $plugin);
             } catch (RecordNotFoundException $e) {
