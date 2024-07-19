@@ -2516,7 +2516,7 @@ class WorkbenchController extends Controller
         }
     }
 
-     /**
+    /**
      * @OA\Get(
      *      path="/api/v4/institutions/positions",
      *      summary="Get a list of institution positions",
