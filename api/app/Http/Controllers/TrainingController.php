@@ -115,7 +115,7 @@ class TrainingController extends Controller
     }
 
 
-     /**
+    /**
      * @OA\Get(
      *     path="/api/v4/training-courses/{courseId}",
      *     tags={"Training"},

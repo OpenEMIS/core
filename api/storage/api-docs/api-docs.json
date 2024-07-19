@@ -22780,15 +22780,18 @@
                                     "file": {
                                         "description": "The Excel file containing meal data",
                                         "type": "string",
-                                        "format": "binary"
+                                        "format": "binary",
+                                        "example": "(binary)"
                                     },
                                     "institution_class_id": {
                                         "description": "The ID of the institution class",
-                                        "type": "integer"
+                                        "type": "integer",
+                                        "example": "591"
                                     },
                                     "institution_id": {
                                         "description": "The ID of the institution",
-                                        "type": "integer"
+                                        "type": "integer",
+                                        "example": "6"
                                     }
                                 },
                                 "type": "object"
@@ -22901,6 +22904,183 @@
                                                 }
                                             },
                                             "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/institutions/students/meals/export": {
+            "get": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Export student meal data",
+                "description": "Export student meal data for a specified academic period, day, week, class, and meal program.",
+                "operationId": "15d4a271b4914658e831de27f1a61638",
+                "parameters": [
+                    {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "The ID of the academic period",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "33"
+                        }
+                    },
+                    {
+                        "name": "day_id",
+                        "in": "query",
+                        "description": "The specific day for which meal data is being exported",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2024-06-18"
+                        }
+                    },
+                    {
+                        "name": "week_id",
+                        "in": "query",
+                        "description": "The ID of the week",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "25"
+                        }
+                    },
+                    {
+                        "name": "week_start_day",
+                        "in": "query",
+                        "description": "The start day of the week",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2024-06-17"
+                        }
+                    },
+                    {
+                        "name": "week_end_day",
+                        "in": "query",
+                        "description": "The end day of the week",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2024-06-23"
+                        }
+                    },
+                    {
+                        "name": "institution_class_id",
+                        "in": "query",
+                        "description": "The ID of the institution class",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "591"
+                        }
+                    },
+                    {
+                        "name": "meal_program_id",
+                        "in": "query",
+                        "description": "The ID of the meal program",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "3"
+                        }
+                    },
+                    {
+                        "name": "institution_id",
+                        "in": "query",
+                        "description": "The ID of the institution",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "6"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/api/v4/institutions/students/meals/import/template": {
+            "get": {
+                "tags": [
+                    "Meals"
+                ],
+                "summary": "Get meal import template",
+                "description": "Retrieve the meal import template for a specific institution and class.",
+                "operationId": "e823f1ba12f4a2f4edff9ac0927a6093",
+                "parameters": [
+                    {
+                        "name": "institution_id",
+                        "in": "query",
+                        "description": "The ID of the institution",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "6"
+                        }
+                    },
+                    {
+                        "name": "institution_class_id",
+                        "in": "query",
+                        "description": "The ID of the institution class",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": "591"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "type": "string",
+                                            "format": "binary"
                                         }
                                     },
                                     "type": "object"
