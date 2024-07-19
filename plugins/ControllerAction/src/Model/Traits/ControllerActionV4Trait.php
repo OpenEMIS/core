@@ -184,7 +184,7 @@ trait ControllerActionV4Trait {
  		} else if (isset($a['order']) && !isset($b['order'])) {
  			return false;
  		} else {
- 			return $a["order"] - $b["order"];
+ 			return (int)$a["order"] - (int)$b["order"];
  		}
 	}
 
