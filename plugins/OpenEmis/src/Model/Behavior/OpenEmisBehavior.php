@@ -102,7 +102,7 @@ class OpenEmisBehavior extends Behavior
 
         $access = $model->AccessControl;
         $toolbarButtons = $extra['toolbarButtons'];
-        if(!empty($toolbarButtons)) {
+        if(!empty($toolbarButtons)) { //POCOR-8486
             foreach ($toolbarButtons->getArrayCopy() as $key => $buttons) {
                 if (isset($buttons['url'])) {
                     if ($buttons['url'] != '#' && !$access->check($buttons['url'])) {
@@ -112,8 +112,7 @@ class OpenEmisBehavior extends Behavior
             }
         }
         $indexButtons = $extra['indexButtons'];
-        if(!empty($indexButtons)) {
-            $indexButtons = $extra['indexButtons'];
+        if(!empty($indexButtons))  { //POCOR-8486
             foreach ($indexButtons->getArrayCopy() as $key => $buttons) {
                 if ($buttons['url'] != '#' && isset($buttons['url'])) {
                     if (!$access->check($buttons['url'])) {
