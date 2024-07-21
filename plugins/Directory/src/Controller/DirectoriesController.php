@@ -492,14 +492,25 @@ class DirectoriesController extends AppController
         if (isset($requestDataa['student_id'])) {
             $UserData = $UsersTable->find('all', ['conditions' => ['id' => $requestDataa['student_id']]])->first();
         }
-        if (isset($requestDataa['openemis_no'])) {
-            $UserData = $UsersTable->find('all', ['conditions' => ['openemis_no' => $requestDataa['openemis_no']]])->first();
+        // POCOR-8231 if found skip redundant search
+        if (!$UserData) {
+            if (isset($requestDataa['openemis_no'])) {
+                $UserData = $UsersTable->find('all', ['conditions' => ['openemis_no' => $requestDataa['openemis_no']]])->first();
+            }
         }
         if (isset($requestDataa['institution_id'])) {
             $InstitutionData = $InstitutionTable->find('all', ['conditions' => ['id' => $requestDataa['institution_id']]])->first();
         }
         if ($UserData) {
+            // POCOR-8231 fix crumbs
+            $name = $UserData->name;
+            $id = $UserData->id;
             $queryStng = $this->paramsEncode(['id' => $UserData->id]);
+            $this->Navigation->addCrumb($name, [
+                'plugin' => 'Directory',
+                'controller' => 'Directories',
+                'action' => 'Directories',
+                'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
         }
         $this->set('InstitutionData', $InstitutionData);
         $this->set('UserData', $UserData);
