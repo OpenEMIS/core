@@ -195,115 +195,9 @@
             <div class="step-pane sample-pane" ng-show="step === 'confirmation'">
                 <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
                     <div class="row section-header header-space-lg"><?= __('Information') ?></div>
-                    <div class="input string row-content">
-                        <label><?= __('Photo Content') ?></label>
-                        <div class="fileinput fileinput-new fileinput-preview">
-                            <div class="table-thumb mb-16">
-                                <div class="profile-image-thumbnail">
-                                    <i class="kd-staff"></i>
-                                </div>
-                            </div>
-                            <div class="file-input-buttons">
-                                <p>* <?= __('Advisable photo dimension 90 by 115') ?><br/>
-                                    * <?= __('Format Supported: .jpg, .jpeg, .png, .gif') ?></p>
-                                <span class="btn btn-default btn-file" style="font-size: 12px !important;">
-                                    <span class="fileinput-new">
-                                        <i class="fa fa-folder"></i>
-                                        <span style="font-size: 12px;"><?= __('Select File') ?></span>
-                                    </span>
-                                    <input id="image-file" class="file-input" type="file" onchange="savePhoto(this)">
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="input string required">
-                        <label><?= __('OpenEMIS ID') ?></label>
-                        <input ng-model="selectedUserData.openemis_no" type="string" ng-disabled="true">
-                    </div>
-                    <div class="input string required">
-                        <label><?= __('First Name') ?></label>
-                        <input ng-model="selectedUserData.first_name" type="string" ng-disabled="true">
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Middle Name') ?></label>
-                        <input ng-model="selectedUserData.middle_name"
-                               ng-change="InstitutionStudentController.setStudentName()" type="string"
-                               ng-disabled="false">
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Third Name') ?></label>
-                        <input ng-model="selectedUserData.third_name"
-                               ng-change="InstitutionStudentController.setStudentName()" type="string"
-                               ng-disabled="false">
-                    </div>
-                    <div class="input string required">
-                        <label><?= __('Last Name') ?></label>
-                        <input ng-model="selectedUserData.last_name" type="string" ng-disabled="true">
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Preferred Name') ?></label>
-                        <input ng-model="selectedUserData.preferred_name" type="string" ng-disabled="true">
-                    </div>
-                    <div class="input select required">
-                        <label><?= __('Gender') ?></label>
-                        <input ng-model="selectedUserData.gender.name" ng-disabled="true"/>
-                    </div>
-                    <div class="input date required">
-                        <label for="Student_date_of_birth"><?= __('Date Of Birth') ?></label>
-                        <div class="input-group date " id="Student_date_of_birth" style="">
-                            <input type="text" class="form-control " name="Student[date_of_birth]"
-                                   ng-model="selectedUserData.date_of_birth" ng-disabled="true">
-                        </div>
-                    </div>
-                    <div class="row section-header header-space-lg"><?= __('Location') ?></div>
-                    <div class="input string">
-                        <label><?= __('Address') ?></label>
-                        <textarea ng-model="selectedUserData.address" type="string"></textarea>
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Postal Code') ?></label>
-                        <input ng-model="selectedUserData.postalCode" type="string">
-                    </div>
-                    <!-- Address area start -->
-                    <div class="row section-header header-space-lg"><?= __('Address Area') ?></div>
-                    <div class="input string" id="addressArea_textbox" style="visibility:hidden">
-                        <label><?= __('Address Area') ?></label>
-                        <input ng-model="selectedUserData.addressArea.name" type="string" ng-disabled="true">
-                    </div>
-                    <div class="input string" id="addressArea_dropdown">
-                        <label><?= __('Address Area') ?></label>
-                        <div
-                                class="tree-form"
-                                id="address_area_id"
-                                ng-controller="SgTreeCtrl as SgTree"
-                                ng-init="SgTree.model='Area.AreaAdministratives'; SgTree.outputValue=addressAreaId; SgTree.userId=2; SgTree.displayCountry=0; SgTree.triggerOnChange=false;">
-                            <kd-tree-dropdown-ng id="address_area_id-tree"
-                                                 expand-parent="SgTree.triggerLoad(refreshList)"
-                                                 output-model="addressAreaOutputModelText" model-type="single"
-                                                 text-config="textConfig"></kd-tree-dropdown-ng>
-                        </div>
-                    </div>
-                    <!-- Address area end -->
-                    <!-- Address area start -->
-                    <div class="row section-header header-space-lg"><?= __('Birthplace Area') ?></div>
-                    <div class="input string" id="birthplaceArea_textbox" style="visibility:hidden">
-                        <label><?= __('Birthplace Area') ?></label>
-                        <input ng-model="selectedUserData.birthplaceArea.name" type="string" ng-disabled="true">
-                    </div>
-                    <div class="input string" id="birthplaceArea_dropdown">
-                        <label><?= __('Birthplace Area') ?></label>
-                        <div
-                                class="tree-form"
-                                id="birthplace_area"
-                                ng-controller="SgTreeCtrl as SgTree"
-                                ng-init="SgTree.model='Area.AreaAdministratives'; SgTree.outputValue=birthplaceAreaId; SgTree.userId=2; SgTree.displayCountry=0; SgTree.triggerOnChange=false; ">
-                            <kd-tree-dropdown-ng id="birthplace_area-tree"
-                                                 expand-parent="SgTree.triggerLoad(refreshList)"
-                                                 output-model="birthplaceAreaOutputModelText" model-type="single"
-                                                 text-config="textConfig"></kd-tree-dropdown-ng>
-                        </div>
-                    </div>
-                    <!-- Address area end -->
+                    <?= $this->element('Directory.confirmation_photo_content') ?>
+                    <?= $this->element('Directory.confirmation_basic_user_fields') ?>
+                    <?= $this->element('Directory.confirmation_address_fields') ?>
                     <div class="row section-header header-space-lg"><?= __('Identities / Nationalities') ?></div>
                     <div class="input string" ng-show="!isSearchResultEmpty">
                         <label><?= __('Nationalities') ?></label>
@@ -368,23 +262,8 @@
                         <label><?= __('Contact Value') ?></label>
                         <input ng-model="selectedUserData.contact_value" type="string">
                     </div>
-                    <div class="input string required">
-                        <label><?= __('Username') ?></label>
-                        <input ng-model="selectedUserData.username" type="string" ng-disabled="disableFields.username">
-                        <div ng-if="error.username" class="error-message">
-                            <p>{{ error.username }}</p>
-                        </div>
-                    </div>
-                    <div class="input password required"  ng-show="!disableFields.password">
-                        <label>
-                            <?= __('Password') ?>&nbsp&nbsp;
-                            <i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="<?= $tooltipMessage ?>"></i>
-                        </label>
-                        <input ng-model="selectedUserData.password" type="string" ng-disabled="disableFields.password">
-                        <div ng-if="error.password" class="error-message">
-                            <p>{{ error.password }}</p>
-                        </div>
-                    </div>
+                    <?= $this->element('Directory.confirmation_username_password') ?>
+
                 </form>
             </div>
             <div class="step-pane sample-pane active" ng-if="step === 'summary'">
