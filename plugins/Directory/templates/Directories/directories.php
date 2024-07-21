@@ -98,16 +98,24 @@
 ?>
 
 <div class="content-wrapper">
-    <ul class="breadcrumb panel-breadcrumb">
-    <li><a href="<?= $this->Url->build($homeUrl) ?>"><i class="fa fa-home"></i></a></li>
-        <li>
-        <a href="<?= $baseUrl ?>">Directory</a> </li>
-    </ul>
+    <?= $this->element('OpenEmis.breadcrumbs') ?>
 
     <div class="page-header">
-        <h2 id="main-header">Directory</h2>
+        <h2 id="main-header"><?= __('Directory') ?></h2>
         <div class="toolbar ">
-           <?php echo $this->Html->link('<i class="fa kd-back"></i>', $backUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escape' => false]); ?> </div>
+            <?= $this->Html->link(
+                '<i class="fa kd-back"></i>',
+                $backUrl,
+                [
+                    'class' => 'btn btn-xs btn-default',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'data-container' => 'body',
+                    'title' => __('Back'),
+                    'escape' => false
+                ]
+            ); ?>
+        </div>
     </div>
 </div>
 
@@ -120,181 +128,68 @@
             <ul class="steps" style="margin-left: 0">
                 <li ng-class="{'active': step === 'user_details'}">
                     <div class="stepper-steps-wrapper">
-                        User Details
-                        <span class="chevron"></span>
-                    </div>
+                        <?= __('User Details') ?>
+                        <span class="chevron"></span></div>
                 </li>
                 <li ng-class="{'active': step === 'internal_search'}">
                     <div class="stepper-steps-wrapper">
-                        Internal Search
-                        <span class="chevron"></span>
-                    </div>
+                        <?= __('Internal Search') ?>
+                        <span class="chevron"></span></div>
                 </li>
                 <li ng-if="isExternalSearchEnable" ng-class="{'active': step === 'external_search'}">
                     <div class="stepper-steps-wrapper">
-                        External Search
-                        <span class="chevron"></span>
-                    </div>
+                        <?= __('External Search') ?>
+                        <span class="chevron"></span></div>
                 </li>
                 <li ng-class="{'active': step === 'confirmation'}">
                     <div class="stepper-steps-wrapper">
-                        Confirmation
-                        <span class="chevron"></span>
-                    </div>
+                        <?= __('Confirmation') ?>
+                        <span class="chevron"></span></div>
                 </li>
                 <li ng-class="{'active': step === 'summary'}">
-                    <div class="stepper-steps-wrapper">
-                        Summary
-                        <span class="chevron"></span>
-                    </div>
+                    <div class="stepper-steps-wrapper"><?= __('Summary') ?><span class="chevron"></span></div>
                 </li>
             </ul>
         </div>
         <div class="actions top">
-            <button
-                ng-if="(step=='user_details')"
-                type="button" class="btn close-btn" ng-click="cancelProcess()" style="font-size: 12px;">Cancel</button>
-            <button
-                ng-if="(step!=='user_details' && step!=='summary')"
-                type="button" class="btn btn-prev close-btn" ng-click="goToPrevStep()" style="font-size: 12px;">Back</button>
-            <button
-                ng-if="(step=='confirmation' && step!=='summary')"
-                type="button" class="btn btn-default" ng-click="validateDetails()" style="font-size: 12px;">Confirm</button>
-            <button
-                ng-if="(step=='summary')"
-                type="button" class="btn close-btn" ng-click="cancelProcess()" style="font-size: 12px;">Close</button>
-            <button  ng-disabled="isNextButtonShouldDisable()" type="button" class="btn btn-default btn-next"
-                ng-if="step!=='confirmation' && step!=='summary'" ng-click="goToNextStep()" style="font-size: 12px;">Next</button>
-            <button type="button" class="btn btn-default btn-next"
-                ng-if="step==='summary' && redirectToGuardian" ng-click="addGuardian()" style="font-size: 12px;">Add Guardian</button>
+            <button ng-if="(step=='user_details') || isNextButtonShouldDisable()"
+                    type="button"
+                    class="btn close-btn"
+                    ng-click="cancelProcess()"
+                    style="font-size: 12px;"><?= __('Cancel') ?></button>
+            <button ng-disabled="(error | json) != '{}' || isNextButtonShouldDisable()"
+                    type="button"
+                    class="btn btn-default btn-next"
+                    ng-if="step!=='confirmation' && step!=='summary'"
+                    ng-click="goToNextStep()" style="font-size: 12px;"><?= __('Next') ?></button>
+            <button ng-if="(step!=='user_details' && step!=='summary')"
+                    type="button"
+                    class="btn btn-prev close-btn"
+                    ng-click="goToPrevStep()" style="font-size: 12px;"><?= __('Back') ?></button>
+            <button ng-if="(step=='confirmation' && step!=='summary')"
+                    type="button"
+                    class="btn btn-default"
+                    ng-click="validateConfirmDetails()"
+                    ng-disabled="(error | json) != '{}'"
+                    style="font-size: 12px;"><?= __('Confirm') ?></button>
+            <button ng-if="(step=='summary')"
+                    type="button"
+                    class="btn close-btn"
+                    ng-click="cancelProcess()"
+                    style="font-size: 12px;"><?= __('Close') ?></button>
+            <button type="button"
+                    class="btn btn-default btn-next"
+                    ng-if="step==='summary' && redirectToGuardian"
+                    ng-click="addGuardian()"
+                    style="font-size: 12px;"><?= __('Add Guardian') ?></button>
         </div>
         <div class="step-content">
             <div class="step-pane sample-pane" ng-show="step === 'user_details'">
                 <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
-                    <div class="input select required error">
-                        <label>User Type</label>
-                        <div class="input-select-wrapper">
-                            <select name="User[user_type_id]" id="user-user_type_id"
-                                ng-options="option.id as option.name for option in userTypeOptions"
-                                ng-model="selectedUserData.user_type_id"
-                                ng-change="changeUserType()"
-                                >
-                                <option value="" >-- <?= __('Select') ?> --</option>
-                            </select>
-                        </div>
-                        <div ng-if="error.user_type_id" class="error-message">
-                            <p>{{ error.user_type_id }}</p>
-                        </div>
-                    </div>
-                    <!-- POCOR-8112 - New section for OpenEMIS ID -->
-                    <div class="row section-header header-space-lg">Search By OpenEMIS ID</div>
-                    <div class="input string">
-                        <label><?= __('OpenEMIS ID') ?></label>
-                        <input ng-model="selectedUserData.openemis_no" type="string">
-                    </div>
-                    <div class="row section-header header-space-lg">Search By Identity</div>
-                    <div ng-class="nationality_class" class="input select">
-                        <label><?= __('Nationality') ?></label>
-                        <div class="input-select-wrapper">
-                            <select name="User[nationality_id]" id="user-nationality_id"
-                                ng-options="option.id as option.name for option in nationalitiesOptions"
-                                ng-model="selectedUserData.nationality_id"
-                                ng-change="changeNationality()"
-                                >
-                                <option value="" >-- <?= __('Select') ?> --</option>
-                            </select>
-                        </div>
-                        <div ng-if="postResponse.error.nationalities[0].nationality_id" class="error-message">
-                            <p ng-repeat="error in postResponse.error.nationalities[0].nationality_id">{{ error }}</p>
-                        </div>
-                        <div ng-if="error.nationality_id" class="error-message">
-                            <p>{{ error.nationality_id }}</p>
-                        </div>
-                    </div>
-                    <div ng-class="identity_type_class" class="input select">
-                        <label><?= __('Identity Type') ?></label>
-                        <div class="input-select-wrapper">
-                            <select name="User[identities_type_id]" id="user-identities_type_id"
-                                ng-options="option.id as option.name for option in identityTypeOptions"
-                                ng-model="selectedUserData.identity_type_id"
-                                ng-change="changeIdentityType()"
-                                >
-                                <option value="" >-- <?= __('Select') ?> --</option>
-                            </select>
-                        </div>
-                        <div ng-if="postResponse.error.identities[0].identity_type_id" class="error-message">
-                            <p ng-repeat="error in postResponse.error.identities[0].identity_type_id">{{ error }}</p>
-                        </div>
-                        <div ng-if="error.identity_type_id" class="error-message">
-                            <p>{{ error.identity_type_id }}</p>
-                        </div>
-                    </div>
-                    <!-- Always show Identity Number POCOR-7245 -->
-                    <div ng-class="identity_class" class="input select">
-                        <label><?= __('{{selectedUserData.identity_type_name ? selectedUserData.identity_type_name : "Identity Number"}}') ?></label>
-                        <input ng-model="selectedUserData.identity_number" type="string">
-                    </div>
-                    <!-- <div ng-class="identity_class" ng-show="selectedUserData.identity_type_id" class="input select required">
-                        <label><?php //echo __('{{selectedUserData.identity_type_name ? selectedUserData.identity_type_name : "Identity Number"}}') ?></label>
-                        <input ng-model="selectedUserData.identity_number" type="string">
-                    </div> --> 
-                    <!-- <div class="row section-header header-space-lg">Search By Basic Information</div>
-                    <div class="input string">
-                        <label><?php //echo __('OpenEMIS ID') ?></label>
-                        <input ng-model="selectedUserData.openemis_no" type="string">
-                    </div> -->
-                    <div class="input string required">
-                        <label><?= __('First Name') ?></label>
-                        <input ng-model="selectedUserData.first_name" ng-change="setName()" type="string">
-                        <div ng-if="error.first_name" class="error-message">
-                            <p>{{ error.first_name }}</p>
-                        </div>
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Middle Name') ?></label>
-                        <input ng-model="selectedUserData.middle_name" ng-change="setName()" type="string">
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Third Name') ?></label>
-                        <input ng-model="selectedUserData.third_name" ng-change="setName()" type="string">
-                    </div>
-                    <div class="input string required">
-                        <label><?= __('Last Name') ?></label>
-                        <input ng-model="selectedUserData.last_name" ng-change="setName()" type="string">
-                        <div ng-if="error.last_name" class="error-message">
-                            <p>{{ error.last_name }}</p>
-                        </div>
-                    </div>
-                    <div class="input string">
-                        <label><?= __('Preferred Name') ?></label>
-                        <input ng-model="selectedUserData.preferred_name" type="string">
-                    </div>
-                    <div class="input select error required">
-                        <label><?= __('Gender') ?></label>
-                        <div class="input-select-wrapper">
-                            <select name="Staff[gender_id]" id="staff-gender_id"
-                                ng-options="option.id as option.name for option in genderOptions"
-                                ng-model="selectedUserData.gender_id"
-                                ng-change="changeGender()"
-                                >
-                                <option value="" >-- <?= __('Select') ?> --</option>
-                            </select>
-                        </div>
-                        <div ng-if="error.gender_id" class="error-message">
-                            <p>{{ error.gender_id }}</p>
-                        </div>
-                    </div>
-                    <div class="input date required">
-                        <label for="User_date_of_birth"><?= __('Date Of Birth') ?></label>
-                        <div class="input-group date " id="User_date_of_birth" style="">
-                            <input type="text" class="form-control " name="User[date_of_birth]" ng-model="selectedUserData.date_of_birth">
-                            <span class="input-group-addon" style="color: #FFFFFF;background-color: #6699CC;"><i class="glyphicon glyphicon-calendar"></i></span>
-                        </div>
-                        <div ng-if="error.date_of_birth" class="error-message">
-                            <p>{{ error.date_of_birth }}</p>
-                        </div>
-                    </div>
-                   
+                    <?= $this->element('Directory.user_details_user_type_id') ?>
+                    <?= $this->element('Directory.user_details_openemis_no') ?>
+                    <?= $this->element('Directory.user_details_identity') ?>
+                    <?= $this->element('Directory.user_details_basic_information') ?>
                 </form>
             </div>
             <div class="step-pane sample-pane" ng-if="step === 'internal_search'">
@@ -321,7 +216,7 @@
             </div>
             <div class="step-pane sample-pane" ng-show="step === 'confirmation'">
                 <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
-                    <div class="row section-header header-space-lg">Information</div>
+                    <div class="row section-header header-space-lg"><?= __('Information') ?></div>
                     <div class="input string row-content">
                         <label><?= __('Photo Content') ?></label>
                         <div class="fileinput fileinput-new fileinput-preview">
@@ -331,14 +226,14 @@
                                 </div>
                             </div>
                             <div class="file-input-buttons">
-                                <p>* Advisable photo dimension 90 by 115<br />
-                                * Format Supported: .jpg, .jpeg, .png, .gif</p>
+                                <p>* <?= __('Advisable photo dimension 90 by 115') ?><br />
+                                    * <?= __('Format Supported: .jpg, .jpeg, .png, .gif') ?></p>
                                 <span class="btn btn-default btn-file" style="font-size: 12px !important;">
                                     <span class="fileinput-new">
-                                        <i class="fa fa-folder"></i> 
-                                        <span style="font-size: 12px;">Select File</span>
+                                        <i class="fa fa-folder"></i>
+                                        <span style="font-size: 12px;"><?= __('Select File') ?></span>
                                     </span>
-                                    <input id="image-file" class="file-input" type="file" onchange="savePhoto(this)" >    
+                                    <input id="image-file" class="file-input" type="file" onchange="savePhoto(this)" >
                                 </span>
                             </div>
                         </div>
@@ -377,7 +272,7 @@
                             <input type="text" class="form-control " name="Student[date_of_birth]" ng-model="selectedUserData.date_of_birth" ng-disabled="true">
                         </div>
                     </div>
-                    <div class="row section-header header-space-lg">Location</div>
+                    <div class="row section-header header-space-lg"><?= __('Location') ?></div>
                     <div class="input string">
                         <label><?= __('Address') ?></label>
                         <textarea ng-model="selectedUserData.address" type="string"></textarea>
@@ -387,7 +282,7 @@
                         <input ng-model="selectedUserData.postalCode" type="string">
                     </div>
                     <!-- Address area start -->
-                    <div class="row section-header header-space-lg">Address Area</div>
+                    <div class="row section-header header-space-lg"><?= __('Address Area') ?></div>
                     <div class="input string" id="addressArea_textbox" style="visibility:hidden">
                         <label><?= __('Address Area') ?></label>
                         <input ng-model="selectedUserData.addressArea.name" type="string" ng-disabled="true">
@@ -645,7 +540,7 @@
                                                                     <td class="vertical-align-top">{{selectedUserData.nationality_name}}</td>
                                                                     <td class="vertical-align-top">No</td>
                                                                 </tr>
-                                                            </tbody>				
+                                                            </tbody>
                                                         </table>
                                                     </div>
                                                 </div>
@@ -743,11 +638,11 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
         font-size: 16px !important;
     }
     .input-hidden{
-        opacity: 0; 
-        position: absolute; 
-        width: 100% !important; 
+        opacity: 0;
+        position: absolute;
+        width: 100% !important;
         height: 100% !important;
-        left: 0; 
+        left: 0;
         top: 0;
     }
     .row-content{
@@ -787,7 +682,7 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
         border-bottom: none;
     }
     /* steps */
-    
+
     .stepper-content-wrapper > ul.steps li,
     .stepper-content-wrapper > .steps-container > ul.steps li {
         float: left;
@@ -981,7 +876,7 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
     }
     @media (min-width: 800px) {
         .row-content{
-            display: flex; 
+            display: flex;
             align-items: flex-start;
         }
     }
