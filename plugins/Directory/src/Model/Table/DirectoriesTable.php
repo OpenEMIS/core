@@ -83,8 +83,8 @@ class DirectoriesTable extends ControllerActionTable
             $dateOfBirth = null;
         }
         $conditions = [];
-        if(!$identityNumber){
-        $conditions = self::buildUserSearchConditions($securityUsersTable, $userId, $openemisNo, $firstName, $lastName, $dateOfBirth);
+        if (!$identityNumber) {
+            $conditions = self::buildUserSearchConditions($securityUsersTable, $userId, $openemisNo, $firstName, $lastName, $dateOfBirth);
         }
         $usersSearchResult = [];
 
