@@ -191,7 +191,11 @@ class TrainingService extends Controller
                     $resp[$k]['assignee_id'] = $d['assignee_id'];
                     $resp[$k]['status_id'] = $d['status_id'];
                     $resp[$k]['area_id'] = $d['area_id'];
-                    $resp[$k]['trainers'] = [];
+
+                    //For POCOR-8491 Start...
+                    $resp[$k]['trainees'] = [];
+                    //For POCOR-8491 End...
+
                     $trainees = [];
                     foreach ($d['training_session_trainee'] as $t => $trainee) {
                         $trainees[$t]['id'] = $trainee['id'];
@@ -203,7 +207,9 @@ class TrainingService extends Controller
                         $trainees[$t]['full_name'] = $trainee['full_name'];
                         $trainees[$t]['name_with_id'] = $trainee['name_with_id'];
                     }
-                    $resp[$k]['trainers'] = $trainees;
+                    //For POCOR-8491 Start...
+                    $resp[$k]['trainees'] = $trainees;
+                    //For POCOR-8491 End...
 
                     $resp[$k]['evaluators'] = [];
                     $evaluators = [];
@@ -260,7 +266,12 @@ class TrainingService extends Controller
                 $resp['assignee_id'] = $data['assignee_id'];
                 $resp['status_id'] = $data['status_id'];
                 $resp['area_id'] = $data['area_id'];
-                $resp['trainers'] = [];
+
+                //For POCOR-8491 Start...
+                $resp['trainees'] = [];
+                //For POCOR-8491 End...
+
+
                 $trainees = [];
                 foreach ($data['training_session_trainee'] as $t => $trainee) {
                     $trainees[$t]['id'] = $trainee['id'];
@@ -272,7 +283,10 @@ class TrainingService extends Controller
                     $trainees[$t]['full_name'] = $trainee['full_name'];
                     $trainees[$t]['name_with_id'] = $trainee['name_with_id'];
                 }
-                $resp['trainers'] = $trainees;
+
+                //For POCOR-8491 Start...
+                $resp['trainees'] = $trainees;
+                //For POCOR-8491 End...
 
                 $resp['evaluators'] = [];
                 $evaluators = [];
