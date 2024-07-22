@@ -142,37 +142,37 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
     });
 
     userCtrl.changeUserType = function () {
-        directorySvc.changeUserType($scope);
+        directorySvc.changeUserType(scope);
     };
 
 // user_details function
 
     userCtrl.changeNationality = function() {
-        directorySvc.changeNationality($scope);
+        directorySvc.changeNationality(scope);
     };
 
     userCtrl.changeIdentityType = function() {
-        directorySvc.changeIdentityType($scope);
+        directorySvc.changeIdentityType(scope);
         };
 
     userCtrl.changeIdentityNumber = function() {
-        directorySvc.changeIdentityNumber($scope);
+        directorySvc.changeIdentityNumber(scope);
     };
 
     userCtrl.changeContactValue = function() {
-        directorySvc.changeContactValue($scope);
+        directorySvc.changeContactValue(scope);
     };
 
     userCtrl.setName = function() {
-        directorySvc.setName($scope);
+        directorySvc.setName(scope);
     };
 
     userCtrl.changeGender = function() {
-        directorySvc.changeGender($scope);
+        directorySvc.changeGender(scope);
     };
 
     userCtrl.changeDateOfBirth = function() {
-        directorySvc.changeDateOfBirth($scope);
+        directorySvc.changeDateOfBirth(scope);
     };
 
     userCtrl.setError = function(field, message) {
@@ -188,11 +188,11 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
     };
 
     userCtrl.validateUserDetails = function () {
-        directorySvc.validateUserDetails($scope);
+        directorySvc.validateUserDetails(scope);
     };
 
     userCtrl.validateConfirmDetails = function () {
-        directorySvc.validateConfirmDetails($scope);
+        directorySvc.validateConfirmDetails(scope);
     };
 
 
@@ -284,11 +284,11 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
     }
 
     userCtrl.goToInternalSearch = function () {
-        directorySvc.goToInternalSearch($scope);
+        directorySvc.goToInternalSearch(scope);
         };
 
     userCtrl.goToExternalSearch = function () {
-        directorySvc.goToExternalSearch($scope);
+        directorySvc.goToExternalSearch(scope);
     }
 
     userCtrl.processGridUserRecord = function (userRecords, params, totalRowCount) {
@@ -372,11 +372,11 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
     };
 
     userCtrl.getUniqueOpenEmisId = function () {
-        return directorySvc.setUniqueOpenEmisId($scope);
+        return directorySvc.setUniqueOpenEmisId(scope);
     };
 
     userCtrl.generatePassword = function () {
-        return directorySvc.setPassword($scope);
+        return directorySvc.setPassword(scope);
     };
 
     userCtrl.initGrid = function () {
@@ -459,7 +459,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
                         userCtrl.isInternalSearchSelected = true;
                         userCtrl.isExternalSearchSelected = false;
                         userCtrl.selectUserFromInternalSearch(_e.node.data.id);
-                    $scope.$apply();
+                        scope.$apply();
                 },
                 onGridSizeChanged: function() {
                     this.api.sizeColumnsToFit();
@@ -537,7 +537,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
                 onRowSelected: function (_e) {
                     var id = _e.node.data.id;
                         userCtrl.selectUserFromExternalSearch(id);
-                    $scope.$apply();
+                    scope.$apply();
                 },
                 onGridSizeChanged: function() {
                     this.api.sizeColumnsToFit();
@@ -621,7 +621,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
                         userCtrl.isExternalSearchSelected = false;
                         userCtrl.isInternalSearchSelected = true;
                         userCtrl.selectUserFromInternalSearch(_e.node.data.id);
-                    $scope.$apply();
+                    scope.$apply();
                 },
                 onGridSizeChanged: function() {
                     this.api.sizeColumnsToFit();
@@ -699,7 +699,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
                 onRowSelected: function (_e) {
                     var id = _e.node.data.id;
                         userCtrl.selectUserFromExternalSearch(id);
-                    $scope.$apply();
+                    scope.$apply();
                 },
                 onGridSizeChanged: function() {
                     this.api.sizeColumnsToFit();
@@ -1278,130 +1278,44 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
         });
     }
 
-    async function checkUserAlreadyExistByIdentity()
-    {
-        const userData = scope.selectedUserData;
+    userCtrl.checkConfigForExternalSearch = function checkConfigForExternalSearch() {
+        var identity_type_id = userCtrl.selectedUserData.identity_type_id;
+        var nationality_id = userCtrl.selectedUserData.nationality_id;
+        userCtrl.isExternalSearchEnable = false;
 
-        const result = await DirectoryaddSvc.checkUserAlreadyExistByIdentity({
-            'identity_type_id': userData.identity_type_id,
-            'identity_number': userData.identity_number,
-            'nationality_id':userData.nationality_id,
-            'first_name': userData.first_name,
-            'last_name': userData.last_name,
-            'gender_id': userData.gender_id,
-            'date_of_birth': userData.date_of_birth,
-            'user_id': userData.user_id,
-        });
-        // const result = await DirectoryaddSvc.checkUserAlreadyExistByIdentity({
-        //     'identity_type_id': scope.selectedUserData.identity_type_id,
-        //     'identity_number': scope.selectedUserData.identity_number,
-        //     'nationality_id': scope.selectedUserData.nationality_id
+        userSvc.checkConfigForExternalSearch(nationality_id, identity_type_id)
+            .then((resp) => {
+                userCtrl.isExternalSearchEnable = resp.showExternalSearch;
+                // console.log(resp);
+                userCtrl.externalSearchSourceName = resp.value;
+                // console.log({
+                //     isExternalSearchEnable: userCtrl.isExternalSearchEnable,
+                //     externalSearchSourceName: userCtrl.externalSearchSourceName
         // });
-        if (result.data.user_exist === 1)
-        {
-            scope.messageClass = 'alert_warn';
-            scope.message = result.data.message;
-            scope.isIdentityUserExist = true;
-        } else
-        {
-            scope.messageClass = '';
-            scope.message = '';
-            scope.isIdentityUserExist = false;
-        }
-        /*  return result.data.user_exist === 1; */
-    }
-
-    /**
-  * @desc 1)Identity Number is mandatory OR
-  * @desc 2)OpenEMIS ID is mandatory OR
-  * @desc 3)First Name, Last Name, Date of Birth and Gender are mandatory
-  * @returns [ error block name | true or false]
-  */
-    function checkUserDetailValidationBlocksHasError()
-    {
-        const { first_name,
-            last_name,
-            gender_id,
-            date_of_birth,
-            identity_type_id,
-            identity_number,
-            nationality_id,
-            openemis_no,
-            identity_type_name
-        } = scope.selectedUserData;
-        const isGeneralInfodHasError = (!first_name || !last_name || !gender_id || !date_of_birth)
-        const isOpenEmisNoHasError = openemis_no !== "" && openemis_no !== undefined;
-        const isIdentityHasError = identity_number?.length> 1  && (nationality_id === undefined || nationality_id==="" || nationality_id === null  || identity_type_id===""|| identity_type_id===undefined || identity_type_id=== null)
-        let isSkipableForIdentity = identity_number?.length>1 && nationality_id > 0 && identity_type_id >0;
-
-        if (identity_type_name == 'UNHCR') {
-            isSkipableForIdentity = false;
-        }
-
-        if (isIdentityHasError)
-        {
-            return ['Identity', true]
-        }
-        if (isSkipableForIdentity)
-        {
-            return ['Identity', false]
-        }
-        if (isOpenEmisNoHasError)
-        {
-            return ["OpenEMIS_ID", false];
-        }
-
-        if (isGeneralInfodHasError)
-        {
-            return ["General_Info", true];
-        }
-
-        return ["", false];
-    }
-
-    scope.checkConfigForExternalSearch=function checkConfigForExternalSearch()
-    {
-        var identity_type_id = scope.selectedUserData.identity_type_id;
-        var nationality_id = scope.selectedUserData.nationality_id;
-        DirectoryaddSvc.checkConfigForExternalSearch(nationality_id, identity_type_id).then(function (resp)
-        {
-            scope.isExternalSearchEnable = resp.showExternalSearch;
-            scope.externalSearchSourceName = resp.value;
             UtilsSvc.isAppendLoader(false);
-        }, function (error)
-        {
-            scope.isExternalSearchEnable = false;
+            })
+            .catch((error) => {
+                userCtrl.isExternalSearchEnable = false;
             console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
+
+        }
+
+    userCtrl.isNextButtonShouldDisable = function isNextButtonShouldDisable() {
+        return directorySvc.isNextButtonShouldDisable(userCtrl);
     }
 
-    scope.isNextButtonShouldDisable = function isNextButtonShouldDisable() {
-        const { step, selectedUserData, isIdentityUserExist, externalSearchSourceName } = scope;
-        const { first_name, last_name, date_of_birth, gender_id, identity_number } = selectedUserData;
 
-        if (isIdentityUserExist && step === "internal_search") {
-          return true;
-        }
-        if (step === 'external_search' && externalSearchSourceName === 'UNHCR' && !identity_number) {
-          return true;
-        }
-
-        if (step === 'external_search' && externalSearchSourceName !== 'UNHCR' && (!first_name || !last_name || !date_of_birth || !gender_id)) {
-          return true;
-        }
-        return false;
-    }
-
-    scope.getCSPDSearchData = function getCSPDSearchData() {
-        var param = scope.selectedUserData;  //POCOR-7916
+    userCtrl.getCSPDSearchData = function getCSPDSearchData() {
+        var param = userCtrl.selectedUserData;  //POCOR-7916
         var dataSource = {
-            pageSize: scope.pageSize,
+            pageSize: userCtrl.pageSize,
             getRows: function (params) {
                 UtilsSvc.isAppendLoader(true);
                 param.limit = params.endRow - params.startRow;
                 param.page = params.endRow / (params.endRow - params.startRow);
-                DirectoryaddSvc.getCspdData(param)
+                userSvc.getCspdData(param)
                 .then(function(response) {
                     var gridData = response.data.data; //POCOR-7916
                     if(!gridData)gridData = [];
@@ -1416,80 +1330,60 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
                         data.identity_type_id = data['identity_type_id'];
                     });
                     var totalRowCount = gridData.length === 0 ? 1 : gridData.length;
-                    scope.isSearchResultEmpty = gridData.length === 0;
-                    return scope.processExternalGridUserRecord(gridData, params, totalRowCount);
+                        userCtrl.isSearchResultEmpty = gridData.length === 0;
+                        return userCtrl.processExternalGridUserRecord(gridData, params, totalRowCount);
                 }, function(error) {
                     console.error(error);
                     UtilsSvc.isAppendLoader(false);
                 });
             }
         };
-        scope.externalGridOptions.api.setDatasource(dataSource);
-        scope.externalGridOptions.api.sizeColumnsToFit();
+        userCtrl.externalGridOptions.api.setDatasource(dataSource);
+        userCtrl.externalGridOptions.api.sizeColumnsToFit();
     }
 
-    scope.checkUserExistByIdentityFromConfiguration = async function checkUserExistByIdentityFromConfiguration()
-    {
+    userCtrl.checkUserExistByIdentityFromConfiguration = async function () {
+        const {identity_type_id, identity_number} = userCtrl.selectedUserData;
 
-        userData = scope.selectedUserData;
-        const { identity_type_id, identity_number } = userData;
-        // console.log(scope.selectedUserData);
-        // scope.error.nationality_id = "";
-        scope.error.identity_type_id = ""
-        scope.error.identity_number = "";
+        userCtrl.unsetError('identity_type_id');
+        userCtrl.unsetError('identity_number');
 
-
-        /* if (!nationality_id)
-        {
-            scope.error.nationality_id =
-                "This field cannot be left empty";
-
-                return false;
-        } */
-        if (!identity_type_id)
-        {
-            scope.error.identity_type_id =
-                "This field cannot be left empty";
-                return false;
-        }
-        if (!identity_number)
-        {
-            scope.error.identity_number =
-                "This field cannot be left empty";
-
+        if (!identity_type_id) {
                 return false;
         }
 
-        const userSvc = DirectoryaddSvc;
-        const userCtrl = scope;
+        if (identity_type_id && !identity_number) {
+            userCtrl.error.identity_number = "This field cannot be left empty";
+            return;
+        }
 
-        const result = await DirectoryaddSvc.checkUserAlreadyExistByIdentity({
-            'identity_type_id': userData.identity_type_id,
-            'identity_number': userData.identity_number,
-            'nationality_id':userData.nationality_id,
-            'first_name': userData.first_name,
-            'last_name': userData.last_name,
-            'gender_id': userData.gender_id,
-            'date_of_birth': userData.date_of_birth,
-            'user_id': userData.user_id,
+        try {
+            const result = await userSvc.checkUserExistByIdentity({
+                identity_type_id,
+                identity_number,
+                nationality_id: userCtrl.selectedUserData.nationality_id,
         });
 
-        if (result.data.user_exist === 1)
-        {
-            // console.log(result.data);
-            scope.messageClass = 'alert_warn';
-            scope.message = result.data.message;
-            scope.isIdentityUserExist = true;
-            scope.error.identity_number = result.data.message;
+            if (result.data.user_exist === 1) {
+                userCtrl.messageClass = 'alert_warn';
+                userCtrl.message = result.data.message;
+                userCtrl.isIdentityUserExist = true;
+                // userCtrl.error.identity_number = result.data.message;
             $window.scrollTo({bottom:0});
-        } else
-        {
-            scope.messageClass = '';
-            scope.message = '';
-            scope.isIdentityUserExist = false;
-            scope.error.identity_number ==""
+
+            } else {
+                userCtrl.messageClass = '';
+                userCtrl.message = '';
+                userCtrl.isIdentityUserExist = false;
+                userCtrl.unsetError('identity_type_id');
+                userCtrl.unsetError('identity_number');
+
         }
         return result.data.user_exist === 1;
+        } catch (error) {
+            console.error('Error checking user existence:', error);
+            return false;
     }
 
+}
 }
