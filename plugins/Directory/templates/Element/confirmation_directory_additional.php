@@ -60,5 +60,7 @@
 </div>
 <div class="input string">
     <label><?= __('Contact Value') ?></label>
-    <input ng-model="selectedUserData.contact_value" type="string">
+    <input ng-model="selectedUserData.contact_value"
+           type="string"
+           ng-change="changeContactValue()">
 </div>

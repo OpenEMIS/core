@@ -38,7 +38,7 @@
     <div ng-class="identity_class" class="input">
         <label><?= __('{{selectedUserData.identity_type_name ? selectedUserData.identity_type_name : "Identity Number"}}') ?></label>
         <input ng-model="selectedUserData.identity_number"
-               ng-change="checkIdentityNumber()"
+               ng-change="changeIdentityNumber()"
                type="string">
         <div ng-if="error.identity_number" class="error-message">
             <p>{{ error.identity_number }}</p>
