@@ -1196,8 +1196,23 @@ class InstitutionSurveysTable extends ControllerActionTable
         $roleId = $userRole['security_role_id'];
         $workflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
         // $this->copyBuildSurveyRecords($controller);//POCOR-7412
-        if(isset($roleId)){
-            $query
+        // POCOR-8496: superAdmin can see all
+        $isSuperAdmin = $session->read('Auth.User.super_admin');;
+        if (isset($roleId)) {
+            $where = [
+                $this->aliasField('assignee_id') => $userId,
+                // $workflowStepsRoles->aliasField('security_role_id') => $roleId,
+                'Assignees.super_admin IS NOT' => 1, //POCOR-7102
+            ];
+        }
+        if ($isSuperAdmin) {
+            $where = [];
+        }
+        if (!isset($roleId) && !$isSuperAdmin) {
+            return $query;
+        }
+
+        $query = $query
             ->select([
                 $this->aliasField('id'),
                 $this->aliasField('status_id'),
@@ -1216,7 +1231,11 @@ class InstitutionSurveysTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->AcademicPeriods->getAlias(), $this->SurveyForms->getAlias(), $this->Institutions->getAlias(), $this->CreatedUser->getAlias(),'Assignees'])
+            ->contain([$this->AcademicPeriods->getAlias(),
+                $this->SurveyForms->getAlias(),
+                $this->Institutions->getAlias(),
+                $this->CreatedUser->getAlias(),
+                'Assignees'])
             ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
@@ -1226,11 +1245,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                     $workflowStepsRoles->aliasField('workflow_step_id = ') . $this->aliasField('status_id')
                 ]
             )
-            ->where([
-                $this->aliasField('assignee_id') => $userId,
-                // $workflowStepsRoles->aliasField('security_role_id') => $roleId,
-                'Assignees.super_admin IS NOT' => 1, //POCOR-7102
-            ])
+            ->where($where)
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) {
                 return $results->map(function ($row) {
@@ -1259,7 +1274,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                     return $row;
                 });
             });
-        }
+
         return $query;
     }
 
