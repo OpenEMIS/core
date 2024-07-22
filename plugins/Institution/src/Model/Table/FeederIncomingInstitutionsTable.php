@@ -25,11 +25,11 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
-        $this->toggle('remove', false);     
+        $this->toggle('remove', false);
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['FeederIncomingInstitutions' =>['academic_period_id','education_grade_id','feeder_institution_id', 'institution_id']
             ]
-        ]);   
+        ]);
     }
 
     public function onGetCode(Event $event, Entity $entity)
@@ -248,7 +248,7 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
                         'code',
                         'name'
                     ]
-                ],                
+                ],
             ]);
     }
 
@@ -258,7 +258,7 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
 
         if ($this->action == 'index' || $this->action == 'view' || $this->action == 'edit') {
             $requestData = $this->request->getQuery();
-            if (!is_null($requestData) && array_key_exists('period', $requestData)) {
+            if (!is_null($requestData) && isset($requestData['period'])) {
                 $selectedAcademicPeriod = $requestData['period'];
 
             } else {

@@ -101,11 +101,11 @@
 							$sortField = '';
 							$sortDirection = '';
 							$nextDirection = 'asc';
-							if (!empty($params) && array_key_exists('sort', $params) && !empty($params['sort'])) {
+							if (!empty($params) && isset($params['sort']) && !empty($params['sort'])) {
 								$sortField = $params['sort'];
 							}
 
-							if (!empty($params) && array_key_exists('direction', $params) && !empty($params['direction'])) {
+							if (!empty($params) && isset($params['direction']) && !empty($params['direction'])) {
 								$sortDirection = $params['direction'];
 								if ($params['direction'] == 'asc') {
 									$nextDirection = 'desc';
@@ -203,7 +203,7 @@
 							?>
 							<?= $this->html->link($obj->student_openemis_no, $newUrl) ?>
 						</td>
-						<td><?php 
+						<td><?php
 							//START: POCOR-6623
 							// if (!empty($obj->user->identity_number)) {
 							if (!empty($obj->user->identities[0]->number)) {
@@ -230,7 +230,7 @@
 								} else {
 									echo "<i class='fa fa-times'></i>";
 								}
-							?> 
+							?>
 						</td>
 					</tr>
 

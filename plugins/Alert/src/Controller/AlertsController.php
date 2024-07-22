@@ -17,7 +17,7 @@ class AlertsController extends AppController
     public function AlertRules() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.AlertRules']); }
     public function Logs() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.AlertLogs']); }
 
-    public function beforeFilter(Event $event) {
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event) {
         if ($this->getPlugin() == $this->getPlugin()) {
             $this->Security->setConfig('validatePost', false);
         }

@@ -1,6 +1,6 @@
 <?php
    use Cake\Utility\Inflector;
-   
+
    ?>
 <div class="adv-search" ng-show="showAdvSearch" ng-init="showAdvSearch=<?= $showOnLoad ?>">
    <button class="btn btn-xs close" type="button" alt="Collapse" ng-click="removeAdvSearch()">×</button>
@@ -10,7 +10,7 @@
    </div>
    <?php
       // POCOR-8219 redone some parts
-      
+
       /*
           list advanced search fields based on the order.
           order is declared on the model file $advancedSearchFieldOrder.
@@ -63,7 +63,7 @@
    </div>
    <?php
       } else {
-      
+
           ?>
    <div class="select">
       <label><?= $filterField['label'] ?>:</label>
@@ -81,7 +81,7 @@
       }
       }
       } else if (array_key_exists($field, $searchables) || array_key_exists($field, $includedFields)) {
-      
+
       //to be used both by $searchable and $includedFields
       if (array_key_exists($field, $searchables)) {
       $fields = $searchables;
@@ -92,8 +92,8 @@
       }
       $searchField = $fields[$field];
       $educationals = ['education_programmes', 'education_systems', 'education_levels'];
-      
-      if (array_key_exists('type', $searchField)) {
+
+      if (isset($searchField['type'])) {
       if ($searchField['type'] == 'select') {
           if (in_array($field, $educationals)) {
               if ($field === 'education_systems') {

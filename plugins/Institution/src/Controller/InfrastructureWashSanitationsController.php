@@ -12,12 +12,12 @@ class InfrastructureWashSanitationsController extends PageController
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('AcademicPeriod.AcademicPeriods');        
-        $this->Page->loadElementsFromTable($this->InfrastructureWashSanitations);        
+        $this->loadModel('AcademicPeriod.AcademicPeriods');
+        $this->Page->loadElementsFromTable($this->InfrastructureWashSanitations);
         $this->Page->disable(['search']); // to disable the search function
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $session = $this->request->session();
         $institutionId = $this->getInstitutionID();
@@ -66,7 +66,7 @@ class InfrastructureWashSanitationsController extends PageController
     }
 
     public function index()
-    {   
+    {
         $page = $this->Page;
 
         // set default ordering
@@ -133,7 +133,7 @@ class InfrastructureWashSanitationsController extends PageController
     }
 
     private function addEdit()
-    {   
+    {
         $page = $this->Page;
 
         $page->exclude(['infrastructure_wash_sanitation_total_male', 'infrastructure_wash_sanitation_total_female', 'infrastructure_wash_sanitation_total_mixed']);
@@ -183,13 +183,13 @@ class InfrastructureWashSanitationsController extends PageController
             ->setLabel('Mixed (Non-functional)')
             ->setControlType('integer');
 
-        $page->move('infrastructure_wash_sanitation_quality_id')->after('infrastructure_wash_sanitation_mixed_nonfunctional'); 
-        $page->move('infrastructure_wash_sanitation_accessibility_id')->after('infrastructure_wash_sanitation_quality_id'); 
+        $page->move('infrastructure_wash_sanitation_quality_id')->after('infrastructure_wash_sanitation_mixed_nonfunctional');
+        $page->move('infrastructure_wash_sanitation_accessibility_id')->after('infrastructure_wash_sanitation_quality_id');
     }
 
     public function view($id)
     {
-        parent::view($id); 
+        parent::view($id);
         $page = $this->Page;
         $entity = $page->getData();
         $quantity = $this->getSanitationQuantity($entity);
@@ -206,7 +206,7 @@ class InfrastructureWashSanitationsController extends PageController
              ])
              ->setAttributes('row', $quantity);
 
-         $page->move('quantities')->after('infrastructure_wash_sanitation_use_id'); 
+         $page->move('quantities')->after('infrastructure_wash_sanitation_use_id');
     }
 
     private function getSanitationQuantity(Entity $entity)

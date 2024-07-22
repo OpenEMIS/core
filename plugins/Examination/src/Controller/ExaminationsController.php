@@ -42,7 +42,7 @@ class ExaminationsController extends AppController
     }
     // End
 
-    public function beforeFilter(Event $event) {
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event) {
 
         if ($this->getPlugin() == 'Examination') {
             $this->Security->setConfig('validatePost', false);
@@ -175,7 +175,7 @@ class ExaminationsController extends AppController
         }
     }
 
-    public function beforeRender(Event $event)
+    public function beforeRender(Event|\Cake\Event\EventInterface $event)
     {
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');

@@ -6,7 +6,7 @@ use Profile\Controller\InsurancesController as BaseController;
 
 class StaffInsurancesController extends BaseController
 {
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
         $session = $this->request->session();
@@ -41,7 +41,7 @@ class StaffInsurancesController extends BaseController
             'userRole' => 'Staff',
             'institutionId' => $encodedInstitutionId
         ]);
-    
+
         $page->get('security_user_id')->setControlType('hidden')->setValue($staffId); // set value and hide the staff_id
     }
 

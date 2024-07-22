@@ -16,7 +16,7 @@ class StudentBehaviourAttachmentsController extends PageController
         $this->viewBuilder()->disableAutoLayout(); //POCOR-8074-6
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID();
@@ -100,7 +100,7 @@ class StudentBehaviourAttachmentsController extends PageController
         $studentBehaviourIdEncode = $this->paramsEncode(['id' => $studentBehaviourIdDecode['student_behaviour_id']]);
         $page = $this->Page;
         $tabElements = [];
-       
+
         $tabElements = [
             'StudentBehaviours' => [
                 'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $encodedInstitutionId, 'action' => 'StudentBehaviours', 'view', $studentBehaviourIdEncode],
