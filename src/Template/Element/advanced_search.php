@@ -67,7 +67,7 @@ use Cake\Utility\Inflector;
                     $varName = $includedFields;
                     $indexName = 'tableField';
                 }
-                if (array_key_exists('type', $varName[$field])) {
+                if (isset($varName[$field]['type'])) {
                     if ($varName[$field]['type'] == 'select') {
     ?>
                         <div class="select">

@@ -68,14 +68,14 @@ class StaffTabBehavior extends Behavior
     public function getCareerTabElements($options = [], $modelName = null)
     {
         $model = $this->_table;
-        $type = (array_key_exists('type', $options)) ? $options['type'] : null;//POCOR-8401
+        $type = (isset($options['type'])) ? $options['type'] : null;//POCOR-8401
         //POCOR-8359 starts
-        //if conditition used for  Institution > Staff > Career > Attandance Tab 
+        //if conditition used for  Institution > Staff > Career > Attandance Tab
         if(!empty($modelName)){
             $controller = $modelName;//POCOR-8379
             $pluginName = $modelName->getPlugin();
             $controllerName = $modelName->getName();
-            $staffID = $modelName->getQueryString('staff_id'); 
+            $staffID = $modelName->getQueryString('staff_id');
             $institutionID = $modelName->getQueryString('institution_id');
             $queryString = $modelName->getQueryString();
             $encodedQueryString = $modelName->paramsEncode($queryString);
@@ -93,7 +93,7 @@ class StaffTabBehavior extends Behavior
             $queryString = $model->getQueryString();
             $encodedQueryString = $model->paramsEncode($queryString);
         }
-        
+
         $labels_tbl = TableRegistry::get('System.Labels');   //POCOR-8056
         $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();//POCOR-8056
         if(empty($curricular_label_Data->name)){
@@ -134,7 +134,7 @@ class StaffTabBehavior extends Behavior
         foreach ($staffTabElements as $key => $tab) {
                 $changeKeyArray = ['StaffLeave', 'StaffAttendances','StaffAppraisals','StaffAssociations','StaffCurriculars'];
                 if($controllerName == "Profiles" || $controllerName == "Directories"){
-                    $type = (array_key_exists('type', $options)) ? $options['type'] : null;//POCOR-8379 
+                    $type = (isset($options['type'])) ? $options['type'] : null;//POCOR-8379
                     if(in_array($key, $changeKeyArray)){
                         //POCOR-8379 starts
                         if(!empty($encodedQueryString)){
@@ -160,7 +160,7 @@ class StaffTabBehavior extends Behavior
         if($controllerName == "Directories") {
             unset($tabElements['StaffCurriculars']);
         }
-        return $controller->TabPermission->checkTabPermission($tabElements);//POCOR-8379 
+        return $controller->TabPermission->checkTabPermission($tabElements);//POCOR-8379
     }
 
 
@@ -190,7 +190,7 @@ class StaffTabBehavior extends Behavior
                 'Licenses' => ['text' => __('Licenses')], //POCOR-7528
             ];
         }
-        
+
         $tabElements = array_merge($tabElements, $staffTabElements);
 
         foreach ($tabElements as $key => $tab) {
@@ -202,7 +202,7 @@ class StaffTabBehavior extends Behavior
             $session = $model->request->getSession();
             $isStudent = $session->read('Auth.User.is_student');
             $isStaff = $session->read('Auth.User.is_staff');
-            
+
             if ($isStaff) {
                 $professionalTabElements = [
                     'Employments' => ['text' => __('Employments')],
@@ -226,17 +226,17 @@ class StaffTabBehavior extends Behavior
             foreach ($professionalTabElements as $key => $tab) {
                 if ($key != 'Employments') {
                     $url = array_merge($staffUrl, ['action' => 'Staff' . $key, 'index']);
-     
+
                 } else {
                     $url = array_merge($staffUrl, ['action' => $key, 'index']);
-     
+
                 }
                 $url['1'] = $encodedQueryString;
                 $tabElements[$key]['url'] = $url;
             }
             return $controller->TabPermission->checkTabPermission($tabElements);
         }
-        
+
         if($controllerName == "Directories"){
             $userID = $this->getUserID();
             if(!is_numeric($userID)){
@@ -273,7 +273,7 @@ class StaffTabBehavior extends Behavior
                 if($key == 'StudentLicenses'){
                     $url = array_merge($staffUrl, ['action' => $key, '0' => 'index']);
 
-                } else 
+                } else
                 if ($key != 'Employments') {
                     $url = array_merge($staffUrl, ['action' => 'Staff' . $key, '0' => 'index']);
 

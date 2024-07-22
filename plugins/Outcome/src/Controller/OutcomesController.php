@@ -82,8 +82,8 @@ class OutcomesController extends AppController
         $this->Navigation->addCrumb($model->getHeader($model->alias));
     }
 
-    public function beforeFilter(Event $event)
-    { 
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    {
         if ($this->getPlugin() == 'Outcome') {
             $this->Security->setConfig('validatePost', false);
         }

@@ -24,7 +24,7 @@
 				// pr($ControllerAction['buttons']);die;
 				// if $current is 0, we need to add an empty row so that the table header and table footer columns will have separator lines; else the lines will not show up.
 				// Probably due to the existence of <tfoot> element.
-				if (count($attr['data'])>0):
+				if (count($attr['data']->toArray())>0)://POCOR-8457
 				?>
 					<?php foreach ($attr['data'] as $i => $obj) : ?>
 						<?php if (!is_object($obj->user)): ?>

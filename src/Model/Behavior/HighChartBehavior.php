@@ -50,7 +50,7 @@ class HighChartBehavior extends Behavior
         }
         $options['series'] = array_values($dataSet);
         $options['credits'] = ['enabled' => false];
-        if (!array_key_exists('colors', $options) && !$defaultColors) {
+        if (!isset($options['colors']) && !$defaultColors) {
             $options['colors'] = $this->colors;
         }
         return json_encode($options, JSON_NUMERIC_CHECK);
@@ -67,7 +67,7 @@ class HighChartBehavior extends Behavior
         $key = '';
         if (!empty($params['dataSet'])) {
             $dataSet = $params['dataSet'];
-            if (array_key_exists('key', $params)) {
+            if (isset($params['key'])) {
                 $key = $params['key'];
             }
         }
@@ -106,7 +106,7 @@ class HighChartBehavior extends Behavior
         $options = array_replace_recursive($selectedConfig, $options);
         $options['series'][] = ['type' => 'pie', 'innerSize' => '85%', 'data' => array_values($dataSet)];
         $options['credits'] = ['enabled' => false];
-        if (!array_key_exists('colors', $options) && !$defaultColors) {
+        if (!isset($options['colors']) && !$defaultColors) {
             $options['colors'] = $this->colors;
         }
         return json_encode($options, JSON_NUMERIC_CHECK);

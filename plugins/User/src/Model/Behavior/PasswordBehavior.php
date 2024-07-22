@@ -25,8 +25,8 @@ class PasswordBehavior extends Behavior {
 
     public function initialize(array $config) {
         $this->targetField = $config['field'];
-        $this->checkOwnPassword = (array_key_exists('checkOwnPassword', $config))? $config['checkOwnPassword']: $this->checkOwnPassword;
-        $this->createRetype = (array_key_exists('createRetype', $config))? $config['createRetype']: $this->createRetype;
+        $this->checkOwnPassword = (isset($config['checkOwnPassword']))? $config['checkOwnPassword']: $this->checkOwnPassword;
+        $this->createRetype = (isset($config['createRetype']))? $config['createRetype']: $this->createRetype;
     }
 
     public function buildValidator(Event $event, Validator $validator, $name) {
@@ -44,12 +44,12 @@ class PasswordBehavior extends Behavior {
                     'rule' => ['comparePasswords', $this->targetField]
                 ]
             ]);
-        
+
         $this->_table->setValidationCode('username.ruleMinLength', 'User.Accounts');
         $this->_table->setValidationCode('username.ruleUnique', 'User.Accounts');
         $this->_table->setValidationCode('username.ruleCheckUsername', 'User.Accounts');
         $this->_table->setValidationCode('retype_password.ruleCompare', 'User.Accounts');
-        
+
         $validator->add($this->targetField, [
             'ruleCheckLength' => [
                 'rule'  => ['lengthBetween', $passwordMinLength, 50],

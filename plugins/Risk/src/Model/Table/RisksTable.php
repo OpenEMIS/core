@@ -273,7 +273,7 @@ class RisksTable extends ControllerActionTable
                 $this->clearRequestData($alias, $fieldKey);
                 $this->getCriteriasToData($entity, $fieldKey, $alias);
             }
-            
+
             $tableCells = $this->populateRiskCriteriaTableCells($alias, $fieldKey, $criteriaOptions, $tableCells, $Form);
         }
 
@@ -333,7 +333,7 @@ class RisksTable extends ControllerActionTable
 
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Risks','Risks');       
+		$is_manual_exist = $this->getManualUrl('Administration','Risks','Risks');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -525,7 +525,7 @@ class RisksTable extends ControllerActionTable
         $alias = $this->getAlias();
         $fieldKey = 'risk_criterias';
 
-        if (array_key_exists($alias, $data) && array_key_exists('criteria_type', $data[$alias])) {
+        if (array_key_exists($alias, $data) && isset($data[$alias]['criteria_type'])) {
             $criteriaType = $data[$alias]['criteria_type'];
             $operator = $this->getCriteriasDetails($criteriaType)['operator'];
 
@@ -710,7 +710,7 @@ class RisksTable extends ControllerActionTable
         $userId = $session->read('Auth.User.id');
         $riskId = $entity->id;
 
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             // generate button
             if ($this->AccessControl->check(['Institutions', 'Risks', 'generate'])) {
                 $url = [
@@ -822,7 +822,7 @@ class RisksTable extends ControllerActionTable
         // echo "<pre>";print_r($entity); die;
         if (!empty($associated[$fieldKey])) {
             foreach ($associated[$fieldKey] as $key => $obj) {
-               
+
                 $id = $obj->id;
                 $risk_ids[] = $id;
             }

@@ -156,7 +156,7 @@ class IndexBehavior extends Behavior
                 } catch (NotFoundException $e) {
                     Log::write('debug', $e->getMessage());
                     $action = $model->url('index', 'QUERY');
-                    if (array_key_exists('page', $action)) {
+                    if (isset($action['page'])) {
                         unset($action['page']);
                     }
                     $mainEvent->stopPropagation();

@@ -59,9 +59,9 @@ class InstitutionTransportProvidersTable extends ControllerActionTable
 
     public function findOptionList(Query $query, array $options)
     {
-        $institutionId = array_key_exists('institution_id', $options) ? $options['institution_id'] : 0;
+        $institutionId = isset($options['institution_id']) ? $options['institution_id'] : 0;
         $query->where(['institution_id' => $institutionId]);
-        
+
         return parent::findOptionList($query, $options);
     }
 
@@ -70,7 +70,7 @@ class InstitutionTransportProvidersTable extends ControllerActionTable
         $this->field('comment',['visible' => false]);
 
         // Start POCOR-5188
-        $is_manual_exist = $this->getManualUrl('Institutions','Providers','Transport');       
+        $is_manual_exist = $this->getManualUrl('Institutions','Providers','Transport');
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',
@@ -79,7 +79,7 @@ class InstitutionTransportProvidersTable extends ControllerActionTable
                 'escape' => false,
                 'target'=>'_blank'
             ];
-    
+
             $helpBtn['url'] = $is_manual_exist['url'];
             $helpBtn['type'] = 'button';
             $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';

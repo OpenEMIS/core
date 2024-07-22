@@ -122,19 +122,19 @@ class CompetencyCriteriasTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        if (array_key_exists('selectedPeriod', $extra)) {
+        if (isset($extra['selectedPeriod'])) {
             if ($extra['selectedPeriod']) {
                 $conditions[$this->aliasField('academic_period_id')] = $extra['selectedPeriod'];
             }
         }
 
-        if (array_key_exists('selectedTemplate', $extra)) {
+        if (isset($extra['selectedTemplate'])) {
             if ($extra['selectedTemplate']) {
                 $conditions[$this->aliasField('competency_template_id')] = $extra['selectedTemplate'];
             }
         }
 
-        if (array_key_exists('selectedItem', $extra)) {
+        if (isset($extra['selectedItem'])) {
             if ($extra['selectedItem']) {
                 $conditions[$this->aliasField('competency_item_id')] = $extra['selectedItem'];
             }
