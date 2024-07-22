@@ -159,6 +159,10 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
         directorySvc.changeIdentityNumber($scope);
     };
 
+    userCtrl.changeContactValue = function() {
+        directorySvc.changeContactValue($scope);
+    };
+
     userCtrl.setName = function() {
         directorySvc.setName($scope);
     };
@@ -288,7 +292,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
     }
 
     userCtrl.processGridUserRecord = function (userRecords, params, totalRowCount) {
-        // console.log(userRecords);
+        console.log(userRecords);
         if (userRecords.length === 0)
         {
             params.failCallback([], totalRowCount);

@@ -35,7 +35,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         changeIdentityNumber: changeIdentityNumber,
         changeDateOfBirth: changeDateOfBirth,
         changeContactType: changeContactType,
-        changeContactNumber: changeContactNumber,
+        changeContactValue: changeContactValue,
         validateUserDetails: validateUserDetails,
         validateConfirmDetails: validateConfirmDetails,
         checkUserAlreadyExistByIdentity: checkUserAlreadyExistByIdentity,
@@ -360,6 +360,10 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         if (nationality_id && identity_type_id && identity_number) {
             this.unsetAllErrors(scope);
         }
+    }
+
+    function changeContactValue(scope) {
+        this.unsetError('contact_value');
     }
 
     function changeDateOfBirth(scope) {
@@ -692,7 +696,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                     },
                 };
                 setTimeout(function () {
-                    setInternalSearchData();
+                    setInternalSearchData(scope);
                 }, 1500);
             }, function (error) {
                 scope.internalGridOptions = {
@@ -890,7 +894,66 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             deferred.reject(error);
         });
         return deferred.promise;
+    }
+
+    function setInternalSearchData(scope) {
+        var first_name = '';
+        var last_name = '';
+        var openemis_no = null;
+        var date_of_birth = '';
+        var identity_number = '';
+
+        var nationality_id = '';
+        var nationality_name = '';
+        var identity_type_name = '';
+        var identity_type_id = '';
+
+        first_name = scope.selectedUserData.first_name;
+        last_name = scope.selectedUserData.last_name;
+        date_of_birth = scope.selectedUserData.date_of_birth;
+        identity_number = scope.selectedUserData.identity_number;
+        openemis_no = scope.selectedUserData.openemis_no;
+        nationality_id = scope.selectedUserData.nationality_id;
+        nationality_name = scope.selectedUserData.nationality_name;
+        identity_type_name = scope.selectedUserData.identity_type_name;
+        identity_type_id = scope.selectedUserData.identity_type_id;
+        var dataSource = {
+            pageSize: scope.pageSize,
+            getRows: function (params) {
+                UtilsSvc.isAppendLoader(true);
+                var param = {
+                    page: params.endRow / (params.endRow - params.startRow),
+                    limit: params.endRow - params.startRow,
+                    first_name: first_name,
+                    last_name: last_name,
+                    openemis_no: openemis_no,
+                    date_of_birth: date_of_birth,
+                    identity_number: identity_number,
+                    institution_id: null,
+                    user_type_id: scope.selectedUserData.user_type_id,
+                    nationality_id: nationality_id,
+                    nationality_name: nationality_name,
+                    identity_type_name: identity_type_name,
+                    identity_type_id: identity_type_id
     };
+                console.log(param);
+                getInternalSearchData(param)
+                    .then(function (response) {
+                        var gridData = response.data.data;
+                        if (!gridData)
+                            gridData = [];
+                        var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
+                        scope.isSearchResultEmpty = gridData.length === 0;
+                        return scope.processGridUserRecord(gridData, params, totalRowCount);
+                    }, function (error) {
+                        console.error(error);
+                        UtilsSvc.isAppendLoader(false);
+                    });
+            }
+        };
+        scope.internalGridOptions.api.setDatasource(dataSource);
+        scope.internalGridOptions.api.sizeColumnsToFit();
+    }
 
     function getExternalSearchData(params) {
         var deferred = $q.defer();
@@ -902,7 +965,72 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             deferred.reject(error);
         });
         return deferred.promise;
+    }
+
+    function setExternalSearchData(scope) {
+        var param = {
+            first_name: scope.selectedUserData.first_name,
+            last_name: scope.selectedUserData.last_name,
+            date_of_birth: scope.selectedUserData.date_of_birth,
+            identity_number: scope.selectedUserData.identity_number,
+            openemis_no: scope.selectedUserData.openemis_no,
+            nationality_id: scope.selectedUserData.nationality_id,
+            search_type: scope.externalSearchSourceName,
+        }
+        var dataSource = {
+            pageSize: scope.pageSize,
+            getRows: function (params) {
+                UtilsSvc.isAppendLoader(true);
+                param.limit = params.endRow - params.startRow;
+                param.page = params.endRow / (params.endRow - params.startRow);
+                getExternalSearchData(param)
+                    .then(function (response) {
+                        var gridData = response.data.data;
+                        if (!gridData) {
+                            gridData = [];
+                        }
+                        if (scope.externalSearchSourceName === 'UNHCR') {
+                            scope.selectedUserData.identity_number = null;
+                        }
+                        // console.log(gridData);
+                        gridData.forEach((data, idx) => {
+                            if (scope.externalSearchSourceName === 'UNHCR') {
+                                scope.selectedUserData.identity_number = null;
+                                data.name = scope.selectedUserData.name;
+                                data.gender = scope.selectedUserData.gender.name;
+                                data.gender_id = scope.selectedUserData.gender_id;
+                                data.nationality_id = scope.selectedUserData.nationality_id;
+                                data.nationality = scope.selectedUserData.nationality_name;
+                                data.identity_type = scope.selectedUserData.identity_type_name;
+                                data.identity_type_id = scope.selectedUserData.identity_type_id;
+                                data.first_name = scope.selectedUserData.first_name;
+                                data.last_name = scope.selectedUserData.last_name;
+                                data.middle_name = scope.selectedUserData.middle_name;
+                                data.third_name = scope.selectedUserData.third_name;
+                                data.preferred_name = scope.selectedUserData.preferred_name;
+                                data.date_of_birth = scope.selectedUserData.date_of_birth;
+                            } else {
+                                data.gender_id = data['gender.id'];
+                                data.gender = data['gender.name'];
+                                data.nationality_id = data['main_nationality.id'];
+                                data.nationality = data['main_nationality.name'];
+                                data.identity_type = data['main_identity_type.name'];
+                                data.identity_type_id = data['main_identity_type.id'];
+                            }
+                            data.id = idx;
+                        });
+                        var totalRowCount = response.data.total === 0 ? 1 : response.data.total;
+                        scope.isSearchResultEmpty = gridData.length === 0;
+                        return scope.processGridUserRecord(gridData, params, totalRowCount);
+                    }, function (error) {
+                        console.error(error);
+                        UtilsSvc.isAppendLoader(false);
+                    });
+            }
     };
+        scope.externalGridOptions.api.setDatasource(dataSource);
+        scope.externalGridOptions.api.sizeColumnsToFit();
+    }
 
     function getRedirectToGuardian() {
         var deferred = $q.defer();
@@ -914,11 +1042,11 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             deferred.reject(error);
         });
         return deferred.promise;
-    };
+    }
 
     function getStudentCustomFields(userId){
         var params = {
-            student_id: userId
+            student_id: userId,
         };
         var deferred = $q.defer();
         let url = angular.baseUrl + '/Institutions/studentCustomFields';
@@ -1030,8 +1158,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
      * @required {nationality_id} nationality_id
      * @returns {[{"user_exist":1,"status_code":2,"message":"User already exist with this nationality, identity type & identity type. Kindly select user from below list."}]}
      */
-    function checkUserAlreadyExistByIdentity(params)
-    {
+    function checkUserExistByIdentity(params) {
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Institutions/checkUserAlreadyExistByIdentity';
         $http.post(url, { params: params })
@@ -1090,4 +1217,62 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             });
         return deferred.promise;
     }
+
+    function setError(errorObj, field, message) {
+        errorObj[field] = message;
+    }
+
+    function unsetError(errorObj, field) {
+        delete errorObj[field];
+    }
+
+    function unsetAllErrors(scope) {
+        scope.error = {};
+    }
+
+    function isNextButtonShouldDisable(scope) {
+        const {
+            step,
+            selectedUserData: {
+                first_name,
+                last_name,
+                date_of_birth,
+                gender_id,
+                identity_number,
+                openemis_no,
+                user_id
+            },
+            isIdentityUserExist,
+            externalSearchSourceName,
+            isExternalSearchEnable
+        } = scope;
+
+        const checkVars = {
+            step,
+            first_name,
+            last_name,
+            date_of_birth,
+            gender_id,
+            identity_number,
+            openemis_no,
+            user_id,
+            isIdentityUserExist,
+            externalSearchSourceName,
+            isExternalSearchEnable
 };
+
+        const isInternalSearch = checkVars.step === "internal_search";
+        const isExternalSearch = checkVars.step === "external_search";
+
+        // console.log(checkVars);
+
+        if (checkVars.isIdentityUserExist && isInternalSearch) return true;
+        if (checkVars.openemis_no && !checkVars.user_id && isInternalSearch) return true;
+        if (checkVars.identity_number && !checkVars.user_id && !checkVars.isExternalSearchEnable && isInternalSearch) return true;
+        if (isInternalSearch && !checkVars.isExternalSearchEnable && !(checkVars.first_name && checkVars.last_name && checkVars.date_of_birth && checkVars.gender_id)) return true;
+        if (isExternalSearch && checkVars.externalSearchSourceName === 'UNHCR' && !checkVars.identity_number) return true;
+        if (isExternalSearch && !(checkVars.first_name && checkVars.last_name && checkVars.date_of_birth && checkVars.gender_id)) return true;
+
+        return false;
+    }
+}

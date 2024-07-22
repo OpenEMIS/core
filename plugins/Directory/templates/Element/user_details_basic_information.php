@@ -47,7 +47,7 @@
             <input type="text" class="form-control "
                    name="User[date_of_birth]"
                    ng-model="selectedUserData.date_of_birth"
-                   ng-change="checkDateOfBirth()">
+                   ng-change="changeDateOfBirth()">
             <span class="input-group-addon" style="color: #FFFFFF;background-color: #6699CC;"><i class="glyphicon glyphicon-calendar"></i></span>
         </div>
         <div ng-if="error.date_of_birth" class="error-message">

@@ -129,7 +129,6 @@ class DirectoriesTable extends ControllerActionTable
 
         $institutionsTable = self::getDynamicTableInstance('Institution.Institutions');
 
-
         $institutionStaffTable = self::getDynamicTableInstance('Institution.Staff');
 
         $userInternalSearchResult = [];
@@ -141,6 +140,8 @@ class DirectoriesTable extends ControllerActionTable
                 $institutionsTable,
                 $institutionStaffTable);
         }
+//        Log::debug(__FUNCTION__);
+//        Log::debug(print_r($userInternalSearchResult, true));
 
         return ['data' => $userInternalSearchResult, 'total' => count($userInternalSearchResult)];
     }
@@ -406,20 +407,17 @@ class DirectoriesTable extends ControllerActionTable
         $identityTypesTable = self::getDynamicTableInstance('FieldOption.IdentityTypes');
         $specialNeedsTable = self::getDynamicTableInstance('SpecialNeeds.SpecialNeedsAssessments');
 
-        $nationality = null;
-        $identityType = null;
-
-        if (!empty($securityUser['nationality_id'])) {
-            $nationality = $nationalitiesTable->find()->where(['id' => $securityUser['nationality_id']])->first();
-        }
-
-        if (!empty($securityUser['identity_type_id'])) {
-            $identityType = $identityTypesTable->find()->where(['id' => $securityUser['identity_type_id']])->first();
+        if (is_resource($securityUser['photo_content'])) {
+            // Read the resource content
+            $content = stream_get_contents($securityUser['photo_content']);
+            // Encode the content to base64
+            $securityUser['photo_content'] = base64_encode($content);
         }
 
         $hasSpecialNeeds = $specialNeedsTable->find()
                 ->where(['security_user_id' => $securityUser['id']])
                 ->count() == 1;
+
         $firstName = $securityUser['first_name'] ?? '';
         $middleName = $securityUser['middle_name'] ?? '';
         $thirdName = $securityUser['third_name'] ?? '';
@@ -438,6 +436,8 @@ class DirectoriesTable extends ControllerActionTable
         }
         $account_type = !empty($accountTypes) ? implode(', ', $accountTypes) : 'Others';
         $contactData = self::getContactData($securityUser['id']);
+        // POCOR-8231 for photo
+
         $userInternalSearchResult = [
             'id' => $securityUser['id'],
             'username' => $securityUser['username'],

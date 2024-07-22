@@ -20,6 +20,7 @@ class DirectoriesController extends AppController
     const STAFF = 2;
     const GUARDIAN = 3;
     const OTHER = 4;
+    private $searchingAJAX = 0;
 
     public function initialize(): void
     {
@@ -1434,9 +1435,10 @@ class DirectoriesController extends AppController
     private function sendJsonResponse(array $response): Response
     {
         $this->autoRender = false;
+        $json_encoded = json_encode($response, JSON_PRETTY_PRINT);
         return $this->response
             ->withType('application/json')
-            ->withStringBody(json_encode($response));
+            ->withStringBody($json_encoded);
     }
 
     /**
@@ -1599,6 +1601,13 @@ class DirectoriesController extends AppController
      */
     public function directoryInternalSearch(): Response
     {
+//        if($this->searchingAJAX > 0){
+            $this->searchingAJAX = $this->searchingAJAX + 1;
+            if($this->searchingAJAX < 2){
+            return $this->sendJsonResponse(['searching' => $this->searchingAJAX]);
+            }
+//        }
+        $this->searchingAJAX = 1;
         $Directories = $this->getDynamicTableInstance('Directory.Directories');
 
         // Read JSON input
@@ -1606,7 +1615,9 @@ class DirectoriesController extends AppController
 
         // Get the internal search results
         $internalSearchResults = $Directories::getUserInternalSearch($requestData);
-
+//        Log::debug(__FUNCTION__);
+//        Log::debug(print_r($internalSearchResults['data'][0], true));
+//        $internalSearchResults = ['mama' => $internalSearchResults['data'][0]];
         // Set response type and body
         return $this->sendJsonResponse($internalSearchResults);
     }
