@@ -948,10 +948,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+//        POCOR-8391 start
         if (!$entity->isNew()) {
             //empty subject student is handled by beforeMarshal
             //in another case, it will be save manually to avoid unecessary queries during save by association
-            if ($entity->has('subjectStudent') && !empty($entity->subjectStudent)) {
+            if (isset($entity->subjectStudent)) {
                 // $institutionClassId = 0;
                 $newStudents = [];
                 //decode string sent through form
@@ -966,31 +967,38 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 //find existing subject student to make comparison
                 $educationGradeId = $entity->education_grade_id;
                 $educationSubjectId = $entity->education_subject_id;
+                $student_status_id = $entity->student_status_id;
                 $institutionSubjectId = $entity->id;
                 // $institutionClassIds = $options['originalClass'];
-                $institutionClassIds = $entity['class_subjects'][0]['institution_class_id'];   //Version4
+                // $institutionClassIds = $entity['class_subjects'][0]['institution_class_id'];   //Version4
                 $SubjectStudents  =  TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
+                $where = [
+                    $SubjectStudents->aliasField('education_subject_id') => $educationSubjectId,
+                    $SubjectStudents->aliasField('institution_subject_id') => $institutionSubjectId,
+                    $SubjectStudents->aliasField('student_status_id = 1')
+                ];
                 $existingStudents = $SubjectStudents
                     ->find('all')
                     ->select([
                         'id', 'student_id', 'institution_class_id', 'education_grade_id', 'academic_period_id', 'institution_id',
                         'student_status_id', 'institution_subject_id', 'education_subject_id'
                     ])
-                    ->where([
-                        // $SubjectStudents->aliasField('institution_class_id') . ' IN ' => $institutionClassIds,
-                        //$SubjectStudents->aliasField('education_grade_id') => $educationGradeId,//POCOR-7139 no need require of this conidition
-                        $SubjectStudents->aliasField('education_subject_id') => $educationSubjectId,
-                        $SubjectStudents->aliasField('institution_subject_id') => $institutionSubjectId
-                    ])
+                    ->where($where)
                     ->toArray();
                 foreach ($existingStudents as $key => $subjectStudentEntity) {
-                    if (!array_key_exists($subjectStudentEntity->student_id, $newStudents)) { // if current student does not exists in the new list of students
+                    $student_id = $subjectStudentEntity->student_id;
+                    if (!isset($newStudents[$student_id])) { // if current student does not exists in the new list of students
+//                        Log::debug('- ' . strval($student_id));
                         $this->SubjectStudents->delete($subjectStudentEntity);
                     } else { // if student exists, then remove from the array to get the new student records to be added
-                        unset($newStudents[$subjectStudentEntity->student_id]);
+//                        Log::debug('+ ' . strval($student_id));
+                        unset($newStudents[$student_id]);
                     }
                 }
                 foreach ($newStudents as $key => $student) {
+                    $student->student_status_id = 1;
+                    $student['student_status_id'] = 1;
+//                    Log::debug(print_r($student, true));
                     $subjectStudentEntity = $this->SubjectStudents->newEntity($student);
                     $this->SubjectStudents->save($subjectStudentEntity);
                 }
