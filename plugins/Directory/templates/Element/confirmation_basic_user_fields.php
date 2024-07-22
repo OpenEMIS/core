@@ -10,7 +10,7 @@
     <label><?= __('Middle Name') ?></label>
     <input ng-model="selectedUserData.middle_name"
            ng-change="setName()" type="string"
-           ng-disabled="selectedUserData.middle_nam">
+           ng-disabled="selectedUserData.middle_name">
 </div>
 <div class="input string">
     <label><?= __('Third Name') ?></label>

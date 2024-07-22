@@ -10,7 +10,6 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         Genders: 'User.Genders',
         Nationalities: 'FieldOption.Nationalities'
     };
-    const userSvc = this;
     var service = {
         init: init,
         // user details function
@@ -40,7 +39,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         validateConfirmDetails: validateConfirmDetails,
         checkUserAlreadyExistByIdentity: checkUserAlreadyExistByIdentity,
         checkUserExistByIdentity: checkUserExistByIdentity,
-        checkUserDetailValidationBlocksHasError,
+        // checkUserDetailValidationBlocksHasError,
         // end user details function
 
         //confirm user functions
@@ -52,7 +51,6 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         goToInternalSearch: goToInternalSearch,
         goToExternalSearch: goToExternalSearch,
         getExternalSearchData: getExternalSearchData,
-        setExternalSearchData: setExternalSearchData,
         getStudentCustomFields: getStudentCustomFields,
         getStaffCustomFields: getStaffCustomFields,
         getAddressAreaId: getAddressAreaId,
@@ -126,7 +124,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
     }
 
     // POCOR-8231 for Ctrl.js
-    function setPassword($scope) {
+    function setPassword(scope) {
         if (scope.selectedUserData.password) {
             // if no pswd only
             return Promise.resolve();
@@ -492,7 +490,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                     onRowSelected: function (_e) {
                         var id = _e.node.data.id;
                         scope.selectUserFromExternalSearch(id);
-                        $scope.$apply();
+                        scope.$apply();
                     },
                     onGridSizeChanged: function () {
                         this.api.sizeColumnsToFit();
@@ -578,7 +576,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                     onRowSelected: function (_e) {
                         var id = _e.node.data.id;
                         scope.selectUserFromExternalSearch(id);
-                        $scope.$apply();
+                        scope.$apply();
                     },
                     onGridSizeChanged: function () {
                         this.api.sizeColumnsToFit();
@@ -682,7 +680,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                         scope.isInternalSearchSelected = true;
                         scope.isExternalSearchSelected = false;
                         scope.selectUserFromInternalSearch(_e.node.data.id);
-                        $scope.$apply();
+                        scope.$apply();
                     },
                     onGridSizeChanged: function () {
                         this.api.sizeColumnsToFit();
@@ -769,7 +767,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                         scope.isInternalSearchSelected = true;
                         scope.isExternalSearchSelected = false;
                         scope.selectUserFromInternalSearch(_e.node.data.id);
-                        $scope.$apply();
+                        scope.$apply();
                     },
                     onGridSizeChanged: function () {
                         this.api.sizeColumnsToFit();
