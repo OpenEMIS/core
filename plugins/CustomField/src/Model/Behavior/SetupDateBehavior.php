@@ -82,11 +82,11 @@ class SetupDateBehavior extends SetupBehavior
         if (!empty($this->_table->request->getData())) {
             $selectedRangeValidation = (array_key_exists($this->_table->getAlias(), $this->_table->request->getData()) && array_key_exists('validation_rules_date', $this->_table->request->getData($this->_table->getAlias())))? $this->_table->request->getData($this->_table->getAlias())['validation_rules_date']: null;
         } else {
-            if (array_key_exists('start_date', $paramsArray) && array_key_exists('end_date', $paramsArray)) {
+            if (isset($paramsArray['start_date']) && isset($paramsArray['end_date'])) {
                 $selectedRangeValidation = 'between';
-            } else if (array_key_exists('start_date', $paramsArray)) {
+            } else if (isset($paramsArray['start_date'])) {
                 $selectedRangeValidation = 'earlier';
-            } else if (array_key_exists('end_date', $paramsArray)) {
+            } else if (isset($paramsArray['end_date'])) {
                 $selectedRangeValidation = 'later';
             } else {
                 $selectedRangeValidation = 'no';
@@ -99,26 +99,26 @@ class SetupDateBehavior extends SetupBehavior
             switch ($selectedRangeValidation) {
                 case 'earlier':
                     $options = ['type' => 'date', 'after' => 'validation_rules_date', 'null' => false];
-                    if (array_key_exists('start_date', $paramsArray)) {
+                    if (isset($paramsArray['start_date'])) {
                         $options['value'] = $paramsArray['start_date'];
                     }
                     $this->_table->field('start_date', $options);
                     break;
                 case 'later':
                     $options = ['type' => 'date', 'after' => 'validation_rules_date', 'null' => false];
-                    if (array_key_exists('end_date', $paramsArray)) {
+                    if (isset($paramsArray['end_date'])) {
                         $options['value'] = $paramsArray['end_date'];
                     }
                     $this->_table->field('end_date', $options);
                     break;
                 case 'between':
                     $options = ['type' => 'date', 'after' => 'validation_rules_date', 'null' => false];
-                    if (array_key_exists('start_date', $paramsArray)) {
+                    if (isset($paramsArray['start_date'])) {
                         $options['value'] = $paramsArray['start_date'];
                     }
                     $this->_table->field('start_date', $options);
                     $options = ['type' => 'date', 'after' => 'start_date', 'null' => false];
-                    if (array_key_exists('end_date', $paramsArray)) {
+                    if (isset($paramsArray['end_date'])) {
                         $options['value'] = $paramsArray['end_date'];
                     }
                     $this->_table->field('end_date', $options);
@@ -135,11 +135,11 @@ class SetupDateBehavior extends SetupBehavior
     {
         $decodedParams = $event->getSubject()->HtmlField->decodeEscapeHtmlEntity($entity->params);
         $paramsArray = (!empty($decodedParams))? json_decode($decodedParams, true): [];
-        if (array_key_exists('start_date', $paramsArray) && array_key_exists('end_date', $paramsArray)) {
+        if (isset($paramsArray['start_date']) && isset($paramsArray['end_date'])) {
             return $this->rangeValidationOptions['between'].' '.$paramsArray['start_date'].' - '.$paramsArray['end_date'];
-        } else if (array_key_exists('start_date', $paramsArray)) {
+        } else if (isset($paramsArray['start_date'])) {
             return $this->rangeValidationOptions['earlier'].' '.$paramsArray['start_date'];
-        } else if (array_key_exists('end_date', $paramsArray)) {
+        } else if (isset($paramsArray['end_date'])) {
             return $this->rangeValidationOptions['later'].' '.$paramsArray['end_date'];
         } else {
             return $this->rangeValidationOptions['no'];
@@ -152,8 +152,8 @@ class SetupDateBehavior extends SetupBehavior
         if ($data->offsetExists('validation_rules_date')) {
             if ($data['field_type'] == $this->fieldTypeCode) {
                 $paramsArray = [];
-                // $start_date = (array_key_exists('start_date', $data))? $data['start_date']: null;
-                // $end_date = (array_key_exists('end_date', $data))? $data['end_date']: null;
+                // $start_date = (isset($data['start_date']))? $data['start_date']: null;
+                // $end_date = (isset($data['end_date']))? $data['end_date']: null;
                 $start_date = $data->offsetExists('start_date') ? $data->offsetGet('start_date') : null;
                 $end_date = $data->offsetExists('end_date') ? $data->offsetGet('end_date') : null;
 

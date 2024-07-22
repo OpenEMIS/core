@@ -1,6 +1,6 @@
 <?php
 // field name
-$fieldName = (array_key_exists('fieldName', $attr))? $attr['fieldName']: $attr['model'].'['.$attr['field'].']';
+$fieldName = (isset($attr['fieldName']))? $attr['fieldName']: $attr['model'].'['.$attr['field'].']';
 // need to format this string
 $tokens = explode('.', $fieldName);
 $firstToken = array_shift($tokens);
@@ -73,10 +73,10 @@ if (isset($attr['alwaysShowOneButton'])) {
 
 		<?php if (!empty($wrapperClass)):?>
 			<div class="input-left-btn">
-				<?php 
+				<?php
 					$downloadClass = ($selectedButton=='download') ? '' : 'fileinput-exists ';
 				?>
-				<?php 
+				<?php
 					if (!isset($downloadOnClick)):
 						$downloadOnClick = "";
 					endif;
@@ -84,11 +84,11 @@ if (isset($attr['alwaysShowOneButton'])) {
 				<button class="btn <?= $downloadClass; ?>" data-toggle="tooltip" data-container="body" data-placement="bottom" title="<?= __('Download Template') ?>" type="reset" onclick="<?= $downloadOnClick ?>">
 					<i class="fa kd-download"></i>
 				</button>
-				
-				<?php 
+
+				<?php
 					$importClass = ($selectedButton=='import') ? '' : 'fileinput-exists ';
 				?>
-				<?php 
+				<?php
 					if (!isset($importOnClick)):
 						$importOnClick = '';
 					endif;
@@ -118,7 +118,7 @@ if (isset($attr['alwaysShowOneButton'])) {
 
 		<?php
 			$errorMsg = '';
-			if (array_key_exists('fieldName', $attr)) {
+			if (isset($attr['fieldName'])) {
 				$errorMsg = $this->Form->error($attr['fieldName']);
 			} else {
 				$errorMsg = $this->Form->error($attr['field']);

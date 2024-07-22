@@ -16,7 +16,7 @@ class InstitutionHistoriesController extends PageController
         $this->Page->disable(['add', 'edit', 'view', 'delete']);
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $institutionId = $this->getQueryString('institution_id');
         $institutionName = $this->Institutions->get($institutionId)->name;

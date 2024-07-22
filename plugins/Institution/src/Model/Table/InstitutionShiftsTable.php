@@ -176,7 +176,7 @@ class InstitutionShiftsTable extends ControllerActionTable
     {
         //echo $extra['selectedAcademicPeriodOptions']; exit;
         $institutionId = $this->getInstitutionID();
-        if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
+        if (isset($extra['selectedAcademicPeriodOptions'])) {
             $query->where([
                 'OR' => [
                     [$this->aliasField('location_institution_id') => $institutionId],
@@ -655,8 +655,8 @@ class InstitutionShiftsTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        //POCOR-6618 starts 
-        if(!empty($entity->id) && $entity->location){ //this will work when edit any shift 
+        //POCOR-6618 starts
+        if(!empty($entity->id) && $entity->location){ //this will work when edit any shift
             $institutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts')->find()
                                     ->where(['id'=>$entity->id])->first();
             //location_institution_id belongs to `occupier` and  institution_id belongs to `owner`
@@ -667,7 +667,7 @@ class InstitutionShiftsTable extends ControllerActionTable
                 $entity->institution_id = $entity->institution_id;
                 $entity->location_institution_id = $this->request->data['InstitutionShifts']['location_institution_id'];
             }
-            //when the occupier and the owner are same 
+            //when the occupier and the owner are same
             if ($entity->location == 'CURRENT' && ($this->request->getData('InstitutionShifts')['institution_id'] == $institutionShifts->institution_id) && ($institutionShifts->institution_id == $institutionShifts->location_institution_id)) {
                 $entity->location_institution_id = $this->request->getData('InstitutionShifts')['institution_id'];
             }
@@ -828,7 +828,7 @@ class InstitutionShiftsTable extends ControllerActionTable
 
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
-       
+
         $institutionClasses = TableRegistry::getTableLocator()->get('institution_units');
        // $query11 = $institutionClasses->find('list',['keyField' => 'id', 'valueField' => 'name']);
         $query11 = $institutionClasses->find('all',['fields' => ['id', 'name']]);
@@ -1100,11 +1100,11 @@ class InstitutionShiftsTable extends ControllerActionTable
     {
         // if its students, it will have classId
         // it will used the classId to get the institutionId and get the shift time.
-        $classId = array_key_exists('institution_class_id', $options) ? $options['institution_class_id'] : null;
+        $classId = isset($options['institution_class_id']) ? $options['institution_class_id'] : null;
 
         // for staff, they dont have the classId, so will used the academic periodId and institutionId to get the shift time.
-        $academicPeriodId = array_key_exists('academic_period_id', $options) ? $options['academic_period_id'] : null;
-        $institutionId = array_key_exists('institution_id', $options) ? $options['institution_id'] : null;
+        $academicPeriodId = isset($options['academic_period_id']) ? $options['academic_period_id'] : null;
+        $institutionId = isset($options['institution_id']) ? $options['institution_id'] : null;
 
         if (!is_null($classId)) {
             $InstitutionClasses = $this->InstitutionClasses;

@@ -46,11 +46,11 @@ class StaffSubjectsTable extends ControllerActionTable {
         return $events;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra) {       
+    public function indexBeforeAction(Event $event, ArrayObject $extra) {
         //echo "<pre>"; print_r($extra['query']->toArray());die;
         $this->field('academic_period', []);
         //start:POCOR-5274
-        $this->field('institution_class',['sort'  => ['field' =>'InstitutionClasses.name']]);        
+        $this->field('institution_class',['sort'  => ['field' =>'InstitutionClasses.name']]);
         $this->field('institution_subject_id', [ 'sort' => ['field' => 'InstitutionSubjects.name']]);
         //end:POCOR-5274
         $this->field('education_subject', []);
@@ -69,7 +69,7 @@ class StaffSubjectsTable extends ControllerActionTable {
 
         // Start POCOR-5188
 		if($this->request->getParam('controller') == 'Staff'){
-			$is_manual_exist = $this->getManualUrl('Institutions','Subjects','Staff - Career');       
+			$is_manual_exist = $this->getManualUrl('Institutions','Subjects','Staff - Career');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -78,7 +78,7 @@ class StaffSubjectsTable extends ControllerActionTable {
 					'escape' => false,
 					'target'=>'_blank'
 				];
-		
+
 				$helpBtn['url'] = $is_manual_exist['url'];
 				$helpBtn['type'] = 'button';
 				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -86,8 +86,8 @@ class StaffSubjectsTable extends ControllerActionTable {
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->getParam('controller') == 'Directories'){ 
-			$is_manual_exist = $this->getManualUrl('Directory','Subjects','Staff - Career');       
+		}elseif($this->request->getParam('controller') == 'Directories'){
+			$is_manual_exist = $this->getManualUrl('Directory','Subjects','Staff - Career');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -119,12 +119,12 @@ class StaffSubjectsTable extends ControllerActionTable {
         ]);
         //start:POCOR-5274
         $query->find('withClass', ['institution_id' => $institutionId, 'period_id' => $academicPeriodId]);
-        
+
         $sortList = ['InstitutionSubjects.name','start_date','end_date','InstitutionClasses.name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
-        //end:POCOR-5274       
+        //end:POCOR-5274
 
         $extra['options']['sortWhitelist'] = $sortList;
         // Academic Periods
@@ -137,8 +137,8 @@ class StaffSubjectsTable extends ControllerActionTable {
         $academicPeriodOptions += ['0'=>'All Acedemic Period'];
         //end:POCOR-5274
         if(!empty($this->request->getQuery('academic_period_id'))){
-            $academicPeriodId = $this->request->getQuery('academic_period_id');                     
-        }    
+            $academicPeriodId = $this->request->getQuery('academic_period_id');
+        }
         //start:POCOR-5274
         if($academicPeriodId == 0){
             $query->toArray();
@@ -147,15 +147,15 @@ class StaffSubjectsTable extends ControllerActionTable {
         }
         //end:POCOR-5274
         $this->controller->set(compact('academicPeriodOptions','academicPeriodId'));
-               
-                
+
+
     }
 
     //start:POCOR-5274
     public function findWithClass(Query $query, array $options)
     {
         $queryData = $query->toArray();
-        $staff_id = $queryData[0]['staff_id']; 
+        $staff_id = $queryData[0]['staff_id'];
         if($staff_id == NULL){
             $staff_id  = 1;
         }
@@ -180,26 +180,26 @@ class StaffSubjectsTable extends ControllerActionTable {
             ->where([$this->aliasField('staff_id') => $staff_id])
             ->group([$InstitutionClassSubjects->aliasField('institution_subject_id')]);//POCOR-6710
     }
-    //end:POCOR-5274   
-     
+    //end:POCOR-5274
+
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        
+
         if ($this->action == 'index') {
             $queryString = $this->getQueryString();
             $encodedQueryString = $this->paramsEncode($queryString);
-            
+
             $indexElements[] = ['name' => 'Staff.Staff/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 0];
             $extra['elements'] = array_merge($extra['elements'], $indexElements);
         }
-       
+
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             $institutionId = $entity->institution_subject->institution_id;
             $url = [
                 'plugin' => 'Institution',
@@ -208,7 +208,7 @@ class StaffSubjectsTable extends ControllerActionTable {
                 0 => 'view',
                 //1 => $encodedQueryString,//here we got staff_id, user_id and institution_id
                 $this->paramsEncode(['id' => $entity->institution_subject->id, 'institution_id' => $institutionId]),
-                
+
             ];
             $buttons['view']['url'] = $url;
         }
@@ -306,7 +306,7 @@ class StaffSubjectsTable extends ControllerActionTable {
 
     private function getSubjectOptions() {
         $subjectOptions = [];
-        
+
         if (
             array_key_exists($this->getAlias(), $this->request->getData())
              && array_key_exists('institution_class_id', $this->request->getData()[$this->getAlias()])
@@ -331,11 +331,11 @@ class StaffSubjectsTable extends ControllerActionTable {
                         $this->InstitutionSubjects->aliasField('name')
                     ])
                 ->toArray();
-                
+
             // data massage for teacher names
             foreach ($subjectOptions as $key => $value) {
                 $tempTeacherArray = [];
-                
+
                 if ($value->has('teachers')) {
                     foreach ($value->teachers as $tkey => $tvalue) {
                         $tempTeacherArray[$tvalue->id] = $tvalue->name;
@@ -352,13 +352,13 @@ class StaffSubjectsTable extends ControllerActionTable {
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         $extra['redirect'] = false;
-        $subjectOptions = (array_key_exists('subjectOptions', $extra))? $extra['subjectOptions']: [];
-        $staffId = (array_key_exists('staffId', $extra))? $extra['staffId']: null;
+        $subjectOptions = (isset($extra['subjectOptions']))? $extra['subjectOptions']: [];
+        $staffId = (isset($extra['staffId']))? $extra['staffId']: null;
         $process = function ($model, $entity) use ($requestData, $subjectOptions, $staffId) {
             if (empty($staffId)) return false;
             $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
             $result = false;
-            if (array_key_exists('Subjects', $requestData)) {
+            if (isset($requestData['Subjects'])) {
                 foreach ($requestData['Subjects'] as $key => $value) {
                     $selectedSubjects[] = $value['subject_id'];
                 }
@@ -423,7 +423,7 @@ class StaffSubjectsTable extends ControllerActionTable {
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-    
+
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
         if ($this->action == 'add') {
@@ -432,7 +432,7 @@ class StaffSubjectsTable extends ControllerActionTable {
                 $buttonsArray = $buttons->getArrayCopy();
                 $indexesToRemove = [];
                 foreach ($buttonsArray as $key => $value) {
-                    if (array_key_exists('attr', $value)) {
+                    if (isset($value['attr'])) {
                         if (array_key_exists('value', $value['attr'])) {
                             if ($value['attr']['value'] == 'save') {
                                 // save button identification

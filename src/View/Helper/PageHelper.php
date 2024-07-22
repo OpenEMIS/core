@@ -68,7 +68,7 @@ class PageHelper extends Helper
                 continue;
             }
 
-            if (array_key_exists('css', $include)) {
+            if (isset($include['css'])) {
                 if (is_array($include['css'])) {
                     foreach ($include['css'] as $css) {
                         echo $this->Html->css($css, ['block' => true]);
@@ -77,7 +77,7 @@ class PageHelper extends Helper
                     echo $this->Html->css($include['css'], ['block' => true]);
                 }
             }
-            if (array_key_exists('js', $include)) {
+            if (isset($include['js'])) {
                 if (is_array($include['js'])) {
                     foreach ($include['js'] as $js) {
                         echo $this->Html->script($js, ['block' => true]);
@@ -86,7 +86,7 @@ class PageHelper extends Helper
                     echo $this->Html->script($include['js'], ['block' => true]);
                 }
             }
-            if (array_key_exists('element', $include)) {
+            if (isset($include['element'])) {
                 $this->_View->element($include['element']);
             }
         }
@@ -157,7 +157,7 @@ class PageHelper extends Helper
         if ($buttons->count() > 0) {
             $html = '<div class="form-buttons"><div class="button-label"></div>';
             foreach ($buttons as $btn) {
-                if (!array_key_exists('url', $btn)) {
+                if (!isset($btn['url'])) {
                     $html .= $this->Form->button($btn['name'], $btn['attr']);
                 } else {
                     $html .= $this->Html->link($btn['name'], $btn['url'], $btn['attr']);
@@ -220,10 +220,10 @@ class PageHelper extends Helper
 
             if ($attr['sortable']) {
                 $url = $this->getUrl(['action' => $currentAction], true);
-                if (array_key_exists('sort', $url)) {
+                if (isset($url['sort'])) {
                     unset($url['sort']);
                 }
-                if (array_key_exists('direction', $url)) {
+                if (isset($url['direction'])) {
                     unset($url['direction']);
                 }
                 $label = $this->Paginator->sort($field, $label, ['url' => $url]);
@@ -347,14 +347,14 @@ class PageHelper extends Helper
         $array = $entity instanceof Entity ? $entity->toArray() : $entity;
         $data = Hash::flatten($array);
         $value = array_key_exists($field['key'], $data) ? $data[$field['key']] : '';
-        if (array_key_exists('displayFrom', $field)) { // if displayFrom exists, always get value based on displayFrom
+        if (isset($field['displayFrom'])) { // if displayFrom exists, always get value based on displayFrom
             $key = $field['displayFrom'];
             if (array_key_exists($key, $data)) {
                 $value = $data[$key];
             }
         } else {
             $isDropdownType = $controlType == 'dropdown';
-            $isOptionsExists = array_key_exists('options', $field);
+            $isOptionsExists = isset($field['options']);
             if ($isDropdownType && $isOptionsExists) {
                 $options = $field['options'];
                 $valueExistsInOptions = array_key_exists($value, $options);
@@ -366,7 +366,7 @@ class PageHelper extends Helper
 
         $isDateTimeType = in_array($controlType, ['date', 'time']);
         $isStringType = in_array($controlType, ['string', 'textarea']);
-        $hasDateTimeFormat = array_key_exists('format', $field);
+        $hasDateTimeFormat = isset($field['format']);
         $valueIsNotEmpty = !empty($value);
 
         if ($isDateTimeType && $hasDateTimeFormat && $valueIsNotEmpty) {
@@ -465,22 +465,22 @@ EOT;
     {
         $key = $field['key'];
         $options = $field['attributes'];
-        if (array_key_exists('name', $options)) {
+        if (isset($options['name'])) {
             unset($options['name']);
         }
 
-        if (array_key_exists('label', $field)) {
+        if (isset($field['label'])) {
             $options['label'] = $field['label'];
         }
 
-        if (array_key_exists('options', $field)) {
+        if (isset($field['options'])) {
             $options['options'] = $field['options'];
         }
 
         $invalidFields = $data->invalid();
         if (array_key_exists($key, $invalidFields)) {
             $value = $invalidFields[$key];
-            if (is_array($value) && array_key_exists('_ids', $value)) { // for multi select
+            if (is_array($value) && isset($value['_ids'])) { // for multi select
                 $value = $invalidFields[$key]['_ids'];
             }
             $options['value'] = $value;
@@ -641,7 +641,7 @@ EOT;
         $html = '';
         $cakephpVersion = Configure::version();
 
-        if (array_key_exists('disabled', $options) && array_key_exists('displayFrom', $field)) {
+        if (isset($options['disabled']) && isset($field['displayFrom'])) {
             $options['type'] = 'hidden';
             unset($options['disabled']);
             $value = $this->getValue($data, $field);
@@ -682,7 +682,7 @@ EOT;
         $html = '';
         $cakephpVersion = Configure::version();
 
-        if (array_key_exists('disabled', $options) && array_key_exists('displayFrom', $field)) {
+        if (isset($options['disabled']) && isset($field['displayFrom'])) {
             $options['type'] = 'hidden';
             unset($options['disabled']);
             $value = $this->getValue($data, $field);
@@ -739,12 +739,12 @@ EOT;
         $options = $this->extractHtmlAttributes($field, $data);
         $options['type'] = 'select';
 
-        if (array_key_exists('dependentOn', $field) && array_key_exists('params', $field)) {
+        if (isset($field['dependentOn']) && isset($field['params'])) {
             $options['dependent-on'] = $field['dependentOn'];
             $options['params'] = $field['params'];
         }
 
-        if (array_key_exists('multiple', $options)) {
+        if (isset($options['multiple'])) {
             return $this->multiselect($field, $data);
         }
 
@@ -764,7 +764,7 @@ EOT;
         $options['class'] = (I18n::locale() == 'ar') ? 'chosen-select chosen-rtl' : 'chosen-select';
 
         $options['data-placeholder'] = '';
-        if (array_key_exists('placeholder', $options)) {
+        if (isset($options['placeholder'])) {
             $options['data-placeholder'] = $options['placeholder'];
             unset($options['placeholder']);
         }

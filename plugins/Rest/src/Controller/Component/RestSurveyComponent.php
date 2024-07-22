@@ -84,10 +84,10 @@ class RestSurveyComponent extends Component
             return $this->response;
         } else { // download as file
             $fileName = $format . '_' . date('Ymdhis');
-            
+
             // $this->response->body($result->asXML());
             // $this->response->type('xml');
-            
+
             $this->response->getBody(function () use ($filePath) {
                 $content = file_get_contents($filePath);
                 if (file_exists($filePath)) {
@@ -132,7 +132,7 @@ class RestSurveyComponent extends Component
         echo $params;
         die;
     }//POCOR-8089
-	
+
 	//POCOR-8089
     public function checkIns($format = "xform", $id = 0, $insCode = 0, $academicPeriod = 0, $surveyQuesId = 0, $output = true)
     {
@@ -213,7 +213,7 @@ class RestSurveyComponent extends Component
             Log::write('debug', 'Data:');
             Log::write('debug', $data);
 
-            if (array_key_exists('response', $data)) {
+            if (isset($data['response'])) {
                 $CustomRecords = TableRegistry::get('Institution.InstitutionSurveys');
                 $formAlias = $this->Form->getAlias();
                 $fieldAlias = $this->Field->getAlias();
@@ -265,7 +265,7 @@ class RestSurveyComponent extends Component
                 $SecurityUser = TableRegistry::get('User.Users');
                 $userEntity = $SecurityUser->get($userId);
 
-                // checking of access only if the user is not super admin    
+                // checking of access only if the user is not super admin
                 if ($userEntity->super_admin == 0) {
                     $userHasAccess = $Institutions
                         ->find('byAccess', ['userId' => $userId])
@@ -643,9 +643,9 @@ class RestSurveyComponent extends Component
         if ($fieldEntity->has('params') && !empty($fieldEntity->params)) {
             $params = json_decode($fieldEntity->params, true);
 
-            if (array_key_exists('number', $params)) {
+            if (isset($params['number'])) {
                 $cellValueColumn = 'number_value';
-            } elseif (array_key_exists('decimal', $params)) {
+            } elseif (isset($params['decimal'])) {
                 $cellValueColumn = 'decimal_value';
             }
         }
@@ -985,14 +985,14 @@ class RestSurveyComponent extends Component
             ,classes_student_info.openemis_no
             ,classes_student_info.student_name
         FROM institution_classes
-        LEFT JOIN 
+        LEFT JOIN
         (
             SELECT institution_class_students.institution_class_id
                 ,security_users.id student_id
                 ,security_users.openemis_no
                 ,REPLACE(CONCAT_WS(' ',security_users.first_name,security_users.middle_name,security_users.third_name,security_users.last_name), '  ', ' ') student_name
             FROM institution_class_students
-            INNER JOIN 
+            INNER JOIN
             (
                 SELECT institution_class_students.student_id
                     ,institution_class_students.education_grade_id
@@ -1019,7 +1019,7 @@ class RestSurveyComponent extends Component
             ON security_users.id = institution_class_students.student_id
             INNER JOIN academic_periods
             ON academic_periods.id = institution_class_students.academic_period_id
-            WHERE institution_class_students.academic_period_id = $apId 
+            WHERE institution_class_students.academic_period_id = $apId
             AND institution_class_students.institution_id = $insId
             AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_class_students.student_status_id = 1, institution_class_students.student_status_id IN (1, 7, 6, 8))
         ) classes_student_info
@@ -1042,12 +1042,12 @@ class RestSurveyComponent extends Component
             ,institution_student_survey_answers.survey_question_id
             ,institution_student_survey_answers.parent_survey_question_id
             ,survey_question_choices.id answer_choice_id_for_dropdown
-            ,IF(institution_student_survey_answers.id IS NULL, '', 
-                IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value, 
-                    IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value, 
-                        IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value, 
-                            IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value, 
-                                IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value, 
+            ,IF(institution_student_survey_answers.id IS NULL, '',
+                IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value,
+                    IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value,
+                        IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value,
+                            IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value,
+                                IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value,
                                         IF(survey_question_choices.id IS NOT NULL, survey_question_choices.name, institution_student_survey_answers.number_value))))))) survey_answer_values
         FROM institution_student_survey_answers
         INNER JOIN institution_student_surveys
@@ -1142,12 +1142,12 @@ class RestSurveyComponent extends Component
                 // 'student_id' => "institution_student_surveys.student_id",
                 // 'openemis_no'=> "security_users.openemis_no",
                 // 'student_name'=> "(REPLACE(CONCAT_WS(' ',security_users.first_name,security_users.middle_name,security_users.third_name,security_users.last_name), '  ', ' '))",
-                // 'survey_answer' => "(IF(institution_student_survey_answers.id IS NULL, '', 
-                // IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value, 
-                //     IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value, 
-                //         IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value, 
-                //             IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value, 
-                //                 IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value, 
+                // 'survey_answer' => "(IF(institution_student_survey_answers.id IS NULL, '',
+                // IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value,
+                //     IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value,
+                //         IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value,
+                //             IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value,
+                //                 IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value,
                 //                         IF(survey_question_choices.id IS NOT NULL, survey_question_choices.id, institution_student_survey_answers.number_value))))))))"
             ])
             ->from(['main_query' => $main_query])
@@ -1177,12 +1177,12 @@ class RestSurveyComponent extends Component
 
                 'academic_period_id' => 'main_query.academic_period_id',
 
-                // 'survey_answer' => "(IF(institution_student_survey_answers.id IS NULL, '', 
-                // IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value, 
-                //     IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value, 
-                //         IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value, 
-                //             IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value, 
-                //                 IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value, 
+                // 'survey_answer' => "(IF(institution_student_survey_answers.id IS NULL, '',
+                // IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value,
+                //     IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value,
+                //         IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value,
+                //             IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value,
+                //                 IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value,
                 //                         IF(survey_question_choices.id IS NOT NULL, survey_question_choices.id, institution_student_survey_answers.number_value))))))))"
             ])
             ->from(['main_query' => $main_query])
@@ -1212,12 +1212,12 @@ class RestSurveyComponent extends Component
                 // 'student_id' => "institution_student_surveys.student_id",
                 // 'openemis_no'=> "security_users.openemis_no",
                 // 'student_name'=> "(REPLACE(CONCAT_WS(' ',security_users.first_name,security_users.middle_name,security_users.third_name,security_users.last_name), '  ', ' '))",
-                // 'survey_answer' => "(IF(institution_student_survey_answers.id IS NULL, '', 
-                // IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value, 
-                //     IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value, 
-                //         IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value, 
-                //             IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value, 
-                //                 IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value, 
+                // 'survey_answer' => "(IF(institution_student_survey_answers.id IS NULL, '',
+                // IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value,
+                //     IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value,
+                //         IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value,
+                //             IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value,
+                //                 IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value,
                 //                         IF(survey_question_choices.id IS NOT NULL, survey_question_choices.id, institution_student_survey_answers.number_value))))))))"
             ])
             ->from(['main_query' => $main_query])
@@ -1316,7 +1316,7 @@ class RestSurveyComponent extends Component
 
         // foreach($tabData as $p => $tbDta){
         //     $finalData[$tbDta->section]['parent_question_tab_id'] = $tbDta->institutiton_survey_question_id;
-        //     foreach($finalData[$tbDta->section]['students'] as $ke=>$student){ 
+        //     foreach($finalData[$tbDta->section]['students'] as $ke=>$student){
 
         //         $ins_stu_survey = $institutionStudentSurveysTbl->find('all',['conditions'=>[
         //             'status_id' => 1,
@@ -1412,7 +1412,7 @@ class RestSurveyComponent extends Component
                         break;
                     case 'range':
                         $validationType = $key;
-                        if (array_key_exists('lower', $value) && array_key_exists('upper', $value)) {
+                        if (isset($value['lower']) && isset($value['upper'])) {
                             $validations['min_length'] = $value['lower'];
                             $validations['max_length'] = $value['upper'];
                             $validationHint = $this->Field->getMessage('CustomField.text.range', ['sprintf' => [$value['lower'], $value['upper']]]);
@@ -1704,7 +1704,7 @@ class RestSurveyComponent extends Component
             if ($field->has('params') && !empty($field->params)) {
                 $params = json_decode($field->params, true);
 
-                if (array_key_exists('number', $params)) {
+                if (isset($params['number'])) {
                     $inputType = 'integer';
 
                     $validationRules = $params['number'];
@@ -1730,7 +1730,7 @@ class RestSurveyComponent extends Component
                             }
                         }
                     }
-                } elseif (array_key_exists('decimal', $params)) {
+                } elseif (isset($params['decimal'])) {
                     $inputType = 'decimal';
 
                     $generateRangeValues = function ($length, $precision = 0) {
@@ -1834,8 +1834,8 @@ class RestSurveyComponent extends Component
         if ($field->has('params') && !empty($field->params)) {
             $params = json_decode($field->params, true);
 
-            $startDate = array_key_exists('start_date', $params) ? $params['start_date'] : null;
-            $endDate = array_key_exists('end_date', $params) ? $params['end_date'] : null;
+            $startDate = isset($params['start_date']) ? $params['start_date'] : null;
+            $endDate = isset($params['end_date']) ? $params['end_date'] : null;
 
             if (!is_null($startDate) && !is_null($endDate)) {
                 $constraint = ". >= '" . $startDate . "'' && " . ". <= '" . $endDate . "'";
@@ -1864,8 +1864,8 @@ class RestSurveyComponent extends Component
         if ($field->has('params') && !empty($field->params)) {
             $params = json_decode($field->params, true);
 
-            $startTime = array_key_exists('start_time', $params) ? $params['start_time'] : null;
-            $endTime = array_key_exists('end_time', $params) ? $params['end_time'] : null;
+            $startTime = isset($params['start_time']) ? $params['start_time'] : null;
+            $endTime = isset($params['end_time']) ? $params['end_time'] : null;
 
             if (!is_null($startTime) && !is_null($endTime)) {
                 $constraint = ". >= '" . $this->twentyFourHourFormat($startTime) . "'' && " . ". <= '" . $this->twentyFourHourFormat($endTime) . "'";
@@ -2139,17 +2139,17 @@ class RestSurveyComponent extends Component
                         security_users.openemis_no openemis_no,
                         REPLACE(CONCAT_WS(' ', security_users.first_name, security_users.middle_name, security_users.third_name, security_users.last_name), '  ', ' ') staff_name
                    FROM institution_staff
-                   INNER JOIN academic_periods 
-                       ON (((`institution_staff`.`end_date` IS NOT NULL AND 
-                            `institution_staff`.`start_date` <= `academic_periods`.`start_date` AND 
-                            `institution_staff`.`end_date` >= `academic_periods`.`start_date`) 
-                           OR (`institution_staff`.`end_date` IS NOT NULL 
+                   INNER JOIN academic_periods
+                       ON (((`institution_staff`.`end_date` IS NOT NULL AND
+                            `institution_staff`.`start_date` <= `academic_periods`.`start_date` AND
+                            `institution_staff`.`end_date` >= `academic_periods`.`start_date`)
+                           OR (`institution_staff`.`end_date` IS NOT NULL
                            AND `institution_staff`.`start_date` <= `academic_periods`.`end_date`
                            AND `institution_staff`.`end_date` >= `academic_periods`.`end_date`)
-                           OR (`institution_staff`.`end_date` IS NOT NULL 
+                           OR (`institution_staff`.`end_date` IS NOT NULL
                            AND `institution_staff`.`start_date` >= `academic_periods`.`start_date`
-                           AND `institution_staff`.`end_date` <= `academic_periods`.`end_date`)) 
-                           OR (`institution_staff`.`end_date` IS NULL 
+                           AND `institution_staff`.`end_date` <= `academic_periods`.`end_date`))
+                           OR (`institution_staff`.`end_date` IS NULL
                            AND `institution_staff`.`start_date` <= `academic_periods`.`end_date`))
                    INNER JOIN institutions
                        ON institutions.id = institution_staff.institution_id
@@ -2173,17 +2173,17 @@ class RestSurveyComponent extends Component
         //                 ,security_users.openemis_no openemis_no
         //                 ,REPLACE(CONCAT_WS(' ',security_users.first_name,security_users.middle_name,security_users.third_name,security_users.last_name), '  ', ' ') staff_name
         //                 FROM institution_staff
-        //                 INNER JOIN academic_periods 
-        //                     ON (((`institution_staff`.`end_date` IS NOT NULL AND 
-        //                          `institution_staff`.`start_date` <= `academic_periods`.`start_date` AND 
-        //                          `institution_staff`.`end_date` >= `academic_periods`.`start_date`) 
-        //                     OR (`institution_staff`.`end_date` IS NOT NULL 
+        //                 INNER JOIN academic_periods
+        //                     ON (((`institution_staff`.`end_date` IS NOT NULL AND
+        //                          `institution_staff`.`start_date` <= `academic_periods`.`start_date` AND
+        //                          `institution_staff`.`end_date` >= `academic_periods`.`start_date`)
+        //                     OR (`institution_staff`.`end_date` IS NOT NULL
         //                     AND `institution_staff`.`start_date` <= `academic_periods`.`end_date`
         //                     AND `institution_staff`.`end_date` >= `academic_periods`.`end_date`)
-        //                     OR (`institution_staff`.`end_date` IS NOT NULL 
+        //                     OR (`institution_staff`.`end_date` IS NOT NULL
         //                     AND `institution_staff`.`start_date` >= `academic_periods`.`start_date`
-        //                     AND `institution_staff`.`end_date` <= `academic_periods`.`end_date`)) 
-        //                     OR (`institution_staff`.`end_date` IS NULL 
+        //                     AND `institution_staff`.`end_date` <= `academic_periods`.`end_date`))
+        //                     OR (`institution_staff`.`end_date` IS NULL
         //                     AND `institution_staff`.`start_date` <= `academic_periods`.`end_date`))
         //                INNER JOIN institutions
         //                   ON institutions.id = institution_staff.institution_id
@@ -2209,12 +2209,12 @@ class RestSurveyComponent extends Component
             ,institution_staff_survey_answers.survey_question_id
             ,institution_staff_survey_answers.parent_survey_question_id
             ,survey_question_choices.id answer_choice_id_for_dropdown
-            ,IF(institution_staff_survey_answers.id IS NULL, '', 
-                IF(institution_staff_survey_answers.text_value IS NOT NULL, institution_staff_survey_answers.text_value, 
-                    IF(institution_staff_survey_answers.decimal_value IS NOT NULL, institution_staff_survey_answers.decimal_value, 
-                        IF(institution_staff_survey_answers.textarea_value IS NOT NULL, institution_staff_survey_answers.textarea_value, 
-                            IF(institution_staff_survey_answers.date_value IS NOT NULL, institution_staff_survey_answers.date_value, 
-                                IF(institution_staff_survey_answers.time_value IS NOT NULL, institution_staff_survey_answers.time_value, 
+            ,IF(institution_staff_survey_answers.id IS NULL, '',
+                IF(institution_staff_survey_answers.text_value IS NOT NULL, institution_staff_survey_answers.text_value,
+                    IF(institution_staff_survey_answers.decimal_value IS NOT NULL, institution_staff_survey_answers.decimal_value,
+                        IF(institution_staff_survey_answers.textarea_value IS NOT NULL, institution_staff_survey_answers.textarea_value,
+                            IF(institution_staff_survey_answers.date_value IS NOT NULL, institution_staff_survey_answers.date_value,
+                                IF(institution_staff_survey_answers.time_value IS NOT NULL, institution_staff_survey_answers.time_value,
                                         IF(survey_question_choices.id IS NOT NULL, survey_question_choices.name, institution_staff_survey_answers.number_value))))))) survey_answer_values
             FROM institution_staff_survey_answers
             INNER JOIN institution_staff_surveys

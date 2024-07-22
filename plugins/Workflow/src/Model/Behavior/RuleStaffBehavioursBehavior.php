@@ -50,7 +50,7 @@ class RuleStaffBehavioursBehavior extends RuleBehavior
             $ruleArray = json_decode($entity->rule, true);
 
             $list = [];
-            if (array_key_exists('where', $ruleArray)) {
+            if (isset($ruleArray['where'])) {
                 $where = $ruleArray['where'];
                 foreach ($where as $field => $fieldValue) {
                     $label = Inflector::humanize($field);

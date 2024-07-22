@@ -25,10 +25,10 @@ class AccountBehavior extends Behavior
         $this->table()->setEntityClass('User.User');
         parent::initialize($config);
 
-        $this->userRole = (array_key_exists('userRole', $config))? $config['userRole']: null;
-        $this->targetField = (array_key_exists('targetField', $config))? $config['targetField']: $this->targetField;
-        $this->passwordAllowEmpty = (array_key_exists('passwordAllowEmpty', $config))? $config['passwordAllowEmpty']: $this->passwordAllowEmpty;
-        $this->isInstitution = (array_key_exists('isInstitution', $config))? $config['isInstitution']: $this->isInstitution;
+        $this->userRole = (isset($config['userRole']))? $config['userRole']: null;
+        $this->targetField = (isset($config['targetField']))? $config['targetField']: $this->targetField;
+        $this->passwordAllowEmpty = (isset($config['passwordAllowEmpty']))? $config['passwordAllowEmpty']: $this->passwordAllowEmpty;
+        $this->isInstitution = (isset($config['isInstitution']))? $config['isInstitution']: $this->isInstitution;
 
         $this->table()->belongsToMany('Roles', [
             'className' => 'Security.SecurityRoles',
@@ -216,7 +216,7 @@ class AccountBehavior extends Behavior
             }else{
                 $institutionId = '';
             }
-            
+
             $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
             $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');//POCOR-7309
             //POCOR-7309 starts

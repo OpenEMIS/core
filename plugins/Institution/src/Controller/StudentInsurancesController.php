@@ -6,7 +6,7 @@ use Profile\Controller\InsurancesController as BaseController;
 
 class StudentInsurancesController extends BaseController
 {
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
         $session = $this->request->session();
@@ -40,7 +40,7 @@ class StudentInsurancesController extends BaseController
             'institutionId' => $institutionId
         ]);
 
-        $page->get('security_user_id')->setControlType('hidden')->setValue($studentId); // set value and hide the student_id    
+        $page->get('security_user_id')->setControlType('hidden')->setValue($studentId); // set value and hide the student_id
     }
 
 
