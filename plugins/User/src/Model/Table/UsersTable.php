@@ -262,7 +262,7 @@ class UsersTable extends AppTable
         $institutionId = null;
         $enrolledStatus = TableRegistry::getTableLocator()->get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
 
-        if (array_key_exists('institution_class_id', $options)) {
+        if (isset($options['institution_class_id'])) {
             $institutionClassId = $options['institution_class_id'];
             $institutionClassRecord = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses')->get($institutionClassId, ['contain' => ['EducationGrades']])->toArray();
             $academicPeriodId = $institutionClassRecord['academic_period_id'];
@@ -481,12 +481,12 @@ class UsersTable extends AppTable
     {
         $queryParams = $request->getQuery();
 
-        if (array_key_exists('sort', $queryParams) && $queryParams['sort'] == 'name') {
+        if (isset($queryParams['sort']) && $queryParams['sort'] == 'name') {
             $query->find('withName', ['direction' => $queryParams['direction']]);
             $query->order([$this->aliasField('name') => $queryParams['direction']]);
         }
 
-        if (array_key_exists('sort', $queryParams) && $queryParams['sort'] == 'default_identity_type') {
+        if (isset($queryParams['sort']) && $queryParams['sort'] == 'default_identity_type') {
             $query->find('withDefaultIdentityType', ['direction' => $queryParams['direction']]);
             $query->order([$this->aliasField('default_identity_type') => $queryParams['direction']]);
             $request->query['sort'] = 'Users.default_identity_type';
@@ -971,7 +971,7 @@ class UsersTable extends AppTable
                     $buttons[$action]['url'][1] = $this->paramsEncode(['id' => $entity->security_user_id]);
                 }
             }
-            if (array_key_exists('remove', $buttons)) {
+            if (isset($buttons['remove'])) {
                 $buttons['remove']['attr']['field-value'] = $entity->security_user_id;
             }
         }
@@ -988,7 +988,7 @@ class UsersTable extends AppTable
             $query = $this->find();
 
             // POCOR-3556 add the user type to finder
-            if (array_key_exists('finder', $extra)) {
+            if (isset($extra['finder'])) {
                 $finders = $extra['finder'];
 
                 foreach ($finders as $finder) {

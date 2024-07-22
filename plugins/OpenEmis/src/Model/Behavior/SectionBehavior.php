@@ -70,7 +70,7 @@ class SectionBehavior extends Behavior {
 
 	private function _fieldSetup() {
 		foreach ($this->_table->fields as $key=>$value) {
-			if (array_key_exists('type', $value) && $value['type'] == 'section') {
+			if (isset($value['type']) && $value['type'] == 'section') {
 				$this->_table->fields[$key]['override'] = true;
 				$this->_table->fields[$key]['label'] = false;
 				$this->_table->fields[$key]['rowClass'] = 'section-header';
@@ -81,7 +81,7 @@ class SectionBehavior extends Behavior {
 	public function onGetSectionElement(Event $event, $action, Entity $entity, $attr, $options) {
 		$html = '';
 
-		if (!array_key_exists('title', $attr)) {
+		if (!isset($attr['title'])) {
 			$attr['title'] = __(Inflector::humanize($attr['field']));
 		}
 

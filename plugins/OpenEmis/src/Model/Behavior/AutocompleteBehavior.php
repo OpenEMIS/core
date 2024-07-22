@@ -28,32 +28,32 @@ class AutocompleteBehavior extends Behavior {
 			];
 
 			$fieldName = $attr['model'] . '.' . $attr['field'];
-			if (array_key_exists('fieldName', $attr)) {
+			if (isset($attr['fieldName'])) {
 				$fieldName = $attr['fieldName'];
 			}
 
 			$options['type'] = 'text';
 
 			// POCOR-4062 maxLength auto set by database type value, so extend the maxLength to 30 char by default, unless specified.
-			$options['maxlength'] = array_key_exists('maxlength', $attr) ? $attr['maxlength'] : 30;
+			$options['maxlength'] = isset($attr['maxlength']) ? $attr['maxlength'] : 30;
 			// end POCOR-4062
 
 			$options['class'] = 'autocomplete';
 			$options['autocomplete-url'] = $url;
 			// text to show for no results
-			if (array_key_exists('noResults', $attr)) {
+			if (isset($attr['noResults'])) {
 				$options['autocomplete-no-results'] = $attr['noResults'];
 			}
 			// action for no results
-			if (array_key_exists('onNoResults', $attr)) {
+			if (isset($attr['onNoResults'])) {
 				$options['autocomplete-on-no-results'] = $attr['onNoResults'];
 			}
 			// action before search happens
-			if (array_key_exists('onBeforeSearch', $attr)) {
+			if (isset($attr['onBeforeSearch'])) {
 				$options['autocomplete-before-search'] = $attr['onBeforeSearch'];
 			}
 			// action when selected
-			if (array_key_exists('onSelect', $attr)) {
+			if (isset($attr['onSelect'])) {
 				$options['autocomplete-submit'] = $attr['onSelect'];
 			}
 			$options['autocomplete-class'] = 'error-message';

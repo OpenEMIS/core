@@ -41,7 +41,7 @@ class RubricsController extends AppController
 
     // end CAv4
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $serverRequest = $this->request;
         parent::beforeFilter($event);

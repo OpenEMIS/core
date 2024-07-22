@@ -1671,7 +1671,7 @@ class InstitutionsController extends AppController
             'download' => false,
             'purge' => false
         ];
-        
+
         $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
 
         $results = $ClassStudents->generateXLXS($settings);
@@ -1956,7 +1956,7 @@ class InstitutionsController extends AppController
                     $viewUrl['education_grade_id'] = $requestQuery['education_grade_id'];
                 }
             } //POCOR-8323 Ends
-            
+
             //POCOR-8107
 
             $indexUrl = [
@@ -5460,10 +5460,13 @@ class InstitutionsController extends AppController
             $institutionPositionsTable->aliasField('id = ') . $StaffTable->aliasField('institution_position_id'),
         ])->where([
             $StaffTable->aliasField('institution_id') => $institution_id,
-            $StaffTable->aliasField('staff_id') => $staff_id,
+            //$StaffTable->aliasField('staff_id') => $staff_id,
             $StaffTable->aliasField('staff_status_id') => $StaffStatusesTable->getIdByCode('ASSIGNED'),
-        ])
-            ->enableHydration(false)->toArray();
+        ]);
+        if(!empty($staff_id)) {
+            $alreadyAssignedStaffs = $alreadyAssignedStaffs->where([$StaffTable->aliasField('staff_id') => $staff_id]);
+        }
+        $alreadyAssignedStaffs = $alreadyAssignedStaffs->enableHydration(false)->toArray();
         $expectedStaffStatuses = [];
         foreach ($alreadyAssignedStaffs as $staff) {
             $expectedStaffStatuses[$staff['staff_position_title_id']] = $staff['staff_position_title_id'];
@@ -5496,7 +5499,7 @@ class InstitutionsController extends AppController
                     'type' => 'StaffPositionTitles.type',
                     'position_name' => 'StaffPositionTitles.name',
                     'StaffPositionTitles.name',
-                    'order' => 'StaffPositionTitles.order',
+                    'order_name' => 'StaffPositionTitles.order',
                     // Add other fields as needed
                 ])
                 ->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order']);
@@ -6618,8 +6621,8 @@ class InstitutionsController extends AppController
 
         $userId = $this->request->getSession()->read('Auth.User.id') ?? 1;
         $userData = $this->extractSecurityUserData($requestData, $userId, false, false, true);
-        $studentOpenemisNo = (array_key_exists('student_openemis_no', $requestData)) ? $requestData['student_openemis_no'] : null;
-        $guardianRelationId = (array_key_exists('guardian_relation_id', $requestData)) ? $requestData['guardian_relation_id'] : null;
+        $studentOpenemisNo = (isset($requestData['student_openemis_no'])) ? $requestData['student_openemis_no'] : null;
+        $guardianRelationId = (isset($requestData['guardian_relation_id'])) ? $requestData['guardian_relation_id'] : null;
 //        Log::debug(print_r($userData, true));
         $securityUserResult = $this->saveSecurityUser($userData);
 //        Log::debug(print_r($securityUserResult, true));
@@ -6780,12 +6783,12 @@ class InstitutionsController extends AppController
         $pattern = '';
 
 
-        if (array_key_exists('identity_type_id', $options) && !empty($options['identity_type_id'])) {
+        if (isset($options['identity_type_id']) && !empty($options['identity_type_id'])) {
             $identityTypeId = $options['identity_type_id'];
         } else {
             return "";
         }
-        if (array_key_exists('identity_number', $options) && !empty($options['identity_number'])) {
+        if (isset($options['identity_number']) && !empty($options['identity_number'])) {
             $identityNumber = $options['identity_number'];
         } else {
             return "";

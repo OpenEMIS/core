@@ -103,7 +103,7 @@ class RenderBehavior extends Behavior {
     }
 
     protected function getStepFromParams($params=[]) {
-        if (array_key_exists('precision', $params) && ($params['precision'] > 0)) {
+        if (isset($params['precision']) && ($params['precision'] > 0)) {
             $step = '0.';
 
             for ($i=1; $i <= $params['precision']; $i++) {

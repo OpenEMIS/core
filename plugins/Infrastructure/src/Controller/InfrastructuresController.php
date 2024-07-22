@@ -7,6 +7,7 @@ use Cake\ORM\Table;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Http\ServerRequest;
+use Cake\Event\EventInterface;
 
 class InfrastructuresController extends AppController
 {
@@ -61,7 +62,7 @@ class InfrastructuresController extends AppController
     }
     // End
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         if ($this->getPlugin() == 'Infrastructure') {
             $this->Security->setConfig('validatePost', false);
@@ -115,7 +116,7 @@ class InfrastructuresController extends AppController
         $this->set('contentHeader', $header);
     }
 
-    public function beforeRender(Event $event)
+    public function beforeRender(EventInterface $event)
     {
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');

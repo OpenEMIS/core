@@ -280,7 +280,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseReportCards(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('report_card_id', $params)) {
+        if (isset($params['report_card_id'])) {
             $ReportCards = TableRegistry::get('ReportCard.ReportCards');
             $entity = $ReportCards->get($params['report_card_id'], ['contain' => ['AcademicPeriods', 'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels']]);
 
@@ -413,7 +413,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseFirstGuardian(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('student_id', $params)) {
+        if (isset($params['student_id'])) {
             $StudentGuardians = TableRegistry::get('Student.Guardians');
             $entity = $StudentGuardians
                 ->find()
@@ -475,7 +475,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseExtracurriculars(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('student_id', $params) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
+        if (isset($params['student_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
 
             //$Extracurriculars = TableRegistry::get('Student.Extracurriculars');
             $Extracurriculars = TableRegistry::get('student_extracurriculars');
@@ -509,7 +509,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseAwards(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('student_id', $params) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
+        if (isset($params['student_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
 
             $Awards = TableRegistry::get('User.Awards');
 
@@ -536,7 +536,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseAdmissions(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('student_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('report_card_education_grade_id', $extra)) {
+        if (isset($params['student_id']) && isset($params['academic_period_id']) && isset($params['institution_id']) && isset($extra['report_card_education_grade_id'])) {
 
             $InstitutionStudents = TableRegistry::get('Institution.Students');
 
@@ -564,7 +564,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionStudentsReportCardsComments(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('report_card_id', $params) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra)) {
+        if (isset($params['report_card_id']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id'])) {
             $StudentsReportCardsComments = TableRegistry::get('Institution.InstitutionStudentsReportCardsComments');
             $ReportCardSubjects = TableRegistry::get('ReportCard.ReportCardSubjects');
             /**POCOR-6810 starts- modified query to get only assigned subjects of student*/
@@ -666,7 +666,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutions(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params)) {
+        if (isset($params['institution_id'])) {
             $Institutions = TableRegistry::get('Institution.Institutions');
             $entity = $Institutions->get($params['institution_id'], ['contain' => ['Providers', 'Areas', 'AreaAdministratives']]);
             return $entity;
@@ -695,7 +695,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseDeputyPrincipal(Event $event, array $params, ArrayObject $extra)
     {
         //POCOR-8013 rewritten
-        if (array_key_exists('institution_id', $params)) {
+        if (isset($params['institution_id'])) {
             $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
             $staffRoleId = $SecurityRoles->getDeputyPrincipalRoleId();
             $institutionId = $params['institution_id'];
@@ -714,7 +714,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseInstitutionClasses(Event $event, array $params, ArrayObject $extra)
     {
 
-        if (array_key_exists('institution_class_id', $params)) {
+        if (isset($params['institution_class_id'])) {
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
             $entity = $InstitutionClasses->get($params['institution_class_id'], [
                 'contain' => [
@@ -761,14 +761,14 @@ class ReportCardsTable extends AppTable
                     $entity->homeroom = $entity->staff->name;
                 }
             }
-            //POCOR-7033[END]  
+            //POCOR-7033[END]
             return $entity;
         }
     }
 
     public function onExcelTemplateInitialiseInstitutionSubjectStudents(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('student_id', $params) && array_key_exists('institution_class_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra)) {
+        if (isset($params['student_id']) && isset($params['institution_class_id']) && isset($params['institution_id']) && isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id'])) {
             $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
             $entity = $SubjectStudents->find()
                 ->where([
@@ -786,7 +786,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionSubjectStudentsWithName(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('student_id', $params) && array_key_exists('institution_class_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra)) {
+        if (isset($params['student_id']) && isset($params['institution_class_id']) && isset($params['institution_id']) && isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id'])) {
             $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
             $subjectObj = $SubjectStudents->find()
                 ->where([
@@ -823,7 +823,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseStudentBehaviours(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
+        if (isset($params['student_id']) && isset($params['institution_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
             $StudentBehaviours = TableRegistry::get('Institution.StudentBehaviours');
 
             $entity = $StudentBehaviours->find()
@@ -841,7 +841,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionStudentAbsencesOldOne(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_class_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('student_id', $params) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
+        if (isset($params['institution_class_id']) && isset($params['institution_id']) && isset($params['student_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
 
             //POCOR-7040
             $startDate = $extra['report_card_start_date']->format('Y-m-d');
@@ -924,7 +924,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionStudentAbsences(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_class_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('student_id', $params) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
+        if (isset($params['institution_class_id']) && isset($params['institution_id']) && isset($params['student_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
 
             //POCOR-7040
             $startDate = $extra['report_card_start_date']->format('Y-m-d');
@@ -1028,7 +1028,7 @@ class ReportCardsTable extends AppTable
             ,COUNT(DISTINCT(CASE WHEN attend_info.absence_type_id = 1 THEN attend_info.absence_date END)) excused_absence_counter
             ,COUNT(DISTINCT(CASE WHEN attend_info.absence_type_id = 2 THEN attend_info.absence_date END)) unexcused_absence_counter
             ,COUNT(DISTINCT(CASE WHEN attend_info.absence_type_id = 3 THEN attend_info.absence_date END)) late_absence_counter
-        FROM 
+        FROM
         (
             SELECT institution_student_absence_details.academic_period_id
                 ,institution_student_absence_details.institution_id
@@ -1040,9 +1040,9 @@ class ReportCardsTable extends AppTable
                 ,institution_student_absence_details.absence_type_id
                 ,period_counter.attendance_per_day period_attendance_per_day
                 ,subject_counter.subjects_taken
-                ,attendance_type.value 
+                ,attendance_type.value
             FROM institution_student_absence_details
-            INNER JOIN 
+            INNER JOIN
             (
                 SELECT student_mark_type_status_grades.education_grade_id
                     ,student_mark_type_statuses.academic_period_id
@@ -1057,7 +1057,7 @@ class ReportCardsTable extends AppTable
             ) period_counter
             ON period_counter.education_grade_id = institution_student_absence_details.education_grade_id
             AND period_counter.academic_period_id = institution_student_absence_details.academic_period_id
-            LEFT JOIN 
+            LEFT JOIN
             (
                 SELECT institution_subject_students.academic_period_id
                     ,institution_subject_students.institution_id
@@ -1098,12 +1098,12 @@ class ReportCardsTable extends AppTable
                 ,institution_student_absence_details.institution_class_id
                 ,institution_student_absence_details.student_id
                 ,institution_student_absence_details.date
-            HAVING 
-                CASE 
-                    WHEN attendance_type.value = 1 
-                    THEN COUNT(*) >= 1 
-                    ELSE 
-                        CASE WHEN institution_student_absence_details.subject_id = 0 
+            HAVING
+                CASE
+                    WHEN attendance_type.value = 1
+                    THEN COUNT(*) >= 1
+                    ELSE
+                        CASE WHEN institution_student_absence_details.subject_id = 0
                         THEN COUNT(*) >= period_counter.attendance_per_day
                         ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0)
                         END
@@ -1120,7 +1120,7 @@ class ReportCardsTable extends AppTable
             ,attend_info.education_grade_id
             ,attend_info.institution_class_id
             ,attend_info.student_id");
-                
+
             $getData = $sqlQuery->fetchAll('assoc');
             $results['EXCUSED']['number_of_days'] = $getData[0]['excused_absence_counter'];
             $results['UNEXCUSED']['number_of_days'] = $getData[0]['unexcused_absence_counter'];
@@ -1133,7 +1133,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseCompetencyTemplates(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
+        if (isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
             $CompetencyTemplates = TableRegistry::get('Competency.CompetencyTemplates');
 
             // only get competency templates that have periods within the report card date
@@ -1178,7 +1178,7 @@ class ReportCardsTable extends AppTable
     //POCOR-7315::Start
     public function onExcelTemplateInitialiseCompetencyPeriodsByTemplate(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('academic_period_id', $params) && array_key_exists('competency_templates_ids', $extra) && !empty($extra['competency_templates_ids']) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
+        if (isset($params['academic_period_id']) && isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
             $CompetencyPeriods = TableRegistry::get('Competency.CompetencyPeriods');
             $AbsenceTypesTable = TableRegistry::get('absence_types');
             $InstitutionStudentAbsenceDays = TableRegistry::get('institution_student_absence_days');
@@ -1243,7 +1243,7 @@ class ReportCardsTable extends AppTable
 
                 //TOTAL Full DAYS  ABSENCE
 
-                $result11 = $conn->execute("SELECT 
+                $result11 = $conn->execute("SELECT
                 subq.academic_period_id
                 ,student_id
                 ,institution_class_id
@@ -1265,7 +1265,7 @@ class ReportCardsTable extends AppTable
                     FROM institution_class_students
                     INNER JOIN student_attendance_marked_records ON institution_class_students.institution_class_id = student_attendance_marked_records.institution_class_id
                     INNER JOIN config_items ON config_items.code = 'calculate_daily_attendance'
-                    LEFT JOIN institution_student_absence_details 
+                    LEFT JOIN institution_student_absence_details
                     ON institution_student_absence_details.student_id = institution_class_students.student_id
                     AND institution_student_absence_details.date = student_attendance_marked_records.date
                     AND institution_student_absence_details.institution_class_id = institution_class_students.institution_class_id
@@ -1303,7 +1303,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseCompetencyPeriods(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('academic_period_id', $params) && array_key_exists('competency_templates_ids', $extra) && !empty($extra['competency_templates_ids']) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
+        if (isset($params['academic_period_id']) && isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
             $CompetencyPeriods = TableRegistry::get('Competency.CompetencyPeriods');
 
             $entity = $CompetencyPeriods->find()
@@ -1323,7 +1323,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseCompetencyItems(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('academic_period_id', $params) && array_key_exists('competency_templates_ids', $extra) && !empty($extra['competency_templates_ids']) && array_key_exists('competency_periods_ids', $extra) && !empty($extra['competency_periods_ids'])) {
+        if (isset($params['academic_period_id']) && isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids'])) {
             $CompetencyItems = TableRegistry::get('Competency.CompetencyItems');
 
             // only get items in periods within the report card date
@@ -1343,7 +1343,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseCompetencyCriterias(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('academic_period_id', $params) && array_key_exists('competency_templates_ids', $extra) && !empty($extra['competency_templates_ids']) && array_key_exists('competency_periods_ids', $extra) && !empty($extra['competency_periods_ids'])) {
+        if (isset($params['academic_period_id']) && isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids'])) {
             $CompetencyCriterias = TableRegistry::get('Competency.CompetencyCriterias');
 
             // only get criterias linked to items in periods within the report card date
@@ -1363,7 +1363,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseStudentCompetencyPeriodComments(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('competency_templates_ids', $extra) && !empty($extra['competency_templates_ids']) && array_key_exists('competency_periods_ids', $extra) && !empty($extra['competency_periods_ids']) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+        if (isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $CompetencyPeriodComments = TableRegistry::get('Institution.InstitutionCompetencyPeriodComments');
 
             $entity = $CompetencyPeriodComments->find()
@@ -1382,7 +1382,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseStudentCompetencyItemComments(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('competency_templates_ids', $extra) && !empty($extra['competency_templates_ids']) && array_key_exists('competency_periods_ids', $extra) && !empty($extra['competency_periods_ids']) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+        if (isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $CompetencyItemComments = TableRegistry::get('Institution.InstitutionCompetencyItemComments');
 
             $entity = $CompetencyItemComments->find()
@@ -1401,7 +1401,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseCompetencyCriteriasWithResults(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('competency_templates_ids', $extra) && !empty($extra['competency_templates_ids']) && array_key_exists('competency_periods_ids', $extra) && !empty($extra['competency_periods_ids']) && array_key_exists('academic_period_id', $params)) {
+        if (isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id']) && isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids']) && isset($params['academic_period_id'])) {
             $CompetencyCriterias = TableRegistry::get('Competency.CompetencyCriterias');
 
             // only get criterias linked to items in periods within the report card date
@@ -1456,7 +1456,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseStudentCompetencyResults(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('competency_templates_ids', $extra) && !empty($extra['competency_templates_ids']) && array_key_exists('competency_periods_ids', $extra) && !empty($extra['competency_periods_ids']) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+        if (isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $StudentCompetencyResults = TableRegistry::get('Institution.InstitutionCompetencyResults');
 
             $entity = $StudentCompetencyResults->find()
@@ -1476,7 +1476,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseAssessments(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra)) {
+        if (isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id'])) {
             $Assessments = TableRegistry::get('Assessment.Assessments');
 
             $entity = $Assessments->find()
@@ -1495,7 +1495,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseAssessmentPeriods(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('assessment_id', $extra) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
+        if (isset($extra['assessment_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
             $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
 
             $entity = $AssessmentPeriods->find()
@@ -1515,7 +1515,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseAssessmentItems(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('assessment_id', $extra) && array_key_exists('institution_class_id', $params)) {
+        if (isset($extra['assessment_id']) && isset($params['institution_class_id'])) {
             $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
             $StudentSubjects = TableRegistry::get('Institution.InstitutionSubjectStudents');
             $entity = $AssessmentItems
@@ -1542,7 +1542,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseSubjectTeacher(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('assessment_id', $extra) && array_key_exists('institution_class_id', $params)) {
+        if (isset($extra['assessment_id']) && isset($params['institution_class_id'])) {
             //Start: POCOR-6769
             /*$AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
             $StudentSubjects = TableRegistry::get('Institution.InstitutionSubjectStudents');
@@ -1635,7 +1635,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseAssessmentItemsStudentSubjects(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_class_id', $params) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('education_grade_id', $params) && array_key_exists('academic_period_id', $params)) {
+        if (isset($params['institution_class_id']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['education_grade_id']) && isset($params['academic_period_id'])) {
 
             // To get the Assessment Item that template selected subject
             $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
@@ -1724,7 +1724,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseAssessmentItemsWithResults(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_class_id', $params) && array_key_exists('assessment_id', $extra) && array_key_exists('assessment_period_ids', $extra) && !empty($extra['assessment_period_ids']) && array_key_exists('institution_id', $params) && array_key_exists('student_id', $params) && array_key_exists('report_card_education_grade_id', $extra) && array_key_exists('academic_period_id', $params)) {
+        if (isset($params['institution_class_id']) && isset($extra['assessment_id']) && isset($extra['assessment_period_ids']) && !empty($extra['assessment_period_ids']) && isset($params['institution_id']) && isset($params['student_id']) && isset($extra['report_card_education_grade_id']) && isset($params['academic_period_id'])) {
 
             $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
 
@@ -1757,7 +1757,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseAssessmentItemResults(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_class_id', $params) && array_key_exists('assessment_id', $extra) && array_key_exists('assessment_period_ids', $extra) && !empty($extra['assessment_period_ids']) && array_key_exists('institution_id', $params) && array_key_exists('student_id', $params) && array_key_exists('report_card_education_grade_id', $extra) && array_key_exists('academic_period_id', $params)) {
+        if (isset($params['institution_class_id']) && isset($extra['assessment_id']) && isset($extra['assessment_period_ids']) && !empty($extra['assessment_period_ids']) && isset($params['institution_id']) && isset($params['student_id']) && isset($extra['report_card_education_grade_id']) && isset($params['academic_period_id'])) {
             $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
             $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
 
@@ -1904,7 +1904,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseOutcomeTemplates(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
+        if (isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
             $OutcomeTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
 
             $entity = $OutcomeTemplates
@@ -1927,7 +1927,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseOutcomePeriods(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('academic_period_id', $params) && array_key_exists('outcome_templates_ids', $extra) && !empty($extra['outcome_templates_ids']) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
+        if (isset($params['academic_period_id']) && isset($extra['outcome_templates_ids']) && !empty($extra['outcome_templates_ids']) && isset($extra['report_card_start_date']) && isset($extra['report_card_end_date'])) {
             $OutcomePeriods = TableRegistry::get('Outcome.OutcomePeriods');
 
             $entity = $OutcomePeriods->find()
@@ -1948,7 +1948,7 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseOutcomeSubjects(Event $event, array $params, ArrayObject $extra)
     {
 
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('education_grade_id', $params) && array_key_exists('institution_class_id', $params) && array_key_exists('outcome_periods_ids', $extra) && !empty($extra['outcome_periods_ids'])) {
+        if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['education_grade_id']) && isset($params['institution_class_id']) && isset($extra['outcome_periods_ids']) && !empty($extra['outcome_periods_ids'])) {
 
             $classId = $params['institution_class_id'];
             $studentId = $params['student_id'];
@@ -1998,7 +1998,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseOutcomeCriterias(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('academic_period_id', $params) && array_key_exists('outcome_templates_ids', $extra) && !empty($extra['outcome_templates_ids'])) {
+        if (isset($params['academic_period_id']) && isset($extra['outcome_templates_ids']) && !empty($extra['outcome_templates_ids'])) {
             $OutcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
 
             $entity = $OutcomeCriterias->find()
@@ -2025,7 +2025,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseStudentOutcomeSubjectComments(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('outcome_templates_ids', $extra) && !empty($extra['outcome_templates_ids']) && array_key_exists('outcome_periods_ids', $extra) && !empty($extra['outcome_periods_ids']) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+        if (isset($extra['outcome_templates_ids']) && !empty($extra['outcome_templates_ids']) && isset($extra['outcome_periods_ids']) && !empty($extra['outcome_periods_ids']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id'])) {
 
             $OutcomeSubjectComments = TableRegistry::get('Institution.InstitutionOutcomeSubjectComments');
             $entity = $OutcomeSubjectComments->find()
@@ -2043,7 +2043,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseStudentOutcomeResults(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('outcome_templates_ids', $extra) && !empty($extra['outcome_templates_ids']) && array_key_exists('outcome_periods_ids', $extra) && !empty($extra['outcome_periods_ids']) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+        if (isset($extra['outcome_templates_ids']) && !empty($extra['outcome_templates_ids']) && isset($extra['outcome_periods_ids']) && !empty($extra['outcome_periods_ids']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $StudentOutcomeResults = TableRegistry::get('Institution.InstitutionOutcomeResults');
 
             $entity = $StudentOutcomeResults->find()
@@ -2062,7 +2062,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseGroupAssessmentItemResults(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_class_id', $params) && array_key_exists('assessment_id', $extra) && array_key_exists('assessment_period_ids', $extra) && !empty($extra['assessment_period_ids']) && array_key_exists('institution_id', $params) && array_key_exists('student_id', $params) && array_key_exists('report_card_education_grade_id', $extra) && array_key_exists('academic_period_id', $params)) {
+        if (isset($params['institution_class_id']) && isset($extra['assessment_id']) && isset($extra['assessment_period_ids']) && !empty($extra['assessment_period_ids']) && isset($params['institution_id']) && isset($params['student_id']) && isset($extra['report_card_education_grade_id']) && isset($params['academic_period_id'])) {
             $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
             $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
             $query = $AssessmentItemResults->find();
@@ -2150,7 +2150,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseGroupAssessmentPeriods(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('assessment_id', $extra)) {
+        if (isset($extra['assessment_id'])) {
             $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
 
             $selectedColumns = [
@@ -2181,7 +2181,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseAssessmentTermResults(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_class_id', $params) && array_key_exists('assessment_id', $extra) && array_key_exists('assessment_period_ids', $extra) && !empty($extra['assessment_period_ids']) && array_key_exists('institution_id', $params) && array_key_exists('student_id', $params) && array_key_exists('report_card_education_grade_id', $extra) && array_key_exists('academic_period_id', $params)) {
+        if (isset($params['institution_class_id']) && isset($extra['assessment_id']) && isset($extra['assessment_period_ids']) && !empty($extra['assessment_period_ids']) && isset($params['institution_id']) && isset($params['student_id']) && isset($extra['report_card_education_grade_id']) && isset($params['academic_period_id'])) {
             $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
             $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
             $query = $AssessmentItemResults->find();
@@ -2279,7 +2279,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseNextClassSubjects(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('student_id', $params) && array_key_exists('institution_class_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra)) {
+        if (isset($params['student_id']) && isset($params['institution_class_id']) && isset($params['institution_id']) && isset($params['academic_period_id']) && isset($extra['report_card_education_grade_id'])) {
 
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
             $nextAcademicPeriodId = $AcademicPeriods->getNextAcademicPeriodId($params['academic_period_id']);
@@ -2301,14 +2301,14 @@ class ReportCardsTable extends AppTable
                     ->contain('InstitutionSubjects')
                     ->enableHydration(false)
                     ->all();
-    
+
                 if (!$institutionSubjectStudentsEntities->isEmpty()) {
                     foreach ($institutionSubjectStudentsEntities->toArray() as $key => $value) {
                         $result[$key] = [
                             'name' => $value['InstitutionSubjects']['name']
                         ];
                     }
-    
+
                     return $result;
                 }
             }
@@ -2320,11 +2320,11 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseStudentNextYearClass(Event $event, array $params, ArrayObject $extra)
     {
 
-        $condition = array_key_exists('student_id', $params)
-            && array_key_exists('institution_class_id', $params)
-            && array_key_exists('institution_id', $params)
-            && array_key_exists('academic_period_id', $params)
-            && array_key_exists('report_card_education_grade_id', $extra);
+        $condition = isset($params['student_id'])
+            && isset($params['institution_class_id'])
+            && isset($params['institution_id'])
+            && isset($params['academic_period_id'])
+            && isset($extra['report_card_education_grade_id']);
 
         if ($condition) {
             $studentId = $params['student_id'];
@@ -2349,7 +2349,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseStudentIdentities(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('student_id', $params)) {
+        if (isset($params['student_id'])) {
             $UserIdentities = TableRegistry::get('user_identities');
 
             $entity = $UserIdentities
@@ -2382,7 +2382,7 @@ class ReportCardsTable extends AppTable
 
      public static function getInstitutionSecurityStaff($institutionId, $staffPosnId)
      {
- 
+
          $Staff = TableRegistry::get('Institution.Staff');
          $institutionSecurityGroupsIds = self::getInstitutionSecurityGroupsIds($institutionId);
  //        Log::debug('$institutionSecurityGroupsIds');
@@ -2397,7 +2397,7 @@ class ReportCardsTable extends AppTable
              $Staff->aliasField('staff_status_id') => $assignedStatus
          ];
  //        Log::debug($where);
- 
+
          $staffQuery = $Staff
              ->find()
              ->select([
@@ -2436,7 +2436,7 @@ class ReportCardsTable extends AppTable
          Log::debug($staffQuery->sql());
          $entity = $staffQuery
              ->first();
- 
+
          // POCOR-7033[START]
          if (!empty($entity)) {
              if ($entity->user->gender_id == '1') {
@@ -2453,7 +2453,7 @@ class ReportCardsTable extends AppTable
          }
          // POCOR-7033[END]
          return $entity;
-    } 
+    }
 
     /**
      * @param $institution_id

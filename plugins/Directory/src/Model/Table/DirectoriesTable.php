@@ -1495,7 +1495,7 @@ public function getIdentityTypeData($value_selection)
 
     public function findStudentsInSchool(Query $query, array $options)
     {
-        $institutionIds = (array_key_exists('institutionIds', $options)) ? $options['institutionIds'] : [];
+        $institutionIds = (isset($options['institutionIds'])) ? $options['institutionIds'] : [];
         if (!empty($institutionIds)) {
             $query
                 ->join([
@@ -1535,7 +1535,7 @@ public function getIdentityTypeData($value_selection)
 
     public function findStaffInSchool(Query $query, array $options)
     {
-        $institutionIds = (array_key_exists('institutionIds', $options)) ? $options['institutionIds'] : [];
+        $institutionIds = (isset($options['institutionIds'])) ? $options['institutionIds'] : [];
         if (!empty($institutionIds)) {
             $query->join([
                 [
@@ -1916,7 +1916,7 @@ public function getIdentityTypeData($value_selection)
         // need to find out order values because recordbehavior changes it
         $allOrderValues = [];
         foreach ($this->fields as $key => $value) {
-            $allOrderValues[] = (array_key_exists('order', $value) && !empty($value['order'])) ? $value['order'] : 0;
+            $allOrderValues[] = (isset($value['order']) && !empty($value['order'])) ? $value['order'] : 0;
         }
         $highestOrder = max($allOrderValues);
 

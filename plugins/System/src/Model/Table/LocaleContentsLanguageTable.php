@@ -71,7 +71,7 @@ class LocaleContentsLanguageTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $queryParams = $this->request->getQuery();
-        if (!array_key_exists('sort', $queryParams)) {
+        if (!isset($queryParams['sort'])) {
             $query->order(
                 [$this->aliasField('created') => 'DESC',
                     $this->aliasField('modified') => 'DESC']);

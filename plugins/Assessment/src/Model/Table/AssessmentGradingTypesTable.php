@@ -108,7 +108,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 		$this->setFieldOrder(['visible', 'code', 'name', 'result_type', 'max', 'pass_mark']);
 
 		// Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Grading Types','Assessments');       
+		$is_manual_exist = $this->getManualUrl('Administration','Grading Types','Assessments');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -304,12 +304,12 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 **
 ******************************************************************************************************************/
 	public function getCustomList($params = []) {
-		if (array_key_exists('keyField', $params)) {
+		if (isset($params['keyField'])) {
 			$keyField = $params['keyField'];
 		} else {
 			$keyField = 'id';
 		}
-		if (array_key_exists('valueField', $params)) {
+		if (isset($params['valueField'])) {
 			$valueField = $params['valueField'];
 		} else {
 			$valueField = 'name';
