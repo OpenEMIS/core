@@ -30,7 +30,7 @@ class OpenEmisBehavior extends Behavior
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(Event $event, ArrayObject $extra = null)
     {
         $action = $this->_table->action;
         switch ($action) {
