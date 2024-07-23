@@ -8,6 +8,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
 use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
 
 class InstitutionTabBehavior extends Behavior
 {
@@ -98,12 +99,18 @@ class InstitutionTabBehavior extends Behavior
         }else{
             $params['institution_id'] = $institutionID;
         }
-//        $params['id'] = $institutionID;
 
         $queryString = $model->paramsEncode($params);
         if ($toolbarButtons->offsetExists('back')) {
-            $toolbarButtons['back']['url'][0] = 'index';
-            $toolbarButtons['back']['url'][1] = $queryString;
+            // POCOR-8496 Start Back to Dashboard from Dashboard
+            $referrer = $model->controller->referer();
+            if ($referrer == "/Dashboard") {
+                $toolbarButtons['back']['url'] = $referrer;
+            } else {
+                $toolbarButtons['back']['url'][0] = 'index';
+                $toolbarButtons['back']['url'][1] = $queryString;
+            }
+            // POCOR-8496 End
         }
         return $toolbarButtons;
     }
