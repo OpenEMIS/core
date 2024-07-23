@@ -400,7 +400,7 @@ class ControllerActionBehavior extends Behavior
 
         if (is_array($field)) {
             foreach ($field as $key) {
-                if (array_key_exists($key, $fields)) {
+                if (is_scalar($key) && array_key_exists($key, $fields)) {
                     $fields[$key]['order'] = $order++;
                 }
             }

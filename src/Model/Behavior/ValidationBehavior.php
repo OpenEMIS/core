@@ -632,7 +632,8 @@ class ValidationBehavior extends Behavior
                                             ->where([$fieldName => 1]);
 
                 if (!$globalData['newRecord']) { //for edit, need to ensure that there is other record which is set as default, or else this one must be set as default.
-                    $recordWithField ->andWhere([$modelClass->aliasField('id').' IS NOT ' => $globalData['data']['id']]);
+                    //$recordWithField ->andWhere([$modelClass->aliasField('id').' IS NOT ' => $globalData['data']['id']]);
+                    $recordWithField ->andWhere([$newEntity->aliasField('id').' IS NOT ' => $globalData['data']['id']]);
                 }
 
                 if (!empty($additionalParameters)) {
