@@ -22,10 +22,12 @@ kd-view .section-header {
   display: none !important;
 }
 
-
-
-
-
+/* ---------------------- copy of footer -----------------------*/
+footer {
+  padding: 10px !important;
+  border-top: 1px solid #3d4047 !important;
+  font-size: 11px !important;
+}
 
 
 /* ---------------------- copy of newStyle.css -----------------------*/
