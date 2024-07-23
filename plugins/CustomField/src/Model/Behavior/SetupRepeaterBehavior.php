@@ -48,10 +48,10 @@ class SetupRepeaterBehavior extends SetupBehavior
                 // view / edit
                 if ($entity->has('params') && !empty($entity->params)) {
                     $params = json_decode($entity->params, true);
-                    if (array_key_exists('survey_form_id', $params)) {
+                    if (isset($params['survey_form_id'])) {
                         $formId = $params['survey_form_id'];
                         //$model->request->query['survey_form'] = $formId;
-                        $request = $request->withQueryParams(array_merge($request->getQueryParams(), ['survey_form' => $formId])); 
+                        $request = $request->withQueryParams(array_merge($request->getQueryParams(), ['survey_form' => $formId]));
                         $entity->survey_form = $formId;
                         $model->request = $request;
                         $entity->survey_form = $formId;

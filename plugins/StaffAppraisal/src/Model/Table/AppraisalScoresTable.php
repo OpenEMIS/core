@@ -90,7 +90,7 @@ class AppraisalScoresTable extends ControllerActionTable
         $this->setupFields();
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
 
@@ -102,7 +102,7 @@ class AppraisalScoresTable extends ControllerActionTable
         }
     }
 
-    public function editAfterAction(Event $event, Entity $entity) 
+    public function editAfterAction(Event $event, Entity $entity)
     {
         $this->setupFields($entity);
 
@@ -181,7 +181,7 @@ class AppraisalScoresTable extends ControllerActionTable
 
             if (!isset($requestData[$this->getAlias()]['steps'][$criteriaId])) {
                 $requestData[$this->getAlias()]['steps'][$criteriaId] = [];
-            }            
+            }
         }
 
         $scoreField = $requestData[$this->getAlias()]['appraisal_forms_criterias_score'];
@@ -245,7 +245,7 @@ class AppraisalScoresTable extends ControllerActionTable
         if (!$result->isEmpty()) {
             $finalScoreEntity = $result->first();
 
-            if (!empty($finalScoreEntity->_matchingData['AppraisalCriterias']['code']) && 
+            if (!empty($finalScoreEntity->_matchingData['AppraisalCriterias']['code']) &&
                 !empty($finalScoreEntity->_matchingData['AppraisalCriterias']['name'])
             ) {
                 $finalQnsCode = $finalScoreEntity->_matchingData['AppraisalCriterias']['code'];
@@ -372,7 +372,7 @@ class AppraisalScoresTable extends ControllerActionTable
                 $scoresParamsJSON = json_decode($appraisalFormsCriteriasScoresEntity->params);
 
                 if (!is_null($scoresParamsJSON)) {
-                    if(!is_null($scoresParamsJSON) && array_key_exists('formula', $scoresParamsJSON) && !is_null($scoresParamsJSON->formula)) {
+                    if(!is_null($scoresParamsJSON) && isset($scoresParamsJSON['formula']) && !is_null($scoresParamsJSON->formula)) {
                         $attr2['attr']['value'] = $this->translateStepToReadableWords($scoresParamsJSON->formula);
                     }
                 }
@@ -497,7 +497,7 @@ class AppraisalScoresTable extends ControllerActionTable
             if (!is_null($appraisalFormsCriteriasScoresEntity) && !is_null($appraisalFormsCriteriasScoresEntity->params)) {
                 $scoresParamsJSON = json_decode($appraisalFormsCriteriasScoresEntity->params);
                 if (!is_null($scoresParamsJSON)) {
-                    if(!is_null($scoresParamsJSON) && array_key_exists('formula', $scoresParamsJSON) && !is_null($scoresParamsJSON->formula)) {
+                    if(!is_null($scoresParamsJSON) && isset($scoresParamsJSON['formula']) && !is_null($scoresParamsJSON->formula)) {
                         $attr2['attr']['value'] = $scoresParamsJSON->formula;
                     }
                 }
@@ -511,7 +511,7 @@ class AppraisalScoresTable extends ControllerActionTable
         if ($action == 'edit') {
             $entity = $attr['attr']['entity'];
             $scoreCriteriasOptions = [];
-            $selectedFinal = '';            
+            $selectedFinal = '';
 
             if ($entity->has('appraisal_forms_criterias')) {
                 $criteriaList = $entity->appraisal_forms_criterias;
@@ -540,7 +540,7 @@ class AppraisalScoresTable extends ControllerActionTable
 
     public function onUpdateFieldCode(Event $event, array $attr, $action, ServerRequest $request){
         if ($action == 'edit') {
-            if (array_key_exists('attr', $attr) && array_key_exists('entity', $attr['attr'])) {
+            if (isset($attr['attr']) && array_key_exists('entity', $attr['attr'])) {
                 $entity = $attr['attr']['entity'];
                 if ($entity->has('code') && $entity->has('name')) {
                     $attr['attr']['value'] = $entity->code . ' - ' . $entity->name;
@@ -581,7 +581,7 @@ class AppraisalScoresTable extends ControllerActionTable
         }
     }
 
-    private function getSelectedCriteriaList($scoreEntity, $requestData = null) 
+    private function getSelectedCriteriaList($scoreEntity, $requestData = null)
     {
         $arrayFields = [];
         $appraisalCriteriaId = $scoreEntity->appraisal_criteria_id;
@@ -605,7 +605,7 @@ class AppraisalScoresTable extends ControllerActionTable
             }
         } elseif ($this->request->is(['post', 'put'])) {
             $requestAlias = $requestData[$this->getAlias()];
-            if (array_key_exists('appraisal_forms_criterias_score', $requestAlias) &&
+            if (isset($requestAlias['appraisal_forms_criterias_score']) &&
                 array_key_exists($appraisalCriteriaId, $requestAlias['appraisal_forms_criterias_score'])
             ) {
                 $criteriaList = $requestAlias['appraisal_forms_criterias_score'][$appraisalCriteriaId];

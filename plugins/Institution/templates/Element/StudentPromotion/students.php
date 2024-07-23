@@ -1,6 +1,6 @@
 <?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
 
-<?php if (in_array($action, ['add', 'reconfirm'])) : 
+<?php if (in_array($action, ['add', 'reconfirm'])) :
 	$getNextclassId = $this->request->getData()['StudentPromotion']['next_class']; ?>
 	<div class="input clearfix required">
 		<label><?= !is_null($attr['label']) ? __($attr['label']) : __($attr['field']) ?></label>
@@ -27,7 +27,7 @@
 					</thead>
 
 					<?php if (!is_null($attr['data'])) :
-							$selectedStudents = array_key_exists('selectedStudents', $attr)? $attr['selectedStudents']: [];
+							$selectedStudents = isset($attr['selectedStudents'])? $attr['selectedStudents']: [];
 							$onlySelectedStudents = [];
 							foreach ($selectedStudents as $sskey => $ssvalue) {
 								if (!empty($ssvalue['selected'])) {

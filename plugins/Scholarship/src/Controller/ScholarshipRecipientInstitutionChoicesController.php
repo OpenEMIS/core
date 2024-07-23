@@ -18,7 +18,7 @@ class ScholarshipRecipientInstitutionChoicesController extends BaseController
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('Scholarship.InstitutionChoiceStatuses');      
+        $this->loadModel('Scholarship.InstitutionChoiceStatuses');
         $this->isSelectedOptions = $this->getSelectOptions('general.yesno');
     }
 
@@ -29,7 +29,7 @@ class ScholarshipRecipientInstitutionChoicesController extends BaseController
         return $event;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
 
@@ -99,7 +99,7 @@ class ScholarshipRecipientInstitutionChoicesController extends BaseController
         $this->renderSelection($entity);
     }
 
-    public function renderSelection(Entity $entity) 
+    public function renderSelection(Entity $entity)
     {
         $page = $this->Page;
 

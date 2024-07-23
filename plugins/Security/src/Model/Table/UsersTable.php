@@ -13,6 +13,8 @@ use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
 use Cake\I18n\FrozenTime;
 use App\Model\Traits\OptionsTrait;
+use Cake\ORM\Table;
+use Cake\Log\Log;
 
 class UsersTable extends ControllerActionTable
 {
@@ -81,7 +83,7 @@ class UsersTable extends ControllerActionTable
         $this->addBehavior('User.AdvancedContactNumberSearch');
         $this->addBehavior('User.AdvancedPositionSearch');
         $this->addBehavior('User.AdvancedSpecificNameTypeSearch');
-       
+
 
         //specify order of advanced search fields
         $advancedSearchFieldOrder = [
@@ -116,7 +118,7 @@ class UsersTable extends ControllerActionTable
                     }
                 }
             }
-            
+
             return $query->select($fields);
         }
     }
@@ -159,24 +161,25 @@ class UsersTable extends ControllerActionTable
     {
         $conditions = [];
         if ($key == 'user_type') {
+
             switch ($value) {
                 case self::STUDENT:
-                    $conditions = [$this->aliasField('is_student') => 1];
+                    $conditions[] = $this->aliasField('is_student = 1');
                     break;
 
                 case self::STAFF:
-                    $conditions = [$this->aliasField('is_staff') => 1];
+                    $conditions[] = $this->aliasField('is_staff = 1');
                     break;
 
                 case self::GUARDIAN:
-                    $conditions = [$this->aliasField('is_guardian') => 1];
+                    $conditions[] = $this->aliasField('is_guardian = 1');
                     break;
 
                 case self::OTHER:
                     $conditions = [
-                        $this->aliasField('is_student') => 0,
-                        $this->aliasField('is_staff') => 0,
-                        $this->aliasField('is_guardian') => 0
+                        $this->aliasField('is_student = 0'),
+                        $this->aliasField('is_staff = 0'),
+                        $this->aliasField('is_guardian = 0')
                     ];
                     break;
             }
@@ -185,11 +188,11 @@ class UsersTable extends ControllerActionTable
         if ($key == 'status') {
             switch ($value) {
                 case self::ACTIVE:
-                    $conditions = [$this->aliasField('status') => 1];
+                    $conditions[] = $this->aliasField('status = 1');
                     break;
 
                 case self::INACTIVE:
-                    $conditions = [$this->aliasField('status') => 0];
+                    $conditions[] = $this->aliasField('status = 0');
                     break;
             }
         }
@@ -267,8 +270,9 @@ class UsersTable extends ControllerActionTable
         ]);
     }
 
-    public function indexBeforeAction(Event $event)
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+
         $this->fields['first_name']['visible'] = false;
         $this->fields['middle_name']['visible'] = false;
         $this->fields['third_name']['visible'] = false;
@@ -280,7 +284,7 @@ class UsersTable extends ControllerActionTable
         $this->fields['name']['visible'] = true;
     }
 
-    public function indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options)
+    public function _indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options)
     {
         //POCOR-6922 Start
         if (!$this->isAdvancedSearchEnabled()) {
@@ -294,7 +298,7 @@ class UsersTable extends ControllerActionTable
 
         $conditions = [];
         $notSuperAdminCondition = [
-            $this->aliasField('super_admin') => 0
+            $this->aliasField('super_admin != 1')
         ];
         $conditions = array_merge($conditions, $notSuperAdminCondition);
 
@@ -312,9 +316,9 @@ class UsersTable extends ControllerActionTable
         $options['auto_search'] = true;
         $userType = $this->Session->read('Users.advanceSearch.belongsTo.user_type');
         if ($userType == self::STAFF || $userType == self::STUDENT) {
-            $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
-            $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
-            $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $IdentityTypes = self::getDynamicTableInstance('FieldOption.IdentityTypes');
+            $UserIdentities = self::getDynamicTableInstance('User.Identities');
+            $ConfigItemTable = self::getDynamicTableInstance('Configuration.ConfigItems');
             if($userType == self::STAFF){
                 $ConfigItem =   $ConfigItemTable
                                 ->find()
@@ -340,12 +344,12 @@ class UsersTable extends ControllerActionTable
                                 ])
                                 ->first();
             }
-            
+
             if(!empty($ConfigItem)){
                 //value_selection
-                //get data from Identity Type table 
+                //get data from Identity Type table
                 $typesIdentity = $this->getIdentityTypeData($ConfigItem->value_selection);
-                if(!empty($typesIdentity)){                
+                if(!empty($typesIdentity)){
                     $query
                         ->select([
                             'identity_type' => $IdentityTypes->aliasField('name'),
@@ -367,14 +371,14 @@ class UsersTable extends ControllerActionTable
                             ]
                         );
                 }
-            }   
+            }
         }//POCOR-6922 ends
     }
 
     //POCOR-6922 starts
     public function getIdentityTypeData($value_selection)
     {
-        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+        $IdentityTypes = self::getDynamicTableInstance('FieldOption.IdentityTypes');
         $typesIdentity =   $IdentityTypes
                             ->find()
                             ->select([
@@ -390,7 +394,7 @@ class UsersTable extends ControllerActionTable
 
     public function findNotSuperAdmin(Query $query, array $options)
     {
-        return $query->where([$this->aliasField('super_admin') => 0]);
+        return $query->where([$this->aliasField('super_admin != 1')]);
     }
 
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)
@@ -416,6 +420,7 @@ class UsersTable extends ControllerActionTable
         $query->find('notSuperAdmin');
         $query->select($this->aliasField('IdentityTypes.name'));
         $query->contain(['MainNationalities', 'IdentityTypes']);
+
     }
 
     public function viewBeforeQuery(Event $event, Query $query)
@@ -451,13 +456,13 @@ class UsersTable extends ControllerActionTable
                 ->select(['first_name','last_name'])
                 ->where(['id' => $entity->modified_user_id])
                 ->first();
-    
+
             return $entity->modified_user_id = $result->first_name.' '.$result->last_name;
         }
     }
     //POCOR-7736::End
-    
-    public function onGetNationalityId(Event $event, Entity $entity){     
+
+    public function onGetNationalityId(Event $event, Entity $entity){
         if (!empty($entity->nationality_id)) {
            $nationalities = TableRegistry::get('User.Nationalities')->get($entity->nationality_id);
            $entity->nationality_name = $nationalities->name;
@@ -622,8 +627,8 @@ class UsersTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-       
-        if (array_key_exists('view', $buttons)) {
+
+        if (isset($buttons['view'])) {
             $buttons['view']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
         }
 
@@ -633,15 +638,8 @@ class UsersTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $options)
     {
-        if ($this->request->is('post')) {
-            $firstName = $this->request->getData()['AdvanceSearch']['Users']['hasMany']['first_name'];
-        }
-            if ($this->request->getData()['AdvanceSearch']['Users']['hasMany']['first_name']==null){
-            $currentDate = FrozenTime::now()->format('Y-m-d');
-                $query->where(function ($exp, $query) use ($currentDate) {
-                    return $exp->eq('DATE(Users.created)', $currentDate);
-                });
-        }
+
+
         if (!$this->isAdvancedSearchEnabled()) {
             $event->stopPropagation();
             return [];
@@ -653,7 +651,7 @@ class UsersTable extends ControllerActionTable
 
         $conditions = [];
         $notSuperAdminCondition = [
-            $this->aliasField('super_admin') => 0
+            $this->aliasField('super_admin != 1')
         ];
         $conditions = array_merge($conditions, $notSuperAdminCondition);
 
@@ -664,15 +662,15 @@ class UsersTable extends ControllerActionTable
                 $this->aliasField('last_name')
             ];
         }
-        
+
         $query->where($conditions)
             ->order($orders);
         $options['auto_search'] = true;
         $userType = $this->Session->read('Users.advanceSearch.belongsTo.user_type');
         if ($userType == self::STAFF || $userType == self::STUDENT) {
-            $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
-            $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
-            $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $IdentityTypes = self::getDynamicTableInstance('FieldOption.IdentityTypes');
+            $UserIdentities = self::getDynamicTableInstance('User.Identities');
+            $ConfigItemTable = self::getDynamicTableInstance('Configuration.ConfigItems');
             if($userType == self::STAFF){
                 $ConfigItem =   $ConfigItemTable
                                 ->find()
@@ -698,12 +696,12 @@ class UsersTable extends ControllerActionTable
                                 ])
                                 ->first();
             }
-            
+
             if(!empty($ConfigItem)){
                 //value_selection
-                //get data from Identity Type table 
+                //get data from Identity Type table
                 $typesIdentity = $this->getIdentityTypeData($ConfigItem->value_selection);
-                if(!empty($typesIdentity)){                
+                if(!empty($typesIdentity)){
                     $query
                         ->select([
                             'identity_type' => $IdentityTypes->aliasField('name'),
@@ -725,7 +723,81 @@ class UsersTable extends ControllerActionTable
                             ]
                         );
                 }
-            }   
+            }
         }
+//            POCOR-8446
+        $firstName = $this->request->getData()['AdvanceSearch']['Users']['hasMany']['first_name'];
+        $lastName = $this->request->getData()['AdvanceSearch']['Users']['hasMany']['last_name'];
+        $openemisID = $this->request->getData()['AdvanceSearch']['Users']['tableField']['openemis_no'];
+        $username = $this->request->getData()['AdvanceSearch']['Users']['tableField']['username'];
+        if ($firstName === "" && $openemisID === "" && $lastName === "" && $username === ""){
+            $this->Alert->warning("Please search by OpenEMIS ID, Username or by First and Last Name. Otherwise, only users created or modified within the last month will be displayed.", ['type' => 'string', 'reset' => true]);
+
+            $currentDate = FrozenTime::now();
+                $pastDate = $currentDate->subDays(31);
+
+// Format the dates to 'Y-m-d'
+                $currentDateFormatted = $currentDate->format('Y-m-d');
+                $pastDateFormatted = $pastDate->format('Y-m-d');
+
+                $query->where(function ($exp, $query) use ($currentDateFormatted, $pastDateFormatted) {
+                    return $exp->between('DATE(Users.created)', $pastDateFormatted, $currentDateFormatted);
+                });
+        }
+    return $options;
     }
+    /**
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName . POCOR-8231
+     * @return \Cake\ORM\Table
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        // Create a TableLocator instance
+        $locator = TableRegistry::getTableLocator();
+
+        try {
+            // Try to get the table instance directly
+            return $locator->get($tableName);
+        } catch (\Exception $e) {
+            Log::debug('Error: ' . $e->getMessage());
+        }
+
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
 }

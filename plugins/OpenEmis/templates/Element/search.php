@@ -18,7 +18,7 @@
 			'onkeypress' => 'if (event.keyCode == 13) jsForm.submit()',
 			'value' => $search
 		]);
-		
+
 		$this->Form->create();
 		$this->Form->unlockField('Search.searchField');
 		?>
@@ -31,7 +31,7 @@
 
 			<?php
             if (
-                array_key_exists('advanced_search', $indexElements) || // v3
+                isset($indexElements['advanced_search']) || // v3
                 isset($advanced_search) // v4
             ) : ?>
 			<button id="search-toggle" class="btn btn-default btn-xs" ng-class="selectedState" data-toggle="tooltip" data-placement="bottom" title="<?= __('Advanced Search') ?>" type="button" ng-click="toggleAdvancedSearch()">

@@ -1,3 +1,22 @@
+### [4.0.13] - 2024-07-18
+- Bug Fixed: Fix for PHP 8.3 changes
+
+### [4.0.12] - 2024-07-17
+- Bug Fixed: Administration>Survey>Forms>Rules: Internal server error
+- Bug Fixed: Institutions > Staff > Add Page: Dropdown for Nationality and gender is not populated
+- Bug Fixed: Institutions > Attendances > Students: Filters are not populated. Students are not showing
+- Bug Fixed: Institutions>Staff>General>Contact: Unable to load page
+- Bug Fixed: Institutions > Appointments > Positions : Upon clicking view Positions, system returns 404 error
+- Bug Fixed: Administration>Survey>Forms: Number validation is not working
+- Bug Fixed: Directory: Unable to load page
+- Bug Fixed: Institutions>General>Map>Export: User is unable to export
+- Bug Fixed: Administration>System Setup>Custom Fields: Page is not loading
+
+### [4.0.11] - 2024-07-16
+- Bug Fixed: Administration>System Setup>System Configuration: Display records is jumbled up
+- Bug Fixed: PHP 8.0(Administration>Security>Users)-Cannot search for student and staff
+- Bug Fixed: (PHP8.0)Institutions>Survey>Forms: User is unable to save survey answers with validations
+
 ### [4.0.10] - 2024-07-12
 - Bug Fixed: Administration > Surveys > Forms > Filters: Other permissions are disabled
 - Bug Fixed: PHP 8.0: Pages cannot load Part three

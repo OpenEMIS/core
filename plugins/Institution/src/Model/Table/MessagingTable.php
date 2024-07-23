@@ -73,7 +73,7 @@ class MessagingTable extends ControllerActionTable
     {
         $this->field('message');
         $this->field('institution_id', ['visible' =>  ['index' => false, 'view' => false, 'edit' => false, 'add' => false]]);
-        $this->field('academic_period_id'); 
+        $this->field('academic_period_id');
         $this->field('created',['visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]]);
         $this->field('created_user_id', ['visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]]);
         $this->field('recipient_level_id');
@@ -81,7 +81,7 @@ class MessagingTable extends ControllerActionTable
         $this->field('security_role_id',['required'=>true,'visible' => ['index' => false, 'view' => true, 'edit' => false, 'add' => true]]);
         $this->field('subject',['sort'=>false]);
         $this->field('status', ['visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]]);
-           
+
     }
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
@@ -279,7 +279,7 @@ class MessagingTable extends ControllerActionTable
     }
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
+        if (isset($extra['selectedAcademicPeriodOptions'])) {
             $query->where([
                 $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions'],
                 $this->aliasField('institution_id') =>  $this->getInstitutionID()
@@ -480,10 +480,10 @@ class MessagingTable extends ControllerActionTable
         return $attr;
     }
     public function getRecipientGroupOptions($recipient_level_id){
-       
+
         $institution_id=$this->getInstitutionID();
         $academicPeriodId =TableRegistry::get('AcademicPeriod.AcademicPeriods')->getCurrent();
-        
+
         $option=[];
         switch ($recipient_level_id) {
             case self::INSTITUTION:
@@ -517,7 +517,7 @@ class MessagingTable extends ControllerActionTable
             case "Subject":
                 $classData = $this->getClassOptions($institution_id, $academicPeriodId)->toArray();
                 foreach ($classData as $key => $value) {
-                    foreach($value->institution_subjects as $Key => $Value){ 
+                    foreach($value->institution_subjects as $Key => $Value){
                         $option[$value->id."-".$Value->id] = $value->name." ".$Value->name;
                     }
                 }
@@ -541,7 +541,7 @@ class MessagingTable extends ControllerActionTable
                 'education_grade_id' => 'EducationGrades.id',
                 'education_grade_name' => 'EducationGrades.name'
             ])
-            ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems']) 
+            ->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
             ->where(['EducationSystems.academic_period_id' => $academicPeriodId,
                      'InstitutionGrades.institution_id' => $institution_id
             ])
@@ -560,7 +560,7 @@ class MessagingTable extends ControllerActionTable
         return $query;
 
     }
-    
+
     private function getSelectedAcademicPeriod($request)
     {
         $selectedAcademicPeriod = '';
@@ -577,7 +577,7 @@ class MessagingTable extends ControllerActionTable
         }
 
         return $selectedAcademicPeriod;
-    } 
+    }
     //POCOR-8016::modify query Start
     public function getRecipientList($entity)
     {
@@ -592,7 +592,7 @@ class MessagingTable extends ControllerActionTable
             } else if ($entity->recipient_level_id == 3) {
                 $where['InstitutionStudents.education_grade_id'] = $entity->recipient_group_id;
             }
-            
+
             $query = $InstitutionStudent->find()
                 ->select([
                     'student_openemis' => 'StudentInfo.openemis_no',

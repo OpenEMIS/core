@@ -45,14 +45,14 @@ class SystemGroupsListTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         unset($extra['indexButtons']['remove']);
         $this->field('security_group_id', [
             'visible' => false]);
         $this->field('security_user_id', [
-            'visible' => ['index' => true, 'view' => true, 'edit' => true, 'add' => true]]);      
+            'visible' => ['index' => true, 'view' => true, 'edit' => true, 'add' => true]]);
         $this->field('security_role_id', ['source_model' => 'Security.SecurityRoles']);
 
         $this->setFieldOrder([
@@ -87,7 +87,7 @@ class SystemGroupsListTable extends ControllerActionTable
     }
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $userGroupId = $this->request->getQuery('userGroupId'); 
+        $userGroupId = $this->request->getQuery('userGroupId');
         $query->contain(['Users','SecurityRoles'])
         ->where([$this->aliasField('security_group_id')=>$userGroupId])
         ->order([$this->aliasField('created DESC')]);
@@ -96,7 +96,7 @@ class SystemGroupsListTable extends ControllerActionTable
         $queryParams = $this->request->getQuery();
         $search = $this->getSearchKey();
 
-        // CUSTOM SEACH - 
+        // CUSTOM SEACH -
         $extra['auto_search'] = false; // it will append an AND
         if (!empty($search)) {
             $query->find('byUserNameRole', ['search' => $search]);
@@ -111,17 +111,17 @@ class SystemGroupsListTable extends ControllerActionTable
         return $entity->user->openemis_no;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-        $userGroupId = $this->request->query['userGroupId'];    
+        $userGroupId = $this->request->query['userGroupId'];
         $entity->security_group_id = $userGroupId;
     }
 
     //POCOR-7175
     public function findByUserNameRole(Query $query, array $options)
     {
-        if (array_key_exists('search', $options)) {
+        if (isset($options['search'])) {
             $search = $options['search'];
             $query
             ->join([
@@ -134,7 +134,7 @@ class SystemGroupsListTable extends ControllerActionTable
                     'conditions' => [
                         'security_roles.id = ' . $this->aliasField('security_role_id')]
                 ],
-                
+
             ])
             ->where([
                     'OR' => [
@@ -151,5 +151,5 @@ class SystemGroupsListTable extends ControllerActionTable
 
         return $query;
     }
-    
+
 }
