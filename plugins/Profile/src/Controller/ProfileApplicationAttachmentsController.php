@@ -12,7 +12,7 @@ class ProfileApplicationAttachmentsController extends BaseController
         $this->loadModel('Scholarship.Scholarships');
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
 

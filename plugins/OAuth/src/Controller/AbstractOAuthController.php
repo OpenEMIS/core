@@ -133,7 +133,7 @@ abstract class AbstractOAuthController extends Controller
                     $authenticationType = 'Local';
                     $postData = $this->request->data;
                     $password = $postData['password'];
-                    $hash = password_hash($password,  PASSWORD_DEFAULT); 
+                    $hash = password_hash($password,  PASSWORD_DEFAULT);
                     $userData = TableRegistry::get('Report.Users');
                     $getUserData = $userData->find('all')
                     ->select([
@@ -187,12 +187,12 @@ abstract class AbstractOAuthController extends Controller
                         throw new UnauthorizedException();
                     }
 
-                    if (!array_key_exists('public_key', $credentials)) {
+                    if (!isset($credentials['public_key'])) {
                         throw new UnauthorizedException('Public Key is missing from getApiCredential()');
                     }
 
                     $scope = [];
-                    if (array_key_exists('scope', $credentials)) {
+                    if (isset($credentials['scope'])) {
                         $scope = $credentials['scope'];
                     }
 

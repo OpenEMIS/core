@@ -15,7 +15,7 @@ class InstitutionTransportProvidersController extends PageController
         $this->loadComponent('Institution.InstitutionInactive');
     }
 
-	public function beforeFilter(Event $event)
+	public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID();

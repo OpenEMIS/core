@@ -642,7 +642,7 @@ class ImportBehavior extends Behavior
         } else {//5695 starts
             if ($title == 'Import Training Session Trainee Results Data') {
                 $title = 'Import Training Results Data';
-            }//5695 ends   
+            }//5695 ends
         }
         $activeSheet = $objPHPExcel->getActiveSheet();
         $activeSheet->setTitle($dataSheetName);
@@ -808,7 +808,7 @@ class ImportBehavior extends Behavior
                 }
             }
 
-            if (count($modelData) > 1 && !array_key_exists('noDropDownList', $modelArr)) {
+            if (count($modelData) > 1 && !isset($modelArr['noDropDownList'])) {
                 $lookupColumn = $firstColumn + intval($modelArr['lookupColumn']) - 1;
                 $alpha = $this->getExcelColumnAlpha($columnOrder - 1);
                 $lookupColumnAlpha = $this->getExcelColumnAlpha($lookupColumn);
@@ -1043,13 +1043,13 @@ class ImportBehavior extends Behavior
                 // end POCOR-3916
 
                 if (!empty($value->description)) {
-                    //POCOR-5913 starts 
+                    //POCOR-5913 starts
                     if ($value->model == 'Student.StudentGuardians') {
                         $label = __($value->description);
                     } else {
                         $label .= ' ' . __($value->description);
                     }
-                    //POCOR-5913 ends 
+                    //POCOR-5913 ends
                 }
             }
 
@@ -1623,7 +1623,7 @@ class ImportBehavior extends Behavior
                     $rowInvalidCodeCols[$columnName] = __($event->result);
                     $rowPass = false;
                 } else {
-                    if (!array_key_exists('customColumns', $tempRow)) {
+                    if (!isset($tempRow['customColumns'])) {
                         $tempRow['customColumns'] = [];
                     }
                     $tempRow['customColumns'][$columnName] = $val;

@@ -12,6 +12,7 @@ use Cake\Utility\Inflector;
 use App\Controller\AppController;
 use Cake\Http\Response;
 use Cake\Http\Client;
+use Cake\Event\EventInterface;
 
 class DirectoriesController extends AppController
 {
@@ -545,8 +546,8 @@ class DirectoriesController extends AppController
 
     public function getAcademicTabElements($options = [])
     {
-        $id = (array_key_exists('id', $options)) ? $options['id'] : 0;
-        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
+        $id = (isset($options['id'])) ? $options['id'] : 0;
+        $type = (isset($options['type'])) ? $options['type'] : null;
         $queryString = $this->ControllerAction->getQueryString();
         if (empty($queryString)) {
             $queryString = $this->getQueryString();
@@ -646,7 +647,7 @@ class DirectoriesController extends AppController
 
     public function getCareerTabElements($options = [])
     {
-        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
+        $type = (isset($options['type'])) ? $options['type'] : null;
         $tabElements = [];
         $queryString = $this->ControllerAction->getQueryString();
         if (empty($queryString)) {
@@ -691,7 +692,7 @@ class DirectoriesController extends AppController
         return $institutionID;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
         $this->Navigation->addCrumb('Directory', ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories']);
@@ -704,7 +705,7 @@ class DirectoriesController extends AppController
         if($action == 'StudentGuardians' && ($furtherAction == 'view' || $furtherAction == 'edit')) {
             return;
         }
-        if (array_key_exists('user_id', $query)) {
+        if (isset($query['user_id'])) {
             $userId = $query['user_id'];
             $Directories = TableRegistry::getTableLocator()->get('Directory.Directories');
             $entity = $Directories->get($userId);
@@ -1080,17 +1081,17 @@ class DirectoriesController extends AppController
         }
         $plugin = $this->getPlugin();
         $name = $this->getName();
-        $id = !empty($id) ? $id : ((array_key_exists('id', $options)) ? $options['id'] : $this->request->getSession()->read($plugin . '.' . $name . '.id'));
+        $id = !empty($id) ? $id : ((isset($options['id'])) ? $options['id'] : $this->request->getSession()->read($plugin . '.' . $name . '.id'));
 
-        if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians' && array_key_exists('entity', $options)) {
+        if (isset($options['userRole']) && $options['userRole'] == 'Guardians' && isset($options['entity'])) {
             $session = $this->request->getSession();
-            $id = (array_key_exists('id', $options)) ? $options['id'] : $id;
+            $id = (isset($options['id'])) ? $options['id'] : $id;
             $session->write('Guardian.Guardians.name', $options['entity']->user->name);
             $session->write('Guardian.Guardians.id', $options['entity']->user->id);
             $session->write('Directory.Directories.studentToGuardian', 'studentToGuardian');
-        } elseif (array_key_exists('userRole', $options) && $options['userRole'] == 'Students' && array_key_exists('entity', $options)) {
+        } elseif (isset($options['userRole']) && $options['userRole'] == 'Students' && isset($options['entity'])) {
             $session = $this->request->getSession();
-            $id = (array_key_exists('id', $options)) ? $options['id'] : $id;
+            $id = (isset($options['id'])) ? $options['id'] : $id;
             $session->write('Student.Students.name', $options['entity']->user->name);
             $session->write('Student.Students.id', $options['entity']->user->id);
             $session->write('Directory.Directories.guardianToStudent', 'guardianToStudent');
@@ -1139,7 +1140,7 @@ class DirectoriesController extends AppController
             }
         }
 
-        if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians') {
+        if (isset($options['userRole']) && $options['userRole'] == 'Guardians') {
             $session = $this->request->getSession();
             $StudentGuardianId = $session->read('Student.Guardians.primaryKey')['id'];
             $relationTabElements = [
@@ -1151,9 +1152,9 @@ class DirectoriesController extends AppController
             $relationTabElements['GuardianUser']['url'] = array_merge($url, ['action' => 'StudentGuardianUser', 'view', $this->paramsEncode(['id' => $id, 'StudentGuardians.id' => $StudentGuardianId])]);
             $tabElements = array_merge($relationTabElements, $tabElements);
             unset($tabElements[$this->getName()]);
-        } elseif (array_key_exists('userRole', $options) && $options['userRole'] == 'Students') {
+        } elseif (isset($options['userRole']) && $options['userRole'] == 'Students') {
             $session = $this->request->getSession();
-            $id = (array_key_exists('id', $options)) ? $options['id'] : $id;
+            $id = (isset($options['id'])) ? $options['id'] : $id;
             $StudentGuardianId = $session->read('Student.Guardians.primaryKey')['id'];
             $session->write('Directory.Directories.guardianToStudent', 'guardianToStudent');
             $relationTabElements = [
@@ -1188,7 +1189,7 @@ class DirectoriesController extends AppController
 
     public function getStudentGuardianTabElements($options = [])
     {
-        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
+        $type = (isset($options['type'])) ? $options['type'] : null;
         $plugin = $this->getPlugin();
         $name = $this->getName();
         $tabElements = [
@@ -1204,7 +1205,7 @@ class DirectoriesController extends AppController
 
     public function getGuardianStudentTabElements($options = [])
     {
-        // $type = (array_key_exists('type', $options))? $options['type']: null;
+        // $type = (isset($options['type']))? $options['type']: null;
         $plugin = $this->getPlugin();
         $name = $this->getName();
         $tabElements = [
@@ -1270,7 +1271,7 @@ class DirectoriesController extends AppController
 
     public function getFinanceTabElements($options = [])
     {
-        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
+        $type = (isset($options['type'])) ? $options['type'] : null;
         $plugin = $this->getPlugin();
         $name = $this->getName();
         $queryString = $this->ControllerAction->getQueryString();
@@ -1300,7 +1301,7 @@ class DirectoriesController extends AppController
 
     public function getStaffFinanceTabElements($options = [])
     {
-        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
+        $type = (isset($options['type'])) ? $options['type'] : null;
         $tabElements = [];
         $queryString = $this->ControllerAction->getQueryString();
         if (empty($queryString)) {
@@ -1511,7 +1512,7 @@ class DirectoriesController extends AppController
      */
     public function getGenders(): Response
     {
-        $gendersTable = $this->getDynamicTableInstance('genders');
+        $gendersTable = $this->getDynamicTableInstance('User.Genders');
         $genders = $gendersTable
             ->find()
             ->select(['id', 'name'])

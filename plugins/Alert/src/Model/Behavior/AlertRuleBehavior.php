@@ -60,15 +60,15 @@ class AlertRuleBehavior extends Behavior
             }
 
             foreach ($thresholdConfig as $field => $attr) {
-                if (array_key_exists('type', $attr)) {
+                if (isset($attr['type'])) {
                     $fieldType = $attr['type'];
 
                     if (in_array($fieldType, ['select', 'chosenSelect'])) {
                         $options = [];
-                        if (array_key_exists('options', $attr) && !empty($attr['options'])) {
+                        if (isset($attr['options']) && !empty($attr['options'])) {
                             $options = $model->getSelectOptions($model->getAlias().".".$attr['options']);
 
-                        } else if (array_key_exists('lookupModel', $attr) && !empty($attr['lookupModel'])) {
+                        } else if (isset($attr['lookupModel']) && !empty($attr['lookupModel'])) {
                             $modelTable = TableRegistry::get($attr['lookupModel']);
                             $options = $modelTable->getList()->toArray();
                         }
@@ -76,7 +76,7 @@ class AlertRuleBehavior extends Behavior
                     }
                 }
 
-                if (array_key_exists('tooltip', $attr)) {
+                if (isset($attr['tooltip'])) {
                     $sprintf = $attr['tooltip']['sprintf'];
                     $message = $model->getMessage($model->getAlias().".".$entity->feature.'.'.$field, ['sprintf' => $sprintf]);
 
