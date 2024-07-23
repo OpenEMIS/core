@@ -1407,6 +1407,14 @@ class InstitutionsController extends AppController
 
     public function StudentAttendances($pass = '')
     {
+        $institutionId = $this->getInstitutionId();
+        $institutionName = $this->Institutions->get($institutionId)->name;
+        $url = $_SERVER['REQUEST_URI'];
+        $startPos = strpos($url, '/Institution/Institutions/StudentAttendances/index') + strlen('/Institution/Institutions/StudentAttendances/index');
+        $encodedPart = substr($url, $startPos);
+        $endPos = ltrim($encodedPart,'/');
+        $baseUrl = Router::fullBaseUrl();
+
         if ($pass == 'excel') {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAttendances']);
         } else {
@@ -1470,6 +1478,10 @@ class InstitutionsController extends AppController
             $this->set('importUrl', Router::url($importUrl));
             $this->set('archiveUrl', Router::url($archiveUrl));
             $this->set('institution_id', $institutionId);
+            $this->set('encoded_url', $endPos);
+            $this->set('baseUrl', $baseUrl);
+            $this->set('institutionName', $institutionName);
+
             $this->set('ngController', 'InstitutionStudentAttendancesCtrl as $ctrl');
 
             // Start POCOR-5188
