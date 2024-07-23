@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { IDynamicFormApi } from 'openemis-styleguide-lib';
+import { IDynamicFormApi, KdAlertEvent } from 'openemis-styleguide-lib';
 import { ApiService } from '../api.service';
+import { DEFAULT_TEMPLATE_THEME } from '../shared/config.default-val';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-student-attendance-report',
@@ -11,21 +13,7 @@ export class StudentAttendanceReportComponent implements OnInit {
   public api: IDynamicFormApi = {};
   counter: number = 0;
   displayLoading: boolean = false;
-  public breadcrumbList: any = {
-    home: { icon: 'fa fa-home', path: '' },
-    list: [{
-      name: 'Institutions',
-      path: ''
-    },
-    {
-      name: 'Avory Primary School',
-      path: ''
-    },
-    {
-      name: 'Import Student Attendances',
-      path: ''
-    }]
-  }
+  themeArray = DEFAULT_TEMPLATE_THEME;
 
   public pageheader: any = {
     leftBtn: [{
@@ -43,16 +31,12 @@ export class StudentAttendanceReportComponent implements OnInit {
 
   public _formButtons: Array<any> = [
     {
-      type: 'submit',
-      name: 'Import',
-      icon: 'kd-import',
-      class: 'btn-text'
+      name: '',
+      class: 'd-none'
     },
     {
-      type: 'cancel',
-      name: 'Cancel',
-      icon: 'kd-close',
-      class: 'btn-outline'
+      name: '',
+      class: 'd-none'
     }
   ];
 
@@ -68,49 +52,59 @@ export class StudentAttendanceReportComponent implements OnInit {
       options: [],
       events: true,
     },
-    {
-      'key': 'select_file_to_import',
-      'label': 'Select File To Import',
-      'visible': true,
-      'required': true,
-      'controlType': 'file-input',
-      'type': 'file',
-      'config': {
-        'leftToolbar': true,
-        'leftButton': [
-          {
-            'icon': 'kd-download',
-            'label': 'Download',
-            'callback': (): void => {
-              event.preventDefault();
-              console.log('this is callback for download button');
-            }
-          }
-        ],
-        'infoText': [
-          {
-            'text': 'Format Supported: xls, xlsx, ods, zip'
-          },
-          {
-            'text': 'File size should not be larger than 512KB.'
-          },
-          {
-            'text': 'Recommended Maximum Records: 2000'
-          }
-        ],
-      }
-    },
+    // {
+    //   'key': 'select_file_to_import',
+    //   'label': 'Select File To Import',
+    //   'visible': true,
+    //   'required': true,
+    //   'controlType': 'file-input',
+    //   'type': 'file',
+    //   'config': {
+    //     'leftToolbar': true,
+    //     'leftButton': [
+    //       {
+    //         'icon': 'kd-download',
+    //         'label': 'Download',
+    //         'callback': (): void => {
+    //           event.preventDefault();
+    //           console.log('this is callback for download button');
+    //         }
+    //       }
+    //     ],
+    //     'infoText': [
+    //       {
+    //         'text': 'Format Supported: xls, xlsx, ods, zip'
+    //       },
+    //       {
+    //         'text': 'File size should not be larger than 512KB.'
+    //       },
+    //       {
+    //         'text': 'Recommended Maximum Records: 2000'
+    //       }
+    //     ],
+    //   }
+    // },
 
   ];
 
   academic_class: any[];
   selected_academic_class: any;
+  institution_id: any;
+  academic_Period: number;
+  selectedClassId: any;
+  student_attendance_data: any;
 
   constructor(
-    private Rest: ApiService
+    private Rest: ApiService,
+    private _kdAlertEvent: KdAlertEvent,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
+    this.institution_id = JSON.parse(localStorage.getItem("institution_id"));
+    // this.institution_id = 6;
+    this.academic_Period = JSON.parse(localStorage.getItem("academic_Period"));
+    // this.academic_Period = 33;
     this.loginData();
   }
 
@@ -139,6 +133,7 @@ export class StudentAttendanceReportComponent implements OnInit {
         }
       }
     } else {
+      this.setTheme();
       this.getAPIData();
     }
   }
@@ -148,6 +143,7 @@ export class StudentAttendanceReportComponent implements OnInit {
       next: (response: any) => {
         if (response) {
           localStorage.setItem("loginToken", response?.data?.token);
+          this.setTheme();
           this.getAPIData();
         }
       },
@@ -162,8 +158,31 @@ export class StudentAttendanceReportComponent implements OnInit {
     })
   }
 
+  setTheme() {
+    this.Rest.getWithToken('themes').subscribe({
+      next: (response: any) => {
+        let selectedThemeData = '';
+        if (response?.data[3].value) {
+          selectedThemeData = response?.data[3].value;
+          selectedThemeData = `#${selectedThemeData}`;
+        } else {
+          selectedThemeData = response?.data[3].default_value;
+          selectedThemeData = `#${selectedThemeData}`;
+        }
+        this.themeArray.btnGroup[0].dropdownContent.forEach((element: any) => {
+          if (element.text == selectedThemeData) {
+            document.body.className = element.theme + ' fuelux';
+          }
+        });
+      },
+      error: (error: any) => {
+
+      }
+    })
+  }
+
   getAPIData() {
-    this.Rest.getWithToken(`institutions/6/classes?order=id&academic_period_id=33`).subscribe({
+    this.Rest.getWithToken(`institutions/${this.institution_id}/classes?order=id&academic_period_id=${this.academic_Period}`).subscribe({
       next: (response: any) => {
         if (response) {
           this.academic_class = [];
@@ -174,6 +193,7 @@ export class StudentAttendanceReportComponent implements OnInit {
             }
             this.academic_class.push(obj);
           });
+          this.academic_class.unshift({ key: '', value: '--Select--' })
           let classData = this._confirmationData;
           classData[0].options = this.academic_class;
           classData[0].value = this.academic_class[0].key;
@@ -198,17 +218,156 @@ export class StudentAttendanceReportComponent implements OnInit {
     delete sessionStorage.password;
   }
 
-  _submitEvent(event: any){
-    console.log(event,"event--");
+  detectValue(event: any) {
+    if (event.controlType == "dropdown" && event.value != '') {
+      this.selectedClassId = event.value;
+      let confirmation = this._confirmationData;
+      confirmation[0].value = event.value;
+      confirmation[1] = {
+        'key': 'select_file_to_import',
+        'label': 'Select File To Import',
+        'visible': true,
+        'required': false,
+        'controlType': 'file-input',
+        'type': 'file',
+        'config': {
+          'leftToolbar': true,
+          'leftButton': [
+            {
+              'icon': 'kd-download',
+              'label': 'Download',
+              'callback': (): void => {
+                // event.preventDefault();
+                this.exportToExcel();
+              }
+            }
+          ],
+          'infoText': [
+            {
+              'text': 'Format Supported: xls, xlsx, ods, zip'
+            },
+            {
+              'text': 'File size should not be larger than 512KB.'
+            },
+            {
+              'text': 'Recommended Maximum Records: 2000'
+            }
+          ],
+        }
+      };
+      this._confirmationData = [...confirmation];
+
+      this._formButtons = [
+        {
+          type: 'submit',
+          name: 'Import',
+          icon: 'kd-import',
+          class: 'btn-text'
+        },
+        {
+          type: 'cancel',
+          name: 'Cancel',
+          icon: 'kd-close',
+          class: 'btn-outline'
+        }
+      ]
+
+    } else if (event.controlType == "dropdown" && event.value == '') {
+      let confirmation = this._confirmationData;
+      confirmation[0].value = event.value;
+      confirmation.pop();
+      this._confirmationData = [...confirmation];
+      this._formButtons = [
+        {
+          name: '',
+          class: 'd-none'
+        },
+        {
+          name: '',
+          class: 'd-none'
+        }
+      ]
+    }
   }
 
-  _buttonEvent(event: any){
-    console.log(event,"event");
-    
+  exportToExcel() {
+
+    this.Rest.getItemExport(`institutions/students/attendances/import/template?institution_id=${this.institution_id}&institution_class_id=${this.selectedClassId}`).subscribe({
+      next: (response: any) => {
+        let url = window.URL.createObjectURL(response);
+        let a = document.createElement('a');
+        document.body.appendChild(a);
+        a.setAttribute('style', 'display: none');
+        a.href = url;
+        a.download = response.filename || 'Student attendance';
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+
+      },
+      error: (error: any) => {
+      
+      }
+    })
+  }
+
+  _submitEvent(event: any) {
+    console.log(event, "event--");
+    if (event.class && event.select_file_to_import) {
+      const formData = new FormData();
+      formData.append('file', event.select_file_to_import);
+      formData.append('institution_class_id', event.class);
+      formData.append('institution_id', this.institution_id);
+      this.Rest.postImportTemplete('institutions/students/attendances/import', formData).subscribe({
+        next: (response: any) => {
+          console.log(response, "response");
+          let toasterConfig: any = {
+            title: 'Student attendance imported successfully!!',
+            showCloseButton: true,
+            tapToDismiss: true,
+          };
+          // localStorage.setItem("meal_imported",JSON.stringify(response.data));
+          this._kdAlertEvent.info(toasterConfig);
+          console.log(response.data, "response.data");
+          let attendance_data = response.data;
+          this.router.navigateByUrl('Institution/Institutions/ImportStudentAttendance/results', {
+            state: {
+              importData: { attendance_data_imported: attendance_data, selectedClassId: this.selectedClassId },
+            },
+          });
+        },
+        error: (error) => {
+          console.log(error, "error");
+          let toasterConfig: any = {
+            title: 'Something went wrong, Please try again',
+            showCloseButton: true,
+            tapToDismiss: true,
+          };
+
+          this._kdAlertEvent.error(toasterConfig);
+        }
+      })
+    } else {
+      let toasterConfig: any = {
+        title: 'Please fill all fields',
+        showCloseButton: true,
+        tapToDismiss: true,
+      };
+
+      this._kdAlertEvent.warn(toasterConfig);
+    }
+  }
+
+  _buttonEvent(event: any) {
+    console.log(event, "event");
+
   }
 
   backToData() {
-
+    let tokenData = localStorage.getItem('encoded_url');
+    if(tokenData){
+      this.router.navigateByUrl(`Institution/Institutions/StudentAttendances/index/${tokenData}`);
+    }
   }
 
 }

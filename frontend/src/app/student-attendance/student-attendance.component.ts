@@ -41,7 +41,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
     leftBtn: [{
       type: "export",
       callback: (): void => {
-        this.backToData();
+        this.exportData();
       }
     },
     {
@@ -57,15 +57,21 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
       }
     },
     {
-      icon: "fa kd-null",
-      path: '/'
-    },
-    {
-      icon: "fa fa-folder",
+      custom: true,
+      icon: 'fa kd-null',
+      tooltip: 'No Scheduled Class',
       callback: (): void => {
-        this.onEditClick();
+        this.nullData();
       }
     },
+    {
+      custom: true,
+      icon: 'fa fa-folder',
+      tooltip: 'Archive',
+      callback: (): void => {
+        this.archiveData();
+      }
+    }
     ],
     moreAction: [],
     moreBtn: false,
@@ -236,9 +242,10 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
 
     super.updatePageHeader();
     super.updateBreadcrumb();
+    this.displayLoading = true;
     this.counter = 0;
     this.institution_id = JSON.parse(localStorage.getItem("institution_id"));
-    // this.institution_id = 6;
+    this.institution_id = 6;
     this.institution_name = localStorage.getItem("institutionName");
     this.pageheader.pageheaderText = `${this.institution_name} - Student Attendances`
 
@@ -373,7 +380,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
     this.Rest.getWithToken('absence-types').subscribe({
       next: (response: any) => {
         if (response) {
-          this.absenceTypeList = response?.data?.list;
+          this.absenceTypeList = response?.data?.data;
           this.absenceReasonAPI();
         }
 
@@ -398,7 +405,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
             id: this.TABLEID,
             rowIdKey: "id",
             gridHeight: "auto",
-            rowContentHeight: 60,
+            rowContentHeight: 160,
             loadType: "normal",
             externalFilter: false,
             paginationConfig: {
@@ -689,7 +696,8 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
     this.Rest.getWithToken(`institutions/${this.institution_id}/grades/${this.selected_education_grade}/classes/${this.selected_academic_class}/student-attendances?academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&attendance_period_id=1&subject_id=0&week_id=${this.academic_period_week}&week_start_day=${this.start_day}&week_end_day=${this.end_day}`).subscribe({
       next: (response: any) => {
         if (response) {
-          this._row = response?.data?.list;
+          this._row = response?.data?.data;
+
           this.oldRowData = JSON.parse(JSON.stringify(this._row));
           this.setDashboard();
           this.displayLoading = false;
@@ -709,6 +717,11 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
   }
 
   public editTableFields() {
+    let tokenData = localStorage.getItem('encoded_url');
+    localStorage.setItem("academic_Period", this.academic_Period);
+    if(tokenData){
+      this._router.navigateByUrl(`Institution/Institutions/${tokenData}/ImportStudentAttendances/add`);
+    }
   }
 
   public backToData() {
@@ -816,7 +829,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
         leftBtn: [{
           type: "export",
           callback: (): void => {
-            this.backToData();
+            this.exportData();
           }
         },
         {
@@ -832,15 +845,21 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
           }
         },
         {
-          icon: "fa kd-null",
-          path: '/'
-        },
-        {
-          icon: "fa fa-folder",
+          custom: true,
+          icon: 'fa kd-null',
+          tooltip: 'No Scheduled Class',
           callback: (): void => {
-            this.onEditClick();
+            this.nullData();
           }
         },
+        {
+          custom: true,
+          icon: 'fa fa-folder',
+          tooltip: 'Archive',
+          callback: (): void => {
+            this.archiveData();
+          }
+        }
         ],
         moreAction: [],
         moreBtn: false,
@@ -921,6 +940,60 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
         this.institutionSubjectClass(event.target.value);
         break;
     }
+  }
+
+  nullData() {
+    // `institutions/students/attendances/no-scheduled-class?institution_id=${this.institution_id}&institution_class_id=${this.selected_academic_class}&education_grade_id=${this.education_grade_id}&academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&attendance_period_id=1&subject_id=0`
+    this.Rest.getWithToken(`institutions/students/attendances/no-scheduled-class?institution_id=${this.institution_id}&institution_class_id=${this.selected_academic_class}&education_grade_id=${this.education_grade_id}&academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&attendance_period_id=1&subject_id=0`).subscribe({
+      next: (response: any) => {
+        if (response) {
+          console.log(response,"response data");
+          
+        }
+
+      },
+      error: (error: any) => {
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
+        this.displayLoading = false;
+      }
+    })
+  }
+
+  archiveData(){
+
+  }
+
+  exportData() {
+    this.displayLoading = true;
+    // `/institutions/students/attendances/export?institution_id=${this.institution_id}&institution_class_id=${this.selected_academic_class}&education_grade_id=${this.education_grade_id}&academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&attendance_period_id=1&subject_id=0&week_id=${this.academic_period_week}&week_start_day=${this.start_day}&week_end_day=${this.end_day}`
+    this.Rest.getItemExport(`institutions/students/attendances/export?institution_id=${this.institution_id}&institution_class_id=${this.selected_academic_class}&education_grade_id=${this.education_grade_id}&academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&attendance_period_id=1&subject_id=0&week_id=${this.academic_period_week}&week_start_day=${this.start_day}&week_end_day=${this.end_day}`).subscribe({
+      next: (response: any) => {
+        this.displayLoading = false;
+        let url = window.URL.createObjectURL(response);
+        let a = document.createElement('a');
+        document.body.appendChild(a);
+        a.setAttribute('style', 'display: none');
+        a.href = url;
+        a.download = response.filename || 'Student attendance';
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+      },
+      error: (error: any) => {
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
+        this.displayLoading = false;
+      }
+    })
   }
 
   ngOnDestroy(): void {
