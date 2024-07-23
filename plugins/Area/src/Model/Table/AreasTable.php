@@ -160,6 +160,9 @@ class AreasTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+
         $this->field('area_level_id');
         $count = $this->find()->where([
                 'OR' => [
@@ -547,6 +550,8 @@ class AreasTable extends ControllerActionTable
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
         //Setup fields
         $this->fieldsOrder = ['area_level_id', 'code', 'name'];
 
