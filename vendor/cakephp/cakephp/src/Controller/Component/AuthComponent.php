@@ -354,15 +354,15 @@ class AuthComponent extends Component implements EventDispatcherInterface
         if ($auth === false) {
             throw new CakeException('At least one authenticate object must be available.');
         }
-        $result = $auth->unauthenticated($controller->getRequest(), $response);
-        if ($result !== null) {
-            return $result instanceof Response ? $result : null;
-        }
-
+        
         if (!$controller->getRequest()->is('ajax')) {
             $this->flash($this->_config['authError']);
 
             return $controller->redirect($this->_loginActionRedirectUrl());
+        }
+        $result = $auth->unauthenticated($controller->getRequest(), $response);
+        if ($result !== null) {
+            return $result instanceof Response ? $result : null;
         }
 
         return $response->withStatus(403);
