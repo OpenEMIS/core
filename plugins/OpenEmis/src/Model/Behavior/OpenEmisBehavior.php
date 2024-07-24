@@ -30,9 +30,8 @@ class OpenEmisBehavior extends Behavior
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra = null)
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $extra = $extra ?? new ArrayObject();//POCOR-8425
         $action = $this->_table->action;
         switch ($action) {
             case 'index':
@@ -102,27 +101,22 @@ class OpenEmisBehavior extends Behavior
 
         $access = $model->AccessControl;
         $toolbarButtons = $extra['toolbarButtons'];
-        if(!empty($toolbarButtons)) {//POCOR-8425 starts
-            foreach ($toolbarButtons->getArrayCopy() as $key => $buttons) {
-                if (isset($buttons['url'])) {
-                    if ($buttons['url'] != '#' && !$access->check($buttons['url'])) {
-                        $toolbarButtons->offsetUnset($key);
-                    }
+        foreach ($toolbarButtons->getArrayCopy() as $key => $buttons) {
+            if (isset($buttons['url'])) {
+                if ($buttons['url'] != '#' && !$access->check($buttons['url'])) {
+                    $toolbarButtons->offsetUnset($key);
                 }
             }
-        }//POCOR-8425 ends
+        }
 
         $indexButtons = $extra['indexButtons'];
-        if(!empty($indexButtons)) {//POCOR-8425 starts
-            $indexButtons = $extra['indexButtons'];
-            foreach ($indexButtons->getArrayCopy() as $key => $buttons) {
-                if ($buttons['url'] != '#' && isset($buttons['url'])) {
-                    if (!$access->check($buttons['url'])) {
-                        $indexButtons->offsetUnset($key);
-                    }
+        foreach ($indexButtons->getArrayCopy() as $key => $buttons) {
+            if ($buttons['url'] != '#' && isset($buttons['url'])) {
+                if (!$access->check($buttons['url'])) {
+                    $indexButtons->offsetUnset($key);
                 }
             }
-        }//POCOR-8425 ends
+        }
 
         $extra['toolbarButtons'] = $toolbarButtons;
         $extra['indexButtons'] = $indexButtons;
@@ -205,15 +199,15 @@ class OpenEmisBehavior extends Behavior
         }
     }
 
-    public function indexAfterAction(Event $event, Query|ResultSet $query = null, $resultSet = null, ArrayObject $extra =null)
-    {//POCOR-8425
-        if ($resultSet == null || count($resultSet) == 0) {
+    public function indexAfterAction(Event $event, Query $query, $resultSet, ArrayObject $extra)
+    {
+        if (count($resultSet) == 0) {
             $this->_table->Alert->info('general.noData');
         }
         $extra['config']['form'] = ['class' => ''];
     }
 
-    public function viewAfterAction(Event $event, Entity|bool $entity, ArrayObject $extra)//POCOR-8425
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         if (!$entity) {
             $this->_table->Alert->warning('general.notExists');
