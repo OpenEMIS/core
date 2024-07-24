@@ -61,14 +61,16 @@ class CustomFieldListBehavior extends Behavior {
 		if (!(is_null($this->getConfig('moduleKey')))) {
 			$filter = $this->getFilter($this->getConfig('model'));
 			$types = $this->getType($filter);
-			$filterKey = $this->getFilterKey($filter, $this->getConfig('model'));
-			if (!empty($types)) {
-				foreach ($types as $key => $name) {
-					$this->excelContent($sheets, $name, $filterKey, $key);
+			if(!is_null($filter)){
+				$filterKey = $this->getFilterKey($filter, $this->getConfig('model'));
+				if (!empty($types)) {
+					foreach ($types as $key => $name) {
+						$this->excelContent($sheets, $name, $filterKey, $key);
+					}
+				} else {
+					$name = $this->_table->getAlias();
+					$this->excelContent($sheets, $name);
 				}
-			} else {
-				$name = $this->_table->getAlias();
-				$this->excelContent($sheets, $name);
 			}
 		} else {
 			// For Surveys only
@@ -145,7 +147,9 @@ class CustomFieldListBehavior extends Behavior {
 
 		$fields->exchangeArray($excelFields);
 		// Setting the list of options into the sheet for easier fetching
-		$this->setCustomFieldOptionsList($settings['sheet']['customFieldOptions']);
+		if(isset($settings['sheet']['customFieldOptions'])){
+			$this->setCustomFieldOptionsList($settings['sheet']['customFieldOptions']);
+		}
 	}
 
 	// Model.excel.onExcelRenderCustomField
@@ -365,14 +369,16 @@ class CustomFieldListBehavior extends Behavior {
      */
 	public function getFilterKey($filter, $model) {
 		$filterKey = '';
-		$associations = TableRegistry::get($filter)->associations();
-		foreach ($associations as $assoc) {
-			if ($assoc->getRegistryAlias() == $model) {
-				$filterKey = $assoc->getForeignKey();
-				return $filterKey;
+		if(isset($filter)){
+			$associations = TableRegistry::get($filter)->associations();
+			foreach ($associations as $assoc) {
+				if ($assoc->getRegistryAlias() == $model) {
+					$filterKey = $assoc->getForeignKey();
+					return $filterKey;
+				}
 			}
+			return $filterKey;
 		}
-		return $filterKey;
 	}
 
 	/**
@@ -603,15 +609,14 @@ class CustomFieldListBehavior extends Behavior {
 	private function student_list($data, $field, $options=[]) {
 		return null;
 	}
-
-	public function table($data, $field, $options=[]): Table {
-		$id = $field['id'];
-		$colId = $field['col_id'];
-		$rowId = $field['row_id'];
-		if (isset($data[$id][$colId][$rowId])) {
-			return $data[$id][$colId][$rowId];
-		}
-		return '';
-	}
+	//POCOR[POCOR-8471]
+	// public function table($data, $field, $options=[]): Table {
+	// 	$id = $field['id'];
+	// 	$colId = $field['col_id'];
+	// 	$rowId = $field['row_id'];
+	// 	if (isset($data[$id][$colId][$rowId])) {
+	// 		return $data[$id][$colId][$rowId];
+	// 	}
+	// }
 
 }
