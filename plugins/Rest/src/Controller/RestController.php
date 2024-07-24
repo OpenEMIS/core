@@ -17,7 +17,7 @@ use Cake\Event\EventInterface;
 class RestController extends AppController
 {
     public $SecurityRestSessions = null;
-    private $RestVersion = '1.0';
+    private $RestVersion = '2.0';
 
     public function initialize(): void
     {
@@ -46,22 +46,25 @@ class RestController extends AppController
         ]);
         $this->SecurityRestSessions = TableRegistry::get('Rest.SecurityRestSessions');
         $this->loadComponent('Cookie');
-        $rootPath = $_SERVER['REQUEST_URI'];
-        $cookieRestful = new \Cake\Http\Cookie\Cookie(
-                            'Restful',
-                            $rootPath,
-                        );
-        $this->response->withCookie($cookieRestful);
     }
 
     public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
         $this->getEventManager()->off($this->Csrf);
+       $rootPath = $_SERVER['REQUEST_URI'];
+        /*$rootPath = $_SERVER['REQUEST_URI'];
+        $cookieRestful = new \Cake\Http\Cookie\Cookie(
+                            'Restful',
+                            $rootPath,
+                        );
+            $this->response->withCookie($cookieRestful);*/
+        setcookie("Restful", $rootPath, time() + (86400 * 30), "/");
         $this->Security->setConfig('unlockedActions', ['survey']);
         if (null !== $this->request->getQuery('version')) {
             $this->RestVersion = $this->request->getQuery('version');
         }
+
         if ($this->RestVersion == 2.0) {
             // Using JWT for authenication
             $this->Auth->setConfig('authenticate', [
@@ -77,15 +80,10 @@ class RestController extends AppController
                     'queryDatasource' => true
                 ]
             ]);
+
             $this->Auth->setConfig('storage', 'Memory');
             $this->Auth->setConfig('authorize', null);
-            $this->Auth->allow(['auth']);
-            $rootPath = $_SERVER['REQUEST_URI'];
-            $cookieRestful = new \Cake\Http\Cookie\Cookie(
-                            'Restful',
-                            $rootPath,
-                        );
-            $this->response->withCookie($cookieRestful);
+            
             if ($this->request->getData('code')) {
                 $token = $this->request->getData('code');
                 $this->request->setEnv('HTTP_AUTHORIZATION', $token);
@@ -418,7 +416,7 @@ class RestController extends AppController
     }
 
     public function auth()
-    {
+    {  //echo "<pre>"; print_r($this->RestVersion); die;
         $json = [];
 
         // Add debug logging to understand the flow
@@ -426,21 +424,25 @@ class RestController extends AppController
 
         if ($this->RestVersion == '2.0') {
             Log::debug('RestVersion 2.0 detected');
-            $payload = $this->request->getQuery('payload');
-            
-            if (isset($payload)) {
-                Log::debug('Payload found in request');
+          $payload = $this->request->getQuery('payload');
+           // $payload = '6hjhhjjg';
+           // echo "<pre>"; print_r($payload); die;
+            if (!is_null($this->request->getQuery('payload'))) {
                 if (!$this->Cookie->check('Restful.Call')) {
-                    Log::debug('Restful.Call cookie not found, redirecting');
                     $redirectUrl = $this->ControllerAction->url('auth');
                     $redirectUrl['version'] = '2.0';
-                    unset($redirectUrl['payload']);
-                    return $this->redirect($redirectUrl);
+                    if (!is_null($redirectUrl['payload'])) {
+                        unset($redirectUrl['payload']);
+                    }
+                    $this->redirect($redirectUrl);
                 }
-                Log::debug('Restful.Call cookie found, setting URL and redirecting');
-                $url = $this->Cookie->read('Restful.CallBackURL') . '?code=' . $payload;
-                return $this->redirect($url);
+                $url = $this->Cookie->read('Restful.CallBackURL');
+                $token = $this->request->getQuery('payload');
+                $url = $url.'?code='.$token;
+                $this->redirect($url);
+                $this->response->header(['Location' => $url]); //POCOR-7926
             } else {
+
                 $this->Cookie->configKey('Restful', 'path', '/');
                 $this->Cookie->configKey('Restful', [
                     'expires' => '+5 minutes'
@@ -464,8 +466,8 @@ class RestController extends AppController
                     ->withPath($rootPath)
                     ->withSecure(false) // Change to true if you want the cookie to be sent over HTTPS only
                     ->withHttpOnly(true);
-
                 $this->response = $this->response->withCookie($cookieUrl);*/
+
                 $this->SSO->doAuthentication();
                // $url = 'http://127.0.0.1/pocor-openemis-core/';
                // return $this->redirect($url);
