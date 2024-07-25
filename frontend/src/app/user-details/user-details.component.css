@@ -1,0 +1,7 @@
+::ng-deep .section-header:nth-of-type(1){
+    display: none !important;
+}
+
+::ng-deep .form-row.section-header {
+    display: block !important;
+}
