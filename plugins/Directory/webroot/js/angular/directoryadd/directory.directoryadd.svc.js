@@ -875,7 +875,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
 
     async function checkUserAlreadyExistByIdentity(scope) {
         const userData = scope.selectedUserData;
-
+        console.log(scope);
         const result = await checkUserExistByIdentity({
             'identity_type_id': userData.identity_type_id,
             'identity_number': userData.identity_number,

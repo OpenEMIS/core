@@ -303,11 +303,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     };
 
     userCtrl.validateUserDetails = function () {
-        directorySvc.validateUserDetails($scope);
+        directorySvc.validateUserDetails(userCtrl);
     };
 
     userCtrl.validateConfirmDetails = function () {
-        directorySvc.validateConfirmDetails($scope);
+        directorySvc.validateConfirmDetails(userCtrl);
     };
 
     function saveStaffDetails() {
@@ -2268,7 +2268,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     async function checkUserAlreadyExistByIdentity() {
 
         const userData = userCtrl.selectedUserData;
-        const result = await directorySvc.checkUserAlreadyExistByIdentity({
+        const result = await directorySvc.checkUserExistByIdentity({
             'identity_type_id': userData.identity_type_id,
             'identity_number': userData.identity_number,
             'nationality_id': userData.nationality_id,
@@ -2392,7 +2392,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             return false;
         }
 
-        const result = await directorySvc.checkUserAlreadyExistByIdentity({
+        const result = await directorySvc.checkUserExistByIdentity({
             'identity_type_id': userData.identity_type_id,
             'identity_number': userData.identity_number,
             'nationality_id': userData.nationality_id,
