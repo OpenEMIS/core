@@ -46,7 +46,7 @@
     </div>
 </div>
 <div class="row section-header header-space-lg"><?= __('Other Information') ?></div>
-<div class="input select">
+<div class="input select {{contactsRequired}}" ng-show="!contactSkipped">
     <label><?= __('Contact Type') ?></label>
     <div class="input-select-wrapper">
         <select name="Staff[gender_id]" id="staff-contact_type_id"
@@ -58,7 +58,7 @@
         </select>
     </div>
 </div>
-<div class="input string">
+<div class="input string {{contactsRequired}}" ng-show="!contactSkipped">
     <label><?= __('Contact Value') ?></label>
     <input ng-model="selectedUserData.contact_value"
            type="string"

@@ -289,7 +289,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
 
     userCtrl.goToInternalSearch = function () {
         directorySvc.goToInternalSearch(scope);
-        };
+    };
 
     userCtrl.goToExternalSearch = function () {
         directorySvc.goToExternalSearch(scope);

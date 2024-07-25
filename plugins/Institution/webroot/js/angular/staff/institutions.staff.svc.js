@@ -34,14 +34,10 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         addIdentityType: addIdentityType,
         setExternalSourceUrl: setExternalSourceUrl,
         resetExternalVariable: resetExternalVariable,
-        getGenders: getGenders,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
         getAddNewStaffConfig: getAddNewStaffConfig,
         getStaffTransfersByTypeConfig: getStaffTransfersByTypeConfig,
         getStaffTransfersByProviderConfig: getStaffTransfersByProviderConfig,
-        getContactTypes: getContactTypes,
-        getIdentityTypes: getIdentityTypes,
-        getNationalities: getNationalities,
         getIdentityTypesExternalSave: getIdentityTypesExternalSave,
         getNationalitiesExternalSave: getNationalitiesExternalSave,
         getSpecialNeedTypes: getSpecialNeedTypes,
@@ -75,6 +71,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         checkUserAlreadyExistByIdentity: checkUserAlreadyExistByIdentity,
         checkConfigForExternalSearch: checkConfigForExternalSearch,
         getCspdData: getCspdData,
+        getConfigItemValue: getConfigItemValue,
     };
 
     var models = {
@@ -872,19 +869,6 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
         return deferred.promise;
     };
 
-    function getGenders()
-    {
-        var deferred = $q.defer();
-        var url = angular.baseUrl + '/Directories/getGenders/';
-        $http.get(url)
-            .then(function(response){
-                deferred.resolve(response);
-            }, function(error) {
-                deferred.reject(error);
-            });
-        return deferred.promise;
-    }
-
     function postAssignedStaff(data) {
         // console.log(data);
         var institutionId = this.getInstitutionId();
@@ -1214,4 +1198,26 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
             });
         return deferred.promise;
     }
+
+    function getConfigItemValue(code) {
+        var success = function(response, deferred) {
+            var results = response.data.data;
+            if (angular.isObject(results) && results.length > 0) {
+                var configItemValue = (results[0].value.length > 0) ? results[0].value : results[0].default_value;
+                deferred.resolve(configItemValue);
+            } else {
+                deferred.reject('There is no ' + code + ' configured');
+            }
+        };
+
+        return ConfigItems
+            .where({
+                code: code
+            })
+            .ajax({
+                success: success,
+                defer: true
+            });
+    }
+
 };
