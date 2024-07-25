@@ -227,6 +227,12 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
+//      POCOR-8496 start
+        if(isset($extra['entity'])){
+            $entity = $extra['entity'];
+            $this->field('assignee_id', ['entity' => $entity]);
+        }
+//        POCOR-8496 end
         $this->setfieldOrder($this->fieldsOrder);
     }
     //POCOR-7171:End
@@ -1196,8 +1202,23 @@ class InstitutionSurveysTable extends ControllerActionTable
         $roleId = $userRole['security_role_id'];
         $workflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
         // $this->copyBuildSurveyRecords($controller);//POCOR-7412
-        if(isset($roleId)){
-            $query
+        // POCOR-8496: superAdmin can see all
+        $isSuperAdmin = $session->read('Auth.User.super_admin');;
+        if (isset($roleId)) {
+            $where = [
+                $this->aliasField('assignee_id') => $userId,
+                // $workflowStepsRoles->aliasField('security_role_id') => $roleId,
+                'Assignees.super_admin IS NOT' => 1, //POCOR-7102
+            ];
+        }
+        if ($isSuperAdmin) {
+            $where = [];
+        }
+        if (!isset($roleId) && !$isSuperAdmin) {
+            return $query;
+        }
+
+        $query = $query
             ->select([
                 $this->aliasField('id'),
                 $this->aliasField('status_id'),
@@ -1216,7 +1237,11 @@ class InstitutionSurveysTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->AcademicPeriods->getAlias(), $this->SurveyForms->getAlias(), $this->Institutions->getAlias(), $this->CreatedUser->getAlias(),'Assignees'])
+            ->contain([$this->AcademicPeriods->getAlias(),
+                $this->SurveyForms->getAlias(),
+                $this->Institutions->getAlias(),
+                $this->CreatedUser->getAlias(),
+                'Assignees'])
             ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
@@ -1226,11 +1251,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                     $workflowStepsRoles->aliasField('workflow_step_id = ') . $this->aliasField('status_id')
                 ]
             )
-            ->where([
-                $this->aliasField('assignee_id') => $userId,
-                // $workflowStepsRoles->aliasField('security_role_id') => $roleId,
-                'Assignees.super_admin IS NOT' => 1, //POCOR-7102
-            ])
+            ->where($where)
             ->order([$this->aliasField('created') => 'DESC'])
             ->formatResults(function (ResultSetInterface $results) {
                 return $results->map(function ($row) {
@@ -1239,8 +1260,9 @@ class InstitutionSurveysTable extends ControllerActionTable
                         'controller' => 'Institutions',
                         'action' => 'Surveys',
                         'view',
-                        $this->paramsEncode(['id' => $row->id]),
-                        'institution_id' => $row->institution_id
+                        $this->paramsEncode(['id' => $row->id,
+                            'institution_id' => $row->institution_id]), //POCOR-8496 Institution ID added to URL
+//                        'institution_id' => $row->institution_id
                     ];
 
                     if (is_null($row->modified)) {
@@ -1259,7 +1281,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                     return $row;
                 });
             });
-        }
+
         return $query;
     }
 
@@ -1294,7 +1316,9 @@ class InstitutionSurveysTable extends ControllerActionTable
     }
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
+
         if ($action == 'add' || $action == 'edit') {
+            $entity = $attr['entity']; // POCOR-8496
             $workflowModel = 'Institutions > Survey > Forms';
             $workflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
             $workflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
@@ -1319,11 +1343,9 @@ class InstitutionSurveysTable extends ControllerActionTable
                             ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $this->request->getSession();
-            $institutionId = $this->getInstitutionID();
-            $institutionId = $institutionId;
             $assigneeOptions = [];
-            if (!is_null($stepId)) {
+            $institutionId = $entity->institution_id;
+            if ($stepId) {
                 $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
                 $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
                 if (!empty($stepRoles)) {
@@ -1331,31 +1353,15 @@ class InstitutionSurveysTable extends ControllerActionTable
                     $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
                     $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                     if ($isSchoolBased) {
-                        if (is_null($institutionId)) {
-                            Log::write('debug', 'Institution Id not found.');
+                        if (!$institutionId) { // POCOR-8496 second try to find institution_id
+                            $institutionId = $this->getInstitutionID();
+                            if (!$institutionId) {
+                                Log::write('debug', 'Institution Id not found.');
+                            }else{
+                                $assigneeOptions = $this->getSchoolBasedAssigneesOptions($Institutions, $institutionId, $SecurityGroupUsers, $stepRoles);
+                            }
                         } else {
-                            $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
-                            $securityGroupId = $institutionObj->security_group_id;
-                            $areaObj = $institutionObj->area;
-                            // School based assignee
-                            $where = [
-                                'OR' => [[$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId],
-                                        ['Institutions.id' => $institutionId]],
-                                $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
-                            ];
-                            $schoolBasedAssigneeQuery = $SecurityGroupUsers
-                                    ->find('userList', ['where' => $where])
-                                    ->leftJoinWith('SecurityGroups.Institutions');
-                            $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
-
-                            // Region based assignee
-                            $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
-                            $regionBasedAssigneeQuery = $SecurityGroupUsers
-                                        ->find('UserList', ['where' => $where, 'area' => $areaObj]);
-
-                            $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
-                            // End
-                            $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
+                            $assigneeOptions = $this->getSchoolBasedAssigneesOptions($Institutions, $institutionId, $SecurityGroupUsers, $stepRoles);
                         }
                     } else {
                         $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
@@ -1404,6 +1410,41 @@ class InstitutionSurveysTable extends ControllerActionTable
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    /**
+     * POCOR-8496
+     * @param \Cake\ORM\Table $Institutions
+     * @param $institutionId
+     * @param \Cake\ORM\Table $SecurityGroupUsers
+     * @param $stepRoles
+     * @return array
+     */
+    private function getSchoolBasedAssigneesOptions(\Cake\ORM\Table $Institutions, $institutionId, \Cake\ORM\Table $SecurityGroupUsers, $stepRoles): array
+    {
+        $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
+        $securityGroupId = $institutionObj->security_group_id;
+        $areaObj = $institutionObj->area;
+        // School based assignee
+        $where = [
+            'OR' => [[$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId],
+                ['Institutions.id' => $institutionId]],
+            $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
+        ];
+        $schoolBasedAssigneeQuery = $SecurityGroupUsers
+            ->find('userList', ['where' => $where])
+            ->leftJoinWith('SecurityGroups.Institutions');
+        $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
+
+        // Region based assignee
+        $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
+        $regionBasedAssigneeQuery = $SecurityGroupUsers
+            ->find('UserList', ['where' => $where, 'area' => $areaObj]);
+
+        $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
+        // End
+        $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
+        return $assigneeOptions;
     }
 
 }
