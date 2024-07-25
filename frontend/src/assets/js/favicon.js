@@ -57,7 +57,7 @@ function updateOpenEMISThemes() {
 	
 	document.head.appendChild(link);
 	document.head.appendChild(shortLink);	
-	document.title = updateTitle(theme);
+	// document.title = updateTitle(theme);
 }
 
 document.addEventListener("DOMContentLoaded", updateOpenEMISThemes);

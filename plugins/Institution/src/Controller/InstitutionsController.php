@@ -1494,9 +1494,24 @@ class InstitutionsController extends AppController
 
     public function StudentMeals($pass = '')
     {
+        $baseUrl = Router::fullBaseUrl();
+        $session = $this->request->getSession();
+        $institutionId = $this->getInstitutionId();
+        $institutionName = $this->Institutions->get($institutionId)->name;
+        $encodedParams = $this->ControllerAction->paramsEncode(['id' => $institutionId]);
+        $institutionDashborad = "{$this->plugin}/Institutions/{$encodedParams}/dashboard/{$encodedParams}";
+        $institutionIndex = "Institutions/Institutions/index/";
+
         if ($pass == 'excel') {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentMeals']);
         } else {
+             //POCOR-8051 start
+             $url = $_SERVER['REQUEST_URI'];
+             $startPos = strpos($url, '/Institution/Institutions/StudentMeals/index/') + strlen('/Institution/Institutions/StudentMeals/index/');
+             $encodedPart = substr($url, $startPos);
+
+             //POCOR-8051 end
+             
             $_edit = $this->AccessControl->check(['Institutions', 'StudentMeals', 'edit']);
             $_excel = $this->AccessControl->check(['Institutions', 'StudentMeals', 'excel']);
             $_import = $this->AccessControl->check(['Institutions', 'ImportStudentMeals', 'add']);
@@ -1531,6 +1546,11 @@ class InstitutionsController extends AppController
             $this->set('excelUrl', Router::url($excelUrl));
             $this->set('importUrl', Router::url($importUrl));
             $this->set('institution_id', $institutionId);
+            $this->set('meal_url', $encodedPart);
+            $this->set('institutionName', $institutionName);
+            $this->set('institutionDashborad', $institutionDashborad);
+            $this->set('institutionIndexUrl', $institutionIndex);
+            $this->set('baseUrl', $baseUrl);
             $this->set('ngController', 'InstitutionStudentMealsCtrl as $ctrl');
         }
 
