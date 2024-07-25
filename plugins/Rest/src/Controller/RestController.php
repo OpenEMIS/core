@@ -13,6 +13,7 @@ use Cake\Core\Configure;
 use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Cookie\Cookie;
 use Cake\Event\EventInterface;
+use Cake\Routing\Router;
 
 class RestController extends AppController
 {
@@ -52,7 +53,7 @@ class RestController extends AppController
     {
         parent::beforeFilter($event);
         $this->getEventManager()->off($this->Csrf);
-       $rootPath = $_SERVER['REQUEST_URI'];
+       $rootPath = 'https://dev-core.openemis.org/dvishwakarma_corev4/';
         /*$rootPath = $_SERVER['REQUEST_URI'];
         $cookieRestful = new \Cake\Http\Cookie\Cookie(
                             'Restful',
@@ -416,7 +417,8 @@ class RestController extends AppController
     }
 
     public function auth()
-    {  //echo "<pre>"; print_r($this->RestVersion); die;
+    { 
+        $baseurl = Router::url('/', true);
         $json = [];
 
         // Add debug logging to understand the flow
@@ -425,8 +427,7 @@ class RestController extends AppController
         if ($this->RestVersion == '2.0') {
             Log::debug('RestVersion 2.0 detected');
           $payload = $this->request->getQuery('payload');
-           // $payload = '6hjhhjjg';
-           // echo "<pre>"; print_r($payload); die;
+          $redirectUrl = $this->ControllerAction->url('auth');
             if (!is_null($this->request->getQuery('payload'))) {
                 if (!$this->Cookie->check('Restful.Call')) {
                     $redirectUrl = $this->ControllerAction->url('auth');
@@ -436,11 +437,19 @@ class RestController extends AppController
                     }
                     $this->redirect($redirectUrl);
                 }
-                $url = $this->Cookie->read('Restful.CallBackURL');
+                //$url = $this->Cookie->read('Restful.CallBackURL');
+                //$baseUrl = rtrim($baseUrl, '/'); // Remove trailing slash if exists
+                $endpoint = '/restful/token'; // Ensure leading slash
+                $url = $baseurl . $endpoint;
                 $token = $this->request->getQuery('payload');
-                $url = $url.'?code='.$token;
-                $this->redirect($url);
-                $this->response->header(['Location' => $url]); //POCOR-7926
+                $urlsend = $url . '?code=' . urlencode($token);
+                $this->log("Redirecting to: " . $urlsend, 'debug');
+                
+                // Ensure no output before redirect
+                $this->redirect($urlsend);
+                $response = $this->response->withStatus(302)
+                                     ->withHeader('Location',$urlsend); //POCOR-7926
+            return $response;
             } else {
 
                 $this->Cookie->configKey('Restful', 'path', '/');
