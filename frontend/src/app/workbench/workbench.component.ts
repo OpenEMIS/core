@@ -32,6 +32,8 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
     }
   };
 
+  public counter: number = 0;
+
   public miniDashboardConfig: IMiniDashboardConfig = MINI_DASHBOARD_CONFIG;
   public miniDashboardData: Array<IMiniDashboardItem> = MINI_DASHBOARD_DATA;
   public workBenchAray: any = [];
@@ -52,6 +54,7 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
   }
 
   ngOnInit(): void {
+    this.counter = 0;
     super.setPageTitle('Content with Sub Splitter', false);
     super.setToolbarMainBtns([]);
 
@@ -71,18 +74,54 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
   }
 
   loginData() {
-    this.Rest.login().subscribe({
-      next: (res: any) => {
-        if (res) {
-          localStorage.setItem("loginToken", res.data.token);
+    this.Rest.setSession();
+    let token = localStorage.getItem("loginToken");
+    if (!token) {
+      let userName = sessionStorage.getItem('username');
+      let password = sessionStorage.getItem('password');
+      console.log(userName, "userName", password, "password");
+
+      if (userName == null && password == null) {
+        setTimeout(() => {
+          this.counter = this.counter + 1;
+          if (this.counter <= 5) {
+            this.loginData();
+          } else {
+            alert('Please login again')
+          }
+        }, 1500);
+      } else {
+        var decodedPassword = atob(password);
+        if (userName && decodedPassword) {
+          this.loginApi(userName, decodedPassword);
+        } else {
+          this.removeSession();
+        }
+      }
+    } else {
+      this.getAPIlist();
+    }
+  }
+
+  loginApi(userName: string, password: string) {
+    this.Rest.loginApi(userName, password).subscribe({
+      next: (response: any) => {
+        console.log(response, "response");
+        if (response) {
+          localStorage.setItem("loginToken", response?.data?.token);
           this.getAPIlist();
+          this.removeSession();
         }
       },
       error: (error: any) => {
-        console.log(error, "error");
 
       }
     })
+  }
+
+  removeSession() {
+    delete sessionStorage.username;
+    delete sessionStorage.password;
   }
 
   getAPIlist() {
@@ -132,9 +171,8 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
 
     this.Rest.getWithToken('notices?limit=10&page=1').subscribe({
       next: (res: any) => {
-        console.log(res, "notices");
-        if(res)
-        this.noticeTotal = res?.data?.total;
+        if (res)
+          this.noticeTotal = res?.data?.total;
         this.noticeData = res?.data?.data
       },
       error: (error) => {
@@ -153,13 +191,18 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         this.displayLoading = false;
       },
       error: (error: any) => {
-        console.log(error, "error Data 4");
-
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
+        this.displayLoading = false;
       }
     })
   }
 
-  setRow(data: any){
+  setRow(data: any) {
     let rowData = [];
     data?.data.forEach((element: any) => {
       let obj = {
@@ -192,13 +235,17 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 1");
-
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
-  studentTransferOut(limit: any){
+  studentTransferOut(limit: any) {
     this.Rest.getWithToken('institutions/students/transferout?limit=' + limit).subscribe({
       next: (res: any) => {
         if (limit == 1) {
@@ -213,17 +260,21 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         } else {
           if (res?.data) {
             this.setRow(res?.data);
-          }        
+          }
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 2");
-
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
-  studentTransferIn(limit: any){
+  studentTransferIn(limit: any) {
     this.Rest.getWithToken('institutions/students/transferin?limit=' + limit).subscribe({
       next: (res: any) => {
         if (limit == 1) {
@@ -238,17 +289,21 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         } else {
           if (res?.data) {
             this.setRow(res?.data);
-          }       
+          }
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 3");
-
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
-  studentAdmission(limit: any){
+  studentAdmission(limit: any) {
     this.Rest.getWithToken('institutions/students/admission?limit=' + limit).subscribe({
       next: (res: any) => {
         if (limit == 1) {
@@ -263,17 +318,21 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         } else {
           if (res?.data) {
             this.setRow(res?.data);
-          }        
+          }
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 3");
-
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
-  studentBehaviour(limit: any){
+  studentBehaviour(limit: any) {
     this.Rest.getWithToken('institutions/behaviour/students?limit=' + limit).subscribe({
       next: (res: any) => {
         if (limit == 1) {
@@ -288,17 +347,21 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         } else {
           if (res?.data) {
             this.setRow(res?.data);
-          }        
+          }
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 3");
-
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
-  staffLeave(limit: any){
+  staffLeave(limit: any) {
     this.Rest.getWithToken('staff/career/leave?limit=' + limit).subscribe({
       next: (res: any) => {
         if (limit == 1) {
@@ -313,17 +376,21 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         } else {
           if (res?.data) {
             this.setRow(res?.data);
-          }      
+          }
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 3");
-
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
-  surveyForms(limit: any){
+  surveyForms(limit: any) {
     this.Rest.getWithToken('institutions/survey/forms?limit=' + limit).subscribe({
       next: (res: any) => {
         if (limit == 1) {
@@ -338,17 +405,21 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         } else {
           if (res?.data) {
             this.setRow(res?.data);
-          }         
+          }
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 3");
-
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
-  staffAppraisal(limit: any){
+  staffAppraisal(limit: any) {
     this.Rest.getWithToken('staff/career/appraisals?limit=' + limit).subscribe({
       next: (res: any) => {
         if (limit == 1) {
@@ -363,17 +434,21 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         } else {
           if (res?.data) {
             this.setRow(res?.data);
-          }        
+          }
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 3");
-
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
-  staffRelease(limit: any){
+  staffRelease(limit: any) {
     this.Rest.getWithToken('institutions/staff/release?limit=' + limit).subscribe({
       next: (res: any) => {
         if (limit == 1) {
@@ -388,17 +463,21 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         } else {
           if (res?.data) {
             this.setRow(res?.data);
-          }        
+          }
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 3");
-
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
-  staffTransferOut(limit: any){
+  staffTransferOut(limit: any) {
     this.Rest.getWithToken('institutions/staff/transferout?limit=' + limit).subscribe({
       next: (res: any) => {
         if (limit == 1) {
@@ -413,17 +492,21 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         } else {
           if (res?.data) {
             this.setRow(res?.data);
-          }         
+          }
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 3");
-
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
-  staffTransferIn(limit: any){
+  staffTransferIn(limit: any) {
     this.Rest.getWithToken('institutions/staff/transferin?limit=' + limit).subscribe({
       next: (res: any) => {
         if (limit == 1) {
@@ -438,17 +521,21 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         } else {
           if (res?.data) {
             this.setRow(res?.data);
-          }         
+          }
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 3");
-
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
-  staffChangeInAssignment(limit: any){
+  staffChangeInAssignment(limit: any) {
     this.Rest.getWithToken('institutions/staff/changeinassignment?limit=' + limit).subscribe({
       next: (res: any) => {
         if (limit == 1) {
@@ -463,17 +550,21 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         } else {
           if (res?.data) {
             this.setRow(res?.data);
-          }          
+          }
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 3");
-
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
-  staffTraining(limit: any){
+  staffTraining(limit: any) {
     this.Rest.getWithToken('staff/training/needs?limit=' + limit).subscribe({
       next: (res: any) => {
         if (limit == 1) {
@@ -488,17 +579,21 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         } else {
           if (res?.data) {
             this.setRow(res?.data);
-          }         
+          }
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 3");
-
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
-  staffLicenses(limit: any){
+  staffLicenses(limit: any) {
     this.Rest.getWithToken('staff/professionaldevelopment/licenses?limit=' + limit).subscribe({
       next: (res: any) => {
         if (limit == 1) {
@@ -513,17 +608,21 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         } else {
           if (res?.data) {
             this.setRow(res?.data);
-          }         
+          }
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 3");
-
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
-  admissionTrainingCourses(limit: any){
+  admissionTrainingCourses(limit: any) {
     this.Rest.getWithToken('administration/training/courses?limit=' + limit).subscribe({
       next: (res: any) => {
         if (limit == 1) {
@@ -538,17 +637,21 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         } else {
           if (res?.data) {
             this.setRow(res?.data);
-          }         
+          }
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 3");
-
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
-  admissionTrainingSessions(limit: any){
+  admissionTrainingSessions(limit: any) {
     this.Rest.getWithToken('administration/training/sessions?limit=' + limit).subscribe({
       next: (res: any) => {
         if (limit == 1) {
@@ -563,17 +666,21 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         } else {
           if (res?.data) {
             this.setRow(res?.data);
-          }         
+          }
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 3");
-
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
-  admissionTrainingResults(limit: any){
+  admissionTrainingResults(limit: any) {
     this.Rest.getWithToken('administration/training/results?limit=' + limit).subscribe({
       next: (res: any) => {
         if (limit == 1) {
@@ -588,16 +695,21 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         } else {
           if (res?.data) {
             this.setRow(res?.data);
-          }         
+          }
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 3");
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
-  visitRequests(limit: any){
+  visitRequests(limit: any) {
     this.Rest.getWithToken('institutions/visits/requests?limit=' + limit).subscribe({
       next: (res: any) => {
         if (limit == 1) {
@@ -612,16 +724,21 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         } else {
           if (res?.data) {
             this.setRow(res?.data);
-          }         
+          }
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 3");
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
-  trainingApplications(limit: any){
+  trainingApplications(limit: any) {
     this.Rest.getWithToken('administration/training/applications?limit=' + limit).subscribe({
       next: (res: any) => {
         if (limit == 1) {
@@ -636,16 +753,21 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         } else {
           if (res?.data) {
             this.setRow(res?.data);
-          }         
+          }
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 3");
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
-  scholarshipApplications(limit: any){
+  scholarshipApplications(limit: any) {
     this.Rest.getWithToken('administration/scholarships/applications?limit=' + limit).subscribe({
       next: (res: any) => {
         if (limit == 1) {
@@ -660,16 +782,21 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         } else {
           if (res?.data) {
             this.setRow(res?.data);
-          }         
+          }
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 3");
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
-  institutionsCases(limit: any){
+  institutionsCases(limit: any) {
     this.Rest.getWithToken('institutions/cases?limit=' + limit).subscribe({
       next: (res: any) => {
         if (limit == 1) {
@@ -684,16 +811,21 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         } else {
           if (res?.data) {
             this.setRow(res?.data);
-          }         
+          }
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 3");
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
-  institutionsPositions(limit: any){
+  institutionsPositions(limit: any) {
     this.Rest.getWithToken('institutions/positions?limit=' + limit).subscribe({
       next: (res: any) => {
         if (limit == 1) {
@@ -708,11 +840,16 @@ export class WorkbenchComponent extends KdPageBase implements OnInit {
         } else {
           if (res?.data) {
             this.setRow(res?.data);
-          }         
+          }
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 3");
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
