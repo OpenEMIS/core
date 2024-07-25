@@ -102,21 +102,16 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     userCtrl.validateAdditionalDetails = validateAdditionalDetails;
     userCtrl.goToInternalSearch = goToInternalSearch;
     userCtrl.goToExternalSearch = goToExternalSearch;
-    userCtrl.setstaffData = setstaffData;
-    userCtrl.setStaffDataFromExternalSearchData = setStaffDataFromExternalSearchData;
-    userCtrl.getStaffCustomFields = getStaffCustomFields;
+    userCtrl.setUserData = setUserData;
+    userCtrl.setUserDataFromExternalSearchData = setUserDataFromExternalSearchData;
     userCtrl.onDecimalNumberChange = onDecimalNumberChange;
     userCtrl.checkUserAge = checkUserAge;
     userCtrl.changeOption = changeOption;
     userCtrl.selectOption = selectOption;
-    userCtrl.filterBySection = filterBySection;
-    userCtrl.mapBySection = mapBySection;
     userCtrl.transferStaffNextStep = transferStaffNextStep;
     userCtrl.checkConfigForExternalSearch = checkConfigForExternalSearch;
     userCtrl.checkUserExistByIdentityFromConfiguration = checkUserExistByIdentityFromConfiguration;
-    userCtrl.generatePassword = generatePassword;
     userCtrl.getCSPDSearchData = getCSPDSearchData;
-
 
     $window.savePhoto = function (event) {
         let photo = event.files[0];
@@ -280,8 +275,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     };
 
 
-    userCtrl.checkIdentityNumber = function() {
-        directorySvc.checkIdentityNumber($scope);
+    userCtrl.changeIdentityNumber = function() {
+        directorySvc.changeIdentityNumber($scope);
     };
 
     userCtrl.setName = function() {
@@ -292,8 +287,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         directorySvc.changeGender($scope);
     };
 
-    userCtrl.checkDateOfBirth = function() {
-        directorySvc.checkDateOfBirth($scope);
+    userCtrl.changeDateOfBirth = function() {
+        directorySvc.changeDateOfBirth($scope);
     };
 
     userCtrl.setError = function(field, message) {
@@ -491,115 +486,23 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         });
     }
 
-    function getStaffCustomFields() {
-        let staffId = userCtrl.staffData && userCtrl.staffData.id ? userCtrl.staffData.id : null;
-        userSvc.getStaffCustomFields(staffId).then(function (resp) {
+    userCtrl.getStaffCustomFields = function() {
+        let userId = userCtrl.selectedUserData.userId ? userCtrl.selectedUserData.userId : null;
+        console.log(userId);
+        directorySvc.getStaffCustomFields(userId).then(function(resp){
+            console.log(resp)
             userCtrl.customFields = resp.data;
             userCtrl.customFieldsArray = [];
-            // userCtrl.createCustomFieldsArray();
+            userCtrl.createCustomFieldsArray();
             UtilsSvc.isAppendLoader(false);
-        }, function (error) {
+        }, function(error){
             console.error(error);
             UtilsSvc.isAppendLoader(false);
         });
     }
 
-    function mapBySection(item) {
-        return item.section;
-    }
-
-    function filterBySection(item, section) {
-        return section === item.section;
-    }
-
-    function createCustomFieldsArray() {
-        var selectedCustomField = userCtrl.customFields;
-        if (selectedCustomField === "null") return;
-        var filteredSections = Array.from(new Set(userCtrl.customFields.map((item) => mapBySection(item))));
-        filteredSections.forEach((section) => {
-            let filteredArray = selectedCustomField.filter((item) => userCtrl.filterBySection(item, section));
-            userCtrl.customFieldsArray.push({sectionName: section, data: filteredArray});
-        });
-        userCtrl.customFieldsArray.forEach((customField) => {
-            customField.data.forEach((fieldData) => {
-                fieldData.answer = '';
-                fieldData.errorMessage = '';
-                if (fieldData.field_type === 'TEXT' || fieldData.field_type === 'TEXTAREA' || fieldData.field_type === 'NOTE') {
-                    fieldData.answer = fieldData.values ? fieldData.values : '';
-                }
-                if (fieldData.field_type === 'DROPDOWN') {
-                    fieldData.selectedOptionId = '';
-                    fieldData.answer = fieldData.values && fieldData.values.length > 0 && fieldData.values[0].dropdown_val ? fieldData.values[0].dropdown_val.toString() : '';
-                    fieldData.option.forEach((option) => {
-                        if (option.option_id === fieldData.answer) {
-                            fieldData.selectedOption = option.option_name;
-                        }
-                    })
-                }
-                if (fieldData.field_type === 'DATE') {
-                    fieldData.isDatepickerOpen = false;
-                    let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
-                    fieldData.params = params;
-                    fieldData.datePickerOptions = {
-                        showWeeks: false
-                    };
-                    const splitDate = fieldData.values.split('-').map((d => parseInt(d)));
-                    fieldData.answer = fieldData.values === "" ? new Date() : new Date(splitDate[0], splitDate[1] - 1, splitDate[2]);
-                }
-                if (fieldData.field_type === 'TIME') {
-                    fieldData.hourStep = 1;
-                    fieldData.minuteStep = 5;
-                    fieldData.isMeridian = true;
-                    let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
-                    fieldData.params = params;
-                    if (fieldData.params && fieldData.params.start_time) {
-                        var startTimeArray = fieldData.params.start_time.split(" ");
-                        var startTimes = startTimeArray[0].split(":");
-                        if (startTimes[0] === 12) {
-                            var startTimeHour = startTimeArray[1] === 'PM' ? Number(startTimes[0]) : Number(startTimes[0]) - 12;
-                        } else {
-                            var startTimeHour = startTimeArray[1] === 'AM' ? Number(startTimes[0]) : Number(startTimes[0]) + 12;
-                        }
-                    }
-                    if (fieldData.params && fieldData.params.end_time) {
-                        var endTimeArray = fieldData.params.end_time.split(" ");
-                        var endTimes = endTimeArray[0].split(":");
-                        if (startTimes[0] === 12) {
-                            var endTimeHour = endTimeArray[1] === 'PM' ? Number(endTimes[0]) : Number(endTimes[0]) - 12;
-                        } else {
-                            var endTimeHour = endTimeArray[1] === 'AM' ? Number(endTimes[0]) : Number(endTimes[0]) + 12;
-                        }
-                    }
-                    if (fieldData.values !== '') {
-                        let timeValuesArray = fieldData.values.split(':');
-                        fieldData.answer = new Date(new Date(new Date().setHours(timeValuesArray[0])).setMinutes(timeValuesArray[1]));
-                    } else {
-                        fieldData.answer = new Date();
-                    }
-                }
-                if (fieldData.field_type === 'CHECKBOX') {
-                    fieldData.answer = [];
-                    fieldData.option.forEach((option) => {
-                        option.selected = false;
-                    });
-                    if (fieldData.values && fieldData.values.length > 0) {
-                        fieldData.values.forEach((value) => {
-                            fieldData.answer.push(value.checkbox_val.toString());
-                            fieldData.option.forEach((option) => {
-                                if (option.option_id === value.checkbox_val.toString()) {
-                                    option.selected = true;
-                                }
-                            })
-                        });
-                    }
-                }
-                if (fieldData.field_type === 'DECIMAL' || fieldData.field_type === 'NUMBER') {
-                    let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
-                    fieldData.params = params;
-                    fieldData.answer = Number(fieldData.values);
-                }
-            });
-        });
+    userCtrl.createCustomFieldsArray = function() {
+        directorySvc.createCustomFieldsArray(userCtrl);
     }
 
     function onDecimalNumberChange(field) {
@@ -676,61 +579,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             }
         }
         return staffObj;
-    }
-
-    function changeGender() {
-        var userData = userCtrl.selectedUserData;
-        if (userData.hasOwnProperty('gender_id')) {
-            var genderOptions = userCtrl.genderOptions;
-            for (var i = 0; i < genderOptions.length; i++) {
-                if (genderOptions[i].id == userData.gender_id) {
-                    userData.gender = {
-                        name: genderOptions[i].name
-                    };
-                }
-            }
-            userCtrl.selectedUserData = userData;
-        }
-    }
-
-    function changeNationality() {
-        var nationalityId = userCtrl.selectedUserData.nationality_id;
-        if (nationalityId === null) {
-            userCtrl.selectedUserData.nationality_name = "";
-        }
-        var options = userCtrl.nationalitiesOptions;
-        var identityOptions = userCtrl.identityTypeOptions;
-        for (var i = 0; i < options.length; i++) {
-            if (options[i].id == nationalityId) {
-                if (options[i].identity_type_id == null) {
-                    userCtrl.selectedUserData.identity_type_id = identityOptions['0'].id;
-                    userCtrl.selectedUserData.identity_type_name = identityOptions['0'].name;
-                } else {
-                    userCtrl.selectedUserData.identity_type_id = options[i].identity_type_id;
-                    userCtrl.selectedUserData.identity_type_name = options[i].identity_type_name;
-                }
-                userCtrl.selectedUserData.nationality_name = options[i].name;
-                break;
-            }
-        }
-        userCtrl.checkConfigForExternalSearch();
-    }
-
-    function changeIdentityType() {
-        var identityType = userCtrl.selectedUserData.identity_type_id;
-        if (identityType == null) {
-            userCtrl.selectedUserData.identity_type_id = '';
-            userCtrl.selectedUserData.identity_number = '';
-            userCtrl.selectedUserData.identity_type_name = '';
-        }
-        var identityTypeOptions = userCtrl.identityTypeOptions;
-        for (var i = 0; i < identityTypeOptions.length; i++) {
-            if (identityTypeOptions[i].id == identityType) {
-                userCtrl.selectedUserData.identity_type_name = identityTypeOptions[i].name;
-                break;
-            }
-        }
-        userCtrl.checkConfigForExternalSearch();
     }
 
     function changePositionType() {
@@ -816,7 +664,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     };
 
     function goToExternalSearch () {
-        directorySvc.goToExternalSearch(scope);
+        directorySvc.goToExternalSearch(userCtrl);
     }
 
     function goToPrevStep() {
@@ -972,7 +820,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 userCtrl.messageClass = 'alert-warning';
                 userCtrl.message = `Staff is currently assigned to ${userCtrl.staffData.currentlyAssignedTo}`
             } else {
-
                 const record = userCtrl.saveStaffDetails();
             }
         }
@@ -981,26 +828,24 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     async function goToNextStep() {
         if (userCtrl.step === 'confirmation') {
             const result = await userCtrl.checkUserExistByIdentityFromConfiguration();
-            // if (result) return;
         }
 
         if (userCtrl.isInternalSearchSelected) {
-            console.log(userCtrl.staffData);
             if (userCtrl.staffData && userCtrl.staffData.is_diff_school > 0) {
                 userCtrl.messageClass = 'alert-warning';
                 userCtrl.message = `This staff is already allocated to ${userCtrl.staffData.current_enrol_institution_code} - ${userCtrl.staffData.current_enrol_institution_name}`;
                 userCtrl.step = 'add_staff';
             } else {
-                userCtrl.step = 'confirmation';
+                userCtrl.processNewUser();
             }
+            userCtrl.isInternalSearchSelected = false;
         } else if (userCtrl.isExternalSearchSelected) {
-            userCtrl.step = 'confirmation';
+            userCtrl.processNewUser();
             userCtrl.isExternalSearchSelected = false;
         } else {
             switch (userCtrl.step) {
                 case 'user_details':
                     userCtrl.checkUserAge();
-
                     break;
                 case 'internal_search': {
                     if (userCtrl.isExternalSearchEnable) {
@@ -1008,15 +853,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                         userCtrl.externalGridOptions = null;
                         userCtrl.goToExternalSearch();
                     } else {
-                        userCtrl.step = 'confirmation';
-                        userCtrl.getUniqueOpenEmisId();
+                        userCtrl.processNewUser();
                     }
                     return;
                 }
                 case 'external_search':
-                    userCtrl.step = 'confirmation';
-                    userCtrl.getUniqueOpenEmisId();
-                    break;
+                    userCtrl.processNewUser();                    break;
                 case 'confirmation':
                     userCtrl.validateAdditionalDetails();
                     break;
@@ -1024,6 +866,31 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             }
         }
     }
+
+    userCtrl.processNewUser = function () {
+        userCtrl.step = 'confirmation';
+        UtilsSvc.isAppendLoader(true);
+
+        userCtrl.getUniqueOpenEmisId()
+            .then(() => {
+                // console.log(userCtrl.selectedUserData.openemis_no)
+                return userCtrl.generatePassword();
+            })
+            .then(() => {
+                    userCtrl.selectedUserData.userType = {};
+                    userCtrl.selectedUserData.userType.name = 'Staff';
+                    return userCtrl.getStaffCustomFields();
+            })
+            .catch(error => {
+                UtilsSvc.isAppendLoader(false);
+                userCtrl.messageClass = 'alert-danger';
+                userCtrl.message = error.message || error.toString();
+                console.error(error);
+            })
+            .then(() => {
+                UtilsSvc.isAppendLoader(false);
+            });
+    };
 
     async function validateAdditionalDetails() {
         // const [blockName, hasError] = checkAdditionalDetailValidationBlocksHasError();
@@ -1069,7 +936,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function confirmUser() {
-        userCtrl.message = (userCtrl.selectedUserData && userCtrl.selectedUserData.userType ? userCtrl.selectedUserData.userType.name : 'Student') + ' successfully added.';
+        userCtrl.message = (userCtrl.selectedUserData && userCtrl.selectedUserData.userType ? userCtrl.selectedUserData.userType.name : 'Staff') + ' successfully added.';
         userCtrl.messageClass = 'alert-success';
         userCtrl.step = "summary";
     }
@@ -1087,32 +954,32 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         userCtrl.selectedUser = id;
         userCtrl.isInternalSearchSelected = true;
         userCtrl.isExternalSearchSelected = false;
-        userCtrl.getStaffData();
-        userCtrl.getStaffCustomFields();
+        userCtrl.getUserData();
+
         if (userCtrl.isIdentityUserExist) {
             userCtrl.messageClass = '';
             userCtrl.message = '';
             userCtrl.isIdentityUserExist = false;
         }
+
         userCtrl.disableFields = {
             username: true,
-            password: true,
-        }
+            password: true
+        };
     }
 
     userCtrl.selectUserFromExternalSearch = function (id) {
         userCtrl.selectedUser = id;
         userCtrl.isInternalSearchSelected = false;
         userCtrl.isExternalSearchSelected = true;
-        userCtrl.getStaffData();
-        userCtrl.getStaffCustomFields();
+        userCtrl.getUserData();
         userCtrl.disableFields = {
             username: false,
             password: false,
         }
     }
 
-    userCtrl.getStaffData = function () {
+    userCtrl.getUserData = function () {
         var log = [];
 
         angular.forEach(userCtrl.rowsThisPage, function (value) {
@@ -1125,202 +992,218 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     userCtrl.staffData.currentlyAssignedTo = value.current_enrol_institution_code + ' - ' + value.current_enrol_institution_name;
                     userCtrl.staffData.requestedBy = value.institution_code + ' - ' + value.institution_name;
 
-                    userCtrl.setstaffData(value);
+                    userCtrl.setUserData(value);
                 }
                 if (userCtrl.isExternalSearchSelected) {
-                    userCtrl.setStaffDataFromExternalSearchData(value);
+                    userCtrl.setUserDataFromExternalSearchData(value);
                 }
             }
         }, log);
     }
 
-    function setstaffData(selectedData) {
-        const deepCopy = {...selectedData};
+    function setUserData(selectedData) {
         userCtrl.selectedUserData.addressArea = {
-            id: deepCopy.address_area_id,
-            name: deepCopy.area_name,
-            code: deepCopy.area_code
+            id: selectedData.address_area_id,
+            name: selectedData.area_name,
+            code: selectedData.area_code
         };
         userCtrl.selectedUserData.birthplaceArea = {
-            id: deepCopy.birthplace_area_id,
-            name: deepCopy.birth_area_name,
-            code: deepCopy.birth_area_code
+            id: selectedData.birthplace_area_id,
+            name: selectedData.birth_area_name,
+            code: selectedData.birth_area_code
         };
-        // console.log(selectedData);
         userCtrl.selectedUserData.user_id = selectedData.id;
         userCtrl.selectedUserData.openemis_no = selectedData.openemis_no;
         userCtrl.selectedUserData.first_name = selectedData.first_name;
         userCtrl.selectedUserData.middle_name = selectedData.middle_name;
         userCtrl.selectedUserData.third_name = selectedData.third_name;
         userCtrl.selectedUserData.last_name = selectedData.last_name;
-        userCtrl.selectedUserData.name = selectedData.first_name + ' ' + selectedData.last_name;//POCOR-7309
         userCtrl.selectedUserData.preferred_name = selectedData.preferred_name;
-        userCtrl.selectedUserData.gender_id = selectedData.gender_id;//POCOR-7125 add gender_id
-        userCtrl.selectedUserData.gender = {
-            name: selectedData.gender
-        };
         userCtrl.selectedUserData.date_of_birth = selectedData.date_of_birth;
         userCtrl.selectedUserData.email = selectedData.email;
-        userCtrl.selectedUserData.contact_type_id = selectedData.contact_type_id; // POCOR-8012-n
-        userCtrl.selectedUserData.contact_value = selectedData.contact_value; // POCOR-8012-n
-
+        userCtrl.selectedUserData.gender_id = selectedData.gender_id;
+        userCtrl.selectedUserData.gender = {name: selectedData.gender};
+        userCtrl.selectedUserData.nationality_id = selectedData.nationality_id;
+        userCtrl.selectedUserData.nationality_name = selectedData.nationality;
+        userCtrl.selectedUserData.identity_type_id = selectedData.identity_type_id;
+        userCtrl.selectedUserData.identity_type_name = selectedData.identity_type;
+        userCtrl.selectedUserData.identity_number = selectedData.identity_number;
+        userCtrl.selectedUserData.photo_name = selectedData.photo_name;
+        userCtrl.selectedUserData.photo_base_64 = selectedData.photo_content;
         if (selectedData.identity_number) {
             userCtrl.canSkipIdentity = true;
         }
-        if (selectedData.nationality) {
+        if (selectedData.nationality_id) {
             userCtrl.canSkipNationality = true;
         }
-        userCtrl.selectedUserData.identity_type_name = selectedData.identity_type;
-        userCtrl.selectedUserData.identity_number = selectedData.identity_number;
-        userCtrl.selectedUserData.identity_type_id = selectedData.identity_type_id;
-        userCtrl.selectedUserData.nationality_id = selectedData.nationality_id;
-        userCtrl.selectedUserData.nationality_name = selectedData.nationality;
+        userCtrl.selectedUserData.contact_type_id = selectedData.contact_type_id; // POCOR-8012-n
+        userCtrl.selectedUserData.contact_value = selectedData.contact_value; // POCOR-8012-n
+
+        userCtrl.selectedUserData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
+        userCtrl.selectedUserData.password = selectedData.password;
         userCtrl.selectedUserData.address = selectedData.address;
         userCtrl.selectedUserData.postalCode = selectedData.postal_code;
-        userCtrl.selectedUserData.addressArea.name = selectedData.area_name;
-        userCtrl.selectedUserData.birthplaceArea.name = selectedData.birth_area_name;
-        userCtrl.selectedUserData.currentlyAssignedTo = selectedData.current_enrol_institution_code + ' - ' + selectedData.current_enrol_institution_name;
-        userCtrl.selectedUserData.requestedBy = selectedData.institution_code + ' - ' + selectedData.institution_name;
-        userCtrl.selectedUserData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
-        userCtrl.user_identity_number = deepCopy.identity_number;
-        userCtrl.user_identity_type_id = deepCopy.identity_type_id;
-        userCtrl.selectedUserData.birthplace_area_id = selectedData.birthplace_area_id;
         userCtrl.selectedUserData.address_area_id = selectedData.address_area_id;
-        userCtrl.selectedUserData.birth_area_code = selectedData.birth_area_code;
-        userCtrl.selectedUserData.area_code = selectedData.area_code;
-        userCtrl.selectedUserData.is_same_school = selectedData.is_same_school;
-        userCtrl.selectedUserData.is_diff_school = selectedData.is_diff_school;
+        userCtrl.selectedUserData.birthplace_area_id = selectedData.birthplace_area_id;
+        userCtrl.selectedUserData.addressArea = {name: selectedData.area_name};
+        userCtrl.selectedUserData.birthplaceArea = {name: selectedData.birth_area_name};
+        userCtrl.selectedUserData.userId = selectedData.id;
+        if($window.localStorage.getItem('birthplace_area_id')) {
+            $window.localStorage.removeItem('birthplace_area_id')
+        }
+        if($window.localStorage.getItem('address_area_id')) {
+            $window.localStorage.removeItem('address_area_id')
+        }
+        $window.localStorage.setItem('birthplace_area_id', selectedData.birthplace_area_id);
+        $window.localStorage.setItem('address_area_id', selectedData.address_area_id);
+        if($window.localStorage.getItem('birthplace_area')) {
+            $window.localStorage.removeItem('birthplace_area')
+        }
+        if($window.localStorage.getItem('address_area')) {
+            $window.localStorage.removeItem('address_area')
+        }
+        $window.localStorage.setItem('birthplace_area', JSON.stringify({id: selectedData.birthplace_area_id, name: selectedData.birth_area_name}));
+        $window.localStorage.setItem('address_area', JSON.stringify({
+            id: selectedData.address_area_id,
+            name: selectedData.area_name
+        }));
+        userCtrl.addressAreaId = selectedData.address_area_id;
+        userCtrl.birthplaceAreaId = selectedData.birthplace_area_id;
 
-        if (selectedData.address_area_id > 0) {
+        if (selectedData.address_area_id) {
             document.getElementById('addressArea_textbox').style.visibility = 'visible';
             document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
-        } else {
+        } else
+        {
             document.getElementById('addressArea_textbox').style.display = 'none';
             document.getElementById('addressArea_dropdown').style.visibility = 'visible';
         }
 
-        if (selectedData.birthplace_area_id > 0) {
+        if (selectedData.birthplace_area_id) {
             document.getElementById('birthplaceArea_textbox').style.visibility = 'visible';
             document.getElementById('birthplaceArea_dropdown').style.visibility = 'hidden';
-        } else {
+        } else
+        {
             document.getElementById('birthplaceArea_textbox').style.display = 'none';
             document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
         }
+        userCtrl.selectedUserData.currentlyAssignedTo = selectedData.current_enrol_institution_code + ' - ' + selectedData.current_enrol_institution_name;
+        userCtrl.selectedUserData.requestedBy = selectedData.institution_code + ' - ' + selectedData.institution_name;
+        userCtrl.selectedUserData.is_same_school = selectedData.is_same_school;
+        userCtrl.selectedUserData.is_diff_school = selectedData.is_diff_school;
+
     }
 
-    function setStaffDataFromExternalSearchData(selectedData) {
+    function setUserDataFromExternalSearchData(selectedData) {
         // DOCS: Demo nationality_number for test usage : 9791048083
-        if (userCtrl.externalSearchSourceName === 'Jordan CSPD') {
+        if (userCtrl.externalSearchSourceName == 'Jordan CSPD') {
             userSvc.getUniqueOpenEmisId().then((response) => {
-                const selectedObjectWithOpenemisNo = Object.assign({}, selectedData, {'openemis_no': response})
+                const selectedObjectWithOpenemisNo =  Object.assign({}, selectedData, {'openemis_no':response})
                 selectedData = selectedObjectWithOpenemisNo;
-                const deepCopy = {...selectedData};
                 userCtrl.selectedUserData.addressArea = {
-                    id: deepCopy.address_area_id,
-                    name: deepCopy.area_name,
-                    code: deepCopy.area_code
+                    id: selectedData.address_area_id,
+                    name: selectedData.area_name,
+                    code: selectedData.area_code
                 };
                 userCtrl.selectedUserData.birthplaceArea = {
-                    id: deepCopy.birthplace_area_id,
-                    name: deepCopy.birth_area_name,
-                    code: deepCopy.birth_area_code
+                    id: selectedData.birthplace_area_id,
+                    name: selectedData.birth_area_name,
+                    code: selectedData.birth_area_code
                 };
                 userCtrl.selectedUserData.openemis_no = selectedData.openemis_no;
                 userCtrl.selectedUserData.first_name = selectedData.first_name;
                 userCtrl.selectedUserData.middle_name = selectedData.middle_name;
                 userCtrl.selectedUserData.third_name = selectedData.third_name;
                 userCtrl.selectedUserData.last_name = selectedData.last_name;
-                userCtrl.selectedUserData.name = selectedData.first_name + ' ' + selectedData.last_name;//POCOR-7309
                 userCtrl.selectedUserData.preferred_name = selectedData.preferred_name;
-                userCtrl.selectedUserData.gender_id = selectedData.gender_id;
-                userCtrl.selectedUserData.gender = {
-                    name: selectedData.gender
-                };
                 userCtrl.selectedUserData.date_of_birth = selectedData.date_of_birth;
                 userCtrl.selectedUserData.email = selectedData.email;
-                userCtrl.selectedUserData.identity_type_id = deepCopy.identity_type_id;
-                userCtrl.selectedUserData.identity_type_name = deepCopy.identity_type;
-                userCtrl.selectedUserData.identity_number = deepCopy.identity_number;
+                userCtrl.selectedUserData.gender_id = selectedData.gender_id;
+                userCtrl.selectedUserData.gender = {name: selectedData.gender};
                 userCtrl.selectedUserData.nationality_id = selectedData.nationality_id;
+                if (selectedData.identity_number) {
+                    userCtrl.canSkipIdentity = true;
+                }
+                if (selectedData.nationality) {
+                    userCtrl.canSkipNationality = true;
+                }
                 userCtrl.selectedUserData.nationality_name = selectedData.nationality;
+                userCtrl.selectedUserData.identity_type_id = selectedData.identity_type_id;
+                userCtrl.selectedUserData.identity_type_name = selectedData.identity_type;
+                userCtrl.selectedUserData.identity_number = selectedData.identity_number;
+                userCtrl.selectedUserData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
+                userCtrl.selectedUserData.password = selectedData.password;
                 userCtrl.selectedUserData.address = selectedData.address;
                 userCtrl.selectedUserData.postalCode = selectedData.postal_code;
-                userCtrl.selectedUserData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
-                userCtrl.user_identity_number = deepCopy.identity_number;
-                userCtrl.user_identity_type_id = deepCopy.identity_type_id;
-                userCtrl.selectedUserData.birthplace_area_id = selectedData.birthplace_area_id;
-                userCtrl.selectedUserData.address_area_id = selectedData.address_area_id;
-                userCtrl.selectedUserData.birth_area_code = selectedData.birth_area_code;
-                userCtrl.selectedUserData.area_code = selectedData.area_code;
 
-                if (selectedData.address_area_id > 0) {
+                if (selectedData.address_area_id > 0)
+                {
                     document.getElementById('addressArea_textbox').style.visibility = 'visible';
                     document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
-                } else {
+                } else
+                {
                     document.getElementById('addressArea_textbox').style.display = 'none';
                     document.getElementById('addressArea_dropdown').style.visibility = 'visible';
                 }
 
-                if (selectedData.birthplace_area_id > 0) {
+                if (selectedData.birthplace_area_id > 0)
+                {
                     document.getElementById('birthplaceArea_textbox').style.visibility = 'visible';
                     document.getElementById('birthplaceArea_dropdown').style.visibility = 'hidden';
-                } else {
+                } else
+                {
                     document.getElementById('birthplaceArea_textbox').style.display = 'none';
                     document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
                 }
             })
-        } else {
-            const deepCopy = {...selectedData};
+
+        }else{
             userCtrl.selectedUserData.addressArea = {
-                id: deepCopy.address_area_id,
-                name: deepCopy.area_name,
-                code: deepCopy.area_code
+                id: selectedData.address_area_id,
+                name: selectedData.area_name,
+                code: selectedData.area_code
             };
             userCtrl.selectedUserData.birthplaceArea = {
-                id: deepCopy.birthplace_area_id,
-                name: deepCopy.birth_area_name,
-                code: deepCopy.birth_area_code
+                id: selectedData.birthplace_area_id,
+                name: selectedData.birth_area_name,
+                code: selectedData.birth_area_code
             };
             userCtrl.selectedUserData.openemis_no = selectedData.openemis_no;
             userCtrl.selectedUserData.first_name = selectedData.first_name;
             userCtrl.selectedUserData.middle_name = selectedData.middle_name;
             userCtrl.selectedUserData.third_name = selectedData.third_name;
             userCtrl.selectedUserData.last_name = selectedData.last_name;
-            userCtrl.selectedUserData.name = selectedData.first_name + ' ' + selectedData.last_name; //POCOR-7309
             userCtrl.selectedUserData.preferred_name = selectedData.preferred_name;
-            userCtrl.selectedUserData.gender_id = selectedData.gender_id;
-            userCtrl.selectedUserData.gender = {
-                name: selectedData.gender
-            };
             userCtrl.selectedUserData.date_of_birth = selectedData.date_of_birth;
             userCtrl.selectedUserData.email = selectedData.email;
-            userCtrl.selectedUserData.identity_type_id = deepCopy.identity_type_id;
-            userCtrl.selectedUserData.identity_type_name = deepCopy.identity_type;
-            userCtrl.selectedUserData.identity_number = deepCopy.identity_number;
+            userCtrl.selectedUserData.gender_id = selectedData.gender_id;
+            userCtrl.selectedUserData.gender = {name: selectedData.gender};
             userCtrl.selectedUserData.nationality_id = selectedData.nationality_id;
             userCtrl.selectedUserData.nationality_name = selectedData.nationality;
+            userCtrl.selectedUserData.identity_type_id = selectedData.identity_type_id;
+            userCtrl.selectedUserData.identity_type_name = selectedData.identity_type;
+            userCtrl.selectedUserData.identity_number = selectedData.identity_number;
+            userCtrl.selectedUserData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
+            userCtrl.selectedUserData.password = selectedData.password;
             userCtrl.selectedUserData.address = selectedData.address;
             userCtrl.selectedUserData.postalCode = selectedData.postal_code;
-            userCtrl.selectedUserData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
-            userCtrl.user_identity_number = deepCopy.identity_number;
-            userCtrl.user_identity_type_id = deepCopy.identity_type_id;
-            userCtrl.selectedUserData.birthplace_area_id = selectedData.birthplace_area_id;
-            userCtrl.selectedUserData.address_area_id = selectedData.address_area_id;
-            userCtrl.selectedUserData.birth_area_code = selectedData.birth_area_code;
-            userCtrl.selectedUserData.area_code = selectedData.area_code;
 
-            if (selectedData.address_area_id > 0) {
+            if (selectedData.address_area_id > 0)
+            {
                 document.getElementById('addressArea_textbox').style.visibility = 'visible';
                 document.getElementById('addressArea_dropdown').style.visibility = 'hidden';
-            } else {
+            } else
+            {
                 document.getElementById('addressArea_textbox').style.display = 'none';
                 document.getElementById('addressArea_dropdown').style.visibility = 'visible';
             }
 
-            if (selectedData.birthplace_area_id > 0) {
+            if (selectedData.birthplace_area_id > 0)
+            {
                 document.getElementById('birthplaceArea_textbox').style.visibility = 'visible';
                 document.getElementById('birthplaceArea_dropdown').style.visibility = 'hidden';
-            } else {
+            } else
+            {
                 document.getElementById('birthplaceArea_textbox').style.display = 'none';
                 document.getElementById('birthplaceArea_dropdown').style.visibility = 'visible';
             }
@@ -2298,19 +2181,14 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         return remain;
     }
 
-    function generatePassword() {
-        UtilsSvc.isAppendLoader(true);
-        userSvc.generatePassword()
-            .then(function (response) {
-                if (userCtrl.selectedUserData.password == '' || typeof userCtrl.selectedUserData.password == 'undefined') {
-                    userCtrl.selectedUserData.password = response;
-                }
-                UtilsSvc.isAppendLoader(false);
-            }, function (error) {
-                console.error(error);
-                UtilsSvc.isAppendLoader(false);
-            });
-    }
+    userCtrl.getUniqueOpenEmisId = function () {
+        return directorySvc.setUniqueOpenEmisId(userCtrl);
+    };
+
+    userCtrl.generatePassword = function () {
+        return directorySvc.setPassword(userCtrl);
+    };
+
 
     angular.element(document.querySelector('#wizard')).on('finished.fu.wizard', function (evt, data) {
         //return;
