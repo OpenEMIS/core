@@ -7,23 +7,13 @@ DirectoryaddguardianSvc.$inject = ['$http', '$q', '$window', 'KdOrmSvc', 'AlertS
 function DirectoryaddguardianSvc($http, $q, $window, KdOrmSvc, AlertSvc, UtilsSvc) {
     var service = {
         init: init,
-        getUniqueOpenEmisId: getUniqueOpenEmisId,
-        generatePassword: generatePassword,
-        getGenders: getGenders,
-        getNationalities: getNationalities,
-        getIdentityTypes: getIdentityTypes,
-        getInternalSearchData: getInternalSearchData,
-        getExternalSearchData: getExternalSearchData,
-        getContactTypes: getContactTypes,
-        getRelationType: getRelationType,
+        // getRelationType: getRelationType,
+        // getInternalSearchData: getInternalSearchData,
+        // getExternalSearchData: getExternalSearchData,
+        // getCspdData: getCspdData,
+        // getUniqueOpenEmisId: getUniqueOpenEmisId,
+        // generatePassword: generatePassword,
         saveGuardianDetails: saveGuardianDetails,
-        getAddressAreaId: getAddressAreaId,
-        getAddressArea: getAddressArea,
-        getBirthplaceAreaId: getBirthplaceAreaId,
-        getBirthplaceArea: getBirthplaceArea,
-        checkUserAlreadyExistByIdentity: checkUserAlreadyExistByIdentity,
-        checkConfigForExternalSearch: checkConfigForExternalSearch,
-        getCspdData: getCspdData,
     };
     return service;
 
@@ -44,41 +34,7 @@ function DirectoryaddguardianSvc($http, $q, $window, KdOrmSvc, AlertSvc, UtilsSv
         return deferred.promise;
     };
 
-    function getGenders() {
-        var deferred = $q.defer();
-        var url = angular.baseUrl + '/Directories/getGenders/';
-        $http.get(url)
-        .then(function(response){
-            deferred.resolve(response);
-        }, function(error) {
-            deferred.reject(error);
-        });
-        return deferred.promise;
-    }
 
-    function getNationalities() {
-        var deferred = $q.defer();
-        var url = angular.baseUrl + '/Directories/getNationalities/';
-        $http.get(url)
-        .then(function(response){
-            deferred.resolve(response);
-        }, function(error) {
-            deferred.reject(error);
-        });
-        return deferred.promise;
-    }
-
-    function getIdentityTypes() {
-        var deferred = $q.defer();
-        var url = angular.baseUrl + '/Directories/getIdentityTypes/';
-        $http.get(url)
-        .then(function(response){
-            deferred.resolve(response);
-        }, function(error) {
-            deferred.reject(error);
-        });
-        return deferred.promise;
-    };
 
     function getUniqueOpenEmisId() {
         var deferred = $q.defer();

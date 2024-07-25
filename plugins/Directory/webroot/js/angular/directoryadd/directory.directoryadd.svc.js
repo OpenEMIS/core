@@ -23,12 +23,14 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         setIdentityTypes: setIdentityTypes,
         getContactTypes: getContactTypes,
         setContactTypes: setContactTypes,
+        getRelationType: getRelationType,
         setError: setError,
         unsetError: unsetError,
         unsetAllErrors: unsetAllErrors,
         setName: setName,
         changeGender: changeGender,
         changeUserType: changeUserType,
+        changeRelationType: changeRelationType,
         changeNationality: changeNationality,
         changeIdentityType: changeIdentityType,
         changeIdentityNumber: changeIdentityNumber,
@@ -50,6 +52,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         //end confirm user functions
         goToInternalSearch: goToInternalSearch,
         goToExternalSearch: goToExternalSearch,
+        getInternalSearchData: getInternalSearchData,
         getExternalSearchData: getExternalSearchData,
         getStudentCustomFields: getStudentCustomFields,
         getStaffCustomFields: getStaffCustomFields,
@@ -59,7 +62,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         getBirthplaceAreaId: getBirthplaceAreaId,
         getBirthplaceArea: getBirthplaceArea,
         saveDirectoryData: saveDirectoryData,
-        checkConfigForExternalSearch: checkConfigForExternalSearch,
+        saveGuardianData: saveGuardianData,
         getCspdData: getCspdData,
         getRedirectToGuardian: getRedirectToGuardian,
         isNextButtonShouldDisable: isNextButtonShouldDisable,
@@ -238,6 +241,18 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             });
     }
 
+    function getRelationType() {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/getRelationshipType';
+        $http.get(url)
+            .then(function(response){
+                deferred.resolve(response);
+            }, function(error) {
+                deferred.reject(error);
+            });
+        return deferred.promise;
+    };
+
     // POCOR-8231 for Ctrl.js
     function setName(scope) {
         const unsetFields = ['first_name', 'middle_name', 'third_name', 'last_name'];
@@ -291,6 +306,23 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         }
     }
 
+    function changeRelationType(scope) {
+        const {selectedUserData, relationTypeOptions, error} = scope;
+
+        if (!selectedUserData.hasOwnProperty('relation_type_id')) {
+            return;
+        }
+
+        unsetError(error, 'relation_type_id');
+
+        const relationType = relationTypeOptions.find(option => option.id === selectedUserData.relation_type_id);
+
+        if (relationType) {
+            selectedUserData.relationType = {name: relationType.name};
+            scope.selectedUserData = selectedUserData;
+        }
+    }
+
     function changeNationality(scope) {
         unsetError(scope.error, 'nationality_id');
 
@@ -325,7 +357,28 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
             unsetAllErrors(scope);
         }
 
-        scope.checkConfigForExternalSearch();
+        setConfigForExternalSearch(scope);
+    }
+
+    function setConfigForExternalSearch(scope) {
+        var identity_type_id = scope.selectedUserData.identity_type_id;
+        var nationality_id = scope.selectedUserData.nationality_id;
+        scope.isExternalSearchEnable = false;
+
+        checkConfigForExternalSearch(nationality_id, identity_type_id)
+            .then((resp) => {
+                scope.isExternalSearchEnable = resp.showExternalSearch;
+                // console.log(resp);
+                scope.externalSearchSourceName = resp.value;
+
+                UtilsSvc.isAppendLoader(false);
+            })
+            .catch((error) => {
+                scope.isExternalSearchEnable = false;
+                console.error(error);
+                UtilsSvc.isAppendLoader(false);
+            });
+
     }
 
     function changeIdentityType(scope) {
@@ -348,7 +401,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         if (nationality_id && identity_type_id && identity_number) {
             unsetAllErrors(scope);
         }
-        scope.checkConfigForExternalSearch();
+        setConfigForExternalSearch(scope);
     }
 
     function changeIdentityNumber(scope) {
@@ -795,9 +848,10 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                 scope.error[field] = message;
             }
         };
-
+        if(!scope.isInternalSearchSelected){
         checkAndSetError('username', 'This field cannot be left empty');
         checkAndSetError('password', 'This field cannot be left empty');
+        }
         if (scope.customFieldsArray) {
             scope.customFieldsArray.forEach((customField) => {
                 customField.data.forEach((field) => {
@@ -1252,6 +1306,20 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         }, function(error) {
             deferred.reject(error);
         });
+        return deferred.promise;
+    }
+
+    function saveGuardianData(params){
+        // console.log(params);
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Institutions/saveGuardianData';
+        $http.post(url, params)
+            .then(function(response){
+                // console.log(response);
+                deferred.resolve(response);
+            }, function(error) {
+                deferred.reject(error);
+            });
         return deferred.promise;
     }
 

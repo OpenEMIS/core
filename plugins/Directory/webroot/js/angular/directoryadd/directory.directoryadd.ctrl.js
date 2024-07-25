@@ -352,7 +352,6 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
                 return scope.generatePassword();
             })
             .then(() => {
-
                 if (scope.selectedUserData.userType.name === 'Students') {
                     return scope.getStudentCustomFields();
                 } else if (scope.selectedUserData.userType.name === 'Staff') {
@@ -366,6 +365,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
                 }
             })
             .catch(error => {
+                UtilsSvc.isAppendLoader(false);
                 scope.messageClass = 'alert-danger';
                 scope.message = error.message || error.toString();
                 console.error(error);
@@ -1184,30 +1184,6 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
             UtilsSvc.isAppendLoader(false);
         });
     }
-
-    userCtrl.checkConfigForExternalSearch = function checkConfigForExternalSearch() {
-        var identity_type_id = userCtrl.selectedUserData.identity_type_id;
-        var nationality_id = userCtrl.selectedUserData.nationality_id;
-        userCtrl.isExternalSearchEnable = false;
-
-        userSvc.checkConfigForExternalSearch(nationality_id, identity_type_id)
-            .then((resp) => {
-                userCtrl.isExternalSearchEnable = resp.showExternalSearch;
-                // console.log(resp);
-                userCtrl.externalSearchSourceName = resp.value;
-                // console.log({
-                //     isExternalSearchEnable: userCtrl.isExternalSearchEnable,
-                //     externalSearchSourceName: userCtrl.externalSearchSourceName
-        // });
-            UtilsSvc.isAppendLoader(false);
-            })
-            .catch((error) => {
-                userCtrl.isExternalSearchEnable = false;
-            console.error(error);
-            UtilsSvc.isAppendLoader(false);
-        });
-
-        }
 
     userCtrl.isNextButtonShouldDisable = function isNextButtonShouldDisable() {
         return directorySvc.isNextButtonShouldDisable(userCtrl);
