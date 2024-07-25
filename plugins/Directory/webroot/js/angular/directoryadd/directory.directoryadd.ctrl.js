@@ -975,6 +975,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
     scope.getStudentCustomFields = function() {
         let userId = scope.selectedUserData.userId ? scope.selectedUserData.userId : null;
         DirectoryaddSvc.getStudentCustomFields(userId).then(function(resp){
+
             scope.customFields = resp.data;
             scope.customFieldsArray = [];
             scope.createCustomFieldsArray();
@@ -1016,7 +1017,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
                     }
                     if(fieldData.field_type === 'DROPDOWN') {
                         fieldData.selectedOptionId = '';
-                        fieldData.answer = fieldData.values && fieldData.values.length > 0 && fieldData.values[0].dropdown_val ? fieldData.values[0].dropdown_val.toString() : '';
+                        fieldData.answer = fieldData.values && fieldData.values.length > 0 && fieldData.values[0].dropdown_val ? fieldData.values[0].dropdown_val : '';
                         fieldData.option.forEach((option) => {
                             if(option.option_id === fieldData.answer) {
                                 fieldData.selectedOption = option.option_name;
@@ -1072,9 +1073,9 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
                         });
                         if(fieldData.values && fieldData.values.length > 0) {
                             fieldData.values.forEach((value) => {
-                                fieldData.answer.push(value.checkbox_val.toString());
+                                fieldData.answer.push(value.checkbox_val);
                                 fieldData.option.forEach((option)=> {
-                                    if(option.option_id === value.checkbox_val.toString()) {
+                                    if(option.option_id === value.checkbox_val) {
                                         option.selected = true;
                                     }
                                 })
