@@ -158,15 +158,15 @@
                     class="btn close-btn"
                     ng-click="cancelProcess()"
                     style="font-size: 12px;"><?= __('Cancel') ?></button>
+            <button ng-if="(step!=='user_details' && step!=='summary')"
+                    type="button"
+                    class="btn btn-prev close-btn"
+                    ng-click="goToPrevStep()" style="font-size: 12px;"><?= __('Back') ?></button>
             <button ng-disabled="(error | json) != '{}' || isNextButtonShouldDisable()"
                     type="button"
                     class="btn btn-default btn-next"
                     ng-if="step!=='confirmation' && step!=='summary'"
                     ng-click="goToNextStep()" style="font-size: 12px;"><?= __('Next') ?></button>
-            <button ng-if="(step!=='user_details' && step!=='summary')"
-                    type="button"
-                    class="btn btn-prev close-btn"
-                    ng-click="goToPrevStep()" style="font-size: 12px;"><?= __('Back') ?></button>
             <button ng-if="(step=='confirmation' && step!=='summary')"
                     type="button"
                     class="btn btn-default"

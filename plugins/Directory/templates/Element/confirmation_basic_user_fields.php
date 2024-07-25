@@ -10,13 +10,13 @@
     <label><?= __('Middle Name') ?></label>
     <input ng-model="selectedUserData.middle_name"
            ng-change="setName()" type="string"
-           ng-disabled="selectedUserData.middle_name">
+    >
 </div>
 <div class="input string">
     <label><?= __('Third Name') ?></label>
     <input ng-model="selectedUserData.third_name"
            ng-change="setName()" type="string"
-           ng-disabled="selectedUserData.third_name">
+    >
 </div>
 <div class="input string required">
     <label><?= __('Last Name') ?></label>
@@ -28,11 +28,12 @@
     <label><?= __('Preferred Name') ?></label>
     <input ng-model="selectedUserData.preferred_name"
            type="string"
-           ng-disabled="selectedUserData.preferred_name">
+    >
 </div>
 <div class="input select required">
     <label><?= __('Gender') ?></label>
-    <input ng-model="selectedUserData.gender.name" ng-disabled="selectedUserData.gender.name"/>
+    <input ng-model="selectedUserData.gender.name"
+           ng-disabled="selectedUserData.gender.name"/>
 </div>
 <div class="input date required">
     <label for="User_date_of_birth"><?= __('Date Of Birth') ?></label>
