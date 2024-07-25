@@ -183,6 +183,11 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
         directorySvc.unsetError(userCtrl.error, field);
     };
 
+    userCtrl.unsetCustomError = function(field) {
+        field.errorMessage = null;
+        directorySvc.unsetError(userCtrl.error, field.name);
+    };
+
     userCtrl.unsetAllErrors = function() {
         userCtrl.error = {};
     };
@@ -194,7 +199,6 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
     userCtrl.validateConfirmDetails = function () {
         directorySvc.validateConfirmDetails(scope);
     };
-
 
     userCtrl.goToNextStep = async function () {
         if (userCtrl.step === 'confirmation') {
@@ -292,7 +296,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
     }
 
     userCtrl.processGridUserRecord = function (userRecords, params, totalRowCount) {
-        console.log(userRecords);
+        // console.log(userRecords);
         if (userRecords.length === 0)
         {
             params.failCallback([], totalRowCount);
