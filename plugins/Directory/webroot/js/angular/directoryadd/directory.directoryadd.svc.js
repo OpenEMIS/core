@@ -934,7 +934,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                     identity_type_name: identity_type_name,
                     identity_type_id: identity_type_id
     };
-                console.log(param);
+                // console.log(param);
                 getInternalSearchData(param)
                     .then(function (response) {
                         var gridData = response.data.data;
