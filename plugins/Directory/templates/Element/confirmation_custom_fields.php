@@ -34,7 +34,6 @@
         </div>
         <div class="input select" ng-class="{'required': field.is_mandatory !== 0}" ng-if="field.field_type === 'DROPDOWN'">
             <label>{{field.name}}</label>
-            <pre>{{ field }}</pre>
             <div class="input-select-wrapper">
                 <select name="Student[option_id]" id={{field.student_custom_field_id}}
                         ng-options="option.option_id as option.option_name for option in field.option"
