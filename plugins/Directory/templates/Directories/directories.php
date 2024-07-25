@@ -151,7 +151,6 @@
                 </li>
             </ul>
         </div>
-        {{ step }} {{ error }}
         <div class="actions top">
             <button ng-if="(step=='user_details') || isNextButtonShouldDisable()"
                     type="button"
