@@ -1608,7 +1608,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             nationality_id: userCtrl.selectedUserData.nationality_id,
             nationality_name: userCtrl.selectedUserData.nationality_name,
             contact_type: userCtrl.selectedUserData.contact_type_id,
-            contact_type_id: userCtrl.selectedUserData.contact_type_id,
             contact_value: userCtrl.selectedUserData.contact_value,
             education_grade_id: userCtrl.selectedUserData.education_grade_id,
             academic_period_id: userCtrl.selectedUserData.academic_period_id,
