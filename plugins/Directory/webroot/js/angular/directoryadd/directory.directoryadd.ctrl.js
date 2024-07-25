@@ -202,9 +202,10 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
 
     userCtrl.goToNextStep = async function () {
         if (userCtrl.step === 'confirmation') {
-            const result = await userCtrl.checkUserExistByIdentityFromConfiguration();
+            const result =
+                await userCtrl.checkUserExistByIdentityFromConfiguration();
             // if (result) return;
-    }
+        }
 
         if (userCtrl.isInternalSearchSelected) {
             userCtrl.processNewUser();
