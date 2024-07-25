@@ -1154,7 +1154,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
             birthplace_area_id: DirectoryaddSvc.getBirthplaceAreaId(),
             address_area_id: DirectoryaddSvc.getAddressAreaId(),
             contact_type: scope.selectedUserData.contact_type_id,
-            contact_value: scope.selectedUserData.contactValue,
+            contact_value: scope.selectedUserData.contact_value,
             photo_name: scope.selectedUserData.photo_name,
             photo_content: scope.selectedUserData.photo_base_64,
             custom: [],
