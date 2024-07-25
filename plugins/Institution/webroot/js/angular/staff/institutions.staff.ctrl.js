@@ -109,7 +109,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     userCtrl.changeOption = changeOption;
     userCtrl.selectOption = selectOption;
     userCtrl.transferStaffNextStep = transferStaffNextStep;
-    userCtrl.checkConfigForExternalSearch = checkConfigForExternalSearch;
     userCtrl.checkUserExistByIdentityFromConfiguration = checkUserExistByIdentityFromConfiguration;
     userCtrl.getCSPDSearchData = getCSPDSearchData;
 
@@ -312,9 +311,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     };
 
     function saveStaffDetails() {
-        const addressAreaRef = userSvc.getAddressArea();
+        const addressAreaRef = directorySvc.getAddressArea();
         addressAreaRef && (userCtrl.selectedUserData.addressArea = addressAreaRef)
-        const birthplaceAreaRef = userSvc.getBirthplaceArea();
+        const birthplaceAreaRef = directorySvc.getBirthplaceArea();
         birthplaceAreaRef && (userCtrl.selectedUserData.birthplaceArea = birthplaceAreaRef)
         var params = {
             openemis_no: userCtrl.selectedUserData.openemis_no,
@@ -332,12 +331,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             password: userCtrl.isInternalSearchSelected ? '' : userCtrl.selectedUserData.password,
             postal_code: userCtrl.selectedUserData.postalCode,
             address: userCtrl.selectedUserData.address,
-            birthplace_area_id: userSvc.getBirthplaceAreaId() == null ? userCtrl.selectedUserData.birthplace_area_id : userSvc.getBirthplaceAreaId(),
-            address_area_id: userSvc.getAddressAreaId() == null ? userCtrl.selectedUserData.address_area_id : userSvc.getAddressAreaId(),
-            identity_type_id: userCtrl.user_identity_type_id === "" ? userCtrl.selectedUserData.identity_type_id : userCtrl.user_identity_type_id,
+            birthplace_area_id: directorySvc.getBirthplaceAreaId() == null ? userCtrl.selectedUserData.birthplace_area_id : directorySvc.getBirthplaceAreaId(),
+            address_area_id: directorySvc.getAddressAreaId() == null ? userCtrl.selectedUserData.address_area_id : directorySvc.getAddressAreaId(),
+            identity_type_id: userCtrl.selectedUserData.identity_type_id,
             identity_type_name: userCtrl.selectedUserData.identity_type_name,
-            identity_number: userCtrl.user_identity_number === "" ? userCtrl.selectedUserData.identity_number : userCtrl.user_identity_number,
-            contact_type_id: userCtrl.selectedUserData.contact_type_id,
+            identity_number: userCtrl.selectedUserData.identity_number,
+            contact_type: userCtrl.selectedUserData.contact_type_id,
             contact_value: userCtrl.selectedUserData.contact_value,
             start_date: userCtrl.selectedUserData.startDate,
             end_date: userCtrl.selectedUserData.endDate ? $filter('date')(userCtrl.selectedUserData.endDate, 'yyyy-MM-dd') : '',
@@ -488,9 +487,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     userCtrl.getStaffCustomFields = function() {
         let userId = userCtrl.selectedUserData.userId ? userCtrl.selectedUserData.userId : null;
-        console.log(userId);
+        // console.log(userId);
         directorySvc.getStaffCustomFields(userId).then(function(resp){
-            console.log(resp)
+            // console.log(resp)
             userCtrl.customFields = resp.data;
             userCtrl.customFieldsArray = [];
             userCtrl.createCustomFieldsArray();
@@ -2269,15 +2268,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     async function checkUserAlreadyExistByIdentity() {
 
         const userData = userCtrl.selectedUserData;
-        const result = await userSvc.checkUserAlreadyExistByIdentity({
+        const result = await directorySvc.checkUserAlreadyExistByIdentity({
             'identity_type_id': userData.identity_type_id,
             'identity_number': userData.identity_number,
             'nationality_id': userData.nationality_id,
-            'first_name': userData.first_name,
-            'last_name': userData.last_name,
-            'gender_id': userData.gender_id,
-            'date_of_birth': userData.date_of_birth,
-            'user_id': userData.user_id,
         });
         if (result.data.user_exist === 1) {
             userCtrl.messageClass = 'alert-warning';
@@ -2339,21 +2333,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         return ["", false];
     }
 
-    function checkConfigForExternalSearch() {
-        var identity_type_id = userCtrl.selectedUserData.identity_type_id;
-        var nationality_id = userCtrl.selectedUserData.nationality_id;
-
-        userCtrl.isExternalSearchEnable = false;
-        userSvc.checkConfigForExternalSearch(nationality_id, identity_type_id).then(function (resp) {
-            userCtrl.isExternalSearchEnable = resp.showExternalSearch;
-            userCtrl.externalSearchSourceName = resp.value;
-            UtilsSvc.isAppendLoader(false);
-        }, function (error) {
-            userCtrl.isExternalSearchEnable = false;
-            console.error(error);
-            UtilsSvc.isAppendLoader(false);
-        });
-    }
 
     userCtrl.isNextButtonShouldDisable = function isNextButtonShouldDisable() {
         return directorySvc.isNextButtonShouldDisable(userCtrl);
@@ -2368,7 +2347,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 UtilsSvc.isAppendLoader(true);
                 param.limit = params.endRow - params.startRow;
                 param.page = params.endRow / (params.endRow - params.startRow);
-                userSvc.getCspdData(param)
+                directorySvc.getCspdData(param)
                     .then(function (response) {
                         var gridData = response.data.data; //POCOR-7916
                         if (!gridData) gridData = [];
@@ -2413,15 +2392,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             return false;
         }
 
-        const result = await userSvc.checkUserAlreadyExistByIdentity({
+        const result = await directorySvc.checkUserAlreadyExistByIdentity({
             'identity_type_id': userData.identity_type_id,
             'identity_number': userData.identity_number,
             'nationality_id': userData.nationality_id,
-            'first_name': userData.first_name,
-            'last_name': userData.last_name,
-            'gender_id': userData.gender_id,
-            'date_of_birth': userData.date_of_birth,
-            'user_id': userData.user_id,
         });
         // StudentController.error.nationality_id = "";
         userCtrl.unsetError('identity_type_id');
