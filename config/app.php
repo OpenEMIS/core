@@ -371,6 +371,15 @@ return [
     'BUILD_POLYFILLS' => define('BUILD_POLYFILLS', 'angular/main/polyfills.0947d4c9434ec41ea5bf'),
     'BUILD_RUNTIME' => define('BUILD_RUNTIME', 'angular/main/runtime.7b63b9fd40098a2e8207'),
     'BUILD_SCRIPTS' => define('BUILD_SCRIPTS', 'angular/main/scripts.d46a215e198ba486ca2a'),
-    'BUILD_STYLE' => define('BUILD_STYLE', 'angular/main/newStyles')
+    'BUILD_STYLE' => define('BUILD_STYLE', 'angular/main/newStyles'),
+
+    'Application' => [
+        'public' => [
+            'key' => file_get_contents(CONFIG . 'public.key')
+        ],
+        'private' => [
+            'key' => file_get_contents(CONFIG . 'private.key')
+        ],
+    ],
     //POCOR-7485 for angular build end
 ];
