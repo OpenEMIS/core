@@ -111,7 +111,8 @@ class DirectoriesController extends AppController
             case 'Addguardian':
                 $this->Angular->addModules([
                     'directory.directoryaddguardian.ctrl',
-                    'directory.directoryaddguardian.svc'
+                    'directory.directoryadd.svc'
+//                    'directory.directoryaddguardian.svc'
                 ]);
                 break;
         }

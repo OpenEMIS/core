@@ -1,20 +1,19 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
 <?php /* POCOR-8231: moved repeating functions to one service js file */ ?>
 <?= $this->Html->script('Directory.angular/directoryadd/directory.directoryadd.svc', ['block' => true]); ?>
-<?= $this->Html->script('Directory.angular/directoryaddguardian/directory.directoryaddguardian.svc', ['block' => true]); ?>
 <?= $this->Html->script('Directory.angular/directoryaddguardian/directory.directoryaddguardian.ctrl', ['block' => true]); ?>
 <?= $this->Html->css('ControllerAction.../plugins/datepicker/css/bootstrap-datepicker.min', ['block' => true]); ?>
 <?= $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepicker.min', ['block' => true]); ?>
 <?= $this->Html->script('ControllerAction.../plugins/chosen/js/chosen.jquery.min.js', ['block' => true]); ?>
 
-<link data-require="bootstrap@3.3.2" data-semver="3.3.2" rel="stylesheet"
-      href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css"/>
-<script data-require="bootstrap@3.3.2" data-semver="3.3.2"
-        src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
-<script data-require="angularjs@1.4.9" data-semver="1.4.9"
-        src="https://code.angularjs.org/1.4.9/angular.min.js"></script>
-<script data-require="ui-bootstrap@*" data-semver="1.3.2"
-        src="https://cdn.rawgit.com/angular-ui/bootstrap/gh-pages/ui-bootstrap-tpls-1.3.2.js"></script>
+<!--<link data-require="bootstrap@3.3.2" data-semver="3.3.2" rel="stylesheet"-->
+<!--      href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css"/>-->
+<!--<script data-require="bootstrap@3.3.2" data-semver="3.3.2"-->
+<!--        src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>-->
+<!--<script data-require="angularjs@1.4.9" data-semver="1.4.9"-->
+<!--        src="https://code.angularjs.org/1.4.9/angular.min.js"></script>-->
+<!--<script data-require="ui-bootstrap@*" data-semver="1.3.2"-->
+<!--        src="https://cdn.rawgit.com/angular-ui/bootstrap/gh-pages/ui-bootstrap-tpls-1.3.2.js"></script>-->
 <!-- POCOR-7231 :: Start -->
 <style>
     h2 {
@@ -122,7 +121,6 @@
                 </li>
             </ul>
         </div>
-        {{step}} {{error}}
         <?php /* POCOR-8231: simplified and unified buttons */ ?>
         <div class="actions top">
             <button
@@ -131,15 +129,15 @@
                     class="btn close-btn"
                     ng-click="cancelProcess()"
                     style="font-size: 12px;"><?= __('Cancel') ?></button>
+            <button ng-if="(step!=='user_details' && step!=='summary')"
+                    type="button"
+                    class="btn btn-prev close-btn"
+                    ng-click="goToPrevStep()" style="font-size: 12px;"><?= __('Back') ?></button>
             <button ng-disabled=" (error | json) != '{}' || isNextButtonShouldDisable()"
                     type="button"
                     class="btn btn-default btn-next"
                     ng-if="step!=='confirmation' && step!=='summary'"
                     ng-click="goToNextStep()" style="font-size: 12px;"><?= __('Next') ?></button>
-            <button ng-if="(step!=='user_details' && step!=='summary')"
-                    type="button"
-                    class="btn btn-prev close-btn"
-                    ng-click="goToPrevStep()" style="font-size: 12px;"><?= __('Back') ?></button>
             <button ng-if="(step=='confirmation' && step!=='summary')"
                     type="button"
                     class="btn btn-default"

@@ -1,13 +1,13 @@
 <div class="row section-header header-space-lg"><?= __('Identities / Nationalities') ?></div>
-<div class="input string" ng-show="!isSearchResultEmpty">
+<div class="input string" ng-show="canSkipNationality">
     <label><?= __('Nationalities') ?></label>
     <input ng-model="selectedUserData.nationality_name" type="string" ng-disabled="true"/>
 </div>
-<div class="input string" ng-show="!isSearchResultEmpty">
+<div class="input string" ng-show="canSkipIdentity">
     <label><?= __('Identity Type') ?></label>
     <input ng-model="selectedUserData.identity_type_name" type="string" ng-disabled="true">
 </div>
-<div ng-class="nationality_class" class="input select" ng-show="isSearchResultEmpty">
+<div ng-class="nationality_class" class="input select" ng-show="!canSkipNationality">
     <label><?= __('Nationality') ?></label>
     <div class="input-select-wrapper">
         <select name="User[nationality_id]" id="user-nationality_id"
@@ -22,7 +22,7 @@
         <p>{{ error.nationality_id }}</p>
     </div>
 </div>
-<div ng-class="identity_type_class" class="input select" ng-show="isSearchResultEmpty">
+<div ng-class="identity_type_class" class="input select" ng-show="!canSkipIdentity">
     <label><?= __('Identity Type') ?></label>
     <div class="input-select-wrapper">
         <select name="User[identities_type_id]" id="user-identities_type_id"
@@ -40,7 +40,7 @@
 <div class="input string">
     <label><?= __('Identity Number') ?></label>
     <input ng-model="selectedUserData.identity_number" type="string"
-           ng-disabled="!isSearchResultEmpty">
+           ng-disabled="canSkipIdentity">
     <div ng-if="error.identity_number" class="error-message">
         <p>{{ error.identity_number }}</p>
     </div>
