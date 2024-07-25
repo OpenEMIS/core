@@ -449,7 +449,7 @@ class InstitutionsController extends AppController
             case 'Addguardian':
                 $this->Angular->addModules([
                     'directory.directoryaddguardian.ctrl',
-                    'directory.directoryaddguardian.svc'
+                    'directory.directoryadd.svc'
                 ]);
                 break;
         }
