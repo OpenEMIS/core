@@ -891,7 +891,16 @@ class UsersController extends AppController
         if (isset($_COOKIE['Restful'])) {
             //echo "<pre>"; print_r($this->generateToken()); die;
             $event->stopPropagation();
-            return $this->redirect(['plugin' => null, 'controller' => 'Rest', 'action' => 'auth', 'payload' => $this->generateToken(), 'version' => '2.0']);
+            //return $this->redirect(['plugin' => null, 'controller' => 'Rest', 'action' => 'auth', 'payload' => $this->generateToken(), 'version' => '2.0']);
+            return $this->redirect([
+                'plugin' => null,
+                    'controller' => 'Rest',
+                    'action' => 'auth',
+                    '?' => [
+                        'payload' => $this->generateToken(),
+                        'version' => '2.0'
+                    ]
+                ]); 
         } else {
             $user = $this->Auth->user();
 
