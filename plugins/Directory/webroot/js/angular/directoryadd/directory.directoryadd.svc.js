@@ -1140,7 +1140,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         function filterBySection(item, section) {
             return section === item.section;
         }
-
+        console.log(scope.customFields);
         if(scope.customFields && scope.customFields.length > 0) {
             var selectedCustomField = scope.customFields;
             var filteredSections = Array.from(new Set(scope.customFields.map((item) => mapBySection(item))));

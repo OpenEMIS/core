@@ -6018,12 +6018,14 @@ class InstitutionsController extends AppController
     {
 
         if($this->savingStudentData > 0) {
+            self::debug('>0');
             return;
         }
         $this->savingStudentData = $this->savingStudentData + 1;
 
-//                Log::debug(__FUNCTION__);
         $requestData = $this->getRequestData();
+        Log::debug(__FUNCTION__);
+        self::debug($requestData);
         if (empty($requestData)) {
             return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
         }
@@ -6043,11 +6045,11 @@ class InstitutionsController extends AppController
             $this->handleContacts($requestData, $userRecordId, $userId);
             $this->handleCustomFields('student', $requestData, $userRecordId, $userId);
             if ($requestData['student_admission_status_value'] == 0 || strtolower($requestData['student_admission_status']) == "enrolled") {
-                $this->handleStudentInstitutionData($requestData, $userRecordId, $userId);
+                $saved_student = $this->handleStudentInstitutionData($requestData, $userRecordId, $userId);
             }
             $this->triggerWebhooks($userRecordId, $requestData);
 //            Log::debug(print_r($studentData,true));
-            return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
+            return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId, 'saved_student' => $saved_student], 200);
         } else {
 //            Log::debug(print_r($studentData,true));
             return $this->sendJsonResponse(['message' => 'Failed to save user Webhooks.'], 500);
@@ -6523,7 +6525,7 @@ class InstitutionsController extends AppController
         $academicPeriodId = $requestData['academic_period_id'] ?? null;
         $startDate = !empty($requestData['start_date']) ? date('Y-m-d', strtotime($requestData['start_date'])) : null;
         $endDate = !empty($requestData['end_date']) ? date('Y-m-d', strtotime($requestData['end_date'])) : null;
-
+        $saved_student = [];
         if (!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionId) && !empty($startDate) && !empty($endDate)) {
             $institutionStudents = self::getDynamicTableInstance('institution_students');
             $entityStudentsData = [
@@ -6542,7 +6544,7 @@ class InstitutionsController extends AppController
             ];
             $entityStudentsData = $institutionStudents->newEntity($entityStudentsData);
             try {
-                $institutionStudents->save($entityStudentsData);
+                $saved_student['institution_student'] = $institutionStudents->save($entityStudentsData)->toArray();
             } catch (\Exception $exception) {
                 Log::debug(__FUNCTION__);
 
@@ -6567,13 +6569,13 @@ class InstitutionsController extends AppController
             ];
             $entityClassData = $institutionClassStudents->newEntity($entityClassData);
             try {
-                $institutionClassStudents->save($entityClassData);
+                $saved_student['institution_class_student'] = $institutionClassStudents->save($entityClassData)->toArray();
             } catch (\Exception $exception) {
                 Log::debug(__FUNCTION__);
-
                 Log::debug('Error: ' . $exception->getMessage());
             }
         }
+        return $saved_student;
     }
 
     /**
