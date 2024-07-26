@@ -53,7 +53,7 @@ class RestController extends AppController
     {
         parent::beforeFilter($event);
         $this->getEventManager()->off($this->Csrf);
-       $rootPath = 'https://dev-core.openemis.org/dvishwakarma_corev4/';
+        $rootPath = Router::url('/', true);
         /*$rootPath = $_SERVER['REQUEST_URI'];
         $cookieRestful = new \Cake\Http\Cookie\Cookie(
                             'Restful',
@@ -87,7 +87,7 @@ class RestController extends AppController
             
             if ($this->request->getData('code')) {
                 $token = $this->request->getData('code');
-                $this->request->setEnv('HTTP_AUTHORIZATION', $token);
+                $this->request->withEnv('HTTP_AUTHORIZATION', $token);
                // $this->request = $this->request->withHeader('Authorization', 'Bearer ' . $token);
             }
             $header = $this->request->getHeaderLine('Authorization');
@@ -197,7 +197,7 @@ class RestController extends AppController
         }
 
         if (method_exists($this->RestSurvey, $action)) {
-            return call_user_func_array(array($this->RestSurvey, $action), $pass);
+            return call_user_func_array([$this->RestSurvey, $action], $pass);
         } else {
             return false;
         }

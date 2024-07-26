@@ -71,7 +71,6 @@ class RestSurveyComponent extends Component
             default:
                 break;
         }
-        //echo "<pre>";print_r($result);die;
         $this->response = $this->getController()->getResponse();
         if ($output) { // true = output to screen
             if (is_object($result)) {
