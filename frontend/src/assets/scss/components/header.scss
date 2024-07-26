@@ -312,10 +312,10 @@
                 }
             }
 
-            .kdx-btn-group-wrapper {
+            .kdx-btn-group-wrapper { 
                 flex: 0 0 auto;
                 height: inherit;
-                max-width: 165px;
+                max-width: 252px;
 
                 .btn-group {
                     height: inherit;
@@ -363,6 +363,21 @@
                                 background-color: #EEE !important;
                             }
                         }
+
+                        .notification-dot {
+                            position: relative;
+                        }
+
+                        .notification-dot::after {
+                            content: '\2022'; /* Unicode character for a bullet, you can change it if needed */
+                            position: absolute;
+                            top: -8px; /* Adjust the positioning as needed */
+                            right: -3px; /* Adjust the positioning as needed */
+                            color: red; /* Color of the notification dot */
+                            font-size: 40px; /* Adjust the font size as needed */
+                            width: 16px; /* Adjust the size of the dot */
+                            height: 16px; /* Adjust the size of the dot */
+                          }
                     }
 
                     .kdx-dropdown-toggle::after {

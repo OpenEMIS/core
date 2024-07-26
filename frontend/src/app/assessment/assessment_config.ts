@@ -4,6 +4,7 @@ interface TableColumns {
     status?: any;
     period1?: any;
     period2?: any;
+    period3?: any;
     totalMark?: any;
   }
   
@@ -11,7 +12,7 @@ interface TableColumns {
     headerName: "OpenEMIS ID",
     field: "id",
     sortable: true,
-    filterable: true,
+    filterable: false,
     filterValue: ['Equals','Not Equals','Starts with',' Ends with','Contains','Not contains'],
     visible: true,
     width: 40,
@@ -21,7 +22,7 @@ interface TableColumns {
     headerName: "Name",
     field: "name",
     sortable: true,
-    filterable: true,
+    filterable: false,
     visible: true,
     filterValue: ['Equals','Not Equals','Starts with',' Ends with','Contains','Not contains'],
     class: "ag-name",
@@ -36,7 +37,7 @@ interface TableColumns {
     headerName: "Status",
     field: "status",
     sortable: true,
-    filterable: true,
+    filterable: false,
     filterValue: ['Equals','Not Equals','Starts with',' Ends with','Contains','Not contains'],
     visible: true,
     enableValue: false,
@@ -48,7 +49,7 @@ interface TableColumns {
     headerName: "Assessment Period 1 | 100",
     field: "period1",
     sortable: true,
-    filterable: true,
+    filterable: false,
     filterValue: ['Equals','Not Equals','Less Than','Less Than or Equal','Greater Than','Greater Than or Equal','In Range'],
     visible: true,
     enableValue: false,
@@ -61,11 +62,24 @@ interface TableColumns {
     headerName: "Assessment Period 2 | 100",
     field: "period2",
     sortable: true,
-    filterable: true,
+    filterable: false,
     filterValue: ['Equals','Not Equals','Less Than','Less Than or Equal','Greater Than','Greater Than or Equal','In Range'],
     visible: true,
     enableValue: false,
     enablePivot: true,
+    enableRowGroup: true,
+    canEdit: true
+  };
+
+  const COLUMN_PERIOD3: any = {
+    headerName: "Assessment Period 3 | 100",
+    field: "period3",
+    sortable: true,
+    filterable: false,
+    filterValue: ['Equals','Not Equals','Less Than','Less Than or Equal','Greater Than','Greater Than or Equal','In Range'],
+    visible: true,
+    enableValue: false,
+    enablePivot: false,
     enableRowGroup: true,
     canEdit: true
   };
@@ -74,7 +88,7 @@ interface TableColumns {
     headerName: "Total Mark",
     field: "totalMark",
     sortable: true,
-    filterable: true,
+    filterable: false,
     filterValue: ['In Range','Greater Than','Less Than'],
     visible: true,
     enableValue: false,
@@ -90,5 +104,6 @@ interface TableColumns {
     status: COLUMN_STATUS,
     period1: COLUMN_PERIOD1,
     period2: COLUMN_PERIOD2,
+    period3: COLUMN_PERIOD3,
     totalMark: COLUMN_TOTALMARK
   };
