@@ -4,6 +4,7 @@ import { ITableApi, ITableColumn, ITableConfig, KdPageBase, KdPageBaseEvent, KdT
 import { ApiService } from '../api.service';
 import { TABLE_COLUMN_LIST } from './assessment_config';
 import { timer } from 'rxjs';
+import { DEFAULT_TEMPLATE_THEME } from '../shared/config.default-val';
 
 @Component({
   selector: 'app-assessment',
@@ -35,6 +36,29 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
     }]
   };
 
+  public academicPeriod: Array<any> = [
+    {
+      'key': 'dropdown',
+      'label': '',
+      'visible': true,
+      'required': false,
+      'controlType': 'dropdown',
+      'disabled': false,
+      'options': []
+    }
+  ]
+
+  public filterButtons: Array<any> = [
+    {
+      name: '',
+      class: 'd-none'
+    },
+    {
+      name: '',
+      class: 'd-none'
+    }
+  ]
+
   public pageheader = {
     leftBtn: [{
       type: "back",
@@ -49,16 +73,26 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
       }
     },
     {
-      icon: "fa kd-header-row",
-      path: '/'
+      custom: true,
+      icon: 'fa kd-header-row',
+      tooltip: 'Report',
+      callback: (): void => {
+        this.getReport();
+      }
     },
     {
-      icon: "fa fa-file-pdf-o",
-      path: '/'
+      custom: true,
+      icon: 'fa fa-file-pdf-o',
+      tooltip: 'PDF',
+      callback: (): void => {
+        this.gePdftReport();
+      }
     },
     {
       type: "export",
-      path: '/'
+      callback: (): void => {
+        this.exportSheet();
+      }
     }
     ],
     moreAction: [],
@@ -82,6 +116,18 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
   };
   academicTerm: any;
   oldData: any = [];
+  counter: any = 0;
+  institution_id: number;
+  themeArray = DEFAULT_TEMPLATE_THEME;
+  excelReport: any;
+  pdfReport: any;
+  reportCard: any;
+  queryParamsData: any;
+  class_Id: any;
+  assessment_id: any;
+  gradingTypeOption_id: any;
+  academicPeriod_id: any;
+  education_grade_id: any;
 
   constructor(
     private _router: Router,
@@ -90,6 +136,8 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
     private _tableEvent: KdTableEvent,
     private _toolbarEvent: KdToolbarEvent,
     private Rest: ApiService,
+    private router: Router,
+    private activatedRoute: ActivatedRoute
   ) {
     super({
       router: _router,
@@ -108,8 +156,21 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
 
     super.updatePageHeader();
     super.updateBreadcrumb();
+    
+    this.class_Id = JSON.parse(localStorage.getItem("classId"));
+    this.class_Id = 591;
+    this.institution_id = JSON.parse(localStorage.getItem("institutionId"));
+    this.institution_id = 6;
+    this.assessment_id = JSON.parse(localStorage.getItem("assessmentId"));
+    this.assessment_id = 34;
+    this.gradingTypeOption_id = JSON.parse(localStorage.getItem("gradingTypeOptionID"));
+    this.gradingTypeOption_id = 5;
+    this.academicPeriod_id = JSON.parse(localStorage.getItem("academicPeriodId"));
+    this.academicPeriod_id = 33;
+
     this.loginData();
     this._column = [];
+    this.counter = 0;
 
     let columns: Array<any> = [];
     columns.push(TABLE_COLUMN_LIST.id);
@@ -119,18 +180,81 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
     columns.push(TABLE_COLUMN_LIST.period2);
     columns.push(TABLE_COLUMN_LIST.totalMark);
     this._column = columns;
+
+    let queryData = this.activatedRoute.snapshot.queryParamMap.get('queryString');
+    this.queryParamsData = queryData.split(".");
+    
   }
 
   loginData() {
-    this.Rest.login().subscribe({
-      next: (res: any) => {
-        if (res) {
-          localStorage.setItem("loginToken", res.data.token);
+    this.Rest.setSession();
+    let token = localStorage.getItem("loginToken");
+    if (!token) {
+      let userName = sessionStorage.getItem('username');
+      let password = sessionStorage.getItem('password');
+
+      if (userName == null && password == null) {
+        setTimeout(() => {
+          this.counter = this.counter + 1;
+          if (this.counter <= 5) {
+            this.loginData();
+          } else {
+            alert('Please login again')
+          }
+        }, 1500);
+      } else {
+        var decodedPassword = atob(password);
+        if (userName && decodedPassword) {
+          this.loginApi(userName, decodedPassword);
+        } else {
+          this.removeSession();
+        }
+      }
+    } else {
+      this.setTheme();
+      this.getAPIlist();
+    }
+  }
+
+  loginApi(userName: string, password: string) {
+    this.Rest.loginApi(userName, password).subscribe({
+      next: (response: any) => {
+        if (response) {
+          localStorage.setItem("loginToken", response?.data?.token);
+          this.setTheme();
           this.getAPIlist();
+          this.removeSession();
         }
       },
       error: (error: any) => {
-        console.log(error, "error");
+
+      }
+    })
+  }
+
+  removeSession() {
+    delete sessionStorage.username;
+    delete sessionStorage.password;
+  }
+
+  setTheme() {
+    this.Rest.getWithToken('themes').subscribe({
+      next: (response: any) => {
+        let selectedThemeData = '';
+        if (response?.data[3].value) {
+          selectedThemeData = response?.data[3].value;
+          selectedThemeData = `#${selectedThemeData}`;
+        } else {
+          selectedThemeData = response?.data[3].default_value;
+          selectedThemeData = `#${selectedThemeData}`;
+        }
+        this.themeArray.btnGroup[0].dropdownContent.forEach((element: any) => {
+          if (element.text == selectedThemeData) {
+            document.body.className = element.theme + ' fuelux';
+          }
+        });
+      },
+      error: (error: any) => {
 
       }
     })
@@ -143,34 +267,53 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
   }
 
   assessmentPeriods() {
-    this.Rest.getWithToken('assessments/32/assessmentperiods').subscribe({
+    this.Rest.getWithToken(`assessments/${this.assessment_id}/assessmentperiods`).subscribe({
       next: (res: any) => {
         if (res) {
-          this.academicTerm = res?.data?.data
+          this.academicTerm = [];
+          res?.data?.data.forEach((element: any) => {
+            let obj = {
+              key: element.id,
+              value: element.name
+            }
+            this.academicTerm.push(obj);
+          });
+          // this.academic_Period = this.academicYear[0].key;
+          this.academicPeriod[0].options = this.academicTerm;
+
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 1");
-
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
   assessment() {
-    this.Rest.getWithToken('assessments/32').subscribe({
+    this.Rest.getWithToken(`assessments/${this.assessment_id}`).subscribe({
       next: (res: any) => {
         this.pageHeaderTitle = res?.data?.code_name;
         this.pageheader.pageheaderText = res?.data?.code_name;
+        this.education_grade_id = res?.data?.education_grade_id;
       },
       error: (error: any) => {
-        console.log(error, "error Data 1");
-
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
   assessmentItems() {
-    this.Rest.getWithToken('assessments/32/assessmentitems?class_id=568&academic_period_id=32&institution_id=6').subscribe({
+    this.Rest.getWithToken(`assessments/${this.assessment_id}/assessmentitems?class_id=${this.class_Id}&academic_period_id=${this.academicPeriod_id}&institution_id=${this.institution_id}`).subscribe({
       next: (res: any) => {
         if (res) {
           res?.data?.data.forEach((element: any, index: any) => {
@@ -195,50 +338,131 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 1");
-
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
+  getBaseUrl() {
+    if (document.cookie) {
+      let base_url: any = document.cookie.split('; ')
+        .find(row => row.startsWith(`my_base_url=`))?.split('=')
+      if (base_url && base_url[1]) {
+        let setBaseUrl = decodeURIComponent(base_url[1]);
+        if (setBaseUrl == '/') {
+          return '/';
+        }
+        return `${setBaseUrl}`
+      } else {
+        return '/'
+      }
+    } else {
+      return '/'
+    }
+  }
+
+
   institutionsSubject(institution_subject_id) {
-    this.Rest.getWithToken(`institutions/subject/student?institution_id=6&institution_class_id=568&assessment_id=32&academic_period_id=32&institution_subject_id=${institution_subject_id}&education_grade_id=189`).subscribe({
+    this.Rest.getWithToken(`institutions/subject/student?institution_id=${this.institution_id}&institution_class_id=${this.class_Id}&assessment_id=${this.assessment_id}&academic_period_id=${this.academicPeriod_id}&institution_subject_id=${institution_subject_id}&education_grade_id=${this.education_grade_id}`).subscribe({
       next: (res: any) => {
-        console.log(res, "res 111");
         if (res) {
           let objData = [];
           res?.data?.data.forEach((element: any, index: any) => {
             if (element) {
+              console.log(element.mark,"element.mark", element.first_name + ' ' + element.last_name);
+              
               let obj = {
-                id: element.the_student_code + index,
+                id: element.the_student_code,
                 name: element.first_name + ' ' + element.last_name,
                 status: element.the_student_status,
-                period1: element.assessment_id,
-                period2: element.assessment_id,
-                totalMark: element.total_mark
+                period1: element.mark != null ? parseFloat(element.mark) : '',
+                period2: element.mark != null ? parseFloat(element.mark) : '',
+                period3: element.mark != null ? parseFloat(element.mark) : '',
+                totalMark: element.total_mark,
+                student_id: element?.student_id,
+                education_subject_id: element?.education_subject_id,
+                assessment_period_id: element?.assessment_period_id
               }
-              objData.push(obj);
-              this.oldData.push(obj);
+              let newIndex = objData.findIndex(element => element.id == obj.id);
+              if (newIndex == -1) {
+                objData.push(obj);
+                this.oldData.push(obj);
+              } else {
+                objData.splice(newIndex, 1, obj);
+                this.oldData.splice(newIndex, 1, obj);
+              }
             }
           });
+          let baseData = this.getBaseUrl();
+          if (res?.data?.urls?.excel) {
+            let importExcelUrl = res?.data?.urls?.excel;
+            let finalExcelUrl = importExcelUrl.replace("cake_session_id", this.queryParamsData[1]);
+            this.excelReport = baseData + finalExcelUrl;
+          }
+          if (res?.data?.urls?.pdf) {
+            let importExcelUrl = res?.data?.urls?.pdf;
+            let finalExcelUrl = importExcelUrl.replace("cake_session_id", this.queryParamsData[1]);
+            this.pdfReport = baseData + finalExcelUrl;
+          }
+          if (res?.data?.urls?.reportCardGenerate) {
+            let importExcelUrl = res?.data?.urls?.reportCardGenerate;
+            let finalExcelUrl = importExcelUrl.replace("cake_session_id", this.queryParamsData[1]);
+            this.reportCard = baseData + finalExcelUrl;
+          }
           timer(2000).subscribe((): void => {
             this._row = objData;
             this.displayLoading = false;
-            console.log(this._row, "row data");
           });
 
         }
       },
       error: (error: any) => {
-        console.log(error, "error Data 1");
-
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
       }
     })
   }
 
+  exportSheet(){
+    console.log(this.excelReport,"this.excelReport");
+    
+    var link = document.createElement('a');
+    link.href = window.URL.createObjectURL(this.excelReport);
+    link.download = 'Report';
+    link.click();
+  }
+
+  gePdftReport(){
+    console.log(this.pdfReport,"pdfReport");
+    
+    var link = document.createElement('a');
+    link.href = window.URL.createObjectURL(this.pdfReport);
+    link.download = 'Report';
+    link.click();
+  }
+
+  getReport() {
+    console.log(this.reportCard,"reportCard");
+    
+    var link = document.createElement('a');
+    link.href = window.URL.createObjectURL(this.reportCard);
+    link.download = 'Report';
+    link.click();
+  }
+
+
   public editTableFields() {
     this._displayEditable = !this._displayEditable;
-    // this.child.toggleEdits('number');
+    this.child.toggleEdits('number');
     this.pageheader = {
       leftBtn: [{
         type: "back",
@@ -247,16 +471,26 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
         }
       },
       {
-        icon: "fa kd-header-row",
-        path: '/'
+        custom: true,
+        icon: 'fa kd-header-row',
+        tooltip: 'Report',
+        callback: (): void => {
+          this.getReport();
+        }
       },
       {
-        icon: "fa fa-file-pdf-o",
-        path: '/'
+        custom: true,
+        icon: 'fa fa-file-pdf-o',
+        tooltip: 'PDF',
+        callback: (): void => {
+          this.gePdftReport();
+        }
       },
       {
         type: "export",
-        path: '/'
+        callback: (): void => {
+          this.exportSheet();
+        }
       }
       ],
       moreAction: [],
@@ -269,30 +503,33 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
 
   public backToData() {
     if (this._displayEditable) {
-      this._displayEditable = false;
-    // this.child.toggleEdits('number');
-      console.log(this._row, "_row _row");
-      this.oldData.forEach(element => {
-        this._row.forEach(newData => {
-          if (element.id == newData.id) {
-            if (element.period1 != newData.period1) {
-              this.Rest.postWithToken
-                (`institutions/students/assessment-item-results?student_id=1153&assessment_id=17&education_subject_id=6&education_grade_id=194&academic_period_id=32&assessment_period_id=3&institution_id=6&institution_classes_id=582&marks=${newData.period1}&action_type=default`, {}).subscribe({
-                  next: (res: any) => {
-                    if (res) {
-                      console.log(res, "res");
-
-                    }
-                  },
-                  error: (error: any) => {
-                    console.log(error, "error Data 1");
-
+      this.child.toggleEdits('number');
+      this._row.forEach((item) => {
+        const indexInArray2 = this.findIndexInArray2(item.period1, item.id);
+        if (indexInArray2 !== -1) {
+          console.log(item,"item");
+          
+          this.Rest.postWithToken
+            (`institutions/students/assessment-item-results?student_id=${item.student_id}&assessment_id=${this.assessment_id}&education_subject_id=${item.education_subject_id}&assessment_grading_option_id=${this.gradingTypeOption_id}&education_grade_id=${this.education_grade_id}&academic_period_id=${this.academicPeriod_id}&assessment_period_id=${item?.assessment_period_id}&institution_id=${this.institution_id}&institution_classes_id=${this.class_Id}&marks=${item.period1}&action_type=default`, {}).subscribe({
+              next: (res: any) => {
+                if (res) {
+                  this._displayEditable = false;
+                  this.displayLoading = false;
+                }
+              },
+              error: (error: any) => {
+                if (error) {
+                  if (error.message == "Token has expired") {
+                    localStorage.removeItem("loginToken");
+                    this.loginData();
                   }
-                })
-            }
-          }
-        });
+                }
+                this._displayEditable = false;
+              }
+            })
+        }
       });
+
       this.pageheader = {
         leftBtn: [{
           type: "back",
@@ -307,16 +544,26 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
           }
         },
         {
-          icon: "fa kd-header-row",
-          path: '/'
+          custom: true,
+          icon: 'fa kd-header-row',
+          tooltip: 'Report',
+          callback: (): void => {
+            this.getReport();
+          }
         },
         {
-          icon: "fa fa-file-pdf-o",
-          path: '/'
+          custom: true,
+          icon: 'fa fa-file-pdf-o',
+          tooltip: 'PDF',
+          callback: (): void => {
+            this.gePdftReport();
+          }
         },
         {
           type: "export",
-          path: '/'
+          callback: (): void => {
+            this.exportSheet();
+          }
         }
         ],
         moreAction: [],
@@ -328,9 +575,20 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
     }
   }
 
-  _selectTabs(event: any) {
-    console.log(event, "event");
+  findIndexInArray2(keyValue: any, id: any) {
+    for (let i = 0; i < this.oldData.length; i++) {
+      if (this.oldData[i].period1 != keyValue && this.oldData[i].id == id) {
+        if ((this.oldData[i].meal_received_id == null && keyValue == 3) || (this.oldData[i].meal_received_id == 3 && keyValue == null)) {
+          return -1;
+        } else {
+          return i;
+        }
+      }
+    }
+    return -1; // Return -1 if the value is not found
+  }
 
+  _selectTabs(event: any) {
     this.pageheader = {
       leftBtn: [{
         type: "back",
@@ -345,16 +603,26 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
         }
       },
       {
-        icon: "fa kd-header-row",
-        path: '/'
+        custom: true,
+        icon: 'fa kd-header-row',
+        tooltip: 'Report',
+        callback: (): void => {
+          this.getReport();
+        }
       },
       {
-        icon: "fa fa-file-pdf-o",
-        path: '/'
+        custom: true,
+        icon: 'fa fa-file-pdf-o',
+        tooltip: 'PDF',
+        callback: (): void => {
+          this.gePdftReport();
+        }
       },
       {
         type: "export",
-        path: '/'
+        callback: (): void => {
+          this.exportSheet();
+        }
       }
       ],
       moreAction: [],
@@ -368,6 +636,33 @@ export class AssessmentComponent extends KdPageBase implements OnInit, OnDestroy
     this._row = [];
     this.displayLoading = true;
     this.institutionsSubject(event);
+  }
+
+  changeTermData(data: any) {
+    if (data.target.value == "Term 2") {
+      this._column = [];
+      timer(100).subscribe((): void => {
+        this._column = [
+          TABLE_COLUMN_LIST.id,
+          TABLE_COLUMN_LIST.name,
+          TABLE_COLUMN_LIST.status,
+          TABLE_COLUMN_LIST.period3,
+          TABLE_COLUMN_LIST.totalMark
+        ];
+      });
+    } else {
+      this._column = [];
+      timer(100).subscribe((): void => {
+        this._column = [
+          TABLE_COLUMN_LIST.id,
+          TABLE_COLUMN_LIST.name,
+          TABLE_COLUMN_LIST.status,
+          TABLE_COLUMN_LIST.period1,
+          TABLE_COLUMN_LIST.period2,
+          TABLE_COLUMN_LIST.totalMark
+        ];
+      });
+    }
   }
 
   ngOnDestroy(): void {
