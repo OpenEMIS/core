@@ -51,8 +51,8 @@ class CompetencyPeriodsTable extends ControllerActionTable
                     'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
                     'provider' => 'table'
                 ]
-            ])
-            ->requirePresence('competency_items', 'create');
+                ]);
+            //->requirePresence('competency_items', 'create'); //POCOR-8504
             // ->add('start_date', 'ruleCompareDate', [
             //     'rule' => ['compareDate', 'end_date', true]
             // ])
@@ -72,7 +72,7 @@ class CompetencyPeriodsTable extends ControllerActionTable
         $request = $this->request;
 
         //academic period filter
-        $extra['selectedPeriod'] = !empty($serverRequest->getAttribute('query')['period']) ?$serverRequest->getAttribute('query')['period'] : $this->AcademicPeriods->getCurrent();
+        $extra['selectedPeriod'] = !empty($request->getQuery('period')) ? $request->getQuery('period') : $this->AcademicPeriods->getCurrent();
         $data['periodOptions'] = $this->AcademicPeriods->getYearList();
         $data['selectedPeriod'] = $extra['selectedPeriod'];
 
@@ -86,8 +86,8 @@ class CompetencyPeriodsTable extends ControllerActionTable
             $templateOptions = ['0' => '-- '.__('All Templates').' --'] + $templateOptions;
         }
 
-        if ($serverRequest->getAttribute('query')['template']) {
-            $selectedTemplate =$serverRequest->getAttribute('query')['template'];
+        if ($request->getQuery('template')) {
+            $selectedTemplate = $request->getQuery('template');
         } else {
             $selectedTemplate = 0;
         }

@@ -31,6 +31,7 @@ class PerformanceCompetenciesShell extends Shell
             $competency_criterias_value = $this->args[2];
             $competency_templates_value = $this->args[3];
             $competency_items_value = $this->args[4];
+            $competency_periods_value = $this->args[5]; //POCOR-8504
 
             $this->out('Initializing Performance Competencies ('.Time::now().')');
 
@@ -38,7 +39,7 @@ class PerformanceCompetenciesShell extends Shell
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
             
             // while (!$exit) {
-                $recordToProcess = $this->getRecords($fromAcademicPeriod, $toAcademicPeriod, $competency_criterias_value, $competency_templates_value, $competency_items_value);
+                $recordToProcess = $this->getRecords($fromAcademicPeriod, $toAcademicPeriod, $competency_criterias_value, $competency_templates_value, $competency_items_value, $competency_periods_value);
                 $this->out($recordToProcess);
                 if ($recordToProcess) {
                     try {
@@ -62,13 +63,37 @@ class PerformanceCompetenciesShell extends Shell
     }
 
     
-    public function getRecords($fromAcademicPeriod, $toAcademicPeriod, $competency_criterias_value, $competency_templates_value, $competency_items_value){
+    public function getRecords($fromAcademicPeriod, $toAcademicPeriod, $competency_criterias_value, $competency_templates_value, $competency_items_value, $competency_periods_value){
 
         $connection = ConnectionManager::get('default');
         $CompetencyCriteriasTable = TableRegistry::get('Competency.CompetencyCriterias');
         $CompetencyTemplatesTable = TableRegistry::get('Competency.CompetencyTemplates');
         $CompetencyItemsTable = TableRegistry::get('Competency.CompetencyItems');
-        $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods'); // POCOR-8504 START
+        $AcademicPeriodsData = $AcademicPeriods
+            ->find()
+            ->where(['id' => $toAcademicPeriod])
+            ->first();
+        if(isset($AcademicPeriodsData['start_date'])){
+            if ($AcademicPeriodsData['start_date'] instanceof Time || $AcademicPeriodsData['start_date'] instanceof Date) {
+                $start_date = $AcademicPeriodsData['start_date']->format('Y-m-d');
+            }else {
+                $start_date = date('Y-m-d', strtotime($AcademicPeriodsData['start_date']));
+            }
+        }else{
+            $start_date = date('Y-m-d');
+        }
+
+        if(isset($AcademicPeriodsData['end_date'])){
+            if ($AcademicPeriodsData['end_date'] instanceof Time || $AcademicPeriodsData['end_date'] instanceof Date) {
+                $end_date = $AcademicPeriodsData['end_date']->format('Y-m-d');
+            }else {
+                $end_date = date('Y-m-d', strtotime($AcademicPeriodsData['end_date']));
+            }
+        }else{
+            $end_date = date('Y-m-d');
+        } // POCOR-8504 End
+
         //POCOOR-7670 start
         //CompetencyTemplates[START]
         if(isset($competency_templates_value) && $competency_templates_value == 0){
@@ -160,9 +185,9 @@ class PerformanceCompetenciesShell extends Shell
                                     ]);
                                     $CompetencyItemsTable->save($newItemEntity);
                                     $newItemDataId= $newItemEntity->id;
-                            } catch (Exception $e) {
-                                pr($e->getMessage());
-                            }
+                                } catch (Exception $e) {
+                                    pr($e->getMessage());
+                                }
                                 if (!empty($newItemDataId)) { 
                                     //CompetencyCriteria[START]      
                                     if(isset($competency_criterias_value) && $competency_criterias_value == 0){
@@ -216,6 +241,66 @@ class PerformanceCompetenciesShell extends Shell
                             }
                         }
                 }//CompetencyItem[END]
+                
+                //CompetencyPeriods[START] POCOR-8504 Start
+                if(!empty($newTemplateDataId)){
+                    if(isset($competency_periods_value) && $competency_periods_value == 0){
+                        $this->out('Performance Competency Periods Data Copy Start');
+                        $CompetencyPeriodsTable = TableRegistry::get('Competency.CompetencyPeriods');
+                        $CompetencyPeriodsData = $CompetencyPeriodsTable
+                        ->find()
+                        ->where(['academic_period_id' => $fromAcademicPeriod,
+                                'competency_template_id' => $CompetencyTemplatesValue['id'] ]  //POCOR-8504 
+                        )
+                        ->toArray();
+                        foreach($CompetencyPeriodsData AS $key => $CompetencyPeriodsValue){
+                            if(isset($CompetencyPeriodsValue['modified'])){
+                                if ($CompetencyPeriodsValue['modified'] instanceof Time || $CompetencyPeriodsValue['modified'] instanceof Date) {
+                                    $modified = $CompetencyPeriodsValue['modified']->format('Y-m-d H:i:s');
+                                }else {
+                                    $modified = date('Y-m-d H:i:s', strtotime($CompetencyPeriodsValue['modified']));
+                                }
+                            }else{
+                                $modified = date('Y-m-d H:i:s');
+                            }
+
+                            if(isset($CompetencyPeriodsValue['created'])){
+                                if ($CompetencyPeriodsValue['created'] instanceof Time || $CompetencyPeriodsValue['created'] instanceof Date) {
+                                    $created = $CompetencyPeriodsValue['created']->format('Y-m-d H:i:s');
+                                }else {
+                                    $created = date('Y-m-d H:i:s', strtotime($CompetencyPeriodsValue['created']));
+                                }
+                            }else{
+                                $created = date('Y-m-d H:i:s');
+                            }
+                            $newCompetencyPeriodId=[];
+                            try{
+                                $newPeriodsEntity = $CompetencyPeriodsTable->newEntity([
+                                    'code' => $CompetencyPeriodsValue["code"],
+                                    'name' => $CompetencyPeriodsValue["name"],
+                                    'start_date' => $start_date,
+                                    'end_date' => $end_date,
+                                    'date_enabled' => $start_date,
+                                    'date_disabled' => $end_date,
+                                    'academic_period_id' => $toAcademicPeriod,
+                                    'competency_template_id' => $newTemplateDataId,
+                                    'modified_user_id' => $CompetencyPeriodsValue["modified_user_id"],
+                                    'modified' => $modified,
+                                    'created_user_id' => $CompetencyPeriodsValue["created_user_id"],
+                                    'created' => $created,
+                                ]);
+                                $CompetencyPeriodsTable->save($newPeriodsEntity);
+                                $newCompetencyPeriodId= $newPeriodsEntity->id;
+                            } catch (Exception $e) {
+                                $this->out('Error in Performance Competency Periods');
+                                pr($e->getMessage());
+                            }
+
+                        }
+                        $this->out('Performance Competency Periods Data Copy End');
+                    }
+                }
+                //CompetencyPeriods[END] POCOR-8504 End
        
         //CompetencyCriterias[END] 
             }
