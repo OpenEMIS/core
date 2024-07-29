@@ -98,7 +98,11 @@ class RestfulController extends BaseController
             $this->getEventManager()->off($this->Csrf);
         }
         if ($this->request->is(['put', 'post', 'delete', 'patch']) || !empty($this->request->getData())) {
-            $token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
+             $header = $this->request->getHeaderLine('Authorization');
+            if ($header) {
+                $token = str_ireplace('Bearer ', '', $header);
+            }
+            //$token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
             $this->request->withEnv('HTTP_X_CSRF_TOKEN', $token);
         }
     }
