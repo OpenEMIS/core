@@ -2731,7 +2731,7 @@ class StaffTable extends ControllerActionTable
      */
     public function findByPositions(Query $query, array $options)
     {
-        if (array_key_exists('Institutions.id', $options) && array_key_exists('type', $options)) {
+        if (array_key_exists('Institutions.id', $options) && isset($options['type'])) {
             $positions = $this->Positions->find('list')
                 ->select([
                     $this->Positions->aliasField('id'),
@@ -2774,7 +2774,7 @@ class StaffTable extends ControllerActionTable
      */
     public function findByType(Query $query, array $options)
     {
-        if (array_key_exists('type', $options)) {
+        if (isset($options['type'])) {
             $types = $this->StaffTypes->getList()->toArray();
             if (is_array($types) && in_array($options['type'], $types)) {
                 $typeId = array_search($options['type'], $types);
@@ -2799,7 +2799,7 @@ class StaffTable extends ControllerActionTable
      */
     public function findByStatus(Query $query, array $options)
     {
-        if (array_key_exists('status', $options)) {
+        if (isset($options['status'])) {
             $statuses = $this->StaffStatuses->getList()->toArray();
             if (is_array($statuses) && in_array($options['status'], $statuses)) {
                 $statusId = array_search($options['status'], $statuses);
@@ -2814,11 +2814,11 @@ class StaffTable extends ControllerActionTable
 
     public function findStaffRecords(Query $query, array $options)
     {
-        $academicPeriodId = (array_key_exists('academicPeriodId', $options)) ? $options['academicPeriodId'] : null;
-        $positionType = (array_key_exists('positionType', $options)) ? $options['positionType'] : null;
-        $staffId = (array_key_exists('staffId', $options)) ? $options['staffId'] : null;
-        $institutionId = (array_key_exists('institutionId', $options)) ? $options['institutionId'] : null;
-        $isHomeroom = (array_key_exists('isHomeroom', $options)) ? $options['isHomeroom'] : null;
+        $academicPeriodId = (isset($options['academicPeriodId'])) ? $options['academicPeriodId'] : null;
+        $positionType = (isset($options['positionType'])) ? $options['positionType'] : null;
+        $staffId = (isset($options['staffId'])) ? $options['staffId'] : null;
+        $institutionId = (isset($options['institutionId'])) ? $options['institutionId'] : null;
+        $isHomeroom = (isset($options['isHomeroom'])) ? $options['isHomeroom'] : null;
 
         if (!is_null($academicPeriodId)) {
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -3608,7 +3608,12 @@ class StaffTable extends ControllerActionTable
         $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
         $staffRecord = $institutionStaff->find('all', ['conditions' => ['staff_id' => $staffId]])
             ->first();
-        $staffStatusId = $staffRecord['staff_status_id'];
+        //POCOR-8379 starts
+        if(!empty($staffRecord)){
+            $staffStatusId = $staffRecord['staff_status_id'];
+        }else{
+            $staffStatusId = '';
+        }//POCOR-8379 ends
         //End of POCOR-7020
         $conditions = [];
         if ($institutionId != '') {

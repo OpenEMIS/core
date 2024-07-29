@@ -1,5 +1,5 @@
 <?php
-	$fieldPrefix = $ControllerAction['table']->alias() . '.institution_repeater_surveys.' . $attr['customField']->id;
+	$fieldPrefix = $ControllerAction['table']->getAlias() . '.institution_repeater_surveys.' . $attr['customField']->id;
 	$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
 	$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
 ?>

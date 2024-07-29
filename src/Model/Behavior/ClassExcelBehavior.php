@@ -45,8 +45,11 @@ class ClassExcelBehavior extends Behavior
 
     public function initialize(array $config): void
     {
-        $this->setConfig('excludes', array_merge($this->setConfig('default_excludes'), $this->setConfig('excludes')));
-        if (!array_key_exists('filename', $config)) {
+        $defaultExcludes = $this->getConfig('default_excludes', []);
+        $excludes = $this->getConfig('excludes', []);
+        $this->setConfig('excludes', array_merge($defaultExcludes, $excludes));
+        // $this->setConfig('excludes', array_merge($this->setConfig('default_excludes'), $this->setConfig('excludes')));
+        if (!isset($config['filename'])) {
             $this->setConfig('filename', $this->_table->getAlias());
         }
         $folder = WWW_ROOT . $this->getConfig('folder');
@@ -56,7 +59,7 @@ class ClassExcelBehavior extends Behavior
             mkdir($folder, 0777);
         } else {
             // $delete = true;
-            // if (array_key_exists('delete', $settings) &&  $settings['delete'] == false) {
+            // if (isset($settings['delete']) &&  $settings['delete'] == false) {
             //  $delete = false;
             // }
             // if ($delete) {
@@ -195,7 +198,7 @@ class ClassExcelBehavior extends Behavior
                     $InstitutionClassGrades->aliasField('InstitutionClassGrades.education_grade_id') => $education_grade_id,
                     $InstitutionClasses->aliasField('InstitutionClasses.academic_period_id') => $academic_period_id,
                     $InstitutionClasses->aliasField('InstitutionClasses.institution_id') => $institution_id
-                    
+
                 ];
             }else{ //option for all grades
                 $conditions = [
@@ -236,7 +239,7 @@ class ClassExcelBehavior extends Behavior
             //$encodedClassId = $this->_table->request->getAttribute('params')['pass'][1];//POCOR-8323
             $checkEncodedClassId = $this->_table->request->getAttribute('params')['pass'][1];//POCOR-8324
             $encodedClassId = $this->_table->paramsDecode($checkEncodedClassId);//POCOR-8323
-            if (array_key_exists('institution_class_id', $encodedClassId)) {//POCOR-8323
+            if (isset($encodedClassId['institution_class_id'])) {//POCOR-8323
                 //$decodedClassId = $this->_table->paramsDecode($encodedClassId);//POCOR-8323
                 $classId = $decodedClassId['id'];
                 $where[$InstitutionClasses->aliasField('InstitutionClasses.id')] = $classId;
@@ -298,13 +301,13 @@ class ClassExcelBehavior extends Behavior
                         ])
                         ->leftJoin(['EducationGrades' => 'education_grades'], [
                             'InstitutionClassGrades.education_grade_id = '. $EducationGrades->aliasField('id')
-                        ]) 
+                        ])
                         ->leftJoin(['InstitutionClassesStudents' => 'institution_class_students'], [
                             'InstitutionClassesStudents.institution_class_id = '. $InstitutionClasses->aliasField('id')
                         ])
                         ->leftJoin(['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'], [
                             'InstitutionClassesSecondaryStaff.institution_class_id = '. $InstitutionClasses->aliasField('id')
-                        ]) 
+                        ])
                         ->leftJoin(['SecurityUsers' => 'security_users'], [
                             'SecurityUsers.id = InstitutionClassesSecondaryStaff.secondary_staff_id'
                         ])
@@ -321,7 +324,7 @@ class ClassExcelBehavior extends Behavior
                             'ClassesStudents.gender_id = Genders.id'
                         ])
                         ->where([$conditions, $where])
-                        ->group(['InstitutionClassesStudents.student_id']); 
+                        ->group(['InstitutionClassesStudents.student_id']);
             } else {
                 $query = $Query
                         ->select([
@@ -381,10 +384,10 @@ class ClassExcelBehavior extends Behavior
                             ])
                             ->leftJoin(['EducationGrades' => 'education_grades'], [
                                 'InstitutionClassGrades.education_grade_id = '. $EducationGrades->aliasField('id')
-                            ]) 
+                            ])
                             ->leftJoin(['InstitutionClassesStudents' => 'institution_class_students'], [
                                 'InstitutionClassesStudents.institution_class_id = '. $InstitutionClasses->aliasField('id')
-                            ]) 
+                            ])
                             ->leftJoin(['StudentStatuses' => 'student_statuses'], [
                                 'StudentStatuses.id = InstitutionClassesStudents.student_status_id'
                             ])
@@ -412,8 +415,8 @@ class ClassExcelBehavior extends Behavior
                         if($table->alias!='Classes'){
                               $query->group([
                                 'ClassesStudents.id'
-                               ]);  
-                            }    
+                               ]);
+                            }
             }
             /*POCOR--6635 ends*/
 
@@ -435,7 +438,7 @@ class ClassExcelBehavior extends Behavior
                             $UserIdentities->aliasField('security_user_id') => $user_data->id,
                         ];
                         $data = $UserIdentities
-                                    ->find()    
+                                    ->find()
                                     ->select([
                                         // 'identity_type' => $IdentityTypes->getAlias().'.name',//POCOR-5852 starts
                                         // 'identity_number' => $UserIdentities->getAlias().'.number',
@@ -452,16 +455,16 @@ class ClassExcelBehavior extends Behavior
                                         ]
                                     )
                                     ->where($conditions)->toArray();
-                        $row['identity_type'] = '';            
-                        $row['identity_number'] = '';            
+                        $row['identity_type'] = '';
+                        $row['identity_number'] = '';
                         if(!empty($data)){
                             $identity_type_name = '';
                             $identity_type_number = '';
                             foreach ($data as $key => $value) {
                                 if($value->default == 1){
-                                    $identity_type_name =  $value->identity_type;    
-                                    $identity_type_number =  $value->identity_number;   
-                                    break; 
+                                    $identity_type_name =  $value->identity_type;
+                                    $identity_type_number =  $value->identity_number;
+                                    break;
                                 }
                             }
                             if(!empty($identity_type_name) && !empty($identity_type_number)){
@@ -475,10 +478,10 @@ class ClassExcelBehavior extends Behavior
                     }else {
                         // Handle the case where $openemisId is null
                         $user_data = null;
-                        $row['identity_type'] = '';            
-                        $row['identity_number'] = '';  
+                        $row['identity_type'] = '';
+                        $row['identity_number'] = '';
                     }//POCOR-8323 ends
-                    return $row;           
+                    return $row;
                 });
             });
             //POCOR-5852 ends
@@ -507,7 +510,7 @@ class ClassExcelBehavior extends Behavior
             $baseSheetName = $sheetName;
 
             // if the primary key of the record is given, only generate that record
-            if (array_key_exists('id', $settings)) {
+            if (isset($settings['id'])) {
                 $id = $settings['id'];
                 if ($id != 0) {
                     $primaryKey = $table->getPrimaryKey();
@@ -535,7 +538,7 @@ class ClassExcelBehavior extends Behavior
             $percentCount = intval($count / 100);
             $pages = ceil($count / $this->getConfig('limit'));
 
-            // Debugging 
+            // Debugging
             $pages = 1;
 
             if (isset($sheet['orientation'])) {
@@ -569,7 +572,7 @@ class ClassExcelBehavior extends Behavior
                     foreach ($fields as $index => $attr) {
                         $subjectsHeaderRow[$index] = "";
 
-                        if (array_key_exists('group', $attr)) {
+                        if (isset($attr['group'])) {
                             if ($groupName !== $attr['group']) {
                                 $groupStartingIndex = $index;
                                 $groupName = $attr['group'];
@@ -704,7 +707,7 @@ class ClassExcelBehavior extends Behavior
 					'openEMIS_ID','student_name','gender','student_status',
 					'special_need', 'identity_type', 'identity_number'
 					];
-        //POCOR-5852 ends                  
+        //POCOR-5852 ends
         $excludes = $this->getConfig('excludes');
 
         if (!is_array($table->getPrimaryKey())) { //if not composite key
@@ -719,7 +722,7 @@ class ClassExcelBehavior extends Behavior
         //$encodedClassId = $this->_table->request->getAttribute('params')['pass'][1];
         $checkEncodedSubjectId = $this->_table->request->getAttribute('params')['pass'][1];//POCOR-8323
         $encodedClassId = $this->_table->paramsDecode($checkEncodedSubjectId);//POCOR-8323
-        if (array_key_exists('institution_class_id', $encodedClassId)) {//POCOR-8323
+        if (isset($encodedClassId['institution_class_id'])) {//POCOR-8323
             $columns = ['institution_code','institution_name','academic_period_id',
                     'class_name','shift','education_grade','homeroom_teacher','secondary_teacher',
                     'openEMIS_ID','student_name','gender','student_status',

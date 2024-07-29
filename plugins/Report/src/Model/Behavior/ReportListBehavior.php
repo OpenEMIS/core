@@ -23,10 +23,10 @@ class ReportListBehavior extends Behavior {
 	public $ReportProgress;
 
 	public function initialize(array $config): void {
-		
+
 		$this->ReportProgress = TableRegistry::getTableLocator()->get('Report.ReportProgress');
 		$this->SecurityUsers  = TableRegistry::getTableLocator()->get('Security.Users');
-		
+
 	}
 
 	public function implementedEvents(): array {
@@ -43,7 +43,7 @@ class ReportListBehavior extends Behavior {
 	}
 
 	public function afterAction(Event $event, $config) {
-		
+
 		if ($this->_table->action == 'index') {
 			/*POCOR-6208 starts*/
 			if ($this->_table->Auth->user()['super_admin'] == 0) {
@@ -57,13 +57,13 @@ class ReportListBehavior extends Behavior {
 	                    	])->leftJoin([$SecurityRoles->getAlias() => $SecurityRoles->getTable()], [
 	                       		'security_role_id = ' . $SecurityRoles->aliasField('id')
 	                    	])->where(['security_user_id' => $this->_table->Auth->user()['id']])
-	                    	->toArray(); 
-	        	if (!empty($userRole )) { 
+	                    	->toArray();
+	        	if (!empty($userRole )) {
 		            $roles = [];
 		            foreach ($userRole as $key => $value) {
 		                $roles[] = $value->security_role_id;
 		            }
-	        	} 
+	        	}
 				$permission_check_array = [
 					'InstitutionStatistics',
 					'InstitutionStandards',
@@ -85,7 +85,7 @@ class ReportListBehavior extends Behavior {
 	        				])
 	        				->first();
 	        	}
-	        	
+
 	        	if (!empty($function)) {
 	        		$functionId = $function->id;
 	        		$data = $SecurityRoleFunctions->find()
@@ -95,7 +95,7 @@ class ReportListBehavior extends Behavior {
 				                    $SecurityRoleFunctions->aliasField('security_function_id') => $functionId
 				                ])->first();
 				    if (!empty($data)) {
-				    	$check = $data->_delete;	
+				    	$check = $data->_delete;
 				    }
 	        	}
 			}
@@ -135,7 +135,7 @@ class ReportListBehavior extends Behavior {
 		$conditions = [
 			$this->ReportProgress->aliasField('module') => $this->_table->getAlias()
 		];
-		
+
 		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
 			$userId = $this->_table->Auth->user('id');
 			$conditions[$this->ReportProgress->aliasField('created_user_id')] = $userId;
@@ -145,7 +145,7 @@ class ReportListBehavior extends Behavior {
 		$institutionId = '';
 		if($this->_table->controller->getPlugin() != 'Report'){
 	    	$institutionId  = $this->_table->getQueryString('institution_id');
-	    } 
+	    }
 		if($this->_table->getAlias() == 'InstitutionStandards'){ // Inside the institution module report listing
 			$query = $this->ReportProgress->find('all')
 			//START:POCOR-6629
@@ -155,7 +155,7 @@ class ReportListBehavior extends Behavior {
 			->order([
 				$this->ReportProgress->aliasField('created') => 'DESC',
 				$this->ReportProgress->aliasField('expiry_date') => 'DESC'
-			]);				
+			]);
 		}elseif($this->_table->getAlias() == 'InstitutionStatistics'){ // Inside the institution module report listing
 			$query = $this->ReportProgress->find('all')
 			//START:POCOR-6629
@@ -165,7 +165,7 @@ class ReportListBehavior extends Behavior {
 			->order([
 				$this->ReportProgress->aliasField('created') => 'DESC',
 				$this->ReportProgress->aliasField('expiry_date') => 'DESC'
-			]);	
+			]);
 		}else{
 			// This is for report module listing
 			$query = $this->ReportProgress->find()
@@ -181,7 +181,7 @@ class ReportListBehavior extends Behavior {
 		return $query;
 	}
 
-	public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request) 
+	public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request)
 	{
 		if($request->getData()['Staff']['feature'] == 'Report.StaffPhoto' || $request->getData()['Students']['feature'] == 'Report.StudentsPhoto'){
 			$attr['options'] = ['zip' => 'Zip'];
@@ -195,7 +195,7 @@ class ReportListBehavior extends Behavior {
 	}
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		
+
 		$data[$this->_table->getAlias()]['locale'] = I18n::getLocale();
 		$session = new Session();
 		$data[$this->_table->getAlias()]['user_id'] = $session->read('Auth.User.id');
@@ -209,7 +209,7 @@ class ReportListBehavior extends Behavior {
 				return false;
 			}
 		};
-		
+
 		return $process;
 	}
 
@@ -317,7 +317,7 @@ class ReportListBehavior extends Behavior {
 
 					// used for institution rubrics
 					if (is_array($value)) {
-						if (array_key_exists('text', $value)) {
+						if (isset($value['text'])) {
 							$value = $value['text'];
 						} else {
 							$value = '';
@@ -332,19 +332,19 @@ class ReportListBehavior extends Behavior {
 		}
 
 		//Check if there exists start and end report date filter, if yes, print out the start and end date.
-		if(array_key_exists('report_start_date', $data[$alias]) && array_key_exists('report_end_date', $data[$alias]) && $data[$alias]['report_start_date'] != 0 && $data[$alias]['report_end_date'] != 0) {
-				
+		if(isset($data[$alias]['report_start_date']) && isset($data[$alias]['report_end_date']) && $data[$alias]['report_start_date'] != 0 && $data[$alias]['report_end_date'] != 0) {
+
 				$reportStartDate = ($this->_table->formatDate(new DateTime($data[$alias]['report_start_date'])));
 
 				$reportEndDate = ($this->_table->formatDate(new DateTime($data[$alias]['report_end_date'])));
 
 				$filters[] = $reportStartDate. __(' to '). $reportEndDate;
 		}
-		
+
 
 		$name = $alias;
 		$name .= ': '. $featureList[$feature];
-			
+
 		if (!empty($filters)) {
 			if($feature == 'Report.InstitutionStudents'){
 				unset($filters[1]);
@@ -362,7 +362,7 @@ class ReportListBehavior extends Behavior {
 		$Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 		$AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 		$EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
-		if (array_key_exists('institution_id', $data['InstitutionStatistics'])) {
+		if (array_key_exists('institution_id', (array)$data['InstitutionStatistics'])) {
 			// $institutionId  = $this->_table->getQueryString('institution_id'); working
 			$institutionId = $data['InstitutionStatistics']['institution_id'];
 	        $institutionData = $Institutions->get($institutionId);
@@ -373,7 +373,7 @@ class ReportListBehavior extends Behavior {
 				$name = $featureList[$feature] .' - '. $academicPeriodData->name .' - '. $institutionData->code .' - '. $institutionData->name;
 			}
 		}
-		if (array_key_exists('institution_id', $data['InstitutionStandards'])) {
+		if (array_key_exists('institution_id', (array)$data['InstitutionStandards'])) {
 			$institutionId = $data['InstitutionStandards']['institution_id'];
 	        $institutionData = $Institutions->get($institutionId);
 	        $academicPeriodData = $AcademicPeriod->get($data['InstitutionStandards']['academic_period_id']);
@@ -404,10 +404,10 @@ class ReportListBehavior extends Behavior {
 	        $reportName = $alias .':'. $featureList[$feature] .' - '. $academicPeriodData->name .' - '. $institutionCode .' - '. $gradeName.' - '. $reportStartDate .' - '.$reportEndDate;
 	        $name = $reportName;
 		}
-		/*POCOR-6439 ends*/		
+		/*POCOR-6439 ends*/
 
 		$params = $data[$alias];
-		
+
 		$ReportProgress = TableRegistry::getTableLocator()->get('Report.ReportProgress');
 		$obj = ['name' => $name, 'module' => $alias, 'params' => $params];
 		$id = $ReportProgress->addReport($obj);
@@ -466,28 +466,28 @@ class ReportListBehavior extends Behavior {
 
         return $file;
 	}
-	
+
 	public function zipArchievePhoto($id, $module)
-    { 
+    {
 		if($module == 'Students'){
 			$where	= ['is_student' =>1, 'photo_content !=' =>''];
 		}
 		if($module == 'Staff'){
 			$where  = ['is_staff' 	=>1, 'photo_content !=' =>''];
 		}
-		
+
 		$this->_table->controller->autoRender = false;
 		$files = $this->SecurityUsers->find()
 				->select(['id','openemis_no','photo_name','photo_content'])
 				->where($where)
 				->toList();
-		
+
         if (!empty($files) ) {
 
 			$path = WWW_ROOT . 'downloads' . DS . lcfirst($module).'-photo' . DS;
 			$zipName = $module.'PhotoReport' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
 			$filepath = $path . $zipName;
-			
+
 			$zip = new ZipArchive;
 			$zip->open($filepath, ZipArchive::CREATE);
             foreach ($files as $file) {
@@ -505,7 +505,7 @@ class ReportListBehavior extends Behavior {
             header("Content-Type: application/zip");
             header("Content-Length: ".filesize($filepath));
 		    header("Content-Disposition: attachment; filename=".$zipName);
-		    
+
             readfile($filepath);
 			// delete file after download
 			// unlink($filepath);
@@ -531,7 +531,7 @@ class ReportListBehavior extends Behavior {
 		$table = $this->_table->getAlias();
 		$this->_table->Alert->success('general.delete.success');
 		$url = ['controller' => $controller, 'action' => $table, 'index'];
-		
+
 		return $this->_table->controller->redirect($url);
     }
     /*POCOR-6208 ends*/

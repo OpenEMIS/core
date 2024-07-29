@@ -36,7 +36,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         $this->hasMany('AppraisalPeriods', ['className' => 'StaffAppraisal.AppraisalPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('AssessmentAssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('Assessments', ['className' => 'Assessment.Assessments', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('CalendarEvents', ['className' => 'calendar_events', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('CalendarEvents', ['className' => 'Institution.CalendarEvents', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ClassAttendanceRecords', ['className' => 'Institution.ClassAttendanceRecords', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ClassProfileProcesses', ['className' => 'class_profile_processes', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ClassProfileTemplates', ['className' => 'class_profile_templates', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -186,7 +186,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         $this->addBehavior('Institution.Calendar');
         $this->setDeleteStrategy('restrict');
         //$this->getSchema()->setColumn('order', ['accessible' => true]);
-    
+
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -229,7 +229,7 @@ class AcademicPeriodsTable extends ControllerActionTable
                 $where['id <> '] = $entity->id; // same with $where = [0 => 'id <> ' . $entity->id];
             }
             $this->updateAll(['current' => 0], $where);
-            
+
         }
     }
 
@@ -253,7 +253,8 @@ class AcademicPeriodsTable extends ControllerActionTable
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
 //        $entity = $this->find()->select(['current'])->where($ids)->first();
-
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
         // die silently when a non super_admin wants to delete
         if (!$this->AccessControl->isAdmin()) {
             $event->stopPropagation();
@@ -272,7 +273,7 @@ class AcademicPeriodsTable extends ControllerActionTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (!$this->AccessControl->isAdmin()) {
-            if (array_key_exists('remove', $buttons)) {
+            if (isset($buttons['remove'])) {
                 unset($buttons['remove']);
             }
         }
@@ -439,6 +440,8 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity)
     {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
         $this->request->getData($this->getAlias())['current'] = $entity->current;
         $this->field('visible');
 
@@ -676,9 +679,9 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function getYearList($params = [])
     {
-        $conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
-        $withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : false;
-        $isEditable = array_key_exists('isEditable', $params) ? $params['isEditable'] : null;
+        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
+        $withLevels = isset($params['withLevels']) ? $params['withLevels'] : false;
+        $isEditable = isset($params['isEditable']) ? $params['isEditable'] : null;
 
         $level = $this->Levels
             ->find()
@@ -703,9 +706,9 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function getArchivedYearList($academicPeriod, $params = [])
     {
-        $conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
-        $withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : false;
-        $isEditable = array_key_exists('isEditable', $params) ? $params['isEditable'] : null;
+        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
+        $withLevels = isset($params['withLevels']) ? $params['withLevels'] : false;
+        $isEditable = isset($params['isEditable']) ? $params['isEditable'] : null;
         // POCOR-7895: start
         if(empty($academicPeriod)){
             $academicPeriod = [-1];
@@ -809,10 +812,10 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function getList($params = [])
     {
-        $withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : true;
-        $withSelect = array_key_exists('withSelect', $params) ? $params['withSelect'] : false;
-        $isEditable = array_key_exists('isEditable', $params) ? $params['isEditable'] : null;
-        $restrictLevel = array_key_exists('restrictLevel', $params) ? $params['restrictLevel'] : null;
+        $withLevels = isset($params['withLevels']) ? $params['withLevels'] : true;
+        $withSelect = isset($params['withSelect']) ? $params['withSelect'] : false;
+        $isEditable = isset($params['isEditable']) ? $params['isEditable'] : null;
+        $restrictLevel = isset($params['restrictLevel']) ? $params['restrictLevel'] : null;
 
         if (!$withLevels) {
             $where = [
@@ -880,7 +883,7 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function findEditable(Query $query, array $options)
     {
-        $isEditable = array_key_exists('isEditable', $options) ? $options['isEditable'] : null;
+        $isEditable = isset($options['isEditable']) ? $options['isEditable'] : null;
         if (is_null($isEditable)) {
             return $query;
         } else {
@@ -1002,14 +1005,14 @@ class AcademicPeriodsTable extends ControllerActionTable
         $weeks = [];
 
         $endDate = clone $startDate;
-        
+
         while ($endDate <= $period->end_date) {
             $weeks[$weekIndex++] = [$startDate];
             $startDate = clone $endDate;
             $startDate = $startDate->addDay();
             $endDate = clone $startDate;
         }
-        
+
         // do {
         //     $endDate = $startDate->copy();
         //     if ($endDate->gt($period->end_date)) {
@@ -1019,7 +1022,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         //     $startDate = $endDate->copy();
         //     $startDate->addDay();
         // } while ($endDate->lt($period->end_date));
-        
+
         return $weeks;
     }
 
@@ -1669,7 +1672,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         $institutionId = $options['institution_id'];
 
         // pass true if you need school closed data
-        if (array_key_exists('school_closed_required', $options)) {
+        if (isset($options['school_closed_required'])) {
             $schoolClosedRequired = $options['school_closed_required'];
         } else {
             $schoolClosedRequired = false;
@@ -1712,17 +1715,17 @@ class AcademicPeriodsTable extends ControllerActionTable
         //             //POCOR-7787 start
         //             if ($schoolClosed) {
         //                 $connection = ConnectionManager::get('default');
-        //                 $sql = "SELECT institution_shift_periods.period_id  
+        //                 $sql = "SELECT institution_shift_periods.period_id
         //                         FROM calendar_event_dates
-        //                         INNER JOIN calendar_events ON calendar_events.id = calendar_event_dates.calendar_event_id 
-        //                         INNER JOIN institution_shifts ON calendar_events.academic_period_id = institution_shifts.academic_period_id 
-        //                                 AND calendar_events.institution_id = institution_shifts.institution_id 
-        //                                 AND calendar_events.institution_shift_id = institution_shifts.shift_option_id 
+        //                         INNER JOIN calendar_events ON calendar_events.id = calendar_event_dates.calendar_event_id
+        //                         INNER JOIN institution_shifts ON calendar_events.academic_period_id = institution_shifts.academic_period_id
+        //                                 AND calendar_events.institution_id = institution_shifts.institution_id
+        //                                 AND calendar_events.institution_shift_id = institution_shifts.shift_option_id
         //                         INNER JOIN calendar_types ON calendar_types.id = calendar_events.calendar_type_id
-        //                         INNER JOIN institution_shift_periods ON institution_shift_periods.institution_shift_period_id = institution_shifts.id 
-        //                         WHERE calendar_event_dates.date = '" . $firstDayOfWeek->format('Y-m-d') . "' 
+        //                         INNER JOIN institution_shift_periods ON institution_shift_periods.institution_shift_period_id = institution_shifts.id
+        //                         WHERE calendar_event_dates.date = '" . $firstDayOfWeek->format('Y-m-d') . "'
         //                         AND calendar_types.is_attendance_required = 0";
-        
+
         //                 $result = $connection->execute($sql)->fetchAll('assoc');
         //                 $closedPeriods = [];
         //                 foreach ($result as $data) {
@@ -1732,7 +1735,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         //             //POCOR-7787 end
         //         }
         //         $suffix = $schoolClosed ? __('School Closed') : '';
-        
+
         //         $data = [
         //             'id' => $firstDayOfWeek->dayOfWeek,
         //             'day' => __($firstDayOfWeek->format('l')),
@@ -1741,14 +1744,14 @@ class AcademicPeriodsTable extends ControllerActionTable
         //             'current_week_number_selected' => $current_week_number_selected, //POCOR-6723
         //             'day_number' => $firstDayOfWeek->isToday() //POCOR-6723
         //         ];
-        
+
         //         if ($schoolClosed) {
         //             $data['closed'] = true;
         //             $data['periods'] = $closedPeriods; //POCOR-7787
         //         }
-        
+
         //         $dayOptions[] = $data;
-        
+
         //         if (is_null($today) || $firstDayOfWeek->isToday()) {
         //             end($dayOptions);
         //             $today = key($dayOptions);
@@ -1765,12 +1768,12 @@ class AcademicPeriodsTable extends ControllerActionTable
                     if ($schoolClosed) {
                         $connection = ConnectionManager::get('default');
                         $sql = "SELECT institution_shift_periods.period_id  FROM calendar_event_dates
-                            INNER JOIN calendar_events ON calendar_events.id = calendar_event_dates.calendar_event_id 
-                            INNER JOIN institution_shifts ON calendar_events.academic_period_id = institution_shifts.academic_period_id 
-                                    AND calendar_events.institution_id = institution_shifts.institution_id 
-                                    AND calendar_events.institution_shift_id = institution_shifts.shift_option_id 
+                            INNER JOIN calendar_events ON calendar_events.id = calendar_event_dates.calendar_event_id
+                            INNER JOIN institution_shifts ON calendar_events.academic_period_id = institution_shifts.academic_period_id
+                                    AND calendar_events.institution_id = institution_shifts.institution_id
+                                    AND calendar_events.institution_shift_id = institution_shifts.shift_option_id
                             INNER JOIN calendar_types ON calendar_types.id = calendar_events.calendar_type_id
-                            INNER JOIN institution_shift_periods ON institution_shift_periods.institution_shift_period_id = institution_shifts.id 
+                            INNER JOIN institution_shift_periods ON institution_shift_periods.institution_shift_period_id = institution_shifts.id
                             WHERE calendar_event_dates.date = '" . $firstDayOfWeek->format('Y-m-d') . "' AND calendar_types.is_attendance_required = 0";
 
                         $result = $connection->execute($sql)->fetchAll('assoc');
@@ -1823,7 +1826,7 @@ class AcademicPeriodsTable extends ControllerActionTable
                 return $dayOptions;
             });
     }
-    
+
     public function findDaysForPeriodWeek(Query $query, array $options)
     {
         $academicPeriodId = $options['academic_period_id'];
@@ -1854,18 +1857,18 @@ class AcademicPeriodsTable extends ControllerActionTable
         $firstDayOfWeekDate = $week[0];
         $today = null;
         $i = 0;
-        
+
         $connection = ConnectionManager::get('default');
         $schoolClosedDates = [];
         if ($schoolClosedRequired) {
             $sql = "SELECT calendar_event_dates.date, institution_shift_periods.period_id
                     FROM calendar_event_dates
-                    INNER JOIN calendar_events ON calendar_events.id = calendar_event_dates.calendar_event_id 
-                    INNER JOIN institution_shifts ON calendar_events.academic_period_id = institution_shifts.academic_period_id 
-                            AND calendar_events.institution_id = institution_shifts.institution_id 
-                            AND calendar_events.institution_shift_id = institution_shifts.shift_option_id 
+                    INNER JOIN calendar_events ON calendar_events.id = calendar_event_dates.calendar_event_id
+                    INNER JOIN institution_shifts ON calendar_events.academic_period_id = institution_shifts.academic_period_id
+                            AND calendar_events.institution_id = institution_shifts.institution_id
+                            AND calendar_events.institution_shift_id = institution_shifts.shift_option_id
                     INNER JOIN calendar_types ON calendar_types.id = calendar_events.calendar_type_id
-                    INNER JOIN institution_shift_periods ON institution_shift_periods.institution_shift_period_id = institution_shifts.id 
+                    INNER JOIN institution_shift_periods ON institution_shift_periods.institution_shift_period_id = institution_shifts.id
                     WHERE calendar_event_dates.date BETWEEN ? AND ?
                     AND calendar_types.is_attendance_required = 0";
             $stmt = $connection->execute($sql, [$week[0]->format('Y-m-d'), $week[1]->format('Y-m-d')]);
@@ -2050,7 +2053,7 @@ class AcademicPeriodsTable extends ControllerActionTable
             ->formatResults(function (ResultSetInterface $results) use ($dayOptions) {
                 return $dayOptions;
             });
-        
+
     }
 
     public function getNextAcademicPeriodId($id)

@@ -1,0 +1,28 @@
+<kd-progressloader *ngIf="displayLoading" configtype="small-spinner" [configvalue]="null"></kd-progressloader>
+<kd-alert></kd-alert>
+<!-- <kd-breadcrumb [config]="breadcrumbList"></kd-breadcrumb> -->
+<kd-pageheader [config]='pageheader'></kd-pageheader>
+<div style="display: flex; flex-flow: row wrap; margin-inline:-15px;" class="m-2">
+    <div style="width:83%; display:flex; flex-flow:column; padding-inline:15px">
+        <kd-mini-dashboard [config]="miniDashboardConfig" [input]="miniDashboardData"></kd-mini-dashboard>
+        <h4> {{ selected_day_value }}</h4>
+
+        <kd-table #changetable [row]="_row" [column]="_column" [config]="_config" [api]="_tableApi">
+        </kd-table>
+    </div>
+    <div style="width:17%; display:flex; flex-flow:column; gap:5px 0; padding-inline:15px; min-height: 90vh;">
+        <span style="font-size: 18px;">Filter</span>
+
+        <kd-view displayType="stacked-form" [inputData]="academicPeriod" [button]="filterButtons"
+            *ngIf="academicPeriod[0]?.options?.length > 0" (change)="changeClick($event, 'academicPeriod')"></kd-view>
+
+        <kd-view displayType="stacked-form" [inputData]="academicWeek" [button]="filterButtons"
+            *ngIf="academicWeek[0]?.options?.length > 0" (change)="changeClick($event, 'academicWeek')"></kd-view>
+
+        <kd-view displayType="stacked-form" [inputData]="academicDay" [button]="filterButtons"
+            *ngIf="academicDay[0]?.options?.length > 0" (change)="changeClick($event, 'academicDay')"></kd-view>
+
+        <kd-view displayType="stacked-form" [inputData]="academicShift" [button]="filterButtons"
+            *ngIf="academicShift[0]?.options?.length > 0" (change)="changeClick($event, 'academicShift')"></kd-view>
+    </div>
+</div>

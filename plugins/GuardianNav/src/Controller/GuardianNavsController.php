@@ -66,7 +66,7 @@ class GuardianNavsController extends AppController
     public function GuardianNavs() {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'GuardianNav.Students']);
     }
-   
+
     public function StudentUser()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'GuardianNav.StudentUser']);
@@ -91,15 +91,15 @@ class GuardianNavsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']);
     }
     public function StudentSubjects()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
-    public function StudentOutcomes()         { 
+    public function StudentOutcomes()         {
         $comment = $this->request->getQuery('comment');
-        if(!empty($comment) && $comment == 1){ 
+        if(!empty($comment) && $comment == 1){
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomeComments']);
 
         }else{
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']);
-        }         
-        
+        }
+
     }
     public function StudentCompetencies()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCompetencies']); }
     public function StudentAwards()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
@@ -118,7 +118,7 @@ class GuardianNavsController extends AppController
     }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
-		$header = 'Students'; 
+		$header = 'Students';
         $this->Navigation->addCrumb($header, ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'GuardianNavs']);
         $viewPermission = $this->AccessControl->check(['StudentUser']);
         if ($viewPermission == 0) {
@@ -144,10 +144,10 @@ class GuardianNavsController extends AppController
                 $studentName = $session->read('Student.Students.name');
                 $studentId = $session->read('Student.Students.id');
             }
-            
+
             // Breadcrumb
             $this->Navigation->addCrumb($studentName);
-                
+
             // header name
             $header = $studentName;
         }
@@ -165,10 +165,10 @@ class GuardianNavsController extends AppController
             } else {
                 $header .= ' - ' . $model->getHeader($alias);
         }
-        $this->set('contentHeader', $header); 
+        $this->set('contentHeader', $header);
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         parent::beforeFilter($event);
         $session = $this->request->getSession();
@@ -197,7 +197,7 @@ class GuardianNavsController extends AppController
     }
 
     public function getUserTabElements($options = [])
-    { 
+    {
         if (array_key_exists('queryString', $this->request->getQuery())) { //to filter if the URL already contain querystring
             $id = $this->ControllerAction->getQueryString('security_user_id');
         }
@@ -205,14 +205,14 @@ class GuardianNavsController extends AppController
         $plugin = $this->getPlugin();
         $name = $this->getName();
 
-        $id = (array_key_exists('id', $options))? $options['id']: $this->request->getSession()->read($plugin.'.'.$name.'.id');
+        $id = (isset($options['id']))? $options['id']: $this->request->getSession()->read($plugin.'.'.$name.'.id');
 
-        if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians' && array_key_exists('entity', $options)) {
+        if (isset($options['userRole']) && $options['userRole'] == 'Guardians' && isset($options['entity'])) {
             $session = $this->request->getSession();
             $session->write('Guardian.Guardians.name', $options['entity']->user->name);
             $session->write('Guardian.Guardians.id', $options['entity']->user->id);
             $session->write('Directory.Directories.studentToGuardian', 'studentToGuardian');
-        } elseif (array_key_exists('userRole', $options) && $options['userRole'] == 'Students' && array_key_exists('entity', $options)) {
+        } elseif (isset($options['userRole']) && $options['userRole'] == 'Students' && isset($options['entity'])) {
             $session = $this->request->getSession();
             $session->write('Student.Students.name', $options['entity']->user->name);
             $session->write('Student.Students.id', $options['entity']->user->id);
@@ -235,7 +235,7 @@ class GuardianNavsController extends AppController
             if($key == 'StudentUser'){
                 $key = 'GuardianNavs'; //this is done because of tab-active on Overview tab
             }
-        
+
             if ($key == $this->name) {
                 if($key == 'GuardianNavs'){
                     $key = 'StudentUser'; //this is done because of tab-active on Overview tab
@@ -260,17 +260,22 @@ class GuardianNavsController extends AppController
 
     public function getAcademicTabElements($options = [])
     {
-        $id = (array_key_exists('id', $options))? $options['id']: 0;
-        $type = (array_key_exists('type', $options))? $options['type']: null;
-        $period = (array_key_exists('academic_period', $options))? $options['academic_period']: null;
+        $id = (isset($options['id']))? $options['id']: 0;
+        $type = (isset($options['type']))? $options['type']: null;
+        $period = (isset($options['academic_period']))? $options['academic_period']: null;
         $tabElements = [];
         $studentUrl = ['plugin' => 'GuardianNav', 'controller' => 'GuardianNavs'];
         //$session = $this->request->getSession();
         //$studentId = $session->read('Student.Students.id');
         $action = $this->request->getParam('action');
         if($action == 'StudentProgrammes' && isset($this->request->getQueryParams()['studentId'])) {
-            $studentId = $this->request->getQueryParams()['studentId'];
-            $studentId = $this->ControllerAction->paramsDecode($studentId);
+            //POCOR-8379 starts
+            $session = $this->request->getSession();
+            $studentId = $session->read('Student.Students.id');
+            if(empty($studentId)){
+                $studentId = $this->request->getQueryParams()['studentId'];
+                $studentId = $this->ControllerAction->paramsDecode($studentId);
+            }//POCOR-8379 ends
             if(!empty($studentId)) {
                 $StudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
                 $Student = $StudentsTable
@@ -284,7 +289,7 @@ class GuardianNavsController extends AppController
                     'student_id' => $studentId,
                     'user_id' => $studentId,
                     'institution_id' => $institutionId,
-                    'type' => $type];     
+                    'type' => $type];
                 $queryString = $this->ControllerAction->paramsEncode($params);
             }
         } else {
@@ -325,7 +330,7 @@ class GuardianNavsController extends AppController
     public function StudentScheduleTimetable()
     {
         $userId = $this->Auth->user('id');
-        
+
         $InstitutionStudents =
         TableRegistry::get('Institution.InstitutionStudents')
         ->find()
@@ -334,12 +339,12 @@ class GuardianNavsController extends AppController
         ])
         ->hydrate(false)
         ->first();
-        
+
         $institutionId = $InstitutionStudents['institution_id'];
         $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
         ->getCurrent();
-        
-        $InstitutionClassStudentsResult = 
+
+        $InstitutionClassStudentsResult =
         TableRegistry::get('Institution.InstitutionClassStudents')
         ->find()
         ->where([
@@ -349,7 +354,7 @@ class GuardianNavsController extends AppController
         ])
         ->hydrate(false)
         ->first();
-        
+
         $institutionClassId = $InstitutionClassStudentsResult['institution_class_id'];
         $ScheduleTimetables = TableRegistry::get('Schedule.ScheduleTimetables')
         ->find()
@@ -361,10 +366,10 @@ class GuardianNavsController extends AppController
         ])
         ->hydrate(false)
         ->first();
-        
+
         $this->set('userId', $userId);
         $timetable_id = (isset($ScheduleTimetables['id']))?$ScheduleTimetables['id']:0;
-        $this->set('timetable_id', $timetable_id);  
+        $this->set('timetable_id', $timetable_id);
         $this->set('academicPeriodId', $academicPeriodId);
         $this->set('institutionDefaultId', $institutionId);
         $this->set('ngController', 'StudentTimetableCtrl as $ctrl');

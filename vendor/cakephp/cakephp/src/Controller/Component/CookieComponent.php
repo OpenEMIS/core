@@ -367,8 +367,8 @@ class CookieComponent extends Component
      *
      * @return string
      */
-    protected function _getCookieEncryptionKey()
+    protected function _getCookieEncryptionKey(): string
     {
-        return $this->_config['key'];
+        return (string) $this->_config['key'];
     }
 }

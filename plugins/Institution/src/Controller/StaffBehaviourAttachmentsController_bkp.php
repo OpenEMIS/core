@@ -18,7 +18,7 @@ class StaffBehaviourAttachmentsController extends PageController
         $this->viewBuilder()->disableAutoLayout(); //POCOR-8074-6
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID();
@@ -97,7 +97,7 @@ class StaffBehaviourAttachmentsController extends PageController
         $page->exclude(['file_content']);
         parent::delete($id);
     }
-    
+
     private function addEdit()
     {
         $page = $this->Page;
@@ -115,7 +115,7 @@ class StaffBehaviourAttachmentsController extends PageController
         $staffBehaviourIdEncode = $this->paramsEncode(['id' => $staffBehaviourIdDecode['staff_behaviour_id']]);
         $page = $this->Page;
         $tabElements = [];
-       
+
         $tabElements = [
             'StaffBehaviours' => [
                 'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $encodedInstitutionId, 'action' => 'StaffBehaviours', 'view', $staffBehaviourIdEncode],

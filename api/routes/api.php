@@ -485,12 +485,18 @@ Route::group(
         Route::post('/institutions/students/meals/import', 'MealController@getStudentMealImport');
         Route::get('/institutions/students/meals/export', 'MealController@getStudentMealExport');
         Route::get('/institutions/students/meals/import/template', 'MealController@getStudentMealImportTemplate');
-        //POCOR-8438 end...
+        //POCOR-8348 end...
         
         //POCOR-8292 start...
         Route::get('/assessments/{assessment_id}/periods', 'AssessmentController@getAssessmentViaAcademicTerm');
         //POCOR-8292 end...
 
-        
+
+        //POCOR-8363 start...
+        Route::get('/institutions/students/attendances/export', 'AttendanceController@getStudentAttendancesExport');
+        Route::get('/institutions/students/attendances/import/template', 'AttendanceController@getStudentAttendancesImportTemplate');
+        Route::post('/institutions/students/attendances/import', 'AttendanceController@studentAttendancesImport');
+        Route::get('/institutions/students/attendances/no-scheduled-class', 'AttendanceController@studentAttendancesNoScheduledClass');
+        //POCOR-8363 end...
     }
 );

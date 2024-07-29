@@ -51,8 +51,8 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();     
-    } 
+        $this->institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
+    }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -74,10 +74,10 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         $this->field('recipient_institution');
         $this->field('area_education');
     }
-    
+
     /* POCOR-6182 starts */
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
-    {  
+    {
         if (isset($buttons['view']) && $this->AccessControl->check(['Institutions', 'FeederOutgoingInstitutions', 'delete']) &&$this->Auth->user()['super_admin'] != 1) {
             $icon = '<i class="fa fa-trash"></i>';
             $removeUrl = [
@@ -88,7 +88,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
                 $this->paramsEncode(['id' => $entity->feeder_institution_id])
             ];
             $encodedId = $this->paramsEncode([
-                            'institution_id' => $entity->institution_id, 
+                            'institution_id' => $entity->institution_id,
                             'feeder_institution_id' => $entity->feeder_institution_id,
                             'academic_period_id' => $entity->academic_period_id,
                             'education_grade_id' => $entity->education_grade_id
@@ -122,7 +122,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
                     'name',
                     'code'
                 ]
-            ], 
+            ],
             'Institutions.Areas' => [
                 'fields' => [
                     'id',
@@ -171,7 +171,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
                     'name',
                     'code'
                 ]
-            ], 
+            ],
             'Institutions.Areas' => [
                 'fields' => [
                     'name'
@@ -302,7 +302,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
             return __('Area Education');
         } else if($field == 'created'){
             return __('Created');
-        } else if($field == 'created_user_id'){  
+        } else if($field == 'created_user_id'){
             return __('Created By');
         }else if($field == 'recipient_institution'){
             return __('Recipient Institution');
@@ -530,7 +530,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
     {
         $selectedAcademicPeriod = '';
         $requestData = $this->request->getQuery();
-        if (!is_null($requestData) && array_key_exists('period', $requestData)) {
+        if (!is_null($requestData) && isset($requestData['period'])) {
             $selectedAcademicPeriod = $requestData['period'];
         } else {
             $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();

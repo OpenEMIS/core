@@ -45,7 +45,7 @@ class SubjectExcelBehavior extends Behavior
     public function initialize(array $config): void
     {
         $this->getConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
-        if (!array_key_exists('filename', $config)) {
+        if (!isset($config['filename'])) {
             $this->setConfig('filename', $this->_table->getAlias());//POCOR-8324
         }
         $folder = WWW_ROOT . $this->getConfig('folder');
@@ -55,7 +55,7 @@ class SubjectExcelBehavior extends Behavior
             mkdir($folder, 0777);
         } else {
             // $delete = true;
-            // if (array_key_exists('delete', $settings) &&  $settings['delete'] == false) {
+            // if (isset($settings['delete']) &&  $settings['delete'] == false) {
             //  $delete = false;
             // }
             // if ($delete) {
@@ -189,7 +189,7 @@ class SubjectExcelBehavior extends Behavior
                 $InstitutionClassSubjects->aliasField('institution_class_id') => $class_id,
                 $InstitutionSubjects->aliasField('InstitutionSubjects.academic_period_id') => $academic_period_id,
                 $InstitutionSubjects->aliasField('InstitutionSubjects.institution_id') => $institution_id
-                
+
             ];
 
         }
@@ -203,7 +203,7 @@ class SubjectExcelBehavior extends Behavior
 
             $footer = $this->getFooter();
             $Query = $sheet['query'];
-			
+
 			$EducationGrades = TableRegistry::get('Education.EducationGrades');
 			$InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
 			$InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
@@ -218,7 +218,7 @@ class SubjectExcelBehavior extends Behavior
             */
             $checkEncodedSubjectId = $this->_table->request->getAttribute('params')['pass'][1];//POCOR-8324
             $encodedSubjectId = $this->_table->paramsDecode($checkEncodedSubjectId);//POCOR-8324
-            if (array_key_exists('institution_subject_id', $encodedSubjectId)) {//POCOR-8324
+            if (isset($encodedSubjectId['institution_subject_id'])) {//POCOR-8324
                 //$decodedSubjectId = $this->_table->paramsDecode($encodedSubjectId);//POCOR-8324
                 //$subjectId = $decodedSubjectId['id'];//POCOR-8324
                 $decodedSubjectId = $encodedSubjectId['institution_subject_id'];
@@ -241,7 +241,7 @@ class SubjectExcelBehavior extends Behavior
                             ]),
                             'gender' => 'Genders.name',
                             'institution_id' => 'Institutions.id',
-                            'student_status' => 'StudentStatuses.name',//POCOR-6338 
+                            'student_status' => 'StudentStatuses.name',//POCOR-6338
                         ])
                         ->contain([
                             'AcademicPeriods' => [
@@ -262,7 +262,7 @@ class SubjectExcelBehavior extends Behavior
                         ])
                         ->leftJoin(['EducationGrades' => 'education_grades'], [
                             $InstitutionSubjects->aliasField('education_grade_id ='). $EducationGrades->aliasField('id')
-                        ]) 
+                        ])
                         ->leftJoin(['InstitutionSubjectStudents' => 'institution_subject_students'], [
                             'InstitutionSubjectStudents.institution_subject_id = '. $InstitutionSubjects->aliasField('id')
                         ])
@@ -306,7 +306,7 @@ class SubjectExcelBehavior extends Behavior
                             ]),
                             'gender' => 'Genders.name',
                             'institution_id' => 'Institutions.id',
-                            'student_status' => 'StudentStatuses.name',//POCOR-6338 
+                            'student_status' => 'StudentStatuses.name',//POCOR-6338
                         ])
                         ->contain([
                             'AcademicPeriods' => [
@@ -327,7 +327,7 @@ class SubjectExcelBehavior extends Behavior
                         ])
                         ->leftJoin(['EducationGrades' => 'education_grades'], [
                             $InstitutionSubjects->aliasField('education_grade_id ='). $EducationGrades->aliasField('id')
-                        ]) 
+                        ])
                         ->leftJoin(['InstitutionSubjectStudents' => 'institution_subject_students'], [
                             'InstitutionSubjectStudents.institution_subject_id = '. $InstitutionSubjects->aliasField('id')
                         ]) // POCOR-6338 starts
@@ -358,7 +358,7 @@ class SubjectExcelBehavior extends Behavior
                             'Institutions.code',
                             'InstitutionSubjects.id'
                         ]);
-                    
+
                     if($table->alias!='Subjects'){
                         $query->group([
                             'SubjectStudents.id'
@@ -371,7 +371,7 @@ class SubjectExcelBehavior extends Behavior
 						$teachers = array_unique($teachers);
 						$teachers = implode(', ',$teachers);
 						$row['teachers'] = $teachers;
-						
+
 						$rooms = explode(',',$row['rooms']);
 						$rooms = array_unique($rooms);
 						$rooms = implode(', ',$rooms);
@@ -395,7 +395,7 @@ class SubjectExcelBehavior extends Behavior
                                 $UserIdentities->aliasField('security_user_id') => $user_data->id,
                             ];
                             $data = $UserIdentities
-                                        ->find()    
+                                        ->find()
                                         ->select([
                                             // 'identity_type' => $IdentityTypes->getAlias().'.name',//POCOR-5852 starts
                                             // 'identity_number' => $UserIdentities->getAlias().'.number',
@@ -413,16 +413,16 @@ class SubjectExcelBehavior extends Behavior
                                         )
                                         ->where($conditions)
                                         ->toArray();
-                            $row['identity_type'] = '';            
-                            $row['identity_number'] = '';            
+                            $row['identity_type'] = '';
+                            $row['identity_number'] = '';
                             if(!empty($data)){
                                 $identity_type_name = '';
                                 $identity_type_number = '';
                                 foreach ($data as $key => $value) {
                                     if($value->default == 1){
-                                    $identity_type_name =  $value->identity_type;    
-                                    $identity_type_number =  $value->identity_number;   
-                                    break; 
+                                    $identity_type_name =  $value->identity_type;
+                                    $identity_type_number =  $value->identity_number;
+                                    break;
                                     }
                                 }
                                 if(!empty($identity_type_name) && !empty($identity_type_number)){
@@ -435,10 +435,10 @@ class SubjectExcelBehavior extends Behavior
                             }
                         }else{
                             $user_data = null;
-                            $row['identity_type'] = '';            
-                            $row['identity_number'] = ''; 
-                        }//POCOR-8324 ends                        
-                        return $row;           
+                            $row['identity_type'] = '';
+                            $row['identity_number'] = '';
+                        }//POCOR-8324 ends
+                        return $row;
                     });
                 });
 				//POCOR-5852 ends
@@ -467,7 +467,7 @@ class SubjectExcelBehavior extends Behavior
             $baseSheetName = $sheetName;
 
             // if the primary key of the record is given, only generate that record
-            if (array_key_exists('id', $settings)) {
+            if (isset($settings['id'])) {
                 $id = $settings['id'];
                 if ($id != 0) {
                     $primaryKey = $table->getPrimaryKey();
@@ -495,7 +495,7 @@ class SubjectExcelBehavior extends Behavior
             $percentCount = intval($count / 100);
             $pages = ceil($count / $this->getConfig('limit'));
 
-            // Debugging 
+            // Debugging
             $pages = 1;
 
             if (isset($sheet['orientation'])) {
@@ -529,7 +529,7 @@ class SubjectExcelBehavior extends Behavior
                     foreach ($fields as $index => $attr) {
                         $subjectsHeaderRow[$index] = "";
 
-                        if (array_key_exists('group', $attr)) {
+                        if (isset($attr['group'])) {
                             if ($groupName !== $attr['group']) {
                                 $groupStartingIndex = $index;
                                 $groupName = $attr['group'];
@@ -664,7 +664,7 @@ class SubjectExcelBehavior extends Behavior
 					'teachers','rooms','openEMIS_ID','student_name',
 					'gender','student_status', 'identity_type', 'identity_number'
 					];
-        //POCOR-5852 ends            
+        //POCOR-5852 ends
         $excludes = $this->getConfig('excludes');
 
         if (!is_array($table->getPrimaryKey())) { //if not composite key
@@ -679,7 +679,7 @@ class SubjectExcelBehavior extends Behavior
         //$encodedSubjectId = $this->_table->request->getAttribute('params')['pass'][1];//POCOR-8324
         $checkEncodedSubjectId = $this->_table->request->getAttribute('params')['pass'][1];//POCOR-8324
         $encodedSubjectId = $this->_table->paramsDecode($checkEncodedSubjectId);//POCOR-8324
-        if (array_key_exists('institution_subject_id', $encodedSubjectId)) {//POCOR-8324
+        if (isset($encodedSubjectId['institution_subject_id'])) {//POCOR-8324
             $columns = ['institution_code', 'institution_name', 'academic_period_id', 'Class_Name', 'education_grade', 'subject_name','subject_code', 'teachers', 'rooms', 'openEMIS_ID', 'student_name', 'gender', 'student_status'];
         } else {
             $columns = array_diff($columns, $excludes);

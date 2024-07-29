@@ -64,11 +64,11 @@ class StudentSubjectsTable extends ControllerActionTable
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['controls'] = ['name' => 'Student.Subjects/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
-        
+
         if (!empty($this->request->getQuery('institution_subject_id'))) {
             $action = 'view';
             $hasAllSubjectsPermission = $this->AccessControl->check(['Institutions', 'AllSubjects', $action]);
-   
+
             $hasMySubjectsPermission = $this->AccessControl->check(['Institutions', 'Subjects', $action]);
             $url = [
                 'plugin' => 'Institution',
@@ -106,7 +106,7 @@ class StudentSubjectsTable extends ControllerActionTable
 
    		// Start POCOR-5188
 		if($this->request->getParam('controller') == 'Students'){
-			$is_manual_exist = $this->getManualUrl('Institutions','Subjects','Students - Academic');       
+			$is_manual_exist = $this->getManualUrl('Institutions','Subjects','Students - Academic');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -115,7 +115,7 @@ class StudentSubjectsTable extends ControllerActionTable
 					'escape' => false,
 					'target'=>'_blank'
 				];
-		
+
 				$helpBtn['url'] = $is_manual_exist['url'];
 				$helpBtn['type'] = 'button';
 				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -123,8 +123,8 @@ class StudentSubjectsTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->getParam('controller') == 'Directories'){ 
-			$is_manual_exist = $this->getManualUrl('Directory','Subjects','Students - Academic');       
+		}elseif($this->request->getParam('controller') == 'Directories'){
+			$is_manual_exist = $this->getManualUrl('Directory','Subjects','Students - Academic');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -156,8 +156,14 @@ class StudentSubjectsTable extends ControllerActionTable
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
         $queryString = $this->getQueryString();
-
+        //POCOR-8413 starts
         $studentId = $queryString['student_id'];
+        if(empty($studentId)){
+            $studentId = $this->Session->read('Student.Students.id');
+            if(empty($studentId)){
+                $studentId = 0;
+            }
+        }//POCOR-8413 ends
         $encodedQueryString = $this->paramsEncode($queryString);
         // Institution and Grade filter
         $InstitutionStudents = TableRegistry::get('Institution.Students');
@@ -215,13 +221,14 @@ class StudentSubjectsTable extends ControllerActionTable
             $where['ClassGrades.education_grade_id'] = $selectedGrade;
         }
         // End
-        
-        
+
+
         $userData = $this->Session->read();
         $session = $this->request->getSession();//POCOR-6267
         if ($userData['Auth']['User']['is_guardian'] == 1) {
-            $sId = $userData['Student']['ExaminationResults']['student_id'];//POCOR-6267
-            $studentId = $this->ControllerAction->paramsDecode($sId)['id'];//POCOR-6267
+            //$sId = $userData['Student']['ExaminationResults']['student_id'];//POCOR-6267
+            //$studentId = $this->ControllerAction->paramsDecode($sId)['id'];//POCOR-6267
+            $studentId = $session->read('Student.Students.id');//POCOR-8323
         } else {
             $studentId = $userData['Auth']['User']['id'];
         }
@@ -259,7 +266,7 @@ class StudentSubjectsTable extends ControllerActionTable
         $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         //POCOR-6468
       //  $where[$this->aliasField('student_status_id')] = $enrolledStatus; //POCOR-7111
-        
+
         $query
             ->matching('InstitutionClasses.ClassGrades')
             ->innerJoin(//POCOR-6468
@@ -278,10 +285,10 @@ class StudentSubjectsTable extends ControllerActionTable
             //POCOR-6832
             ->where($where)
             ->group([
-                $this->aliasField('education_subject_id'), 
-                $this->aliasField('education_grade_id'), 
+                $this->aliasField('education_subject_id'),
+                $this->aliasField('education_grade_id'),
                 $this->aliasField('institution_id')
-            ]);  
+            ]);
     }
 
     /**
@@ -305,7 +312,7 @@ class StudentSubjectsTable extends ControllerActionTable
         $encodedQueryString = $this->paramsEncode($queryString);
 
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             $institutionId = $entity->institution_class->institution_id;
             $url = [
                 'plugin' => 'Institution',
@@ -316,7 +323,7 @@ class StudentSubjectsTable extends ControllerActionTable
                 2 =>$this->paramsEncode(['id' => $entity->id]),
                 //3 =>$this->paramsEncode(['id' => $entity->institution_class]),
                3 => $this->paramsEncode(['id' => $entity->institution_subject->id]),
-                
+
             ];
 
             if ($this->controller->getName() == 'Directories') {
@@ -344,7 +351,7 @@ class StudentSubjectsTable extends ControllerActionTable
         $options = ['type' => 'student'];
         //$tabElements = $this->controller->getAcademicTabElements($options);
         $tabElements = $this->getAcademicTabElements($options);
-        if ($this->controller->getName() == 'Directories') {
+        if ($this->controller->getName() == 'GuardianNavs' || $this->controller->getName() == 'Directories') {//POCOR-8323
             $tabElements = $this->controller->getAcademicTabElements($options);
         }
         $this->controller->set('tabElements', $tabElements);

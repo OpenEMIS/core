@@ -84,7 +84,7 @@ class CustomReportsTable extends AppTable
                 $filters = json_decode($customReportData->filter, true);
 
                 // academic period filter
-                if (array_key_exists('academic_period_id', $filters)) {
+                if (isset($filters['academic_period_id'])) {
                     // add validation
                     $validator->notEmpty('academic_period_id');
                     $this->ControllerAction->field('academic_period_id');
@@ -93,29 +93,29 @@ class CustomReportsTable extends AppTable
 
                 //START: POCOR-7069
                 // Institution Type filter
-                if (array_key_exists('institution_type_id', $filters)) {
+                if (isset($filters['institution_type_id'])) {
                     // add validation
                     $validator->notEmpty('institution_type_id');
                     $this->ControllerAction->field('institution_type_id');
                     unset($filters['institution_type_id']);
                 }
                 // Institution  filter
-                if (array_key_exists('institution_id', $filters)) {
+                if (isset($filters['institution_id'])) {
                     // add validation
                     $validator->notEmpty('institution_id');
                     $this->ControllerAction->field('institution_id');
                     unset($filters['institution_id']);
                 }
                 // edication grade filter
-                if (array_key_exists('education_grade_id', $filters)) {
+                if (isset($filters['education_grade_id'])) {
                     // add validation
                     $validator->notEmpty('education_grade_id');
                     $this->ControllerAction->field('education_grade_id');
                     unset($filters['education_grade_id']);
                 }
-                
+
                 // education subject filter
-                if (array_key_exists('education_subject_id', $filters)) {
+                if (isset($filters['education_subject_id'])) {
                     // add validation
                     $validator->notEmpty('education_subject_id');
                     $this->ControllerAction->field('education_subject_id');
@@ -140,7 +140,7 @@ class CustomReportsTable extends AppTable
                         $toReset = true;
                     }
 
-                    $fieldType = array_key_exists('fieldType', $filterData) ? $filterData['fieldType'] : 'select';
+                    $fieldType = isset($filterData['fieldType']) ? $filterData['fieldType'] : 'select';
                     $fieldParams = [];
                     $fieldParams['type'] = $fieldType;
 
@@ -154,8 +154,8 @@ class CustomReportsTable extends AppTable
                         $options = $this->buildQuery($filterData, $queryParams, $byaccess, $toSql);
 
                         // add additional options
-                        if (array_key_exists('options', $filterData)) {
-                            if (array_key_exists('options_condition', $filterData)) {
+                        if (isset($filterData['options'])) {
+                            if (isset($filterData['options_condition'])) {
                                 // only allow options if conditions met
                                 if ($this->checkOptionCondition($filterData["options_condition"], $queryParams)) {
                                     foreach ($filterData['options'] as $value => $option) {
@@ -184,7 +184,7 @@ class CustomReportsTable extends AppTable
                     }
 
                     // add validation for fields
-                    $validate = array_key_exists('validate', $filterData) ? filter_var($filterData['validate'], FILTER_VALIDATE_BOOLEAN) : true;
+                    $validate = isset($filterData['validate']) ? filter_var($filterData['validate'], FILTER_VALIDATE_BOOLEAN) : true;
                     if ($validate) {
                         $fieldParams['required'] = true;
                         $validator->notEmpty($field);
@@ -206,7 +206,7 @@ class CustomReportsTable extends AppTable
 
             $customReports = $this
                 ->find(
-                    'list', 
+                    'list',
                     ["valueField" => function ($row) {
                             return $row;
                     }]
@@ -307,15 +307,15 @@ class CustomReportsTable extends AppTable
     {
         $params = $settings['requestQuery'];
         $customReportData = $this->get($params['feature']);
-		
+
 		if(!empty($params['start_date'])) {
-			$params['start_date'] = date("Y-m-d", strtotime($params['start_date']));	
+			$params['start_date'] = date("Y-m-d", strtotime($params['start_date']));
 		}
 		if(!empty($params['end_date'])) {
-			$params['end_date'] = date("Y-m-d", strtotime($params['end_date']));	
+			$params['end_date'] = date("Y-m-d", strtotime($params['end_date']));
 		}
-		
-        //if (array_key_exists('requestQuery', $settings)) {
+
+        //if (isset($settings['requestQuery'])) {
         if (isset($settings['requestQuery'])) {    //POCOR-8126
             $jsonQuery = json_decode($customReportData->query, true);
 
@@ -348,7 +348,7 @@ class CustomReportsTable extends AppTable
             }
 
             $institutionList = $institutionQuery->toArray();
-           
+
             $attr['onChangeReload'] = true;
             if (count($institutionList) > 1) {
                 //$attr['options'] = [0 => __('All Institutions')] + $institutionList;
@@ -398,7 +398,7 @@ class CustomReportsTable extends AppTable
             $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
             $grades = TableRegistry::get('Institution.InstitutionGrades');
             $institutions = TableRegistry::get('Institution.Institutions');
-            
+
             //POCOR-7178 start
             $conditions = [];
             if (!empty($selectedPeriod)) {
@@ -412,7 +412,7 @@ class CustomReportsTable extends AppTable
             }
             //POCOR-7178 end
             if(!empty($selectedPeriod)){ // POCOR-7241
-                $periodGrades = $EducationGrades->find('list', ['keyField' => 'id', 
+                $periodGrades = $EducationGrades->find('list', ['keyField' => 'id',
                                 'valueField' => 'programme_grade_name'])
                             ->find('visible')
                             ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
@@ -426,7 +426,7 @@ class CustomReportsTable extends AppTable
                             ->order([$EducationGrades->aliasField('id')])
                             ->toArray();
             }
-            
+
             $attr['onChangeReload'] = true;
             $attr['options'] = $periodGrades;
             $attr['type'] = 'select';
@@ -436,7 +436,7 @@ class CustomReportsTable extends AppTable
         }
     }
 
-    // POCOR-7069 education sujbect filter 
+    // POCOR-7069 education sujbect filter
     public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {

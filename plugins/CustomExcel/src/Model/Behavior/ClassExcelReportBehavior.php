@@ -22,9 +22,9 @@ use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use Cake\ORM\Table;
 /**
- * 
+ *
  * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
- * 
+ *
  */
 class ClassExcelReportBehavior extends Behavior
 {
@@ -64,7 +64,7 @@ class ClassExcelReportBehavior extends Behavior
         $model = $this->_table;
         $folder = WWW_ROOT . $this->getConfig('folder');
         $subfolder = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder');
-        if (!array_key_exists('filename', $config)) {
+        if (!isset($config['filename'])) {
             $this->getConfig('filename', $model->getAlias());
         }
 
@@ -84,7 +84,7 @@ class ClassExcelReportBehavior extends Behavior
     {
         $model = $this->_table;
 
-        if (array_key_exists('requestQuery', $extra)) {
+        if (isset($extra['requestQuery'])) {
             $params = $extra['requestQuery'];
         } else {
             $params = $model->getQueryString();
@@ -106,8 +106,8 @@ class ClassExcelReportBehavior extends Behavior
     {
         $model = $this->_table;
         $format = $this->getConfig('format');
-            
-        if (array_key_exists('requestQuery', $extra)) {
+
+        if (isset($extra['requestQuery'])) {
             $params = $extra['requestQuery'];
         } else {
             $params = $model->getQueryString();
@@ -128,9 +128,9 @@ class ClassExcelReportBehavior extends Behavior
         $this->generateExcel($objSpreadsheet, $extra);
 
         Log::write('debug', 'ClassExcelReportBehavior >>> renderExcelTemplate');
-		
-	    $this->saveFile($objSpreadsheet, $temppath, $format, $params['institution_id']);
-		
+
+        $this->saveFile($objSpreadsheet, $temppath, $format, $params['institution_id']);
+
         if ($extra->offsetExists('temp_logo')) {
             // delete temporary logo
             $this->deleteFile($extra['temp_logo']);
@@ -149,19 +149,19 @@ class ClassExcelReportBehavior extends Behavior
 
         if (!empty($params['institution_id'])) {
             unset($params['area_id']);// POCOR-7838
-			$pdfFilePath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $this->getConfig('filename') . '_' . $params['institution_id'].'.txt';
+            $pdfFilePath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $this->getConfig('filename') . '_' . $params['institution_id'].'.txt';
             $pdfFileContent = file_get_contents($pdfFilePath);
-			
-			$ClassProfiles = TableRegistry::get('Institution.ClassProfiles');
+
+            $ClassProfiles = TableRegistry::get('Institution.ClassProfiles');
             // save Pdf file
-			$ClassProfiles->updateAll([
-				'file_content_pdf' => $pdfFileContent
-			], $params);
-			
-			$this->deleteFile($pdfFilePath);
+            $ClassProfiles->updateAll([
+                'file_content_pdf' => $pdfFileContent
+            ], $params);
+
+            $this->deleteFile($pdfFilePath);
         }
-		
-		if ($this->getConfig('download')) {
+
+        if ($this->getConfig('download')) {
             $tempfile = new File($temppath);
             $tempinfo = $tempfile->info();
             $tempcontent = $tempfile->read();
@@ -182,7 +182,7 @@ class ClassExcelReportBehavior extends Behavior
     {
         $model = $this->_table;
 
-        if (array_key_exists('requestQuery', $extra) && array_key_exists($this->getConfig('templateTableKey'), $extra['requestQuery'])) {
+        if (isset($extra['requestQuery']) && array_key_exists($this->getConfig('templateTableKey'), $extra['requestQuery'])) {
             $recordId = $extra['requestQuery'][$this->getConfig('templateTableKey')];
         } else {
             $recordId = $model->getQueryString($this->getConfig('templateTableKey'));
@@ -340,7 +340,7 @@ class ClassExcelReportBehavior extends Behavior
 
         $objDrawing = new MemoryDrawing();
 
-        if (!array_key_exists('image_resource', $extra) && $imagePath) {
+        if (!isset($extra['image_resource']) && $imagePath) {
             switch ($attr['mime_type']) {
                 case 'image/png':
                     $imageResource = imagecreatefrompng($imagePath);
@@ -386,10 +386,10 @@ class ClassExcelReportBehavior extends Behavior
         if ($format == 'pdf') {
             $this->savePDF($objSpreadsheet, $filepath, $institution_id);
         } else {
-			// pdf
-			if(!empty($institution_id)) {
-				$this->savePDF($objSpreadsheet, $filepath, $institution_id);
-			}
+            // pdf
+            if(!empty($institution_id)) {
+                $this->savePDF($objSpreadsheet, $filepath, $institution_id);
+            }
             // xlsx
             $objWriter->save($filepath);
         }
@@ -540,22 +540,22 @@ class ClassExcelReportBehavior extends Behavior
         $attr = [];
 
         $settings = array_key_exists($keyword, $jsonArray) ? $jsonArray[$keyword] : [];
-        $displayValue = array_key_exists('displayValue', $settings) ? $settings['displayValue'] : null;
-        $attr['displayValue'] = array_key_exists('displayValue', $settings) ? $settings['displayValue'] : null;
-        $attr['type'] = array_key_exists('type', $settings) ? $settings['type'] : null;
-        $attr['format'] = array_key_exists('format', $settings) ? $settings['format'] : null;
-        $attr['children'] = array_key_exists('children', $settings) ? $settings['children'] : [];
-        $attr['rows'] = array_key_exists('rows', $settings) ? $settings['rows'] : [];
-        $attr['columns'] = array_key_exists('columns', $settings) ? $settings['columns'] : [];
-        $attr['filter'] = array_key_exists('filter', $settings) ? $settings['filter'] : null;
-        $attr['displayColumns'] = array_key_exists('displayColumns', $settings) ? $settings['displayColumns'] : [];
-        $attr['source'] = array_key_exists('source', $settings) ? $settings['source'] : null;
-        $attr['showHeaders'] = array_key_exists('showHeaders', $settings) ? $settings['showHeaders'] : false;
-        $attr['insertRows'] = array_key_exists('insertRows', $settings) ? $settings['insertRows'] : false;
-        $attr['mergeColumns'] = array_key_exists('mergeColumns', $settings) ? $settings['mergeColumns'] : 1;
-        $attr['imageWidth'] = array_key_exists('imageWidth', $settings) ? $settings['imageWidth'] : null;
-        $attr['imageMarginLeft'] = array_key_exists('imageMarginLeft', $settings) ? $settings['imageMarginLeft'] : null;
-        $attr['imageMarginTop'] = array_key_exists('imageMarginTop', $settings) ? $settings['imageMarginTop'] : null;
+        $displayValue = isset($settings['displayValue']) ? $settings['displayValue'] : null;
+        $attr['displayValue'] = isset($settings['displayValue']) ? $settings['displayValue'] : null;
+        $attr['type'] = isset($settings['type']) ? $settings['type'] : null;
+        $attr['format'] = isset($settings['format']) ? $settings['format'] : null;
+        $attr['children'] = isset($settings['children']) ? $settings['children'] : [];
+        $attr['rows'] = isset($settings['rows']) ? $settings['rows'] : [];
+        $attr['columns'] = isset($settings['columns']) ? $settings['columns'] : [];
+        $attr['filter'] = isset($settings['filter']) ? $settings['filter'] : null;
+        $attr['displayColumns'] = isset($settings['displayColumns']) ? $settings['displayColumns'] : [];
+        $attr['source'] = isset($settings['source']) ? $settings['source'] : null;
+        $attr['showHeaders'] = isset($settings['showHeaders']) ? $settings['showHeaders'] : false;
+        $attr['insertRows'] = isset($settings['insertRows']) ? $settings['insertRows'] : false;
+        $attr['mergeColumns'] = isset($settings['mergeColumns']) ? $settings['mergeColumns'] : 1;
+        $attr['imageWidth'] = isset($settings['imageWidth']) ? $settings['imageWidth'] : null;
+        $attr['imageMarginLeft'] = isset($settings['imageMarginLeft']) ? $settings['imageMarginLeft'] : null;
+        $attr['imageMarginTop'] = isset($settings['imageMarginTop']) ? $settings['imageMarginTop'] : null;
 
         // Start attributes  for dropdown
         $dropdownAttrs = ['source', 'promptTitle', 'prompt', 'errorTitle', 'error'];
@@ -830,7 +830,7 @@ class ClassExcelReportBehavior extends Behavior
         $rowValue = $attr['rowValue'];
         $columnIndex = $attr['columnIndex'];
         $columnValue = $attr['columnValue'];
-        $nestedRow = array_key_exists('children', $attr) ? $attr['children'] : [];
+        $nestedRow = isset($attr['children']) ? $attr['children'] : [];
 
         $mergeColumns = $attr['mergeColumns'];
         $mergeColumnIndex = $columnIndex + ($mergeColumns - 1);
@@ -875,8 +875,8 @@ class ClassExcelReportBehavior extends Behavior
     private function nestedRow($nestedRow, $parentKey, $parentRowValue, $parentColumnIndex, $parentMergeColumns, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
     {
         $nestedAttr = $this->extractPlaceholderAttr($nestedRow, $this->advancedTypes['row'], $extra);
-        $filter = array_key_exists('filter', $nestedAttr) ? $nestedAttr['filter'] : null;
-        $secondNestedRow = array_key_exists('children', $nestedAttr) ? $nestedAttr['children'] : [];
+        $filter = isset($nestedAttr['filter']) ? $nestedAttr['filter'] : null;
+        $secondNestedRow = isset($nestedAttr['children']) ? $nestedAttr['children'] : [];
 
         $nestedRowValue = $parentRowValue;
         $nestedColumnIndex = $parentColumnIndex + ($parentMergeColumns - 1) + 1; // always output children to the immediate next column
@@ -948,7 +948,7 @@ class ClassExcelReportBehavior extends Behavior
         $columnIndex = $attr['columnIndex'];
         $columnValue = $attr['columnValue'];
         $mergeColumns = $attr['mergeColumns'];
-        $nestedColumn = array_key_exists('children', $attr) ? $attr['children'] : [];
+        $nestedColumn = isset($attr['children']) ? $attr['children'] : [];
 
         if (!empty($attr['data'])) {
             foreach ($attr['data'] as $key => $value) {
@@ -1059,13 +1059,13 @@ class ClassExcelReportBehavior extends Behavior
 
                 foreach ($displayColumns as $column) {
                     $value = null;
-                    if (array_key_exists('displayValue', $column)) {
+                    if (isset($column['displayValue'])) {
                         $field = $this->splitDisplayValue($column['displayValue'])[1];
                         $value = Hash::get($vars, $field);
                     }
 
-                    $attr['type'] = array_key_exists('type', $column) ? $column['type'] : null;
-                    $attr['format'] = array_key_exists('format', $column) ? $column['format'] : null;
+                    $attr['type'] = isset($column['type']) ? $column['type'] : null;
+                    $attr['format'] = isset($column['format']) ? $column['format'] : null;
 
                     $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
                     $cellCoordinate = $columnValue.$rowValue;
@@ -1088,8 +1088,8 @@ class ClassExcelReportBehavior extends Behavior
     {
         list($attr['placeholderPrefix'], $attr['placeholderSuffix']) = $this->splitDisplayValue($attr['displayValue']);
 
-        $rowsArray = array_key_exists('rows', $attr) ? $attr['rows'] : [];
-        $columnsArray = array_key_exists('columns', $attr) ? $attr['columns'] : [];
+        $rowsArray = isset($attr['rows']) ? $attr['rows'] : [];
+        $columnsArray = isset($attr['columns']) ? $attr['columns'] : [];
 
         if (!empty($rowsArray)) {
             $this->matchRows($objSpreadsheet, $objWorksheet, $objCell, $attr, $rowsArray, $columnsArray, $extra);
@@ -1102,13 +1102,13 @@ class ClassExcelReportBehavior extends Behavior
 
     private function matchRows($objSpreadsheet, $objWorksheet, $objCell, $attr, $rowsArray=[], $columnsArray=[], $extra)
     {
-        $matchFrom = array_key_exists('matchFrom', $rowsArray) ? $rowsArray['matchFrom'] : [];
-        $matchTo = array_key_exists('matchTo', $rowsArray) ? $rowsArray['matchTo'] : [];
+        $matchFrom = isset($rowsArray['matchFrom']) ? $rowsArray['matchFrom'] : [];
+        $matchTo = isset($rowsArray['matchTo']) ? $rowsArray['matchTo'] : [];
         $rowData = $this->getPlaceholderData($matchFrom, $extra);
         $nestedRow = isset($rowsArray['children']) ? $rowsArray['children'] : [];
 
         $filterStr = $this->formatFilter($matchTo);
-        $attr['filterStr'] = array_key_exists('filterStr', $attr) ? $attr['filterStr'].$filterStr : $filterStr;
+        $attr['filterStr'] = isset($attr['filterStr']) ? $attr['filterStr'].$filterStr : $filterStr;
 
         $columnIndex = $attr['columnIndex'];
         $rowValue = $attr['rowValue'];
@@ -1154,13 +1154,13 @@ class ClassExcelReportBehavior extends Behavior
 
     private function nestedMatchRow($nestedRow, $matchFilter, $parentKey, $rowValue, $columnIndex, $objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
     {
-        if (array_key_exists('rows', $nestedRow)) {
+        if (isset($nestedRow['rows'])) {
             $nestedAttr = $nestedRow['rows'];
-            $nestedFilter = array_key_exists('filter', $nestedAttr) ? $nestedAttr['filter'] : null; // used to filter nested match row data
-            $nestedMatchFrom = array_key_exists('matchFrom', $nestedAttr) ? $nestedAttr['matchFrom'] : [];
-            $nestedMatchTo = array_key_exists('matchTo', $nestedAttr) ? $nestedAttr['matchTo'] : [];
-            $nestedMergeBy = array_key_exists('mergeBy', $nestedAttr) ? $nestedAttr['mergeBy'] : [];
-            $secondNestedRow = array_key_exists('children', $nestedAttr) ? $nestedAttr['children'] : [];
+            $nestedFilter = isset($nestedAttr['filter']) ? $nestedAttr['filter'] : null; // used to filter nested match row data
+            $nestedMatchFrom = isset($nestedAttr['matchFrom']) ? $nestedAttr['matchFrom'] : [];
+            $nestedMatchTo = isset($nestedAttr['matchTo']) ? $nestedAttr['matchTo'] : [];
+            $nestedMergeBy = isset($nestedAttr['mergeBy']) ? $nestedAttr['mergeBy'] : [];
+            $secondNestedRow = isset($nestedAttr['children']) ? $nestedAttr['children'] : [];
 
             $mergeColumns = $attr['mergeColumns'];
             $mergeColumnIndex = $columnIndex + ($mergeColumns - 1);
@@ -1225,20 +1225,20 @@ class ClassExcelReportBehavior extends Behavior
 
     private function matchColumns($objSpreadsheet, $objWorksheet, $objCell, $attr, $columnsArray=[], &$columnIndex, &$rowValue, $filterValue=null, $extra)
     {
-        $matchFrom = array_key_exists('matchFrom', $columnsArray) ? $columnsArray['matchFrom'] : [];
-        $matchTo = array_key_exists('matchTo', $columnsArray) ? $columnsArray['matchTo'] : [];
+        $matchFrom = isset($columnsArray['matchFrom']) ? $columnsArray['matchFrom'] : [];
+        $matchTo = isset($columnsArray['matchTo']) ? $columnsArray['matchTo'] : [];
         $columnData = $this->getPlaceholderData($matchFrom, $extra);
 
         $nestedColumnsArray = isset($columnsArray['children']['columns']) ? $columnsArray['children']['columns'] : [];
-        $nestedMatchFrom = array_key_exists('matchFrom', $nestedColumnsArray) ? $nestedColumnsArray['matchFrom'] : [];
-        $nestedMatchTo = array_key_exists('matchTo', $nestedColumnsArray) ? $nestedColumnsArray['matchTo'] : [];
+        $nestedMatchFrom = isset($nestedColumnsArray['matchFrom']) ? $nestedColumnsArray['matchFrom'] : [];
+        $nestedMatchTo = isset($nestedColumnsArray['matchTo']) ? $nestedColumnsArray['matchTo'] : [];
         $nestedColumnData = !empty($nestedMatchFrom) ? $this->getPlaceholderData($nestedMatchFrom, $extra) : [];
 
         $filterStr = $this->formatFilter($matchTo);
         if (!empty($nestedColumnData)) {
             $filterStr .= $this->formatFilter($nestedMatchTo);
         }
-        $attr['filterStr'] = array_key_exists('filterStr', $attr) ? $attr['filterStr'].$filterStr : $filterStr;
+        $attr['filterStr'] = isset($attr['filterStr']) ? $attr['filterStr'].$filterStr : $filterStr;
 
         if (!empty($columnData)) {
             foreach ($columnData as $key => $value) {
@@ -1288,9 +1288,9 @@ class ClassExcelReportBehavior extends Behavior
 
     private function countMergeData($mergeAttr, $parentKey, $mergeCount, $extra)
     {
-        $mergeFrom = array_key_exists('mergeFrom', $mergeAttr) ? $mergeAttr['mergeFrom'] : [];
-        $filter = array_key_exists('filter', $mergeAttr) ? $mergeAttr['filter'] : null;
-        $nestedMergeBy = array_key_exists('mergeBy', $mergeAttr) ? $mergeAttr['mergeBy'] : [];
+        $mergeFrom = isset($mergeAttr['mergeFrom']) ? $mergeAttr['mergeFrom'] : [];
+        $filter = isset($mergeAttr['filter']) ? $mergeAttr['filter'] : null;
+        $nestedMergeBy = isset($mergeAttr['mergeBy']) ? $mergeAttr['mergeBy'] : [];
 
         $data = [];
         if (!empty($mergeFrom)) {
@@ -1323,7 +1323,7 @@ class ClassExcelReportBehavior extends Behavior
 
     private function dropdown($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra)
     {
-        $matchFrom = array_key_exists('rows', $attr) ? $attr['rows'] : [];
+        $matchFrom = isset($attr['rows']) ? $attr['rows'] : [];
         $rowData = $this->getPlaceholderData($matchFrom, $extra);
 
         if (!empty($rowData)) {
@@ -1346,9 +1346,9 @@ class ClassExcelReportBehavior extends Behavior
         $rowValue = $attr['rowValue'];
         $cellCoordinate = $columnValue.$rowValue;
 
-        $attr['imageWidth'] = array_key_exists('imageWidth', $attr) ? $attr['imageWidth'] : 50;
-        $attr['imageMarginLeft'] = array_key_exists('imageMarginLeft', $attr) ? $attr['imageMarginLeft'] : 0;
-        $attr['imageMarginTop'] = array_key_exists('imageMarginTop', $attr) ? $attr['imageMarginTop'] : 0;
+        $attr['imageWidth'] = isset($attr['imageWidth']) ? $attr['imageWidth'] : 50;
+        $attr['imageMarginLeft'] = isset($attr['imageMarginLeft']) ? $attr['imageMarginLeft'] : 0;
+        $attr['imageMarginTop'] = isset($attr['imageMarginTop']) ? $attr['imageMarginTop'] : 0;
 
         $data = Hash::extract($extra['vars'], $attr['displayValue']);
         $imageContent = current($data);

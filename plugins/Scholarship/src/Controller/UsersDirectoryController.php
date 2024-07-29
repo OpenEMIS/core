@@ -24,7 +24,7 @@ class UsersDirectoryController extends PageController
         return $event;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
         parent::beforeFilter($event);
@@ -74,7 +74,7 @@ class UsersDirectoryController extends PageController
 
         $page->addToolbar('back', []); // to fix the order of the buttons
 
-        if ($this->AccessControl->check(['Scholarships', 'Applications', 'add'])) { 
+        if ($this->AccessControl->check(['Scholarships', 'Applications', 'add'])) {
             $page->addToolbar('Apply', [
                 'type' => 'element',
                 'element' => 'Page.button',

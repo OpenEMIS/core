@@ -6,7 +6,6 @@ use App\Model\Table\ControllerActionTable;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
-use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\I18n\Time;
 use Cake\Http\ServerRequest;
@@ -36,7 +35,7 @@ class SurveyRecipientsTable extends ControllerActionTable
         $name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey','Institution > Staff > Survey');
         $CustomModules = TableRegistry::get('CustomField.CustomModules');
         $moduleOptions =  $CustomModules
-            ->find('list', ['keyField' => 'id', 'valueField' => 'code']) 
+            ->find('list', ['keyField' => 'id', 'valueField' => 'code'])
            ->where([$CustomModules->aliasField('name IN') => $name])->toArray();
 
         if (!empty($moduleOptions)) {
@@ -81,17 +80,17 @@ class SurveyRecipientsTable extends ControllerActionTable
         $surveyFilterOptions = ['-1' => '-- '.__('All Survey Filter').' --'] + $surveyFilterOptions;
         $surveyFilterId = $serverRequest->getQuery('survey_filter_id');
         $this->advancedSelectOptions($surveyFilterOptions, $surveyFilterId);
-     
+
         $extra['elements']['controls'] = ['name' => 'Survey.survey_status', 'data' => [], 'options' => [], 'order' => 3];
         $this->controller->set(compact('surveyFilterOptions'));
 
         $institutions = TableRegistry::get('Institution.Institutions');
         $surveyForm = TableRegistry::get('Survey.SurveyForms');
         $SurveyFormFilters = TableRegistry::get('Survey.SurveyFormsFilters');
-        $SurveyStatus = TableRegistry::get('Survey.SurveyStatuses'); //POCOR-7611 
-        $SurveyAreas = TableRegistry::get('Survey.SurveyFilterAreas'); //POCOR-7611 
-        $SurveyInstitutionProviders=TableRegistry::get('Survey.SurveyFilterInstitutionProviders');//POCOR-7611 
-        $SurveyInstitutionTypes = TableRegistry::get('Survey.SurveyFilterInstitutionTypes');//POCOR-7611 
+        $SurveyStatus = TableRegistry::get('Survey.SurveyStatuses'); //POCOR-7611
+        $SurveyAreas = TableRegistry::get('Survey.SurveyFilterAreas'); //POCOR-7611
+        $SurveyInstitutionProviders=TableRegistry::get('Survey.SurveyFilterInstitutionProviders');//POCOR-7611
+        $SurveyInstitutionTypes = TableRegistry::get('Survey.SurveyFilterInstitutionTypes');//POCOR-7611
         $this->field('institution_code',['visible' => true]);
         $this->field('institution_name', ['visible' => true]);
         $this->field('status_id', ['visible' => false]);
@@ -192,16 +191,16 @@ class SurveyRecipientsTable extends ControllerActionTable
                 [$surveyForm->aliasField('id').'='.$this->aliasField('survey_form_id')])
             ->leftJoin([$SurveyFormFilters->getAlias() => $SurveyFormFilters->getTable()],
                 [$SurveyFormFilters->aliasField('survey_form_id').'='.$this->aliasField('survey_form_id')])
-            ->InnerJoin([$SurveyStatus->getAlias() => $SurveyStatus->getTable()],//POCOR-7611 
+            ->InnerJoin([$SurveyStatus->getAlias() => $SurveyStatus->getTable()],//POCOR-7611
                 [$SurveyStatus->aliasField('survey_form_id').'='.$this->aliasField('survey_form_id'),
-                 $SurveyStatus->aliasField('survey_filter_id').'='.$SurveyFormFilters->aliasField('id') 
+                 $SurveyStatus->aliasField('survey_filter_id').'='.$SurveyFormFilters->aliasField('id')
                 ])
-            ->distinct($institutions->aliasField('code'))//POCOR-7611 
+            ->distinct($institutions->aliasField('code'))//POCOR-7611
             ->where([$SurveyFormFilters->aliasField('id') => $surveyFilterId,
                      $SurveyFormFilters->aliasField('custom_module_id') => $moduleId,
-                     $this->aliasField('survey_form_id IN') => $surveyFormId,$conditions])//POCOR-7611 
+                     $this->aliasField('survey_form_id IN') => $surveyFormId,$conditions])//POCOR-7611
             ->order([$this->aliasField('id') => 'DESC']);
-        
+
         }elseif($moduleId == 1 && $surveyFormId == -1 && $surveyFilterId != -1){
             $query
             ->select(['id' => $this->aliasField('id'),'institution_name'=> $institutions->aliasField('name'),
@@ -212,13 +211,13 @@ class SurveyRecipientsTable extends ControllerActionTable
                 [$surveyForm->aliasField('id').'='.$this->aliasField('survey_form_id')])
             ->leftJoin([$SurveyFormFilters->getAlias() => $SurveyFormFilters->getTable()],
                 [$SurveyFormFilters->aliasField('survey_form_id').'='.$this->aliasField('survey_form_id')])
-            ->InnerJoin([$SurveyStatus->getAlias() => $SurveyStatus->getTable()],//POCOR-7611 
+            ->InnerJoin([$SurveyStatus->getAlias() => $SurveyStatus->getTable()],//POCOR-7611
                 [$SurveyStatus->aliasField('survey_filter_id').'='.$SurveyFormFilters->aliasField('id') ])
-            ->distinct( $institutions->aliasField('code'))//POCOR-7611 
-            ->where([$SurveyFormFilters->aliasField('id') => $surveyFilterId,$conditions])//POCOR-7611 
+            ->distinct( $institutions->aliasField('code'))//POCOR-7611
+            ->where([$SurveyFormFilters->aliasField('id') => $surveyFilterId,$conditions])//POCOR-7611
             ->group([$this->aliasField('institution_id')])
             ->order([$this->aliasField('id') => 'DESC']);
-        }  
+        }
         else{
             $query
             ->select(['id' => $this->aliasField('id'),'institution_name'=> $institutions->aliasField('name'),
@@ -232,13 +231,13 @@ class SurveyRecipientsTable extends ControllerActionTable
             ->where([$SurveyFormFilters->aliasField('id') => $surveyFilterId,$surveyForm->aliasField('custom_module_id') => $moduleId,$this->aliasField('survey_form_id') => $surveyFormId])
             ->group([$this->aliasField('institution_id')])
             ->order([$this->aliasField('id') => 'DESC']);
-        }              
+        }
     }
 
     //POCOR-7271
     public function findBySurveyRecipient(Query $query, array $options)
     {
-        if (array_key_exists('search', $options)) {
+        if (isset($options['search'])) {
             $search = $options['search'];
             $query
             ->join([

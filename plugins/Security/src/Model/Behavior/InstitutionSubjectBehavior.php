@@ -27,7 +27,7 @@ class InstitutionSubjectBehavior extends Behavior
         // This logic is dependent on SecurityAccessBehavior because it relies on SecurityAccess join table
         // This logic will only be triggered when the table is accessed by RestfulController
 
-        if (array_key_exists('user', $options) && is_array($options['user'])) { // the user object is set by RestfulComponent
+        if (array_key_exists('user', $options instanceof \ArrayObject ? $options->getArrayCopy() : $options) && is_array($options['user'])) { // the user object is set by RestfulComponent
             $user = $options['user'];
             if ($user['super_admin'] == 0) { // if he is not super admin
                 $userId = $user['id'];
@@ -256,11 +256,11 @@ class InstitutionSubjectBehavior extends Behavior
 
     public function findByAccess(Query $query, array $options)
     {
-        if (array_key_exists('accessControl', $options)) {
+        if (isset($options['accessControl'])) {
             $AccessControl = $options['accessControl'];
             $userId = $options['userId'];
             $roles = [];
-            if (array_key_exists('controller', $options)) {
+            if (isset($options['controller'])) {
                 $controller = $options['controller'];
                 $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
                 if (is_array($event->getResult())) {

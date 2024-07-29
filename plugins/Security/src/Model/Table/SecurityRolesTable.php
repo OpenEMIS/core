@@ -65,17 +65,17 @@ class SecurityRolesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
-      
+
         // webhook create role starts
          if($entity->isNew()) {
-          
+
             $body = array();
             $createRole = [
                 'role_id' =>$entity->id,
                 'role_name' =>$entity->name,
-               
+
             ];
-          
+
             /*$Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
             //if ($this->Auth->user()) { // creating issue while adding new permission //POCOR-6878
                 $Webhooks->triggerShell('role_create', [], $createRole);
@@ -89,9 +89,9 @@ class SecurityRolesTable extends ControllerActionTable
             $updateRole = [
                 'role_id' =>$entity->id,
                 'role_name' =>$entity->name,
-               
+
             ];
-          
+
             //$Webhooks = TableRegistry::get('Webhook.Webhooks');
             //$Webhooks->triggerShell('role_update', [], $updateRole);
             /*if ($this->Auth->user()) {
@@ -101,14 +101,14 @@ class SecurityRolesTable extends ControllerActionTable
 
         // webhook update role ends
 
-      
+
 
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
         // Webhook role delete -- Start
-       
+
         $deleteBody = [
             'role_id' => $entity->id
         ];
@@ -122,7 +122,7 @@ class SecurityRolesTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         $validator
             ->add('name', 'ruleUnique', [
                 'rule' => 'validateUnique',
@@ -189,7 +189,7 @@ class SecurityRolesTable extends ControllerActionTable
         // -1 = system roles, we are not allowing users to modify system roles
         // removing all buttons from the menu
         if ($groupId == self::FIXED_SYSTEM_GROUP_ID) {
-            if (array_key_exists('remove', $buttons)) {
+            if (isset($buttons['remove'])) {
                 unset($buttons['remove']);
             }
         }
@@ -298,93 +298,82 @@ class SecurityRolesTable extends ControllerActionTable
             'visible' => false
         ]);
     }
-public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-{
-    $selectedAction = $extra['selectedAction'];
 
-    $userId = $this->Auth->user('id');
-    $isSuperAdmin = $this->Auth->user('super_admin');
-    $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
-
-    switch ($selectedAction) 
+    //POCOR-8407 change in query
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        case 'user':
-            $selectedGroup = $extra['selectedGroup'];
+        $selectedAction = $extra['selectedAction'];
+        $userId = $this->Auth->user('id');
+        $isSuperAdmin = $this->Auth->user('super_admin');
+        $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
 
-            $conditions = [$this->aliasField('security_group_id') => $selectedGroup];
+        switch ($selectedAction) {
+            case 'user':
+                $selectedGroup = $extra['selectedGroup'];
+                if (!empty($selectedGroup)) {
+                    if (!empty($selectedGroup)) {
+                        $conditions = [$this->aliasField('security_group_id') => $selectedGroup];
 
-            if (!$isSuperAdmin) 
-            {
-                $userRole = $GroupRoles
-                    ->find()
-                    ->contain('SecurityRoles')
-                    ->order(['SecurityRoles.order'])
-                    ->where([
-                        $GroupRoles->aliasField('security_user_id') => $userId,
-                        'SecurityRoles.security_group_id' => $selectedGroup
-                    ])
-                    ->first();
-                    $order = [];
-                    if($userRole['security_role']['order'] != null){
-                        $order[$this->aliasField('order')] = $userRole['security_role']['order'];
-                    }else{
-                        $order[$this->aliasField('order IS')] = null;
+                        if (!$isSuperAdmin) {
+                            $userRole = $GroupRoles
+                                ->find()
+                                ->contain('SecurityRoles')
+                                ->order(['SecurityRoles.order'])
+                                ->where([
+                                    $GroupRoles->aliasField('security_user_id') => $userId,
+                                    'SecurityRoles.security_group_id' => $selectedGroup
+                                ])
+                                ->first();
+
+                            $conditions = [
+                                'OR' => [
+                                    // show roles that are lower privileges than current user role in selected group
+                                    [
+                                        $this->aliasField('security_group_id') => $selectedGroup,
+                                        $this->aliasField('order').' > ' => $userRole['security_role']['order'],
+                                    ],
+                                    // also show roles that are created by current user
+                                    [
+                                        $this->aliasField('security_group_id') => $selectedGroup,
+                                        $this->aliasField('created_user_id') => $userId
+                                    ]
+                                ]
+                            ];
+                        }
                     }
-                $conditions = [
-                    'OR' => [
-                        // show roles that are lower privileges than the current user role in the selected group
-                        [
-                            $this->aliasField('security_group_id') => $selectedGroup,
-                           $order
-                        ],
-                        // also show roles that are created by the current user
-                        [
-                            $this->aliasField('security_group_id') => $selectedGroup,
-                            $this->aliasField('created_user_id') => $userId,
-                        ]
-                    ]
-                ];
+                    }
 
                 $query->where($conditions);
-            }
-            break;
+                break;
 
-        case 'system':
-            //POCOR-8074 start
-            $conditions = [
-                'OR' => [
-                    // custom system-defined roles
-                    [
-                        $this->aliasField('security_group_id') => self::CUSTOM_SYSTEM_GROUP_ID,
-                    ],
-                    // fixed system-defined roles
-                    [
-                        $this->aliasField('security_group_id') => self::FIXED_SYSTEM_GROUP_ID
-                    ]
-                ]
-            ];
-            $query->where($conditions);
-            //POCOR-8074 end
-            if (!$isSuperAdmin) {
-                $userRole = $GroupRoles
-                    ->find()
-                    ->contain('SecurityRoles')
-                    ->order(['SecurityRoles.order'])
-                    ->where([
-                        $GroupRoles->aliasField('security_user_id') => $userId,
-                        'SecurityRoles.security_group_id IN ' => [self::FIXED_SYSTEM_GROUP_ID, self::CUSTOM_SYSTEM_GROUP_ID]
-                    ])
-                    ->first();
+            case 'system':
+                    $query
+                        ->where(function ($exp, $q) {
+                            return $exp->or_([
+                                $this->aliasField('security_group_id') => self::CUSTOM_SYSTEM_GROUP_ID,
+                                $this->aliasField('security_group_id') => self::FIXED_SYSTEM_GROUP_ID
+                            ]);
+                        });
 
-                $query->andWhere([$this->aliasField('order').' > ' => $userRole['security_role']['order']]);
-            }
-            break;
+                if (!$isSuperAdmin) {
+                    $userRole = $GroupRoles
+                        ->find()
+                        ->contain('SecurityRoles')
+                        ->order(['SecurityRoles.order'])
+                        ->where([
+                            $GroupRoles->aliasField('security_user_id') => $userId,
+                            'SecurityRoles.security_group_id IN ' => [self::FIXED_SYSTEM_GROUP_ID, self::CUSTOM_SYSTEM_GROUP_ID]
+                        ])
+                        ->first();
 
-        default:
-            break;
+                    $query->andWhere([$this->aliasField('order').' > ' => $userRole['security_role']['order']]);
+                }
+                break;
+
+            default:
+                break;
+        }
     }
-}
-
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
@@ -429,7 +418,7 @@ public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
             $this->field('security_group_id', [
                 'entity' => $entity
             ]);
-            
+
             $this->setFieldOrder([
                 'name', 'code', 'order', 'visible', 'security_group_id'
             ]);
@@ -475,7 +464,7 @@ public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
             case 'system':
                 if ($action == 'edit') {
                     $entity = $attr['entity'];
-                    
+
                     if ($entity->has('security_group_id') && $entity->security_group_id == self::FIXED_SYSTEM_GROUP_ID) {
                         $attr['type'] = 'readonly';
                         $attr['value'] = $entity->name;
@@ -539,7 +528,7 @@ public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     public function findByInstitution(Query $query, $options)
     {
         $ids = [self::FIXED_SYSTEM_GROUP_ID, self::CUSTOM_SYSTEM_GROUP_ID];
-        if (array_key_exists('id', $options)) {
+        if (isset($options['id'])) {
             // need to get the security_group_id of the institution
             $Institution = TableRegistry::get('Institution.Institutions');
             $institutionQuery = $Institution->find()
@@ -825,7 +814,7 @@ public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     /**
      * POCOR-6878,add defult order value
     */
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
 
         $connection = $this->getConnection();

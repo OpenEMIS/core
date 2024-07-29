@@ -1,7 +1,7 @@
-<?php 
+<?php
 
-$fieldName = (array_key_exists('fieldName', $attr))? $attr['fieldName']: null;
-$operation = (array_key_exists('operation', $attr))? $attr['operation']: null;
+$fieldName = (isset($attr['fieldName']))? $attr['fieldName']: null;
+$operation = (isset($attr['operation']))? $attr['operation']: null;
 $totalAmount = 0;
 $addBtnName = "";
 
@@ -19,10 +19,10 @@ switch ($fieldName) {
 	$totalAmount = $data->deductions;
 	$addBtnName = "Deduction";
 	break;
-}	
+}
 ?>
 <script type="text/javascript">
-	$(function(){ 
+	$(function(){
 		$(".total_salary_<?= $fieldName; ?>s").val(<?= $totalAmount; ?>);
 
 		//calculate the row values added upon loading
@@ -35,7 +35,7 @@ switch ($fieldName) {
 	<div class="input-form-wrapper">
 		<div class="table-toolbar">
 			<button class="btn btn-default btn-xs" onclick="$('#reload').val('<?php echo $operation.'Row'; ?>').click(); return false;">
-				<i class="fa fa-plus"></i> 
+				<i class="fa fa-plus"></i>
 				<span><?= __('Add '.$addBtnName) ?></span>
 			</button>
 		</div>
@@ -54,12 +54,12 @@ switch ($fieldName) {
 							<?php foreach ($data->{$fieldName} as $key => $obj) : ?>
 								<tr>
 									<td>
-										<?php 
-										if (array_key_exists('amount', $obj)) {
+										<?php
+										if (isset($obj['amount'])) {
 											$totalAmount += $obj['amount'];
 										}
-										if (array_key_exists('id', $obj)) {
-											echo $this->Form->input('Salaries.'.$fieldName.'.'.$key.'.id', array('type' => 'hidden', 'class' => $fieldName.'-control-id', 'label' => false, 'value' => $obj['id'])); 
+										if (isset($obj['id'])) {
+											echo $this->Form->input('Salaries.'.$fieldName.'.'.$key.'.id', array('type' => 'hidden', 'class' => $fieldName.'-control-id', 'label' => false, 'value' => $obj['id']));
 										}
 										?>
 										<?php
@@ -73,7 +73,7 @@ switch ($fieldName) {
 										?>
 									</td>
 									<td>
-										<?php 
+										<?php
 											$optionsArray = [];
 											$optionsArray['type'] = 'string';
 											$optionsArray['maxlength'] = 9;
@@ -93,7 +93,7 @@ switch ($fieldName) {
 											echo $this->Form->input('Salaries.'.$fieldName.'.'.$key.'.amount', $optionsArray);
 										 ?>
 									</td>
-									<td> 
+									<td>
 										<button onclick="jsTable.doRemove(this);jsTable.computeTotalForMoney('total_salary_<?php echo $fieldName; ?>s');jsForm.compute(this);" title="Delete" style="cursor: pointer;" class="btn btn-dropdown action-toggle btn-single-action">
 											<i class="fa fa-trash"></i>
 											<span>Delete</span>

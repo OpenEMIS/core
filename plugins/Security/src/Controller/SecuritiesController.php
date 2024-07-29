@@ -7,6 +7,7 @@ use App\Controller\AppController;
 use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
+use Cake\Event\EventInterface;
 
 class SecuritiesController extends AppController
 {
@@ -112,7 +113,7 @@ class SecuritiesController extends AppController
         }
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         if ($this->getPlugin() == 'Security') {
             $this->Security->setConfig('validatePost', false);
@@ -159,7 +160,7 @@ class SecuritiesController extends AppController
         $plugin = $this->getPlugin();
         $name = $this->getName();
 
-        $id = (array_key_exists('id', $options))? $options['id']: $this->request->getSession()->read($name.'.id');
+        $id = (isset($options['id']))? $options['id']: $this->request->getSession()->read($name.'.id');
 
         $tabElements = [
             $this->name => [
@@ -175,7 +176,7 @@ class SecuritiesController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
-    public function beforeRender(Event $event)
+    public function beforeRender(EventInterface $event)
     {
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');

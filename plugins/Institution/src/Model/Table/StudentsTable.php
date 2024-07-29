@@ -7,7 +7,7 @@ use ArrayObject;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Event\Event;
 use Cake\I18n\Time;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
@@ -588,7 +588,7 @@ class StudentsTable extends ControllerActionTable
         $options = array_merge($options, $newOptions);
 
         // targetInstitutionId is used to determine the error message, whether it is enrolled in 'this' or 'other' institution
-        $targetInstitutionId = (array_key_exists('targetInstitutionId', $options)) ? $options['targetInstitutionId'] : null;
+        $targetInstitutionId = (isset($options['targetInstitutionId'])) ? $options['targetInstitutionId'] : null;
 
         $enrolledInstitutionIds = $this->enrolledInAnyInstitution($studentId, $systemId, $options);
 
@@ -609,7 +609,7 @@ class StudentsTable extends ControllerActionTable
     {
         $newOptions['select'] = ['institution_id', 'education_grade_id'];
         $options = array_merge($options, $newOptions);
-        $getInstitutions = (array_key_exists('getInstitutions', $options)) ? $options['getInstitutions'] : false;
+        $getInstitutions = (isset($options['getInstitutions'])) ? $options['getInstitutions'] : false;
 
         $EducationGradesTable = TableRegistry::get('Education.EducationGrades');
 
@@ -640,7 +640,7 @@ class StudentsTable extends ControllerActionTable
     {
         $studentId = $options['studentId'];
         $statusCode = 'CURRENT';
-        if (array_key_exists('code', $options)) {
+        if (isset($options['code'])) {
             $statusCode = $options['code'];
         }
         $status = $this->StudentStatuses->getIdByCode($statusCode);
@@ -650,11 +650,11 @@ class StudentsTable extends ControllerActionTable
             $this->aliasField('student_status_id') => $status
         ];
 
-        if (array_key_exists('excludeInstitutions', $options) && !empty($options['excludeInstitutions'])) {
+        if (isset($options['excludeInstitutions']) && !empty($options['excludeInstitutions'])) {
             $conditions[$this->aliasField('institution_id') . ' NOT IN '] = $options['excludeInstitutions'];
         }
 
-        if (array_key_exists('select', $options) && !empty($options['select'])) {
+        if (isset($options['select']) && !empty($options['select'])) {
             $query->select($options['select']);
         }
 
@@ -692,9 +692,9 @@ class StudentsTable extends ControllerActionTable
 
     public function findTripPassengers(Query $query, array $options)
     {
-        $queryString = array_key_exists('querystring', $options) ? $options['querystring'] : [];
-        $institutionId = array_key_exists('institution_id', $queryString) ? $queryString['institution_id'] : 0;
-        $academicPeriodId = array_key_exists('academic_period_id', $queryString) ? $queryString['academic_period_id'] : 0;
+        $queryString = isset($options['querystring']) ? $options['querystring'] : [];
+        $institutionId = isset($queryString['institution_id']) ? $queryString['institution_id'] : 0;
+        $academicPeriodId = isset($queryString['academic_period_id']) ? $queryString['academic_period_id'] : 0;
 
         $query
             ->select([

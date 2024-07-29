@@ -57,7 +57,7 @@ class SurveyStatusesTable extends ControllerActionTable
         }*/
 
         // Start POCOR-5188
-        $is_manual_exist = $this->getManualUrl('Administration','Status','Survey');       
+        $is_manual_exist = $this->getManualUrl('Administration','Status','Survey');
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',
@@ -80,7 +80,7 @@ class SurveyStatusesTable extends ControllerActionTable
         $name = array('Institution > Overview','Institution > Students > Survey','Institution > Repeater > Survey','Institution > Staff > Survey');
         $CustomModules = TableRegistry::get('CustomField.CustomModules');
         $moduleOptions =  $CustomModules
-            ->find('list', ['keyField' => 'id', 'valueField' => 'code']) 
+            ->find('list', ['keyField' => 'id', 'valueField' => 'code'])
            ->where([$CustomModules->aliasField('name IN') => $name])->toArray();
 
         if (!empty($moduleOptions)) {
@@ -127,7 +127,7 @@ class SurveyStatusesTable extends ControllerActionTable
         $surveyFilterOptions = ['-1' => '-- '.__('All Survey Filter').' --'] + $surveyFilterOptions;
         $surveyFilterId = $serverRequest->getquery('survey_filter_id');
         $this->advancedSelectOptions($surveyFilterOptions, $surveyFilterId);
-     
+
         $extra['elements']['controls'] = ['name' => 'Survey.survey_status', 'data' => [], 'options' => [], 'order' => 3];
         $this->controller->set(compact('surveyFilterOptions'));
         $form  = TableRegistry::get('Survey.SurveyForms');
@@ -177,7 +177,7 @@ class SurveyStatusesTable extends ControllerActionTable
                     $form->aliasField('custom_module_id') =>$moduleId
 
                 ]);
-        }        
+        }
 
     }
 
@@ -209,32 +209,32 @@ class SurveyStatusesTable extends ControllerActionTable
     //POCOR-8096::Start
     public function deleteBeforeAction(Event $event, ArrayObject $extra)
     {
-        $data = $this->paramsDecode($this->request->data('primaryKey'));
+        $data = $this->paramsDecode($this->request->getData('primaryKey'));
         $surveyStatusId = $data['id'];
         $surveyStatusData = $this->get($surveyStatusId);
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $apData = $AcademicPeriods->find('all',['conditions'=>['start_date'=> $surveyStatusData->date_enabled, 'end_date'=> $surveyStatusData->date_disabled  ]])->first();
-        $surveyStatusPeriods = TableRegistry::get('survey_status_periods');
+        $surveyStatusPeriods = TableRegistry::get('Survey.SurveyStatusPeriods');
         $surveyStatusPeriodsData = $surveyStatusPeriods->find('all', ['conditions' => ['survey_status_id' => $surveyStatusData->id]])->toArray();
         foreach($surveyStatusPeriodsData as $surveyStatusPeriodsData1){
             $apId = $surveyStatusPeriodsData1->academic_period_id;
             $insSurveyTbl = TableRegistry::get('Institution.InstitutionSurveys');
             $insSurveyData = $insSurveyTbl->find('all', ['conditions' =>['survey_form_id'=> $surveyStatusData->survey_form_id, 'academic_period_id'=> $apId]])->toArray();
-            
+
             foreach($insSurveyData as $insSurvey1){
-                $institutionSurveyTableCellsTbl = TableRegistry::get('institution_survey_table_cells');
-                $institutionSurveyAnswersTbl = TableRegistry::get('institution_survey_answers');
-                $institutionStudentSurveysTbl = TableRegistry::get('institution_student_surveys');
-                $institutionStaffSurveysTbl = TableRegistry::get('institution_staff_surveys');
-                $institutionRepeaterSurveysTbl = TableRegistry::get('institution_repeater_surveys');
+                $institutionSurveyTableCellsTbl = TableRegistry::get('Institution.InstitutionSurveyTableCells');
+                $institutionSurveyAnswersTbl = TableRegistry::get('Institution.InstitutionSurveyAnswers');
+                $institutionStudentSurveysTbl = TableRegistry::get('Student.StudentSurveys');
+                $institutionStaffSurveysTbl = TableRegistry::get('Staff.StaffSurveys');
+                $institutionRepeaterSurveysTbl = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
 
-                $institution_repeater_survey_answers_tbl = TableRegistry::get('institution_repeater_survey_answers');
-                $institution_staff_survey_answers_tbl = TableRegistry::get('institution_staff_survey_answers');
-                $institution_student_survey_answers_tbl = TableRegistry::get('institution_student_survey_answers');
+                $institution_repeater_survey_answers_tbl = TableRegistry::get('InstitutionRepeater.RepeaterSurveyAnswers');
+                $institution_staff_survey_answers_tbl = TableRegistry::get('Staff.StaffSurveyAnswers');
+                $institution_student_survey_answers_tbl = TableRegistry::get('Student.StudentSurveyAnswers');
 
-                $institution_repeater_survey_table_cells_tbl = TableRegistry::get('institution_repeater_survey_table_cells');
-                $institution_staff_survey_table_cells_tbl = TableRegistry::get('institution_staff_survey_table_cells');
-                $institution_student_survey_table_cells_tbl = TableRegistry::get('institution_student_survey_table_cells');
+                $institution_repeater_survey_table_cells_tbl = TableRegistry::get('InstitutionRepeater.RepeaterSurveyTableCells');
+                $institution_staff_survey_table_cells_tbl = TableRegistry::get('Staff.StaffSurveyTableCells');
+                $institution_student_survey_table_cells_tbl = TableRegistry::get('Student.StudentSurveyTableCells');
 
                 $institutionSurveyTableCells = $institutionSurveyTableCellsTbl->find('all',['conditions' =>['institution_survey_id' => $insSurvey1->id]])->first();
                 if(!empty($institutionSurveyTableCells)){
@@ -283,7 +283,7 @@ class SurveyStatusesTable extends ControllerActionTable
                         return $this->controller->redirect($url);
                     }
                 }
-                
+
 
                 $institutionStaffSurveyData = $institutionStaffSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->survey_form_id, 'academic_period_id' => $apId]])->toArray();
                 foreach($institutionStaffSurveyData as $institutionStaffSurveyData1){
@@ -317,7 +317,7 @@ class SurveyStatusesTable extends ControllerActionTable
                         return $this->controller->redirect($url);
                     }
                 }
-                
+
 
                 $institutionStaffSurveyDataa = $institutionStaffSurveysTbl->find('all',['conditions' =>['parent_form_id' => $insSurvey1->survey_form_id, 'academic_period_id' => $apId]])->toArray();
                 foreach($institutionStaffSurveyDataa as $institutionStaffSurveyDataa1){
@@ -370,7 +370,7 @@ class SurveyStatusesTable extends ControllerActionTable
     {
         $AcademicPeriodLevels = TableRegistry::get('AcademicPeriod.AcademicPeriodLevels');
         $levelOptions = $AcademicPeriodLevels->getList()->toArray();
-        
+
         $attr['options'] = $levelOptions;
         $attr['onChangeReload'] = 'changePeriod';
         if ($action != 'add') {
@@ -386,7 +386,7 @@ class SurveyStatusesTable extends ControllerActionTable
         $selectedLevel = key($this->fields['academic_period_level']['options']);
         if ($serverRequest->is('post')) {
             $selectedLevel = $request->data($this->aliasField('academic_period_level'));
-           
+
         }
 
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -427,14 +427,14 @@ class SurveyStatusesTable extends ControllerActionTable
             ->toArray();
         $selectedForm = isset($query['form']) ? $query['form'] : key($formOptions);
 
-         
+
 
         return compact('moduleOptions', 'selectedModule', 'formOptions', 'selectedForm');
     }
 
     /**POCOR-6676 starts - modified conditions to save record before add
      * POCOR-7271 change condition based on new filters
-    **/ 
+    **/
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
        //echo "<pre>"; print_r($entity);die;
@@ -457,14 +457,14 @@ class SurveyStatusesTable extends ControllerActionTable
                 $institutionProviderId = $value['institution_provider_id'];
                 if($institutionProviderId != -1){
                     $providerId[]  = $value['institution_provider_id'];
-                    
+
                 }
             }
             if($provider[0]['institution_provider_id'] != -1){
                 $where[$Institutions->aliasField('institution_provider_id IN')] = $providerId;
             }
         }
-        
+
         $type = $filterInstitutionTypes->find()->select(['institution_type_id'])
                 ->where([$filterInstitutionTypes->aliasField('survey_filter_id') => $surveyFilterId])->toArray();
         $typsids = [];
@@ -504,7 +504,7 @@ class SurveyStatusesTable extends ControllerActionTable
                 $where[$Institutions->aliasField('area_id IN')] = $areaId;
             }
         }
-        
+
         $getInstitutionObj = $Institutions->find()
                         ->select([$Institutions->aliasField('id')])
                         ->where($where)
@@ -527,7 +527,7 @@ class SurveyStatusesTable extends ControllerActionTable
                                 ['status_id' => 1,'academic_period_id'=>$periodObj->id,'survey_form_id' => $surveyFormId,'institution_id' => $instId,'assignee_id' => $surveyDataVal->assignee_id,'modified_user_id' => 1,'modified' => new Time('NOW')],   //POCOR-7359 //field
                                 [
                                  'id' => $surveyDataVal['id'], //condition
-                                ] 
+                                ]
                             );
                     }else{
                         $entity = $InstitutionSurveys->newEntity([
@@ -547,7 +547,7 @@ class SurveyStatusesTable extends ControllerActionTable
             }
         }
     }
-    /**POCOR-6676 ends*/ 
+    /**POCOR-6676 ends*/
 
     //POCOR-7271
     public function onUpdateFieldSurveyFilterId(Event $event, array $attr, $action, ServerRequest $request)
@@ -558,7 +558,7 @@ class SurveyStatusesTable extends ControllerActionTable
             $form  = TableRegistry::get('Survey.SurveyForms');
             $surveyFormId = $form->find()->first()->id;
         }else{
-          $surveyFormId = $surveyFormId;  
+          $surveyFormId = $surveyFormId;
         }
         if(!empty($this->request->getAttribute('params')['pass'][1])){
             $dataid = $this->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
@@ -574,7 +574,7 @@ class SurveyStatusesTable extends ControllerActionTable
             return $attr;
         }elseif($action == 'add'){
             $filterOptions = $formTable
-                ->find('list', ['keyField' => 'id', 'valueField' => 'name']) 
+                ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
                 ->where([$formTable->aliasField('survey_form_id') => $surveyFormId,$formTable->aliasField('name IS NOT') => ''])
                 ->toArray();
             $attr['type'] = 'select';
@@ -583,13 +583,13 @@ class SurveyStatusesTable extends ControllerActionTable
             $attr['onChangeReload'] = 'changeModule';
             return $attr;
         }
-        
+
     }
 
     //POCOR-7271
     public function findBySurveyFilter(Query $query, array $options)
     {
-        if (array_key_exists('search', $options)) {
+        if (isset($options['search'])) {
             $search = $options['search'];
             $query
             ->join([
@@ -619,14 +619,14 @@ class SurveyStatusesTable extends ControllerActionTable
     {
         $formTable = TableRegistry::get('Survey.SurveyForms');
         $formOptions = $formTable
-            ->find('list', ['keyField' => 'id', 'valueField' => 'name']) 
+            ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->toArray();
         $attr['type'] = 'select';
         $attr['options'] = $formOptions;
         $attr['select'] = false;
         $attr['onChangeReload'] = 'changeModule';
         return $attr;
-         
+
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
