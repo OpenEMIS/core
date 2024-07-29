@@ -258,34 +258,34 @@ const COLUMN_INPUT_REASON_OR_COMMENT: any = {
 
 const attendanceType = {
   'NOTMARKED': {
-      code: 'NOTMARKED',
-      icon: 'fa fa-minus',
-      color: '#999999'
+    code: 'NOTMARKED',
+    icon: 'fa fa-minus',
+    color: '#999999'
   },
   'PRESENT': {
-      code: 'PRESENT',
-      icon: 'fa fa-check',
-      color: '#77B576'
+    code: 'PRESENT',
+    icon: 'fa fa-check',
+    color: '#77B576'
   },
   'LATE': {
-      code: 'LATE',
-      icon: 'fa fa-check-circle-o',
-      color: '#999'
+    code: 'LATE',
+    icon: 'fa fa-check-circle-o',
+    color: '#999'
   },
   'UNEXCUSED': {
-      code: 'UNEXCUSED',
-      icon: 'fa fa-circle-o',
-      color: '#CC5C5C'
+    code: 'UNEXCUSED',
+    icon: 'fa fa-circle-o',
+    color: '#CC5C5C'
   },
   'EXCUSED': {
-      code: 'EXCUSED',
-      icon: 'fa fa-circle-o',
-      color: '#CC5C5C'
+    code: 'EXCUSED',
+    icon: 'fa fa-circle-o',
+    color: '#CC5C5C'
   },
   'NoScheduledClicked': {
-      code: 'NoScheduledClicked',
-      icon: '',
-      color: 'black',
+    code: 'NoScheduledClicked',
+    icon: '',
+    color: 'black',
   }
 };
 
@@ -431,13 +431,16 @@ function getEditCommentElement(data, context, api) {
   let dataKey = 'comment';
   // let scope = context.scope;
   let eTextarea = document.createElement("textarea");
+  eTextarea.style.width = '160px'; // Set the width as needed
+  eTextarea.style.height = '80px'; // Set the height as needed
+  eTextarea.style.resize = 'none';
   eTextarea.setAttribute("placeholder", "Comments");
   eTextarea.setAttribute("id", dataKey);
 
   eTextarea.value = data.institution_student_absences[dataKey];
   eTextarea.addEventListener('blur', () => {
-      let oldValue = data.institution_student_absences.comment;
-      data.institution_student_absences[dataKey] = eTextarea.value;
+    let oldValue = data.institution_student_absences.comment;
+    data.institution_student_absences[dataKey] = eTextarea.value;
   })
 
   return eTextarea
@@ -447,7 +450,7 @@ function getViewCommentsElement(data) {
   let comment = data.institution_student_absences.comment;
   let html = '';
   if (comment != null) {
-      html = '<div class="absences-comment"><i class="' + icons.COMMENT + '"></i><span style="margin-left: 8px;">' + comment + '</span></div>';
+    html = '<div class="absences-comment"><i class="' + icons.COMMENT + '"></i><span style="margin-left: 8px;">' + comment + '</span></div>';
   }
   return html
 }
@@ -458,9 +461,9 @@ function getViewAbsenceReasonElement(data, studentAbsenceReasonList) {
   let html = '';
 
   if (absenceReasonId === null) {
-      html = '<div><i class="' + icons.PRESENT + '"></i></div>';
+    html = '<div><i class="' + icons.PRESENT + '"></i></div>';
   } else {
-      html = '<div class="absence-reason"><i class="' + icons.REASON + '"></i><span style="margin-left: 8px;">' + absenceReasonObj.name + '</span></div>';
+    html = '<div class="absence-reason"><i class="' + icons.REASON + '"></i><span style="margin-left: 8px;">' + absenceReasonObj.name + '</span></div>';
   }
 
   return html
@@ -470,11 +473,11 @@ function setRowDatas(context, data, api) {
   let studentList = context.scope.data
 
   studentList.forEach((dataItem, index) => {
-      if (dataItem.institution_student_absences.absence_type_code == null || dataItem.institution_student_absences.absence_type_code == "PRESENT") {
-          dataItem.rowHeight = 60;
-      } else {
-          dataItem.rowHeight = 120;
-      }
+    if (dataItem.institution_student_absences.absence_type_code == null || dataItem.institution_student_absences.absence_type_code == "PRESENT") {
+      dataItem.rowHeight = 60;
+    } else {
+      dataItem.rowHeight = 120;
+    }
   })
   // api.setRowData(studentList)
 }
@@ -487,21 +490,21 @@ function getEditAbsenceReasonElement(data, studentAbsenceReasonList, context, ap
   eSelectWrapper.setAttribute("id", dataKey);
   let eSelect = document.createElement("select");
   if (data.institution_student_absences[dataKey] == null) {
-      data.institution_student_absences[dataKey] = studentAbsenceReasonList[0].id;
+    data.institution_student_absences[dataKey] = studentAbsenceReasonList[0].id;
   }
 
   studentAbsenceReasonList.forEach((obj, key) => {
-      let eOption = document.createElement("option");
-      let labelText = obj.name;
-      eOption.setAttribute("value", obj.id);
-      eOption.innerHTML = labelText;
-      eSelect.appendChild(eOption);
+    let eOption = document.createElement("option");
+    let labelText = obj.name;
+    eOption.setAttribute("value", obj.id);
+    eOption.innerHTML = labelText;
+    eSelect.appendChild(eOption);
   })
 
   eSelect.value = data.institution_student_absences[dataKey];
   eSelect.addEventListener('change', () => {
-      let oldValue = data.institution_student_absences[dataKey];
-      data.institution_student_absences[dataKey] = eSelect.value;
+    let oldValue = data.institution_student_absences[dataKey];
+    data.institution_student_absences[dataKey] = eSelect.value;
   })
   eSelectWrapper.appendChild(eSelect);
   return eSelectWrapper;
