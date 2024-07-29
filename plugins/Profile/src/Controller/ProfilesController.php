@@ -11,6 +11,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Routing\Router;
+use Cake\Event\EventInterface;
 use App\Controller\AppController;
 
 class ProfilesController extends AppController
@@ -533,7 +534,7 @@ class ProfilesController extends AppController
 
     private function attachAngularModules()
     {
-        $action = $this->request->action;
+        $action = $this->request->getAttribute('params')['action'];//POCOR-8379
 
         switch ($action) {
             case 'StudentResults':
@@ -571,7 +572,7 @@ class ProfilesController extends AppController
         }
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
         $session = $this->request->getSession();
@@ -782,7 +783,7 @@ class ProfilesController extends AppController
 
             $model->fields['security_user_id']['type'] = 'hidden';
             $model->fields['security_user_id']['value'] = $userId;
-            
+
             if (count($this->request->getParam('pass')) > 2) {
                 $modelId = $this->request->getParam('pass')[1]; // id of the sub model
                 $ids = $this->ControllerAction->paramsDecode($modelId);
@@ -902,7 +903,7 @@ class ProfilesController extends AppController
         }
     }
 
-    public function beforeRender(Event $event)
+    public function beforeRender(EventInterface $event)
     {
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
@@ -984,7 +985,7 @@ class ProfilesController extends AppController
         $plugin = $this->plugin;
         $name = $this->name;
 
-        $id = (array_key_exists('id', $options)) ? $options['id'] : $this->Auth->user('id');
+        $id = (isset($options['id'])) ? $options['id'] : $this->Auth->user('id');
 
         $tabElements = [
             $this->name => ['text' => __('Overview')],
@@ -1036,8 +1037,8 @@ class ProfilesController extends AppController
         } else {
             $studentId = $this->request->getParam('pass')[1];
         }
-        $id = (array_key_exists('id', $options)) ? $options['id'] : 0;
-        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
+        $id = (isset($options['id'])) ? $options['id'] : 0;
+        $type = (isset($options['type'])) ? $options['type'] : null;
         $tabElements = [];
         $studentUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
         $plugin = $this->getPlugin();
@@ -1189,7 +1190,7 @@ class ProfilesController extends AppController
     public
     function getFinanceTabElements($options = [])
     {
-        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
+        $type = (isset($options['type'])) ? $options['type'] : null;
         $plugin = $this->getPlugin();
         $name = $this->getName();
         $tabElements = [];
@@ -1216,7 +1217,7 @@ class ProfilesController extends AppController
     public
     function getCareerTabElements($options = [])
     {
-        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
+        $type = (isset($options['type'])) ? $options['type'] : null;
         $tabElements = [];
         $staffUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
         $studentTabElements = [
@@ -1287,7 +1288,7 @@ class ProfilesController extends AppController
     public
     function getStaffFinanceTabElements($options = [])
     {
-        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
+        $type = (isset($options['type'])) ? $options['type'] : null;
         $tabElements = [];
         $staffUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
         $staffTabElements = [
@@ -1393,7 +1394,7 @@ class ProfilesController extends AppController
         $shiftOptions = TableRegistry::get('Schedule.ScheduleIntervals')
             ->getStaffShiftOptions($academicPeriodId, false, $institutionId);
         $intervals = TableRegistry::get('Schedule.ScheduleIntervals');
-        
+
         $conditions = [
             $intervals->aliasField('academic_period_id') => $academicPeriodId,
         ];

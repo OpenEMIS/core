@@ -48,6 +48,7 @@ class SurveyFormsTable extends CustomFormsTable
         ];
         parent::initialize($config);
         $this->hasMany('SurveyStatuses', ['className' => 'Survey.SurveyStatuses', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('SurveyFilters', ['className' => 'Survey.SurveyFilters', 'dependent' => true, 'cascadeCallbacks' => true]);
         // The hasMany association for InstitutionSurveys and StudentSurveys is done in onBeforeDelete() and is added based on module to avoid conflict.
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Rules' => ['index'],
@@ -107,7 +108,7 @@ class SurveyFormsTable extends CustomFormsTable
                 foreach ($postedEntity['custom_filters'] as $key => $obj) {
                     $postedFilters[$obj->id] = $obj->name;
                 }
-                
+
                 $compareFilters = array_intersect_key($originalFilters, $postedFilters);
                 if (sizeof($originalFilters) != sizeof($compareFilters)) {
                     $differentFilters = array_diff_key($originalFilters, $postedFilters);
@@ -154,7 +155,7 @@ class SurveyFormsTable extends CustomFormsTable
                         ]);
                         $InstitutionSurveyT->save($entity);
                     }
-                    
+
                 }
             }
         }else{
@@ -176,7 +177,7 @@ class SurveyFormsTable extends CustomFormsTable
                         'created_user_id'=>$this->Auth->user('id'),
                         'created'=> date('Y-m-d h:i:s')
                     ]);
-                    if($saveSurvey = $InstitutionSurveyT->save($entity)){ 
+                    if($saveSurvey = $InstitutionSurveyT->save($entity)){
                         $InstitutionTypes = $InstitutionTypesT->find('all')->toArray();
                         foreach($InstitutionTypes as $ki => $InstitutionType){
                             $exixtData = $SurveyFormsFilters->find('all',['conditions'=>['survey_form_id'=>$saveSurvey->survey_form_id, 'survey_filter_id' => $InstitutionType->id ]])->first();
@@ -191,14 +192,14 @@ class SurveyFormsTable extends CustomFormsTable
                                     Log::write('debug', $surveyFormFilterEntity->errors());
                                 }
                             }
-                            
+
                         }
                     }
                 }
             }
 
-            
-            
+
+
         }
         //POCOR-7263::End
       //  $this->setAllCustomFilter($entity);
@@ -280,20 +281,34 @@ class SurveyFormsTable extends CustomFormsTable
 
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $customModule = $this->CustomModules
-            ->find()
-            ->where([
-                $this->CustomModules->aliasField('id') => $entity->custom_module_id
-            ])
-            ->first();
+        $extra['excludedModels'] = [
+            $this->CustomFields->getAlias()
+        ];
+        $associations = $this->getAssociatedRecords($this, $entity, $extra);
+        $totalCount = 0;
+        foreach ($associations as $row) {
+            $totalCount += $row['count'];
+        }
+        if ($totalCount > 0) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        } else {
+            $customModule = $this->CustomModules
+                ->find()
+                ->where([
+                    $this->CustomModules->aliasField('id') => $entity->custom_module_id
+                ])
+                ->first();
 
-        $model = $customModule->model;
-        if ($model == 'Institution.Institutions') {
-            $this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
-        } elseif ($model == 'Student.Students') {
-            $this->hasMany('StudentSurveys', ['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
-        } elseif ($model == 'Staff.Staff') {
-            $this->hasMany('StaffSurveys', ['className' => 'Staff.StaffSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+            $model = $customModule->model;
+            if ($model == 'Institution.Institutions') {
+                $this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+            } elseif ($model == 'Student.Students') {
+                $this->hasMany('StudentSurveys', ['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+            } elseif ($model == 'Staff.Staff') {
+                $this->hasMany('StaffSurveys', ['className' => 'Staff.StaffSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
+            }
         }
     }
 
@@ -356,7 +371,7 @@ class SurveyFormsTable extends CustomFormsTable
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
         if ($this->AccessControl->check([$this->controller->getName(), 'Forms', 'download'])) {
-            if (array_key_exists('view', $buttons)) {
+            if (isset($buttons['view'])) {
                 $downloadButton = $buttons['view'];
                 $downloadButton['url'] = [
                     'plugin' => 'Rest',
@@ -533,14 +548,14 @@ class SurveyFormsTable extends CustomFormsTable
                 ])
                 ->toArray();
 
-            $selectedModule = array_key_exists('module', $options) ? $options['module'] : key($moduleOptions);
+            $selectedModule = isset($options['module']) ? $options['module'] : key($moduleOptions);
             $query->where([
                 $this->aliasField('custom_module_id') => $selectedModule
             ]);
 
             // institution type checking for forms of Institution.Institutions module
             if (array_key_exists($selectedModule, $moduleOptions) && $moduleOptions[$selectedModule] == 'Institution.Institutions') {
-                // check the form filters table if the selected module is Institution.Institutions 
+                // check the form filters table if the selected module is Institution.Institutions
                 // filter the survey_form if is not super_admin
                 if ($user['super_admin'] == 0) {
                     $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
@@ -572,7 +587,7 @@ class SurveyFormsTable extends CustomFormsTable
                                 [$SurveyFormsFilters->aliasField('survey_filter_id') => 0]
                             ]
                         ]);*/
-                } 
+                }
             }
 
             return $query;
@@ -582,7 +597,7 @@ class SurveyFormsTable extends CustomFormsTable
     // Start POCOR-5188
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-		$is_manual_exist = $this->getManualUrl('Administration','Forms','Survey');       
+		$is_manual_exist = $this->getManualUrl('Administration','Forms','Survey');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -642,5 +657,5 @@ class SurveyFormsTable extends CustomFormsTable
         }
     }
 
-    
+
 }

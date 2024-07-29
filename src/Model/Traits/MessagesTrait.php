@@ -408,7 +408,7 @@ trait MessagesTrait
                 'remoteFail' => 'Remote authentication failed, please try local login.',
                 'changePassword' => 'This is the first time that you are logging in, please change your password.',
                 'locked_account'=> 'Your account has been locked. Please contact system administrator for assistance.'//POCOR-2976
-            
+
             ],
             'noAccess' => 'You do not have access to this location.',
             'emptyFields' => 'Some of the required fields for this authentication type are empty.'
@@ -474,7 +474,7 @@ trait MessagesTrait
         'Users' => [
             'student_category' => 'Category',
             'status' => 'Status',
-            'select_student' => 'Select Student', 
+            'select_student' => 'Select Student',
             'select_users' => 'Select Users', // POCOR-7362
             'select_student_empty' => 'No Other Student Available',
             'add_all_student' => 'Add All Students',
@@ -687,7 +687,7 @@ trait MessagesTrait
             'evaluator_types' => 'Type',
             'evaluator' => 'Evaluator'
         ],
-        
+
         'TrainingSessionResults' => [
             'noResultTypes' => 'You need to configure Result Types under Training Course.',
             'noTrainees' => 'No Available Trainees'
@@ -2047,7 +2047,7 @@ trait MessagesTrait
                 'range' => 'Text should be between %d and %d characters'
             ],
             'number' => [
-                'minValue' => 'Number should not be lesser than %d',
+                'minValue' => 'Number should not be less than %d',
                 'maxValue' => 'Number should not be greater than %d',
                 'range' => 'Number should be between %d and %d'
             ],
@@ -2564,7 +2564,7 @@ trait MessagesTrait
                 ]
             ]
         ], //POCOR-7271 end
-        
+
         'SpecialNeeds' => [
             'SpecialNeedsReferrals' => [
                 'date' => [
@@ -2649,8 +2649,8 @@ trait MessagesTrait
 
     public function getMessage($code, $options = [])
     {
-        $sprintf = (array_key_exists('sprintf', $options))? $options['sprintf']: [];
-        $defaultMessage = (array_key_exists('defaultMessage', $options))? $options['defaultMessage']: true;
+        $sprintf = (isset($options['sprintf']))? $options['sprintf']: [];
+        $defaultMessage = (isset($options['defaultMessage']))? $options['defaultMessage']: true;
 
         $Labels = TableRegistry::get('Labels');
         $message = Cache::read($code, $Labels->getDefaultConfig());
@@ -2672,6 +2672,6 @@ trait MessagesTrait
             }
         }
 
-        return !is_array($message) ? vsprintf(__($message), $sprintf) : $message;
+        return !is_array($message) ? vsprintf(__($message), (array)$sprintf) : $message;
     }
 }

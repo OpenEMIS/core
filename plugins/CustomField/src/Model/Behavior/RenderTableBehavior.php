@@ -39,10 +39,10 @@ class RenderTableBehavior extends RenderBehavior {
         if ($customField->has('params') && !empty($customField->params)) {
             $params = json_decode($customField->params, true);
 
-            if (array_key_exists('number', $params)) {
+            if (isset($params['number'])) {
                 $valueColumn = 'number_value';
                 $cellAttr['type'] = 'number';
-            } else if (array_key_exists('decimal', $params)) {
+            } else if (isset($params['decimal'])) {
                 $valueColumn = 'decimal_value';
                 $cellAttr['type'] = 'number';
 
@@ -161,13 +161,13 @@ class RenderTableBehavior extends RenderBehavior {
                 $textValue = NULL;
                 $numberValue = NULL;
                 $decimalValue = NULL;
-                if (array_key_exists('text_value', $attr)) {
+                if (isset($attr['text_value'])) {
                     $textValue = $attr['text_value'];
                 }
-                if (array_key_exists('number_value', $attr)) {
+                if (isset($attr['number_value'])) {
                     $numberValue = $attr['number_value'];
                 }
-                if (array_key_exists('decimal_value', $attr)) {
+                if (isset($attr['decimal_value'])) {
                     $decimalValue = $attr['decimal_value'];
                 }
 

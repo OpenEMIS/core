@@ -29,7 +29,7 @@ export class ExcelService {
   private columnHeaderFill: any = {
     type: "pattern",
     pattern: "solid",
-    fgColor: { argb: "003366" },
+    fgColor: { argb: "6699CC" },
   };
   private columnHeaderFont = {
     name: "Calibri",
@@ -192,7 +192,7 @@ export class ExcelService {
       } else {
         name = row.getCell(col);
         id = row.getCell(col + 1);
-      }
+      }      
       name.value = referenceData[referenceDataArr].header[0];
       id.value = referenceData[referenceDataArr].header[1];
       if (["Candidate"].includes(referenceDataArr)) {
@@ -208,7 +208,12 @@ export class ExcelService {
       // j is the number of row where we will begin to add references after adding logo, subtitle and col heading. hence j=4.
       let j = 4;
       let refData = referenceData[referenceDataArr].data;
+      console.log(refData,"refData");
+      console.log(this.idAsKey,"this.idAsKey");
+      
       for (let x in refData) {
+        console.log(this.referenceSheet.getCell(j, col).value,"topa", refData[x]);
+        
         this.referenceSheet.getCell(j, col).value = this.idAsKey
           ? refData[x]
           : x;
@@ -250,6 +255,10 @@ export class ExcelService {
     // ['"One,Two,Three,Four"']
     let colNumber = this.referenceHeadingsAddressObject[headings[currentValue]];
     let startRow = 4;
+    console.log(referenceData,"Object.keys(referenceData[headings[currentValue]].data).length");
+    console.log(headings,"headings");
+    console.log(currentValue,"currentValue");
+    
     let endRow =
       Object.keys(referenceData[headings[currentValue]].data).length + 3;
     let range =

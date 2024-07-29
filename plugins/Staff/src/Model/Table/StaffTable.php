@@ -194,7 +194,7 @@ class StaffTable extends AppTable
         // need to find out order values because recordbehavior changes it
         $allOrderValues = [];
         foreach ($this->fields as $key => $value) {
-            $allOrderValues[] = (array_key_exists('order', $value) && !empty($value['order']))? $value['order']: 0;
+            $allOrderValues[] = (isset($value['order']) && !empty($value['order']))? $value['order']: 0;
         }
         $highestOrder = max($allOrderValues);
 

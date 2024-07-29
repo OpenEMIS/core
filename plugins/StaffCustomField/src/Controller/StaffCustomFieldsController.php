@@ -6,6 +6,7 @@ use App\Controller\AppController;
 use Cake\ORM\Table;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use Cake\Event\EventInterface;
 
 class StaffCustomFieldsController extends AppController
 {
@@ -24,7 +25,7 @@ class StaffCustomFieldsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'StaffCustomField.StaffCustomForms']);
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         if ($this->getPlugin() == 'StaffCustomField') {
             $this->Security->setConfig('validatePost', false);
@@ -57,7 +58,7 @@ class StaffCustomFieldsController extends AppController
         $this->set('contentHeader', $header);
     }
 
-    public function beforeRender(Event $event)
+    public function beforeRender(EventInterface $event)
     {
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');

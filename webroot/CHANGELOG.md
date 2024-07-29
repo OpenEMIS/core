@@ -1,3 +1,76 @@
+### [4.1.0] - 2024-07-24
+- Implemented: Develop Meals feature in Angular v11
+- Implemented: Develop authentication function from Angular v11 to v4 APIs
+- Implemented: Apply OpenEMIS StyleGuide v11 to OpenEMIS Core
+- Bug Fixed: Integrate existing API to use the base URL that is provided in Login API
+- Bug Fixed: Reports(Automation) Part Two: Page is unable to load
+- Bug Fixed: Administration>System Setup(Automation): Page is unable to load
+- Bug Fixed: Workbench(Libya): Workbench is empty even though there are pending survey issues
+
+### [4.0.13] - 2024-07-18
+- Bug Fixed: Fix for PHP 8.3 changes
+
+### [4.0.12] - 2024-07-17
+- Bug Fixed: Administration>Survey>Forms>Rules: Internal server error
+- Bug Fixed: Institutions > Staff > Add Page: Dropdown for Nationality and gender is not populated
+- Bug Fixed: Institutions > Attendances > Students: Filters are not populated. Students are not showing
+- Bug Fixed: Institutions>Staff>General>Contact: Unable to load page
+- Bug Fixed: Institutions > Appointments > Positions : Upon clicking view Positions, system returns 404 error
+- Bug Fixed: Administration>Survey>Forms: Number validation is not working
+- Bug Fixed: Directory: Unable to load page
+- Bug Fixed: Institutions>General>Map>Export: User is unable to export
+- Bug Fixed: Administration>System Setup>Custom Fields: Page is not loading
+
+### [4.0.11] - 2024-07-16
+- Bug Fixed: Administration>System Setup>System Configuration: Display records is jumbled up
+- Bug Fixed: PHP 8.0(Administration>Security>Users)-Cannot search for student and staff
+- Bug Fixed: (PHP8.0)Institutions>Survey>Forms: User is unable to save survey answers with validations
+
+### [4.0.10] - 2024-07-12
+- Bug Fixed: Administration > Surveys > Forms > Filters: Other permissions are disabled
+- Bug Fixed: PHP 8.0: Pages cannot load Part three
+- Bug Fixed: PHP 8.0: Login as Principal and access and edit survey
+- Bug Fixed: (PHP8.0)Institutions>Survey>Forms: Edit not present in list page
+- Bug Fixed: (PHP8.0)Administration>Surveys>Forms: Download getting internal server error
+- Bug Fixed: (PHP8.0)Institutions>Survey>Forms: User getting 404 when saving survey
+- Bug Fixed: (PHP8.0)Institutions>Survey>Forms: User getting blank page when first login user
+
+### [4.0.9] - 2024-07-11
+- Implemented: Develop changes to API for attendance import template
+- Bug Fixed: Login : When logged in as Arabic, system switches back to English after navigating to another page
+- Bug Fixed: Institutions>Surveys>Forms: Repeater Form and Staff List are not showing correctly
+- Bug Fixed: Administration>Survey>Forms: User is unable to view, edit and delete and save
+- Bug Fixed: PHP 8.0: Pages cannot load
+- Bug Fixed: PHP 8.0: Pages cannot load Part two
+
+### [4.0.8] - 2024-07-10
+- Bug Fixed: Institutions > Staff > Career > Leave: When applying for leave for staff for the previous academic period, the page got refreshed upon selecting the assignee
+- Bug Fixed: Administration > Surveys > Forms > Filters/Recipient: When giving permission for user to view Survey Filters and Recipients, the user is not able to see it in their account
+- Bug Fixed: Administration>Security>Roles>Permissions: It does not show security role name and cannot save
+- Bug Fixed: Personal>Student>Academic(Automation): Showing blank page for all tabs
+- Bug Fixed: Institutions>Surveys>Forms: Student list is not showing correctly
+- Bug Fixed: 404 error page is displayed but system errors is not updated
+
+### [4.0.7] - 2024-07-09
+- Implemented: Develop APIs for student attendance import, export, no scheduled and class
+- Bug Fixed: Administration > System Setup > Custom Fields > Institution/Student/Staff/Infrastructure: The phrase is "Should not be lesser than"
+- Bug Fixed: Administration > Profiles > Students: PDF Template not formatted correctly
+- Bug Fixed: Personal>Staff>Career>Institution Curricular(Automation): User is getting blank page
+- Bug Fixed: Institutions>Students>Academic>Programmes(Automation): It should show Student Name - Tab Name
+- Bug Fixed: Administration > Surveys > Forms : Sections are not appearing in Question tab when viewed
+
+### [4.0.6] - 2024-07-08
+- Implemented: Develop changes to API for meals import template
+- Bug Fixed: Institutions>Students>List>Overview: Custom fields are not showing
+- Bug Fixed: Institutions>Academic>Subjects: Added subjects not showing unassigned students and export is not showing correctly
+- Bug Fixed: 404 error page not displayed and debug not working
+
+### [4.0.5] - 2024-07-08
+- Bug Fixed: Institutions > Performance > Report Cards > Merge and Download PDF: When merging and downloading PDF for students report card, the page gives a 404 error.
+- Bug Fixed: Institutions>Staff>Career>Attendance(Automation): User is getting blank page Part 3
+- Bug Fixed: Administrations > Surveys > Forms > Filters/Status : Feature returns blank page
+- Bug Fixed: Institutions > Surveys > Forms : Questions configured in Survey Forms are not showing
+
 ### [4.0.4] - 2024-07-05
 - Bug Fixed: Institutions>Students>Add(Automation): Unable to add students by OpenEMIS or Identity Number
 - Bug Fixed: Institutions>Students>Guardian>Add: Relation type is empty

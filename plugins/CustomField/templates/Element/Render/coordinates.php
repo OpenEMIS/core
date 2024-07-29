@@ -33,8 +33,8 @@
 	            ],
 	            'value' => (!is_null($values)) ? $values->latitude : '',
 			];
-			$latError = (array_key_exists('latitude', $errors)) ? $errors['latitude'] : false;
-			$lngError = (array_key_exists('longitude', $errors)) ? $errors['longitude'] : false;
+			$latError = (isset($errors['latitude'])) ? $errors['latitude'] : false;
+			$lngError = (isset($errors['longitude'])) ? $errors['longitude'] : false;
 		?>
 
 		<div class="input-form-wrapper <?php if ($latError || $lngError): ?> error <?php endif; ?>">

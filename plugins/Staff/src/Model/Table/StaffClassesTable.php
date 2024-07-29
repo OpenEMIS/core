@@ -192,7 +192,7 @@ class StaffClassesTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             $institutionId = $entity->institution->id;
             $url = [
                 'plugin' => 'Institution',
@@ -395,10 +395,10 @@ class StaffClassesTable extends ControllerActionTable
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         $extra['redirect'] = false;
-        $classOptions = (array_key_exists('classOptions', $extra))? $extra['classOptions']: [];
+        $classOptions = (isset($extra['classOptions']))? $extra['classOptions']: [];
 
         $process = function ($model, $entity) use ($requestData, $classOptions) {
-            if (array_key_exists('Classes', $requestData)) {
+            if (isset($requestData['Classes'])) {
                 foreach ($requestData['Classes'] as $key => $value) {
                     $selectedClasses[] = $value['class_id'];
                 }
@@ -467,7 +467,7 @@ class StaffClassesTable extends ControllerActionTable
                 $buttonsArray = $buttons->getArrayCopy();
                 $indexesToRemove = [];
                 foreach ($buttonsArray as $key => $value) {
-                    if (array_key_exists('attr', $value)) {
+                    if (isset($value['attr'])) {
                         if (array_key_exists('value', $value['attr'])) {
                             if ($value['attr']['value'] == 'save') {
                                 // save button identification

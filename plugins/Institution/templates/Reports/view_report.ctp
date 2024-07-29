@@ -8,7 +8,7 @@ echo $this->Html->script('https://cdn.datatables.net/v/dt/dt-1.10.23/datatables.
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
 	foreach ($toolbarButtons as $key => $btn) {
-		if (!array_key_exists('type', $btn) || $btn['type'] == 'button') {
+		if (!isset($btn['type']) || $btn['type'] == 'button') {
 			echo $this->Html->link($btn['label'], $btn['url'], $btn['attr']);
 		} else if ($btn['type'] == 'element') {
 			echo $this->element($btn['element'], $btn['data'], $btn['options']);

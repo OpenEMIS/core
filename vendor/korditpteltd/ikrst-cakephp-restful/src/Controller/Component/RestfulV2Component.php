@@ -53,7 +53,7 @@ class RestfulV2Component extends Component implements RestfulInterface
         if (empty($request->getAttribute('params')['_ext'])) {
             $request->getAttribute('params')['_ext'] = 'json';
         }
-       
+
         if (isset($request->getAttribute('params')['model'])) {
             $tableAlias = $request->getAttribute('params')['model'];
             $model = $this->instantiateModel($tableAlias);
@@ -154,7 +154,7 @@ class RestfulV2Component extends Component implements RestfulInterface
         $allowedHeaders = ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'ControllerAction'];
         $header = $this->response->getHeaderLine();
         $origin = isset($header['Origin']) ? $header['Origin'] : [];
-        
+
         $this->response->cors($this->request, $origin, $supportedMethods, $allowedHeaders);
 
         // Default it should be UTF-8 and text/html and the following need not be set
@@ -271,7 +271,7 @@ class RestfulV2Component extends Component implements RestfulInterface
 
         // blob data type will be sent using based64 format
         $entity = $this->convertBase64ToBinary($entity);
-        // $entity->set('academic_periods.academic_period_id', $entity->academic_period_id); 
+        // $entity->set('academic_periods.academic_period_id', $entity->academic_period_id);
         // echo "<pre>";print_r($entity);die;
         // $connection = ConnectionManager::get('default');
         // $entryDate = date('Y-m-d');
@@ -462,7 +462,7 @@ class RestfulV2Component extends Component implements RestfulInterface
     private function _fields($query, $value, ArrayObject $extra)
     {
         if (!empty($value)) {
-            if (!array_key_exists('fields', $extra)) {
+            if (!array_key_exists('fields', $extra instanceof \ArrayObject ? $extra->getArrayCopy() : $extra)) {
                 $extra['fields'] = [];
             }
             $table = $this->model;
@@ -985,7 +985,16 @@ class RestfulV2Component extends Component implements RestfulInterface
         $model = str_replace('-', '.', $model);
         if (Configure::read('debug')) {
             $_connectionName = $this->getController()->getRequest()->getQuery('_db') ? $this->getController()->getRequest()->getQuery('_db') : 'externalConnection';
-            $target = TableRegistry::get($model, ['connectionName' => $_connectionName]);
+            // POCOR-8436 in the debug if external not set
+            try {
+                $target = TableRegistry::get($model, ['connectionName' => $_connectionName]);
+            } catch (\Exception $exception) {
+                try {
+                    $target = TableRegistry::get($model);
+                } catch (\Exception $e) {
+                    return $e;
+                }
+            }
         } else {
             try{
                 // $model = str_replace('.', '_', $model);

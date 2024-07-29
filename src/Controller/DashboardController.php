@@ -11,6 +11,7 @@ use Cake\Log\Log;
 use Cake\I18n\Time;
 use App\Model\Table\AlertsTable;
 use Cake\Controller\Controller;
+use Cake\Event\EventInterface;
 
 class DashboardController extends AppController
 {
@@ -53,13 +54,13 @@ class DashboardController extends AppController
         return true;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
 
         $user = $this->Auth->user();
 
-        if (is_array($user) && array_key_exists('last_login', $user) && is_null($user['last_login'])) {
+        if (is_array($user) && isset($user['last_login']) && is_null($user['last_login'])) {
             $userInfo = TableRegistry::getTableLocator()->get('User.Users')->get($user['id']);
             if ($userInfo->password) {
                 $this->Alert->warning('security.login.changePassword');
@@ -76,14 +77,14 @@ class DashboardController extends AppController
         //$expirationTime = (new FrozenTime())->addDay();
         $cookie = new \Cake\Http\Cookie\Cookie(
             'my_base_url',
-            $rootPath/*, 
-            $expirationTime, 
-            $fullBaseUrl, 
-            $httpHost, 
-            true, 
+            $rootPath/*,
+            $expirationTime,
+            $fullBaseUrl,
+            $httpHost,
+            true,
             true */
         );
-        
+
         // Write the cookie
         $this->response = $this->response->withCookie($cookie);
 
@@ -140,7 +141,7 @@ class DashboardController extends AppController
                 $this->set('hasPermission', $hasPermission);
             }
         }
-        
+
         /*POCOR-6395 ends*/
         $StudentStatusUpdates = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates');
         $StudentStatusUpdates->checkRequireUpdate();
@@ -179,7 +180,7 @@ class DashboardController extends AppController
         Log::write('debug', $shellCmd);
 
     }
-    
+
     private function triggerInstitutionClassSubjectsShell()
     {
         $script = 'InstitutionClassSubjects';
@@ -262,7 +263,7 @@ class DashboardController extends AppController
             ->order(['UserLanguages.modified' => 'desc'])
             ->limit(1)
             ->first();
-        // config 
+        // config
         $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $enabledTypeList = $ConfigItem
             ->find()
@@ -486,7 +487,7 @@ class DashboardController extends AppController
         // $profilePercentage = 100/$totalProfileComplete * $profileComplete;
         // $profilePercentage = round($profilePercentage);
         //$data['percentage'] = $profilePercentage;
-        // config 
+        // config
         $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $typeList = $ConfigItem
             ->find('list', [
@@ -535,7 +536,7 @@ class DashboardController extends AppController
         $cmd = ROOT . DS . 'bin' . DS . 'cake AutomatedStudentWithdrawal';
         $nohup = 'nohup ' . $cmd . '> /dev/null 2>/dev/null &';
         exec($nohup);
-        Log::write('debug', $nohup); 
+        Log::write('debug', $nohup);
     }*/
 
     //    private function triggerInstitutionClassSubjectsShell()
@@ -546,7 +547,7 @@ class DashboardController extends AppController
 //        $cmd = ROOT . DS . 'bin' . DS . 'cake InstitutionClassSubjects';
 //        $nohup = 'nohup ' . $cmd . '> /dev/null 2>/dev/null &';
 //        exec($nohup);
-//        Log::write('debug', $nohup); 
+//        Log::write('debug', $nohup);
 //    }
 
 

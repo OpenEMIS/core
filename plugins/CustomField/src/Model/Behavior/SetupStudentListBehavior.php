@@ -42,21 +42,27 @@ class SetupStudentListBehavior extends SetupBehavior
     public function onSetStudentListElements(Event $event, Entity $entity)
     {
         $model = $this->_table;
-
+        $request = $model->request;
         if ($model->request->is(['get'])) {
             if (isset($entity->id)) {
                 // view / edit
                 if ($entity->has('params') && !empty($entity->params)) {
                     $params = json_decode($entity->params, true);
-                    if (array_key_exists('survey_form_id', $params)) {
+                    if (isset($params['survey_form_id'])) {
                         $formId = $params['survey_form_id'];
-                        $model->request->query['survey_form'] = $formId;
+                        //$model->request->query['survey_form'] = $formId;
+                        $request = $request->withQueryParams(array_merge($request->getQueryParams(), ['survey_form' => $formId]));
                         $entity->survey_form = $formId;
+                        $model->request = $request;
                     }
                 }
             } else {
                 // add
-                unset($model->request->query['survey_form']);
+                $queryParams = $request->getQueryParams();
+                //unset($model->request->query['survey_form']);
+                unset($queryParams['survey_form']);
+                $request = $request->withQueryParams($queryParams);
+                $model->request = $request;
             }
         }
 
