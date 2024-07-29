@@ -724,13 +724,20 @@ class StudentRepository extends Controller
         DB::beginTransaction();
         try {
             $param = $request->all();
-
             $isLinked = $this->checkIfStudentLinked($param);
             
             if(!$isLinked){
                 return 3;
             }
 
+            //Removing Student Absence Record when absence_type_id = 0...
+
+            if($param['absence_type_id'] == 0){
+                $this->deleteStudentAbsenceRecord($param);
+
+                DB::commit();
+                return 2;
+            }
 
             $check = InstitutionStudentAbsenceDetails::where([
                 'student_id' => $param['student_id'],
@@ -741,8 +748,6 @@ class StudentRepository extends Controller
                 'period' => $param['period'],
                 'subject_id' => $param['subject_id']
             ])->first();
-
-
 
             if($check){
                 $updateArr['academic_period_id'] = $param['academic_period_id'];
@@ -798,7 +803,8 @@ class StudentRepository extends Controller
                     'education_grade_id' => $param['education_grade_id'],
                     'date' => $param['date'],
                     'period' => $param['period'],
-                    'subject_id' => $param['subject_id']
+                    'subject_id' => $param['subject_id'],
+                    'no_scheduled_class' => 0
                 ])
                 ->first();
 
@@ -810,6 +816,7 @@ class StudentRepository extends Controller
                 $storeArr['date'] = $param['date'];
                 $storeArr['period'] = $param['period'];
                 $storeArr['subject_id'] = $param['subject_id'];
+                $storeArr['no_scheduled_class'] = 0;
 
                 $insert = StudentAttendanceMarkedRecords::insert($storeArr);
             }
@@ -822,7 +829,6 @@ class StudentRepository extends Controller
                 'Failed to add data in DB.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Student absences Not Added');
         }
     }
@@ -937,4 +943,25 @@ class StudentRepository extends Controller
             return false;
         }
     }
+
+
+    //For POCOR-8505 Start...
+    public function deleteStudentAbsenceRecord($param)
+    {
+        try {
+            $delete = InstitutionStudentAbsenceDetails::where([
+                    'student_id' => $param['student_id'],
+                    'institution_id' => $param['institution_id'],
+                    'academic_period_id' => $param['academic_period_id'],
+                    'institution_class_id' => $param['institution_class_id'],
+                    'date' => $param['date'],
+                    'period' => $param['period'],
+                    'subject_id' => $param['subject_id']
+                ])->delete();
+            return true;
+        } catch (\Exception $e) {
+
+        }
+    }
+    //For POCOR-8505 End...
 }
