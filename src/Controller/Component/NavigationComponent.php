@@ -2371,7 +2371,7 @@ class NavigationComponent extends Component
 
     public function getGuardianNavNavigation()
     {
-
+        // POCOR-8415 start
         $studentId = $this->getStudentID();
         if(!$studentId){
             $session = $this->getController()->getRequest()->getSession();
@@ -2381,12 +2381,13 @@ class NavigationComponent extends Component
         $decodedQueryString['id'] = $studentId;
         $decodedQueryString['student_id'] = $studentId;
         $queryString = $this->controller->paramsEncode($decodedQueryString);
+        // POCOR-8415 end
         $navigation = [
             'GuardianNavs.StudentUser.view' => [
                 'title' => 'General',
                 'parent' => 'GuardianNavs.GuardianNavs.index',
                 'params' => ['plugin' => 'GuardianNav',
-                    '1' => $queryString],
+                    '1' => $queryString], // POCOR-8415
                 'selected' => ['GuardianNavs.StudentUser']
             ],
             'GuardianNavs.StudentProgrammes.index' => [
@@ -2411,7 +2412,7 @@ class NavigationComponent extends Component
         ];
         foreach ($navigation as &$n) {
             if (isset($n['params'])) {
-                $n['params']['1'] = $queryString;
+                $n['params']['1'] = $queryString; // POCOR-8415
             }
         }
         return $navigation;
