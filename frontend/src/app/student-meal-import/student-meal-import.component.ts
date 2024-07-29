@@ -253,9 +253,14 @@ export class StudentMealImportComponent implements OnInit {
 
     this.Rest.getItemImportTemplate(`institutions/students/meals/import/template?institution_id=${this.institution_id}&institution_class_id=${this.selectedClassId}`).subscribe((res: any) => {
       console.log(res, "res");
-      this.meal_import_data = res;
-      // localStorage.setItem("meal_import_result",JSON.stringify(res));
-
+      // this.meal_import_data = res;
+      var uri = res;
+      var link = document.createElement("a");
+      link.href = uri;
+      link.download = 'OpenEMIS_Exams_Import_Exam_Centre_Template.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     },
       (error: any) => {
 
@@ -297,6 +302,7 @@ export class StudentMealImportComponent implements OnInit {
     console.log(event, "event");
 
     if (event.controlType == "dropdown" && event.value != '') {
+      alert(event.value)
       this.selectedClassId = event.value;
       let confirmation = this._confirmationData;
       confirmation[0].value = event.value;
@@ -315,7 +321,8 @@ export class StudentMealImportComponent implements OnInit {
               'label': 'Download',
               'callback': (): void => {
                 // event.preventDefault();
-                this.exportToExcel();
+                // this.exportToExcel();
+                this.generateImportTemplate();
               }
             }
           ],
@@ -333,8 +340,8 @@ export class StudentMealImportComponent implements OnInit {
         }
       };
       this._confirmationData = [...confirmation];
-
-      this._formButtons = [
+      let formButton = this._formButtons;
+      formButton = [
         {
           type: 'submit',
           name: 'Import',
@@ -348,8 +355,10 @@ export class StudentMealImportComponent implements OnInit {
           class: 'btn-outline'
         }
       ]
+      this._formButtons = [...formButton]
+      console.log(this._formButtons, "_formButtons");
+
       console.log(this._confirmationData, "_confirmationData");
-      this.generateImportTemplate();
       // this._confirmationData[this._confirmationData.length - 1]['config']['leftButton'][0].callback = this.generateImportTemplate.bind(this);
     } else if (event.controlType == "dropdown" && event.value == '') {
       let confirmation = this._confirmationData;
