@@ -23,7 +23,7 @@ class ImportInstitutionPositionsTable extends AppTable
     {
         $this->setTable('import_mapping');
         parent::initialize($config);
-        
+
         $this->addBehavior('Import.ImportPosition', [
             'plugin' => 'Institution',
             'model' => 'InstitutionPositions'
@@ -49,11 +49,9 @@ class ImportInstitutionPositionsTable extends AppTable
 
     public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
     {
-        $session = $request->getSession();
-        if ($session->check('Institution.Institutions.id')) {
-            $this->institutionId = $session->read('Institution.Institutions.id');
-        }
-
+        $queryString = $this->getQueryString();
+        $institutionId = $queryString['institution_id'];
+        $this->institutionId = $institutionId;
         $crumbTitle = $this->getHeader($this->getAlias());
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
@@ -63,6 +61,8 @@ class ImportInstitutionPositionsTable extends AppTable
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . "InstitutionShifts");
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $periodEntity = $AcademicPeriods->getCurrent();
+        $queryString = $this->getQueryString();
+        $institutionId = $queryString['institution_id'];
         $InstitutionShiftsResults = $lookedUpTable
             ->find()
             ->contain(['ShiftOptions','AcademicPeriods'])
@@ -73,9 +73,9 @@ class ImportInstitutionPositionsTable extends AppTable
             ])
             ->where([
                 $lookedUpTable->aliasField('academic_period_id') => $periodEntity,
-                $lookedUpTable->aliasField('location_institution_id') =>$_SESSION['Institution']['Institutions']['id'],
+                $lookedUpTable->aliasField('location_institution_id') => $institutionId,
             ])
-            ->autoFields(false)
+//            ->autoFields(false)
             ->all();
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 2;
@@ -119,7 +119,7 @@ class ImportInstitutionPositionsTable extends AppTable
                 $lookedUpTable->aliasField('type') => 'DESC',
                 $lookedUpTable->aliasField('order'),
             ])
-            ->autoFields(false)
+//            ->autoFields(false)
             ->all();
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
@@ -202,28 +202,31 @@ class ImportInstitutionPositionsTable extends AppTable
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
+        return true;
         //POCOR-7417:Start
         $conn = ConnectionManager::get('default');
         $status = $tempRow['status_id'];
-        $insId = $_SESSION['Institution']['Institutions']['id'];
-        $result = $conn->execute("SELECT MIN(security_group_users.security_user_id)
+        $queryString = $this->getQueryString();
+        $institutionId = $queryString['institution_id'];
+        $insId = $institutionId;
+        $sqlStr = "SELECT MIN(security_group_users.security_user_id)
         FROM security_group_users
-        WHERE security_group_users.security_group_id IN 
+        WHERE security_group_users.security_group_id IN
         (
             SELECT security_group_institutions.security_group_id
             FROM security_group_institutions
             WHERE security_group_institutions.institution_id = $insId
-        
-            UNION 
-        
+
+            UNION
+
             SELECT security_group_areas.security_group_id
             FROM security_group_areas
             INNER JOIN institutions
             ON institutions.area_id = security_group_areas.area_id
             AND institutions.id = $insId
-        
-            UNION 
-        
+
+            UNION
+
             SELECT institutions.security_group_id
             FROM institutions
             WHERE institutions.id = $insId
@@ -240,7 +243,9 @@ class ImportInstitutionPositionsTable extends AppTable
             ON workflow_models.id = workflows.workflow_model_id
             WHERE workflow_models.name LIKE 'Institutions > Positions'
             AND workflow_steps.id = $status -- This values is coming from Template > References > Status
-        )");
+        )";
+//        dd($sqlStr);
+        $result = $conn->execute($sqlStr);
         $rows = $result->fetch('assoc');
         $userRow = $rows['MIN(security_group_users.security_user_id)'];
         //POCOR-7417:end

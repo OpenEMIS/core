@@ -1511,7 +1511,7 @@ class InstitutionsController extends AppController
              $encodedPart = substr($url, $startPos);
 
              //POCOR-8051 end
-             
+
             $_edit = $this->AccessControl->check(['Institutions', 'StudentMeals', 'edit']);
             $_excel = $this->AccessControl->check(['Institutions', 'StudentMeals', 'excel']);
             $_import = $this->AccessControl->check(['Institutions', 'ImportStudentMeals', 'add']);
@@ -2719,6 +2719,9 @@ class InstitutionsController extends AppController
             return true;
         }
         if ($furtherAction == 'ajaxInstitutionsAutocomplete') {
+            return true;
+        }
+        if ($furtherAction == 'downloadPassed' || 'downloadFailed') {
             return true;
         }
 //        $this->log(print_r($request,true), debug);
