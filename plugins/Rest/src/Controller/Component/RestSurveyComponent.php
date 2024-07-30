@@ -28,6 +28,7 @@ define("NS_XF", "http://www.w3.org/2002/xforms");
 define("NS_EV", "http://www.w3.org/2001/xml-events");
 define("NS_XSD", "http://www.w3.org/2001/XMLSchema");
 define("NS_OE", "https://www.openemis.org");
+define('NS_OE', 'http://www.w3.org/1999/xhtml');
 
 class RestSurveyComponent extends Component
 {
@@ -43,6 +44,7 @@ class RestSurveyComponent extends Component
     {
         $this->controller = $this->_registry->getController();
         $this->action = $this->getController()->getRequest()->getParam('action');
+        $this->response = $this->getController()->getResponse();
 
         $models = $this->getConfig('models');
         foreach ($models as $key => $model) {
@@ -64,14 +66,14 @@ class RestSurveyComponent extends Component
 
     public function downloadUrl()
     {
-
-        $this->response = $this->getController()->getResponse();
         $url = '/' . $this->getController()->getName() . '/survey/download/xform/';
+
         $this->response = $this->response
             ->withType('application/json')
-            ->withStringBody(json_encode($url, JSON_UNESCAPED_UNICODE));
+            ->withStringBody(json_encode($url, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         return $this->response;
     }
+
 
 
     public function download($format = "xform", $id = 0, $output = true)
@@ -83,7 +85,6 @@ class RestSurveyComponent extends Component
             default:
                 break;
         }
-        $response = $this->getController()->getResponse();
         if ($output) { // true = output to screen
         if (is_object($result)) {
             // Convert object to XML string
@@ -99,7 +100,7 @@ class RestSurveyComponent extends Component
         $stream->rewind();
 
         // Set the response body and type
-        $response = $response->withBody($stream)
+        $response = $this->response->withBody($stream)
                              ->withType('xml');
         // Return the modified response
         return $response;
@@ -120,11 +121,11 @@ class RestSurveyComponent extends Component
             $stream = new Stream('php://memory', 'rw');
             $stream->write($result->asXML());
             $stream->rewind();
-            $this->response = $response->withBody($stream);
-            $this->response = $response->withType('xml');
+            $this->response = $this->response->withBody($stream);
+            $this->response = $this->response->withType('xml');
 
             // Optionally force file download
-            $this->response = $response->withDownload($fileName . '.xml');
+            $this->response = $this->response->withDownload($fileName . '.xml');
 
             // Return response object to prevent controller from trying to render a view.
             return $this->response;
@@ -170,7 +171,7 @@ class RestSurveyComponent extends Component
     //POCOR-7707
     public function studentlist($format = "xform", $id = 0, $insCode = 0, $academicPeriod = 0, $surveyQuesId = 0, $output = true)
     {
-        $this->response = $this->getController()->getResponse();
+        //$this->response = $this->getController()->getResponse();
         switch ($format) {
             case 'xform':
                 $result = $this->getXList($format, $id, $insCode, $academicPeriod, $surveyQuesId);
@@ -215,22 +216,18 @@ class RestSurveyComponent extends Component
 
     public function upload()
     {
-        $this->response = $this->getController()->getResponse();
+        //$this->response = $this->getController()->getResponse();
 
        /* $generateErrorResponse = function ($params = [], $code = 500) {
             $this->response = $this->response->withStatus($code)
                                              ->withType('application/json')
                                              ->withStringBody(json_encode($params, JSON_UNESCAPED_UNICODE));
             return $this->response;
-        };
-*/
+        };*/
         if ($this->getController()->getRequest()->is(['post', 'put'])) {
 
             // check for valid authorization token to upload survey
             $header = $this->getController()->getRequest()->getData()['code'];
-           // echo "<pre>"; print_r($header); echo 'lll';
-           // $header = $header[0];
-            
             if (isset($header)) {
                 //$token = str_ireplace('Bearer ', '', $header);
                 $token = $header;
@@ -269,17 +266,12 @@ class RestSurveyComponent extends Component
                 // end testing data //
 
                 // save response into database for debug purpose, always purge 3 days old response
-                //$this->deleteExpiredResponse();
+                $this->deleteExpiredResponse();
                 
                 $this->addResponse($xmlResponse);
                
                  Log::write('debug', 'DataAkash:');
                 Log::write('debug', (string)$xmlResponse);
-                /*$xmlObject = Xml::fromArray($xmlResponse, ['format' => 'tags', 'return' => 'domdocument']);
-                
-                $xmlResponse = $xmlObject->saveXML();*/
-                // End
-            
                 Log::write('debug', 'XML Response');
                // $xmlResponse = preg_replace('/(xf:|oe:)/', '', $xmlResponse);
                 //Log::write('debug', $xmlResponse);
@@ -2619,13 +2611,15 @@ class RestSurveyComponent extends Component
     
     public function getXForms($instanceId, $id)
     {
+        
         // Ensure Form object is properly initialized
-        if (is_null($this->Form) || !method_exists($this->Form, 'get') || !method_exists($this->Form, 'getAlias')) {
+        if (is_null($this->Form) || !method_exists($this->Form, 'get')) {
             throw new \RuntimeException('Form object is not properly initialized.');
         }
 
         // Fetch and sanitize form data
         $form = $this->Form->get($id);
+
         if (!$form) {
             throw new \RuntimeException('Form not found.');
         }
@@ -2646,7 +2640,7 @@ class RestSurveyComponent extends Component
                          xmlns:xsd="' . NS_XSD . '"
                          xmlns:oe="' . NS_OE . '">
                    </html>';
-
+Log::debug('XML String: ' . $xmlstr);
         try {
             $xml = Xml::build($xmlstr);
         } catch (\Exception $e) {
@@ -2661,8 +2655,10 @@ class RestSurveyComponent extends Component
         $metaNode->addAttribute("name", "description");
         $metaNode->addAttribute("content", $description);
         $modelNode = $headNode->addChild("model", null, NS_XF);
-
+        Log::debug('XML String: ' . $modelNode);
         $instanceNode = $modelNode->addChild("instance", null, NS_XF);
+         Log::error('XML String: ' . $instanceNode);
+        
         $instanceNode->addAttribute("id", $instanceId);
         $formNode = $instanceNode->addChild($this->Form->getAlias(), null, NS_OE);
         $formNode->addAttribute("id", $id);
