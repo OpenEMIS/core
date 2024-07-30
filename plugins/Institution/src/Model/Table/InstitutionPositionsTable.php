@@ -710,7 +710,9 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
 
     public function beforeSave($event, Entity $entity, ArrayObject $options)
     {
-        $entity->institution_id = $this->getInstitutionID();
+        if (!isset($entity->institution_id)) {
+            $entity->institution_id = $this->getInstitutionID();
+        }
     }
 
     /******************************************************************************************************************

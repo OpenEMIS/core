@@ -352,6 +352,7 @@ class ImportPositionBehavior extends Behavior
                 $originalRow = new ArrayObject();
                 $extra['entityValidate'] = true;
                 $institutionID = $this->_table->getQueryString('institution_id');
+                $this->institutionId = $institutionID;
                 if (empty($tempRow['institution_id'])) {
                     $tempRow['institution_id'] = $institutionID;
                 }
@@ -370,19 +371,20 @@ class ImportPositionBehavior extends Behavior
                 }
 
                 $tempRow = $tempRow->getArrayCopy();
-
+//                dd($tempRow);
                 if (!isset($tempRow['entity'])) {
                     $tableEntity = $activeModel->newEntity([]);
                 } else {
-                    $tableEntity = $tempRow['entity'];
-                    unset($tempRow['entity']);
+                    $tableEntity = $tempRow;
+//                    unset($tempRow['entity']);
                 }
                 if (!isset($tempRow['position_no'])) {
                     $tempRow['position_no'] = $this->_table->InstitutionPositions->getUniquePositionNo($institutionID);
                 }
-//                dd($tempRow);
+
                 if ($extra['entityValidate']) {
                     $tempRow['action_type'] = 'imported';
+//                    dd([$tableEntity, $tempRow])
                     $activeModel->patchEntity($tableEntity, $tempRow);
                 }
 
@@ -401,6 +403,9 @@ class ImportPositionBehavior extends Behavior
 
                     $arr = array_column($shiftArr, 'shift_option_id');
 
+                    if(empty($tempRow['institution_id'])){
+                        $tempRow['institution_id'] = $institutionID;
+                    }
                     try {
                         if (!empty($tempRow['institution_id'])) {
                             if (!in_array($tempRow['shift_id'], $arr)) {
@@ -428,7 +433,7 @@ class ImportPositionBehavior extends Behavior
                             $errorRow = 'row' . $row;
                         }
                         $rowInvalidCodeCols[$errorRow] = $message;
-                        dd($rowInvalidCodeCols);
+//                        dd($rowInvalidCodeCols);
                     }
 
                     if ($newEntity) {
@@ -442,7 +447,7 @@ class ImportPositionBehavior extends Behavior
                 }
 
                 if (!empty($rowInvalidCodeCols) || $errors) {
-                    dd([$rowInvalidCodeCols, $errors]);
+//                    dd([$rowInvalidCodeCols, $errors]);
                     $rowCodeError = '';
                     $rowCodeErrorForExcel = [];
 
