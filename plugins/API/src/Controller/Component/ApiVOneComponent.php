@@ -12,7 +12,7 @@ class ApiVOneComponent extends Component {
 
 	public function process($externalApplication) {
 
-		$params = $this->request->query;
+		$params = $this->request->getQuery();
 		$data = false;
 
 		// for extracting error codes
