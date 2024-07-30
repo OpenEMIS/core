@@ -23,7 +23,7 @@ const textCheck: any = {
         console.log(params,"params");
         
         if (params && params.value) {
-            return params.value.includes("Invalid")
+            return (params.value.includes("Invalid") || params.value.includes("required"))
         }
     }
 }

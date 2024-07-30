@@ -251,16 +251,18 @@ export class StudentMealImportComponent implements OnInit {
 
   public generateImportTemplate() {
 
-    this.Rest.getItemImportTemplate(`institutions/students/meals/import/template?institution_id=${this.institution_id}&institution_class_id=${this.selectedClassId}`).subscribe((res: any) => {
+    this.Rest.getItemExport(`institutions/students/meals/import/template?institution_id=${this.institution_id}&institution_class_id=${this.selectedClassId}`).subscribe((res: any) => {
       console.log(res, "res");
       // this.meal_import_data = res;
-      var uri = res;
-      var link = document.createElement("a");
-      link.href = uri;
-      link.download = 'OpenEMIS_Exams_Import_Exam_Centre_Template.xlsx';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      let url = window.URL.createObjectURL(res);
+      let a = document.createElement('a');
+      document.body.appendChild(a);
+      a.setAttribute('style', 'display: none');
+      a.href = url;
+      a.download = res.filename || 'Student meal';
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
     },
       (error: any) => {
 
@@ -302,7 +304,6 @@ export class StudentMealImportComponent implements OnInit {
     console.log(event, "event");
 
     if (event.controlType == "dropdown" && event.value != '') {
-      alert(event.value)
       this.selectedClassId = event.value;
       let confirmation = this._confirmationData;
       confirmation[0].value = event.value;

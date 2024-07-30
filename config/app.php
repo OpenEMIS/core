@@ -367,7 +367,7 @@ return [
     'installerCensus' => false,
     'installerVaccinations' => false,
     //POCOR-7485 for angular build start
-    'BUILD_MAIN' => define('BUILD_MAIN', 'angular/main.e960dd01416aada109b0'),
+    'BUILD_MAIN' => define('BUILD_MAIN', 'angular/main.6c30f64a39b5aee2910e'),
     'BUILD_POLYFILLS' => define('BUILD_POLYFILLS', 'angular/polyfills.0947d4c9434ec41ea5bf'),
     'BUILD_RUNTIME' => define('BUILD_RUNTIME', 'angular/runtime.7b63b9fd40098a2e8207'),
     'BUILD_SCRIPTS' => define('BUILD_SCRIPTS', 'angular/scripts.986023b5d731304047cb'),
