@@ -154,6 +154,7 @@ class InstitutionPositionsTable extends ControllerActionTable
 
         $this->field('position_no', ['visible' => true]);
         $this->field('shift_id', ['visible' => true]);
+        $this->field('instution_id', ['visible' => false]);
         $this->field('staff_position_title_id', [
             'visible' => true,
             'type' => 'select'
@@ -189,9 +190,13 @@ class InstitutionPositionsTable extends ControllerActionTable
     {
         $alias = $this->getAlias();
         $data = $request->getData($alias);
+
         if ($action == 'add') {
             $attr['attr']['value'] = $data['position_no'] ?? $this->getUniquePositionNo();
+            $data['institution_id'] = $this->getInstitutionID();
+            $request = $request->withData($alias, $data);
         }
+
         return $attr;
     }
 
@@ -692,10 +697,20 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
         ]);POCOR-5069 Ends*/
 
         //POCOR-6971
-//        $this->field('shift_id', [
-//            'type' => 'select',
-//            'entity' => $entity
-//        ]);
+        $this->field('shift_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
+        if(!isset($entity['institution_id'])){
+            $entity['institution_id'] = $this->getInstitutionID();
+//            dd([1, $entity]);
+        };
+//        dd([2, $entity]);
+    }
+
+    public function beforeSave($event, Entity $entity, ArrayObject $options)
+    {
+        $entity->institution_id = $this->getInstitutionID();
     }
 
     /******************************************************************************************************************
