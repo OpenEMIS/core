@@ -22,6 +22,7 @@ use Cake\Utility\Hash;
 use Cake\Validation\Validator;
 use ControllerAction\Model\Traits\EventTrait;
 use Cake\Log\Log;
+// POCOR-7799 start and lot of changes
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -29,6 +30,7 @@ use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use Laminas\Diactoros\UploadedFile;
 use PhpOffice\PhpSpreadsheet\Shared\Date as SharedDate;
+// POCOR-7799 end
 
 /**
  * ImportBehavior is to be used with import_mapping table.
@@ -158,47 +160,26 @@ class ImportPositionBehavior extends Behavior
 
         switch ($action) {
             case 'add':
-                $downloadUrl = $toolbarButtons['back']['url'];
+                $backUrl = $toolbarButtons['back']['url'];
+                $downloadUrl = $backUrl;
                 $downloadUrl[0] = 'template';
                 $downloadUrl[2] = $encodedQueryString;
-
-                if ($buttons['add']['url']['action'] == 'ImportInstitutionSurveys') {
-                    $downloadUrl[1] = $buttons['add']['url'][1];
-                }
-
                 $this->_table->controller->set('downloadOnClick', "javascript:window.location.href='" . Router::url($downloadUrl) . "'");
+                $backUrl['action'] = 'Positions';
+                $backUrl['0'] = 'index';
+                $backUrl['1'] = $encodedQueryString;
+                $toolbarButtons['back']['url'] = $backUrl;
+                return;
+                break;
+            case 'results':
+                $backUrl = $toolbarButtons['back']['url'];
+                $backUrl['action'] = 'Positions';
+                $backUrl['0'] = 'index';
+                $backUrl['1'] = $encodedQueryString;
+                $toolbarButtons['back']['url'] = $backUrl;
+                return;
                 break;
         }
-
-        if (!empty($this->getConfig('backUrl'))) {
-            $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->getConfig('backUrl'));
-        } elseif ($toolbarButtons['back']['url']['plugin'] == 'Directory') {
-            $back = [];
-            if ($this->_table->request->getParam('pass')[0] == 'add') {
-                $back['action'] = 'Directories';
-            } elseif ($this->_table->request->getParam('pass')[0] == 'results') {
-                $back['action'] = $this->_table->getAlias();
-                $back[0] = 'add';
-            }
-            $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $back);
-        } elseif ($this->institutionId && $toolbarButtons['back']['url']['plugin'] == 'Institution') {
-            $back = [];
-            if ($this->_table->request->getAttribute('params')['pass'][0] == 'add') {
-                $back['action'] = str_replace('Import', '', $this->_table->getAlias());
-            } elseif ($this->_table->request->getAttribute('params')['pass'][0] == 'results') {
-                $back['action'] = $this->_table->getAlias();
-                $back[0] = 'add';
-            }
-
-            if (!array_key_exists($back['action'], $this->_table->ControllerAction->models)) {
-                $back['action'] = str_replace('Institution', '', $back['action']);
-            }
-            $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $back);
-        } else {
-            $toolbarButtons['back']['url']['action'] = 'index';
-        }
-
-        unset($toolbarButtons['back']['url'][0]);
     }
 
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
@@ -279,6 +260,7 @@ class ImportPositionBehavior extends Behavior
         ini_set('max_execution_time', 3600);
 
         return function ($model, $entity) {
+
             $errors = $entity->getErrors();
 
             if (!empty($errors)) {
@@ -1211,141 +1193,9 @@ class ImportPositionBehavior extends Behavior
             $lookupColumnName = $excelMappingObj->column_name;
             $mappingModel = $excelMappingObj->model;
 
-            if ($mappingModel == 'Student.Extracurriculars' && $lookupColumnName == 'openemis_no') {
-                $columnName = 'security_user_id';
-                $securityUser = self::getDynamicTableInstance('User.Users')->find()->where(['openemis_no' => $originalValue])->first();
-                if (!$securityUser) {
-                    $rowInvalidCodeCols[$columnName] = __('OpenEMIS ID is not valid');
-                    $rowPass = false;
-                    $extra['entityValidate'] = false;
-                }
-                $originalRow[$col] = $securityUser->id;
-                $cellValue = $securityUser->id;
-            } else if ($mappingModel == 'Student.StudentGuardians' && $lookupColumnName == 'guardian_id' && $lookupColumn == 'openemis_no' && !empty($originalValue)) {
-                $i = 1;
-                $columnName = 'guardian_id';
-                $userIdentities = self::getDynamicTableInstance('User.Identities');
-                $identityTypes = self::getDynamicTableInstance('identity_types');
-                $User = self::getDynamicTableInstance('security_users');
-                $securityUser = $User
-                    ->find()
-                    ->select([
-                        'id' => $User->aliasField('id'),
-                        'openemis_id' => $User->aliasField('openemis_no'),
-                        'user_identities_id' => $userIdentities->aliasField('id'),
-                        'identity_type_id' => $userIdentities->aliasField('identity_type_id'),
-                        'number' => $userIdentities->aliasField('number'),
-                        'security_user_id' => $userIdentities->aliasField('security_user_id'),
-                        'identityTypes_id' => $identityTypes->aliasField('id'),
-                        'default' => $identityTypes->aliasField('default')
-                    ])
-                    ->leftJoin(
-                        [$userIdentities->getAlias() => $userIdentities->getTable()],
-                        [$userIdentities->aliasField('security_user_id') . ' = ' . $User->aliasField('id')]
-                    )
-                    ->leftJoin(
-                        [$identityTypes->getAlias() => $identityTypes->getTable()],
-                        [$identityTypes->aliasField('id') . ' = ' . $userIdentities->aliasField('identity_type_id')]
-                    )
-                    ->where([
-                        'OR' => [
-                            $User->aliasField('openemis_no') => $originalValue,
-                            'AND' => [
-                                $userIdentities->aliasField('number') => $originalValue,
-                                $identityTypes->aliasField('default') => 1
-                            ]
-                        ]
-                    ])
-                    ->first();
-                if (!$securityUser) {
-                    $rowInvalidCodeCols[$columnName] = __('OpenEMIS ID is not valid');
-                    $rowPass = false;
-                    $extra['entityValidate'] = false;
-
-                    $originalRow[$col] = $originalValue;
-                    $cellValue = $originalValue;
-                } else {
-                    $originalRow[$col] = $securityUser->id;
-                    $cellValue = $securityUser->id;
-                }
-            } else if ($mappingModel == 'Student.StudentGuardians' && $lookupColumnName == 'guardian_id' && $lookupColumn == 'number' && !empty($originalValue)) {
-                if ($i == 1) {
-                    break;
-                }
-                $k = 1;
-                $columnName = 'guardian_id';
-                $userIdentities = self::getDynamicTableInstance('User.Identities');
-                $identityTypes = self::getDynamicTableInstance('identity_types');
-                $User = self::getDynamicTableInstance('security_users');
-                $securityUser = $User
-                    ->find()
-                    ->select([
-                        'id' => $User->aliasField('id'),
-                        'openemis_id' => $User->aliasField('openemis_no'),
-                        'user_identities_id' => $userIdentities->aliasField('id'),
-                        'identity_type_id' => $userIdentities->aliasField('identity_type_id'),
-                        'number' => $userIdentities->aliasField('number'),
-                        'security_user_id' => $userIdentities->aliasField('security_user_id'),
-                        'identityTypes_id' => $identityTypes->aliasField('id'),
-                        'default' => $identityTypes->aliasField('default')
-                    ])
-                    ->leftJoin(
-                        [$userIdentities->getAlias() => $userIdentities->getTable()],
-                        [$userIdentities->aliasField('security_user_id') . ' = ' . $User->aliasField('id')]
-                    )
-                    ->leftJoin(
-                        [$identityTypes->getAlias() => $identityTypes->getTable()],
-                        [$identityTypes->aliasField('id') . ' = ' . $userIdentities->aliasField('identity_type_id')]
-                    )
-                    ->where([
-                        'OR' => [
-                            $User->aliasField('openemis_no') => $originalValue,
-                            'AND' => [
-                                $userIdentities->aliasField('number') => $originalValue,
-                                $identityTypes->aliasField('default') => 1
-                            ]
-                        ]
-                    ])
-                    ->first();
-                if (!$securityUser) {
-                    $rowInvalidCodeCols[$columnName] = __('Identity number is not valid');
-                    $rowPass = false;
-                    $extra['entityValidate'] = false;
-
-                    $originalRow[$col] = $originalValue;
-                    $cellValue = $originalValue;
-                } else {
-                    $originalRow[$col] = $securityUser->id;
-                    $cellValue = $securityUser->id;
-                }
-            } else if ($mappingModel == 'Training.TrainingSessionTraineeResults' && $lookupColumnName == 'OpenEMIS_ID') {
-                $columnName = 'OpenEMIS_ID';
-                $securityUser = self::getDynamicTableInstance('User.Users')->find()->where(['openemis_no' => $originalValue])->first();
-                if (!$securityUser) {
-                    $rowInvalidCodeCols[$columnName] = __('OpenEMIS ID is not valid');
-                    $rowPass = false;
-                    $extra['entityValidate'] = false;
-                }
-                $originalRow[$col] = $originalValue;
-                $cellValue = $originalValue;
-            } else {
                 $columnName = $columns[$col];
                 $originalRow[$col] = $originalValue;
-            }
 
-            if ($mappingModel == 'Student.StudentGuardians' && $lookupColumnName == 'guardian_id' && $lookupColumn == 'openemis_no' && empty($originalValue)) {
-                $i = 0;
-                continue;
-            } else if ($mappingModel == 'Student.StudentGuardians' && $lookupColumnName == 'guardian_id' && $lookupColumn == 'number' && empty($originalValue)) {
-                if ($i == 0) {
-                    /*$columnName = 'guardian_id';
-                    $rowInvalidCodeCols[$columnName] = __('Please enter either OpenEMIS ID or Identity number for guardian');
-                    $rowPass = false;
-                    $extra['entityValidate'] = false;*/
-                } else {
-                    continue;
-                }
-            }
 
             $val = $cellValue;
             $datePattern = "/(0[1-9]|[1-2][0-9]|3[0-1])\/(0[1-9]|1[0-2])\/[0-9]{4}/";
@@ -1519,7 +1369,6 @@ class ImportPositionBehavior extends Behavior
             $tempRow['userId'] = $userId;
             $tempRow['superAdmin'] = $superAdmin;
         }
-
         if ($rowPass) {
             $rowPassEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportModelSpecificValidation'), 'onImportModelSpecificValidation', [$references, $tempRow, $originalRow, $rowInvalidCodeCols]);
             $rowPass = $rowPassEvent->getResult();

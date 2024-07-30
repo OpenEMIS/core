@@ -37,6 +37,7 @@ class ImportInstitutionPositionsTable extends AppTable
     {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+
         $events['Model.import.onImportGetHomeroomTeacherId'] = 'onImportGetHomeroomTeacherId';
         $events['Model.import.onImportPopulateStaffPositionTitlesData'] = 'onImportPopulateStaffPositionTitlesData';
         $events['Model.import.onImportPopulateShiftOptionsData'] = 'onImportPopulateShiftOptionsData'; //POCOR-7684
@@ -49,9 +50,11 @@ class ImportInstitutionPositionsTable extends AppTable
 
     public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
     {
+        // POCOR-7799 start
         $queryString = $this->getQueryString();
         $institutionId = $queryString['institution_id'];
         $this->institutionId = $institutionId;
+        // POCOR-7799 end
         $crumbTitle = $this->getHeader($this->getAlias());
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
@@ -61,8 +64,10 @@ class ImportInstitutionPositionsTable extends AppTable
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . "InstitutionShifts");
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $periodEntity = $AcademicPeriods->getCurrent();
+        // POCOR-7799 start
         $queryString = $this->getQueryString();
         $institutionId = $queryString['institution_id'];
+        // POCOR-7799 end
         $InstitutionShiftsResults = $lookedUpTable
             ->find()
             ->contain(['ShiftOptions','AcademicPeriods'])
@@ -75,7 +80,7 @@ class ImportInstitutionPositionsTable extends AppTable
                 $lookedUpTable->aliasField('academic_period_id') => $periodEntity,
                 $lookedUpTable->aliasField('location_institution_id') => $institutionId,
             ])
-//            ->autoFields(false)
+//            ->autoFields(false) start
             ->all();
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 2;
@@ -119,7 +124,7 @@ class ImportInstitutionPositionsTable extends AppTable
                 $lookedUpTable->aliasField('type') => 'DESC',
                 $lookedUpTable->aliasField('order'),
             ])
-//            ->autoFields(false)
+//            ->autoFields(false) // POCOR-779
             ->all();
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
@@ -202,13 +207,14 @@ class ImportInstitutionPositionsTable extends AppTable
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
-        return true;
+//        return true;
         //POCOR-7417:Start
         $conn = ConnectionManager::get('default');
         $status = $tempRow['status_id'];
         $queryString = $this->getQueryString();
         $institutionId = $queryString['institution_id'];
         $insId = $institutionId;
+        $this->institutionId = $institutionId;
         $sqlStr = "SELECT MIN(security_group_users.security_user_id)
         FROM security_group_users
         WHERE security_group_users.security_group_id IN
