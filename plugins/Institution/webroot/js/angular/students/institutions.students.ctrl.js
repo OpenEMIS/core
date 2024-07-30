@@ -222,6 +222,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         if (period.current === 1) {
                             userCtrl.currentAcademicPeriod = period.id;
                             userCtrl.currentAcademicPeriodName = period.name;
+                            userSvc.getStartDateFromAcademicPeriod({academic_period_id: academicPeriod}).then((response) => {
+                                    const startDateRangeResponse = response;
+                                    const {start_date, end_date} = startDateRangeResponse.data[0];
+                                    userCtrl.currentAcademicPeriodStartDate = userSvc.formatDate(start_date);
+                                    userCtrl.currentAcademicPeriodEndDate = userSvc.formatDate(end_date);
+                                }
+                            );
                             break; // Exit the loop once the current period is found
                         }
                     }
@@ -742,7 +749,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         try {
             const startDateRangeResponse = await userSvc.getStartDateFromAcademicPeriod({academic_period_id: academicPeriod});
             const {start_date, end_date} = startDateRangeResponse.data[0];
-
             userCtrl.getEducationGrades();
 
             const startDatePicker2 = angular.element(document.getElementById('Student_start_date'));
@@ -1028,7 +1034,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
     function gotoAddStudentStep() {
         userCtrl.step = 'add_student';
-        userCtrl.selectedUserData.endDate = '31-12-' + userCtrl.currentYear;
+        userCtrl.selectedUserData.endDate = userCtrl.currentAcademicPeriodEndDate;
 
     }
 
@@ -1677,7 +1683,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 }
             );
         } else {
-            userCtrl.selectedUserData.endDate = '31-12-' + new Date().getFullYear(); //default beahaviour
+            userCtrl.selectedUserData.endDate = userCtrl.currentAcademicPeriodEndDate; //default beahaviour
         }
         //POCOR-7889: end
         userCtrl.selectedUserData.addressArea = {
@@ -1796,7 +1802,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 userCtrl.selectedUserData.address = selectedData.address;
                 userCtrl.selectedUserData.postalCode = selectedData.postal_code;
                 userCtrl.selectedUserData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
-                userCtrl.selectedUserData.endDate = '31-12-' + new Date().getFullYear();
+                userCtrl.selectedUserData.endDate = userCtrl.currentAcademicPeriodEndDate;
                 var todayDate = new Date();
                 userCtrl.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
 
@@ -1854,7 +1860,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             userCtrl.selectedUserData.address = selectedData.address;
             userCtrl.selectedUserData.postalCode = selectedData.postal_code;
             userCtrl.selectedUserData.username = selectedData.username ? selectedData.username : angular.copy(selectedData.openemis_no);
-            userCtrl.selectedUserData.endDate = '31-12-' + new Date().getFullYear();
+            userCtrl.selectedUserData.endDate = userCtrl.currentAcademicPeriodEndDate;
             var todayDate = new Date();
             userCtrl.todayDate = $filter('date')(todayDate, 'yyyy-MM-dd HH:mm:ss');
 
