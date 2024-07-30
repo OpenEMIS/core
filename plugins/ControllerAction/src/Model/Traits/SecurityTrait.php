@@ -165,7 +165,8 @@ trait SecurityTrait
 
     public function paramsEncode($params = [])
     {
-        if(empty($params)){
+        // Ensure $params is an array
+        if (!is_array($params)) {
             $params = [];
         }
         $sessionId = Security::hash('session_id', 'sha256');

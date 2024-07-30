@@ -80,7 +80,7 @@ class ProfilesController extends AppController
 
     public function StudentBehaviours()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentBehaviours']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.ProfileStudentBehaviours']);//POCOR-8425
     }
 
     public function Personal()
