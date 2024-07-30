@@ -248,8 +248,7 @@ class RestSurveyComponent extends Component
                 return $generateErrorResponse(['message' => __('Do not have permission to access the server')], 500);
             }
 
-            $data = $this->getController()->getRequest()->getData();
-           // echo "<pre>"; print_r($data); 
+            $data = $this->getController()->getRequest()->getData(); 
             Log::write('debug', 'Data:');
             Log::write('debug', (string)$data);
             
