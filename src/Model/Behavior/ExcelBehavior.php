@@ -210,14 +210,29 @@ class ExcelBehavior extends Behavior
             $baseSheetName = $sheetName;
 
             // if the primary key of the record is given, only generate that record
-            if (isset($settings['id'])) {
-                $id = $settings['id'];
-                if ($id != 0) {
-                    $primaryKey = $table->getPrimaryKey();
-                    $query->where([$table->aliasField($primaryKey) => $id]);
+            //POCOR-8484 starts
+            if(isset($this->_table->action) && !empty($this->_table->action)){
+                $action = $this->_table->action;
+                if($action != 'excel') {
+                    if (isset($settings['id'])) {
+                        $id = $settings['id'];
+                        if ($id != 0) {
+                            $primaryKey = $table->getPrimaryKey();
+                            $query->where([$table->aliasField($primaryKey) => $id]);
+                        }
+                    }
+                }//POCOR-8484 ends
+            //POCOR-8515 starts    
+            }else{
+                if (isset($settings['id'])) {
+                    $id = $settings['id'];
+                    if ($id != 0) {
+                        $primaryKey = $table->getPrimaryKey();
+                        $query->where([$table->aliasField($primaryKey) => $id]);
+                    }
                 }
-            }
-
+            }//POCOR-8515 ends
+            
             if ($this->getConfig('auto_contain')) {
                 $this->contain($query, $fields, $table);
             }
