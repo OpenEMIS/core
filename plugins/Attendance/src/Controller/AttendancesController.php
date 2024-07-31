@@ -32,7 +32,7 @@ class AttendancesController extends AppController
             $this->Security->setConfig('validatePost', false);
         }
         parent::beforeFilter($event);
-        $selectedAction = $this->request->action;
+        $selectedAction = $this->request->getParam('action');
 
         if ($selectedAction == 'StudentMarkTypes') {
             $setupTab = 'Attendances';
