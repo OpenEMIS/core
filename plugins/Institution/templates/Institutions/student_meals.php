@@ -4,10 +4,6 @@
 
 <script>
 // Assume you're outputting the session values into a JavaScript object
-var sessionData = {
-    username: "<?php echo 'admin' ?>",
-    password: "<?php echo 'ZGVtbw==' ?>"
-};
 
 // Now you can use sessionData to set session storage values in JavaScript
     localStorage.removeItem('institution_id');
@@ -18,8 +14,8 @@ var sessionData = {
     sessionStorage.removeItem('username');
     sessionStorage.removeItem('password');
 
-	sessionStorage.setItem('username', sessionData.username);
-	sessionStorage.setItem('password', sessionData.password);
+	sessionStorage.setItem('nbn', '<?php echo $user;?>');
+	sessionStorage.setItem('pbn', '<?php echo $pass;?>');
 	localStorage.setItem('encoded_url', '<?php echo $meal_url;?>');
     localStorage.setItem('institutionName', '<?php echo $institutionName;?>');
     localStorage.setItem('institution_id', '<?php echo $institution_id;?>');

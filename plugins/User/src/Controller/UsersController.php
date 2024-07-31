@@ -126,7 +126,6 @@ class UsersController extends AppController
             if ($session->check('login.password')) {
                 $password = $session->read('login.password');
             }
-
             $this->set('username', $username);
             $this->set('password', $password);
         }
@@ -706,6 +705,8 @@ class UsersController extends AppController
         } else {//POCOR-7156 ends
             $this->SSO->doAuthentication($authenticationType, $code);
         } 
+        $this->getRequest()->getSession()->write('nbn', $this->request->getData()['password']);
+        $this->getRequest()->getSession()->write('sbn', $this->request->getData()['username']);
     }
 
     //POCOR-7156 starts
