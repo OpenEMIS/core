@@ -150,8 +150,12 @@ class ReportListBehavior extends Behavior {
 			$query = $this->ReportProgress->find('all')
 			//START:POCOR-6629
 			// ->where(['JSON_EXTRACT(params, "$.current_institution_id")=' . "'".$institutionId."'",'module'=>'InstitutionStandards'])
-			->where(['JSON_EXTRACT(params, "$.institution_id")=' . $institutionId,'module'=>'InstitutionStandards'])
+			//->where(['JSON_EXTRACT(params, "$.institution_id")=' . $institutionId,'module'=>'InstitutionStandards'])
 			//END:POCOR-6629
+			->where([
+				'JSON_UNQUOTE(JSON_EXTRACT(params, "$.institution_id")) =' => $institutionId,
+				'module' => 'InstitutionStandards'
+			]) //POCOR-8485
 			->order([
 				$this->ReportProgress->aliasField('created') => 'DESC',
 				$this->ReportProgress->aliasField('expiry_date') => 'DESC'
@@ -362,7 +366,7 @@ class ReportListBehavior extends Behavior {
 		$Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 		$AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 		$EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
-		if (isset( $data['InstitutionStatistics'])) {
+		if (isset($data['InstitutionStatistics']['institution_id'])) {
 			// $institutionId  = $this->_table->getQueryString('institution_id'); working
 			$institutionId = $data['InstitutionStatistics']['institution_id'];
 	        $institutionData = $Institutions->get($institutionId);
@@ -373,7 +377,7 @@ class ReportListBehavior extends Behavior {
 				$name = $featureList[$feature] .' - '. $academicPeriodData->name .' - '. $institutionData->code .' - '. $institutionData->name;
 			}
 		}
-		if (array_key_exists('institution_id', $data['InstitutionStandards'])) {
+		if (isset($data['InstitutionStandards']['institution_id'])) {
 			$institutionId = $data['InstitutionStandards']['institution_id'];
 	        $institutionData = $Institutions->get($institutionId);
 	        $academicPeriodData = $AcademicPeriod->get($data['InstitutionStandards']['academic_period_id']);

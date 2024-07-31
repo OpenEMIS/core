@@ -7088,7 +7088,7 @@ class InstitutionsController extends AppController
         } else {
             $dataModule = $data['module'];
         }
-        $this->Navigation->addCrumb(__('Reports'), [
+        $this->Navigation->addCrumb(__($data['module']), [
             'plugin' => $this->getPlugin(),
             'controller' => $this->getName(),
             'action' => $dataModule,
@@ -7096,7 +7096,6 @@ class InstitutionsController extends AppController
             '1' => $this->paramsEncode(['institution_id'=> $institutionId])
         ]);
         
-        $this->Navigation->addCrumb($data['module']);
         $header = __('Reports') . ' - ' . $data['module'];
 
         $inputFileName = $replace_data;
