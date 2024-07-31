@@ -545,13 +545,15 @@ class ExcelBehavior extends Behavior
         }
 
         $specialCharacters = ['=', '@'];
-        $firstCharacter = substr($value, 0, 1);
-        if (in_array($firstCharacter, $specialCharacters)) {
-            // append single quote to escape special characters
-            $value = "'" . $value;
-        }
+        //POCOR-8515 commented this code because of getting error to generate report starts 
+        //$firstCharacter = substr($value, 0, 1);
+        // if (in_array($firstCharacter, $specialCharacters)) {
+        //     // append single quote to escape special characters
+        //     $value = "'" . $value;
+        // }//POCOR-8515 ends
 
-        return ['rowData' => __($value), 'style' => $style];
+        //return ['rowData' => __($value), 'style' => $style];
+        return ['rowData' => $value, 'style' => $style];//POCOR-8515 
     }
 
     private function isForeignKey($table, $field)
