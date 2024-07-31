@@ -577,6 +577,16 @@ class InstitutionSubjectsTable extends ControllerActionTable
      ******************************************************************************************************************/
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
+        //POCOR-8481 starts
+        $toolbarButtons = $extra['toolbarButtons'];
+        $toolbarButtons['back']['url'] = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'Subjects',
+            '0' => 'index',
+            '1' => $this->paramsEncode(['id' => $extra['institution_id'], 'institution_id' => $extra['institution_id']])
+        ];//POCOR-8481 ends
+
         if ($extra['selectedAcademicPeriodId'] == -1) {
             return $this->controller->redirect([
                 'plugin' => $this->controller->getPlugin(),
