@@ -786,7 +786,7 @@ class NavigationComponent extends Component
             ],
 
             'Institutions.InstitutionCurriculars.index' => [ //POCOR-6673
-                'title' => 'Curriculars',
+                'title' => 'Institution Curriculars',
                 'parent' => 'Institution.Academic',
                 'selected' => ['Institutions.InstitutionCurriculars', 'Institutions.InstitutionCurricularStudents'],
                 'action' => 'index',

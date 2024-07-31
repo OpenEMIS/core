@@ -144,11 +144,17 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     }
 
+    //POCOR-8482[START]
+    // public function onGetCurricularCategory(Event $event, Entity $entity)
+    // {
+    //     return $entity['institution_curricular']['category'] ? __('Co-Curricular') : $entity->category ? __('Co-Curricular') : __('Extracurricular');
+
+    // }
     public function onGetCurricularCategory(Event $event, Entity $entity)
     {
-        return $entity['institution_curricular']['category'] ? __('Co-Curricular') : $entity->category ? __('Co-Curricular') : __('Extracurricular');
-
+        return $entity['institution_curricular']['category'] ? __('Co-Curricular') : ($entity->category ? __('Co-Curricular') : __('Extracurricular'));
     }
+    //POCOR-8482[END]   
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -169,12 +175,19 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
                             ])
                             ->where([$curriculars->aliasField('id') => $curricularIdGet])->first();
 
-        $entity->name = $curricularData->name;
-        $entity->category = $curricularData->category ? __('Co-Curricular') : __('Extracurricular');
-        $entity->curricularType = $curricularData->curricularType;
-        $this->field('name', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $entity->name, 'required' => true]]);
-        $this->field('curricular_type_id', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $entity->curricularType, 'required' => true]]);
-        $this->field('category', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $entity->category, 'required' => true]]);
+        //POCOR-8482[START]                   
+        // $entity->name = $curricularData->name;
+        // $entity->category = $curricularData->category ? __('Co-Curricular') : __('Extracurricular');
+        // $entity->curricularType = $curricularData->curricularType;
+
+        $name = $curricularData->name;
+        $category = $curricularData->category ? __('Co-Curricular') : __('Extracurricular');
+        $curricularType = $curricularData->curricularType;
+        //POCOR-8482[END]
+
+        $this->field('name', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $name, 'required' => true]]);
+        $this->field('curricular_type_id', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $curricularType, 'required' => true]]);
+        $this->field('category', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $category, 'required' => true]]);
         $this->field('student_id', ['type' => 'select','visible' => true]);
         $this->field('institution_curricular_id', ['visible' => false]);
         $this->field('start_date',['attr' => ['label' => __('Start Date')]]);
