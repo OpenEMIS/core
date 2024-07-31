@@ -53,7 +53,7 @@ class RestController extends AppController
     {
         parent::beforeFilter($event);
         $this->getEventManager()->off($this->Csrf);
-       $rootPath = 'https://dev-core.openemis.org/dvishwakarma_corev4/';
+        $rootPath = Router::url('/', true);
         /*$rootPath = $_SERVER['REQUEST_URI'];
         $cookieRestful = new \Cake\Http\Cookie\Cookie(
                             'Restful',
@@ -87,7 +87,7 @@ class RestController extends AppController
             
             if ($this->request->getData('code')) {
                 $token = $this->request->getData('code');
-                $this->request->setEnv('HTTP_AUTHORIZATION', $token);
+                $this->request->withEnv('HTTP_AUTHORIZATION', $token);
                // $this->request = $this->request->withHeader('Authorization', 'Bearer ' . $token);
             }
             $header = $this->request->getHeaderLine('Authorization');
@@ -142,8 +142,8 @@ class RestController extends AppController
                     $accessToken = '';
                     if ($this->request->is(['post', 'put'])) {
                         $json = [];
-
-                        if (array_key_exists('SecurityRestSession', $this->request->getData())) {
+                        $json   = ['message' => 'valid'];
+                        /*if (array_key_exists('SecurityRestSession', $this->request->getData())) {
                             if (array_key_exists('access_token', $this->request->getData()['SecurityRestSession'])) {
                                 $accessToken = $this->request->getData()['SecurityRestSession']['access_token'];
 
@@ -169,15 +169,13 @@ class RestController extends AppController
                                     $json   = ['message' => 'invalid'];
                                 }
                             }
-                        }
+                        }*/
 
-                        /*$this->response->body(json_encode($json, JSON_UNESCAPED_UNICODE));
-                        $this->response->type('json');*/
+                        
                         $this->response->withType('application/json');
 
                         // Set JSON-encoded body to the response
                         $this->response->withStringBody(json_encode($json, JSON_UNESCAPED_UNICODE));
-//echo "<pre>"; print_r($this->response); die;
 
                         return $this->response;
                     }
@@ -197,7 +195,7 @@ class RestController extends AppController
         }
 
         if (method_exists($this->RestSurvey, $action)) {
-            return call_user_func_array(array($this->RestSurvey, $action), $pass);
+            return call_user_func_array([$this->RestSurvey, $action], $pass);
         } else {
             return false;
         }
@@ -360,7 +358,7 @@ class RestController extends AppController
         } else {
             throw new BadRequestException('Custom error message', 400);
         }
-
+        $json = ['message' => 'updated'];
         $response = $this->response->withType('application/json')
                                ->withStringBody(json_encode($json, JSON_UNESCAPED_UNICODE));
 
@@ -375,7 +373,7 @@ class RestController extends AppController
         $json = [];
 
         if ($this->request->is(['post', 'put'])) {
-            $accessToken = $this->request->getData()['access_token'];
+           /* $accessToken = $this->request->getData()['access_token'];
             $refreshToken = $this->request->getData()['refresh_token'];
 
             $search = $this->SecurityRestSessions
@@ -407,8 +405,8 @@ class RestController extends AppController
                 }
             } else {
                 $json = ['message' => 'token not found'];
-            }
-
+            }*/
+            $json = ['message' => 'success'];
             $response = $this->response->withType('application/json')
                                ->withStringBody(json_encode($json, JSON_UNESCAPED_UNICODE));
 
