@@ -158,7 +158,8 @@ $this->start('panelBody');
 									$deleteUrl = ['plugin' => $params['plugin'],
 										'controller' => $params['controller'],
 										'action' =>  $ControllerAction['table']->getAlias(),
-										'removeReport',$obj->id
+										'removeReport',$obj->id,
+										'institution_id' => $institution_id
 									];
 								?>
 								<ul class="dropdown-menu action-dropdown" role="menu" aria-labelledby="action-menu">

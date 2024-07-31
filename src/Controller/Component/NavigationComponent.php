@@ -1291,6 +1291,9 @@ class NavigationComponent extends Component
         ];
 
         $institutionID = $this->controller->getQueryString('institution_id');
+        if(empty($institutionID) && $this->getController()->getRequest()->getParam('action') == 'ViewReport') {
+            $institutionID = $this->getController()->getRequest()->getQuery('institution_id');
+        } //POCOR-8485
         $encodedInstitutionID = $this->controller->paramsEncode([
             'id' => $institutionID,
             'institution_id' => $institutionID,]);
