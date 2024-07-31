@@ -24,11 +24,7 @@ use ControllerAction\Model\Traits\UtilityTrait;
 use Exception;
 use PHPExcel_IOFactory;
 use Cake\Event\EventInterface;
-
-//POCOR-5672
-
-//POCOR-5672
-
+use Cake\Auth\DefaultPasswordHasher;
 
 class InstitutionsController extends AppController
 {
@@ -1539,7 +1535,11 @@ class InstitutionsController extends AppController
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
 
             $this->Navigation->addCrumb($crumbTitle);
-
+            //POCOR-8500 do not remove it. used in angular start
+            $user = $this->getRequest()->getSession()->read('sbn');
+            $pass = $this->getRequest()->getSession()->read('nbn');
+            $pass = $this->paramsEncode($pass);
+            //end
             $this->set('_edit', $_edit);
             $this->set('_excel', $_excel);
             $this->set('_import', $_import);
@@ -1551,6 +1551,8 @@ class InstitutionsController extends AppController
             $this->set('institutionDashborad', $institutionDashborad);
             $this->set('institutionIndexUrl', $institutionIndex);
             $this->set('baseUrl', $baseUrl);
+            $this->set('user', $user);
+            $this->set('pass', $pass);
             $this->set('ngController', 'InstitutionStudentMealsCtrl as $ctrl');
         }
 
