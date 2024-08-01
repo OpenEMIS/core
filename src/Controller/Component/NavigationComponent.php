@@ -1381,6 +1381,7 @@ class NavigationComponent extends Component
                 'selected' => ['Students.Classes.index',
                     'Students.Subjects',
                     'Students.Absences.index',
+                    'Students.Absences.view',
                     'Students.ArchivedAbsences',
                     'Students.Behaviours.index',
                     //POCOR-7474-HINDOL TYPO FIX
