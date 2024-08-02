@@ -12,14 +12,14 @@ class HighChartBehavior extends Behavior
         '#D5AA68'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
     }
 
     public function getHighChart($chart, $params = [])
     {
         $model = $this->_table;
-        $selectedConfig = $this->config($chart);
+        $selectedConfig = $this->getConfig($chart);
         $function = $selectedConfig['_function'];
         $defaultColors = isset($selectedConfig['_defaultColors']) ? $selectedConfig['_defaultColors'] : true;
         $params = call_user_func_array([$model, $function], [$params]);
@@ -50,7 +50,7 @@ class HighChartBehavior extends Behavior
         }
         $options['series'] = array_values($dataSet);
         $options['credits'] = ['enabled' => false];
-        if (!array_key_exists('colors', $options) && !$defaultColors) {
+        if (!isset($options['colors']) && !$defaultColors) {
             $options['colors'] = $this->colors;
         }
         return json_encode($options, JSON_NUMERIC_CHECK);
@@ -59,7 +59,7 @@ class HighChartBehavior extends Behavior
     public function getDonutChart($chart, $params = array())
     {
         $model = $this->_table;
-        $selectedConfig = $this->config($chart);
+        $selectedConfig = $this->getConfig($chart);
         $function = $selectedConfig['_function'];
         $defaultColors = isset($selectedConfig['_defaultColors']) ? $selectedConfig['_defaultColors'] : true;
         $params = call_user_func_array([$model, $function], [$params]);
@@ -67,7 +67,7 @@ class HighChartBehavior extends Behavior
         $key = '';
         if (!empty($params['dataSet'])) {
             $dataSet = $params['dataSet'];
-            if (array_key_exists('key', $params)) {
+            if (isset($params['key'])) {
                 $key = $params['key'];
             }
         }
@@ -106,7 +106,7 @@ class HighChartBehavior extends Behavior
         $options = array_replace_recursive($selectedConfig, $options);
         $options['series'][] = ['type' => 'pie', 'innerSize' => '85%', 'data' => array_values($dataSet)];
         $options['credits'] = ['enabled' => false];
-        if (!array_key_exists('colors', $options) && !$defaultColors) {
+        if (!isset($options['colors']) && !$defaultColors) {
             $options['colors'] = $this->colors;
         }
         return json_encode($options, JSON_NUMERIC_CHECK);
@@ -131,7 +131,7 @@ class HighChartBehavior extends Behavior
     // Modification from advance name search behavior
     public function advanceNameSearch($model, $search)
     {
-        $alias = $model->alias();
+        $alias = $model->getAlias();
 
         $searchParams = explode(' ', $search);
         foreach ($searchParams as $key => $value) {
@@ -140,8 +140,12 @@ class HighChartBehavior extends Behavior
             }
         }
         $conditions = [];
+
+        // Get the connection
+        $connection = $this->_table->getConnection();
+        $driverName = $connection->config()['driver'];
         // note that CONCAT_WS is not supported by cakephp and also not supported by some dbs like sqlite and mysqlserver, thus this condition
-        if ($this->_table->connection()->config()['driver'] == 'Cake\Database\Driver\Mysql') {
+        if ($driverName == 'Cake\Database\Driver\Mysql') {
             switch (count($searchParams)) {
                 case 1:
                     // 1 word - search by openemis id or 1st or middle or third or last

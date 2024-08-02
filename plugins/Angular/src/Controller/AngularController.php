@@ -5,16 +5,17 @@ namespace Angular\Controller;
 use Angular\Controller\AppController;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\Http\ServerRequest;
 
 class AngularController extends AppController
 {
     public $helpers = ['ControllerAction.HtmlField'];
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         parent::beforeFilter($event);
 
@@ -54,7 +55,7 @@ class AngularController extends AppController
             $this->set('request', $this->request);
 
             $context = [
-                    'schema' => $table->schema(),
+                    'schema' => $table->getSchema(),
                     'errors' => '{{errors.'.$requestAttr['model'].'[key].'.$requestAttr['field'].'}}'
                 ];
             $this->set('context', $context);

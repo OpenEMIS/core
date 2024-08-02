@@ -12,27 +12,34 @@ class InfrastructureWashHygienesController extends PageController
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('AcademicPeriod.AcademicPeriods');        
-        $this->Page->loadElementsFromTable($this->InfrastructureWashHygienes);        
+        $this->loadModel('AcademicPeriod.AcademicPeriods');
+        $this->Page->loadElementsFromTable($this->InfrastructureWashHygienes);
         $this->Page->disable(['search']); // to disable the search function
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $session = $this->request->session();
-        $requestQuery = $this->request->query;
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
+        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
         $institutionName = $session->read('Institution.Institutions.name');
 
         parent::beforeFilter($event);
 
-        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-
         $page = $this->Page;
 
         // set Breadcrumb
-        $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-        $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $encodedInstitutionId, $encodedInstitutionId]);
+        $page->addCrumb('Institutions', [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'Institutions',
+            'index']);
+        $page->addCrumb($institutionName, [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'dashboard',
+            'institutionId' => $encodedInstitutionId,
+            $encodedInstitutionId]);
         $page->addCrumb(__('Hygiene'));
 
         // set institution_id
@@ -122,7 +129,7 @@ class InfrastructureWashHygienesController extends PageController
     }
 
     private function addEdit()
-    {   
+    {
         $page = $this->Page;
 
         $page->exclude(['infrastructure_wash_hygiene_total_male', 'infrastructure_wash_hygiene_total_female', 'infrastructure_wash_hygiene_total_mixed']);
@@ -171,7 +178,7 @@ class InfrastructureWashHygienesController extends PageController
 
     public function view($id)
     {
-        parent::view($id); 
+        parent::view($id);
         $page = $this->Page;
         $entity = $page->getData();
         $quantity = $this->getHygieneQuantity($entity);
@@ -187,7 +194,7 @@ class InfrastructureWashHygienesController extends PageController
                  ['label' => __('Non-functional'), 'key' => 'nonfunctional']
              ])
              ->setAttributes('row', $quantity);
-        $page->move('quantities')->after('infrastructure_wash_hygiene_education_id'); 
+        $page->move('quantities')->after('infrastructure_wash_hygiene_education_id');
 
     }
 
@@ -222,5 +229,22 @@ class InfrastructureWashHygienesController extends PageController
         $rows[] = ['gender' => 'Female', 'functional' => $female_functional, 'nonfunctional' => $female_nonfunctional];
         $rows[] = ['gender' => 'Mixed', 'functional' => $mixed_functional, 'nonfunctional' => $mixed_nonfunctional];
         return $rows;
+    }
+
+
+    private function getInstitutionID()
+    {
+        $session = $this->request->session();
+        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
+        $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
+        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
+            $this->request->params['institutionId'] :
+            $encodedInstitutionIDFromSession;
+        try {
+            $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
+        } catch (\Exception $exception) {
+            $institutionID = $insitutionIDFromSession;
+        }
+        return $institutionID;
     }
 }

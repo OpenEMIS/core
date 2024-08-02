@@ -29,7 +29,7 @@ class AlertLogsTable extends ControllerActionTable
 
     private $featureGrouping = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->featureGrouping = $this->getSelectOptions($this->aliasField('feature_grouping'));
@@ -38,7 +38,7 @@ class AlertLogsTable extends ControllerActionTable
         $this->toggle('edit', false);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Workflow.afterSave'] = 'alertAssigneeAfterSave';
@@ -64,10 +64,10 @@ class AlertLogsTable extends ControllerActionTable
             }
         }
 
-        $workflowModel = isset($modelName) ? $modelName : $recordEntity->source();
+        $workflowModel = isset($modelName) ? $modelName : $recordEntity->getSource();
         $model = TableRegistry::get($workflowModel);
-        $modelAlias = $model->alias();
-        $modelRegistryAlias = $model->registryAlias();
+        $modelAlias = $model->getAlias();
+        $modelRegistryAlias = $model->getRegistryAlias();
         $feature = __(Inflector::humanize(Inflector::underscore($modelAlias))); // feature for control filter
 
         $method = 'Email'; // method will be predefined
@@ -101,10 +101,11 @@ class AlertLogsTable extends ControllerActionTable
 
             if ($records) {
                 $lastExecutorId = $records->created_user_id;
-                $lastExecutorName = $Users->get($lastExecutorId)->name;
+                if($lastExecutorId){ //POCOR-7964
+                    $lastExecutorName = $Users->get($lastExecutorId)->name;
+                }
 
-                $vars = $query->hydrate(false)->first();
-
+                $vars = $query->enableHydration(false)->first();
                 $vars['feature'] = $feature;
                 $vars['last_executor_id'] = $lastExecutorId;
                 $vars['last_executor_name'] = $lastExecutorName;
@@ -177,7 +178,7 @@ class AlertLogsTable extends ControllerActionTable
                 $result = TableRegistry::get('Alert.AlertLogs')->find()->where(['id' => $saveData->id])->first();
                 $this->triggerSendingAlertShell('SendingAlert', $result->feature, $result->id);
             }//POCOR-6023 ends
-           
+
         }
 
     }
@@ -273,7 +274,7 @@ class AlertLogsTable extends ControllerActionTable
         // end element control
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Logs','Communications');       
+		$is_manual_exist = $this->getManualUrl('Administration','Logs','Communications');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -295,11 +296,11 @@ class AlertLogsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $selectedFeature = $extra['selectedFeature'];
+        //$selectedFeature = $extra['selectedFeature'];
         $featureOptions = $this->getFeatureOptions();
-
-        if ($selectedFeature != 'AllFeatures') {
-            $query->where([$this->aliasField('feature') => $selectedFeature]);
+        $selectedFeature = $this->request->getQuery('feature');
+        if ($selectedFeature != -1 && !empty($selectedFeature)) {
+            $query->where(['feature' => $selectedFeature]);
         }
     }
 
@@ -370,5 +371,31 @@ class AlertLogsTable extends ControllerActionTable
         $shellCmd = $cmd . ' >> ' . $logs;
         exec($shellCmd);
         Log::write('debug', $shellCmd);
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            case 'subject':
+                return __('Subject');
+            case 'status':
+                return __('Status');
+            case 'processed_date':
+                return __('Process Date');
+            case 'method':
+                return __('Method');
+            case 'destination':
+                return __('Destination');
+            case 'message':
+                return __('Message');
+            case 'created':
+                return __('Created By');
+            case 'created_user_id':
+                return __('Created On');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

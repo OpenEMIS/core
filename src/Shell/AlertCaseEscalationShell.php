@@ -10,8 +10,8 @@ use App\Shell\AlertShell;
 /* POCOR-7462 cases */
 class AlertCaseEscalationShell extends AlertShell
 {
-     
-    public function initialize()
+
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Cases.InstitutionCases');
@@ -23,21 +23,21 @@ class AlertCaseEscalationShell extends AlertShell
         $feature = $this->featureName;
         $this->Alerts->updateAll(['process_id' => getmypid(), 'modified' => Time::now()], ['process_name' => $processName]);
         $dir = new Folder(ROOT . DS . 'tmp');
-    
+
         do {
             $rules = $this->getAlertRules($feature);
             foreach ($rules as $rule) {
-               
+
                 $threshold = $rule->threshold;
                 $thresholdArray = json_decode($threshold, true);
 
                 $data = $this->getAlertData($thresholdArray, $model);
-                
+
                 foreach ($data as $key => $vars) {
                     $vars=$vars->toArray();
                     $vars['threshold']['value'] = $thresholdArray['value'];
-                  
-                    if (array_key_exists('institution', $vars)) {
+
+                    if (isset($vars['institution'])) {
                         $institutionId = $vars['institution']['id'];
                     }
                     if (!empty($rule['security_roles']) && !empty($institutionId)) { //check if the alertRule have security role and institution id
@@ -48,7 +48,7 @@ class AlertCaseEscalationShell extends AlertShell
                         $message = $this->AlertLogs->replaceMessage($feature, $rule->message, $vars);
                         // insert record to  the alertLog
                         $this->AlertLogs->insertAlertLog($rule->method, $rule->feature, $email, $subject, $message);
-                    
+
                 }}
             }
             sleep(10);

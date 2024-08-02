@@ -6,20 +6,23 @@ use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use App\Controller\AppController;
+use Cake\Http\ServerRequest;
 
 class StaffAppraisalsController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
+        //$this->loadComponent('FormProtection');
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         parent::beforeFilter($event);
         $header = 'Appraisals';
+        $request = $this->request;
         $this->Navigation->addCrumb($header, ['plugin' => 'StaffAppraisal', 'controller' => 'StaffAppraisals', 'action' => 'Criterias']);
-        $this->Navigation->addCrumb(Inflector::humanize($this->request->action));
+        $this->Navigation->addCrumb(Inflector::humanize(isset($request->getAttribute('params')['action'])? $request->getAttribute('params')['action']: ''));
         $this->getAppraisalsTabElements();
         $this->set('contentHeader', __($header));
     }
@@ -33,8 +36,9 @@ class StaffAppraisalsController extends AppController
 
     private function getAppraisalsTabElements()
     {
-        $plugin = $this->plugin;
-        $name = $this->name;
+        $request = $this->request;
+        $plugin = $this->getPlugin();
+        $name = $this->getName();
         $tabElements = [
             'Criterias' => [
                 'url' => ['plugin' => 'StaffAppraisal', 'controller' => 'StaffAppraisals', 'action' => 'Criterias'],
@@ -60,7 +64,7 @@ class StaffAppraisalsController extends AppController
         ];
 
         $this->set('tabElements', $this->TabPermission->checkTabPermission($tabElements));
-        $this->set('selectedAction', $this->request->param('action'));
+        $this->set('selectedAction',$request->getAttribute('params')['action']);
     }
 
     public function Criterias()

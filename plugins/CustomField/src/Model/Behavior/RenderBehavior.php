@@ -13,7 +13,7 @@ class RenderBehavior extends Behavior {
     private $surveyRules = null;
     private $SurveyRulesTable;
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
         parent::initialize($config);
 
         $class = basename(str_replace('\\', '/', get_class($this)));
@@ -23,10 +23,10 @@ class RenderBehavior extends Behavior {
 		$code = strtoupper(Inflector::underscore($class));
 		$this->fieldTypeCode = $code;
 		$this->fieldType = $class;
-        $this->SurveyRulesTable = TableRegistry::get('Survey.SurveyRules');
+        $this->SurveyRulesTable = TableRegistry::getTableLocator()->get('Survey.SurveyRules');
     }
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
     	$events = parent::implementedEvents();
     	$eventMap = [
             'Render.on'.$this->fieldType.'Initialize' => 'on'.$this->fieldType.'Initialize',
@@ -69,7 +69,7 @@ class RenderBehavior extends Behavior {
             $rules = $this->SurveyRulesTable
                 ->find()
                 ->where([
-                    $this->SurveyRulesTable->aliasField('survey_form_id') => $entity->survey_form_id,
+                    // $this->SurveyRulesTable->aliasField('survey_form_id') => $entity->survey_form_id,
                     $this->SurveyRulesTable->aliasField('enabled') => 1
                 ])
                 ->select([
@@ -77,7 +77,7 @@ class RenderBehavior extends Behavior {
                     $this->SurveyRulesTable->aliasField('dependent_question_id'),
                     $this->SurveyRulesTable->aliasField('show_options')
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->toArray();
             foreach ($rules as $rule) {
                 $showOptionsJsonArray = str_replace('"', '', $rule['show_options']);
@@ -103,7 +103,7 @@ class RenderBehavior extends Behavior {
     }
 
     protected function getStepFromParams($params=[]) {
-        if (array_key_exists('precision', $params) && ($params['precision'] > 0)) {
+        if (isset($params['precision']) && ($params['precision'] > 0)) {
             $step = '0.';
 
             for ($i=1; $i <= $params['precision']; $i++) {

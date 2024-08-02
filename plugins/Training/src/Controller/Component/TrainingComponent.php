@@ -8,7 +8,7 @@ class TrainingComponent extends Component
 {
     private $controller;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->controller = $this->_registry->getController();
     }
@@ -20,7 +20,7 @@ class TrainingComponent extends Component
         $query = $Courses->find('list', ['keyField' => 'id', 'valueField' => 'code_name']);
 
         // excludes
-        $excludes = array_key_exists('excludes', $params) ? $params['excludes'] : false;
+        $excludes = isset($params['excludes']) ? $params['excludes'] : false;
         if ($excludes) {
             $query->where([
                 $Courses->aliasField('id NOT IN') => $excludes
@@ -29,7 +29,7 @@ class TrainingComponent extends Component
         // End
 
         // Filter by Approved
-        $steps = $this->controller->Workflow->getStepsByModelCode($Courses->registryAlias(), 'APPROVED');
+        $steps = $this->controller->Workflow->getStepsByModelCode($Courses->getRegistryAlias(), 'APPROVED');
         if (!empty($steps)) {
             $query->where([
                 $Courses->aliasField('status_id IN') => $steps
@@ -45,15 +45,15 @@ class TrainingComponent extends Component
 
     public function getSessionList($params = [])
     {
-        $listAll = array_key_exists('listAll', $params) ? $params['listAll'] : false;
-        $courseId = array_key_exists('training_course_id', $params) ? $params['training_course_id'] : false;
+        $listAll = isset($params['listAll']) ? $params['listAll'] : false;
+        $courseId = isset($params['training_course_id']) ? $params['training_course_id'] : false;
 
         $Sessions = TableRegistry::get('Training.TrainingSessions');
         $query = $Sessions->find('list', ['keyField' => 'id', 'valueField' => 'code_name']);
 
         if (!$listAll) {
             // Filter by Approved
-            $steps = $this->controller->Workflow->getStepsByModelCode($Sessions->registryAlias(), 'APPROVED');
+            $steps = $this->controller->Workflow->getStepsByModelCode($Sessions->getRegistryAlias(), 'APPROVED');
             if (!empty($steps)) {
                 $query->where([
                     $Sessions->aliasField('status_id IN') => $steps

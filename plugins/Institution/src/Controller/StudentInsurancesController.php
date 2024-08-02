@@ -6,11 +6,11 @@ use Profile\Controller\InsurancesController as BaseController;
 
 class StudentInsurancesController extends BaseController
 {
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
         $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $institutionName = $session->read('Institution.Institutions.name');
         $studentId = $session->read('Student.Students.id');
         $studentName = $session->read('Student.Students.name');
@@ -40,6 +40,23 @@ class StudentInsurancesController extends BaseController
             'institutionId' => $institutionId
         ]);
 
-        $page->get('security_user_id')->setControlType('hidden')->setValue($studentId); // set value and hide the student_id    
+        $page->get('security_user_id')->setControlType('hidden')->setValue($studentId); // set value and hide the student_id
+    }
+
+
+    private function getInstitutionID()
+    {
+        $session = $this->request->session();
+        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
+        $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
+        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
+            $this->request->params['institutionId'] :
+            $encodedInstitutionIDFromSession;
+        try {
+            $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
+        } catch (\Exception $exception) {
+            $institutionID = $insitutionIDFromSession;
+        }
+        return $institutionID;
     }
 }

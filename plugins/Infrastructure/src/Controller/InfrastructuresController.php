@@ -6,10 +6,12 @@ use App\Controller\AppController;
 use Cake\ORM\Table;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use Cake\Http\ServerRequest;
+use Cake\Event\EventInterface;
 
 class InfrastructuresController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadComponent('Paginator');
@@ -60,27 +62,30 @@ class InfrastructuresController extends AppController
     }
     // End
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
+        if ($this->getPlugin() == 'Infrastructure') {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
 
         $tabElements = [
             'Fields' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Fields'],
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Fields'],
                 'text' => __('Fields')
             ],
             'Pages' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'LandPages'],
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'LandPages'],
                 'text' => __('Pages')
             ],
             'Types' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'LandTypes'],
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'LandTypes'],
                 'text' => __('Types')
             ]
         ];
 
         // Types & RoomTypes share one tab, Pages & RoomPages share one tab
-        switch ($this->request->action) {
+        switch ($this->request->getParam('action')) {
             case 'LandTypes':
             case 'BuildingTypes':
             case 'FloorTypes':
@@ -94,7 +99,7 @@ class InfrastructuresController extends AppController
                 $selectedAction = 'Pages';
                 break;
             default:
-                $selectedAction = $this->request->action;
+                $selectedAction = $this->request->getParam('action');
         }
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
@@ -104,10 +109,16 @@ class InfrastructuresController extends AppController
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
         $header = __('Infrastructure');
-        $header .= ' - ' . __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
-        $this->Navigation->addCrumb('Infrastructure', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
-        $this->Navigation->addCrumb(__(Inflector::humanize(Inflector::underscore($this->request->param('action')))));
+        $header .= ' - ' . __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
+        $this->Navigation->addCrumb('Infrastructure', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $model->getAlias()]);
+        $this->Navigation->addCrumb(__(Inflector::humanize(Inflector::underscore($this->request->getParam('action')))));
 
         $this->set('contentHeader', $header);
+    }
+
+    public function beforeRender(EventInterface $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 }

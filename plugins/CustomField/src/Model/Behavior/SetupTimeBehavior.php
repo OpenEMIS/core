@@ -13,7 +13,7 @@ class SetupTimeBehavior extends SetupBehavior
 {
     private $rangeValidationOptions;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -30,8 +30,8 @@ class SetupTimeBehavior extends SetupBehavior
     public function editAfterQuery(Event $event, Entity $entity, ArrayObject $extra)
     {
         $fieldType = '';
-        if (!empty($this->_table->request->data)) {
-            $fieldType = (array_key_exists('field_type', $this->_table->request->data[$this->_table->alias()]))? $this->_table->request->data[$this->_table->alias()]['field_type']: null;
+        if (!empty($this->_table->request->getData())) {
+            $fieldType = (array_key_exists('field_type', $this->_table->request->getData($this->_table->getAlias())))? $this->_table->request->getData($this->_table->getAlias())['field_type']: null;
         } else {
             if (!empty($entity)) {
                 $fieldType = $entity->field_type;
@@ -46,7 +46,7 @@ class SetupTimeBehavior extends SetupBehavior
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         if ($this->_table->request->is('POST')) {
-            $fieldType = (array_key_exists('field_type', $this->_table->request->data[$this->_table->alias()]))? $this->_table->request->data[$this->_table->alias()]['field_type']: null;
+            $fieldType = (array_key_exists('field_type', $this->_table->request->getData()[$this->_table->getAlias()]))? $this->_table->request->getData()[$this->_table->getAlias()]['field_type']: null;
             if ($fieldType == 'TIME') {
                 $this->addTimeValidation();
             }
@@ -55,7 +55,7 @@ class SetupTimeBehavior extends SetupBehavior
 
     private function addTimeValidation()
     {
-        $validator = $this->_table->validator();
+        $validator = $this->_table->getValidator();
         $validator->notEmpty('validation_rules_time');
         $validator->notEmpty('start_time');
         $validator->notEmpty('end_time');
@@ -75,19 +75,19 @@ class SetupTimeBehavior extends SetupBehavior
 
         $paramsArray = [];
         if ($this->_table->action == 'edit') {
-            if (empty($this->_table->request->data)) {
+            if (empty($this->_table->request->getData())) {
                 $paramsArray = (!empty($entity->params))? json_decode($entity->params, true): [];
             }
         }
 
-        if (!empty($this->_table->request->data)) {
-            $selectedRangeValidation = (array_key_exists($this->_table->alias(), $this->_table->request->data) && array_key_exists('validation_rules_time', $this->_table->request->data[$this->_table->alias()]))? $this->_table->request->data[$this->_table->alias()]['validation_rules_time']: null;
+        if (!empty($this->_table->request->getData())) {
+            $selectedRangeValidation = (array_key_exists($this->_table->getAlias(), $this->_table->request->getData()) && array_key_exists('validation_rules_time', $this->_table->request->getData($this->_table->getAlias())))? $this->_table->request->getData($this->_table->getAlias())['validation_rules_time']: null;
         } else {
-            if (array_key_exists('start_time', $paramsArray) && array_key_exists('end_time', $paramsArray)) {
+            if (isset($paramsArray['start_time']) && isset($paramsArray['end_time'])) {
                 $selectedRangeValidation = 'between';
-            } else if (array_key_exists('start_time', $paramsArray)) {
+            } else if (isset($paramsArray['start_time'])) {
                 $selectedRangeValidation = 'earlier';
-            } else if (array_key_exists('end_time', $paramsArray)) {
+            } else if (isset($paramsArray['end_time'])) {
                 $selectedRangeValidation = 'later';
             } else {
                 $selectedRangeValidation = 'no';
@@ -100,26 +100,26 @@ class SetupTimeBehavior extends SetupBehavior
             switch ($selectedRangeValidation) {
                 case 'earlier':
                     $options = ['type' => 'time', 'after' => 'validation_rules_time', 'null' => false];
-                    if (array_key_exists('start_time', $paramsArray)) {
+                    if (isset($paramsArray['start_time'])) {
                         $options['value'] = $paramsArray['start_time'];
                     }
                     $this->_table->field('start_time', $options);
                     break;
                 case 'later':
                     $options = ['type' => 'time', 'after' => 'validation_rules_time', 'null' => false];
-                    if (array_key_exists('end_time', $paramsArray)) {
+                    if (isset($paramsArray['end_time'])) {
                         $options['value'] = $paramsArray['end_time'];
                     }
                     $this->_table->field('end_time', $options);
                     break;
                 case 'between':
                     $options = ['type' => 'time', 'after' => 'validation_rules_time', 'null' => false];
-                    if (array_key_exists('start_time', $paramsArray)) {
+                    if (isset($paramsArray['start_time'])) {
                         $options['value'] = $paramsArray['start_time'];
                     }
                     $this->_table->field('start_time', $options);
                     $options = ['type' => 'time', 'after' => 'start_time', 'null' => false];
-                    if (array_key_exists('end_time', $paramsArray)) {
+                    if (isset($paramsArray['end_time'])) {
                         $options['value'] = $paramsArray['end_time'];
                     }
                     $this->_table->field('end_time', $options);
@@ -134,13 +134,13 @@ class SetupTimeBehavior extends SetupBehavior
 
     public function onGetValidationRulesTime(Event $event, Entity $entity)
     {
-        $decodedParams = $event->subject()->HtmlField->decodeEscapeHtmlEntity($entity->params);
+        $decodedParams = $event->getSubject()->HtmlField->decodeEscapeHtmlEntity($entity->params);
         $paramsArray = (!empty($decodedParams))? json_decode($decodedParams, true): [];
-        if (array_key_exists('start_time', $paramsArray) && array_key_exists('end_time', $paramsArray)) {
+        if (isset($paramsArray['start_time']) && isset($paramsArray['end_time'])) {
             return $this->rangeValidationOptions['between'].' '.$this->_table->formatTime(new Time($paramsArray['start_time'])).' - '.$this->_table->formatTime(new Time($paramsArray['end_time']));
-        } else if (array_key_exists('start_time', $paramsArray)) {
+        } else if (isset($paramsArray['start_time'])) {
             return $this->rangeValidationOptions['earlier'].' '.$this->_table->formatTime(new Time($paramsArray['start_time']));
-        } else if (array_key_exists('end_time', $paramsArray)) {
+        } else if (isset($paramsArray['end_time'])) {
             return $this->rangeValidationOptions['later'].' '.$this->_table->formatTime(new Time($paramsArray['end_time']));
         } else {
             return $this->rangeValidationOptions['no'];
@@ -150,11 +150,11 @@ class SetupTimeBehavior extends SetupBehavior
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
-        if (array_key_exists('validation_rules_time', $data)) {
+        if ($data->offsetExists('validation_rules_time')) {
             if ($data['field_type'] == $this->fieldTypeCode) {
                 $paramsArray = [];
-                $start_time = (array_key_exists('start_time', $data))? $data['start_time']: null;
-                $end_time = (array_key_exists('end_time', $data))? $data['end_time']: null;
+                $start_time = $data->offsetExists('start_time') ? $data->offsetGet('start_time') : null;
+                $end_time = $data->offsetExists('end_time') ? $data->offsetGet('end_time') : null;
 
                 if (!empty($start_time)) {
                     $paramsArray['start_time'] = $start_time;

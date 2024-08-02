@@ -74,7 +74,7 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
                 }
             }, function(error) {
                 // No Notices
-                console.log(error);
+                console.error(error);
                 vm.notices = null;
                 AlertSvc.warning($scope, error);
             })
@@ -108,7 +108,7 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
                 return vm.workbenchItems;
             }, function(error) {
                 // No Workbench Data
-                console.log(error);
+                console.error(error);
                 vm.workbenchItems = false;
                 AlertSvc.warning($scope, error);
             })
@@ -129,12 +129,12 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
                     });
                 return defer.promise;
             }, function(error) {
-                console.log(error);
+                console.error(error);
             })
             .then(function(workbenchItemsTranslated) {
                 vm.workbenchItems = workbenchItemsTranslated;
             }, function(error) {
-                console.log(error);
+                console.error(error);
             })
             .finally(function() {
                 UtilsSvc.isAppendSpinner(false, 'dashboard-workbench-item-table');
@@ -166,7 +166,7 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
                     onGridSizeChanged: function() {
                         this.api.sizeColumnsToFit();
                     },
-                   
+
                 };
             });
     }
@@ -177,7 +177,8 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
 
         // reset to empty
         vm.gridOptions[vm.target].api.setColumnDefs([]);
-
+        // console.log("model.cols");
+        // console.log(model.cols);
         var columnDefs = DashboardSvc.getWorkbenchColumnDefs(model.cols);
         var textToTranslate = [];
         angular.forEach(columnDefs, function(value, key) {
@@ -187,7 +188,7 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
         DashboardSvc.translate(textToTranslate)
             .then(function(res) {
                 // console.log('res', res);
-                var maxCount = res.length - 1;
+                var maxCount = res;
                 angular.forEach(res, function(value, key) {
                     if (key < maxCount) {
                         columnDefs[key]['headerName'] = value;
@@ -198,7 +199,7 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
                 vm.gridOptions[vm.target].api.setColumnDefs(columnDefs);
                 vm.gridOptions[vm.target].api.sizeColumnsToFit();
             }, function(error) {
-                console.log(error);
+                console.error(error);
             });
             var limit = 0;
             var page = 0;
@@ -213,16 +214,16 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
                            rows = response.data.data;
                              vm.gridOptions[vm.target].api.setRowData(rows)
                             //  console.log('row end');
-                           
-                        } 
-                        
+
+                        }
+
                     }, function(error) {
-                        console.log(error);
+                        console.error(error);
                     })
                     .finally(function() {
                         UtilsSvc.isAppendSpinner(false, 'dashboard-workbench-table');
                     });
-                  
+
 
         // var limit = 10;
         // var dataSource = {

@@ -11,13 +11,14 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\ExpiredException;
 use Cake\Core\Configure;
 use Cake\Network\Exception\BadRequestException;
+use Cake\Event\EventInterface;
 
 class RestController extends AppController
 {
     public $SecurityRestSessions = null;
     private $RestVersion = '1.0';
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
@@ -46,14 +47,15 @@ class RestController extends AppController
         $this->loadComponent('Cookie');
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
-        $this->eventManager()->off($this->Csrf);
-        $this->Security->config('unlockedActions', ['survey']);
-        if (isset($this->request->query['version'])) {
-            $this->RestVersion = $this->request->query('version');
+        $this->getEventManager()->off($this->Csrf);
+        $this->Security->getConfig('unlockedActions', ['survey']);
+        if (null !== $this->request->getQuery('version')) {
+            $this->RestVersion = $this->request->getQuery('version');
         }
+
 
         if ($this->RestVersion == 2.0) {
             // Using JWT for authenication
@@ -173,7 +175,7 @@ class RestController extends AppController
     public function survey()
     {
         $this->autoRender = false;
-        $pass = $this->request->params['pass'];
+        $pass = $this->request->getParam('pass');
         $action = 'index';
 
         if (!empty($pass)) {
@@ -228,6 +230,7 @@ class RestController extends AppController
                 $token = $this->request->query('payload');
                 $url = $url.'?code='.$token;
                 $this->redirect($url);
+                $this->response->header(['Location' => $url]); //POCOR-7926
             } else {
                 $this->Cookie->configKey('Restful', 'path', '/');
                 $this->Cookie->configKey('Restful', [

@@ -4,13 +4,14 @@ namespace App\Controller;
 use Cake\Event\Event;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\Locator\TableLocator;
 
 use PDO;
 
 class AboutController extends AppController
 {
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $tabElements = [
@@ -41,7 +42,7 @@ class AboutController extends AppController
         $this->set('selectedAction', $this->request->action);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
@@ -53,7 +54,7 @@ class AboutController extends AppController
         return true;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         parent::beforeFilter($event);
         $this->set('contentHeader', __($this->name));
@@ -80,7 +81,9 @@ class AboutController extends AppController
 
     public function partners()
     {
-        $ConfigAttachments = TableRegistry::get('ConfigAttachments');
+        $tableLocator = new TableLocator();
+        $ConfigAttachments = $tableLocator->get('ConfigAttachments');
+        // $ConfigAttachments = TableRegistry::get('ConfigAttachments');
 
         $configAttachmentsQuery = $ConfigAttachments->find()
             ->where([$ConfigAttachments->aliasField('active') => 1, $ConfigAttachments->aliasField('type') => 'partner', ])

@@ -13,15 +13,15 @@ use Cake\Log\Log;
 
 class IdentityTypesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('identity_types');
+        $this->setTable('identity_types');
         parent::initialize($config);
 
         $this->hasMany('Identities', ['className' => 'User.Identities', 'foreignKey' => 'identity_type_id']);
         $this->hasMany('Nationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'identity_type_id']);
 
-        $this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
+        $this->behaviors()->get('ControllerAction')->getConfig('actions.remove', 'restrict');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index', 'add'],
             'Staff' => ['index', 'add']
@@ -36,6 +36,8 @@ class IdentityTypesTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
         $entity->validation_pattern = trim($entity->validation_pattern);
     }
 
@@ -62,6 +64,40 @@ class IdentityTypesTable extends ControllerActionTable
             return $entity->id;
         } else {
             return '';
+        }
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'visible':
+                return __('Visible');
+            case 'name':
+                return __('Name');
+            case 'international_code':
+                return __('International Code');
+            case 'national_code':
+                return __('National Code');
+            case 'editable':
+                return __('Editable');
+            case 'default':
+                return __('Default');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 }

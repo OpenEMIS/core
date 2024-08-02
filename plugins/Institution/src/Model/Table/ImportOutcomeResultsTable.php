@@ -3,7 +3,7 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
@@ -14,9 +14,9 @@ use Cake\Datasource\ConnectionManager;
 
 class ImportOutcomeResultsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('import_mapping');
+        $this->setTable('import_mapping');
         parent::initialize($config);
 
         $this->addBehavior('Import.ImportOutcomeResult', [
@@ -38,14 +38,14 @@ class ImportOutcomeResultsTable extends AppTable
         $this->OutcomeGradingTypes = TableRegistry::get('Outcome.OutcomeGradingTypes');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.import.onImportModelSpecificValidation'] = 'onImportModelSpecificValidation';
         return $events;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -55,21 +55,29 @@ class ImportOutcomeResultsTable extends AppTable
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
         $request = $this->request;
-        if (empty($request->query('education_subject'))) {
+        if (empty($request->getQuery('education_subject'))) {
             unset($buttons[0]);
             unset($buttons[1]);
         }
     }
 
-    public function addOnInitialize(Event $event, Entity $entity)
+   public function addOnInitialize(Event $event, Entity $entity)
     {
         $request = $this->request;
-        unset($request->query['period']);
-        unset($request->query['class']);
-        unset($request->query['education_subject']);
-        unset($request->query['outcome_template']);
-        unset($request->query['outcome_period']);
+        $query = $request->getQuery(); // Get the query parameters
+
+        // Unset specific query parameters
+        unset($query['period']);
+        unset($query['class']);
+        unset($query['education_subject']);
+        unset($query['outcome_template']);
+        unset($query['outcome_period']);
+
+        // Set the modified query parameters back to the request
+        $request = $request->withQueryParams($query);
+        $this->request = $request;
     }
+
 
     public function addAfterAction(Event $event, Entity $entity)
     {
@@ -91,25 +99,25 @@ class ImportOutcomeResultsTable extends AppTable
         //Assumptiopn - onChangeReload must be named in this format: change<field_name>. E.g changeClass
         $currentFieldName = strtolower(str_replace("change", "", $entity->submit));
 
-        if (isset($this->request->data[$this->alias()])) {
+        if (isset($this->request->getData()[$this->getAlias()])) {
             $unsetFlag = false;
-            $aryRequestData = $this->request->data[$this->alias()];
+            $aryRequestData = $this->request->getData()[$this->getAlias()];
             foreach ($aryRequestData as $requestData => $value) {
                 if ($unsetFlag) {
-                    unset($this->request->query[$requestData]);
-                    $this->request->data[$this->alias()][$requestData] = 0;
+                    unset($this->request->getQuery[$requestData]);
+                    $this->request->getData()[$this->getAlias()][$requestData] = 0;
                 }
 
                 if ($currentFieldName == str_replace("_", "", $requestData)) {
                     $unsetFlag = true;
                 }
             }
-            $aryRequestData = $this->request->data[$this->alias()];
+            $aryRequestData = $this->request->getData()[$this->getAlias()];
             foreach ($aryRequestData as $requestData => $value) {
                 if (isset($this->dependency[$requestData]) && $value) {
                     $aryDependencies = $this->dependency[$requestData];
                     foreach ($aryDependencies as $dependency) {
-                        $this->request->query = $this->request->data[$this->alias()];
+                        $this->request->getQuery = $this->request->getData()[$this->getAlias()];
                         $this->ControllerAction->field($dependency, ['visible' => true]);
                     }
                 }
@@ -117,22 +125,22 @@ class ImportOutcomeResultsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldEducationSubject(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationSubject(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $academicPeriodId = $request->data[$this->alias()]['academic_period'];
+            $academicPeriodId = $this->request->getData()[$this->getAlias()]['academic_period'];
             $conditions = [];
-            if (!empty($request->data[$this->alias()]['academic_period']) && !empty($request->data[$this->alias()]['outcome_template'])) {
-                $conditions[] = 
+            if (!empty($request->getData()[$this->getAlias()]['academic_period']) && !empty($request->getData()[$this->getAlias()]['outcome_template'])) {
+                $conditions[] =
                 [
-                    $this->OutcomeCriterias->aliasField('academic_period_id') => $request->data[$this->alias()]['academic_period'],
-                    $this->OutcomeCriterias->aliasField('outcome_template_id') => $request->data[$this->alias()]['outcome_template']
+                    $this->OutcomeCriterias->aliasField('academic_period_id') => $request->getData()[$this->getAlias()]['academic_period'],
+                    $this->OutcomeCriterias->aliasField('outcome_template_id') => $request->getData()[$this->getAlias()]['outcome_template']
                 ];
             }
 
             $userId = $this->Auth->user('id');
             $AccessControl = $this->AccessControl;
-            $classId = $this->request->query('class');
+            $classId = $this->request->getQuery('class') !== null ? $this->request->getQuery('class') : 'default_value';
             $OutcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
             $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
             $allowedEducationSubjectList = $InstitutionSubjects
@@ -140,13 +148,13 @@ class ImportOutcomeResultsTable extends AppTable
                     'keyField' => 'education_subject_id',
                     'valueField' => 'educationSubjects'
                 ])
-                ->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl, 'controller' => $this->controller])
+// POCOR-7977               ->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl, 'controller' => $this->controller])
                 ->select(['educationSubjects' => 'EducationSubjects.name', 'education_subject_id' => 'EducationSubjects.id'])
                 ->contain(['EducationSubjects'])
                 ->matching('ClassSubjects', function ($q) use ($classId) {
                     return $q->where(['ClassSubjects.institution_class_id' => $classId]);
                 })
-                ->innerJoin([$OutcomeCriterias->alias() => $OutcomeCriterias->table()], [
+                ->innerJoin([$OutcomeCriterias->getAlias() => $OutcomeCriterias->getTable()], [
                              $OutcomeCriterias->aliasField('education_grade_id = ') . $InstitutionSubjects->aliasField('education_grade_id'),
                              $OutcomeCriterias->aliasField('education_subject_id = ') . $InstitutionSubjects->aliasField('education_subject_id'),
 
@@ -162,7 +170,7 @@ class ImportOutcomeResultsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['select'] = false;
@@ -174,116 +182,147 @@ class ImportOutcomeResultsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldClass(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldClass(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $academicPeriodId = !is_null($request->data('ImportOutcomeResults')['academic_period']) ? $request->data('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
-            $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
+            $academicPeriodId = !is_null($request->getData('ImportOutcomeResults')['academic_period']) ? $request->getData('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
+            $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
+// POCOR-7977 start
+//            $userId = $this->Auth->user('id');
+//            $AccessControl = $this->AccessControl;
+//            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+//            $Institutions = TableRegistry::get('Institution.Institutions');
+//            $roles = $Institutions->getInstitutionRoles($userId, $institutionId);
+//            $query = $InstitutionClasses->find();
+//            if (!$AccessControl->isAdmin()) {
+//                if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles) && !$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles))
+//                 {
+//                    $classPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
+//                    $subjectPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
+//                    if (!$classPermission && !$subjectPermission) {
+//                        $query->where(['1 = 0'], [], true);
+//                    } else {
+//                        //POCOR-7506 start
+//                        $connection = ConnectionManager::get('default');
+//                        $statement = $connection->prepare("SELECT subq.institution_classes_id
+//                                            ,subq.institution_classes_name
+//                                        FROM
+//                                        (
+//                                            SELECT institution_classes.id institution_classes_id
+//                                                ,institution_classes.name institution_classes_name
+//                                            FROM institution_classes
+//                                            WHERE institution_classes.academic_period_id = $academicPeriodId
+//                                            AND institution_classes.staff_id = $userId
+//                                            AND institution_classes.institution_id = $institutionId
+//
+//                                            UNION ALL
+//
+//                                            SELECT class_info.institution_classes_id
+//                                                ,class_info.institution_classes_name
+//                                            FROM institution_classes_secondary_staff
+//                                            INNER JOIN
+//                                            (
+//                                                SELECT institution_classes.id institution_classes_id
+//                                                    ,institution_classes.name institution_classes_name
+//                                                FROM institution_classes
+//                                                WHERE institution_classes.academic_period_id = $academicPeriodId
+//                                                AND institution_classes.institution_id = $institutionId
+//                                            ) class_info
+//                                            ON class_info.institution_classes_id = institution_classes_secondary_staff.institution_class_id
+//                                            WHERE institution_classes_secondary_staff.secondary_staff_id = $userId
+//
+//                                            UNION ALL
+//
+//                                            SELECT subject_info.institution_classes_id
+//                                                ,subject_info.institution_classes_name
+//                                            FROM institution_subject_staff
+//                                            INNER JOIN
+//                                            (
+//                                                SELECT institution_subjects.id institution_subject_id
+//                                                    ,institution_classes.id institution_classes_id
+//                                                    ,institution_classes.name institution_classes_name
+//                                                FROM institution_subjects
+//                                                INNER JOIN institution_class_subjects
+//                                                ON institution_class_subjects.institution_subject_id = institution_subjects.id
+//                                                INNER JOIN institution_classes
+//                                                ON institution_classes.id = institution_class_subjects.institution_class_id
+//                                                WHERE institution_subjects.academic_period_id = $academicPeriodId
+//                                                AND institution_classes.institution_id = $institutionId
+//                                            ) subject_info
+//                                            ON subject_info.institution_subject_id = institution_subject_staff.institution_subject_id
+//                                            WHERE institution_subject_staff.staff_id = $userId
+//                                        ) subq
+//
+//                                            ");
+//                        $statement->execute();
+//                        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+//                        $classlist = [];
+//                        if(!empty($result)){
+//                           foreach($result as $val){
+//                            $classlist[$val['institution_classes_id']] = $val['institution_classes_name'];
+//                           }
+//                        }
+//                        $attr['options'] = $classlist;
+//                        $attr['onChangeReload'] = 'changeClass';
+//                    }
+//                    //POCOR-7506 end
+//                }
+//
+//            }else{
+//                $classOptions = $query
+//                ->find('list')
+//                ->where([
+//                    $InstitutionClasses->aliasField('academic_period_id') => $academicPeriodId,
+//                    $InstitutionClasses->aliasField('institution_id') => $institutionId])
+//                ->group([
+//                    $InstitutionClasses->aliasField('id')
+//                ])
+//                ->toArray();
+//                $attr['options'] = $classOptions;
+//                $attr['onChangeReload'] = 'changeClass';
+//            }
 
-            $userId = $this->Auth->user('id');
-            $AccessControl = $this->AccessControl;
+            if(empty($institutionId) && isset($this->request->getParam('pass')[1])) {
+                $institutionId = $this->paramsDecode($this->request->getParam('pass')[1])['institution_id'];
+            }
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-            $Institutions = TableRegistry::get('Institution.Institutions');
-            $roles = $Institutions->getInstitutionRoles($userId, $institutionId);
-            $query = $InstitutionClasses->find();
-            if (!$AccessControl->isAdmin()) {
-                if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles) && !$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles))
-                 {
-                    $classPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
-                    $subjectPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
-                    if (!$classPermission && !$subjectPermission) {
-                        $query->where(['1 = 0'], [], true);
-                    } else {
-                        //POCOR-7506 start
-                        $connection = ConnectionManager::get('default');
-                        $statement = $connection->prepare("SELECT subq.institution_classes_id
-                                            ,subq.institution_classes_name
-                                        FROM 
-                                        (  
-                                            SELECT institution_classes.id institution_classes_id
-                                                ,institution_classes.name institution_classes_name
-                                            FROM institution_classes
-                                            WHERE institution_classes.academic_period_id = $academicPeriodId
-                                            AND institution_classes.staff_id = $userId
-                                            AND institution_classes.institution_id = $institutionId
-
-                                            UNION ALL
-
-                                            SELECT class_info.institution_classes_id
-                                                ,class_info.institution_classes_name
-                                            FROM institution_classes_secondary_staff
-                                            INNER JOIN 
-                                            (
-                                                SELECT institution_classes.id institution_classes_id
-                                                    ,institution_classes.name institution_classes_name
-                                                FROM institution_classes
-                                                WHERE institution_classes.academic_period_id = $academicPeriodId
-                                                AND institution_classes.institution_id = $institutionId   
-                                            ) class_info
-                                            ON class_info.institution_classes_id = institution_classes_secondary_staff.institution_class_id
-                                            WHERE institution_classes_secondary_staff.secondary_staff_id = $userId
-
-                                            UNION ALL 
-
-                                            SELECT subject_info.institution_classes_id
-                                                ,subject_info.institution_classes_name
-                                            FROM institution_subject_staff
-                                            INNER JOIN 
-                                            (
-                                                SELECT institution_subjects.id institution_subject_id
-                                                    ,institution_classes.id institution_classes_id
-                                                    ,institution_classes.name institution_classes_name
-                                                FROM institution_subjects
-                                                INNER JOIN institution_class_subjects
-                                                ON institution_class_subjects.institution_subject_id = institution_subjects.id
-                                                INNER JOIN institution_classes
-                                                ON institution_classes.id = institution_class_subjects.institution_class_id
-                                                WHERE institution_subjects.academic_period_id = $academicPeriodId  
-                                                AND institution_classes.institution_id = $institutionId
-                                            ) subject_info
-                                            ON subject_info.institution_subject_id = institution_subject_staff.institution_subject_id
-                                            WHERE institution_subject_staff.staff_id = $userId
-                                        ) subq
-
-                                            ");
-                        $statement->execute();
-                        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
-                        $classlist = [];
-                        if(!empty($result)){
-                           foreach($result as $val){
-                            $classlist[$val['institution_classes_id']] = $val['institution_classes_name'];
-                           }
-                        }
-                        $attr['options'] = $classlist;
-                        $attr['onChangeReload'] = 'changeClass';
-                    }
-                    //POCOR-7506 end
-                }
-         
-            }else{    
-                $classOptions = $query
-                ->find('list')
+            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+            $classNameOption = $InstitutionClasses->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'name'
+            ])
+                ->leftJoin([$InstitutionClassGrades->getAlias() => $InstitutionClassGrades->getTable()], [
+                    $InstitutionClassGrades->aliasField('institution_class_id = ') . $InstitutionClasses->aliasField('id')
+                ])
+                ->leftJoin([$EducationGrades->getAlias() => $EducationGrades->getTable()], [
+                    $EducationGrades->aliasField('id = ') . $InstitutionClassGrades->aliasField('education_grade_id')
+                ])
+                ->leftJoin([$this->OutcomeTemplates->getAlias() => $this->OutcomeTemplates->getTable()], [
+                    $this->OutcomeTemplates->aliasField('education_grade_id = ') . $EducationGrades->aliasField('id')
+                ])
                 ->where([
+                    $InstitutionClasses->aliasField('institution_id') => $institutionId,
                     $InstitutionClasses->aliasField('academic_period_id') => $academicPeriodId,
-                    $InstitutionClasses->aliasField('institution_id') => $institutionId])
-                ->group([
-                    $InstitutionClasses->aliasField('id')
+                    $this->OutcomeTemplates->aliasField('academic_period_id') => $academicPeriodId
                 ])
                 ->toArray();
-                $attr['options'] = $classOptions;
-                $attr['onChangeReload'] = 'changeClass';
-            }
-        }
 
-        return $attr;
+
+            $attr['options'] = $classNameOption;
+            $attr['onChangeReload'] = 'changeClass';
+            return $attr;
+        }
+// POCOR-7977 end
+
     }
 
 
-    public function onUpdateFieldClassBkp(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldClassBkp(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $academicPeriodId = !is_null($request->data('ImportOutcomeResults')['academic_period']) ? $request->data('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
-            $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
+            $academicPeriodId = !is_null($request->getData('ImportOutcomeResults')['academic_period']) ? $request->getData('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
+            $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
 
             $userId = $this->Auth->user('id');
             $AccessControl = $this->AccessControl;
@@ -360,12 +399,15 @@ class ImportOutcomeResultsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldOutcomeTemplate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldOutcomeTemplate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $academicPeriodId = !is_null($request->data('ImportOutcomeResults')['academic_period']) ? $request->data('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
-            $classId = $request->query('class');
-            $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
+            $academicPeriodId = !is_null($request->getData('ImportOutcomeResults')['academic_period']) ? $request->getData('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
+            $classId = $request->getQuery('class');
+            $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
+            if(empty($institutionId) && isset($this->request->getParam('pass')[1])) {
+                $institutionId = $this->paramsDecode($this->request->getParam('pass')[1])['institution_id'];
+            }
             // if class id is not null, then filter Outcome Template by class_grades of the class else by institution_grades of the school
             if (!is_null($classId) && !empty($classId)) {
                 $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
@@ -400,19 +442,19 @@ class ImportOutcomeResultsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldOutcomePeriod(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldOutcomePeriod(Event $event, array $attr, $action, ServerRequest $request)
     {
 
         if ($action == 'add') {
-            $academicPeriodId = !is_null($request->data('ImportOutcomeResults')['academic_period']) ? $request->data('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
+            $academicPeriodId = !is_null($request->getData('ImportOutcomeResults')['academic_period']) ? $request->getData('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
 
             $outcomePeriodOptions = [];
-            if (!is_null($request->query('outcome_template'))) {
+            if (!is_null($request->getQuery('outcome_template'))) {
                 $outcomePeriodOptions = $this->OutcomePeriods
                     ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
                     ->where([
                         $this->OutcomePeriods->aliasField('academic_period_id') => $academicPeriodId,
-                        $this->OutcomePeriods->aliasField('outcome_template_id ') => $request->query('outcome_template')
+                        $this->OutcomePeriods->aliasField('outcome_template_id ') => $request->getQuery('outcome_template')
                     ])
                     ->toArray();
             }
@@ -426,12 +468,13 @@ class ImportOutcomeResultsTable extends AppTable
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
-        $requestData = $this->request->data[$this->alias()];
+
+        $requestData = $this->request->getData()[$this->getAlias()];
         $tempRow['academic_period_id'] = $requestData['academic_period'];
         $tempRow['outcome_template_id'] = $requestData['outcome_template'];
         $tempRow['outcome_period_id'] = $requestData['outcome_period'];
         $tempRow['institution_class_id'] = $requestData['class'];
-        $tempRow['institution_id'] = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
+        $tempRow['institution_id'] = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
 
         $outcomeCriteriaEntity = $this->OutcomeCriterias->find()
             ->matching('Templates')

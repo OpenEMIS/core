@@ -18,7 +18,7 @@ class AdvancedNameSearchStudentBehavior extends Behavior
     public function addSearchConditions(Query $query, $options = [])
     {
         $conditions = $this->getNameSearchConditions($options);
-        if (array_key_exists('OR', $options)) {
+        if (isset($options['OR'])) {
             $conditions = array_merge($conditions, $options['OR']);
         }
         $query->where(['OR' => $conditions]);
@@ -30,16 +30,16 @@ class AdvancedNameSearchStudentBehavior extends Behavior
     {
         $conditions = [];
         $searchByUserName = false;
-        if (array_key_exists('searchByUserName', $options)) {
+        if (isset($options['searchByUserName'])) {
             $searchByUserName = $options['searchByUserName'];
         }
 
-        if (array_key_exists('searchTerm', $options)) {
+        if (isset($options['searchTerm'])) {
             $search = $options['searchTerm'];
         }
 
-        $alias = $this->_table->alias();
-        if (array_key_exists('alias', $options)) {
+        $alias = $this->_table->getAlias();
+        if (isset($options['alias'])) {
             $alias = $options['alias'];
         }
         $alias = '`'.$alias.'`';
@@ -49,7 +49,7 @@ class AdvancedNameSearchStudentBehavior extends Behavior
         * @ticket POCOR-6532
         */
         // Starts POCOR-6532
-        if (array_key_exists('aliasidentity', $options)) {
+        if (isset($options['aliasidentity'])) {
             $aliasidentity = $options['aliasidentity'];
         }
         $aliasidentity = '`'.$aliasidentity.'`';
@@ -78,9 +78,9 @@ class AdvancedNameSearchStudentBehavior extends Behavior
                         $alias . '.last_name LIKE' => $searchString,
                         $alias . '.identity_number LIKE' => $searchString, // Adding the search by identity.
                         // Starts POCOR-6532
-                        $aliasidentity . '.number LIKE' => $searchString 
+                        $aliasidentity . '.number LIKE' => $searchString
                         // Ends POCOR-6532
-                        // Adding the search by user identity table number column 
+                        // Adding the search by user identity table number column
                     ]
                 ];
                 if ($searchByUserName) {

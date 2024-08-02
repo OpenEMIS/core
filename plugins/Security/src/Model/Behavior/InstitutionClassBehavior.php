@@ -11,7 +11,7 @@ use Cake\I18n\Date;
 
 class InstitutionClassBehavior extends Behavior
 {
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         // priority has to be set at 100 so that Institutions->indexBeforePaginate will be triggered first
@@ -26,7 +26,9 @@ class InstitutionClassBehavior extends Behavior
     {
         // This logic is dependent on SecurityAccessBehavior because it relies on SecurityAccess join table
         // This logic will only be triggered when the table is accessed by RestfulController
-        if (array_key_exists('user', $options) && is_array($options['user']) && !array_key_exists('iss', $options['user'])) { // the user object is set by RestfulComponent
+        if (isset($options['user']) &&
+            is_array($options['user']) &&
+            !isset($options['user']['iss'])) { // the user object is set by RestfulComponent
             $user = $options['user'];
             if ($user['super_admin'] == 0) { // if he is not super admin
                 $userId = $user['id'];
@@ -214,16 +216,16 @@ class InstitutionClassBehavior extends Behavior
     {
         $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
         $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-        if (array_key_exists('accessControl', $options)) {
+        if (isset($options['accessControl'])) {
             $AccessControl = $options['accessControl'];
             $userId = $options['userId'];
             $permission = isset($options['permission']) ? $options['permission'] : 'index';
             $roles = [];
-            if (array_key_exists('controller', $options)) {
+            if (isset($options['controller'])) {
                 $controller = $options['controller'];
                 $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
-                if (is_array($event->result)) {
-                    $roles = $event->result;
+                if (is_array($event->getResult())) {
+                    $roles = $event->getResult();
                 }
             }
             if (!$AccessControl->check(['Institutions', 'AllClasses', $permission], $roles)) {
@@ -263,8 +265,8 @@ class InstitutionClassBehavior extends Behavior
         $controller = $this->_table->controller;
         $roles = [];
         $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
-        if ($event->result) {
-            $roles = $event->result;
+        if ($event->getResult()) {
+            $roles = $event->getResult();
         }
         $myClassesPermission = $AccessControl->check(['Institutions', 'Classes', $action], $roles);
         if ($myClassesPermission) {
@@ -281,8 +283,8 @@ class InstitutionClassBehavior extends Behavior
         $controller = $this->_table->controller;
         $roles = [];
         $event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
-        if ($event->result) {
-            $roles = $event->result;
+        if ($event->getResult()) {
+            $roles = $event->getResult();
         }
         $allClassesPermission = $AccessControl->check(['Institutions', 'AllClasses', $action], $roles);
         if ($allClassesPermission) {

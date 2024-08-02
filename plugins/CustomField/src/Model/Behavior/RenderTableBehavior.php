@@ -8,7 +8,7 @@ use Cake\Event\Event;
 use CustomField\Model\Behavior\RenderBehavior;
 
 class RenderTableBehavior extends RenderBehavior {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
         parent::initialize($config);
     }
 
@@ -23,7 +23,7 @@ class RenderTableBehavior extends RenderBehavior {
         $formKey = $attr['attr']['formKey'];
         $tableColumnKey = $attr['attr']['tableColumnKey'];
         $tableRowKey = $attr['attr']['tableRowKey'];
-        $form = $event->subject()->Form;
+        $form = $event->getSubject()->Form;
 
         $tableHeaders = [];
         $tableCells = [];
@@ -39,10 +39,10 @@ class RenderTableBehavior extends RenderBehavior {
         if ($customField->has('params') && !empty($customField->params)) {
             $params = json_decode($customField->params, true);
 
-            if (array_key_exists('number', $params)) {
+            if (isset($params['number'])) {
                 $valueColumn = 'number_value';
                 $cellAttr['type'] = 'number';
-            } else if (array_key_exists('decimal', $params)) {
+            } else if (isset($params['decimal'])) {
                 $valueColumn = 'decimal_value';
                 $cellAttr['type'] = 'number';
 
@@ -55,7 +55,7 @@ class RenderTableBehavior extends RenderBehavior {
         }
         // end
 
-        $cellErrors = $entity->errors('custom_table_cells');
+        $cellErrors = $entity->getErrors('custom_table_cells');
         foreach ($customField->custom_table_rows as $rowKey => $rowObj) {
             $rowData = [];
             $rowData[] = $rowObj->name;
@@ -134,9 +134,9 @@ class RenderTableBehavior extends RenderBehavior {
         $attr['tableCells'] = $tableCells;
 
         if ($action == 'view') {
-            $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
+            $value = $event->getSubject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
         } else if ($action == 'edit') {
-            $value = $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
+            $value = $event->getSubject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
             $value = $this->processRelevancyDisabled($entity, $value, $fieldId, $form, $unlockFields);
         }
 
@@ -161,13 +161,13 @@ class RenderTableBehavior extends RenderBehavior {
                 $textValue = NULL;
                 $numberValue = NULL;
                 $decimalValue = NULL;
-                if (array_key_exists('text_value', $attr)) {
+                if (isset($attr['text_value'])) {
                     $textValue = $attr['text_value'];
                 }
-                if (array_key_exists('number_value', $attr)) {
+                if (isset($attr['number_value'])) {
                     $numberValue = $attr['number_value'];
                 }
-                if (array_key_exists('decimal_value', $attr)) {
+                if (isset($attr['decimal_value'])) {
                     $decimalValue = $attr['decimal_value'];
                 }
 

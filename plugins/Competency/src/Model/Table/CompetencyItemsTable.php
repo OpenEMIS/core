@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 
@@ -14,9 +14,9 @@ use App\Model\Table\ControllerActionTable;
 
 class CompetencyItemsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('competency_items');
+        $this->setTable('competency_items');
 
         parent::initialize($config);
 
@@ -44,39 +44,39 @@ class CompetencyItemsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $queryString = $this->request->query('queryString');
-        if ($queryString) {
-            $this->controller->getCompetencyTemplateTabs(['queryString' => $queryString]);
-            $queryStringArr = $this->getQueryString();
+        //POCOR-8074-5
+        $queryStringArr = $this->getQueryString();
+        $queryString = $this->paramsEncode($queryStringArr); //POCOR-8074-5
+        if ($queryStringArr) {
+            $this->controller->getCompetencyTemplateTabs(); //POCOR-8074-5
             $academicPeriodId = $queryStringArr['academic_period_id'];
             $competencyTemplateId = $queryStringArr['competency_template_id'];
-
             $extra['selectedPeriod'] = $academicPeriodId;
             $extra['selectedTemplate'] = $competencyTemplateId;
-
             $extra['queryString'] = $queryString;
 
             $name = $this->Templates->get(['id' => $competencyTemplateId, 'academic_period_id' => $academicPeriodId])->name;
-            $header = $name . ' - ' . __(Inflector::humanize(Inflector::underscore($this->alias())));
+            $header = $name . ' - ' . __(Inflector::humanize(Inflector::underscore($this->getAlias())));
             $this->controller->set('contentHeader', $header);
-            $this->controller->Navigation->substituteCrumb($this->alias(), $header);
+            $this->controller->Navigation->substituteCrumb($this->getAlias(), $header);
 
         } else {
+            $this->log('$queryString is not set properly', 'error'); //POCOR-8074-5
             $event->stopPropagation();
-            return $this->controller->redirect(['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Templates']);
+            return $this->controller->redirect(['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'Templates']);
         }
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $this->fields['competency_template_id']['type'] = 'integer';
-        if (array_key_exists('selectedPeriod', $extra)) {
+        if (isset($extra['selectedPeriod'])) {
             if ($extra['selectedPeriod']) {
                 $conditions[$this->aliasField('academic_period_id')] = $extra['selectedPeriod'];
             }
         }
 
-        if (array_key_exists('selectedTemplate', $extra)) {
+        if (isset($extra['selectedTemplate'])) {
             if ($extra['selectedTemplate']) {
                 $conditions[$this->aliasField('competency_template_id')] = $extra['selectedTemplate'];
             }
@@ -107,7 +107,7 @@ class CompetencyItemsTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['type'] = 'readonly';
@@ -124,18 +124,18 @@ class CompetencyItemsTable extends ControllerActionTable
     public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        $request->query['template'] = '-1';
+        $request->getQuery['template'] = '-1';
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
-                    $request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('academic_period_id', $request->getData($this->getAlias()))) {
+                    $request->getQuery['period'] = $request->getData($this->getAlias())['academic_period_id'];
                 }
             }
         }
     }
 
-    public function onUpdateFieldCompetencyTemplateId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCompetencyTemplateId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
 
@@ -155,7 +155,7 @@ class CompetencyItemsTable extends ControllerActionTable
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
-        if (empty($entity->errors())) {
+        if (empty($entity->getErrors())) {
             $extra['redirect'] = [
                 'plugin' => 'Competency',
                 'controller' => 'Competencies',
@@ -179,5 +179,28 @@ class CompetencyItemsTable extends ControllerActionTable
                 $this->aliasField('competency_template_id') => $templateId
             ]);
         return $query;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'competency_template_id') {
+            return __('Competency Template');
+        } elseif ($field == 'competency_items') {
+            return __('Competency Items');
+        }elseif ($field == 'name') {
+            return __('Name');
+        }elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

@@ -1,7 +1,9 @@
 <?php
+
 namespace Report\Model\Table;
 
 use ArrayObject;
+use Cake\Log\Log;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
@@ -14,17 +16,18 @@ class InstitutionClassesTable extends AppTable
     // POCOR-6606 starts <vikas.rathore@mail.valuecoders.com>
     const CLASS_TEACHER = 'Home Room Teacher';
     const ASSISTANT_TEACHER = 'Secondary Teacher';
+
     // POCOR-6606 ends <vikas.rathore@mail.valuecoders.com>
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_classes');
+        $this->setTable('institution_classes');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('Staff', ['className' => 'User.Users',                       'foreignKey' => 'staff_id']);
-        $this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts',    'foreignKey' => 'institution_shift_id']);
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions',         'foreignKey' => 'institution_id']);
+        $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'foreignKey' => 'institution_shift_id']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->hasMany('ClassesSecondaryStaff', ['className' => 'Institution.InstitutionClassesSecondaryStaff', 'saveStrategy' => 'replace', 'foreignKey' => 'institution_class_id']);
 
         $this->belongsToMany('EducationGrades', [
@@ -43,6 +46,7 @@ class InstitutionClassesTable extends AppTable
             ],
             'autoFields' => false
         ]);
+        $this->addBehavior('Report.AreaList');//POCOR-7794
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.InstitutionSecurity');
     }
@@ -67,6 +71,21 @@ class InstitutionClassesTable extends AppTable
         return $entity->shift_name;
     }
 
+
+    public static function getMaleCountByClass($classId)
+    {
+        $gender_id = 1; // male
+        $count = self::getStudentCountByClassAndGender($classId, $gender_id);
+        return $count;
+    }
+
+    public static function getFemaleCountByClass($classId)
+    {
+        $gender_id = 2; // female
+        $count = self::getStudentCountByClassAndGender($classId, $gender_id);
+        return $count;
+    }
+
     public function onExcelGetEducationGrades(Event $event, Entity $entity)
     {
         $classGrades = [];
@@ -75,7 +94,6 @@ class InstitutionClassesTable extends AppTable
                 $classGrades[] = $value->name;
             }
         }
-
         return implode(', ', $classGrades); //display as comma seperated
     }
 
@@ -85,17 +103,31 @@ class InstitutionClassesTable extends AppTable
         $institution_id = $requestData->institution_id;
         $gradesId = $requestData->education_grade_id;
         $areaId = $requestData->area_education_id;
+        $areaLevelId = $requestData->area_level_id;//POCOR-7794
         $where = [];
         if ($institution_id != 0) {
             $where['Institutions.id'] = $institution_id;
         }
-        if ($areaId != -1) {
-            $where['Institutions.area_id'] = $areaId;
+        //POCOR-7794 start
+        $areaList = [];
+        if (
+            $areaLevelId > 1 && $areaId > 1
+        ) {
+            $areaList = $this->getAreaList($areaLevelId, $areaId);
+        } elseif ($areaLevelId > 1) {
+
+            $areaList = $this->getAreaList($areaLevelId, 0);
+        } elseif ($areaId > 1) {
+            $areaList = $this->getAreaList(0, $areaId);
         }
+        if (!empty($areaList)) {
+            $where['Institutions.area_id IN'] = $areaList;
+        }
+        //POCOR-7794 end
         if ($gradesId != -1) {
             $where['InstitutionClassGrades.education_grade_id'] = $gradesId;
         }
-        
+
         $academic_period_id = $requestData->academic_period_id;
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
@@ -106,6 +138,7 @@ class InstitutionClassesTable extends AppTable
         $query
             ->select([
                 $this->aliasField('id'),
+                'class_id' => $this->aliasField('id'),
                 'academic_period_id' => 'InstitutionClasses.academic_period_id',
                 'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',
@@ -164,28 +197,27 @@ class InstitutionClassesTable extends AppTable
                 ]
             ])
             ->leftJoin(
-            ['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'],
-            [
-                'InstitutionClassesSecondaryStaff.institution_class_id = '. $this->aliasField('id')
-            ]
+                ['InstitutionClassesSecondaryStaff' => 'institution_classes_secondary_staff'],
+                [
+                    'InstitutionClassesSecondaryStaff.institution_class_id = ' . $this->aliasField('id')
+                ]
             )
             ->leftJoin(
-            ['SecurityUsers' => 'security_users'],
-            [
-                'SecurityUsers.id = '. $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
-            ]
+                ['SecurityUsers' => 'security_users'],
+                [
+                    'SecurityUsers.id = ' . $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
+                ]
             )
             ->leftJoin(
-            ['InstitutionClassGrades'=>'institution_class_grades'],
-            [
-                'InstitutionClassGrades.institution_class_id = '.  $this->aliasField('id')
-            ] 
-            )   
-            
+                ['InstitutionClassGrades' => 'institution_class_grades'],
+                [
+                    'InstitutionClassGrades.institution_class_id = ' . $this->aliasField('id')
+                ]
+            )
             ->where([
                 'InstitutionClasses.academic_period_id' => $academic_period_id,
-               // 'InstitutionClassGrades.education_grade_id' => $gradesId,
-            
+                // 'InstitutionClassGrades.education_grade_id' => $gradesId,
+
                 $where
             ])
             ->group([
@@ -199,51 +231,65 @@ class InstitutionClassesTable extends AppTable
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                
-                $areas1 = TableRegistry::get('areas');
+
+                $class_id = $row['class_id'];
+                $femaleCountByClass = self::getFemaleCountByClass($class_id);
+
+                if ($femaleCountByClass != $row->total_female_students) {
+                    $this->updateAll(['total_female_students' => $femaleCountByClass], ['id' => $class_id]);
+                    $row['total_female_students'] = $femaleCountByClass;
+                }
+                $maleCountByClass = self::getMaleCountByClass($class_id);
+                if ($maleCountByClass != $row->total_male_students) {
+                    $this->updateAll(['total_male_students' => $maleCountByClass], ['id' => $class_id]);
+                    $row['total_male_students'] = $maleCountByClass;
+                }
+                $row['total_students'] = $maleCountByClass + $femaleCountByClass;
+
+                $areas1 = TableRegistry::get('Area.Areas');
                 $areasData = $areas1
-                            ->find()
-                            ->where([$areas1->alias('code')=>$row->area_code])
-                            ->first();
-                $row['region_code'] = '';            
+                    ->find()
+                    ->where([$areas1->getAlias('code') => $row->area_code])
+                    ->first();
+                $row['region_code'] = '';
                 $row['region_name'] = '';
-                if(!empty($areasData)){
-                    $areas = TableRegistry::get('areas');
+                if (!empty($areasData)) {
+                    $areas = TableRegistry::get('Area.Areas');
                     $areaLevels = TableRegistry::get('area_levels');
                     $institutions = TableRegistry::get('institutions');
                     $val = $areas
-                                ->find()
-                                ->select([
-                                    $areas1->aliasField('code'),
-                                    $areas1->aliasField('name'),
-                                    ])
-                                ->leftJoin(
-                                    [$areaLevels->alias() => $areaLevels->table()],
-                                    [
-                                        $areas->aliasField('area_level_id  = ') . $areaLevels->aliasField('id')
-                                    ]
-                                )
-                                ->leftJoin(
-                                    [$institutions->alias() => $institutions->table()],
-                                    [
-                                        $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
-                                    ]
-                                )    
-                                ->where([
-                                    $areaLevels->aliasField('level !=') => 1,
-                                    $areas->aliasField('id') => $areasData->parent_id
-                                ])->first();
-                    
+                        ->find()
+                        ->select([
+                            $areas1->aliasField('code'),
+                            $areas1->aliasField('name'),
+                        ])
+                        ->leftJoin(
+                            [$areaLevels->getAlias() => $areaLevels->getTable()],
+                            [
+                                $areas->aliasField('area_level_id  = ') . $areaLevels->aliasField('id')
+                            ]
+                        )
+                        ->leftJoin(
+                            [$institutions->getAlias() => $institutions->getTable()],
+                            [
+                                $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
+                            ]
+                        )
+                        ->where([
+                            $areaLevels->aliasField('level !=') => 1,
+                            $areas->aliasField('id') => $areasData->parent_id
+                        ])->first();
+
                     if (!empty($val->name) && !empty($val->code)) {
                         $row['region_code'] = $val->code;
                         $row['region_name'] = $val->name;
                     }
-                }            
-                
+                }
+
                 return $row;
             });
         });
-        
+
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -371,5 +417,26 @@ class InstitutionClassesTable extends AppTable
         ];
 
         $fields->exchangeArray($newFields);
+    }
+
+    /**
+     * @param $classId
+     * @param $gender_id
+     * @return int
+     */
+    private static function getStudentCountByClassAndGender($classId, $gender_id)
+    {
+        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $count = $InstitutionClassStudents
+            ->find()
+            ->contain('Users')
+            ->matching('StudentStatuses', function ($q) {
+                return $q->where(['StudentStatuses.code NOT IN' => ['TRANSFERRED', 'WITHDRAWN']]);
+            })
+            ->where([$InstitutionClassStudents->Users->aliasField('gender_id') => $gender_id])
+            ->where([$InstitutionClassStudents->aliasField('institution_class_id') => $classId])
+            ->enableHydration(false)
+            ->count();
+        return $count;
     }
 }

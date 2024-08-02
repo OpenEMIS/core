@@ -16,10 +16,10 @@ class MandatoryBehavior extends Behavior
     protected $_roleFields;
     protected $_currentNationality;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->_userRole = (array_key_exists('userRole', $config))? $config['userRole']: null;
-        $this->_roleFields = (array_key_exists('roleFields', $config))? $config['roleFields']: [];
+        $this->_userRole = (isset($config['userRole']))? $config['userRole']: null;
+        $this->_roleFields = (isset($config['roleFields']))? $config['roleFields']: [];
         if (is_null($this->_userRole)) {
             die('userRole must be set in mandatory behavior');
         }
@@ -37,7 +37,7 @@ class MandatoryBehavior extends Behavior
         $this->_table->hasMany('Contacts', ['className' => 'User.Contacts', 'foreignKey' => 'security_user_id', 'dependent' => true, 'cascadeCallbacks' => true]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -94,11 +94,11 @@ class MandatoryBehavior extends Behavior
                     $defaultIdentityType = $defaultNationality->identity_type_id;
                 }
                 //POCOR-6047 ends
-                
+
             }
 
             if (empty($defaultIdentityType)) {
-                $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+                $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
                 $defaultIdentityTypeEntity = $IdentityTypes->find()
                     ->where([$IdentityTypes->aliasField('default') => 1])
                     ->first();
@@ -237,7 +237,7 @@ class MandatoryBehavior extends Behavior
         $nationality = $Nationalities->findById($nationalityId)->first();
         $defaultIdentityType = (!empty($nationality))? $nationality->identity_type_id: null;
         if (empty($defaultIdentityType)) {
-            $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+            $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
             $defaultIdentityType = $IdentityTypes->find()
                 ->where([$IdentityTypes->aliasField('default') => 1])
                 ->first();
@@ -290,7 +290,7 @@ class MandatoryBehavior extends Behavior
                 'ContactTypes.order'
             ])
             ->toArray();
-            
+
         $attr['type'] = 'select';
         $attr['fieldName'] = $this->_table->alias().'.contacts.0.contact_type_id';
         $attr['options'] = $contactOptions;
@@ -334,7 +334,7 @@ class MandatoryBehavior extends Behavior
             }
         }
 
-        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $identityTypeOptions = $IdentityTypes->getList();
         $attr['type'] = 'select';
         $attr['fieldName'] = $this->_table->alias().'.identities.0.identity_type_id';

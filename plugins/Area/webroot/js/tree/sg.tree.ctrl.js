@@ -34,11 +34,11 @@ function SgTreeController($scope, $window, SgTreeSvc) {
             })
             .then(function(res) {
                 $scope.textConfig = res;
-                console.log('document ready res', res);
+                // console.log('document ready res', res);
             }, function (error) {
                 console.log(error);
             });
-        console.log('document ready');
+        // console.log('document ready');
     });
 
     function triggerLoad(refreshList) {
@@ -49,8 +49,10 @@ function SgTreeController($scope, $window, SgTreeSvc) {
             var userId = JSON.parse(Controller.userId);
             SgTreeSvc.getRecords(Controller.model, userId, Controller.displayCountry, Controller.outputValue)
             .then(function(response) {
+                console.log("triggerLoad");
+                console.log(response);
                 refreshList(response);
-                return SgTreeSvc.translate($scope.textConfig);
+                // return SgTreeSvc.translate($scope.textConfig);
             }, function(error){
                 console.log(error)
             });

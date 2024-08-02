@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
@@ -18,15 +18,15 @@ use Cake\Routing\Router;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 use Cake\Datasource\ResultSetInterface;
-use Cake\Network\Session;
+use Cake\Http\Session;
 use Cake\I18n\Time;
 
 class CounsellingsTable extends ControllerActionTable
 {
     const ASSIGNED = 1;
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('counsellings');
+        $this->setTable('counsellings');
         parent::initialize($config);
         $this->belongsTo('GuidanceTypes', ['className' => 'Student.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
         $this->belongsTo('Counselors', ['className' => 'Security.Users', 'foreign_key' => 'counselor_id']);
@@ -41,25 +41,36 @@ class CounsellingsTable extends ControllerActionTable
         ]);
         $this->toggle('view', true);
         $this->toggle('edit', true);
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['Counsellings' =>
+                ['id']
+            ]
+        ]);
       
     }
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
         return $validator->allowEmpty('file_content');
     }
     public function addEditBeforeAction(Event $event, ArrayObject $extra){
-        $session = $this->request->session();
-        $StudentId = $session->read('Student.Students.id');
-        $table=TableRegistry::get('institution_students');
-        $institutionStudent=$table->find('all')->select('institution_id')->where([
+        // $session = $this->request->getSession();
+        // $StudentId = $session->read('Student.Students.id');
+        $StudentId = $this->getUserID();
+        $table=TableRegistry::get('Institution.InstitutionStudents');
+        $institutionStudent = $table->find('all')->select('institution_id')->where([
             $table->aliasField('student_id')=>$StudentId,
             $table->aliasField('student_status_id')=>1
         ])->first();
-        $institutionId=$institutionStudent->institution_id;
-        $requestorOptions=$this->getRequesterOptions($institutionId);
-        $counselorOptions=$this->getCounselorOptions($institutionId);
+       
+        if(!empty($institutionStudent)){
+             $institutionId = $institutionStudent->institution_id;
+        }else{
+            $institutionId = '';
+        }
+        //$requestorOptions = $this->getRequesterOptions($institutionId);//cakephp4 Comment
+        $counselorOptions = $this->getCounselorOptions($institutionId);
         $this->fields['requester_id']['type'] = 'select';
         $this->fields['requester_id']['options'] = $requestorOptions;
         $this->fields['guidance_type_id']['type'] = 'select';
@@ -83,11 +94,11 @@ class CounsellingsTable extends ControllerActionTable
                 'valueField' => 'name_with_id'
             ])
             ->innerJoin(
-                    [$InstitutionStaff->alias() => $InstitutionStaff->table()],
+                    [$InstitutionStaff->getAlias() => $InstitutionStaff->getTable()],
                     [
                         $InstitutionStaff->aliasField('staff_id = ') . $this->Counselors->aliasField('id'),
-                        $InstitutionStaff->aliasField('institution_id') => $institutionId,
-                        $InstitutionStaff->aliasField('staff_status_id') => self::ASSIGNED
+                        $InstitutionStaff->aliasField('institution_id IS') => $institutionId,
+                        $InstitutionStaff->aliasField('staff_status_id ') => self::ASSIGNED
                     ]
                 )
             ->order([
@@ -103,8 +114,8 @@ class CounsellingsTable extends ControllerActionTable
     public function getRequesterOptions($institutionId)
     {        
        
-        $InstitutionStaff = TableRegistry::get('institution_staff');
-        $InstitutionStudents = TableRegistry::get('institution_students');
+        $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
+        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
         $Institutions = TableRegistry::get('Institution.Institutions');
         $UserData = TableRegistry::get('User.Users');
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -148,7 +159,8 @@ class CounsellingsTable extends ControllerActionTable
                     $UserData->aliasField('last_name')
             ]);
 
-          $data =   $requestorOptions->join($join)->toArray();
+          $data =   $requestorOptions->enableHydration(false)->join($join)->toArray();
+
             return $data;
     }
 
@@ -178,6 +190,26 @@ class CounsellingsTable extends ControllerActionTable
                 return __('Created By');
             case 'created';
                 return __('Created On');
+            case 'date':
+                return __('Date');
+            case 'description':
+                return __('Description');
+            case 'intervention':
+                return __('Intervention');
+            case 'counselor_id':
+                return __('Counselor');
+            case 'requester_id':
+                return __('Requester');
+            case 'counselor_id': 
+                return __('Counselor');
+            case 'guidance_utilized': 
+                return __('Guidance Utilized');
+            case 'description': 
+                return __('Description'); 
+            case 'guidance_type_id': 
+                return __('Guidance Type');
+            case 'comment': 
+                return __('Comment');
             
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
@@ -199,4 +231,8 @@ class CounsellingsTable extends ControllerActionTable
         
         $this->setFieldOrder(['date', 'description', 'intervention', 'counselor_id', 'guidance_type_id', 'requester_id',  'Actions']);
     }
-    }
+
+
+
+}
+

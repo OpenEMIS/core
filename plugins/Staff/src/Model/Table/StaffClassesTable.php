@@ -17,9 +17,9 @@ class StaffClassesTable extends ControllerActionTable
 
     private $InstitutionClassStudents;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_classes');
+        $this->setTable('institution_classes');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
@@ -61,6 +61,12 @@ class StaffClassesTable extends ControllerActionTable
          */
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Classes' =>
+                ['id', 'institution_id']
+            ]
+        ]);
+        $this->addBehavior('Staff.StaffTab');
     }
     public function beforeAction(Event $event)
     {
@@ -76,7 +82,7 @@ class StaffClassesTable extends ControllerActionTable
         $this->fields['capacity']['visible'] = false;
 
         $this->field('total_students', []);
-
+        $this->field('staff_id', ['visible' => false]);
         $this->setFieldOrder([
             'academic_period_id',
             'institution_id',
@@ -87,8 +93,8 @@ class StaffClassesTable extends ControllerActionTable
         ]);
 
         // Start POCOR-5188
-		if($this->request->params['controller'] == 'Staff'){
-			$is_manual_exist = $this->getManualUrl('Institutions','Classes','Staff - Career');       
+		if($this->request->getParam('controller') == 'Staff'){
+			$is_manual_exist = $this->getManualUrl('Institutions','Classes','Staff - Career');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -97,7 +103,7 @@ class StaffClassesTable extends ControllerActionTable
 					'escape' => false,
 					'target'=>'_blank'
 				];
-		
+
 				$helpBtn['url'] = $is_manual_exist['url'];
 				$helpBtn['type'] = 'button';
 				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -105,8 +111,8 @@ class StaffClassesTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
-			$is_manual_exist = $this->getManualUrl('Directory','Classes','Staff - Career');       
+		}elseif($this->request->getParam('controller') == 'Directories'){
+			$is_manual_exist = $this->getManualUrl('Directory','Classes','Staff - Career');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -132,9 +138,9 @@ class StaffClassesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // POCOR-5914
-        $staffId = $this->Session->read('Staff.Staff.id');
+        $staffId = $this->getStaffID();
         if (!empty($staffId)) {
-            $staffId = $this->Session->read('Staff.Staff.id');
+            $staffId = $this->getStaffID();
         } else {
             $staffId =$this->Session->read('Auth.User.id');
         }
@@ -142,9 +148,9 @@ class StaffClassesTable extends ControllerActionTable
         $classData = $InstitutionClassesSecondaryStaff->find()
                     ->select([$InstitutionClassesSecondaryStaff->aliasField('institution_class_id')])
                     ->where([$InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId])->toArray();
-        
+
         $classIds = [];
-        
+
         if (!empty($classData)) {
             foreach ($classData as $key => $value) {
                 $classIds[] = $value->institution_class_id;
@@ -165,14 +171,14 @@ class StaffClassesTable extends ControllerActionTable
             'Institutions'
         ])
         // POCOR-5914
-        ->leftJoin([$InstitutionClassesSecondaryStaff->alias() => $InstitutionClassesSecondaryStaff->table()], [
+        ->leftJoin([$InstitutionClassesSecondaryStaff->getAlias() => $InstitutionClassesSecondaryStaff->getTable()], [
             $InstitutionClassesSecondaryStaff->aliasField('institution_class_id = ') . $this->aliasField('id')
-        ])
-        ->orWhere($where);
+        ]);
+        // ->orWhere($where); // POCOR-7485
         // POCOR-5914
     }
 
-   
+
 
     public function onGetTotalStudents(Event $event, Entity $entity)
     {
@@ -186,7 +192,7 @@ class StaffClassesTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             $institutionId = $entity->institution->id;
             $url = [
                 'plugin' => 'Institution',
@@ -204,16 +210,23 @@ class StaffClassesTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $options = ['type' => 'staff'];
-        $tabElements = $this->controller->getCareerTabElements($options);
+        $tabElements = $this->getCareerTabElements($options);
+        $controllerName = $this->controller->getName();
+        $selectedAction = 'Classes';
+        // if($controllerName == 'Directories') {
+        //     $selectedAction = 'StaffClasses';
+        // }
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'Classes');
+        $this->controller->set('selectedAction', $selectedAction);
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        $staffId = $session->read('Staff.Staff.id');
-        $institutionId = $session->read('Institution.Institutions.id');
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $session = $this->request->getSession();
+        $staffId = $this->getStaffID();
+        $institutionId = $this->getInstitutionID();
         $institutionName = TableRegistry::get('Institution.Institutions')->get($institutionId)->name;
 
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
@@ -250,7 +263,8 @@ class StaffClassesTable extends ControllerActionTable
             'type' => 'element',
             'element' => 'Institution.Classes/classes',
             'data' => [
-                'classes' => $classOptions
+                'classes' => $classOptions,
+                'encodedQueryString' => $encodedQueryString,
             ],
         ]);
         $extra['classOptions'] = $classOptions;
@@ -259,17 +273,17 @@ class StaffClassesTable extends ControllerActionTable
     private function getClassOptions()
     {
         $classOptions = [];
-        if (array_key_exists($this->alias(), $this->request->data)
-             && array_key_exists('academic_period_id', $this->request->data[$this->alias()])
-             && !empty($this->request->data[$this->alias()]['academic_period_id'])) {
+        if (array_key_exists($this->getAlias(), $this->request->getData())
+             && array_key_exists('academic_period_id', $this->request->getData()[$this->getAlias()])
+             && !empty($this->request->getData()[$this->getAlias()]['academic_period_id'])) {
             $classOptions = $this->find()
                 ->contain(['Users' => function ($q) {
                         return $q->select(['id', 'first_name', 'middle_name', 'third_name', 'last_name']);
                 }
                 ])
                 ->where([
-                    $this->aliasField('institution_id') => $this->request->data[$this->alias()]['institution_id'],
-                    $this->aliasField('academic_period_id') => $this->request->data[$this->alias()]['academic_period_id']
+                    $this->aliasField('institution_id') => $this->request->getData()[$this->getAlias()]['institution_id'],
+                    $this->aliasField('academic_period_id') => $this->request->getData()[$this->getAlias()]['academic_period_id']
                 ])
                 ->toArray()
                 ;
@@ -356,14 +370,14 @@ class StaffClassesTable extends ControllerActionTable
 
                     }
                     $totalStudent = $maleStudents + $femaleStudents ;
-                    $dataVal[$key]['total_students'] = $totalStudent;  
+                    $dataVal[$key]['total_students'] = $totalStudent;
                 }else{
                     $dataVal[$key]['total_students'] = NULL;
                     $dataVal[$key]['students']['institution_class_students_openemis_no'] = NULL;
                     $dataVal[$key]['maleStudents']['institution_classes_total_male_students'] = NULL;
                     $dataVal[$key]['femaleStudents']['institution_classes_total_female_studentss'] = NULL;
                 }
-                
+
 
             }
         }
@@ -374,17 +388,17 @@ class StaffClassesTable extends ControllerActionTable
         ];
         $Webhooks = TableRegistry::get('Webhook.Webhooks');
         $Webhooks->triggerShell('class_update', ['username' => ''], $body);
-        // end POCOR-6995     
+        // end POCOR-6995
     }
 
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         $extra['redirect'] = false;
-        $classOptions = (array_key_exists('classOptions', $extra))? $extra['classOptions']: [];
+        $classOptions = (isset($extra['classOptions']))? $extra['classOptions']: [];
 
         $process = function ($model, $entity) use ($requestData, $classOptions) {
-            if (array_key_exists('Classes', $requestData)) {
+            if (isset($requestData['Classes'])) {
                 foreach ($requestData['Classes'] as $key => $value) {
                     $selectedClasses[] = $value['class_id'];
                 }
@@ -434,6 +448,12 @@ class StaffClassesTable extends ControllerActionTable
             return  __('Male Students');
         } else if ($field == 'total_female_students') {
             return  __('Female Students');
+        } else if ($field == 'academic_period_id') {
+            return  __('Academic Period');
+        } else if ($field == 'institution_id') {
+            return  __('Institution');
+        } else if ($field == 'total_students') {
+            return  __('Total Students');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -447,7 +467,7 @@ class StaffClassesTable extends ControllerActionTable
                 $buttonsArray = $buttons->getArrayCopy();
                 $indexesToRemove = [];
                 foreach ($buttonsArray as $key => $value) {
-                    if (array_key_exists('attr', $value)) {
+                    if (isset($value['attr'])) {
                         if (array_key_exists('value', $value['attr'])) {
                             if ($value['attr']['value'] == 'save') {
                                 // save button identification

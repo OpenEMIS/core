@@ -62,13 +62,13 @@ class TransferLogsTable extends ControllerActionTable
 
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
-        $this->table('transfer_logs');
-        $this->displayField('id');
-        $this->primaryKey('id');
+        $this->setTable('transfer_logs');
+        $this->getDisplayField('id');
+        $this->getPrimaryKey('id');
 
         $this->belongsTo('AcademicPeriods', [
             'foreignKey' => 'academic_period_id',
@@ -94,7 +94,7 @@ class TransferLogsTable extends ControllerActionTable
      * @param \Cake\Validation\Validator $validator Validator instance.
      * @return \Cake\Validation\Validator
      */
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator->integer('id')->allowEmpty('id', 'create');
         $validator->dateTime('generated_on')->allowEmpty('generated_on', 'create');
@@ -109,7 +109,7 @@ class TransferLogsTable extends ControllerActionTable
      * @param \Cake\ORM\RulesChecker $rules The rules object to be modified.
      * @return \Cake\ORM\RulesChecker
      */
-    public function buildRules(RulesChecker $rules)
+    public function buildRules(RulesChecker $rules): RulesChecker
     {
         $rules->add($rules->existsIn(['academic_period_id'], 'AcademicPeriods'));
 
@@ -121,19 +121,25 @@ class TransferLogsTable extends ControllerActionTable
         $this->field('academic_period_id', ['sort' => true]);
         $this->field('generated_on');
         $this->field('generated_by');
+        $this->field('completed_on', ['sort' => true]);  // POCOR-7957
         $this->field('p_id', ['visible' => false]);
         $this->field('features', ['sort' => false]); // POCOR-6816
-        $this->setFieldOrder(['academic_period_id', 'features', 'generated_on', 'generated_by']);
-        $alreadytransferring = $this->find('all')
-            ->where(['process_status' => self::IN_PROGRESS,
-            ])
-            ->count();
-        if ($alreadytransferring === 1) {
-            $this->Alert->warning('There is an archive process currently running. Please try again later', ['type' => 'string', 'reset' => true]);;
-        }
-        if ($alreadytransferring > 1) {
-            $this->Alert->warninf("There are $alreadytransferring archive processes currently running. Please try again later", ['type' => 'string', 'reset' => true]);;
-        }
+        $this->setFieldOrder([
+            'academic_period_id',
+            'features',
+            'generated_on',
+            'generated_by',
+            'completed_on']);  // POCOR-7957
+//        $alreadytransferring = $this->find('all')
+//            ->where(['process_status' => self::IN_PROGRESS,
+//            ])
+//            ->count();
+//        if ($alreadytransferring === 1) {
+//            $this->Alert->warning('There is an archive process currently running. Please try again later', ['type' => 'string', 'reset' => true]);;
+//        }
+//        if ($alreadytransferring > 1) {
+//            $this->Alert->warning("There are $alreadytransferring archive processes currently running. Please try again later", ['type' => 'string', 'reset' => true]);;
+//        }
         //$this->Alert->info('Archive.backupReminder', ['reset' => false]);
 
         // Start POCOR-5188
@@ -155,7 +161,11 @@ class TransferLogsTable extends ControllerActionTable
             $extra['toolbarButtons']['help'] = $helpBtn;
         }
         // End POCOR-5188
-        $this->clearPendingProcesses();
+        if (extension_loaded('posix')) {
+            if (function_exists('posix_kill')) { //POCOR-7895
+                $this->clearPendingProcesses(); //POCOR-7895
+            }
+        }
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
@@ -166,6 +176,7 @@ class TransferLogsTable extends ControllerActionTable
         $this->field('features', ['type' => 'select', 'options' => $this->getFeatureOptions()]); // POCOR-6816
         $this->field('id', ['visible' => false]);
         $this->field('generated_on', ['visible' => false]);
+        $this->field('completed_on', ['visible' => false]);  // POCOR-7957
         $this->field('generated_by', ['visible' => false]);
         $this->field('process_status', ['visible' => false]);
         $this->field('p_id', ['visible' => false]);
@@ -195,6 +206,7 @@ class TransferLogsTable extends ControllerActionTable
         $name = $generated_by['name'];
         return $name;
     }
+
 
 
     /**
@@ -252,29 +264,41 @@ class TransferLogsTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
+//        $this->log($entity, 'debug');
         if ($entity->isNew()) {
-            $superAdmin = $this->checkSuperAdmin();
-            if (!$superAdmin) {
-                $this->Alert->error('Archive.notSuperAdmin');
-                $event->stopPropagation();
-                return false;
-            }
+//            $superAdmin = $this->checkSuperAdmin();
+//            if (!$superAdmin) {
+//                $this->Alert->error('Archive.notSuperAdmin');
+//                $event->stopPropagation();
+//                return false;
+//            }
             $current = $this->isCurrent($entity);
             if ($current) {
                 $this->Alert->error('Archive.currentAcademic');
                 return false;
             }
+            $inputString = $entity->features;
+
+            // Use a regular expression to extract the desired string
+            if (preg_match('/^([^\.]+)/', $inputString, $matches)) {
+                $feature = $matches[1];
+            } else {
+                // Handle the case where the pattern doesn't match
+                $feature = "Pattern not found";
+            }
             $alreadytransferring = $this->find('all')
-                ->where(['process_status' => self::IN_PROGRESS,
+                ->where([
+                    'process_status' => self::IN_PROGRESS,
+                    'features LIKE' => '%' . $feature . '%'
                 ])
                 ->count();
             if ($alreadytransferring > 0) {
-                $this->Alert->error('There is an archive process currently running. Please try again later', ['type' => 'string', 'reset' => true]);
-//                $event->stopPropagation();
-//                return false;
+                $this->Alert->error("There is $feature archive process currently running. Please try again once the process has ended", ['type' => 'string', 'reset' => true]);
+                $event->stopPropagation();
+                return false;
             }
             $entity->p_id = random_int(100000, 999999);
-//        $entity->process_status = 0;
+            //$entity->process_status = 0;
             $entity->academic_period_id = $entity['academic_period_id'];
             $entity->generated_on = date("Y-m-d H:i:s");
             $entity->generated_by = $this->Session->read('Auth.User.id');
@@ -432,9 +456,9 @@ class TransferLogsTable extends ControllerActionTable
     {
         $tablesToArchive = self::$ArchiveVars['Tables']['StudentAssessments'];
         $shellName = self::$ArchiveVars['Shell']['StudentAssessments'];
-        $this->log(self::$ArchiveVars, 'debug');
-        $this->log($tablesToArchive, 'debug');
-        $this->log($shellName, 'debug');
+        $this->log((string) self::$ArchiveVars, 'debug');
+        $this->log((string) $tablesToArchive, 'debug');
+        $this->log((string) $shellName, 'debug');
         $this->archiveTableRecords($entity, $tablesToArchive, $shellName);
     }
 
@@ -450,8 +474,7 @@ class TransferLogsTable extends ControllerActionTable
         $this->log($shellName, 'debug');
         $session = $this->Session;
         $superAdmin = $session->read('Auth.User.super_admin');
-
-        if ($superAdmin == 1) {//POCOR-7399
+//        if ($superAdmin == 1) {//POCOR-7399
             $academic_period_id = $entity->academic_period_id;
             $recordsToArchive = 0;
             foreach ($tablesToArchive as $tableToArchive) {
@@ -460,11 +483,11 @@ class TransferLogsTable extends ControllerActionTable
                         $academic_period_id);
                 $recordsToArchive = $recordsToArchive + $tableRecordsCount;
             }
-
+            
             if ($recordsToArchive == 0) {
 //                $this->log($entity, 'debug');
                 $entity['process_status'] = self::DONE;
-                $entity->features = $entity['features'] . '. ' . __('No Records');
+                $entity->features = $entity['features'] . ': ' . __('No Records');  // POCOR-7957
                 $this->save($entity);
                 $this->Alert->error('Connection.noDataToArchive', ['reset' => true]);
             }
@@ -479,10 +502,10 @@ class TransferLogsTable extends ControllerActionTable
                     $recordsInArchive = $recordsInArchive + $archiveTableRecordsCount;
                 }
 
-                $recordsInArchiveStr = number_format($recordsInArchive, 0, '', ' ');
-                $recordsToArchiveStr = number_format($recordsToArchive, 0, '', ' ');
-                $todoing = trim($entity['features']) . '. 0 /' . $recordsToArchiveStr;
-
+                $recordsInArchiveStr = number_format($recordsInArchive, 0, '', ',');
+                $recordsToArchiveStr = number_format($recordsToArchive, 0, '', ',');
+                $todoing = trim($entity['features']) . ': '
+                    . $recordsToArchiveStr . ' / ' . $recordsInArchiveStr;  // POCOR-7957
                 $alreadytransferring = $this->find('all')
                     ->where(['academic_period_id' => $entity->academic_perid_id,
                         'process_status' => self::IN_PROGRESS,
@@ -497,17 +520,19 @@ class TransferLogsTable extends ControllerActionTable
                 $entity->process_status = self::IN_PROGRESS;
                 $this->save($entity);
             }
-        }
-        if ($superAdmin != 1) {
-            $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
-        }
+        // }
+        // if ($superAdmin != 1) {
+        //     $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
+        // }
     }
 
     public static
     function setTransferLogsFailed($pid)
     {
         $TransferLogs = TableRegistry::get('Archive.TransferLogs');
-        $TransferLogs->updateAll(['process_status' => $TransferLogs::ERROR],
+
+        $TransferLogs->updateAll(['process_status' => $TransferLogs::ERROR,
+            'completed_on' => date("Y-m-d H:i:s")], // POCOR-7957
             ['p_id' => $pid]
         );
         $processInfo = date('Y-m-d H:i:s');
@@ -556,7 +581,8 @@ class TransferLogsTable extends ControllerActionTable
         return intval($RecordsCount);
     }
 
-    private static function getSimpleCount($tableName, $connectionName, $fieldName, $fieldValue) {
+    private static function getSimpleCount($tableName, $connectionName, $fieldName, $fieldValue)
+    {
         $connection = ConnectionManager::get($connectionName);
         $sql = "SELECT count(*) as count FROM $tableName WHERE $fieldName = :fieldValue";
         $result = $connection->execute($sql, ['fieldValue' => $fieldValue])->fetch('assoc');
@@ -645,7 +671,7 @@ class TransferLogsTable extends ControllerActionTable
     private function clearPendingProcesses()
     {
         $SystemProcesses = TableRegistry::get('SystemProcesses');
-        $runningProcess = $SystemProcesses->getRunningProcesses($this->registryAlias());
+        $runningProcess = $SystemProcesses->getRunningProcesses($this->getRegistryAlias());
         foreach ($runningProcess as $key => $processData) {
             $process_params = (array)json_decode($processData['params']);
             $systemProcessId = $processData['id'];
@@ -654,7 +680,7 @@ class TransferLogsTable extends ControllerActionTable
             $php_process_id = isset($processData['process_id']) ? $processData['process_id'] : 0;
             $isPhpProcessRunning = self::isPhpProcessRunning($php_process_id);
             if ($transfer_log_pid == null) {
-                $this->log("gonna kill $systemProcessId", 'debug');
+                $this->log("going to kill $systemProcessId", 'debug');
                 if ($isPhpProcessRunning) {
                     $SystemProcesses::killProcess($php_process_id);
                     self::setSystemProcessFailed($systemProcessId);
@@ -664,12 +690,32 @@ class TransferLogsTable extends ControllerActionTable
                 }
             }
             if ($transfer_log_pid != null) {
-                $this->log("not gonna kill $systemProcessId", 'debug');
+                $this->log("not going to kill $systemProcessId", 'debug');
                 if (!$isPhpProcessRunning) {
                     self::setTransferLogsFailed($transfer_log_pid);
                     self::setSystemProcessFailed($systemProcessId);
                 }
             }
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'features':
+                return __('Features');
+            case 'generated_on':
+                return __('Generated On');
+            case 'generated_by':
+                return __('Generated By');
+            case 'created_user_id':
+                return __('Created By');
+            case 'created':
+                return __('Created');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 

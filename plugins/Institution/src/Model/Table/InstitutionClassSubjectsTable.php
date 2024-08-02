@@ -10,17 +10,28 @@ use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
 use Cake\I18n\Time;
+use App\Model\Table\ControllerActionTable;
 
-class InstitutionClassSubjectsTable extends AppTable
+class InstitutionClassSubjectsTable extends ControllerActionTable
 {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
         $this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects']);
         
+        // $this->addBehavior('Restful.RestfulAccessControl', [
+        //     'ScheduleTimetable' => ['index']
+        // ]);
         $this->addBehavior('Restful.RestfulAccessControl', [
+            'Students' => ['index'],
+            'Staff' => ['index'],
+            'Results' => ['index'],
+            'StudentExaminationResults' => ['index'],
+            'OpenEMIS_Classroom' => ['index', 'view'],
+            'InstitutionStaffAttendances' => ['index', 'view'],
+            'StudentAttendances' => ['index', 'view'],
             'ScheduleTimetable' => ['index']
         ]);
     }
@@ -34,7 +45,7 @@ class InstitutionClassSubjectsTable extends AppTable
     public function findAllSubjects(Query $query, array $options)
     {       
         $institutionClassId = $options['institution_class_id'];
-        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
         $query
             ->select([
                  $this->aliasField('id'),
@@ -59,14 +70,13 @@ class InstitutionClassSubjectsTable extends AppTable
         $academicPeriodId = $options['academic_period_id'];
         $day_id = (new Time($options['day_id']))->format('w');
         $educationGradeId = $options['education_grade_id'];
-        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-        $ScheduleTimetables = TableRegistry::get('Schedule.ScheduleTimetables');
-        $ScheduleCurriculumLessons = TableRegistry::get('Schedule.ScheduleCurriculumLessons');
-        $ScheduleNonCurriculumLessons = TableRegistry::get('Schedule.ScheduleNonCurriculumLessons');
-        $ScheduleLessonDetails = TableRegistry::get('Schedule.ScheduleLessonDetails');
-        $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
-        $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-
+        $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+        $ScheduleTimetables = TableRegistry::getTableLocator()->get('Schedule.ScheduleTimetables');
+        // $ScheduleCurriculumLessons = TableRegistry::getTableLocator()->get('Schedule.ScheduleCurriculumLessons');
+        // $ScheduleNonCurriculumLessons = TableRegistry::getTableLocator()->get('Schedule.ScheduleNonCurriculumLessons');
+        // $ScheduleLessonDetails = TableRegistry::getTableLocator()->get('Schedule.ScheduleLessonDetails');
+        $InstitutionSubjectStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
+        $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
         $scheduleTimetablesData = $ScheduleTimetables->find()
                                     ->where([
                                         $ScheduleTimetables->aliasField('institution_class_id') => $institutionClassId,
@@ -123,7 +133,7 @@ class InstitutionClassSubjectsTable extends AppTable
                              'name'=>$InstitutionSubjects->aliasField('name'),
                         ])
                         ->innerJoin(
-                        [$InstitutionSubjects->alias() => $InstitutionSubjects->table()],
+                        [$InstitutionSubjects->getAlias() => $InstitutionSubjects->getTable()],
                             [
                                 $InstitutionSubjects->aliasField('id = ') . $this->aliasField('institution_subject_id')
                             ]
@@ -146,7 +156,7 @@ class InstitutionClassSubjectsTable extends AppTable
                             if (!$allSubjectsPermission) {
                                 $query
                                 ->innerJoin(
-                                [$InstitutionSubjectStaff->alias() => $InstitutionSubjectStaff->table()],
+                                [$InstitutionSubjectStaff->getAlias() => $InstitutionSubjectStaff->getTable()],
                                         [
                                     $InstitutionSubjectStaff->aliasField('staff_id = ') . $staffId,
                                     $InstitutionSubjectStaff->aliasField('institution_subject_id = ') . $InstitutionSubjects->aliasField('id')
@@ -160,10 +170,10 @@ class InstitutionClassSubjectsTable extends AppTable
 
     public function getRolePermissionAccessForAllSubjects($userId, $institutionId)
     {
-        $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
+        $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
         //$userAccessRoles = implode(', ', $roles);    
         
-        $QueryResult = TableRegistry::get('SecurityRoleFunctions')->find()              
+        $QueryResult = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()              
                 ->leftJoin(['SecurityFunctions' => 'security_functions'], [
                     [
                         'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',

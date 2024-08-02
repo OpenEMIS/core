@@ -27,20 +27,36 @@ class ArchivedAttendancesTable extends ControllerActionTable
     private $institutionId = null;
     private $staffId = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $config['Modified'] = false;
         $config['Created'] = false;
         $table_name = 'institution_staff_attendances';
         $targetTableNameAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
+        
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
         $this->connectionName = $targetTableConnection;
-        $this->connection($remoteConnection);
-        $this->table($targetTableName);
+        
+        $this->getConnection($remoteConnection);
+        $this->setTable($targetTableName);
+        
+        // if($targetTableName == 'institution_staff_attendances'){
+        //     $tableLocator = new TableLocator();
+        //     $tableArchived = $tableLocator->get('InstitutionStaffAttendances', [
+        //     'connection' => $remoteConnection]); 
+        // }else{
+        //     $tableLocator = new TableLocator();
+        //     $tableArchived = $tableLocator->get($targetTableName, [
+        //     'connection' => $remoteConnection]); 
+        // }
+        // echo "<pre>"; print_r($this->getTable($targetTableName));
+        // die;
         parent::initialize($config);
-
+        
+//         echo "<pre>"; print_r($targetTableConnection);
+        
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
@@ -55,6 +71,7 @@ class ArchivedAttendancesTable extends ControllerActionTable
         $this->field('absence_type_id', ['visible' => false]);
 
         $this->setFieldOrder(['Date', 'time_in', 'time_out', 'comment']);
+        $encodedString = $this->request->getAttribute('params')['pass'][1];
         $toolbarButtons = $extra['toolbarButtons'];
         $extra['toolbarButtons']['back'] = [
             'url' => [
@@ -62,6 +79,7 @@ class ArchivedAttendancesTable extends ControllerActionTable
                 'controller' => 'Staff',
                 'action' => 'StaffAttendances',
                 '0' => 'index',
+                $encodedString
             ],
             'type' => 'button',
             'label' => '<i class="fa kd-back"></i>',
@@ -102,32 +120,43 @@ class ArchivedAttendancesTable extends ControllerActionTable
     {
 
         $institutionId = $staffId = null;
-        $session = $this->controller->request->session();
-        if ($session->check('Institution.Institutions.id')) {
-            $institutionId = $session->read('Institution.Institutions.id');
-        }
-        if (!is_null($this->request->query('user_id'))) {
-            $staffId = $this->request->query('user_id');
+        $params = $this->getQueryString();//POCOR-8359
+        $institutionId = $params['institution_id'];//POCOR-8359
+        if(!is_null($params['user_id'])){
+            $staffId = $params['user_id'];
         }
         if (!$staffId) {
-            if (!is_null($this->request->query('staff_id'))) {
-                $staffId = $this->request->query('staff_id');
+            if (!is_null($params['staff_id'])) {
+                $staffId = $params['staff_id'];
             }
         }
-        if (!$staffId) {
-            if ($session->check('Institution.Staff.id')) {
-                if (is_numeric($session->read('Institution.Staff.id'))) {
-                    $staffId = $session->read('Institution.Staff.id');
-                }
-            }
-        }
-        if (!$staffId) {
-            if ($session->check('Staff.Staff.id')) {
-                if (is_numeric($session->read('Staff.Staff.id'))) {
-                    $staffId = $session->read('Staff.Staff.id');
-                }
-            }
-        }
+        //$staffId = $params['staff_id'];//POCOR-8359
+        //$session = $this->controller->request->session();
+        // if ($session->check('Institution.Institutions.id')) {
+        //     $institutionId = $session->read('Institution.Institutions.id');
+        // }
+        // if (!is_null($this->request->query('user_id'))) {
+        //     $staffId = $this->request->query('user_id');
+        // }
+        // if (!$staffId) {
+        //     if (!is_null($this->request->query('staff_id'))) {
+        //         $staffId = $this->request->query('staff_id');
+        //     }
+        // }
+        // if (!$staffId) {
+        //     if ($session->check('Institution.Staff.id')) {
+        //         if (is_numeric($session->read('Institution.Staff.id'))) {
+        //             $staffId = $session->read('Institution.Staff.id');
+        //         }
+        //     }
+        // }
+        // if (!$staffId) {
+        //     if ($session->check('Staff.Staff.id')) {
+        //         if (is_numeric($session->read('Staff.Staff.id'))) {
+        //             $staffId = $session->read('Staff.Staff.id');
+        //         }
+        //     }
+        // }
 //        if ($session->check('Directory.Staff.id')) {
 //            $staffId = $session->read('Directory.Staff.id');
 //        }
@@ -139,7 +168,7 @@ class ArchivedAttendancesTable extends ControllerActionTable
     {
         $this->setInstitutionStaffIDs();
         $selectedPeriod = $this->setAcademicPeriodsOptions($query);
-        $requestWeek = $this->request->query('week');
+        $requestWeek = $this->request->getQuery('week');
         if ($selectedPeriod != 0) {
             $conditions = $this->setWeekOptions($query, $selectedPeriod, $requestWeek);
             $extra['elements']['controls'] = ['name' => 'Institution.Attendance/controls', 'data' => [], 'options' => [], 'order' => 1];
@@ -242,20 +271,30 @@ class ArchivedAttendancesTable extends ControllerActionTable
         $selectedYear = end($uniqu_array);
 
         $periodOptions = $AcademicPeriod->getArchivedYearList($uniqu_array);
-        if (empty($this->request->query['academic_period_id'])) {
-            $this->request->query['academic_period_id'] = $selectedYear;
+        //POCOR-8359 Starts
+        //old way V3
+        // if (empty($this->request->getQuery()['academic_period_id'])) {
+        //     $this->request->getQuery()['academic_period_id'] = $selectedYear;
+        // }
+        // $selectedPeriod = $this->request->getQuery()['academic_period_id'];
+        //new way V4
+        $queryParams = $this->request->getQueryParams();
+        // Check if 'academic_period_id' is empty
+        if (empty($queryParams['academic_period_id'])) {
+            // Merge the new value into the query parameters
+            $queryParams = array_merge($queryParams, ['academic_period_id' => $selectedYear]);
         }
-        $selectedPeriod = $this->request->query['academic_period_id'];
+        // Retrieve the updated 'academic_period_id' value
+        $selectedPeriod = $queryParams['academic_period_id'];//POCOR-8359 ends
         $this->advancedSelectOptions($periodOptions, $selectedPeriod);
         $this->controller->set(compact('periodOptions', 'selectedPeriod'));
         // To add the academic_period_id to export
         // if (isset($extra['toolbarButtons']['export']['url'])) {
         //     $extra['toolbarButtons']['export']['url']['academic_period_id'] = $selectedPeriod;
         // }
-
-        $this->request->query['academic_period_id'] = $selectedPeriod;
+        // $this->request->getQuery()['academic_period_id'] = $selectedPeriod;
+        $this->request = $this->request->withQueryParams(['academic_period_id' => $selectedPeriod]);//POCOR-8359
         return $selectedPeriod;
-
     }
 
     /**
@@ -275,7 +314,7 @@ class ArchivedAttendancesTable extends ControllerActionTable
 
         $distinctQuery = clone $query;
 
-// Modify the cloned query to select distinct dates
+        // Modify the cloned query to select distinct dates
         $distinctDates = $distinctQuery->find('all')
             ->where(['institution_id' => $institutionId,
                 'staff_id' => $staffId])
@@ -283,14 +322,14 @@ class ArchivedAttendancesTable extends ControllerActionTable
             ->distinct(['date'])
             ->toArray();
         $distinctDateValues = array_column($distinctDates, 'date');
-//        $this->log('$distinctDateValues', 'debug');
-//        $this->log($distinctDateValues, 'debug');
-// Execute the cloned query and fetch the distinct dates
+        //        $this->log('$distinctDateValues', 'debug');
+        //        $this->log($distinctDateValues, 'debug');
+        // Execute the cloned query and fetch the distinct dates
 
-// Get the array of distinct date values
+        // Get the array of distinct date values
         $distinctDateValues = array_column($distinctDates, 'date');
 
-// Filter the weeks array based on the distinct dates
+        // Filter the weeks array based on the distinct dates
         $weekOptions = [];
         $currentWeek = null;
         foreach ($weeks as $index => $dates) {

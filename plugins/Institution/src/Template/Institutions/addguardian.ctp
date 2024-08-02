@@ -49,20 +49,20 @@ h2, h3, h4, h5, h6 {
         margin-bottom: 0px;
     }
 
-    
+
 </style>
 <body>
 
 <?= $this->element('OpenEmis.breadcrumbs') ?>
     <div class="page-header">
 		<h2 id="main-header"><?php echo $UserData->first_name.' '.$UserData->last_name ?> - <?php echo __('Add Student Guardians') ?></h2>
-					
+
 			</div>
 
             </body>
 <!-- POCOR-7231 :: END -->
 
-<div class="pd-10" ng-controller = 'DirectoryaddguardianCtrl'>
+<div class="pd-10" ng-controller = 'DirectoryaddguardianCtrl' ng-init="studentOpenEmisId='<?php echo $UserData->openemis_no; ?>'">
     <div class="alert {{messageClass}}" ng-if="message">
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
     </div>
@@ -138,6 +138,13 @@ h2, h3, h4, h5, h6 {
                             <p>{{ error.relation_type_id }}</p>
                         </div>
                     </div>
+                    <!-- POCOR-8112 - New section for OpenEMIS ID -->
+                    <div class="row section-header header-space-lg">Search By OpenEMIS ID</div>
+                    <div class="input string">
+                        <label><?= __('OpenEMIS ID') ?></label>
+                        <input ng-model="selectedUserData.openemis_no" type="string">
+                    </div>
+
                     <div class="row section-header header-space-lg">Search By Identity</div>
                     <div ng-class="nationality_class" class="input select">
                         <label><?= __('Nationality') ?></label>
@@ -173,10 +180,6 @@ h2, h3, h4, h5, h6 {
                         <input ng-model="selectedUserData.identity_number" type="string">
                     </div> -->
                     <div class="row section-header header-space-lg">Search By Basic Information</div>
-                    <div class="input string">
-                        <label><?= __('OpenEMIS ID') ?></label>
-                        <input ng-model="selectedUserData.openemis_no" type="string">
-                    </div>
                     <div class="input string required">
                         <label><?= __('First Name') ?></label>
                         <input ng-model="selectedUserData.first_name" ng-change="setName()" type="string">
@@ -228,7 +231,7 @@ h2, h3, h4, h5, h6 {
                             <p>{{ error.date_of_birth }}</p>
                         </div>
                     </div>
-                   
+
                 </form>
             </div>
             <div class="step-pane sample-pane" ng-if="step === 'internal_search'">
@@ -269,10 +272,10 @@ h2, h3, h4, h5, h6 {
                                 * Format Supported: .jpg, .jpeg, .png, .gif</p>
                                 <span class="btn btn-default btn-file" style="font-size: 12px !important;">
                                     <span class="fileinput-new">
-                                        <i class="fa fa-folder"></i> 
+                                        <i class="fa fa-folder"></i>
                                         <span style="font-size: 12px;">Select File</span>
                                     </span>
-                                    <input id="image-file" class="file-input" type="file" onchange="savePhoto(this)" >    
+                                    <input id="image-file" class="file-input" type="file" onchange="savePhoto(this)" >
                                 </span>
                             </div>
                         </div>
@@ -338,7 +341,7 @@ h2, h3, h4, h5, h6 {
                     </div>
                     <!-- Address area end -->
                     <!-- Address area start -->
-                    <div class="row section-header header-space-lg">Birthplace Area</div>
+                    <div class="row section-header header-space-lg"><?= __('Birthplace Area') ?></div>
                     <div class="input string" id="birthplaceArea_textbox" style="visibility:hidden">
                         <label><?= __('Birthplace Area') ?></label>
                         <input ng-model="selectedUserData.birthplaceArea.name" type="string" ng-disabled="true">
@@ -353,7 +356,7 @@ h2, h3, h4, h5, h6 {
                             <kd-tree-dropdown-ng id="birthplace_area-tree" expand-parent="SgTree.triggerLoad(refreshList)" output-model="birthplaceAreaOutputModelText" model-type="single" text-config="textConfig"></kd-tree-dropdown-ng>
                         </div>
                     </div>
-                    <div class="row section-header header-space-lg">Identities / Nationalities</div>
+                    <div class="row section-header header-space-lg"><?= __('Additional Information') ?></div>
                     <div class="input string">
                         <label><?= __('Nationalities') ?></label>
                         <input ng-model="selectedUserData.nationality_name" type="string" ng-disabled="true" />
@@ -366,7 +369,7 @@ h2, h3, h4, h5, h6 {
                         <label><?= __('Identity Number') ?></label>
                         <input ng-model="selectedUserData.identity_number" type="string" ng-disabled="true">
                     </div>
-                    <div class="row section-header header-space-lg">Other Information</div>
+                    <div class="row section-header header-space-lg"><?= __('Other Information') ?></div>
                     <div class="input select">
                         <label><?= __('Contact Type') ?></label>
                         <div class="input-select-wrapper">
@@ -381,7 +384,7 @@ h2, h3, h4, h5, h6 {
                     </div>
                     <div class="input string">
                         <label><?= __('Contact Value') ?></label>
-                        <input ng-model="selectedUserData.contactValue" type="string">
+                        <input ng-model="selectedUserData.contact_value" type="string">
                     </div>
                     <div class="input string required">
                         <label><?= __('Username') ?></label>
@@ -390,7 +393,7 @@ h2, h3, h4, h5, h6 {
                             <p>{{ error.relation_type_id }}</p>
                         </div>
                     </div>
-                    <div class="input password required">
+                    <div ng-if="!disableFields.password" class="input password required">
                         <label><?=
                             __('Password') . '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $tooltipMessage . '"></i>'
                         ?></label>
@@ -478,7 +481,7 @@ h2, h3, h4, h5, h6 {
                                                                     <td class="vertical-align-top">{{selectedUserData.nationality_name}}</td>
                                                                     <td class="vertical-align-top">No</td>
                                                                 </tr>
-                                                            </tbody>				
+                                                            </tbody>
                                                         </table>
                                                     </div>
                                                 </div>
@@ -576,11 +579,11 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
         font-size: 16px !important;
     }
     .input-hidden{
-        opacity: 0; 
-        position: absolute; 
-        width: 100% !important; 
+        opacity: 0;
+        position: absolute;
+        width: 100% !important;
         height: 100% !important;
-        left: 0; 
+        left: 0;
         top: 0;
     }
     .row-content{
@@ -620,7 +623,7 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
         border-bottom: none;
     }
     /* steps */
-    
+
     .stepper-content-wrapper > ul.steps li,
     .stepper-content-wrapper > .steps-container > ul.steps li {
         float: left;
@@ -814,7 +817,7 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
     }
     @media (min-width: 800px) {
         .row-content{
-            display: flex; 
+            display: flex;
             align-items: flex-start;
         }
     }
@@ -966,7 +969,7 @@ $( document ).on('DOMMouseScroll mousewheel scroll', function(){
         height: 40px !important;
         padding-left: 0px !important;
     }
-    
+
     .alert {
         color: #FFF !important;
         padding: 10px !important;

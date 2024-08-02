@@ -11,19 +11,22 @@ use Cake\ORM\TableRegistry;
 
 class FieldOptionsController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadComponent('FieldOption.FieldOption');
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
+        if ($this->getPlugin() == 'FieldOption') {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
         $header = 'Field Options';
-        $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'index']);
-        $session = $this->request->session();
-        $action = $this->request->params['action'];
+        $this->Navigation->addCrumb($header, ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'index']);
+        $session = $this->request->getSession();
+        $action = $this->request->getParam('action');
 
         $this->set('contentHeader', __($header));
     }
@@ -50,7 +53,7 @@ class FieldOptionsController extends AppController
 
     public function index()
     {
-        return $this->redirect(['plugin' => $this->plugin, 'controller' => $this->name, 'action' => key($this->FieldOption->getFieldOptions())]);
+        return $this->redirect(['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => key($this->FieldOption->getFieldOptions())]);
     }
 
     public function Duties()
@@ -791,4 +794,20 @@ class FieldOptionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
     }
     //POCOR-7363 end
+
+    public function beforeRender(Event|\Cake\Event\EventInterface $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+    }
+    //POCOR-7613 start
+    public function CaseTypes()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
+    }
+    public function CasePriorities()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
+    }
+    //POCOR-7613 end
 }

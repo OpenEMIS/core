@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use Cake\I18n\Time;
+use Cake\I18n\FrozenTime;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -17,8 +18,8 @@ class SystemProcessesTable extends ControllerActionTable {
 	const RUNNING = 2;
 	const ERROR = -2;
 	const ABORT = -1;
-	public function initialize(array $config) {
-        $this->table('system_processes');
+	public function initialize(array $config): void {
+        $this->setTable('system_processes');
         parent::initialize($config);
 	}
 
@@ -28,7 +29,7 @@ class SystemProcessesTable extends ControllerActionTable {
 			'process_id' => $pid,
 			'callable_event' => $callableEvent,
 			'status' => self::NEW_PROCESS,
-			'start_date' => Time::now(),
+			'start_date' => FrozenTime::now(),
 			'model' => $model,
 			'params' => $params
 		];
@@ -47,7 +48,7 @@ class SystemProcessesTable extends ControllerActionTable {
 				$this->aliasField('model') => $model,
 				$this->aliasField('process_id') => $pid
 			])
-			->hydrate(false)
+			->enableHydration(false)
 			->toArray();
 	}
 
@@ -78,7 +79,7 @@ class SystemProcessesTable extends ControllerActionTable {
 				$this->aliasField('model') => $model,
 				$this->aliasField('status') => self::RUNNING
 			])
-			->hydrate(false)
+			->enableHydration(false)
 			->toArray();
 	}
 
@@ -95,6 +96,6 @@ class SystemProcessesTable extends ControllerActionTable {
 			]);
 		}
 
-		return $query->hydrate(false)->toArray();
+		return $query->toArray();
 	}
 }

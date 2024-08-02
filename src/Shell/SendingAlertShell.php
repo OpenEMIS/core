@@ -10,7 +10,7 @@ use Cake\Mailer\Email;
 
 class SendingAlertShell extends Shell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Alert.AlertLogs');

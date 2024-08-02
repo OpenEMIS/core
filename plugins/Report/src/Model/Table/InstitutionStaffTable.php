@@ -18,9 +18,9 @@ class InstitutionStaffTable extends AppTable
 {
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff');
+        $this->setTable('institution_staff');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
@@ -39,12 +39,13 @@ class InstitutionStaffTable extends AppTable
             'autoFields' => false
         ]);
         $this->addBehavior('Report.InstitutionSecurity');
+        $this->addBehavior('Report.AreaList');//POCOR-7794
     }
 
     public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -59,6 +60,7 @@ class InstitutionStaffTable extends AppTable
         $typeId = $requestData->type;
         $institutionId = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
+        $areaLevelId = $requestData->area_level_id;//POCOR-7794
         $academicPeriodId = $requestData->academic_period_id;
 
         if ($statusId != 0) {
@@ -77,9 +79,22 @@ class InstitutionStaffTable extends AppTable
                 $this->aliasField('institution_id') => $institutionId
             ]);
         }
-        if ($areaId != -1) {
-            $query->where(['Institutions.area_id' => $areaId]);
+        //POCOR-7794 start
+        $areaList = [];
+        if (
+            $areaLevelId > 1 && $areaId > 1
+        ) {
+            $areaList = $this->getAreaList($areaLevelId, $areaId);
+        } elseif ($areaLevelId > 1) {
+
+            $areaList = $this->getAreaList($areaLevelId, 0);
+        } elseif ($areaId > 1) {
+            $areaList = $this->getAreaList(0, $areaId);
         }
+        if (!empty($areaList)) {
+            $query->where(['Institutions.area_id IN' => $areaList]);
+        }
+        //POCOR-7794 end
 
         $query
             ->select([
@@ -272,10 +287,10 @@ class InstitutionStaffTable extends AppTable
             $ClassesTable = TableRegistry::get('Institution.InstitutionClasses');
             $ClassesSecondaryStaffTable = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
             //Start:POCOR-6714
-            $EducationGrades = TableRegistry::get('education_grades');
-            $subStaffTable = TableRegistry::get('institution_subject_staff');
-            $InsSubTable = TableRegistry::get('institution_subjects');
-            $AcademicTable = TableRegistry::get('academic_periods');
+            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $subStaffTable = TableRegistry::get('Institution.InstitutionSubjectStaff');
+            $InsSubTable = TableRegistry::get('Institution.InstitutionSubjects');
+            $AcademicTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 	     
 	        $AcademicData = $AcademicTable->find()->where(['id'=> $entity->academic_period_id])->first();
             $startDateYear = $AcademicData->start_year;
@@ -598,7 +613,6 @@ class InstitutionStaffTable extends AppTable
         $ContactOptionsTable = TableRegistry::get('User.ContactOptions');
         $options = $ContactOptionsTable->find('list')
             ->where([$ContactOptionsTable->aliasField('code IN') => $displayContactOptions])
-            ->order('order')
             ->toArray();
 
         $ContactTypesTable = TableRegistry::get('User.ContactTypes');

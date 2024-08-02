@@ -38,7 +38,7 @@ class AssessmentItemResultRequest extends FormRequest
             'institution_id' => 'required',
             'institution_classes_id' => 'required',
             // 'marks' => 'required',
-            // 'assessment_grading_option_id' => 'required',
+            'assessment_grading_option_id' => 'required',
         ];
     }
 
@@ -49,6 +49,7 @@ class AssessmentItemResultRequest extends FormRequest
         $errors = (new ValidationException($validator))->errors();
         throw new HttpResponseException(
             response()->json([
+                'message' => "Unsuccessful.",
                 'Enter Required Fileds' => $errors,
             ],
             JsonResponse::HTTP_UNPROCESSABLE_ENTITY

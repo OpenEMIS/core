@@ -34,8 +34,9 @@ class AppView extends View
      *
      * @return void
      */
-    public function initialize()
+    public function initialize(): void
     {
+        $this->loadHelper('ControllerAction.ControllerAction');
         $this->loadHelper('ControllerAction.HtmlField');
     }
 }

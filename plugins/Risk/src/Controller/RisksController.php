@@ -12,7 +12,7 @@ use App\Controller\AppController;
 
 class RisksController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
     }
@@ -25,12 +25,21 @@ class RisksController extends AppController
     }
     // End
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
+        if ($this->getPlugin() == 'Risk') {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
-        
+
         $header = __('Risks');
-        $this->Navigation->addCrumb('Risks', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Risks']);
+        $this->Navigation->addCrumb('Risks', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Risks']);
         $this->set('contentHeader', $header);
+    }
+
+    public function beforeRender(Event|\Cake\Event\EventInterface $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 }

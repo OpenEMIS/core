@@ -13,7 +13,7 @@ use PDOException;
 
 class DatabaseTransferShell extends Shell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         

@@ -6,21 +6,22 @@ use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
 use App\Model\Traits\HtmlTrait;
 use App\Model\Table\ControllerActionTable;
+use Cake\Datasource\EntityInterface;
 
 class SystemGroupsTable extends ControllerActionTable
 {
     use MessagesTrait;
     use HtmlTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('security_groups');
+        $this->setTable('security_groups');
         parent::initialize($config);
 
         $this->hasMany('Roles', ['className' => 'Security.SecurityRoles', 'dependent' => true]);
@@ -85,7 +86,7 @@ class SystemGroupsTable extends ControllerActionTable
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -100,17 +101,17 @@ class SystemGroupsTable extends ControllerActionTable
         $controller = $this->controller;
         $tabElements = [
             'UserGroups' => [
-                'url' => ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => 'UserGroups'],
+                'url' => ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName(), 'action' => 'UserGroups'],
                 'text' => $this->getMessage('UserGroups.tabTitle')
             ],
-            $this->alias() => [
-                'url' => ['plugin' => $controller->plugin, 'controller' => $controller->name, 'action' => $this->alias()],
+            $this->getAlias() => [
+                'url' => ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName(), 'action' => $this->getAlias()],
                 'text' => $this->getMessage($this->aliasField('tabTitle'))
             ]
         ];
         $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
 
         // $roleOptions = $this->Roles->find('list')->toArray();
         // $this->ControllerAction->field('users', [
@@ -120,7 +121,7 @@ class SystemGroupsTable extends ControllerActionTable
         //     'visible' => ['index' => false, 'view' => true, 'edit' => true]
         // ]);
 
-        $this->ControllerAction->setFieldOrder(['name', 'users']);
+        $this->setFieldOrder(['name', 'users']); // POCOR-8446
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -132,27 +133,22 @@ class SystemGroupsTable extends ControllerActionTable
     public function onGetNoOfUsers(Event $event, Entity $entity)
     {
         $id = $entity->id;
-
         $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $count = $GroupUsers->findAllBySecurityGroupId($id)->count();
-
         return $count;
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $queryParams = $request->query;
-
+        $queryParams = $this->request->getQuery();
         $query->find('inInstitutions');
 
-        if (!array_key_exists('sort', $queryParams) && !array_key_exists('direction', $queryParams)) {
+        if (!isset($queryParams['sort']) && !isset($queryParams['direction'])) {
             $query->order([$this->aliasField('name') => 'asc']);
         }
-
         // filter groups by users permission
         if ($this->Auth->user('super_admin') != 1) {
             $userId = $this->Auth->user('id');
-
             $SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
             $SecurityGroupUsers = $SecurityGroupUsersTable
                 ->find('list')
@@ -178,9 +174,7 @@ class SystemGroupsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->request->data[$this->alias()]['security_group_id'] = $entity->id;
-
-
+        $this->request->getData[$this->getAlias()]['security_group_id'] = $entity->id;
         $toolbarAttr = [
                     'class' => 'btn btn-xs btn-default',
                     'data-toggle' => 'tooltip',
@@ -193,7 +187,8 @@ class SystemGroupsTable extends ControllerActionTable
             'controller' => 'Securities',
             'action' => 'SystemGroupsList',
             'userGroupId' => $entity->id,
-            'index'
+            'index',
+            "?userGroupId=$entity->id"
         ];
 
         $listButton['url'] = $listUrl;
@@ -210,5 +205,26 @@ class SystemGroupsTable extends ControllerActionTable
         return $query;
     }
 
-        
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'custom_module_id') {
+            return __('Custom Module');
+        }elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }elseif ($field == 'no_of_users') {
+            return __('No Of Users');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+
 }

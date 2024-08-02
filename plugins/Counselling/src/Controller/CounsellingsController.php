@@ -7,7 +7,7 @@ use App\Controller\PageController;
 
 class CounsellingsController extends PageController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
@@ -16,10 +16,10 @@ class CounsellingsController extends PageController
         $this->Page->enable(['download']);
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        $institutionId = $this->getInstitutionID(); // POCOR-7911
         $institutionName = $session->read('Institution.Institutions.name');
         $studentId = $session->read('Student.Students.id');
         $studentName = $session->read('Student.Students.name');
@@ -32,10 +32,28 @@ class CounsellingsController extends PageController
         $page = $this->Page;
 
         // set Breadcrumb
-        $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-        $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $encodedInstitutionId, $encodedInstitutionId]);
-        $page->addCrumb('Students', ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Students', 'institutionId' => $encodedInstitutionId]);
-        $page->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $encodedStudentId]);
+        $page->addCrumb('Institutions', [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'Institutions',
+            'index']);
+        $page->addCrumb($institutionName, [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'dashboard',
+            'institutionId' => $encodedInstitutionId,
+            $encodedInstitutionId]);
+        $page->addCrumb('Students',
+            ['plugin' => $this->plugin,
+                'controller' => 'Institutions',
+                'action' => 'Students',
+                'institutionId' => $encodedInstitutionId]);
+        $page->addCrumb($studentName,
+            ['plugin' => $this->plugin,
+                'controller' => 'Institutions',
+                'action' => 'StudentUser',
+                'view',
+                $encodedStudentId]);
         $page->addCrumb('Counselling');
 
         $page->get('student_id')->setControlType('hidden')->setValue($studentId); // set value and hide the student_id
@@ -133,5 +151,21 @@ class CounsellingsController extends PageController
         $page->move('intervention')->after('description');
         $page->move('comment')->after('intervention');
         $page->move('file_content')->after('comment');
+    }
+
+    private function getInstitutionID()
+    {
+        $session = $this->request->getSession();
+        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
+        $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
+        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
+            $this->request->params['institutionId'] :
+            $encodedInstitutionIDFromSession;
+        try {
+            $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
+        } catch (\Exception $exception) {
+            $institutionID = $insitutionIDFromSession;
+        }
+        return $institutionID;
     }
 }

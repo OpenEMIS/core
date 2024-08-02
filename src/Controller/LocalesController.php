@@ -2,85 +2,32 @@
 namespace App\Controller;
 
 use Cake\Event\Event;
-use Cake\ORM\Entity;
+use Cake\Utility\Inflector;
 
-use App\Controller\PageController;
-
-class LocalesController extends PageController
+class LocalesController extends AppController
 {
-    private $officialLanguages = ['ar', 'zh', 'en', 'fr', 'ru', 'es'];
-
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
+        $this->loadComponent('Paginator');
     }
 
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        $events['Controller.Page.getEntityDisabledActions'] = 'getEntityDisabledActions';
-
-        return $events;
-    }
-
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         parent::beforeFilter($event);
-        $this->Page->addCrumb('Localization', ['plugin' => false, 'controller' => 'Locales', 'action' => 'index']);
+        $name = $this->name;
+        $action  = $this->request->getParam('action');
+        $actionName = __(Inflector::humanize($action));
+        $header = $name .' - '.$actionName;
+        $this->Navigation->addCrumb(__($name), ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $action]);
+        $this->Navigation->addCrumb($actionName);
+        $this->set('contentHeader', $header);
+        $this->set('selectedAction', $this->request->getParam('action'));
 
-        $this->Page->get('direction')
-            ->setControlType('select')
-            ->setOptions([
-                '' => '-- Select --', 'ltr' => __('Left to Right'), 'rtl' => __('Right to Left')
-            ]);
-
-        $this->Page->exclude(['editable']);
     }
 
-    public function getEntityDisabledActions(Event $event, Entity $entity)
+    public function Locales()
     {
-        if (in_array($entity->iso, $this->officialLanguages)) {
-            return ['delete'];
-        }
-    }
-
-    public function index()
-    {
-        $page = $this->Page;
-        $page->exclude(['iso', 'full_iso']);
-        parent::index();
-    }
-
-    public function add()
-    {
-        parent::add();
-        $this->addEdit();
-    }
-
-    public function edit($id)
-    {
-        parent::edit($id);
-        $this->addEdit();
-    }
-
-    private function addEdit()
-    {
-        $page = $this->Page;
-
-        $page->get('iso')
-            ->setLabel('ISO');
-    }
-
-    public function view($id)
-    {
-        parent::view($id);
-        $page = $this->Page;
-        $entity = $page->getData();
-
-        if (in_array($entity->iso, $this->officialLanguages)) {
-            $page->disable(['delete']);
-        }
-        $page->get('iso')
-            ->setLabel('ISO');
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.Locales']);
     }
 }

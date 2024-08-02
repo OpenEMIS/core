@@ -10,7 +10,7 @@ use Cake\ORM\TableRegistry;
 
 class AssessmentsController extends AppController
 {
-	public function initialize() {
+	public function initialize(): void {
 		parent::initialize();
 		$this->loadComponent('Paginator');
 	}
@@ -21,7 +21,11 @@ class AssessmentsController extends AppController
 	public function GradingTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Assessment.AssessmentGradingTypes']); }
 	// End
 
-	public function beforeFilter(Event $event) {
+	public function beforeFilter(Event|\Cake\Event\EventInterface $event) {
+
+		if ($this->getPlugin() == 'Assessment') {
+            $this->Security->setConfig('validatePost', false);
+        }
     	parent::beforeFilter($event);
 
 		$tabElements = [
@@ -41,10 +45,11 @@ class AssessmentsController extends AppController
 
 		$tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
-        $this->set('selectedAction', $this->request->action);
+        $this->set('selectedAction', $this->request->getParam('action'));
 
-	    if ($this->request->action=='addNewAssessmentPeriod') {
-	    	$this->request->params['_ext'] = 'json';
+	    if ($this->request->getParam('action') == 'addNewAssessmentPeriod') {
+	    	//$this->request->params['_ext'] = 'json';
+			$this->request = $this->request->withParam('_ext', 'json');
 	    }
 
 	}

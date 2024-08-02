@@ -21,7 +21,92 @@ class StudentController extends Controller
         $this->studentService = $studentService;
     }
 
-
+    /**
+     * @OA\Get(
+     *      path="/api/v4/institutions/students",
+     *      summary="Get a list of students",
+     *      description="Get a list of students",
+     *      tags={"Institutions"},
+     *      @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic period id",
+     *         @OA\Schema(type="integer", example="1")
+     *      ),
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *      ),
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *      ),
+     *      @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                      @OA\Property(property="student_id", type="integer", example=196),
+     *                      @OA\Property(property="first_name", type="string", example="Dixie"),
+     *                      @OA\Property(property="middle_name", type="string", example=null),
+     *                      @OA\Property(property="third_name", type="string", example=null),
+     *                      @OA\Property(property="last_name", type="string", example="Campbell"),
+     *                      @OA\Property(property="openemis_no", type="string", example="1522272158"),
+     *                      @OA\Property(property="date_of_birth", type="string", example="2011-01-01"),
+     *                      @OA\Property(property="date_of_death", type="string", example=null),
+     *                      @OA\Property(property="identity_number", type="string", example=null),
+     *                      @OA\Property(property="external_reference", type="string", example=null),
+     *                      @OA\Property(property="gender_id", type="integer", example=2),
+     *                      @OA\Property(property="gender_name", type="string", example="Female"),
+     *                      @OA\Property(property="start_date", type="string", example="2019-01-01"),
+     *                      @OA\Property(property="start_year", type="integer", example=2019),
+     *                      @OA\Property(property="end_date", type="string", example="2019-12-31"),
+     *                      @OA\Property(property="end_year", type="integer", example=2019),
+     *                      @OA\Property(property="institution_id", type="integer", example=22),
+     *                      @OA\Property(property="institution_code", type="string", example="P1009"),
+     *                      @OA\Property(property="institution_name", type="string", example="Kinda Primary School"),
+     *                      @OA\Property(property="student_status_id", type="integer", example=1),
+     *                      @OA\Property(property="student_status_name", type="string", example="Enrolled"),
+     *                      @OA\Property(property="student_status_code", type="string", example="CURRENT"),
+     *                      @OA\Property(property="education_grade_id", type="integer", example=121),
+     *                      @OA\Property(property="education_grade_name", type="string", example="Primary 1"),
+     *                      @OA\Property(property="academic_period_id", type="integer", example=28),
+     *                      @OA\Property(property="academic_period_name", type="string", example="2019"),
+     *                      @OA\Property(property="previous_institution_student_id", type="string", example="6546009d-815f-42e6-8db5-76050a4f95d9"),
+     *                      @OA\Property(property="modified_user_id", type="integer", example=null),
+     *                      @OA\Property(property="modified", type="string", example=null),
+     *                      @OA\Property(property="created_user_id", type="integer", example=2),
+     *                      @OA\Property(property="created", type="string", example="2019-11-20 19:51:58")
+     *                 )
+     *             )
+     *             )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getStudents(Request $request)
     {
         try {
@@ -38,7 +123,99 @@ class StudentController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *      path="/api/v4/institutions/{institutionId}/students",
+     *      summary="Get a list of institutions students",
+     *      description="Get a list of institutions students",
+     *      tags={"Institutions"},
+     *      @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Id of institution",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic period id",
+     *         @OA\Schema(type="integer", example="1")
+     *      ),
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *      ),
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                      @OA\Property(property="student_id", type="integer", example=196),
+     *                      @OA\Property(property="first_name", type="string", example="Dixie"),
+     *                      @OA\Property(property="middle_name", type="string", example=null),
+     *                      @OA\Property(property="third_name", type="string", example=null),
+     *                      @OA\Property(property="last_name", type="string", example="Campbell"),
+     *                      @OA\Property(property="openemis_no", type="string", example="1522272158"),
+     *                      @OA\Property(property="date_of_birth", type="string", example="2011-01-01"),
+     *                      @OA\Property(property="date_of_death", type="string", example=null),
+     *                      @OA\Property(property="identity_number", type="string", example=null),
+     *                      @OA\Property(property="external_reference", type="string", example=null),
+     *                      @OA\Property(property="gender_id", type="integer", example=2),
+     *                      @OA\Property(property="gender_name", type="string", example="Female"),
+     *                      @OA\Property(property="start_date", type="string", example="2019-01-01"),
+     *                      @OA\Property(property="start_year", type="integer", example=2019),
+     *                      @OA\Property(property="end_date", type="string", example="2019-12-31"),
+     *                      @OA\Property(property="end_year", type="integer", example=2019),
+     *                      @OA\Property(property="institution_id", type="integer", example=22),
+     *                      @OA\Property(property="institution_code", type="string", example="P1009"),
+     *                      @OA\Property(property="institution_name", type="string", example="Kinda Primary School"),
+     *                      @OA\Property(property="student_status_id", type="integer", example=1),
+     *                      @OA\Property(property="student_status_name", type="string", example="Enrolled"),
+     *                      @OA\Property(property="student_status_code", type="string", example="CURRENT"),
+     *                      @OA\Property(property="education_grade_id", type="integer", example=121),
+     *                      @OA\Property(property="education_grade_name", type="string", example="Primary 1"),
+     *                      @OA\Property(property="academic_period_id", type="integer", example=28),
+     *                      @OA\Property(property="academic_period_name", type="string", example="2019"),
+     *                      @OA\Property(property="previous_institution_student_id", type="string", example="6546009d-815f-42e6-8db5-76050a4f95d9"),
+     *                      @OA\Property(property="modified_user_id", type="integer", example=null),
+     *                      @OA\Property(property="modified", type="string", example=null),
+     *                      @OA\Property(property="created_user_id", type="integer", example=2),
+     *                      @OA\Property(property="created", type="string", example="2019-11-20 19:51:58")
+     *                 )
+     *             )
+     *             )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getInstitutionStudents(Request $request, $institutionId)
     {
         try {
@@ -55,7 +232,73 @@ class StudentController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *      path="/api/v4/institutions/{institutionId}/students/{studentId}",
+     *      summary="Get a institution student detail",
+     *      description="Get a institution student detail",
+     *      tags={"Institutions"},
+     *      @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Id of institution",
+     *         @OA\Schema(type="integer", example="1")
+     *      ),
+     *      @OA\Parameter(
+     *         name="studentId",
+     *         in="path",
+     *         required=true,
+     *         description="Id of student",
+     *         @OA\Schema(type="integer", example="1")
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="student_id", type="integer", example=196),
+     *                 @OA\Property(property="first_name", type="string", example="Dixie"),
+     *                 @OA\Property(property="middle_name", type="string", example=null),
+     *                 @OA\Property(property="third_name", type="string", example=null),
+     *                 @OA\Property(property="last_name", type="string", example="Campbell"),
+     *                 @OA\Property(property="openemis_no", type="string", example="1522272158"),
+     *                 @OA\Property(property="date_of_birth", type="string", example="2011-01-01"),
+     *                 @OA\Property(property="date_of_death", type="string", example=null),
+     *                 @OA\Property(property="identity_number", type="string", example=null),
+     *                 @OA\Property(property="external_reference", type="string", example=null),
+     *                 @OA\Property(property="gender_id", type="integer", example=2),
+     *                 @OA\Property(property="gender_name", type="string", example="Female"),
+     *                 @OA\Property(property="start_date", type="string", example="2019-01-01"),
+     *                 @OA\Property(property="start_year", type="integer", example=2019),
+     *                 @OA\Property(property="end_date", type="string", example="2019-12-31"),
+     *                 @OA\Property(property="end_year", type="integer", example=2019),
+     *                 @OA\Property(property="institution_id", type="integer", example=22),
+     *                 @OA\Property(property="institution_code", type="string", example="P1009"),
+     *                 @OA\Property(property="institution_name", type="string", example="Kinda Primary School"),
+     *                 @OA\Property(property="student_status_id", type="integer", example=1),
+     *                 @OA\Property(property="student_status_name", type="string", example="Enrolled"),
+     *                 @OA\Property(property="student_status_code", type="string", example="CURRENT"),
+     *                 @OA\Property(property="education_grade_id", type="integer", example=121),
+     *                 @OA\Property(property="education_grade_name", type="string", example="Primary 1"),
+     *                 @OA\Property(property="academic_period_id", type="integer", example=28),
+     *                 @OA\Property(property="academic_period_name", type="string", example="2019"),
+     *                 @OA\Property(property="previous_institution_student_id", type="string", example="6546009d-815f-42e6-8db5-76050a4f95d9"),
+     *                 @OA\Property(property="modified_user_id", type="integer", example=null),
+     *                 @OA\Property(property="modified", type="string", example=null),
+     *                 @OA\Property(property="created_user_id", type="integer", example=2),
+     *                 @OA\Property(property="created", type="string", example="2019-11-20 19:51:58")
+     *             )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getInstitutionStudentData(Request $request, $institutionId, $studentId)
     {
         try {
@@ -72,7 +315,101 @@ class StudentController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *      path="/api/v4/institutions/students/absences",
+     *      summary="Get a list of students absences",
+     *      description="Get a list of students absences",
+     *      tags={"Institutions"},
+     *      @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic period id",
+     *         @OA\Schema(type="integer", example="1")
+     *      ),
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *      ),
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                      type="object",
+     *                      @OA\Property(property="student_id", type="integer", example=10602),
+     *                      @OA\Property(property="first_name", type="string", example="Francklin"),
+     *                      @OA\Property(property="middle_name", type="string", example=null),
+     *                      @OA\Property(property="third_name", type="string", example=null),
+     *                      @OA\Property(property="last_name", type="string", example="Samter"),
+     *                      @OA\Property(property="openemis_no", type="string", example="1548403445"),
+     *                      @OA\Property(property="date_of_birth", type="string", example="2013-06-27"),
+     *                      @OA\Property(property="date_of_death", type="string", example=null),
+     *                      @OA\Property(property="identity_number", type="string", example=null),
+     *                      @OA\Property(property="external_reference", type="string", example=null),
+     *                      @OA\Property(property="gender_id", type="integer", example=1),
+     *                      @OA\Property(property="gender_name", type="string", example="Male"),
+     *                      @OA\Property(property="institution_id", type="integer", example=1),
+     *                      @OA\Property(property="institution_code", type="string", example="K0001"),
+     *                      @OA\Property(property="institution_name", type="string", example="Star Kindergarten"),
+     *                      @OA\Property(property="education_grade_id", type="integer", example=119),
+     *                      @OA\Property(property="education_grade_name", type="string", example="Kindergarten 1"),
+     *                      @OA\Property(property="academic_period_id", type="integer", example=28),
+     *                      @OA\Property(property="academic_period_name", type="string", example="2019"),
+     *                      @OA\Property(property="institution_class_id", type="integer", example=488),
+     *                      @OA\Property(property="institution_class_name", type="string", example="Kindergarten 1-A"),
+     *                      @OA\Property(property="date", type="array",
+     *                          @OA\Items(
+     *                              type="object",
+     *                              @OA\Property(property="period_id", type="null"),
+     *                              @OA\Property(property="period_name", type="null"),
+     *                              @OA\Property(property="subject_id", type="null"),
+     *                              @OA\Property(property="subject_name", type="null"),
+     *                              @OA\Property(property="absence_type_id", type="integer", example=2),
+     *                              @OA\Property(property="absence_type_name", type="string", example="Absence - Unexcused"),
+     *                              @OA\Property(property="student_absence_reason_id", type="null"),
+     *                              @OA\Property(property="student_absence_reason_name", type="null"),
+     *                              @OA\Property(property="comment", type="null"),
+     *                              @OA\Property(property="date", type="string", example="2019-05-07")
+     *                          )
+     *                      ),
+     *                      @OA\Property(property="modified_user_id", type="null"),
+     *                      @OA\Property(property="modified", type="null"),
+     *                      @OA\Property(property="created_user_id", type="integer", example=2),
+     *                      @OA\Property(property="created", type="string", example="2019-11-25 18:23:42")
+     *                  )
+     *              ) 
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getStudentAbsences(Request $request)
     {
         try {
@@ -90,7 +427,108 @@ class StudentController extends Controller
     }
 
 
-
+    /**
+     * @OA\Get(
+     *      path="/api/v4/institutions/{institutionId}/students/absences",
+     *      summary="Get a list of institution students absences",
+     *      description="Get a list of institution students absences",
+     *      tags={"Institutions"},
+     *      @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Instituton Id",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=false,
+     *         description="Academic period id",
+     *         @OA\Schema(type="integer", example="1")
+     *      ),
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *      ),
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                      type="object",
+     *                      @OA\Property(property="student_id", type="integer", example=10602),
+     *                      @OA\Property(property="first_name", type="string", example="Francklin"),
+     *                      @OA\Property(property="middle_name", type="string", example=null),
+     *                      @OA\Property(property="third_name", type="string", example=null),
+     *                      @OA\Property(property="last_name", type="string", example="Samter"),
+     *                      @OA\Property(property="openemis_no", type="string", example="1548403445"),
+     *                      @OA\Property(property="date_of_birth", type="string", example="2013-06-27"),
+     *                      @OA\Property(property="date_of_death", type="string", example=null),
+     *                      @OA\Property(property="identity_number", type="string", example=null),
+     *                      @OA\Property(property="external_reference", type="string", example=null),
+     *                      @OA\Property(property="gender_id", type="integer", example=1),
+     *                      @OA\Property(property="gender_name", type="string", example="Male"),
+     *                      @OA\Property(property="institution_id", type="integer", example=1),
+     *                      @OA\Property(property="institution_code", type="string", example="K0001"),
+     *                      @OA\Property(property="institution_name", type="string", example="Star Kindergarten"),
+     *                      @OA\Property(property="education_grade_id", type="integer", example=119),
+     *                      @OA\Property(property="education_grade_name", type="string", example="Kindergarten 1"),
+     *                      @OA\Property(property="academic_period_id", type="integer", example=28),
+     *                      @OA\Property(property="academic_period_name", type="string", example="2019"),
+     *                      @OA\Property(property="institution_class_id", type="integer", example=488),
+     *                      @OA\Property(property="institution_class_name", type="string", example="Kindergarten 1-A"),
+     *                      @OA\Property(property="date", type="array",
+     *                          @OA\Items(
+     *                              type="object",
+     *                              @OA\Property(property="period_id", type="null"),
+     *                              @OA\Property(property="period_name", type="null"),
+     *                              @OA\Property(property="subject_id", type="null"),
+     *                              @OA\Property(property="subject_name", type="null"),
+     *                              @OA\Property(property="absence_type_id", type="integer", example=2),
+     *                              @OA\Property(property="absence_type_name", type="string", example="Absence - Unexcused"),
+     *                              @OA\Property(property="student_absence_reason_id", type="null"),
+     *                              @OA\Property(property="student_absence_reason_name", type="null"),
+     *                              @OA\Property(property="comment", type="null"),
+     *                              @OA\Property(property="date", type="string", example="2019-05-07")
+     *                          )
+     *                      ),
+     *                      @OA\Property(property="modified_user_id", type="null"),
+     *                      @OA\Property(property="modified", type="null"),
+     *                      @OA\Property(property="created_user_id", type="integer", example=2),
+     *                      @OA\Property(property="created", type="string", example="2019-11-25 18:23:42")
+     *                  )
+     *              )
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getInstitutionStudentAbsences(Request $request, $institutionId)
     {
         try {
@@ -107,7 +545,82 @@ class StudentController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Get(
+     *      path="/api/v4/institutions/{institutionId}/students/{studentId}/absences",
+     *      summary="Get details of institution student absences",
+     *      description="Get details of institution student absences",
+     *      tags={"Institutions"},
+     *      @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Instituton Id",
+     *         @OA\Schema(type="integer", example="6")
+     *      ),
+     *      @OA\Parameter(
+     *         name="studentId",
+     *         in="path",
+     *         required=true,
+     *         description="Student Id",
+     *         @OA\Schema(type="integer", example="11763")
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *                      @OA\Property(property="student_id", type="integer", example=10602),
+     *                      @OA\Property(property="first_name", type="string", example="Francklin"),
+     *                      @OA\Property(property="middle_name", type="string", example=null),
+     *                      @OA\Property(property="third_name", type="string", example=null),
+     *                      @OA\Property(property="last_name", type="string", example="Samter"),
+     *                      @OA\Property(property="openemis_no", type="string", example="1548403445"),
+     *                      @OA\Property(property="date_of_birth", type="string", example="2013-06-27"),
+     *                      @OA\Property(property="date_of_death", type="string", example=null),
+     *                      @OA\Property(property="identity_number", type="string", example=null),
+     *                      @OA\Property(property="external_reference", type="string", example=null),
+     *                      @OA\Property(property="gender_id", type="integer", example=1),
+     *                      @OA\Property(property="gender_name", type="string", example="Male"),
+     *                      @OA\Property(property="institution_id", type="integer", example=1),
+     *                      @OA\Property(property="institution_code", type="string", example="K0001"),
+     *                      @OA\Property(property="institution_name", type="string", example="Star Kindergarten"),
+     *                      @OA\Property(property="education_grade_id", type="integer", example=119),
+     *                      @OA\Property(property="education_grade_name", type="string", example="Kindergarten 1"),
+     *                      @OA\Property(property="academic_period_id", type="integer", example=28),
+     *                      @OA\Property(property="academic_period_name", type="string", example="2019"),
+     *                      @OA\Property(property="institution_class_id", type="integer", example=488),
+     *                      @OA\Property(property="institution_class_name", type="string", example="Kindergarten 1-A"),
+     *                      @OA\Property(property="date", type="array",
+     *                          @OA\Items(
+     *                              type="object",
+     *                              @OA\Property(property="period_id", type="null"),
+     *                              @OA\Property(property="period_name", type="null"),
+     *                              @OA\Property(property="subject_id", type="null"),
+     *                              @OA\Property(property="subject_name", type="null"),
+     *                              @OA\Property(property="absence_type_id", type="integer", example=2),
+     *                              @OA\Property(property="absence_type_name", type="string", example="Absence - Unexcused"),
+     *                              @OA\Property(property="student_absence_reason_id", type="null"),
+     *                              @OA\Property(property="student_absence_reason_name", type="null"),
+     *                              @OA\Property(property="comment", type="null"),
+     *                              @OA\Property(property="date", type="string", example="2019-05-07")
+     *                          )
+     *                      ),
+     *                      @OA\Property(property="modified_user_id", type="null"),
+     *                      @OA\Property(property="modified", type="null"),
+     *                      @OA\Property(property="created_user_id", type="integer", example=2),
+     *                      @OA\Property(property="created", type="string", example="2019-11-25 18:23:42")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getInstitutionStudentAbsencesData(Request $request, $institutionId, $studentId)
     {
         try {
@@ -127,7 +640,65 @@ class StudentController extends Controller
 
 
     //POCOR-7547 Starts...
-
+    /**
+     * @OA\Get(
+     *      path="/api/v4/attendance-mark-types/education-grades",
+     *      summary="Get a list of education grades",
+     *      description="Get a list of education grades",
+     *      tags={"Institutions"},
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                      type="object",
+     *                      @OA\Property(property="academic_period_id", type="integer", example=28),
+     *                      @OA\Property(property="academic_period_name", type="string", example="2019"),
+     *                      @OA\Property(property="education_grade_id", type="integer", example=119),
+     *                      @OA\Property(property="education_grade_name", type="string", example="Kindergarten 1"),
+     *                      @OA\Property(property="attendance_by", type="string", example="DAY"),
+     *                      @OA\Property(property="period_name", type="string", example="Period 1"),
+     *                      @OA\Property(property="attendance_per_day", type="interger", example=2),
+     *                      @OA\Property(property="date_enabled", type="string", example="2023-12-31"),
+     *                      @OA\Property(property="date_disabled", type="string", example="2023-12-31"),
+     *                      @OA\Property(property="value", type="string", example="1"),
+     *                      @OA\Property(property="day_configuration", type="string", example="Mark absent if one or more records absent"),
+     *                  )
+     *              )
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getEducationGrades(Request $request)
     {
         try {
@@ -143,8 +714,78 @@ class StudentController extends Controller
             return $this->sendErrorResponse('Education Grade List Not Found');
         }
     }
+    
 
+    /**
+     * @OA\Get(
+     *      path="/api/v4/institutions/{institutionId}/classes/subjects",
+     *      summary="Get a list of institution class subjects",
+     *      description="Get a list of institution class subjects",
+     *      tags={"Institutions"},
+     *      @OA\Parameter(
+     *         name="institutionId",
+     *         in="path",
+     *         required=true,
+     *         description="Instituton Id",
+     *         @OA\Schema(type="integer", example="6")
+     *     ),
+     *      @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *      ),
+     *      @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Limit",
+     *         @OA\Schema(type="integer", example="10")
+     *     ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="object",
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                      type="object",
+     *                      @OA\Property(property="academic_period_id", type="integer", example=28),
+     *                      @OA\Property(property="institution_id", type="integer", example=6),
+     *                      @OA\Property(property="institution_class_id", type="integer", example=119),
+     *                      @OA\Property(property="institution_class_name", type="string", example="Kindergarten 1"),
+     *                      @OA\Property(property="institution_subject_id", type="integer", example=40),
+     *                      @OA\Property(property="institution_subject_name", type="string", example="Science"),
+     *                      @OA\Property(property="education_subject_id", type="integer", example=2),
+     *                      @OA\Property(property="education_grade_id", type="integer", example=13),
+     *                      @OA\Property(property="total_male_students", type="integer", example=131),
+     *                      @OA\Property(property="total_female_students", type="integer", example=13),
+     *                      @OA\Property(property="modified_user_id", type="integer", example=null),
+     *                      @OA\Property(property="modified", type="string", example=null),
+     *                      @OA\Property(property="created_user_id", type="integer", example=2),
+     *                      @OA\Property(property="created", type="string", example="2019-11-20 19:51:58")
 
+     *                  )
+     *              )
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function getClassesSubjects(Request $request, $institutionId)
     {
         try {
@@ -161,10 +802,53 @@ class StudentController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Post(
+     *      path="/api/v4/institutions/classes/attendances",
+     *      summary="Add class attendances",
+     *      description="Add class attendances",
+     *      tags={"Institutions"},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="academic_period_id", type="integer", example=33),
+     *              @OA\Property(property="education_grade_id", type="integer", example=209),
+     *              @OA\Property(property="institution_id", type="integer", example=6),
+     *              @OA\Property(property="institution_class_id", type="integer", example=6),
+     *              @OA\Property(property="date", type="string", example="2012-04-17"),
+     *              @OA\Property(property="period", type="integer", example=6),
+     *              @OA\Property(property="subject_id", type="integer", example=6),
+     *          )
+     *      ),
+     *      @OA\Response(
+     *           response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function addClassAttendances(ClassAttendanceAdd $request)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'StudentAttendances', 'add'], ['institution_id' => $request['institution_id']]);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
             $data = $this->studentService->addClassAttendances($request);
             
             if($data == 1){
@@ -185,16 +869,65 @@ class StudentController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Post(
+     *      path="/api/v4/institutions/students/absences",
+     *      summary="Add student absences",
+     *      description="Add student absences",
+     *      tags={"Institutions"},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="academic_period_id", type="integer", example=33),
+     *              @OA\Property(property="education_grade_id", type="integer", example=209),
+     *              @OA\Property(property="institution_id", type="integer", example=6),
+     *              @OA\Property(property="institution_class_id", type="integer", example=6),
+     *              @OA\Property(property="date", type="string", example="2012-04-17"),
+     *              @OA\Property(property="period", type="integer", example=6),
+     *              @OA\Property(property="subject_id", type="integer", example=6),
+     *              @OA\Property(property="student_id", type="integer", example=611),
+     *              @OA\Property(property="absence_type_id", type="integer", example=1),
+     *              @OA\Property(property="student_absence_reason_id", type="integer", example=1),
+     *              @OA\Property(property="comment", type="string", example="test"),
+     *          )
+     *      ),
+     *      @OA\Response(
+     *           response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function addStudentAbsences(StudentAbsenceAdd $request)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'Absences', 'add'], ['institution_id' => $request['institution_id']]);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
             $data = $this->studentService->addStudentAbsences($request);
             
             if($data == 1){
                 return $this->sendSuccessResponse("Student absences data added.", $data);
             } elseif($data == 2) {
                 return $this->sendSuccessResponse("Student absences data updated.", $data);
+            } elseif($data == 3) {
+                return $this->sendErrorResponse("Student is not assigned to the class, grade and academic period for which attendance/absence is marked");
             } else {
                 return $this->sendErrorResponse('Failed to add student absences details.');
             }
@@ -209,10 +942,50 @@ class StudentController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Post(
+     *      path="/api/v4/institutions/staff/attendances",
+     *      summary="Add staff attendances",
+     *      description="Add staff attendances",
+     *      tags={"Institutions"},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="academic_period_id", type="integer", example=33),
+     *              @OA\Property(property="institution_id", type="integer", example=6),
+     *              @OA\Property(property="date", type="string", example="2012-04-17"),
+     *              @OA\Property(property="staff_id", type="integer", example=6),
+     *          )
+     *      ),
+     *      @OA\Response(
+     *           response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function addStaffAttendances(StaffAttendanceAdd $request)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'InstitutionStaffAttendances', 'add'], ['institution_id' => $request['institution_id']]);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
             $data = $this->studentService->addStaffAttendances($request);
             
             if($data == 1){
@@ -233,10 +1006,51 @@ class StudentController extends Controller
         }
     }
 
-
+    /**
+     * @OA\Post(
+     *      path="/api/v4/institutions/staff",
+     *      summary="update staff",
+     *      description="update staff",
+     *      tags={"Institutions"},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="id", type="integer", example=33),
+     *              @OA\Property(property="first_name", type="string", example="teststaffUser first name"),
+     *              @OA\Property(property="last_name", type="string", example="teststaffUser last name"),
+     *              @OA\Property(property="gender_id", type="integer", example=1),
+     *              @OA\Property(property="date_of_birth", type="string", example="2000-01-01"),
+     *          )
+     *      ),
+     *      @OA\Response(
+     *           response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Unsuccessful.",
+     *      )
+     * )
+     */
     public function updateStaffDetails(UpdateStaffDetails $request)
     {
         try {
+
+            //For POCOR-7772 Start
+            $checkPermission = checkPermission(['Institutions', 'Staff', 'add']);
+            
+            if(!$checkPermission){
+                return $this->sendAuthorizationErrorResponse();
+            }
+            //For POCOR-7772 End
+
             $data = $this->studentService->updateStaffDetails($request);
             
             if($data == 1){

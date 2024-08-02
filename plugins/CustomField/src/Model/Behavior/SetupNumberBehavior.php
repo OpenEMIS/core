@@ -11,12 +11,12 @@ class SetupNumberBehavior extends SetupBehavior
 {
     private $validationOptions = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
         $this->ruleOptions = [
-            'min_value' => __('Should not be lesser than'),
+            'min_value' => __('Should not be less than'),
             'max_value' => __('Should not be greater than'),
             'range' => __('In between (inclusive)')
         ];
@@ -26,7 +26,7 @@ class SetupNumberBehavior extends SetupBehavior
     {
         $model = $this->_table;
         $fieldTypes = $model->getFieldTypes();
-        $selectedFieldType = isset($model->request->data[$model->alias()]['field_type']) ? $model->request->data[$model->alias()]['field_type'] : key($fieldTypes);
+        $selectedFieldType = isset($model->request->getData($model->getAlias())['field_type']) ? $model->request->getData($model->getAlias())['field_type'] : key($fieldTypes);
 
         if ($selectedFieldType == $this->fieldTypeCode) {
             $this->buildNumberValidator();
@@ -45,7 +45,7 @@ class SetupNumberBehavior extends SetupBehavior
         $min = $this->inputLimits['number_value']['min'];
         $max = $this->inputLimits['number_value']['max'];
 
-        $validator = $this->_table->validator();
+        $validator = $this->_table->getValidator();
         $validator
             ->notEmpty('minimum_value')
             ->add('minimum_value', 'validateLower', [
@@ -111,31 +111,39 @@ class SetupNumberBehavior extends SetupBehavior
     public function onSetNumberElements(Event $event, Entity $entity)
     {
         $model = $this->_table;
-
+        $request = $model->request;
         if ($model->request->is(['get'])) {
             if (isset($entity->id)) {
                 // view / edit
                 if ($entity->has('params') && !empty($entity->params)) {
                     $params = json_decode($entity->params, true);
-                    if (array_key_exists('min_value', $params)) {
-                        $model->request->query['number_rule'] = 'min_value';
+                    if (isset($params['min_value'])) {
+                        //$model->request->query['number_rule'] = 'min_value';
+                        $request = $request->withQueryParams(array_merge($request->getQueryParams(), ['number_rule' => 'min_value']));
                         $entity->minimum_value = $params['min_value'];
-                    } else if (array_key_exists('max_value', $params)) {
-                        $model->request->query['number_rule'] = 'max_value';
+                    } else if (isset($params['max_value'])) {
+                        //$model->request->query['number_rule'] = 'max_value';
+                        $request = $request->withQueryParams(array_merge($request->getQueryParams(), ['number_rule' => 'max_value']));
                         $entity->maximum_value = $params['max_value'];
-                    } else if (array_key_exists('range', $params)) {
-                        $model->request->query['number_rule'] = 'range';
+                    } else if (isset($params['range'])) {
+                        //$model->request->query['number_rule'] = 'range';
+                        $request = $request->withQueryParams(array_merge($request->getQueryParams(), ['number_rule' => 'range']));
                         $entity->lower_limit = $params['range']['lower'];
                         $entity->upper_limit = $params['range']['upper'];
                     }
+                    $model->request = $request;
                 }
             } else {
                 // add
-                unset($model->request->query['number_rule']);
+                $queryParams = $request->getQueryParams();
+                //unset($model->request->query['number_rule']);
+                unset($queryParams['number_rule']);
+                $request = $request->withQueryParams($queryParams);
+                $model->request = $request;
             }
 
             if ($model->action == 'view') {
-                $selectedRule = $model->request->query('number_rule');
+                $selectedRule = $model->request->getQuery('number_rule');
                 $entity->validation_rule = !is_null($selectedRule) ? $this->ruleOptions[$selectedRule] : __('No Validation');
             }
         }
@@ -186,31 +194,33 @@ class SetupNumberBehavior extends SetupBehavior
             if (isset($data['validation_rule'])) {
                 $model = $this->_table;
                 $request = $model->request;
-                unset($request->query['number_rule']);
+                unset($request->getQuery['number_rule']);
 
                 if (!empty($data['validation_rule'])) {
                     $selectedRule = $data['validation_rule'];
-                    $request->query['number_rule'] = $selectedRule;
+                    //$request->query['number_rule'] = $selectedRule;
+                    $request = $request->withQueryParams(array_merge($request->getQueryParams(), ['number_rule' => $selectedRule]));
+                    $model->request = $request;
                     $params = [];
 
                     switch ($selectedRule) {
                         case 'min_value':
-                            $minValue = array_key_exists('minimum_value', $data) ? $data['minimum_value']: null;
+                            $minValue = $data->offsetExists('minimum_value') ? $data->offsetGet('minimum_value'): null;
 
                             if (!is_null($minValue)) {
-                                $params['min_value'] = $data['minimum_value'];
+                                $params['min_value'] = $data->offsetGet('minimum_value');
                             }
                             break;
                         case 'max_value':
-                            $maxValue = array_key_exists('maximum_value', $data) ? $data['maximum_value']: null;
+                            $maxValue = $data->offsetExists('maximum_value') ? $data->offsetGet('maximum_value'): null;
 
                             if (!is_null($maxValue)) {
-                                $params['max_value'] = $data['maximum_value'];
+                                $params['max_value'] =  $data->offsetGet('maximum_value');
                             }
                             break;
                         case 'range':
-                            $lowerLimit = array_key_exists('lower_limit', $data) ? $data['lower_limit']: null;
-                            $upperLimit = array_key_exists('upper_limit', $data) ? $data['upper_limit']: null;
+                            $lowerLimit = $data->offsetExists('lower_limit') ? $data->offsetGet('lower_limit'): null;
+                            $upperLimit = $data->offsetExists('upper_limit') ? $data->offsetGet('upper_limit'): null;
 
                             if (!is_null($lowerLimit) && !is_null($upperLimit)) {
                                 $params['range'] = [

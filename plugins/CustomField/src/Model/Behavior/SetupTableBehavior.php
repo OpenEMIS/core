@@ -7,6 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 use CustomField\Model\Behavior\SetupBehavior;
 
@@ -15,7 +16,7 @@ class SetupTableBehavior extends SetupBehavior
     private $ruleOptions = [];
     private $numberValidationOptions = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -27,7 +28,7 @@ class SetupTableBehavior extends SetupBehavior
 
         $this->numberValidationOptions = [
             1 => __('No Validation'),
-            'min_value' => __('Should not be lesser than'),
+            'min_value' => __('Should not be less than'),
             'max_value' => __('Should not be greater than'),
             'range' => __('In between (inclusive)')
         ];
@@ -37,7 +38,7 @@ class SetupTableBehavior extends SetupBehavior
     {
         $model = $this->_table;
         $fieldTypes = $model->getFieldTypes();
-        $selectedFieldType = isset($model->request->data[$model->alias()]['field_type']) ? $model->request->data[$model->alias()]['field_type'] : key($fieldTypes);
+        $selectedFieldType = isset($model->request->getData($model->getAlias())['field_type']) ? $model->request->getData($model->getAlias())['field_type'] : key($fieldTypes);
 
         if ($selectedFieldType == $this->fieldTypeCode) {
             $this->buildTableValidator();
@@ -62,7 +63,7 @@ class SetupTableBehavior extends SetupBehavior
         $minPrecision = $this->inputLimits['decimal_value']['precision']['min'];
         $maxPrecision = $this->inputLimits['decimal_value']['precision']['max'];
 
-        $validator = $this->_table->validator();
+        $validator = $this->_table->getValidator();
         $validator
             // NUMBER
             ->notEmpty('table_minimum_value')
@@ -149,22 +150,22 @@ class SetupTableBehavior extends SetupBehavior
             if (!$entity->isNew()) {
                 if ($entity->has('params') && !empty($entity->params)) {
                     $params = json_decode($entity->params, true);
-                    if (array_key_exists('number', $params)) {
+                    if (isset($params['number'])) {
                         $entity->table_validation_rule = 'number';
 
                         $numberAttr = $params['number'];
                         if (is_array($numberAttr)) {
-                            if (array_key_exists('min_value', $numberAttr)) {
+                            if (isset($numberAttr['min_value'])) {
                                 $entity->table_number_validation = 'min_value';
                                 $entity->table_minimum_value = $numberAttr['min_value'];
                             }
 
-                            if (array_key_exists('max_value', $numberAttr)) {
+                            if (isset($numberAttr['max_value'])) {
                                 $entity->table_number_validation = 'max_value';
                                 $entity->table_maximum_value = $numberAttr['max_value'];
                             }
 
-                            if (array_key_exists('range', $numberAttr)) {
+                            if (isset($numberAttr['range'])) {
                                 $entity->table_number_validation = 'range';
 
                                 if (array_key_exists('lower', $numberAttr['range'])) {
@@ -178,15 +179,15 @@ class SetupTableBehavior extends SetupBehavior
                         } else {
                             $entity->table_number_validation = 1;
                         }
-                    } else if (array_key_exists('decimal', $params)) {
+                    } else if (isset($params['decimal'])) {
                         $entity->table_validation_rule = 'decimal';
 
                         $decimalAttr = $params['decimal'];
-                        if (array_key_exists('length', $decimalAttr)) {
+                        if (isset($decimalAttr['length'])) {
                             $entity->table_decimal_length = $decimalAttr['length'];
                         }
 
-                        if (array_key_exists('precision', $decimalAttr)) {
+                        if (isset($decimalAttr['precision'])) {
                             $entity->table_decimal_precision = $decimalAttr['precision'];
                         }
                     } else {
@@ -259,7 +260,7 @@ class SetupTableBehavior extends SetupBehavior
                             ]
                         ]);
                         break;
-                    
+
                     default:
                         break;
                 }
@@ -304,7 +305,7 @@ class SetupTableBehavior extends SetupBehavior
         return $value;
     }
 
-    public function onUpdateFieldTableValidationRule(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTableValidationRule(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['type'] = 'select';
@@ -323,7 +324,7 @@ class SetupTableBehavior extends SetupBehavior
         return $attr;
     }
 
-    public function onUpdateFieldTableNumberValidation(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTableNumberValidation(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
@@ -335,7 +336,7 @@ class SetupTableBehavior extends SetupBehavior
         return $attr;
     }
 
-    public function onUpdateFieldTableDecimalLength(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTableDecimalLength(Event $event, array $attr, $action, ServerRequest $request)
     {
         $minLength = $this->inputLimits['decimal_value']['length']['min'];
         $maxLength = $this->inputLimits['decimal_value']['length']['max'];
@@ -360,7 +361,7 @@ class SetupTableBehavior extends SetupBehavior
         return $attr;
     }
 
-    public function onUpdateFieldTableDecimalPrecision(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTableDecimalPrecision(Event $event, array $attr, $action, ServerRequest $request)
     {
         $minPrecision = $this->inputLimits['decimal_value']['precision']['min'];
         $maxPrecision = $this->inputLimits['decimal_value']['precision']['max'];
@@ -412,12 +413,12 @@ class SetupTableBehavior extends SetupBehavior
         $model = $this->_table;
         $request = $model->request;
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($model->alias(), $request->data)) {
-                if (array_key_exists('custom_table_columns', $request->data[$model->alias()])) {
-                    unset($data[$model->alias()]['custom_table_columns']);
+            if (array_key_exists($model->getAlias(), $request->getData())) {
+                if (array_key_exists('custom_table_columns', $request->getData()[$model->getAlias()])) {
+                    unset($data[$model->getAlias()]['custom_table_columns']);
                 }
-                if (array_key_exists('custom_table_rows', $request->data[$model->alias()])) {
-                    unset($data[$model->alias()]['custom_table_rows']);
+                if (array_key_exists('custom_table_rows', $request->getData()[$model->getAlias()])) {
+                    unset($data[$model->getAlias()]['custom_table_rows']);
                 }
             }
         }
@@ -426,12 +427,12 @@ class SetupTableBehavior extends SetupBehavior
     public function addEditOnAddColumn(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
-        if ($data[$model->alias()]['field_type'] == $this->fieldTypeCode) {
+        if ($data[$model->getAlias()]['field_type'] == $this->fieldTypeCode) {
             $columnOptions = [
                 'name' => '',
                 'visible' => 1
             ];
-            $data[$this->_table->alias()]['custom_table_columns'][] = $columnOptions;
+            $data[$this->_table->getAlias()]['custom_table_columns'][] = $columnOptions;
 
             //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
             $options['associated'] = [
@@ -444,12 +445,12 @@ class SetupTableBehavior extends SetupBehavior
     public function addEditOnAddRow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
-        if ($data[$model->alias()]['field_type'] == $this->fieldTypeCode) {
+        if ($data[$model->getAlias()]['field_type'] == $this->fieldTypeCode) {
             $rowOptions = [
                 'name' => '',
                 'visible' => 1
             ];
-            $data[$this->_table->alias()]['custom_table_rows'][] = $rowOptions;
+            $data[$this->_table->getAlias()]['custom_table_rows'][] = $rowOptions;
 
             //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
             $options['associated'] = [
@@ -473,7 +474,7 @@ class SetupTableBehavior extends SetupBehavior
                                 $selectedNumberValidation = $data['table_number_validation'];
                                 switch ($selectedNumberValidation) {
                                     case 'min_value':
-                                        $minValue = array_key_exists('table_minimum_value', $data) ? $data['table_minimum_value']: null;
+                                        $minValue = isset($data['table_minimum_value']) ? $data['table_minimum_value']: null; //POCOR-8460
 
                                         if (!is_null($minValue)) {
                                             $params['number']['min_value'] = $minValue;
@@ -481,7 +482,7 @@ class SetupTableBehavior extends SetupBehavior
                                         break;
 
                                     case 'max_value':
-                                        $maxValue = array_key_exists('table_maximum_value', $data) ? $data['table_maximum_value']: null;
+                                        $maxValue = isset($data['table_maximum_value']) ? $data['table_maximum_value']: null; //POCOR-8460
 
                                         if (!is_null($maxValue)) {
                                             $params['number']['max_value'] = $maxValue;
@@ -489,8 +490,8 @@ class SetupTableBehavior extends SetupBehavior
                                         break;
 
                                     case 'range':
-                                        $lowerLimit = array_key_exists('table_lower_limit', $data) ? $data['table_lower_limit']: null;
-                                        $upperLimit = array_key_exists('table_upper_limit', $data) ? $data['table_upper_limit']: null;
+                                        $lowerLimit = isset($data['table_lower_limit']) ? $data['table_lower_limit']: null; //POCOR-8460
+                                        $upperLimit = isset($data['table_upper_limit']) ? $data['table_upper_limit']: null; //POCOR-8460
 
                                         if (!is_null($lowerLimit) && !is_null($upperLimit)) {
                                             $params['number']['range'] = [
@@ -502,7 +503,7 @@ class SetupTableBehavior extends SetupBehavior
                                     case 1:
                                         $params['number'] = 1;
                                         break;
-                                    
+
                                     default:
                                         break;
                                 }
@@ -510,8 +511,8 @@ class SetupTableBehavior extends SetupBehavior
                             break;
 
                         case 'decimal':
-                            $length = array_key_exists('table_decimal_length', $data) ? $data['table_decimal_length'] : null;
-                            $precision = array_key_exists('table_decimal_precision', $data) ? $data['table_decimal_precision'] : null;
+                            $length = isset($data['table_decimal_length']) ? $data['table_decimal_length'] : null; //POCOR-8460
+                            $precision = isset($data['table_decimal_precision']) ? $data['table_decimal_precision'] : null; //POCOR-8460
 
                             $params['decimal'] = [
                                 'length' => $length,

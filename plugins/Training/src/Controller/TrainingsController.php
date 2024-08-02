@@ -9,9 +9,10 @@ use Cake\Event\Event;
 
 class TrainingsController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
+
         $this->loadComponent('Paginator');
         $this->loadComponent('Training.Training');
         $this->loadModel('Training.TrainingSessionTraineeResults');//5695
@@ -19,6 +20,8 @@ class TrainingsController extends AppController
             'ImportTrainees'    => ['className' => 'Training.ImportTrainees', 'actions' => ['add']],
             'ImportTrainingSessionTraineeResults' => ['className' => 'Training.ImportTrainingSessionTraineeResults', 'actions' => ['add']] //5695
         ];
+        $this->loadComponent('RequestHandler');
+
     }
 
     // CAv4
@@ -32,9 +35,9 @@ class TrainingsController extends AppController
     {
         $header = __('Training');
 
-        $header .= ' - ' . $model->getHeader($model->alias);
-        $this->Navigation->addCrumb('Training', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
-        $this->Navigation->addCrumb($model->getHeader($model->alias));
+        $header .= ' - ' . $model->getHeader($model->getAlias());
+        $this->Navigation->addCrumb('Training', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $model->getAlias()]);
+        $this->Navigation->addCrumb($model->getHeader($model->getAlias()));
 
         $this->set('contentHeader', $header);
     }
@@ -55,4 +58,21 @@ class TrainingsController extends AppController
         }
         return $this->TabPermission->checkTabPermission($tabElements);
     }
+
+    public function beforeRender(Event|\Cake\Event\EventInterface $event)
+    {
+        parent::beforeRender($event);
+
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+    }
+
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    {
+
+        if ($this->getPlugin() == 'Training') {
+            $this->Security->setConfig('validatePost', false);
+        }
+        parent::beforeFilter($event);
+    }
+
 }

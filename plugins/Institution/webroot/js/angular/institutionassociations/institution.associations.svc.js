@@ -124,7 +124,7 @@ function InstitutionAssociationsSvc($http, $q, $filter, KdDataSvc) {
 
     // for add page 
     function getAcademicPeriodOptions(institutionId) {
-        console.log("Institution ID " + institutionId);
+        // console.log("Institution ID " + institutionId);
         var success = function(response, deferred) {
             var periods = response.data.data;
             if (angular.isObject(periods) && periods.length > 0) {
@@ -135,9 +135,11 @@ function InstitutionAssociationsSvc($http, $q, $filter, KdDataSvc) {
         };
 
         return AcademicPeriods
-            .find('periodHasClass', {
-                institution_id: institutionId
-            })
+            .find('schoolAcademicPeriod' //POCOR-7988
+                //     , {
+                //     institution_id: institutionId
+                // }
+            )
             .ajax({
                 success: success,
                 defer: true

@@ -14,6 +14,7 @@ use Cake\Utility\Hash;
 use XLSXWriter;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
 
 
 class InstitutionSummaryExcelBehavior extends Behavior
@@ -34,29 +35,29 @@ class InstitutionSummaryExcelBehavior extends Behavior
         'auto_contain' => true
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->config('excludes', array_merge($this->config('default_excludes'), $this->config('excludes')));
-        if (!array_key_exists('filename', $config)) {
-            $this->config('filename', $this->_table->alias());
+        $this->setConfig('excludes', array_merge($this->setConfig('default_excludes'), $this->setConfig('excludes')));
+        if (!isset($config['filename'])) {
+            $this->setConfig('filename', $this->_table->getAlias());
         }
-        $folder = WWW_ROOT . $this->config('folder');
+        $folder = WWW_ROOT . $this->getConfig('folder');
 
         if (!file_exists($folder)) {
             umask(0);
             mkdir($folder, 0777);
         } else {
             // $delete = true;
-            // if (array_key_exists('delete', $settings) &&  $settings['delete'] == false) {
+            // if (isset($settings['delete']) &&  $settings['delete'] == false) {
             //  $delete = false;
             // }
             // if ($delete) {
             //  $this->deleteOldFiles($folder, $format);
             // }
         }
-        $pages = $this->config('pages');
+        $pages = $this->setConfig('pages');
         if ($pages !== false && empty($pages)) {
-            $this->config('pages', ['index', 'view']);
+            $this->setConfig('pages', ['index', 'view']);
         }
     }
 
@@ -81,8 +82,8 @@ class InstitutionSummaryExcelBehavior extends Behavior
     {
         $id = 0;
         $break = false;
-        $action = $this->_table->action;
-        $pass = $this->_table->request->pass;
+        $action = $this->_table->getParam('action');
+        $pass = $this->_table->request->getParam('pass');
         if (in_array($action, $pass)) {
             unset($pass[array_search($action, $pass)]);
             $pass = array_values($pass);
@@ -99,12 +100,12 @@ class InstitutionSummaryExcelBehavior extends Behavior
     {
         return 'Model.excel.' . $key;
     }
-	
+
 	public function generateXLXS($settings = [])
     {
         $_settings = [
-            'file' => $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
-            'path' => WWW_ROOT . $this->config('folder') . DS,
+            'file' => $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
+            'path' => WWW_ROOT . $this->getConfig('folder') . DS,
             'download' => true,
             'purge' => true
         ];
@@ -114,19 +115,19 @@ class InstitutionSummaryExcelBehavior extends Behavior
 
         $writer = new XLSXWriter();
         $excel = $this;
-		
+
 		$generate = function ($settings) {
             $generate = $this->generate($settings);
         };
-		
+
         $_settings['writer'] = $writer;
 
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$_settings]);
-       
+
         $generate($_settings);
 
 		// institution_providers institution_types
-		$InstitutionProvidersTable = TableRegistry::get('institution_providers');
+		$InstitutionProvidersTable = TableRegistry::get('Institutions.InstitutionProviders');
 		$InstitutionProviders = $InstitutionProvidersTable->find('all')->toArray();
 		$providerArr = [];
 		foreach($InstitutionProviders as $keyy => $InstitutionProvider){
@@ -136,22 +137,22 @@ class InstitutionSummaryExcelBehavior extends Behavior
 		//$labelArray = array("area_education","area_administrative","locality","type","ownership","sector","provider","first_shift_gender","second_shift_gender","third_shift_gender","fourth_shift_gender","total_gender");
 		$headerRow1[] = 'Area Education';
 
-		$InstitutionTypesTable = TableRegistry::get('institution_types');
+		$InstitutionTypesTable = TableRegistry::get('Institutions.InstitutionTypes');
 		$InstitutionTypes = $InstitutionTypesTable->find('all')->toArray();
 
 		foreach($labelArray as $label) {
-			
+
 			foreach($InstitutionTypes as $kkey=>$its){
 				if($kkey == 0){
 				$headerRow2[] = $this->getFields($this->_table, $settings, $label);
-				
+
 				}else{
 					$headerRow2[] = '';
-				}	
+				}
 			}
 		}
-		
-		$ShiftOptionTable = TableRegistry::get('shift_options');
+
+		$ShiftOptionTable = TableRegistry::get('Institutions.ShiftOptions');
 		$ShiftOptions = $ShiftOptionTable->find('all')->toArray();
 		$shiftArr = [];
 		foreach($ShiftOptions as $keyy => $ShiftOption){
@@ -163,30 +164,30 @@ class InstitutionSummaryExcelBehavior extends Behavior
 		}
 		$headerRow4[] = 'Total';
 		$headerRow = array_merge($headerRow1,$headerRow2,$headerRow3,$headerRow4);
-		
+
 		$requestData = json_decode($settings['process']['params']);
-		
+
 		if($requestData->area_level_id == 1){
 			$data = $this->getCountryData($settings);
 		}elseif($requestData->area_level_id == 2){
 			$data = $this->getReagionData($settings);
 		}elseif($requestData->area_level_id == 3){
-			$AreaLevelTable = TableRegistry::get('area_levels');
+			$AreaLevelTable = TableRegistry::get('Area.AreaLevels');
 			$AreaLevel = $AreaLevelTable->find('all',['conditions'=>['id'=>3]])->first();
-		
+
 			if($AreaLevel->name == 'Atoll'){
 				$data = $this->getReagionAtollData($settings);
 			}else{
 				$data = $this->getDistrictData($settings);
 			}
-			
+
 		}else{
 			$data = $this->getDistrictData($settings);
 		}
-		
-		$InstitutionTypesTable = TableRegistry::get('institution_types');
+
+		$InstitutionTypesTable = TableRegistry::get('Institutions.InstitutionTypes');
 		$InstitutionTypesCount = $InstitutionTypesTable->find('all')->count();
-		
+
 		$writer->writeSheetRow('Summary', $headerRow);
 		foreach($data as $row) {
 			if(array_filter($row)) {
@@ -197,7 +198,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 		$footer = $this->getFooter();
 		$writer->writeSheetRow('Summary', $blankRow);
 		$writer->writeSheetRow('Summary', $footer);
-		
+
 		$filepath = $_settings['path'] . $_settings['file'];
         $_settings['file_path'] = $filepath;
         $writer->writeToFile($_settings['file_path']);
@@ -211,36 +212,36 @@ class InstitutionSummaryExcelBehavior extends Behavior
         }
         return $_settings;
     }
-	
+
 
 	public function getCountryData($settings)
     {
-	$Institutions = TableRegistry::get('Institutions');
+	$Institutions = TableRegistry::get('Institution.Institutions');
     	$requestData = json_decode($settings['process']['params']);
     	$institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
 	$areaLevelId = $requestData->area_level_id;
 	$academic_period_id = $requestData->academic_period_id;
-	
-	$AcademicPriodT = TableRegistry::get('academic_periods'); 
+
+	$AcademicPriodT = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 	$AcademicPeriodDataforYear = $AcademicPriodT->find('all')->where(['id' => $academic_period_id])->first();
 	$startDate = $AcademicPeriodDataforYear->start_date->format('Y-m-d');;
 	$endDate = $AcademicPeriodDataforYear->end_date->format('Y-m-d');;
-		
+
 	$currDate = date('Y-m-d');
 	if($currDate >= $startDate && $currDate <= $endDate){
 		$stuStatussArr = [1];
 	}else{
 		$stuStatussArr = [1,6,7,8];
 	}
-	
-		
-	$AreaLvlT = TableRegistry::get('area_levels'); 
+
+
+	$AreaLvlT = TableRegistry::get('Area.AreaLevels');
 	$AreaLvlData = $AreaLvlT->find('all')->where(['id' => $areaLevelId])->first();
-        $AreaT = TableRegistry::get('areas');       
-	$ShiftOptionTable = TableRegistry::get('shift_options');
-	$InsStudentTable = TableRegistry::get('institution_students');
-	$InsStudentTable1 = TableRegistry::get('institution_students');             
+        $AreaT = TableRegistry::get('Area.Areas');
+	$ShiftOptionTable = TableRegistry::get('Institutions.ShiftOptions');
+	$InsStudentTable = TableRegistry::get('Institutions.InstitutionStudents');
+	$InsStudentTable1 = TableRegistry::get('Institutions.InstitutionStudents');
         //Level-1
         $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['area_level_id' => $areaLevelId])->toArray();
         $childArea =[];
@@ -265,7 +266,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
                     $childArea3[$kyy.$ky] = $AreaDatal222->id;
                 }
             }
-        }   
+        }
         //level-4
         if(!empty($childAreaMain)){
             foreach($childArea3 as $kyy =>$AreaDatal4 ){
@@ -280,7 +281,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
         $mergeArr = array_unique($mergeArr);
         $finalIds = implode(',',$mergeArr);
         $finalIds = explode(',',$finalIds);
-		
+
         $where = [];
         if ($areaId != -1) {
             $where[$Institutions->aliasField('area_id in')] = $finalIds;
@@ -354,20 +355,20 @@ class InstitutionSummaryExcelBehavior extends Behavior
 					)
 					->where([$where])
 					;
-					$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];	
+					$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];
 					$resultArray = array();
 					$i = 0;
-					foreach($institutionData as $key => $value) { 
-						if($i == 0) { 
-							$InstitutionTypesTable = TableRegistry::get('institution_types');
+					foreach($institutionData as $key => $value) {
+						if($i == 0) {
+							$InstitutionTypesTable = TableRegistry::get('Institutions.InstitutionTypes');
 							$InstitutionTypes = $InstitutionTypesTable->find('all')->toArray();
-							$InstitutionProvidersTable = TableRegistry::get('institution_providers');
+							$InstitutionProvidersTable = TableRegistry::get('Institutions.InstitutionProviders');
 							$InstitutionProviders = $InstitutionProvidersTable->find('all')->toArray();
 							$resultArray[0][] = $AreaLvlData->name;
 							$keyy = 0;
 							$ki = 1;
-							foreach($InstitutionProviders as $keyy => $InstitutionProvider){ 
-								foreach($InstitutionTypes as $ki => $InstitutionType){ 
+							foreach($InstitutionProviders as $keyy => $InstitutionProvider){
+								foreach($InstitutionTypes as $ki => $InstitutionType){
 
 						//**************************************************************************** */
 						//********************  Section For Country  Start     *****************************
@@ -436,7 +437,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 						// 			->where(['institution_provider_id'=>$InstitutionProvider->id,'institution_type_id'=>$InstitutionType->id,$where])
 						// 			;
 
-								
+
 									$institut =	$InsStudentTable->find()
 								->select([
 									//'id','institution_id','student_id'
@@ -446,7 +447,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 									'student_status_id' => $InsStudentTable->aliasField('student_status_id'),
 									'gender_id' => 'Students.gender_id',
 								])
-								
+
 								->leftJoin(
 									['Students' => 'security_users'],
 									[
@@ -467,13 +468,13 @@ class InstitutionSummaryExcelBehavior extends Behavior
 										]
 										)
 
-										
-								
+
+
 								->where(['Institutions.institution_provider_id'=>$InstitutionProvider->id,'Institutions.institution_type_id'=>$InstitutionType->id ,'student_status_id in'=>$stuStatussArr,'academic_period_id'=>$academic_period_id])
 								->distinct([$InsStudentTable->aliasField('student_id')])
 								//->count()
 								;
-						
+
 						//**************************************************************************** */
 						//********************  Section For Counrty  END     *****************************
 						//**************************************************************************** */
@@ -481,16 +482,16 @@ class InstitutionSummaryExcelBehavior extends Behavior
 						$resultArray['countryData'][]= $institut->count();
 						$ki++;
 					}
-					
+
 				}
 				$totalValue = array_sum($resultArray['countryData']);
 				//echo "<pre>";print_r($totalValue);die;
-				$ShiftOptionTable = TableRegistry::get('shift_options');
-				$InsStudentTable = TableRegistry::get('institution_students');
+				$ShiftOptionTable = TableRegistry::get('Institutions.ShiftOptions');
+				$InsStudentTable = TableRegistry::get('Institutions.InstitutionStudents');
 				$ShiftOptions = $ShiftOptionTable->find('all')->toArray();
 				$shiftArr = [];
 				$shiftArrResult = [];
-				foreach($ShiftOptions as $keyy => $ShiftOption){  
+				foreach($ShiftOptions as $keyy => $ShiftOption){
 					$shiftArr[$keyy] = 'male';
 					$shiftArrResult[$keyy] = $InsStudentTable->find()
 					->select([
@@ -501,7 +502,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 						'student_status_id' => 'student_status_id',
 						'gender_id' => 'Students.gender_id',
 					])
-					
+
 					->leftJoin(
 						['Students' => 'security_users'],
 						[
@@ -522,7 +523,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 									'InsShifts.institution_id = '. $InsStudentTable->aliasField('institution_id')
 								]
 								)
-					
+
 					->where([$InsStudentTable->aliasField('institution_id in') => $finalIds,$InsStudentTable->aliasField('academic_period_id')=> $academic_period_id,'Students.gender_id'=>1,'InsShifts.shift_option_id'=>$ShiftOption->id])
 					->count()
 					;
@@ -536,7 +537,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 						'student_status_id' => 'student_status_id',
 						'gender_id' => 'Students.gender_id',
 					])
-					
+
 					->leftJoin(
 						['Students' => 'security_users'],
 						[
@@ -570,37 +571,37 @@ class InstitutionSummaryExcelBehavior extends Behavior
 				//echo "<pre>";print_r($AreaLvlData);die;
 				array_unshift($resultArray['countryData'] , $AreaLvlData->name);
 			    $AreasData1 = $AreaT->find('all',['conditions'=>['area_level_id'=> $areaLevelId]])->toArray();
-				foreach($AreasData1 as $KEYY => $Area_insss){ 
+				foreach($AreasData1 as $KEYY => $Area_insss){
 					$resultArray[$KEYY+1] = $resultArray['DistrictData'];
 					array_unshift($resultArray[$KEYY+1], $Area_ins->name);
 				}
-				
-			} else {  
+
+			} else {
 
 				if(!empty($value->area_id)) {
 					//if (!in_array($value->area_id, $areaArray)) {
-						$resultArray[$key]['area_name'] = $value->area_name; 
+						$resultArray[$key]['area_name'] = $value->area_name;
 					$areaArray[] = $value->area_id;
 				} else {
 					$resultArray[$key]['area_name'] = '';
 				}
 			}
-			$i++;	
+			$i++;
 		}
-		
+
 		$shift_gender = array();
 		$totalMale = $totalFemale = 0;
 		$genderArray = [];
 		$ShiftOptions = TableRegistry::get('ShiftOptions');
 		$shiftOptionData = $ShiftOptions->find();
-		
+
 		$data = $area = $locality = $areaAdministrative = $sector = $ownership = $provider = $type = array();
 		$areaIndex = $areaAdministrativeIndex = $localityIndex = $sectorIndex = $providerIndex = $ownershipIndex = $typeIndex = NULL;
-		
+
 		if(!empty($resultArray)) {
 			foreach($resultArray as $key => $result) { //echo "<pre>";print_r($result);die;
 				if(array_filter($result)) {
-					
+
 					foreach($result as $key3 => $value3) { //echo "Key3";
 						$data[$key][$key3] = $value3;
 						if(($key != 0) && ($key3 === 'area_name'|| $key3 === 'area_code'|| $key3 === 'area_count')) {
@@ -689,16 +690,16 @@ class InstitutionSummaryExcelBehavior extends Behavior
 					unset($ownership[$ownershipIndex]);
 					unset($type[$typeIndex]);
 				}
-				
+
 			}
-		}		
+		}
 		$finalArray = array();
-		$AreaLevelT = TableRegistry::get('area_levels');
-		$AreaT = TableRegistry::get('areas');
+		$AreaLevelT = TableRegistry::get('Area.AreaLevels');
+		$AreaT = TableRegistry::get('Area.Areas');
 		$AreaLevel = $AreaLevelT->find('all',['conditions'=>['id'=>$areaLevelId]])->first();
 		if(!empty($data)) {
 			foreach($data as $data_keyy => $data_roww) { //echo "<pre>";print_r($arrayy);die;
-				if($data_keyy === 0) { 
+				if($data_keyy === 0) {
 					$finalArray[$data_keyy] = $data_roww;
 					$finalArray[$data_keyy+1] = $data['countryData'];
 				}else{
@@ -709,37 +710,37 @@ class InstitutionSummaryExcelBehavior extends Behavior
 		array_push($finalArray[1],$totalValue);
 		//echo "<pre>";print_r($finalArray);die;
 		return $finalArray;
-		
+
 	}
-	
+
 	public function getReagionData($settings)
     {
-	$Institutions = TableRegistry::get('Institutions');
+	$Institutions = TableRegistry::get('Institution.Institutions');
     	$requestData = json_decode($settings['process']['params']);
     	$institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
 		$areaLevelId = $requestData->area_level_id;
 		$academic_period_id = $requestData->academic_period_id;
-		
-		$AcademicPriodT = TableRegistry::get('academic_periods'); 
+
+		$AcademicPriodT = TableRegistry::get('academic_periods');
 	$AcademicPeriodDataforYear = $AcademicPriodT->find('all')->where(['id' => $academic_period_id])->first();
 	$startDate = $AcademicPeriodDataforYear->start_date->format('Y-m-d');;
 	$endDate = $AcademicPeriodDataforYear->end_date->format('Y-m-d');;
-		
+
 	$currDate = date('Y-m-d');
 	if($currDate >= $startDate && $currDate <= $endDate){
 		$stuStatussArr = [1];
 	}else{
 		$stuStatussArr = [1,6,7,8];
 	}
-		
-		
-	$AreaLvlT = TableRegistry::get('area_levels'); 
+
+
+	$AreaLvlT = TableRegistry::get('Area.AreaLevels');
 	$AreaLvlData = $AreaLvlT->find('all')->where(['id' => $areaLevelId])->first();
-        $AreaT = TableRegistry::get('areas');  
-		$ShiftOptionTable = TableRegistry::get('shift_options');
-		$InsStudentTable = TableRegistry::get('institution_students');
-		$InsStudentTable1 = TableRegistry::get('institution_students');                  
+        $AreaT = TableRegistry::get('Area.Areas');
+		$ShiftOptionTable = TableRegistry::get('Institution.ShiftOptions');
+		$InsStudentTable = TableRegistry::get('Institution.InstitutionStudents');
+		$InsStudentTable1 = TableRegistry::get('Institution.InstitutionStudents');
         //Level-1
         $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['area_level_id' => $areaLevelId])->toArray();
         $childArea =[];
@@ -764,7 +765,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
                     $childArea3[$kyy.$ky] = $AreaDatal222->id;
                 }
             }
-        }   
+        }
         //level-4
         if(!empty($childAreaMain)){
             foreach($childArea3 as $kyy =>$AreaDatal4 ){
@@ -779,9 +780,9 @@ class InstitutionSummaryExcelBehavior extends Behavior
         $mergeArr = array_unique($mergeArr);
         $finalIds = implode(',',$mergeArr);
         $finalIds = explode(',',$finalIds);
-		
+
 		//echo "<pre>";print_r($requestData);die;
-		
+
         $where = [];
         if ($areaId != -1) {
             $where[$Institutions->aliasField('area_id in')] = $finalIds;
@@ -852,11 +853,11 @@ class InstitutionSummaryExcelBehavior extends Behavior
 					)
 					->where([$where])
 					;
-					$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];	
+					$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];
 					$resultArray = array();
 					$resultArray1 = array();
 					$i = 0;
-					foreach($institutionData as $key => $value) { 
+					foreach($institutionData as $key => $value) {
 						if($i == 0) {
 							$InstitutionTypesTable = TableRegistry::get('institution_types');
 							$InstitutionTypes = $InstitutionTypesTable->find('all')->toArray();
@@ -865,8 +866,8 @@ class InstitutionSummaryExcelBehavior extends Behavior
 							$InstitutionProviders = $InstitutionProvidersTable->find('all')->toArray();
 							$InstitutionProvidersCount = $InstitutionProvidersTable->find('all')->count();
 							$totalCount = $InstitutionProvidersCount*$InstitutionTypesCount;
-							
-							
+
+
 
 							$resultArray[0][] = $AreaLvlData->name;
 							$keyy = 0;
@@ -877,7 +878,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 							$abcArr =[];
 							foreach($AreasData1 as $KEYY => $Area_insss){
 
-								
+
 								//Level-1
 								$areaparentIds = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $Area_insss->id])->toArray();
 								$childArea1 =[];
@@ -890,12 +891,12 @@ class InstitutionSummaryExcelBehavior extends Behavior
 								//level-2
 								foreach($childArea1 as $kyy =>$AreaDatal21 ){
 									$AreaDatas11 = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal21])->toArray();
-									
-									
+
+
 									foreach($AreaDatas11 as $ky =>$AreaDatal223 ){
 										$childAreaMain2[$kyy.$ky] = $AreaDatal223->id;
 									}
-									
+
 								}
 								//echo "<pre>";print_r($childAreaMain2);die;
 								//level-3
@@ -906,7 +907,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 											$childArea33[$kyy.$ky] = $AreaDatal222->id;
 										}
 									}
-								}   
+								}
 								/*//level-4
 								if(!empty($childAreaMain2)){
 									foreach($childArea33 as $kyy =>$AreaDatal4 ){
@@ -922,12 +923,12 @@ class InstitutionSummaryExcelBehavior extends Behavior
 								$finalIds1 = implode(',',$mergeArr1);
 								$finalIds1 = explode(',',$finalIds1);*/
 								$abcArr[$KEYY] = $finalIds1;
-								
+
 								//Log::write('debug', $finalIds1);
 								//echo "qwerty"; echo "<pre>";print_r($childArea1);die;
 
-							foreach($InstitutionProviders as $keyy => $InstitutionProvider){ 
-								foreach($InstitutionTypes as $ki => $InstitutionType){ 
+							foreach($InstitutionProviders as $keyy => $InstitutionProvider){
+								foreach($InstitutionTypes as $ki => $InstitutionType){
 
 									//**************************************************************************** */
 									//********************  Section For Country  Start     *****************************
@@ -943,7 +944,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 									'student_status_id' => $InsStudentTable->aliasField('student_status_id'),
 									'gender_id' => 'Students.gender_id',
 								])
-								
+
 								->leftJoin(
 									['Students' => 'security_users'],
 									[
@@ -958,8 +959,8 @@ class InstitutionSummaryExcelBehavior extends Behavior
 										]
 										)
 
-										
-								
+
+
 								->where(['Institutions.institution_provider_id'=>$InstitutionProvider->id,'Institutions.institution_type_id'=>$InstitutionType->id,'Institutions.area_id in' => $childAreaMain2,'student_status_id in'=>$stuStatussArr,'academic_period_id'=>$academic_period_id,$where])
 								->group([$InsStudentTable->aliasField('student_id')])
 								//->count()
@@ -1029,22 +1030,22 @@ class InstitutionSummaryExcelBehavior extends Behavior
 									// 			)
 									// 			->where(['area_id' => $Area_insss->id,'institution_provider_id'=>$InstitutionProvider->id,'institution_type_id'=>$InstitutionType->id,$where])
 									// 			;
-									
+
 									//**************************************************************************** */
 									//********************  Section For Counrty  END     *****************************
 									//**************************************************************************** */
-									
+
 									$resultArray[$key][] = $InstitutionType->name;
 									$resultArray[$KEYY+1][]= $institut1->count();
 									$ki++;
 								}
-								
+
 							}
-							
+
 							$ShiftOptions = $ShiftOptionTable->find('all')->toArray();
 							$shiftArr = [];
 							$shiftArrResult = [];
-							foreach($ShiftOptions as $keyy => $ShiftOption){  
+							foreach($ShiftOptions as $keyy => $ShiftOption){
 								$shiftArr[$keyy] = 'male';
 								$shiftArrResult[$keyy] = $InsStudentTable->find()
 								->select([
@@ -1055,7 +1056,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 									'student_status_id' => 'student_status_id',
 									'gender_id' => 'Students.gender_id',
 								])
-								
+
 								->leftJoin(
 									['Students' => 'security_users'],
 									[
@@ -1076,7 +1077,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 												'InsShifts.institution_id = '. $InsStudentTable->aliasField('institution_id')
 											]
 											)
-								
+
 								->where([$InsStudentTable->aliasField('institution_id in') => $finalIds,$InsStudentTable->aliasField('academic_period_id')=> $academic_period_id,'Students.gender_id'=>1,'Institutions.area_id'=>$Area_insss->id,'InsShifts.shift_option_id'=>$ShiftOption->id])
 								->count()
 								;
@@ -1090,7 +1091,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 									'student_status_id' => 'student_status_id',
 									'gender_id' => 'Students.gender_id',
 								])
-								
+
 								->leftJoin(
 									['Students' => 'security_users'],
 									[
@@ -1114,11 +1115,11 @@ class InstitutionSummaryExcelBehavior extends Behavior
 								->count()
 								;
 							}
-							
+
 								$abc = $shiftArrResult;
 								array_unshift($resultArray[$KEYY+1], $Area_insss->name);
 								 $mergeshift[] = array_merge($resultArray[$KEYY+1], $abc );
-								 
+
 						}
 						//echo "<pre>";print_r($abcArr);die;
 						unset($resultArray[0]);
@@ -1126,7 +1127,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 						foreach($mergeshift as $e=>$ms){
 							$mergeshift[$e][count($ms)-1] = array_sum($mergeshift[$e]);
 						}
-						
+
 						//add level array start
 												$institutionData1 = $Institutions->find()
 													->select([
@@ -1191,21 +1192,21 @@ class InstitutionSummaryExcelBehavior extends Behavior
 													)
 													->where([$where])
 													;
-													$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];	
+													$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];
 													$resultArray1 = array();
 													$i = 0;
-													foreach($institutionData as $key => $value) { 
-														if($i == 0) { 
-															$InstitutionTypesTable = TableRegistry::get('institution_types');
+													foreach($institutionData as $key => $value) {
+														if($i == 0) {
+															$InstitutionTypesTable = TableRegistry::get('Institution.InstitutionTypes');
 															$InstitutionTypess = $InstitutionTypesTable->find('all')->toArray();
-															$InstitutionProvidersTable = TableRegistry::get('institution_providers');
+															$InstitutionProvidersTable = TableRegistry::get('Institution.InstitutionProviders');
 															$InstitutionProviderss = $InstitutionProvidersTable->find('all')->toArray();
 															$resultArray1[0][] = 'atoll';
 															$keyy = 0;
 															$ki = 1;
-															foreach($InstitutionProviderss as $keyy => $InstitutionProvider1){ 
-																foreach($InstitutionTypess as $ki => $InstitutionType1){ 
-						
+															foreach($InstitutionProviderss as $keyy => $InstitutionProvider1){
+																foreach($InstitutionTypess as $ki => $InstitutionType1){
+
 												//**************************************************************************** */
 												//********************  Section For Country  Start     *****************************
 												//**************************************************************************** */
@@ -1272,18 +1273,18 @@ class InstitutionSummaryExcelBehavior extends Behavior
 															)
 															->where(['institution_provider_id'=>$InstitutionProvider1->id,'institution_type_id'=>$InstitutionType1->id,$where])
 															;
-						
-												
+
+
 												//**************************************************************************** */
 												//********************  Section For Counrty  END     *****************************
 												//**************************************************************************** */
-						
+
 												$resultArray1[$key][] = $InstitutionType1->name;
 												//$resultArray['countryData'][]= $institut11->count();
-						
+
 												$ki++;
 											}
-											
+
 										}
 									}
 								}
@@ -1291,13 +1292,13 @@ class InstitutionSummaryExcelBehavior extends Behavior
 							array_unshift($resultArray1[1],$AreaLvlData->name);
 							$arrrr[]= $resultArray1[1];
 							$resultfinalArr =	array_merge($arrrr,$mergeshift);
-							$ShiftOptionTable = TableRegistry::get('shift_options');
-							$InsStudentTable = TableRegistry::get('institution_students');
+							$ShiftOptionTable = TableRegistry::get('Institution.ShiftOptions');
+							$InsStudentTable = TableRegistry::get('Institution.InstitutionStudents');
 							$ShiftOptions = $ShiftOptionTable->find('all')->toArray();
 							$shiftArr = [];
 							$shiftArrResult = [];
-							
-							foreach($ShiftOptions as $keyy => $ShiftOption){  
+
+							foreach($ShiftOptions as $keyy => $ShiftOption){
 								$shiftArr[$keyy] = 'male';
 							$shiftArrResult[$keyy] = $InsStudentTable->find()
 							->select([
@@ -1308,7 +1309,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 								'student_status_id' => 'student_status_id',
 								'gender_id' => 'Students.gender_id',
 							])
-						
+
 							->leftJoin(
 								['Students' => 'security_users'],
 								[
@@ -1322,7 +1323,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 										'Institutions.id = '. $InsStudentTable->aliasField('institution_id')
 									]
 									)
-						
+
 						->where(['institution_id in'=>$finalIds,'academic_period_id'=> $academic_period_id,'gender_id'=>1])
 						->count();
 						$shiftArr[$keyy.'1'] = 'female';
@@ -1335,14 +1336,14 @@ class InstitutionSummaryExcelBehavior extends Behavior
 							'student_status_id' => 'student_status_id',
 							'gender_id' => 'Students.gender_id',
 						])
-						
+
 						->leftJoin(
 							['Students' => 'security_users'],
 							[
 								'Students.id = '. $InsStudentTable->aliasField('student_id')
 							]
 							)
-						
+
 						->where(['institution_id in'=>$finalIds,'academic_period_id'=> $academic_period_id,'gender_id'=>2])
 						->count();
 					}
@@ -1352,52 +1353,52 @@ class InstitutionSummaryExcelBehavior extends Behavior
 					}else{
 						$resultfinalArr[0] =array_merge($resultfinalArr[0],$shiftArr);
 					}
-					
 
-			} else {  
+
+			} else {
 				if(!empty($value->area_id)) {
-						$resultArray[$key]['area_name'] = $value->area_name; 
+						$resultArray[$key]['area_name'] = $value->area_name;
 					$areaArray[] = $value->area_id;
 				} else {
 					$resultArray[$key]['area_name'] = '';
 				}
 			}
-			$i++;	
+			$i++;
 		}
 		return $resultfinalArr;
-		
+
 	}
 
 
 	public function getReagionAtollData($settings)
     {
-    
-	$Institutions = TableRegistry::get('Institutions');
+
+	$Institutions = TableRegistry::get('Institution.Institutions');
     	$requestData = json_decode($settings['process']['params']);
     	$institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
 		$areaLevelId = $requestData->area_level_id;
 		$academic_period_id = $requestData->academic_period_id;
-		
-		$AcademicPriodT = TableRegistry::get('academic_periods'); 
+
+		$AcademicPriodT = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 	$AcademicPeriodDataforYear = $AcademicPriodT->find('all')->where(['id' => $academic_period_id])->first();
 	$startDate = $AcademicPeriodDataforYear->start_date->format('Y-m-d');;
 	$endDate = $AcademicPeriodDataforYear->end_date->format('Y-m-d');;
-		
+
 	$currDate = date('Y-m-d');
 	if($currDate >= $startDate && $currDate <= $endDate){
 		$stuStatussArr = [1];
 	}else{
 		$stuStatussArr = [1,6,7,8];
 	}
-	
-	
-	$AreaLvlT = TableRegistry::get('area_levels'); 
+
+
+	$AreaLvlT = TableRegistry::get('Area.AreaLevels');
 	$AreaLvlData = $AreaLvlT->find('all')->where(['id' => $areaLevelId])->first();
-        $AreaT = TableRegistry::get('areas');  
-		$ShiftOptionTable = TableRegistry::get('shift_options');
-		$InsStudentTable = TableRegistry::get('institution_students');
-		$InsStudentTable1 = TableRegistry::get('institution_students');                  
+        $AreaT = TableRegistry::get('areas');
+		$ShiftOptionTable = TableRegistry::get('Institution.ShiftOptions');
+		$InsStudentTable = TableRegistry::get('Institution.InstitutionStudents');
+		$InsStudentTable1 = TableRegistry::get('Institution.InstitutionStudents');
         //Level-1
         $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['area_level_id' => $areaLevelId])->toArray();
         $childArea =[];
@@ -1422,7 +1423,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
                     $childArea3[$kyy.$ky] = $AreaDatal222->id;
                 }
             }
-        }   
+        }
         //level-4
         if(!empty($childAreaMain)){
             foreach($childArea3 as $kyy =>$AreaDatal4 ){
@@ -1437,9 +1438,9 @@ class InstitutionSummaryExcelBehavior extends Behavior
         $mergeArr = array_unique($mergeArr);
         $finalIds = implode(',',$mergeArr);
         $finalIds = explode(',',$finalIds);
-		
+
 		//echo "<pre>";print_r($requestData);die;
-		
+
         $where = [];
         if ($areaId != -1) {
             $where[$Institutions->aliasField('area_id in')] = $finalIds;
@@ -1510,21 +1511,21 @@ class InstitutionSummaryExcelBehavior extends Behavior
 					)
 					->where([$where])
 					;
-					$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];	
+					$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];
 					$resultArray = array();
 					$resultArray1 = array();
 					$i = 0;
-					foreach($institutionData as $key => $value) { 
+					foreach($institutionData as $key => $value) {
 						if($i == 0) {
-							$InstitutionTypesTable = TableRegistry::get('institution_types');
+							$InstitutionTypesTable = TableRegistry::get('Institution.InstitutionTypes');
 							$InstitutionTypes = $InstitutionTypesTable->find('all')->toArray();
 							$InstitutionTypesCount = $InstitutionTypesTable->find('all')->count();
-							$InstitutionProvidersTable = TableRegistry::get('institution_providers');
+							$InstitutionProvidersTable = TableRegistry::get('Institution.InstitutionProviders');
 							$InstitutionProviders = $InstitutionProvidersTable->find('all')->toArray();
 							$InstitutionProvidersCount = $InstitutionProvidersTable->find('all')->count();
 							$totalCount = $InstitutionProvidersCount*$InstitutionTypesCount;
-							
-							
+
+
 
 							$resultArray[0][] = $AreaLvlData->name;
 							$keyy = 0;
@@ -1535,7 +1536,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 							$abcArr =[];
 							foreach($AreasData1 as $KEYY => $Area_insss){
 
-								
+
 								//Level-1
 								$areaparentIds = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $Area_insss->id])->toArray();
 								$childArea1 =[];
@@ -1548,12 +1549,12 @@ class InstitutionSummaryExcelBehavior extends Behavior
 								//level-2
 								foreach($childArea1 as $kyy =>$AreaDatal21 ){
 									$AreaDatas11 = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal21])->toArray();
-									
-									
+
+
 									foreach($AreaDatas11 as $ky =>$AreaDatal223 ){
 										$childAreaMain2[$kyy.$ky] = $AreaDatal223->id;
 									}
-									
+
 								}
 								//echo "<pre>";print_r($childAreaMain2);die;
 								//level-3
@@ -1564,7 +1565,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 											$childArea33[$kyy.$ky] = $AreaDatal222->id;
 										}
 									}
-								}   
+								}
 								/*//level-4
 								if(!empty($childAreaMain2)){
 									foreach($childArea33 as $kyy =>$AreaDatal4 ){
@@ -1580,12 +1581,12 @@ class InstitutionSummaryExcelBehavior extends Behavior
 								$finalIds1 = implode(',',$mergeArr1);
 								$finalIds1 = explode(',',$finalIds1);*/
 								$abcArr[$KEYY] = $finalIds1;
-								
+
 								//Log::write('debug', $finalIds1);
 								//echo "qwerty"; echo "<pre>";print_r($childArea1);die;
 
-							foreach($InstitutionProviders as $keyy => $InstitutionProvider){ 
-								foreach($InstitutionTypes as $ki => $InstitutionType){ 
+							foreach($InstitutionProviders as $keyy => $InstitutionProvider){
+								foreach($InstitutionTypes as $ki => $InstitutionType){
 
 									//**************************************************************************** */
 									//********************  Section For Country  Start     *****************************
@@ -1601,7 +1602,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 									'student_status_id' => $InsStudentTable->aliasField('student_status_id'),
 									'gender_id' => 'Students.gender_id',
 								])
-								
+
 								->leftJoin(
 									['Students' => 'security_users'],
 									[
@@ -1616,8 +1617,8 @@ class InstitutionSummaryExcelBehavior extends Behavior
 										]
 										)
 
-										
-								
+
+
 								->where(['Institutions.institution_provider_id'=>$InstitutionProvider->id,'Institutions.institution_type_id'=>$InstitutionType->id,'Institutions.area_id in' => $childArea1,'student_status_id in'=>$stuStatussArr,'academic_period_id'=>$academic_period_id,$where])
 								->group([$InsStudentTable->aliasField('student_id')])
 								//->count()
@@ -1687,22 +1688,22 @@ class InstitutionSummaryExcelBehavior extends Behavior
 									// 			)
 									// 			->where(['area_id' => $Area_insss->id,'institution_provider_id'=>$InstitutionProvider->id,'institution_type_id'=>$InstitutionType->id,$where])
 									// 			;
-									
+
 									//**************************************************************************** */
 									//********************  Section For Counrty  END     *****************************
 									//**************************************************************************** */
-									
+
 									$resultArray[$key][] = $InstitutionType->name;
 									$resultArray[$KEYY+1][]= $institut1->count();
 									$ki++;
 								}
-								
+
 							}
-							
+
 							$ShiftOptions = $ShiftOptionTable->find('all')->toArray();
 							$shiftArr = [];
 							$shiftArrResult = [];
-							foreach($ShiftOptions as $keyy => $ShiftOption){  
+							foreach($ShiftOptions as $keyy => $ShiftOption){
 								$shiftArr[$keyy] = 'male';
 								$shiftArrResult[$keyy] = $InsStudentTable->find()
 								->select([
@@ -1713,7 +1714,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 									'student_status_id' => 'student_status_id',
 									'gender_id' => 'Students.gender_id',
 								])
-								
+
 								->leftJoin(
 									['Students' => 'security_users'],
 									[
@@ -1734,7 +1735,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 												'InsShifts.institution_id = '. $InsStudentTable->aliasField('institution_id')
 											]
 											)
-								
+
 								->where([$InsStudentTable->aliasField('institution_id in') => $finalIds,$InsStudentTable->aliasField('academic_period_id')=> $academic_period_id,'Students.gender_id'=>1,'Institutions.area_id'=>$Area_insss->id,'InsShifts.shift_option_id'=>$ShiftOption->id])
 								->count()
 								;
@@ -1748,7 +1749,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 									'student_status_id' => 'student_status_id',
 									'gender_id' => 'Students.gender_id',
 								])
-								
+
 								->leftJoin(
 									['Students' => 'security_users'],
 									[
@@ -1772,11 +1773,11 @@ class InstitutionSummaryExcelBehavior extends Behavior
 								->count()
 								;
 							}
-							
+
 								$abc = $shiftArrResult;
 								array_unshift($resultArray[$KEYY+1], $Area_insss->name);
 								 $mergeshift[] = array_merge($resultArray[$KEYY+1], $abc );
-								 
+
 						}
 						//echo "<pre>";print_r($abcArr);die;
 						unset($resultArray[0]);
@@ -1784,7 +1785,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 						foreach($mergeshift as $e=>$ms){
 							$mergeshift[$e][count($ms)-1] = array_sum($mergeshift[$e]);
 						}
-						
+
 						//add level array start
 												$institutionData1 = $Institutions->find()
 													->select([
@@ -1849,21 +1850,21 @@ class InstitutionSummaryExcelBehavior extends Behavior
 													)
 													->where([$where])
 													;
-													$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];	
+													$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];
 													$resultArray1 = array();
 													$i = 0;
-													foreach($institutionData as $key => $value) { 
-														if($i == 0) { 
-															$InstitutionTypesTable = TableRegistry::get('institution_types');
+													foreach($institutionData as $key => $value) {
+														if($i == 0) {
+															$InstitutionTypesTable = TableRegistry::get('Institution.InstitutionTypes');
 															$InstitutionTypess = $InstitutionTypesTable->find('all')->toArray();
-															$InstitutionProvidersTable = TableRegistry::get('institution_providers');
+															$InstitutionProvidersTable = TableRegistry::get('Institution.InstitutionProviders');
 															$InstitutionProviderss = $InstitutionProvidersTable->find('all')->toArray();
 															$resultArray1[0][] = 'atoll';
 															$keyy = 0;
 															$ki = 1;
-															foreach($InstitutionProviderss as $keyy => $InstitutionProvider1){ 
-																foreach($InstitutionTypess as $ki => $InstitutionType1){ 
-						
+															foreach($InstitutionProviderss as $keyy => $InstitutionProvider1){
+																foreach($InstitutionTypess as $ki => $InstitutionType1){
+
 												//**************************************************************************** */
 												//********************  Section For Country  Start     *****************************
 												//**************************************************************************** */
@@ -1930,18 +1931,18 @@ class InstitutionSummaryExcelBehavior extends Behavior
 															)
 															->where(['institution_provider_id'=>$InstitutionProvider1->id,'institution_type_id'=>$InstitutionType1->id,$where])
 															;
-						
-												
+
+
 												//**************************************************************************** */
 												//********************  Section For Counrty  END     *****************************
 												//**************************************************************************** */
-						
+
 												$resultArray1[$key][] = $InstitutionType1->name;
 												//$resultArray['countryData'][]= $institut11->count();
-						
+
 												$ki++;
 											}
-											
+
 										}
 									}
 								}
@@ -1949,13 +1950,13 @@ class InstitutionSummaryExcelBehavior extends Behavior
 							array_unshift($resultArray1[1],$AreaLvlData->name);
 							$arrrr[]= $resultArray1[1];
 							$resultfinalArr =	array_merge($arrrr,$mergeshift);
-							$ShiftOptionTable = TableRegistry::get('shift_options');
-							$InsStudentTable = TableRegistry::get('institution_students');
+							$ShiftOptionTable = TableRegistry::get('Institution.ShiftOptions');
+							$InsStudentTable = TableRegistry::get('Institution.InstitutionStudents');
 							$ShiftOptions = $ShiftOptionTable->find('all')->toArray();
 							$shiftArr = [];
 							$shiftArrResult = [];
-							
-							foreach($ShiftOptions as $keyy => $ShiftOption){  
+
+							foreach($ShiftOptions as $keyy => $ShiftOption){
 								$shiftArr[$keyy] = 'male';
 							$shiftArrResult[$keyy] = $InsStudentTable->find()
 							->select([
@@ -1966,7 +1967,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 								'student_status_id' => 'student_status_id',
 								'gender_id' => 'Students.gender_id',
 							])
-						
+
 							->leftJoin(
 								['Students' => 'security_users'],
 								[
@@ -1980,7 +1981,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 										'Institutions.id = '. $InsStudentTable->aliasField('institution_id')
 									]
 									)
-						
+
 						->where(['institution_id in'=>$finalIds,'academic_period_id'=> $academic_period_id,'gender_id'=>1])
 						->count();
 						$shiftArr[$keyy.'1'] = 'female';
@@ -1993,14 +1994,14 @@ class InstitutionSummaryExcelBehavior extends Behavior
 							'student_status_id' => 'student_status_id',
 							'gender_id' => 'Students.gender_id',
 						])
-						
+
 						->leftJoin(
 							['Students' => 'security_users'],
 							[
 								'Students.id = '. $InsStudentTable->aliasField('student_id')
 							]
 							)
-						
+
 						->where(['institution_id in'=>$finalIds,'academic_period_id'=> $academic_period_id,'gender_id'=>2])
 						->count();
 					}
@@ -2010,50 +2011,50 @@ class InstitutionSummaryExcelBehavior extends Behavior
 					}else{
 						$resultfinalArr[0] =array_merge($resultfinalArr[0],$shiftArr);
 					}
-					
 
-			} else {  
+
+			} else {
 				if(!empty($value->area_id)) {
-						$resultArray[$key]['area_name'] = $value->area_name; 
+						$resultArray[$key]['area_name'] = $value->area_name;
 					$areaArray[] = $value->area_id;
 				} else {
 					$resultArray[$key]['area_name'] = '';
 				}
 			}
-			$i++;	
+			$i++;
 		}
 		return $resultfinalArr;
-		
+
 	}
 
 	public function getDistrictData($settings)
     {
-		$Institutions = TableRegistry::get('Institutions');
+		$Institutions = TableRegistry::get('Institution.Institutions');
     	$requestData = json_decode($settings['process']['params']);
     	$institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
 		$areaLevelId = $requestData->area_level_id;
 		$academic_period_id = $requestData->academic_period_id;
-		
-		$AcademicPriodT = TableRegistry::get('academic_periods'); 
+
+		$AcademicPriodT = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 	$AcademicPeriodDataforYear = $AcademicPriodT->find('all')->where(['id' => $academic_period_id])->first();
 	$startDate = $AcademicPeriodDataforYear->start_date->format('Y-m-d');;
 	$endDate = $AcademicPeriodDataforYear->end_date->format('Y-m-d');;
-		
+
 	$currDate = date('Y-m-d');
 	if($currDate >= $startDate && $currDate <= $endDate){
 		$stuStatussArr = [1];
 	}else{
 		$stuStatussArr = [1,6,7,8];
 	}
-		
-		$AreaLvlT = TableRegistry::get('area_levels'); 
+
+		$AreaLvlT = TableRegistry::get('Area.AreaLevels');
 	$AreaLvlData = $AreaLvlT->find('all')->where(['id' => $areaLevelId])->first();
 	//print_r($AreaLvlData);die;
-        $AreaT = TableRegistry::get('areas');  
-		$ShiftOptionTable = TableRegistry::get('shift_options');
-		$InsStudentTable = TableRegistry::get('institution_students');
-		$InsStudentTable1 = TableRegistry::get('institution_students');                  
+        $AreaT = TableRegistry::get('Area.Areas');
+		$ShiftOptionTable = TableRegistry::get('Institution.ShiftOptions');
+		$InsStudentTable = TableRegistry::get('Institution.InstitutionStudents');
+		$InsStudentTable1 = TableRegistry::get('Institution.InstitutionStudents');
         //Level-1
         $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['area_level_id' => $areaLevelId])->toArray();
         $childArea =[];
@@ -2078,7 +2079,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
                     $childArea3[$kyy.$ky] = $AreaDatal222->id;
                 }
             }
-        }   
+        }
         //level-4
         if(!empty($childAreaMain)){
             foreach($childArea3 as $kyy =>$AreaDatal4 ){
@@ -2093,7 +2094,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
         $mergeArr = array_unique($mergeArr);
         $finalIds = implode(',',$mergeArr);
         $finalIds = explode(',',$finalIds);
-		
+
         $where = [];
         if ($areaId != -1) {
             $where[$Institutions->aliasField('area_id in')] = $finalIds;
@@ -2164,16 +2165,16 @@ class InstitutionSummaryExcelBehavior extends Behavior
 					)
 					->where([$where])
 					;
-					$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];	
+					$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];
 					$resultArray = array();
 					$resultArray1 = array();
 					$i = 0;
-					foreach($institutionData as $key => $value) { 
+					foreach($institutionData as $key => $value) {
 						if($i == 0) {
-							$InstitutionTypesTable = TableRegistry::get('institution_types');
+							$InstitutionTypesTable = TableRegistry::get('Institution.InstitutionTypes');
 							$InstitutionTypes = $InstitutionTypesTable->find('all')->toArray();
 							$InstitutionTypesCount = $InstitutionTypesTable->find('all')->count();
-							$InstitutionProvidersTable = TableRegistry::get('institution_providers');
+							$InstitutionProvidersTable = TableRegistry::get('Institution.InstitutionProviders');
 							$InstitutionProviders = $InstitutionProvidersTable->find('all')->toArray();
 							$InstitutionProvidersCount = $InstitutionProvidersTable->find('all')->count();
 							$totalCount = $InstitutionProvidersCount*$InstitutionTypesCount;
@@ -2189,8 +2190,8 @@ class InstitutionSummaryExcelBehavior extends Behavior
 
 
 
-							foreach($InstitutionProviders as $keyy => $InstitutionProvider){ 
-								foreach($InstitutionTypes as $ki => $InstitutionType){ 
+							foreach($InstitutionProviders as $keyy => $InstitutionProvider){
+								foreach($InstitutionTypes as $ki => $InstitutionType){
 
 									//**************************************************************************** */
 									//********************  Section For Country  Start     *****************************
@@ -2206,7 +2207,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 									'student_status_id' => $InsStudentTable->aliasField('student_status_id'),
 									'gender_id' => 'Students.gender_id',
 								])
-								
+
 								->leftJoin(
 									['Students' => 'security_users'],
 									[
@@ -2221,8 +2222,8 @@ class InstitutionSummaryExcelBehavior extends Behavior
 										]
 										)
 
-										
-								
+
+
 								->where(['Institutions.institution_provider_id'=>$InstitutionProvider->id,'Institutions.institution_type_id'=>$InstitutionType->id,'Institutions.area_id' => $Area_insss->id,'student_status_id in'=>$stuStatussArr,'academic_period_id'=>$academic_period_id,$where])
 								->group([$InsStudentTable->aliasField('student_id')])
 								//->count()
@@ -2292,22 +2293,22 @@ class InstitutionSummaryExcelBehavior extends Behavior
 									// 			)
 									// 			->where(['area_id' => $Area_insss->id,'institution_provider_id'=>$InstitutionProvider->id,'institution_type_id'=>$InstitutionType->id,$where])
 									// 			;
-									
+
 									//**************************************************************************** */
 									//********************  Section For Counrty  END     *****************************
 									//**************************************************************************** */
-									
+
 									$resultArray[$key][] = $InstitutionType->name;
 									$resultArray[$KEYY+1][]= $institut->count();
 									$ki++;
 								}
-								
+
 							}
-							
+
 							$ShiftOptions = $ShiftOptionTable->find('all')->toArray();
 							$shiftArr = [];
 							$shiftArrResult = [];
-							foreach($ShiftOptions as $keyy => $ShiftOption){  
+							foreach($ShiftOptions as $keyy => $ShiftOption){
 								$shiftArr[$keyy] = 'male';
 								$shiftArrResult[$keyy] = $InsStudentTable->find()
 								->select([
@@ -2318,7 +2319,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 									'student_status_id' => 'student_status_id',
 									'gender_id' => 'Students.gender_id',
 								])
-								
+
 								->leftJoin(
 									['Students' => 'security_users'],
 									[
@@ -2339,7 +2340,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 												'InsShifts.institution_id = '. $InsStudentTable->aliasField('institution_id')
 											]
 											)
-								
+
 								->where([$InsStudentTable->aliasField('institution_id in') => $finalIds,$InsStudentTable->aliasField('academic_period_id')=> $academic_period_id,'Students.gender_id'=>1,'Institutions.area_id'=>$Area_insss->id,'InsShifts.shift_option_id'=>$ShiftOption->id])
 								->count()
 								;
@@ -2353,7 +2354,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 									'student_status_id' => 'student_status_id',
 									'gender_id' => 'Students.gender_id',
 								])
-								
+
 								->leftJoin(
 									['Students' => 'security_users'],
 									[
@@ -2377,19 +2378,19 @@ class InstitutionSummaryExcelBehavior extends Behavior
 								->count()
 								;
 							}
-							
+
 								$abc = $shiftArrResult;
 								array_unshift($resultArray[$KEYY+1], $Area_insss->name);
 								 $mergeshift[] = array_merge($resultArray[$KEYY+1], $abc );
-								 
+
 						}
-						
+
 						unset($resultArray[0]);
 
 						foreach($mergeshift as $e=>$ms){
 							$mergeshift[$e][count($ms)-1] = array_sum($mergeshift[$e]);
 						}
-						
+
 						//add level array start
 												$institutionData1 = $Institutions->find()
 													->select([
@@ -2454,21 +2455,21 @@ class InstitutionSummaryExcelBehavior extends Behavior
 													)
 													->where([$where])
 													;
-													$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];	
+													$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];
 													$resultArray1 = array();
 													$i = 0;
-													foreach($institutionData as $key => $value) { 
-														if($i == 0) { 
-															$InstitutionTypesTable = TableRegistry::get('institution_types');
+													foreach($institutionData as $key => $value) {
+														if($i == 0) {
+															$InstitutionTypesTable = TableRegistry::get('Institution.InstitutionTypes');
 															$InstitutionTypess = $InstitutionTypesTable->find('all')->toArray();
-															$InstitutionProvidersTable = TableRegistry::get('institution_providers');
+															$InstitutionProvidersTable = TableRegistry::get('Institution.InstitutionProviders');
 															$InstitutionProviderss = $InstitutionProvidersTable->find('all')->toArray();
 															$resultArray1[0][] = 'atoll';
 															$keyy = 0;
 															$ki = 1;
-															foreach($InstitutionProviderss as $keyy => $InstitutionProvider1){ 
-																foreach($InstitutionTypess as $ki => $InstitutionType1){ 
-						
+															foreach($InstitutionProviderss as $keyy => $InstitutionProvider1){
+																foreach($InstitutionTypess as $ki => $InstitutionType1){
+
 												//**************************************************************************** */
 												//********************  Section For Country  Start     *****************************
 												//**************************************************************************** */
@@ -2535,18 +2536,18 @@ class InstitutionSummaryExcelBehavior extends Behavior
 															)
 															->where(['institution_provider_id'=>$InstitutionProvider1->id,'institution_type_id'=>$InstitutionType1->id,$where])
 															;
-						
-												
+
+
 												//**************************************************************************** */
 												//********************  Section For Counrty  END     *****************************
 												//**************************************************************************** */
-						
+
 												$resultArray1[$key][] = $InstitutionType1->name;
 												//$resultArray['countryData'][]= $institut11->count();
-						
+
 												$ki++;
 											}
-											
+
 										}
 									}
 								}
@@ -2554,13 +2555,13 @@ class InstitutionSummaryExcelBehavior extends Behavior
 							array_unshift($resultArray1[1],$AreaLvlData->name);
 							$arrrr[]= $resultArray1[1];
 							$resultfinalArr =	array_merge($arrrr,$mergeshift);
-							$ShiftOptionTable = TableRegistry::get('shift_options');
-							$InsStudentTable = TableRegistry::get('institution_students');
+							$ShiftOptionTable = TableRegistry::get('Institution.ShiftOptions');
+							$InsStudentTable = TableRegistry::get('Institution.InstitutionStudents');
 							$ShiftOptions = $ShiftOptionTable->find('all')->toArray();
 							$shiftArr = [];
 							$shiftArrResult = [];
-							
-							foreach($ShiftOptions as $keyy => $ShiftOption){  
+
+							foreach($ShiftOptions as $keyy => $ShiftOption){
 								$shiftArr[$keyy] = 'male';
 							$shiftArrResult[$keyy] = $InsStudentTable->find()
 							->select([
@@ -2571,7 +2572,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 								'student_status_id' => 'student_status_id',
 								'gender_id' => 'Students.gender_id',
 							])
-						
+
 							->leftJoin(
 								['Students' => 'security_users'],
 								[
@@ -2585,7 +2586,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 										'Institutions.id = '. $InsStudentTable->aliasField('institution_id')
 									]
 									)
-						
+
 						->where(['institution_id in'=>$finalIds,'academic_period_id'=> $academic_period_id,'gender_id'=>1])
 						->count();
 						$shiftArr[$keyy.'1'] = 'female';
@@ -2598,14 +2599,14 @@ class InstitutionSummaryExcelBehavior extends Behavior
 							'student_status_id' => 'student_status_id',
 							'gender_id' => 'Students.gender_id',
 						])
-						
+
 						->leftJoin(
 							['Students' => 'security_users'],
 							[
 								'Students.id = '. $InsStudentTable->aliasField('student_id')
 							]
 							)
-						
+
 						->where(['institution_id in'=>$finalIds,'academic_period_id'=> $academic_period_id,'gender_id'=>2])
 						->count();
 					}
@@ -2615,27 +2616,27 @@ class InstitutionSummaryExcelBehavior extends Behavior
 					}else{
 						$resultfinalArr[0] =array_merge($resultfinalArr[0],$shiftArr);
 					}
-					
 
-			} else {  
+
+			} else {
 				if(!empty($value->area_id)) {
-						$resultArray[$key]['area_name'] = $value->area_name; 
+						$resultArray[$key]['area_name'] = $value->area_name;
 					$areaArray[] = $value->area_id;
 				} else {
 					$resultArray[$key]['area_name'] = '';
 				}
 			}
-			$i++;	
+			$i++;
 		}
-		
+
 		return $resultfinalArr;
-		
+
 	}
 
 
     public function getData($settings)
     {
-    	$Institutions = TableRegistry::get('Institutions');
+    	$Institutions = TableRegistry::get('Institution.Institutions');
     	$requestData = json_decode($settings['process']['params']);
     	$institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
@@ -2643,7 +2644,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 		$academic_period_id = $requestData->academic_period_id;
 		//echo "<pre>";print_r($requestData);die;
 		//Start:POCOR-6818 Modified this for POCOR-6859
-        $AreaT = TableRegistry::get('areas');                    
+        $AreaT = TableRegistry::get('Area.Areas');
         //Level-1
         $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['area_level_id' => $areaLevelId])->toArray();
         $childArea =[];
@@ -2668,7 +2669,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
                     $childArea3[$kyy.$ky] = $AreaDatal222->id;
                 }
             }
-        }   
+        }
         //level-4
         if(!empty($childAreaMain)){
             foreach($childArea3 as $kyy =>$AreaDatal4 ){
@@ -2683,7 +2684,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
         $mergeArr = array_unique($mergeArr);
         $finalIds = implode(',',$mergeArr);
         $finalIds = explode(',',$finalIds);
-		
+
         $where = [];
         if ($areaId != -1) {
             $where[$Institutions->aliasField('area_id in')] = $finalIds;
@@ -2754,20 +2755,20 @@ class InstitutionSummaryExcelBehavior extends Behavior
 					)
 					->where([$where])
 					;
-		$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];	
+		$areaArray = $sectorArray = $sectorData = $ownershipArray = $localityArray = $typeArray = $providerArray = $areaAdministrativeArray = [];
 		$resultArray = array();
 		$i = 0;
-		foreach($institutionData as $key => $value) { 
-			if($i == 0) { 
-				$InstitutionTypesTable = TableRegistry::get('institution_types');
+		foreach($institutionData as $key => $value) {
+			if($i == 0) {
+				$InstitutionTypesTable = TableRegistry::get('Institution.InstitutionTypes');
 				$InstitutionTypes = $InstitutionTypesTable->find('all')->toArray();
-				$InstitutionProvidersTable = TableRegistry::get('institution_providers');
+				$InstitutionProvidersTable = TableRegistry::get('Institution.InstitutionProviders');
 				$InstitutionProviders = $InstitutionProvidersTable->find('all')->toArray();
 				$resultArray[0][] = 'atoll';
 				$keyy = 0;
 				$ki = 1;
-				foreach($InstitutionProviders as $keyy => $InstitutionProvider){ 
-					foreach($InstitutionTypes as $ki => $InstitutionType){ 
+				foreach($InstitutionProviders as $keyy => $InstitutionProvider){
+					foreach($InstitutionTypes as $ki => $InstitutionType){
 
 						//**************************************************************************** */
 						//********************  Section For Country  Start     *****************************
@@ -2839,10 +2840,10 @@ class InstitutionSummaryExcelBehavior extends Behavior
 						//**************************************************************************** */
 						//********************  Section For Region  Start     *****************************
 						//**************************************************************************** */
-						
+
 						$finalArrayyyy =[];
 						$AreasData = $AreaT->find('all',['conditions'=>['area_level_id'=> $areaLevelId]])->toArray();
-						foreach($AreasData as $KEY => $Area_ins){ 
+						foreach($AreasData as $KEY => $Area_ins){
 							$finalArrayyyy[$KEY-1] = $Area_ins->name;
 							$institutRegion = $Institutions->find()
 									->select([
@@ -2908,17 +2909,17 @@ class InstitutionSummaryExcelBehavior extends Behavior
 									->where(['area_id'=>$Area_ins->id,'institution_provider_id'=>$InstitutionProvider->id,'institution_type_id'=>$InstitutionType->id])
 									;
 
-						}	
-						
+						}
+
 
 						//**************************************************************************** */
 						//********************  Section For District  Start     *****************************
 						//**************************************************************************** */
-						
+
 						$finalArrayyyy =[];
 						//$$institutDist=[];
 						$AreasData = $AreaT->find('all',['conditions'=>['area_level_id'=> $areaLevelId]])->toArray();
-						foreach($AreasData as $K => $Area_ins){ 
+						foreach($AreasData as $K => $Area_ins){
 							$finalArrayyyy[$K-1] = $Area_ins->name;
 
 							$institutDist = $Institutions->find()
@@ -2995,15 +2996,15 @@ class InstitutionSummaryExcelBehavior extends Behavior
 						$resultArray['DistrictData'][][$KEY]= $institutDist->count();
 						$ki++;
 					}
-					
+
 				}
 
-				$ShiftOptionTable = TableRegistry::get('shift_options');
-				$InsStudentTable = TableRegistry::get('institution_students');
+				$ShiftOptionTable = TableRegistry::get('Institution.ShiftOptions');
+				$InsStudentTable = TableRegistry::get('Institution.InstitutionStudents');
 				$ShiftOptions = $ShiftOptionTable->find('all')->toArray();
 				$shiftArr = [];
 				$shiftArrResult = [];
-				foreach($ShiftOptions as $keyy => $ShiftOption){ 
+				foreach($ShiftOptions as $keyy => $ShiftOption){
 					$shiftArr[$keyy] = 'male';
 					$shiftArrResult[$keyy] = $InsStudentTable->find()
 					->select([
@@ -3014,17 +3015,17 @@ class InstitutionSummaryExcelBehavior extends Behavior
 						'student_status_id' => 'student_status_id',
 						'gender_id' => 'Students.gender_id',
 					])
-					
+
 					->leftJoin(
 						['Students' => 'security_users'],
 						[
 							'Students.id = '. $InsStudentTable->aliasField('student_id')
 						]
 						)
-					
+
 					->where(['institution_id in'=>$finalIds,'academic_period_id'=> $academic_period_id,'gender_id'=>1])
 					->count();
-					
+
 
 					$shiftArr[$keyy.'1'] = 'female';
 					$shiftArrResult[$keyy.'1'] = $InsStudentTable->find()
@@ -3036,14 +3037,14 @@ class InstitutionSummaryExcelBehavior extends Behavior
 						'student_status_id' => 'student_status_id',
 						'gender_id' => 'Students.gender_id',
 					])
-					
+
 					->leftJoin(
 						['Students' => 'security_users'],
 						[
 							'Students.id = '. $InsStudentTable->aliasField('student_id')
 						]
 						)
-					
+
 					->where(['institution_id in'=>$finalIds,'academic_period_id'=> $academic_period_id,'gender_id'=>2])
 					->count();
 				}
@@ -3059,7 +3060,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 				//echo "<pre>";print_r($resultArray);die;
 				array_unshift($resultArray['countryData'] , 'Country');
 			    $AreasData1 = $AreaT->find('all',['conditions'=>['area_level_id'=> $areaLevelId]])->toArray();
-				foreach($AreasData1 as $KEYY => $Area_insss){ 
+				foreach($AreasData1 as $KEYY => $Area_insss){
 
 					//provider & types..
 					// $InstitutionsTypesTable = TableRegistry::get('institution_types');
@@ -3069,12 +3070,12 @@ class InstitutionSummaryExcelBehavior extends Behavior
 					// $resultArray[0][] = 'atoll';
 					// $keyy = 0;
 					// $ki = 1;
-					// foreach($InstitutionsProviders as $keyy => $InstitutionsProvider){ 
-					// 	foreach($InstitutionsTypes as $ki => $InstitutionsType){ 
+					// foreach($InstitutionsProviders as $keyy => $InstitutionsProvider){
+					// 	foreach($InstitutionsTypes as $ki => $InstitutionsType){
 					// 		$finalArrayyyy =[];
 					// 	//$$institutDist=[];
 					// 	$AreasData = $AreaT->find('all',['conditions'=>['area_level_id'=> $areaLevelId]])->toArray();
-					// 	foreach($AreasData as $K => $Area_ins){ 
+					// 	foreach($AreasData as $K => $Area_ins){
 					// 		$finalArrayyyy[$K-1] = $Area_ins->name;
 
 					// 		$institutDist = $Institutions->find()
@@ -3150,12 +3151,12 @@ class InstitutionSummaryExcelBehavior extends Behavior
 				}
 
 				//echo "<pre>";print_r($resultArray);die;
-			} else {  
+			} else {
 
 				if(!empty($value->area_id)) {
 					//if (!in_array($value->area_id, $areaArray)) {
-						$resultArray[$key]['area_name'] = $value->area_name; 
-					// } else { 
+						$resultArray[$key]['area_name'] = $value->area_name;
+					// } else {
 					// 	$resultArray[$key]['area_name'] = '';
 					// }
 					$areaArray[] = $value->area_id;
@@ -3178,11 +3179,11 @@ class InstitutionSummaryExcelBehavior extends Behavior
 				// unset ($shiftArr);
 				// echo "<pre>";print_r($resultArray);die;
 			}
-			$i++;	
+			$i++;
 		}
 		//echo "<pre>";print_r($resultArray);die;
-		
-		
+
+
 		// $shiftGenderData = $Institutions->find()
         //             ->select([
         //                 'gender' => 'Genders.name',
@@ -3222,11 +3223,11 @@ class InstitutionSummaryExcelBehavior extends Behavior
 		// 			);
 					//echo "<pre>".print_r($shiftGenderData->toArray());die;
 		$shift_gender = array();
-		// if(!empty($shiftGenderData)) {	
+		// if(!empty($shiftGenderData)) {
 		// 	foreach($shiftGenderData as $gender_key => $gender_value) {
 		// 		if($gender_value->code == 'M') {
 		// 			$shift_gender[$gender_value->shift_option_id][$gender_value->code][] = $gender_value->gender;
-		// 		} 
+		// 		}
 		// 		if($gender_value->code == 'F') {
 		// 			$shift_gender[$gender_value->shift_option_id][$gender_value->code][] = $gender_value->gender;
 		// 		}
@@ -3234,7 +3235,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 		// }
 		$totalMale = $totalFemale = 0;
 		$genderArray = [];
-		$ShiftOptions = TableRegistry::get('ShiftOptions');
+		$ShiftOptions = TableRegistry::get('Institution.ShiftOptions');
 		$shiftOptionData = $ShiftOptions->find();
 		// if(!empty($shiftOptionData)) {
 		// 	foreach($shiftOptionData as $key => $value) {
@@ -3250,14 +3251,14 @@ class InstitutionSummaryExcelBehavior extends Behavior
 		// 		} else {
 		// 			$genderArray[$value->name]['male_count'] = 0;
 		// 			$genderArray[$value->name]['female_count'] = 0;
-		// 		}	
+		// 		}
 		// 	}
 		// }
 		// $genderArray['total_gender'] = array('male_name'=> 'Male','male_code'=> 'M','male_count'=> $totalMale, 'female_name'=> 'Female','female_code'=> 'F','female_count'=> $totalFemale);
-		
+
 		$data = $area = $locality = $areaAdministrative = $sector = $ownership = $provider = $type = array();
 		$areaIndex = $areaAdministrativeIndex = $localityIndex = $sectorIndex = $providerIndex = $ownershipIndex = $typeIndex = NULL;
-		
+
 		if(!empty($resultArray)) {
 			foreach($resultArray as $key => $result) { //echo "<pre>";print_r($result);die;
 				if(array_filter($result)) {
@@ -3341,7 +3342,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 					// 				$type[$key] = $key;
 					// 			}
 					// 		}
-					// 	} 
+					// 	}
 					// 	foreach($genderArray as $maleGender) {
 					// 		$data[$key][] = $maleGender['male_code'];
 					// 		$data[$key][] = $maleGender['male_name'];
@@ -3428,7 +3429,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
 					// 				$type[$key] = $key;
 					// 			}
 					// 		}
-					// 	} 
+					// 	}
 					// 	foreach($genderArray as $femaleGender) {
 					// 		$data[$key][] = $femaleGender['female_code'];
 					// 		$data[$key][] = $femaleGender['female_name'];
@@ -3524,19 +3525,19 @@ class InstitutionSummaryExcelBehavior extends Behavior
 					unset($type[$typeIndex]);
 				}
 				//die;
-				
+
 			}
-		}		
+		}
 		$finalArray = array();
-		
-		$AreaLevelT = TableRegistry::get('area_levels');
-		$AreaT = TableRegistry::get('areas');
+
+		$AreaLevelT = TableRegistry::get('Area.AreaLevels');
+		$AreaT = TableRegistry::get('Area.Areas');
 		$AreaLevel = $AreaLevelT->find('all',['conditions'=>['id'=>$areaLevelId]])->first();
 		if(!empty($data)) {
 
 			if($AreaLevel->level == "1"){
 				foreach($data as $data_keyy => $data_roww) { //echo "<pre>";print_r($arrayy);die;
-					if($data_keyy === 0) { 
+					if($data_keyy === 0) {
 						//array_unshift($data['countryData'] , 'Country');//echo "<pre>";print_r($data_roww['countryData']);die;
 						$finalArray[$data_keyy] = $data_roww;
 						$finalArray[$data_keyy+1] = $data['countryData'];
@@ -3556,19 +3557,19 @@ class InstitutionSummaryExcelBehavior extends Behavior
 					}
 				}
 					//provider & types..
-					$InstitutionsTypesTable = TableRegistry::get('institution_types');
+					$InstitutionsTypesTable = TableRegistry::get('Institution.InstitutionTypes');
 					$InstitutionsTypes = $InstitutionsTypesTable->find('all')->toArray();
-					$InstitutionProviderssTable = TableRegistry::get('institution_providers');
+					$InstitutionProviderssTable = TableRegistry::get('Institution.InstitutionProviders');
 					$InstitutionsProviders = $InstitutionProviderssTable->find('all')->toArray();
 					$resultArray[0][] = 'atoll';
 					$keyy = 0;
 					$ki = 1;
-					foreach($InstitutionsProviders as $keyy => $InstitutionsProvider){ 
-						foreach($InstitutionsTypes as $ki => $InstitutionsType){ 
+					foreach($InstitutionsProviders as $keyy => $InstitutionsProvider){
+						foreach($InstitutionsTypes as $ki => $InstitutionsType){
 							$finalArrayyyy =[];
 							//$$institutDist=[];
 							$AreasData = $AreaT->find('all',['conditions'=>['area_level_id'=> $areaLevelId]])->toArray();
-							foreach($AreasData as $K => $Area_ins){ 
+							foreach($AreasData as $K => $Area_ins){
 								$finalArrayyyy[$K-1] = $Area_ins->name;
 
 								$institutDist = $Institutions->find()
@@ -3674,17 +3675,17 @@ class InstitutionSummaryExcelBehavior extends Behavior
 					if($data_key === 0) {
 						$finalArray[$data_key] = $data_row;
 					}
-					
+
 				}
 				//
 				$arrr =[];
-				
-				foreach($AreasData as $KEy => $AreaINs){ 
+
+				foreach($AreasData as $KEy => $AreaINs){
 					$arrr[0] =$AreaINs->name;
 					$arrr[1] =10;
 					$arrr[2] =15;
 					$arrr[3] =20;
-					
+
 					$arrr[4] = 12;
 					$arrr[5] = 43;
 					$arrr[6] = 23;
@@ -3703,12 +3704,12 @@ class InstitutionSummaryExcelBehavior extends Behavior
 					$arrr[19]= 4;
 					$arrr[20]= 4;
 					$finalArray[$KEy+1] = $arrr;
-					
+
 				}
 
 				//echo "<pre>";print_r($finalArray);die;
 			}
-			
+
 		}
 		//echo "<pre>";print_r($AreaLevel);die;
 		//echo "<pre>";print_r($finalArray);die;
@@ -3717,21 +3718,21 @@ class InstitutionSummaryExcelBehavior extends Behavior
 
     public function generate($settings = [])
     {
-		$language = I18n::locale();
-		$module = $this->_table->alias();
+		$language = I18n::getLocale();
+		$module = $this->_table->getAlias();
 		//echo '<pre>';print_r($module);
-		
+
 		$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, 'area_education', 'fr'], true);
 		return $event;
     }
 
     private function getFields($table, $settings, $label)
     {
-        $language = I18n::locale();
-		$module = $this->_table->alias();
+        $language = I18n::getLocale();
+		$module = $this->_table->getAlias();
 
 		$event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, $label, $language], true);
-		return $event->result;
+		return $event->getResult();
     }
 
     private function getFooter()
@@ -3755,8 +3756,8 @@ class InstitutionSummaryExcelBehavior extends Behavior
                 } else {
                     $event = $this->dispatchEvent($table, $this->eventKey($method), null, [$entity, $attr]);
                 }
-                if ($event->result) {
-                    $returnedResult = $event->result;
+                if ($event->getResult()) {
+                    $returnedResult = $event->getResult();
                     if (is_array($returnedResult)) {
                         $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
                         $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
@@ -3767,8 +3768,8 @@ class InstitutionSummaryExcelBehavior extends Behavior
             } else {
                 $method = 'onExcelGet' . Inflector::camelize($field);
                 $event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity], true);
-                if ($event->result) {
-                    $returnedResult = $event->result;
+                if ($event->getResult()) {
+                    $returnedResult = $event->getResult();
                     if (is_array($returnedResult)) {
                         $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
                         $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
@@ -3870,7 +3871,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 0];
@@ -3890,7 +3891,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $action = $this->_table->action;
-        if (in_array($action, $this->config('pages'))) {
+        if (in_array($action, $this->getConfig('pages'))) {
             $toolbarButtons = isset($extra['toolbarButtons']) ? $extra['toolbarButtons'] : [];
             $toolbarAttr = [
                 'class' => 'btn btn-xs btn-default',
@@ -3929,7 +3930,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
                 $export['url']['action'] = 'excel';
             }
 
-            $pages = $this->config('pages');
+            $pages = $this->getConfig('pages');
             if (in_array($action, $pages)) {
                 $toolbarButtons['export'] = $export;
             }
@@ -3946,7 +3947,7 @@ class InstitutionSummaryExcelBehavior extends Behavior
                 $export['url']['action'] = 'excel';
             }
 
-            $pages = $this->config('pages');
+            $pages = $this->getConfig('pages');
             if ($pages != false) {
                 if (in_array($action, $pages)) {
                     $toolbarButtons['export'] = $export;

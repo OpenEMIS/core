@@ -9,7 +9,7 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Workflow\Model\Behavior\WorkflowBehavior;
 use Cake\Datasource\ConnectionManager;
 
@@ -19,12 +19,12 @@ class ImportInstitutionPositionsTable extends AppTable
 
     private $institutionId;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('import_mapping');
+        $this->setTable('import_mapping');
         parent::initialize($config);
         
-        $this->addBehavior('Import.Import', [
+        $this->addBehavior('Import.ImportPosition', [
             'plugin' => 'Institution',
             'model' => 'InstitutionPositions'
         ]);
@@ -33,7 +33,7 @@ class ImportInstitutionPositionsTable extends AppTable
         $this->InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
@@ -47,14 +47,14 @@ class ImportInstitutionPositionsTable extends AppTable
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
     {
-        $session = $request->session();
+        $session = $request->getSession();
         if ($session->check('Institution.Institutions.id')) {
             $this->institutionId = $session->read('Institution.Institutions.id');
         }
 
-        $crumbTitle = $this->getHeader($this->alias());
+        $crumbTitle = $this->getHeader($this->getAlias());
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
     //POCOR-7684:: Start
@@ -170,7 +170,7 @@ class ImportInstitutionPositionsTable extends AppTable
             ->matching('WorkflowModels', function ($q) {
                 return $q->where(['WorkflowModels.model' => 'Institution.InstitutionPositions']);
             })
-            ->matching($lookedUpTable->alias())
+            ->matching($lookedUpTable->getAlias())
             ->order([
                 $this->Workflows->aliasField('name'),
                 $lookupModel.'.category'
@@ -257,6 +257,37 @@ class ImportInstitutionPositionsTable extends AppTable
         }
         //POCOR-7417:end
         $tempRow['institution_id'] = $this->institutionId;
+
+        //POCOR-7800::Start
+        if(empty($tempRow['assignee_id'])){
+            $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+            $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+            $Institutions = TableRegistry::get('Institution.Institutions');
+            $stepRoles = $WorkflowStepsRoles->getRolesByStep($tempRow['status_id']);
+            $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $tempRow['institution_id']])->contain(['Areas'])->first();
+            $securityGroupId = $institutionObj->security_group_id;
+            $areaObj = $institutionObj->area;
+
+
+            $where = [
+                'OR' => [[$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId],
+                        ['Institutions.id' => $institutionId]],
+                $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
+            ];
+            $schoolBasedAssigneeQuery = $SecurityGroupUsers
+                    ->find('userList', ['where' => $where])
+                    ->leftJoinWith('SecurityGroups.Institutions');
+            $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
+
+
+            $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
+            $regionBasedAssigneeQuery = $SecurityGroupUsers
+                                            ->find('UserList', ['where' => $where, 'area' => $areaObj]);
+            $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
+            $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
+            $tempRow['assignee_id'] = array_key_first($assigneeOptions);
+        }
+        //POCOR-7800::End
 
         if (!isset($tempRow['position_no'])) {
             $tempRow['position_no'] = $this->InstitutionPositions->getUniquePositionNo($this->institutionId);

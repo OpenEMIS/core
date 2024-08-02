@@ -10,7 +10,7 @@ class ExcelReportComponent extends Component
 {
 	private $controller;
 
-	public function initialize(array $config)
+	public function initialize(array $config):void
 	{
 		parent::initialize($config);
 		$this->controller = $this->_registry->getController();
@@ -23,18 +23,19 @@ class ExcelReportComponent extends Component
 		$className = $params['className'];
 		$model = TableRegistry::get($className);
 
-		if ($model->behaviors()->has('ExcelReport') && array_key_exists('format', $params)) {
-			$model->behaviors()->get('ExcelReport')->config([
-				'format' => $params['format']
-			]);
+		if ($model->behaviors()->has('ExcelReport') && isset($params['format'])) {
+			$model->behaviors()->get('ExcelReport')->setConfig(
+				'format', $params['format']
+			);
 		}
 
 		$extra = new ArrayObject($params);
+
 		$event = $model->dispatchEvent('ExcelTemplates.Model.onRenderExcelTemplate', [$extra], $this->controller);
-		if ($event->isStopped()) { return $event->result; }
+		if ($event->isStopped()) { return $event->getResult(); }
 
 		$event = $model->dispatchEvent('ExcelTemplates.Model.afterRenderExcelTemplate', [$extra, $this->controller], $this->controller);
-		if ($event->isStopped()) { return $event->result; }
+		if ($event->isStopped()) { return $event->getResult(); }
 	}
 
 	public function viewVars($params=[])
@@ -46,6 +47,6 @@ class ExcelReportComponent extends Component
 
 		$extra = new ArrayObject([]);
 		$event = $model->dispatchEvent('ExcelTemplates.Model.onGetExcelTemplateVars', [$extra], $this->controller);
-		if ($event->isStopped()) { return $event->result; }
+		if ($event->isStopped()) { return $event->getResult(); }
 	}
 }

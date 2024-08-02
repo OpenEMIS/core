@@ -16,6 +16,7 @@
 						'class' => 'form-control',
 						'label' => false,
 						'options' => $academicPeriodOptions,
+						'default' => $selectedAcademicPeriod, //POCOR-8092
 						'url' => $baseUrl,
 						'data-named-key' => 'academic_period_id',
 						'data-named-group' => 'status_id,education_grade_id'

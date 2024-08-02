@@ -7,7 +7,7 @@ use Cake\Datasource\ResultSetInterface;
 use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
 use Cake\ORM\TableRegistry;
-
+// @todo redo
 class InstitutionTripsController extends PageController
 {
     public function initialize()
@@ -25,7 +25,7 @@ class InstitutionTripsController extends PageController
         $this->loadComponent('Institution.InstitutionInactive');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $event = parent::implementedEvents();
         $event['Controller.Page.onRenderDays'] = 'onRenderDays';
@@ -33,21 +33,29 @@ class InstitutionTripsController extends PageController
         return $event;
     }
 
-	public function beforeFilter(Event $event)
+	public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        $institutionId = $this->getInstitutionID();
+        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
         $institutionName = $session->read('Institution.Institutions.name');
 
-    	parent::beforeFilter($event);
+        parent::beforeFilter($event);
 
-        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-
-		$page = $this->Page;
+        $page = $this->Page;
 
         // set Breadcrumb
-        $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-        $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $encodedInstitutionId, $encodedInstitutionId]);
+        $page->addCrumb('Institutions', [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'Institutions',
+            'index']);
+        $page->addCrumb($institutionName, [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'dashboard',
+            'institutionId' => $encodedInstitutionId,
+            $encodedInstitutionId]);
         $page->addCrumb('Trips');
 
         // set header
@@ -445,5 +453,11 @@ class InstitutionTripsController extends PageController
         }
 
         return $students;
+    }
+
+
+    private function getInstitutionID()
+    {
+        $this->getQueryString('institution_id');
     }
 }

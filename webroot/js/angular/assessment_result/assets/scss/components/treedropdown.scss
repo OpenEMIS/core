@@ -1,0 +1,126 @@
+@charset "UTF-8";
+
+/* Tree Dropdown V1.1.2 */
+
+.kdx-tree-dropdown {
+    font-size: $bodyTextSize;
+
+    .kdx-treedropdown-input {
+        border: $greyCBorder;
+        border-radius: 3px;
+        display: inline-block;
+        width: 100%;
+        padding: $padding5 $padding10;
+        background-color: $whiteColor;
+    }
+}
+
+.kdx-popover-window {
+    background-color: $whiteColor;
+    margin-top: $noMargin !important;
+    border-top-right-radius: 0 !important;
+    border-top-left-radius: 0 !important;
+    padding: $noPadding !important;
+    margin-top: -2px !important;
+
+    &.popover.popover-bottom::before,
+    &.popover.popover-bottom::after {
+        display: none;
+    }
+
+    .popover-content {
+        padding: $noPadding !important;
+    }
+
+    .ui-tree-toggler {
+        font-family: $fontAwesome;
+        transform-origin: 50% 50%;
+
+        &.fa-caret-down {
+
+            &.kdx-loading-class:before {
+                content: '\f110';
+            }
+        }
+    }
+
+    .ui-tree-container {
+        padding: $noPadding $padding10;
+        max-height: 1px;
+        transform: translateZ(0);
+        overflow-x: hidden !important;
+
+        .ui-treenode {
+            .input-selection {
+                background-color: transparent !important;
+                border-radius: 0;
+                border: 0;
+                width: 100%;
+                padding: $noPadding !important;
+                margin-bottom: $noMargin;
+            }
+
+            .ui-treenode-children {
+                padding: $noPadding $noPadding $noPadding 18px;
+
+                .rtl & {
+                    padding: $noPadding 18px $noPadding $noPadding;
+                }
+            }
+
+            .fa-caret-right:before {
+                .rtl & {
+                    content: "\f0d9";
+                }
+            }
+        }
+    }
+
+    .kdx-p-tree {
+        div.ui-tree {
+            border: 0 !important;
+            max-width: 100%;
+            overflow-y: auto;
+        }
+    }
+
+    .ui-tree {
+        width: 100% !important;
+
+        .selection-wrapper .dropdown {
+            pointer-events: none;
+        }
+
+        .ui-treenode {
+            position: relative;
+        }
+
+        .ui-treenode {
+            .ui-treenode-content {
+                min-height: 30px;
+
+                .ui-treenode-label,
+                .ui-treenode-label label {
+                    cursor: pointer;
+                    white-space: normal;
+                    vertical-align: top;
+                    width: 95%;
+                }
+
+                .ui-state-hover {
+                    background-color: #F9F9F9;
+                    border-radius: 0;
+                }
+            }
+
+            .ui-tree-toggler,
+            .ui-treenode-leaf-icon {
+                width: 20px !important;
+                margin: $margin10 $noMargin $noMargin;
+            }
+        }
+    }
+}
+.pi {
+    font-family: 'primeicons' !important;
+}

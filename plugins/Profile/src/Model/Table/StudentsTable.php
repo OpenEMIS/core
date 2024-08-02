@@ -80,12 +80,12 @@ class StudentsTable extends ControllerActionTable
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
         $urlButtons = [
-            'plugin' => $this->controller->plugin,
-            'controller' => $this->controller->name,
+            'plugin' => $this->controller->getPlugin(),
+            'controller' => $this->controller->getName(),
             'action' => 'ProfileStudentUser'
         ];
 
-        if (array_key_exists('view', $buttons) && $entity->has('_matchingData')) {
+        if (isset($buttons['view']) && $entity->has('_matchingData')) {
             $buttons['view']['url'] = $urlButtons;
             $buttons['view']['url'][0] = 'view';
             $buttons['view']['url'][1] = $this->paramsEncode(['id' =>  $entity->_matchingData['Users']->id, 'ProfileGuardians.id' => $entity->id]);

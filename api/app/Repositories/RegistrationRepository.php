@@ -26,16 +26,20 @@ use App\Models\StudentCustomFieldValues;
 use App\Models\IdentityTypes;
 use App\Models\InstitutionTypes;
 use App\Models\AreaLevels;
+use App\Models\AreaAdministrativeLevels;
 use App\Models\SecurityGroupUsers;
+use App\Models\UserContacts;
 use Illuminate\Support\Facades\DB;
 use Mail;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
 
 class RegistrationRepository extends Controller
 {
 
 
-    public function academicPeriodsList()
+    public function academicPeriodsList($params)
     {
         try {
             $academicPeriods = AcademicPeriod::select('id', 'name', 'start_year')->where('current', 1)->orderBy('id','DESC')->get()->toArray();
@@ -46,9 +50,12 @@ class RegistrationRepository extends Controller
                 $restAcademicPeriods = AcademicPeriod::select('id', 'name', 'start_year')->where('start_year' ,'>', $current_start_year)->get()->toArray();
             }
 
-            $newArray = array_merge($academicPeriods, $restAcademicPeriods);
+            $academicPeriodArr['current_academic_year'] = $academicPeriods;
+            $academicPeriodArr['rest_academic_year'] = $restAcademicPeriods;
+
             
-            return $newArray;
+            
+            return $academicPeriodArr;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -83,41 +90,65 @@ class RegistrationRepository extends Controller
                 $lists = $lists->where('academic_periods.current', 1);
             }
 
-                    
-            $educationGrades = $lists->get();
-            
+            if(isset($request['order'])){
+                $orderBy = $request['order_by']??"ASC";
+                $col = 'education_grades.'.$request['order'];
+                $lists = $lists->orderBy($col, $orderBy);
+            }
+
+
+            if ($request['limit']) {
+                $educationGrades = $lists->paginate($request['limit']);
+            } else {
+                $educationGrades = $lists->get();
+            }
             return $educationGrades;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Failed to fetch list from DB');
         }
     }
 
 
-    public function institutionDropdown($request)
+    public function institutionDropdown($params)
     {
         try {
             $institutions = Institutions::select('id', 'name', 'code');
 
-            if($request['institution_type_id']){
-                $institutions = $institutions->where('institution_type_id', $request['institution_type_id']);
+            if(isset($params['institution_type_id'])){
+                $institutions = $institutions->where('institution_type_id', $params['institution_type_id']);
             }
 
 
-            if($request['area_id']){
-                $institutions = $institutions->where('area_id', $request['area_id']);
+            if(isset($params['area_id'])){
+                $institutions = $institutions->where('area_id', $params['area_id']);
             }
 
 
-            $data = $institutions->get();
+            //$data = $institutions->get();
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $institutions = $institutions->orderBy($col, $orderBy);
+            }
+                        
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $institutions->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $institutions->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
             
-            return $data;
+            return $list;
         } catch (\Exception $e) {
-            
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -128,13 +159,18 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function administrativeAreasList()
+    public function administrativeAreasList($params)
     {
         try {
-            /*$areaAdministratives = AreaAdministratives::select('id', 'name', 'parent_id')->with('areaAdministrativesChild:id,name,parent_id')->get();*/
 
-            $areaAdministratives = Areas::select('id', 'name', 'parent_id')->orderBy('name', 'ASC')->get()->toArray();
-            
+            $areaAdministratives = Areas::select('id', 'name', 'parent_id')->orderBy('name', 'ASC');
+
+            if (isset($params['limit'])) {
+                $areaAdministratives = $areaAdministratives->paginate($params['limit'])->toArray();
+            } else {
+                $areaAdministratives = $areaAdministratives->get()->toArray();
+            }
+
             return $areaAdministratives;
         } catch (\Exception $e) {
             Log::error(
@@ -277,11 +313,36 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function autocompleteOpenemisNo($id)
+    public function autocompleteOpenemisNo($params, $id)
     {
         try {
-            $data = SecurityUsers::select('id as key', 'openemis_no as value')->where('openemis_no', 'LIKE', '%'.$id.'%')->get()->toArray();
-            return $data;
+            $data = SecurityUsers::select(
+                    'id as key', 
+                    'openemis_no as value',
+                    'first_name',
+                    'middle_name',
+                    'third_name',
+                    'last_name',
+                    'openemis_no',
+                    )->where('openemis_no', 'LIKE', '%'.$id.'%');
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $data = $data->orderBy($col, $orderBy);
+            }
+                        
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $data->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $data->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+            
+            return $list;
             
         } catch (\Exception $e) {
             Log::error(
@@ -311,7 +372,7 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function detailsByEmis($id)
+    public function detailsByEmis($params,$id)
     {
         try {
             $data = SecurityUsers::with(
@@ -320,29 +381,51 @@ class RegistrationRepository extends Controller
                     'institutionStudent',
                     'institutionStudent.institution'
                 )
-                ->where('openemis_no', $id)
-                ->orWhere('identity_number', $id)
-                ->get();
-            return $data;
+                ->where('openemis_no', 'LIKE', '%'.$id.'%')
+                ->orWhere('identity_number', 'LIKE', '%'.$id.'%');
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $data = $data->orderBy($col, $orderBy);
+            }
+                        
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $data->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $data->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
+            return $list;
             
         } catch (\Exception $e) {
             Log::error(
                 'Failed to find candidate data.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
+            dd($e);
             return $this->sendErrorResponse('Failed to find candidate data.');
         }
     }
 
 
-    public function nationalityList()
+    public function nationalityList($params)
     {
         try {
-            $nationalities = Nationalities::select('id', 'name')->get();
+            $nationalities = Nationalities::orderBy('order', 'ASC');
+            if (isset($params['limit'])) {
+                $nationalities = $nationalities->paginate($params['limit']);
+            } else {
+                $nationalities = $nationalities->get();
+            }
             
             return $nationalities;
         } catch (\Exception $e) {
+
             Log::error(
                 'Failed to find nationality list.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -360,9 +443,9 @@ class RegistrationRepository extends Controller
             //dd($request->all());
 
             $encodedOtp = base64_encode($request['otp']??"");
-            //dd($encodedOtp);
+            
             //$otpData = RegistrationOtp::where('otp', $encodedOtp)->first();
-            $userData = SecurityUserCode::select('security_users.id as user_id')->join('security_users', 'security_users.id', '=', 'security_user_codes.security_user_id')->where('verification_otp', $encodedOtp)->first();
+            $userData = SecurityUserCode::select('security_users.id as user_id', 'security_users.email')->join('security_users', 'security_users.id', '=', 'security_user_codes.security_user_id')->where('verification_otp', $encodedOtp)->first();
 
             if(!$userData){
                 return 7; //Invalid otp...
@@ -372,6 +455,16 @@ class RegistrationRepository extends Controller
             
             if(is_array($validateAge)){
                 return $validateAge;
+            }
+
+            $validateCustomField = $this->validateCustomField($request);
+            
+            if(is_array($validateCustomField) && count($validateCustomField) > 0){
+                return $validateCustomField;
+            }
+            
+            if($validateCustomField == 0){
+                return 8;
             }
 
             if($request['openemis_id'] != ""){
@@ -426,6 +519,20 @@ class RegistrationRepository extends Controller
                             $store = InstitutionStudent::insert($storeStu);
                             Log::info("## Stored in InstitutionStudent ##", $storeStu);*/
                             
+
+                            //For POCOR-8178 Start
+                            if(isset($request['email'])  && ($request['email'] <> "")){
+                                $userContactStore['contact_type_id'] = 8; //For email
+                                $userContactStore['value'] = $request['email'];
+                                $userContactStore['preferred'] = 1;
+                                $userContactStore['security_user_id'] = $student->id;
+                                $userContactStore['created_user_id'] = $student->id;
+                                $userContactStore['created'] = Carbon::now()->toDateTimeString();
+
+                                $userContactInsert = UserContacts::insert($userContactStore);
+                            }
+                            //For POCOR-8178 End
+
 
                             //Creating Institution_student_Admission...
                             $assigneeId = $this->getAssigneeId();
@@ -519,7 +626,18 @@ class RegistrationRepository extends Controller
                             $store = InstitutionStudent::insert($storeStu);
                             Log::info("## Stored in InstitutionStudent ##", $storeStu);*/
 
-                            
+                            //For POCOR-8178 Start
+                            if(isset($request['email'])  && ($request['email'] <> "")){
+                                $userContactStore['contact_type_id'] = 8; //For email
+                                $userContactStore['value'] = $request['email'];
+                                $userContactStore['preferred'] = 1;
+                                $userContactStore['security_user_id'] = $student->id;
+                                $userContactStore['created_user_id'] = $student->id;
+                                $userContactStore['created'] = Carbon::now()->toDateTimeString();
+
+                                $userContactInsert = UserContacts::insert($userContactStore);
+                            }
+                            //For POCOR-8178 End
 
                             //Creating Institution_student_Admission...
                             $assigneeId = $this->getAssigneeId();
@@ -607,6 +725,20 @@ class RegistrationRepository extends Controller
                         ->first();
 
 
+                        //For POCOR-8184 Start
+                        if(isset($request['email']) && ($request['email'] <> "")){
+                            $userContactStore['contact_type_id'] = 8; //For email
+                            $userContactStore['value'] = $request['email'];
+                            $userContactStore['preferred'] = 1;
+                            $userContactStore['security_user_id'] = $userId;
+                            $userContactStore['created_user_id'] = $userId;
+                            $userContactStore['created'] = Carbon::now()->toDateTimeString();
+
+                            $userContactInsert = UserContacts::insert($userContactStore);
+                        }
+                        //For POCOR-8184 End
+
+
                         //$stuStatus = StudentStatuses::where('name', 'Pending Admission')->first();
                         $academicPeriod = AcademicPeriod::where('id', $request['academic_period_id'])->first();
 
@@ -678,11 +810,372 @@ class RegistrationRepository extends Controller
     }
 
 
+    public function validateCustomField($request)
+    {
+        try {
+            $param = $request->all();
+            
+            $customFields = $this->getStudentCustomFields();
+
+            $requiredCfArray = [];
+            $requiredCfIds = [];
+            $allCfIds = [];
+            foreach($customFields as $k => $cf){
+                if(is_numeric($cf['is_mandatory']) && $cf['is_mandatory'] == 1){
+                    
+                    //array_push($requiredCfArray, $cf);
+                    array_push($requiredCfIds, $cf['student_custom_field_id']);
+                }
+            }
+            
+
+            if(count($requiredCfIds) > 0){
+                if(isset($param['custom_fields']) && count($param['custom_fields']) > 0){
+                    $customField = $param['custom_fields'];
+                    
+                    foreach($customField as $cf){
+                        array_push($allCfIds, $cf['custom_field_id']);
+                    }
+                    
+
+                    foreach($requiredCfIds as $reqCfId){
+
+                        if(in_array($reqCfId, $allCfIds)){
+                            $key = array_search($reqCfId, array_column($customField, 'custom_field_id'));
+                            
+                            if($key !== false){
+                                $array = $customField[$key];
+                                //For POCOR-8237 start...
+                                if($array['text_value'] != null || $array['number_value'] != null || $array['decimal_value'] != null || $array['textarea_value'] != null || $array['time_value'] != null || $array['dropdown_value'] != null || $array['checkbox_value'] != null || $array['file'] != null || $array['date_value'] != null){
+                                    //
+                                } else {
+                                    return 0;
+                                }
+                                //For POCOR-8237 end...
+                            }
+                        } else {
+                            return 0;
+                        }
+                    }
+
+                } else {
+                    return 0;
+                }
+            }
+
+
+
+            $validationRule = $this->checkValidationRule($customFields, $param);
+            
+            if(is_array($validationRule) && count($validationRule) > 0){
+                return $validationRule;
+            }
+
+            return 1;
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
+
+
+    public function checkValidationRule($customFields, $param)
+    {
+        try {
+            //dd($customFields, $param);
+            $error = [];
+            if(isset($param['custom_fields'])  && count($param['custom_fields']) > 0){
+
+                foreach($param['custom_fields'] as $k => $cF){
+                    $key = array_search($cF['custom_field_id'], array_column($customFields, 'student_custom_field_id'));
+                    
+                    if($key !== false){
+                        $customFieldData = $customFields[$key]['student_custom_field'];
+
+                        if(count($customFieldData) > 0){
+                            $fieldType = $customFieldData['field_type'];
+                            $params = $customFieldData['params'];
+                            if(isset($params)){
+                                
+                                $paramArr = json_decode($params);
+
+                                //Validating Date field type...
+                                if($fieldType == 'DATE'){
+                                    $dateErr = $this->validateDate($paramArr, $cF, $customFieldData['name']);
+
+                                    if(is_array($dateErr) && count($dateErr) >0){
+                                        return $dateErr;
+                                    }
+                                }
+
+                                //Validating Time field type...
+                                if($fieldType == 'TIME'){
+                                    $timeErr = $this->validateTime($paramArr, $cF, $customFieldData['name']);
+
+                                    if(is_array($timeErr) && count($timeErr) >0){
+                                        return $timeErr;
+                                    }
+                                }
+
+
+                                //Validating Number field type...
+                                if($fieldType == 'NUMBER'){
+                                    $numErr = $this->validateNumber($paramArr, $cF, $customFieldData['name']);
+
+                                    if(is_array($numErr) && count($numErr) >0){
+                                        return $numErr;
+                                    }
+                                }
+
+
+                                //Validating Decimal field type...
+                                if($fieldType == 'DECIMAL'){
+                                    $decErr = $this->validateDecimal($paramArr, $cF, $customFieldData['name']);
+
+                                    if(is_array($decErr) && count($decErr) >0){
+                                        return $decErr;
+                                    }
+                                }
+                            }
+
+
+                            //Validating File field type...
+                            if($fieldType == 'FILE'){
+
+                                $fileErr = $this->validateFile($cF, $customFieldData['name']);
+                                
+                                if(is_array($fileErr) && count($fileErr) >0){
+                                    return $fileErr;
+                                }
+                            }
+                        }
+                    }
+
+                }
+                
+            }
+            
+            return $error;
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+
+
+    public function validateDate($paramArr, $cF, $cFName)
+    {
+        try {
+            $resp = [];
+
+            $date_val = $cF['date_value']??"";
+
+            $start_date = $paramArr->start_date??"";
+            $end_date = $paramArr->end_date??"";
+
+            //For POCOR-8237 start...
+            if($date_val == ""){
+                return $resp;
+            }
+            //For POCOR-8237 end...
+
+            if(!strtotime($date_val)){
+                $resp['msg'] = $cFName. ' should be a date value.';
+                return $resp;
+            }
+            
+            if(isset($date_val) && $date_val != ""){
+                if($start_date != "" && $end_date == ""){
+                    if($date_val < $start_date){
+                        $resp['msg'] = $cFName. ' should be earlier than '.$start_date;
+                    }
+                }
+
+                if($start_date == "" && $end_date != ""){
+                    if($date_val > $end_date){
+                        $resp['msg'] = $cFName. ' should be later than '.$end_date;
+                    }
+                }
+
+                if($start_date != "" && $end_date != ""){
+                    if($date_val < $start_date || $date_val > $end_date){
+                        $resp['msg'] = $cFName. ' should be between '.$start_date.' and '.$end_date;
+                    }
+                }
+                
+            }
+
+            return $resp;
+        } catch (\Exception $e){
+            return [];
+        }
+    }
+
+    public function validateTime($paramArr, $cF, $cFName)
+    {
+        try {
+            $resp = [];
+
+            $time_val = $cF['time_value']??"";
+            $start_time = $paramArr->start_time??"";
+            $end_time = $paramArr->end_time??"";
+
+            if(!strtotime($time_val)){
+                $resp['msg'] = $cFName. ' should be a time value.';
+                return $resp;
+            }
+
+            if(isset($time_val) && $time_val != ""){
+                $time_val = strtotime($time_val);
+
+                $start_time_val = explode(" ", $start_time)[0]; //Removing AM/PM
+                $end_time_val = explode(" ", $end_time)[0]; //Removing AM/PM
+
+                
+                if($start_time_val != "" && $end_time_val == ""){
+                    $start_time_str = strtotime($start_time_val);
+
+                    if($time_val < $start_time_str){
+                        $resp['msg'] = $cFName. ' should be later than '.$start_time;
+                    }
+                }
+
+                if($start_time_val == "" && $end_time_val != ""){
+                    $end_time_str = strtotime($end_time_val);
+
+                    if($time_val > $end_time_str){
+                        $resp['msg'] = $cFName. ' should be earlier than '.$end_time;
+                    }
+                }
+
+                if($start_time_val != "" && $end_time_val != ""){
+                    $start_time_str = strtotime($start_time_val);
+                    $end_time_str = strtotime($end_time_val);
+
+                    if($time_val < $start_time_str || $time_val > $end_time_str){
+                        $resp['msg'] = $cFName. ' should be between '.$start_time.' and '.$end_time;
+                    }
+                }
+            }
+            return $resp;
+
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    public function validateNumber($paramArr, $cF, $cFName)
+    {
+        try {
+            $resp = [];
+
+            $num_val = $cF['number_value']??"";
+            
+            $range = $paramArr->range??"";
+            $min_value = $paramArr->min_value??"";
+            $max_value = $paramArr->max_value??"";
+            
+
+            if($num_val != ""){
+                if(!is_numeric($num_val)){
+                    $resp['msg'] = $cFName. ' should be a numeric value.';
+                    return $resp;
+                }
+                
+                
+                if(isset($range) && $range != ""){
+                    if(isset($num_val) && $num_val != ""){
+
+                        $lower = $range->lower??"";
+                        $upper = $range->upper??"";
+
+                        if($num_val < $lower || $num_val > $upper){
+                            $resp['msg'] = $cFName. ' should be between '.$lower.' and '.$upper;
+                        }
+                    }
+                }
+
+                if(isset($num_val) && $num_val != ""){
+
+                    if($min_value != "" && $max_value == ""){
+                        if($num_val < $min_value){
+                            $resp['msg'] = $cFName. ' should be greater than '.$min_value;
+                        }
+                    }
+
+                    if($min_value == "" && $max_value != ""){
+                        if($num_val > $max_value){
+                            $resp['msg'] = $cFName. ' should be less than '.$max_value;
+                        }
+                    }
+                }
+            }
+            return $resp;
+        } catch (\Exception $e){
+            return [];
+        }
+    }
+
+
+    public function validateDecimal($paramArr, $cF, $cFName)
+    {
+        try {
+            $resp = [];
+
+            $dec_val = $cF['decimal_value']??"";
+            $length = $paramArr->length??"";
+            $precision = $paramArr->precision??"";
+            
+
+            if(isset($dec_val) && $dec_val != ""){
+                $dec_val_arr = explode(".", $dec_val);
+                if(count($dec_val_arr) == 1){
+                    $resp['msg'] = $cFName. ' should be a decimal value.';
+                    return $resp;
+                }
+
+                $dec_val_place = strlen($dec_val_arr[1]);
+                
+                if($dec_val_place > $precision) {
+                    $resp['msg'] = $cFName. ' should have '.$precision.' decimal places.';
+
+                    return $resp;
+                }
+
+            }
+            return $resp;
+        } catch (\Exception $e){
+            return [];
+        }
+    }
+
+
+    public function validateFile($cF, $cFName)
+    {
+        try {
+            $resp = [];
+
+            $file_link = $cF['file']??"";
+            
+            if($file_link != ""){
+                if (!filter_var($file_link, FILTER_VALIDATE_URL)) {
+                    
+                    $resp['msg'] = "Invalid file url for ".$cFName.".";
+                }
+            }
+            
+            return $resp;
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+
     public function storeCustomField($customFieldsArr, $student_id, $user_id)
     {
         DB::beginTransaction();
         try {
             $cfArray = [];
+            $fileArr = [];
             foreach($customFieldsArr as $k => $cf){
                 $cfArray[$k]['id'] = Str::uuid();
                 $cfArray[$k]['student_custom_field_id'] = $cf['custom_field_id'];
@@ -694,8 +1187,17 @@ class RegistrationRepository extends Controller
                 $cfArray[$k]['date_value'] = $cf['date_value']??Null;
 
                 if(isset($cf['file']) && ($cf['file']) != ""){
-                    $cfArray[$k]['file'] = file_get_contents($cf['file']);
-                    $cfArray[$k]['text_value'] = $cf['file']->getClientOriginalName();
+                    $file_name = basename($cf['file']);
+                    
+                    $fileContent = Http::get($cf['file'])->body();
+                    
+                    //$cfArray[$k]['file'] = file_get_contents($cf['file']);
+                    $cfArray[$k]['file'] = $fileContent;
+                    $cfArray[$k]['text_value'] = $file_name;
+                    //$cfArray[$k]['text_value'] = $cf['file']->getClientOriginalName();
+
+                    $fileArr[] = $cf['file'];
+
                 } else {
                     $cfArray[$k]['file'] = Null;
                 }
@@ -706,6 +1208,14 @@ class RegistrationRepository extends Controller
             }
             
             $store = StudentCustomFieldValues::insert($cfArray);
+            
+            //Removing the custom field files...
+
+            foreach($fileArr as $file){
+                $fileName = basename($file);
+                $path = 'public/customfieldfiles/'.$fileName;
+                Storage::delete($path);
+            }
             Log::info("## Stored in StudentCustomFieldValues ##", $cfArray);
             DB::commit();
             return true;
@@ -759,60 +1269,8 @@ class RegistrationRepository extends Controller
     public function getNewOpenemisNo()
     {
         try {
-            $configItem = ConfigItem::where('code', 'openemis_id_prefix')->first();
-            if($configItem){
-                $value = $configItem->value;
-                $prefix = explode(",", $value);
-                if($prefix[1] > 0){
-                    $prefix = $prefix[1];
-                } else {
-                    $prefix = '';
-                }
-
-                $latest = SecurityUsers::orderBy('id', 'DESC')->first();
-                $latestOpenemisNo = $latest->openemis_no;
-
-
-                if (empty($prefix)) {
-                    $latestDbStamp = $latestOpenemisNo;
-                } else {
-                    $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
-                }
-
-                $latestOpenemisNoLastValue = substr($latestOpenemisNo, -1);
-
-
-                $currentStamp = time();
-                if ($latestDbStamp <= $currentStamp && is_numeric($latestOpenemisNoLastValue)) {
-                    $newStamp = $latestDbStamp + 1;
-                } else {
-                    $newStamp = $currentStamp;
-                }
-                $newOpenemisNo = $prefix.$newStamp;
-
-                $resultOpenemisTemp = OpenemisTemp::orderBy('id', 'DESC')->first();
-
-                if(strlen($resultOpenemisTemp->openemis_no) < 5){
-                    $resultOpenemisTemp = SecurityUsers::orderBy('id', 'DESC')->first();
-                }
-
-                $resultOpenemisNoTemp = substr($resultOpenemisTemp->openemis_no, strlen($prefix));
-
-                $newOpenemisNo = $resultOpenemisNoTemp+1;
-                $newOpenemisNo=$prefix.$newOpenemisNo;
-
-                $resultOpenemisTemps = OpenemisTemp::where('openemis_no', $newOpenemisNo)->first();
-                
-                if(empty($resultOpenemisTemps->openemis_no)){
-                    $storeOpenemisTemp = OpenemisTemp::insert([
-                        'openemis_no' => $newOpenemisNo,
-                        'ip_address' => $_SERVER['REMOTE_ADDR'],
-                        'created' => Carbon::now()->toDateTimeString()
-                    ]);
-                }
-
-                return $newOpenemisNo;
-            }
+            $newOpenemisNo = getNewOpenemisNo();
+            return $newOpenemisNo;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to get new openemis number.',
@@ -825,7 +1283,7 @@ class RegistrationRepository extends Controller
 
 
 
-    public function getStudentCustomFields()
+    public function getStudentCustomFields($params)
     {
         try {
             $customFields = StudentCustomFormField::with([
@@ -835,11 +1293,27 @@ class RegistrationRepository extends Controller
             ])
             ->whereHas('studentCustomField')
             ->where('student_custom_form_id', 1)
-            ->orderBy('order', 'ASC')
-            ->get()
-            ->toArray();
+            ->orderBy('order', 'ASC');
             //dd($customFields);
-            return $customFields;
+
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $customFields = $customFields->orderBy($col, $orderBy);
+            }
+                        
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $customFields->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $customFields->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
+            return $list;
 
         } catch (\Exception $e) {
             Log::error(
@@ -852,11 +1326,17 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function identityTypeList()
+    public function identityTypeList($params)
     {
         try {
-            $identityTypes = IdentityTypes::select('id', 'name')->get();
-            
+            $identityTypes = IdentityTypes::select('id', 'name')->orderBy('order', 'ASC');
+
+            if (isset($params['limit'])) {
+                $identityTypes = $identityTypes->paginate($params['limit']);
+            } else {
+                $identityTypes = $identityTypes->get();
+            }
+
             return $identityTypes;
         } catch (\Exception $e) {
             Log::error(
@@ -873,10 +1353,11 @@ class RegistrationRepository extends Controller
     public function getInstitutionGradesList($request, $gradeId)
     {
         try {
-            $institutions = Institutions::whereHas('educationGrades',
-                    function ($query) use ($gradeId) {
-                        $query->where('education_grade_id', $gradeId);
-                    })->select('id', 'name', 'code');
+            $institutions = new Institutions();
+
+            $institutions = $institutions->select('institutions.*')->where('institutions.institution_status_id', '!=', 2);
+
+            $institutions = $institutions->join('institution_grades', 'institution_grades.institution_id', '=', 'institutions.id')->where('institution_grades.education_grade_id', $gradeId);
 
 
             if($request['institution_type_id']){
@@ -888,10 +1369,17 @@ class RegistrationRepository extends Controller
                 $institutions = $institutions->where('area_id', $request['area_id']);
             }
 
-            $lists = $institutions->get();
-            
+            $lists = $institutions->orderBy('institutions.name', 'ASC');
+
+            if (isset($request['limit'])) {
+                $lists = $lists->paginate($request['limit']);
+            } else {
+                $lists = $lists->get();
+            }
+
             return $lists;
         } catch (\Exception $e) {
+
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -902,12 +1390,28 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function institutionTypesDropdown()
+    public function institutionTypesDropdown($params)
     {
         try {
-            $institutions = InstitutionTypes::select('id', 'name')->get();
+            $institutions = InstitutionTypes::select('id', 'name');
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $institutions = $institutions->orderBy($col, $orderBy);
+            }
+                        
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $institutions->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $institutions->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
             
-            return $institutions;
+            return $list;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -919,11 +1423,22 @@ class RegistrationRepository extends Controller
     }
 
 
-    public function areaLevelsDropdown()
+    public function areaLevelsDropdown($params)
     {
         try {
-            $areaLevels = AreaLevels::select('id', 'name')->get();
-            
+            $areaLevels = AreaLevels::select('id', 'name');
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $areaLevels = $areaLevels->orderBy($col, $orderBy);
+            }
+
+            if (isset($params['limit'])) {
+                $areaLevels = $areaLevels->paginate($params['limit']);
+            } else {
+                $areaLevels = $areaLevels->get();
+            }
             return $areaLevels;
         } catch (\Exception $e) {
             Log::error(
@@ -945,8 +1460,12 @@ class RegistrationRepository extends Controller
                 $areas = $areas->where('area_level_id', $request['area_level_id']);
             }
 
-            $data = $areas->orderBy('name', 'ASC')->get();
-            
+            $data = $areas->orderBy('name', 'ASC');
+            if (isset($request['limit'])) {
+                $data = $data->paginate($request['limit']);
+            } else {
+                $data = $data->get();
+            }
             return $data;
         } catch (\Exception $e) {
             Log::error(
@@ -959,6 +1478,65 @@ class RegistrationRepository extends Controller
     }
 
 
+    public function areaAdministrativeLevelsDropdown($params)
+    {
+        try {
+            $areaLevels = AreaAdministrativeLevels::select('id', 'name');
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $areaLevels = $areaLevels->orderBy($col, $orderBy);
+            }
+
+            if (isset($params['limit'])) {
+                $areaLevels = $areaLevels->paginate($params['limit']);
+            } else {
+                $areaLevels = $areaLevels->get();
+            }
+
+            return $areaLevels;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Area Levels List Not Found');
+        }
+    }
+
+
+
+    public function areasAdministrativeDropdown($request)
+    {
+        try {
+            $areas = AreaAdministratives::select('id', 'name');
+
+            if($request['area_administrative_level_id']){
+                $areas = $areas->where('area_administrative_level_id', $request['area_administrative_level_id']);
+            }
+
+            $data = $areas->orderBy('name', 'ASC');
+
+            if (isset($request['limit'])) {
+                $data = $data->paginate($request['limit']);
+            } else {
+                $data = $data->get();
+            }
+            return $data;
+        } catch (\Exception $e) {
+            dd($e);
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Area Administrative Levels List Not Found');
+        }
+    }
+
+    
     public function validateAge($dob, $educationGradeId, $academicPeriodId)
     {
         try {  
@@ -988,11 +1566,19 @@ class RegistrationRepository extends Controller
                 $admissionAge = $educationGrade->admission_age;
 
                 $lowerLimit = $admissionAge - $ageMinusVal;
+
+                //If lower limit is in -ve...
+                if($lowerLimit < 0){
+                    $lowerLimit = 0;
+                }
+                
                 $upperLimit = $admissionAge + $agePlusVal;
 
                 if(($studentAge < $lowerLimit) || ($studentAge > $upperLimit)){
-                    $arr['loweAgeLimit'] = $lowerLimit;
-                    $arr['upperAgeLimit'] = $upperLimit;
+                    //$arr['loweAgeLimit'] = $lowerLimit;
+                    //$arr['upperAgeLimit'] = $upperLimit;
+
+                    $arr['msg'] = "The student should be between ".$lowerLimit." to ".$upperLimit. " years old.";
 
                     return $arr;
                 } else {
@@ -1035,5 +1621,52 @@ class RegistrationRepository extends Controller
         }
     }
 
-}
 
+
+    public function storecustomfieldfile($request)
+    {
+        try {
+            $params = $request->all();
+            $resp = [];
+            if(count($params) > 0){
+                
+                $storage_path = 'public/customfieldfiles';
+
+                Storage::deleteDirectory($storage_path);
+                if (!Storage::exists($storage_path)) {
+                    Storage::makeDirectory($storage_path, 0755);
+                }
+                
+                foreach($params['custom_field'] as $key => $param){
+                    
+                    $file = $param['file'];
+                    $str = rand(0000,9999).substr(time(), 0, -4);
+
+                    $file_name = $str.'_'.$file->getClientOriginalName();
+                    $file_name = str_replace(" ", "_", $file_name);
+                    
+                    $file->storeAs($storage_path,$file_name);
+
+                    $path = asset('public/storage/customfieldfiles/'.$file_name);
+                    
+                    $resp[$key]['custom_field_id'] = $param['custom_field_id'];
+                    $resp[$key]['file_name'] = $file_name;
+                    $resp[$key]['file_path'] = $path;
+                    
+                }
+                return $resp;
+            } else {
+                return 0;
+            }
+        } catch (\Exception $e) {
+            
+            Log::error(
+                'Failed to store file.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to store file.');
+        }
+    }
+
+}

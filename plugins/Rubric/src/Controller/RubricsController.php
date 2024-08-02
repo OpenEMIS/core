@@ -8,18 +8,23 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use Cake\Http\ServerRequest;
+use Cake\Event\EventInterface;
 
 class RubricsController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
         $this->ControllerAction->models = [
-            'Sections' => ['className' => 'Rubric.RubricSections'],
+            //'Sections' => ['className' => 'Rubric.RubricSections'],
             'Criterias' => ['className' => 'Rubric.RubricCriterias'],
             'Options' => ['className' => 'Rubric.RubricTemplateOptions'],
-            'Status' => ['className' => 'Rubric.RubricStatuses']
+            'Status' => ['className' => 'Rubric.RubricStatuses'],
+            'RubricCriterias' => ['className' => 'Rubric.RubricCriterias'],
+            'RubricTemplateOptions' => ['className' => 'Rubric.RubricTemplateOptions'],
+            'RubricStatuses' => ['className' => 'Rubric.RubricStatuses']
         ];
         $this->loadComponent('Paginator');
     }
@@ -29,10 +34,17 @@ class RubricsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Rubric.RubricTemplates']);
     }
+
+    public function Sections()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Rubric.RubricSections']);
+    }
+
     // end CAv4
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
+        $serverRequest = $this->request;
         parent::beforeFilter($event);
 
         $tabElements = [
@@ -59,40 +71,40 @@ class RubricsController extends AppController
         ];
 
         // pass query string for selected template across tabs
-        if (!is_null($this->request->query('template'))) {
-            $template = $this->request->query('template');
+        if (!is_null($serverRequest->getQuery('template'))) {
+            $template = $serverRequest->getQuery('template');
             foreach ($tabElements as $key => $obj) {
                 $tabElements[$key]['url']['template'] = $template;
             }
         }
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
-        $this->set('selectedAction', $this->request->action);
+        $this->set('selectedAction', $this->request->getParam('action'));
     }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
         $header = __('Rubric');
 
-        $header .= ' - ' . $model->getHeader($model->alias);
-        $this->Navigation->addCrumb('Rubric', ['plugin' => 'Rubric', 'controller' => 'Rubrics', 'action' => $model->alias]);
-        $this->Navigation->addCrumb($model->getHeader($model->alias));
+        $header .= ' - ' . $model->getHeader($model->getAlias());
+        $this->Navigation->addCrumb('Rubric', ['plugin' => 'Rubric', 'controller' => 'Rubrics', 'action' => $model->getAlias()]);
+        $this->Navigation->addCrumb($model->getHeader($model->getAlias()));
 
         $this->set('contentHeader', $header);
     }
 
     public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
     {
-        if ($model->alias == 'Sections' || $model->alias == 'Criterias' || $model->alias == 'Options') {
+        if ($model->getAlias() == 'Sections' || $model->getAlias() == 'Criterias' || $model->getAlias() == 'Options') {
             $request = $this->request;
 
             $RubricTemplates = TableRegistry::get('Rubric.RubricTemplates');
             $templateOptions = $RubricTemplates
                 ->find('list')
                 ->toArray();
-            $selectedTemplate = !is_null($request->query('template')) ? $request->query('template') : key($templateOptions);
+            $selectedTemplate = !is_null($request->getQuery('template')) ? $request->getQuery('template') : key($templateOptions);
 
-            $columns = $model->schema()->columns();
+            $columns = $model->getSchema()->columns();
             if (in_array('rubric_section_id', $columns)) {
                 $RubricSections = TableRegistry::get('Rubric.RubricSections');
                 $sectionOptions = $RubricSections
@@ -100,7 +112,7 @@ class RubricsController extends AppController
                     ->find('order')
                     ->where([$RubricSections->aliasField('rubric_template_id') => $selectedTemplate])
                     ->toArray();
-                $selectedSection = !is_null($request->query('section')) ? $request->query('section') : key($sectionOptions);
+                $selectedSection = !is_null($request->getQuery('section')) ? $request->getQuery('section') : key($sectionOptions);
 
                 $query->where([$model->aliasField('rubric_section_id') => $selectedSection]);
 

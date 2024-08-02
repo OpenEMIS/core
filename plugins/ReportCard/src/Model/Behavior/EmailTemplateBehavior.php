@@ -17,7 +17,7 @@ class EmailTemplateBehavior extends Behavior
         'placeholder' => []
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -36,7 +36,7 @@ class EmailTemplateBehavior extends Behavior
             ->requirePresence('message');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.viewEdit.beforeQuery'] = 'viewEditBeforeQuery';
@@ -60,8 +60,8 @@ class EmailTemplateBehavior extends Behavior
                 $emailTemplateEntity = $EmailTemplatesTable
                     ->find()
                     ->where([
-                        'model_alias' => $model->registryAlias(),
-                        'model_reference' => $row->{$model->primaryKey()}
+                        'model_alias' => $model->getRegistryAlias(),
+                        'model_reference' => $row->{$model->getPrimaryKey()}
                     ])
                     ->first();
                 $row->email_template = $emailTemplateEntity;
@@ -71,7 +71,7 @@ class EmailTemplateBehavior extends Behavior
                 $defaultEmailTemplateEntity = $EmailTemplatesTable
                     ->find()
                     ->where([
-                        'model_alias' => $model->registryAlias(),
+                        'model_alias' => $model->getRegistryAlias(),
                         'model_reference' => 0
                     ])
                     ->first();
@@ -104,7 +104,7 @@ class EmailTemplateBehavior extends Behavior
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        if (array_key_exists('list', $toolbarButtonsArray)) {
+        if (isset($toolbarButtonsArray['list'])) {
             unset($toolbarButtonsArray['list']);
         }
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
@@ -115,27 +115,24 @@ class EmailTemplateBehavior extends Behavior
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         $process = function ($model, $entity) use ($data) {
-            $errors = $entity->errors();
-
+            $errors = $entity->getErrors();
             if (empty($errors)) {
-                $EmailTemplatesTable = TableRegistry::get('Email.EmailTemplates');
-                $requestData = $data[$model->alias()];
 
+                $EmailTemplatesTable = TableRegistry::get('Email.EmailTemplates');
+                $requestData = $data[$model->getAlias()];
                 $emailTemplateData = [
-                    'model_alias' => $model->registryAlias(),
-                    'model_reference' => $entity->{$model->primaryKey()},
+                    'model_alias' => $model->getRegistryAlias(),
+                    'model_reference' => $entity->{$model->getPrimaryKey()},
                     'subject' => $requestData['subject'],
                     'message' => $requestData['message']
                 ];
-                $emailTemplateEntity = $EmailTemplatesTable->newEntity();
+                $emailTemplateEntity = $EmailTemplatesTable->newEntity($emailTemplateData);
                 $emailTemplateEntity = $EmailTemplatesTable->patchEntity($emailTemplateEntity, $emailTemplateData);
-
                 return $EmailTemplatesTable->save($emailTemplateEntity);
             } else {
                 return false;
             }
         };
-
         return $process;
 
     }
@@ -175,7 +172,7 @@ class EmailTemplateBehavior extends Behavior
             $tableCells = [];
             $fieldKey = 'keyword_remarks';
 
-            $placeholder = $this->config('placeholder');
+            $placeholder = $this->getConfig('placeholder');
 
             if (!empty($placeholder)) {
                 foreach ($placeholder as $placeholderKey => $placeholderObj) {
@@ -189,13 +186,13 @@ class EmailTemplateBehavior extends Behavior
 
             $attr['tableHeaders'] = $tableHeaders;
             $attr['tableCells'] = $tableCells;
-            return $event->subject()->renderElement($fieldKey, ['attr' => $attr]);
+            return $event->getSubject()->renderElement($fieldKey, ['attr' => $attr]);
         }
     }
 
     public function getPlaceholders()
     {
-        return $this->config('placeholder');
+        return $this->getConfig('placeholder');
     }
 
     private function setupFields(Event $event, Entity $entity, ArrayObject $extra)

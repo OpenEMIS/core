@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
+use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
 
 class ReportCardsTable extends ControllerActionTable
@@ -21,7 +22,7 @@ class ReportCardsTable extends ControllerActionTable
     CONST ALL_SUBJECTS = 2;
     CONST SELECT_SUBJECTS = 1;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -37,15 +38,15 @@ class ReportCardsTable extends ControllerActionTable
             'allowable_file_types' => 'document',
             'useDefaultName' => true
         ]);
-        $this->behaviors()->get('Download')->config(
+        $this->behaviors()->get('Download')->getConfig(
             'name',
             'excel_template_name'
         );
-        $this->behaviors()->get('Download')->config(
+        $this->behaviors()->get('Download')->getConfig(
             'content',
             'excel_template'
         );
-        $this->behaviors()->get('ControllerAction')->config(
+        $this->behaviors()->get('ControllerAction')->getConfig(
             'actions.download.show',
             true
         );
@@ -56,14 +57,14 @@ class ReportCardsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.downloadTemplate'] = 'downloadTemplate';
         return $events;
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
 
         return $validator
@@ -131,31 +132,32 @@ class ReportCardsTable extends ControllerActionTable
         $this->setFieldOrder(['code', 'name', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_grade_id', 'excel_template']);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Templates','Report Cards');       
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
+        $is_manual_exist = $this->getManualUrl('Administration','Templates','Report Cards');       
+        if(!empty($is_manual_exist)){
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target'=>'_blank'
+            ];
 
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // Academic Period filter
+        $serverRequest = $this->request;
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($serverRequest->getQuery('academic_period_id')) ? $serverRequest->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
@@ -186,7 +188,7 @@ class ReportCardsTable extends ControllerActionTable
             $filename = $entity->excel_template;
             return !empty($filename);
         };
-        $this->behaviors()->get('ControllerAction')->config(
+        $this->behaviors()->get('ControllerAction')->getConfig(
             'actions.download.show',
             $showFunc
         );
@@ -245,7 +247,7 @@ class ReportCardsTable extends ControllerActionTable
         $this->controller->set('downloadOnClick', "javascript:window.location.href='". Router::url($downloadUrl) ."'");
 
         //POCOR-7400 start
-        $SecurityRoles = TableRegistry::get('security_roles');
+        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
         $SecurityRoleOptions = $SecurityRoles->find('list',['keyField' => 'id', 'valueField' => 'name']);
         $tooltipMessage="The security roles chosen here will not be affected by the date enabled and date disabled.";
         $this->field('excluded_security_roles', [
@@ -287,12 +289,12 @@ class ReportCardsTable extends ControllerActionTable
     {
         $this->setupFields($entity);
         $this->fields['code']['type'] = 'readonly';
-        $this->fields['name']['type'] = 'readonly';
+       // $this->fields['name']['type'] = 'readonly';
         $this->field('education_programme_id', ['entity' => $entity]);
         $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_programme_id', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
     }
 
-    public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'index' || $action == 'view') {
             $attr['type'] = 'string';
@@ -305,12 +307,12 @@ class ReportCardsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
             $attr['type'] = 'select';
-			$attr['onChangeReload'] = true;
+            $attr['onChangeReload'] = true;
             $attr['options'] = $periodOptions;
 
         } else if ($action == 'edit') {
@@ -321,22 +323,22 @@ class ReportCardsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
 
         if ($action == 'add') {
-			
-			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			$academicPeriodId = !is_null($request->data($this->aliasField('academic_period_id'))) ? $request->data($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();					
-				
+            
+            $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();	                    
+                
             $programmeOptions = $EducationProgrammes
                 ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
                 ->find('visible')
-				->contain(['EducationCycles.EducationLevels.EducationSystems'])
+                ->contain(['EducationCycles.EducationLevels.EducationSystems'])
                 ->order(['EducationCycles.order', $EducationProgrammes->aliasField('order')])
                 ->where(['EducationSystems.academic_period_id' => $academicPeriodId])
-				->toArray();
+                ->toArray();
             $attr['type'] = 'select';
             $attr['options'] = $programmeOptions;
             $attr['onChangeReload'] = 'changeEducationProgrammeId';
@@ -356,24 +358,24 @@ class ReportCardsTable extends ControllerActionTable
         $request = $this->request;
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('education_grade_id', $request->data[$this->alias()])) {
-                    unset($data[$this->alias()]['education_grade_id']);
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('education_grade_id', $request->getData()[$this->getAlias()])) {
+                    unset($data[$this->getAlias()]['education_grade_id']);
                 }
-                if (array_key_exists('subjects', $request->data[$this->alias()])) {
-                    unset($data[$this->alias()]['subjects']);
+                if (array_key_exists('subjects', $request->getData()[$this->getAlias()])) {
+                    unset($data[$this->getAlias()]['subjects']);
                 }
             }
         }
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $gradeOptions = [];
 
-            if (isset($request->data[$this->alias()]['education_programme_id']) && !empty($request->data[$this->alias()]['education_programme_id'])) {
-                $selectedProgramme = $request->data[$this->alias()]['education_programme_id'];
+            if (isset($request->getData()[$this->getAlias()]['education_programme_id']) && !empty($request->getData()[$this->getAlias()]['education_programme_id'])) {
+                $selectedProgramme = $request->getData()[$this->getAlias()]['education_programme_id'];
                 $gradeOptions = $this->EducationGrades
                     ->find('list')
                     ->find('visible')
@@ -400,15 +402,15 @@ class ReportCardsTable extends ControllerActionTable
         $request = $this->request;
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('subjects', $request->data[$this->alias()])) {
-                    unset($data[$this->alias()]['subjects']);
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('subjects', $request->getData()[$this->getAlias()])) {
+                    unset($data[$this->getAlias()]['subjects']);
                 }
             }
         }
     }
 
-    public function onUpdateFieldTeacherCommentsRequired(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTeacherCommentsRequired(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
@@ -435,23 +437,23 @@ class ReportCardsTable extends ControllerActionTable
         $request = $this->request;
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('subjects', $request->data[$this->alias()])) {
-                    unset($data[$this->alias()]['subjects']);
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('subjects', $request->getData()[$this->getAlias()])) {
+                    unset($data[$this->getAlias()]['subjects']);
                 }
             }
         }
     }
 
-    public function onUpdateFieldSubjects(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSubjects(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
-                $teacherComments = isset($request->data[$this->alias()]['teacher_comments_required']) ? $request->data[$this->alias()]['teacher_comments_required'] : 0;
-                $selectedGrade = isset($request->data[$this->alias()]['education_grade_id']) ? $request->data[$this->alias()]['education_grade_id'] : null;
+                $teacherComments = isset($request->data[$this->getAlias()]['teacher_comments_required']) ? $request->data[$this->getAlias()]['teacher_comments_required'] : 0;
+                $selectedGrade = isset($request->data[$this->getAlias()]['education_grade_id']) ? $request->data[$this->getAlias()]['education_grade_id'] : null;
 
             } else if($action == 'edit') {
-                $teacherComments = isset($request->data[$this->alias()]['teacher_comments_required']) ? $request->data[$this->alias()]['teacher_comments_required'] : $attr['entity']->teacher_comments_required;
+                $teacherComments = isset($request->data[$this->getAlias()]['teacher_comments_required']) ? $request->data[$this->getAlias()]['teacher_comments_required'] : $attr['entity']->teacher_comments_required;
                 $selectedGrade = $attr['entity']->education_grade_id;
             }
 
@@ -477,22 +479,32 @@ class ReportCardsTable extends ControllerActionTable
                 $attr['options'] = $subjectOptions;
             }
 
-            $attr['fieldName'] = $this->alias().'.subjects';
+            $attr['fieldName'] = $this->getAlias().'.subjects';
         }
 
         return $attr;
     }
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
-    {
-        if (!empty($data[$this->alias()]['teacher_comments_required']) && !empty($data[$this->alias()]['education_grade_id'])) {
-            $selectedGrade = $data[$this->alias()]['education_grade_id'];
-            $teacherComments = $data[$this->alias()]['teacher_comments_required'];
+    {   
+        //POCOR-7860 :: Start
+        $string = $data['ReportCards']['name'];
+        if (preg_match('/[\'^£$%&*()}{@#~?><>,|=_+¬-]/', $string))
+        {
+            // one or more of the 'special characters' found in $string
+            $this->Alert->error('Templates.specialCharr', ['reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('edit'));;
+        }
+        //POCOR-7860 :: End
+        if (!empty($data[$this->getAlias()]['teacher_comments_required']) && !empty($data[$this->getAlias()]['education_grade_id'])) {
+            $selectedGrade = $data[$this->getAlias()]['education_grade_id'];
+            $teacherComments = $data[$this->getAlias()]['teacher_comments_required'];
 
             $subjects = [];
             if ($teacherComments == self::SELECT_SUBJECTS) {
-                if (!empty($data[$this->alias()]['subjects'])) {
-                    $subjects = $data[$this->alias()]['subjects'];
+                if (!empty($data[$this->getAlias()]['subjects'])) {
+                    $subjects = $data[$this->getAlias()]['subjects'];
                 }
                 $options['validate'] = 'subjects';
 
@@ -509,7 +521,7 @@ class ReportCardsTable extends ControllerActionTable
 
             if (!empty($subjects)) {
                 foreach ($subjects as $subject) {
-                    $data[$this->alias()]['report_card_subjects'][] = [
+                    $data[$this->getAlias()]['report_card_subjects'][] = [
                         'education_subject_id' => $subject,
                         'education_grade_id' => $selectedGrade
                     ];
@@ -527,7 +539,7 @@ class ReportCardsTable extends ControllerActionTable
 
     public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        if (empty($entity->errors())) {
+        if (empty($entity->getErrors())) {
             if ($entity->teacher_comments_required == self::ALL_SUBJECTS) {
                 $entity->teacher_comments_required = 1;
             }
@@ -539,11 +551,11 @@ class ReportCardsTable extends ControllerActionTable
         if (empty($entity->errors())) {
             // manually delete hasMany reportCardSubjects data
             $fieldKey = 'report_card_subjects';
-            if (!array_key_exists($fieldKey, $data[$this->alias()])) {
-                $data[$this->alias()][$fieldKey] = [];
+            if (!array_key_exists($fieldKey, $data[$this->getAlias()])) {
+                $data[$this->getAlias()][$fieldKey] = [];
             }
 
-            $subjectIds = array_column($data[$this->alias()][$fieldKey], 'education_subject_id');
+            $subjectIds = array_column($data[$this->getAlias()][$fieldKey], 'education_subject_id');
             $originalSubjects = $entity->extractOriginal([$fieldKey])[$fieldKey];
             foreach ($originalSubjects as $key => $subject) {
                 if (!in_array($subject['education_subject_id'], $subjectIds)) {
@@ -556,7 +568,7 @@ class ReportCardsTable extends ControllerActionTable
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
-        $extra['excludedModels'] = [$this->ReportCardSubjects->alias()];
+        $extra['excludedModels'] = [$this->ReportCardSubjects->getAlias()];
     }
 
     public function checkIfHasTemplate($reportCardId=0)
@@ -594,12 +606,11 @@ class ReportCardsTable extends ControllerActionTable
     {
         $tabElements = $this->controller->getReportCardTab($entity->id);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-
         if (!empty($entity->generate_start_date)) {
             $entity->generate_start_date = (new Date($entity->generate_start_date))->format('Y-m-d H:i:s');
         }
@@ -607,14 +618,13 @@ class ReportCardsTable extends ControllerActionTable
         if (!empty($entity->generate_end_date)) {
             $entity->generate_end_date = (new Date($entity->generate_end_date))->format('Y-m-d H:i:s');
         }        
-
     } 
 
     /**
      * * POCOR-6916
      * add number of pages print while pdf generate 
      */
-    public function onUpdateFieldPdfPageNumber(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPdfPageNumber(Event $event, array $attr, $action, ServerRequest $request)
     {
         $pdfPage = array(-1 =>'All',1=>1,2=>2,3=>3,4=>4,5=>5,6=>6,7=>7,8=>8,9=>9,10=>10);
         if ($action == 'add') {
@@ -636,14 +646,14 @@ class ReportCardsTable extends ControllerActionTable
     //POCOR-7400 start
       public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $table=TableRegistry::get('report_cards');
+        $table=TableRegistry::get('ReportCard.ReportCards');
         $entityData=$table->find()->where([$table->aliasField('code')=>$entity->code,
                                 $table->aliasField('academic_period_id')=>$entity->academic_period_id
                                 ])->first();
        
-        $ReportCardExcludedSecurityRolesTable = TableRegistry::get('report_card_excluded_security_roles');
+        $ReportCardExcludedSecurityRolesTable = TableRegistry::get('ReportCard.ReportCardExcludedSecurityRoles');
   
-        if($this->request->params['pass'][0] == 'edit'){
+        if($this->request->getParam('pass')[0] == 'edit'){
            
         $ExcludedSecurityRoleData =  $ReportCardExcludedSecurityRolesTable->find()->where(['report_card_id'=>$entityData->id])->toArray();
         if($ExcludedSecurityRoleData){
@@ -665,7 +675,7 @@ class ReportCardsTable extends ControllerActionTable
 
     public function onGetExcludedSecurityRoles(Event $event, Entity $entity)
     {
-        $table=TableRegistry::get('security_roles');
+        $table=TableRegistry::get('Security.SecurityRoles');
         $obj = [];
         if ($entity->has('excluded_security_roles')) {
            
@@ -679,7 +689,143 @@ class ReportCardsTable extends ControllerActionTable
         return $values;
     }
 
-     //POCOR-7400 end
+    public static function getInstitutionSecurityStaff($institutionId, $staffPosnId)
+     {
+ 
+         $Staff = TableRegistry::get('Institution.Staff');
+         $institutionSecurityGroupsIds = self::getInstitutionSecurityGroupsIds($institutionId);
+ //        Log::debug('$institutionSecurityGroupsIds');
+ //        Log::debug($institutionSecurityGroupsIds);
+         $institutionsPositions = TableRegistry::get('Institution.InstitutionPosition');//POCOR-8093
+         $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+         $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+         $where = [
+             $Staff->aliasField('institution_id') => $institutionId,
+             'InstitutionPositions.staff_position_title_id' => $staffPosnId, //POCOR-8193
+             'SecurityGroupUsers.security_group_id IN (' . implode(',', $institutionSecurityGroupsIds) . ')',
+             $Staff->aliasField('staff_status_id') => $assignedStatus
+         ];
+ 
+         $staffQuery = $Staff
+             ->find()
+             ->select([
+                 $Staff->aliasField('id'),
+                 $Staff->aliasField('FTE'),
+                 $Staff->aliasField('start_date'),
+                 $Staff->aliasField('start_year'),
+                 $Staff->aliasField('end_date'),
+                 $Staff->aliasField('end_year'),
+                 $Staff->aliasField('staff_id'),
+                 $Staff->aliasField('security_group_user_id'),
+                 $Staff->aliasField('institution_position_id')//POCOR-8093
+             ])
+             ->innerJoin(
+                 ['InstitutionPositions' => 'institution_positions'],
+                     ['InstitutionPositions.id = Staff.institution_position_id']
+             )
+             ->innerJoinWith('SecurityGroupUsers')
+             ->contain([
+                 'Users' => [
+                     'fields' => [
+                         'openemis_no',
+                         'first_name',
+                         'middle_name',
+                         'third_name',
+                         'last_name',
+                         'preferred_name',
+                         'email',
+                         'address',
+                         'postal_code',
+                         'gender_id' // POCOR-7033
+                     ]
+                 ]
+             ])
+             ->where($where);
+         $entity = $staffQuery
+             ->first();
+ 
+         // POCOR-7033[START]
+         if (!empty($entity)) {
+             if ($entity->user->gender_id == '1') {
+                 $entity->user->gender_id = "Male";
+                 $entity->gender = "Male";
+             } else {
+                 $entity->user->gender_id = "Female";
+                 $entity->gender = "Male";
+             }
+             $username = $entity->user->name;
+             if(empty($username) || $username = ""){
+                 $entity->user->name = $entity->user->first_name . ' ' . $entity->user->last_name;
+             }
+         }
+         // POCOR-7033[END]
+         return $entity;
+    }
+
+    /**
+     * @param $institution_id
+     * @return array
+     */
+    private static function getInstitutionSecurityGroupsIds($institution_id)
+    {
+        $securityGroupInstitutions = TableRegistry::get('security_group_institutions');
+        $distinctResults = $securityGroupInstitutions
+            ->find('all')
+            ->select(['security_group_id'])
+            ->distinct(['security_group_id'])
+            ->where(['institution_id' => $institution_id])
+            ->toArray();
+        $distinctResultsValues = array_column($distinctResults, 'security_group_id');
+        if (sizeof($distinctResultsValues) > 0) {
+            $uniqu_array = array_unique($distinctResultsValues);
+        } else {
+            $uniqu_array = [0];
+        };
+        return $uniqu_array;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'code') {
+            return __('Code');
+        } elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'description') {
+            return __('Description');
+        } elseif ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'start_date') {
+            return __('Start Date');
+        } elseif ($field == 'end_date') {
+            return __('End Date');
+        } elseif ($field == 'generate_start_date') {
+            return __('Generate Start Date');
+        } elseif ($field == 'generate_end_date') {
+            return __('Generate End Date');
+        } elseif ($field == 'education_programme_id') {
+            return __('Education Programme');
+        } elseif ($field == 'education_grade_id') {
+            return __('Education Grade');
+        } elseif ($field == 'principal_comments_required') {
+            return __('Principal Comments Required');
+        } elseif ($field == 'homeroom_teacher_comments_required') {
+            return __('Homeroom Teacher Comments Required');
+        } elseif ($field == 'teacher_comments_required') {
+            return __('Teacher Comments Required');
+        } elseif ($field == 'excel_template') {
+            return __('Excel Template');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }
 
 

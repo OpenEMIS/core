@@ -14,10 +14,16 @@ class ScholarshipTabsComponent extends Component
     public $components = ['TabPermission', 'Page.Page'];
     private $queryString;
 
-    public function initialize(array $config)
+    public function initialize(array $config) : void
     {
         $this->controller = $this->_registry->getController();
-        $this->queryString = $this->request->query('queryString');
+        $this->queryString = $this->getController()->getRequest()->getQuery('queryString');
+        //$serverData = explode("/",$_SERVER['REQUEST_URI']);
+        /*$this->queryString = $this->request->getQuery('queryString');
+        if($this->queryString == null){
+            $this->queryString = 'eyJhcHBsaWNhbnRfaWQiOjYsInNjaG9sYXJzaGlwX2lkIjoyfQ.ZjdjMzJiMDIxY2E4MjVlZTNlMTY5MzM2OGM3MjE5M2ZhNDQwZjhlNjE2NzhkOTRhMzU2OWNkNGRiYzdkNDYyMg';
+        }*/
+        //$this->queryString = $serverData[7];
 
         $this->controller->loadModel('Scholarship.Scholarships');
         $this->controller->loadModel('Scholarship.FinancialAssistanceTypes');
@@ -67,7 +73,7 @@ class ScholarshipTabsComponent extends Component
     {
         $ids = $this->controller->paramsDecode($this->queryString);
         $encodedIds = $this->Page->encode($ids);
-        
+
         $tabElements = [
             'Recipients' => [
                 'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipients', 'action' => 'view', $encodedIds, 'queryString' => $this->queryString],
@@ -96,7 +102,7 @@ class ScholarshipTabsComponent extends Component
         ];
 
         $isLoan = false;
-        if (array_key_exists('scholarship_id', $ids) && !empty($ids['scholarship_id'])) {
+        if (isset($ids['scholarship_id']) && !empty($ids['scholarship_id'])) {
             $scholarshipEntity = $this->controller->Scholarships->get($ids['scholarship_id']);
             // $isLoan = $this->controller->FinancialAssistanceTypes->is($scholarshipEntity->scholarship_financial_assistance_type_id, 'LOAN');
             // Start POCOR-7570

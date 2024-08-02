@@ -33,7 +33,7 @@ class ArchiveStudentAssessmentsShell extends Shell
     /**
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function initialize()
+    public function initialize(): void
     {
         //POCOR-7521-HINDOL cleaned the code even more
         parent::initialize();
@@ -92,6 +92,7 @@ class ArchiveStudentAssessmentsShell extends Shell
                 $this->out("Transfer failed $processName:  $processedDateTime");
                 $processedDateTime = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
                 $this->out("System process failed $processName:  $processedDateTime");
+                exit(1); //POCOR-7895
             }
             $this->out("Finished archiving records for $tableToArchive");
         }
@@ -109,7 +110,7 @@ class ArchiveStudentAssessmentsShell extends Shell
                 $this->out("Transfer failed $processName:  $processedDateTime");
                 $processedDateTime = CommonArchiveShell::setSystemProcessFailed($systemProcessId);
                 $this->out("System process failed $processName:  $processedDateTime");
-                throw $e;
+                throw $e; //POCOR-7895
             }
         }
 

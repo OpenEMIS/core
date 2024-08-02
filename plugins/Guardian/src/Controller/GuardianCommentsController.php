@@ -8,17 +8,17 @@ use Profile\Controller\CommentsController as BaseController;
 
 class GuardianCommentsController extends BaseController
 {
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $guardianName = $session->read('Guardian.Guardians.name');
         $guardianId = $session->read('Guardian.Guardians.id');
 
         parent::beforeFilter($event);
 
         // set Header
-        $page->setHeader($guardianName . ' - ' . __('Comments'));        
+        $page->setHeader($guardianName . ' - ' . __('Comments'));
 
         // set QueryString (for findIndex)
         $page->setQueryString('security_user_id', $guardianId);
@@ -33,7 +33,7 @@ class GuardianCommentsController extends BaseController
     {
         $page = $this->Page;
 
-        $session = $this->request->session();   
+        $session = $this->request->getSession();
 
         $guardianId = $session->read('Guardian.Guardians.id');
         $page->get('security_user_id')->setValue($guardianId);
@@ -43,12 +43,12 @@ class GuardianCommentsController extends BaseController
 
     public function setupTabElements($options)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $guardianId = $session->read('Guardian.Guardians.id');
         $StudentGuardianId = $session->read('Student.Guardians.primaryKey')['id'];
 
         $page = $this->Page;
-        $plugin = $this->plugin;
+        $plugin = $this->getPlugin();
 
         $nationalityId = $this->Users->get($guardianId)->nationality_id;
         $encodedUserId = $this->paramsEncode(['security_user_id' => $guardianId]);

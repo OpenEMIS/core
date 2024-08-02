@@ -11,9 +11,9 @@ use Cake\ORM\Entity;
 
 class SalariesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('staff_salaries');
+        $this->setTable('staff_salaries');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
@@ -29,7 +29,7 @@ class SalariesTable extends ControllerActionTable
         $this->addBehavior('Institution.StaffProfile');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;
@@ -138,7 +138,7 @@ class SalariesTable extends ControllerActionTable
             'staff_salary_id' => $entity->id,
         ];
         if (!empty($present)) {
-            $deleteOptions[$SalaryAdditions->primaryKey().' NOT IN'] = $present;
+            $deleteOptions[$SalaryAdditions->getPrimaryKey().' NOT IN'] = $present;
         }
         $SalaryAdditions->deleteAll($deleteOptions);
 
@@ -158,7 +158,7 @@ class SalariesTable extends ControllerActionTable
             'staff_salary_id' => $entity->id,
         ];
         if (!empty($present)) {
-            $deleteOptions[$SalaryDeductions->primaryKey().' NOT IN'] = $present;
+            $deleteOptions[$SalaryDeductions->getPrimaryKey().' NOT IN'] = $present;
         }
         $SalaryDeductions->deleteAll($deleteOptions);
 
@@ -194,12 +194,12 @@ class SalariesTable extends ControllerActionTable
     //POCOR-5915
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        if (array_key_exists($this->alias(), $data)) {
-            if (!array_key_exists('salary_additions', $data[$this->alias()])) {
-                $data[$this->alias()]['salary_additions'] = [];
+        if (array_key_exists($this->getAlias(), $data)) {
+            if (!array_key_exists('salary_additions', $data[$this->getAlias()])) {
+                $data[$this->getAlias()]['salary_additions'] = [];
             }
-            if (!array_key_exists('salary_deductions', $data[$this->alias()])) {
-                $data[$this->alias()]['salary_deductions'] = [];
+            if (!array_key_exists('salary_deductions', $data[$this->getAlias()])) {
+                $data[$this->getAlias()]['salary_deductions'] = [];
             }
         }
     }
@@ -268,7 +268,7 @@ class SalariesTable extends ControllerActionTable
 
     public function addEditOnAddRow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $data[$this->alias()]['salary_additions'][] = ['amount' => '0.00'];
+        $data[$this->getAlias()]['salary_additions'][] = ['amount' => '0.00'];
         $options['associated'] = [
             'StaffSalaryTransactions' => ['validate' => false],
             //'SalaryDeductions' => ['validate' => false]
@@ -278,7 +278,7 @@ class SalariesTable extends ControllerActionTable
 
     public function addEditOnDeductRow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {//die("22");
-        $data[$this->alias()]['salary_deductions'][] = ['amount' => '0.00'];
+        $data[$this->getAlias()]['salary_deductions'][] = ['amount' => '0.00'];
         $options['associated'] = [
             //'SalaryAdditions' => ['validate' => false],
             'StaffSalaryTransactions' => ['validate' => false]
@@ -310,7 +310,7 @@ class SalariesTable extends ControllerActionTable
     private function setupTabElements()
     {
         $nonSchoolController = ['Directories', 'Profiles'];
-        if (in_array($this->controller->name, $nonSchoolController)) {
+        if (in_array($this->controller->getName(), $nonSchoolController)) {
             $options = [
                 'type' => 'staff'
             ];
@@ -319,7 +319,7 @@ class SalariesTable extends ControllerActionTable
             $tabElements = $this->controller->getFinanceTabElements();
         }
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function afterAction(Event $event)

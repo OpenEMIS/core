@@ -41,12 +41,12 @@ class RenderFileBehavior extends RenderBehavior
         'png'   => 'image/png'
     );
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.downloadFile'] = 'downloadFile';
@@ -88,18 +88,18 @@ class RenderFileBehavior extends RenderBehavior
                 if (in_array($mimeType, $this->fileImagesMap) && is_resource($savedFile)) {
                     $imgSrc = base64_encode(stream_get_contents($savedFile));
                     if (base64_decode($imgSrc, true)) {
-                        $value = $event->subject()->renderElement('ControllerAction.thumbnail', ['attr' => ['src' => "data:image/jpeg;base64,$imgSrc", 'title' => $savedValue]]);
+                        $value = $event->getSubject()->renderElement('ControllerAction.thumbnail', ['attr' => ['src' => "data:image/jpeg;base64,$imgSrc", 'title' => $savedValue]]);
                     }
                 } else {
                     $url = $model->url('view');
-                    $url['action'] = $model->request->param('action');
+                    $url['action'] = $model->request->getParam('action');
                     $url[0] = 'downloadFile';
                     $url[1] = $model->paramsEncode(['id' => $savedId]);
-                    $value = $event->subject()->Html->link($savedValue, $url);
+                    $value = $event->getSubject()->Html->link($savedValue, $url);
                 }
             }
         } else if ($action == 'edit') {
-            $form = $event->subject()->Form;
+            $form = $event->getSubject()->Form;
             $unlockFields = [];
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
@@ -108,8 +108,8 @@ class RenderFileBehavior extends RenderBehavior
             }
 
             // Rely on session variable to show file name, if session has value, read from session
-            $session = $model->request->session();
-            $sessionKey = $model->registryAlias().'.parseFile.'.$fieldId;
+            $session = $model->request->getSession();
+            $sessionKey = $model->getRegistryAlias().'.parseFile.'.$fieldId;
             if ($session->check($sessionKey)) {
                 $parseFileData = $session->read($sessionKey);
                 $attr['value'] = $parseFileData['file']['name'];
@@ -120,7 +120,7 @@ class RenderFileBehavior extends RenderBehavior
             $form->unlockField($attr['fieldName']);
             $attr['comment'] = $this->getFileComment();
 
-            $value .= $event->subject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
+            $value .= $event->getSubject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
             $value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
             $unlockFields[] = $fieldPrefix.".".$attr['attr']['fieldKey'];
             if (!is_null($savedId)) {
@@ -147,8 +147,8 @@ class RenderFileBehavior extends RenderBehavior
         $fieldId = $customValue[$fieldKey];
 
         $model = $this->_table;
-        $session = $model->request->session();
-        $sessionKey = $model->registryAlias().'.parseFile.'.$fieldId;
+        $session = $model->request->getSession();
+        $sessionKey = $model->getRegistryAlias().'.parseFile.'.$fieldId;
 
         $parseFileData = [
             'file' => ['name' => $customValue->text_value]
@@ -165,9 +165,9 @@ class RenderFileBehavior extends RenderBehavior
         $file = $customValue['file'];
 
         $model = $this->_table;
-        $session = $model->request->session();
-        $sessionKey = $model->registryAlias().'.parseFile.'.$fieldId;
-        $sessionErrorKey = $model->registryAlias().'.parseFileError.'.$fieldId;
+        $session = $model->request->getSession();
+        $sessionKey = $model->getRegistryAlias().'.parseFile.'.$fieldId;
+        $sessionErrorKey = $model->getRegistryAlias().'.parseFileError.'.$fieldId;
         $session->delete($sessionErrorKey);
 
         if (!is_array($file)) {
@@ -185,7 +185,7 @@ class RenderFileBehavior extends RenderBehavior
                     $session->delete($sessionKey);
                     $session->write($sessionErrorKey, [
                         'file' => [
-                            'ruleCustomFile' => $model->getMessage('CustomField.file.maxSize', ['sprintf' => $this->config('size')])
+                            'ruleCustomFile' => $model->getMessage('CustomField.file.maxSize', ['sprintf' => $this->getConfig('size')])
                         ]
                     ]);
                 }
@@ -212,14 +212,14 @@ class RenderFileBehavior extends RenderBehavior
 
         $fieldId = $customValue[$fieldKey];
         $model = $this->_table;
-        $session = $model->request->session();
-        $sessionKey = $model->registryAlias().'.parseFile.'.$fieldId;
+        $session = $model->request->getSession();
+        $sessionKey = $model->getRegistryAlias().'.parseFile.'.$fieldId;
 
         $uploadNewFile = true;
         if ($session->check($sessionKey)) {
             $parseFileData = $session->read($sessionKey);
 
-            if (array_key_exists('fileContent', $parseFileData)) {
+            if (isset($parseFileData['fileContent'])) {
                 // upload new file
                 $customValue['text_value'] = $parseFileData['fileName'];
                 $customValue['file'] = $parseFileData['fileContent'];
@@ -242,7 +242,7 @@ class RenderFileBehavior extends RenderBehavior
 
     private function getFileComment()
     {
-        $comment = '* ' . sprintf(__('File size should not be larger than %s'), $this->config('size'));
+        $comment = '* ' . sprintf(__('File size should not be larger than %s'), $this->getConfig('size'));
 
         return $comment;
     }
@@ -254,20 +254,20 @@ class RenderFileBehavior extends RenderBehavior
         $GIGA = $MEGA * 1024;
         $TERA = $GIGA * 1024;
 
-        if (substr_count(strtolower($this->config('size')), 'kb')) {
-            $size = intval(str_replace('kb', '', (strtolower($this->config('size')))));
+        if (substr_count(strtolower($this->getConfig('size')), 'kb')) {
+            $size = intval(str_replace('kb', '', (strtolower($this->getConfig('size')))));
             return $size * $KILO;
         } else if (substr_count(strtolower($this->config('size')), 'mb')) {
-            $size = intval(str_replace('mb', '', (strtolower($this->config('size')))));
+            $size = intval(str_replace('mb', '', (strtolower($this->getConfig('size')))));
             return $size * $MEGA;
         } else if (substr_count(strtolower($this->config('size')), 'gb')) {
-            $size = intval(str_replace('gb', '', (strtolower($this->config('size')))));
+            $size = intval(str_replace('gb', '', (strtolower($this->getConfig('size')))));
             return $size * $GIGA;
         } else if (substr_count(strtolower($this->config('size')), 'tb')) {
-            $size = intval(str_replace('tb', '', (strtolower($this->config('size')))));
+            $size = intval(str_replace('tb', '', (strtolower($this->getConfig('size')))));
             return $size * $TERA;
         } else {
-            return intval($this->config('size'));
+            return intval($this->getConfig('size'));
         }
     }
 
@@ -291,16 +291,16 @@ class RenderFileBehavior extends RenderBehavior
 
     public function downloadFile(Event $mainEvent, ArrayObject $extra)
     {
-        $model = $this->_table->CustomFieldValues->target();
+        $model = $this->_table->CustomFieldValues->getTarget();
         $ids = $model->paramsDecode($this->_table->paramsPass(0));
         $idKey = $model->getIdKeys($model, $ids);
 
         if ($model->exists($idKey)) {
             $data = $model->get($ids);
-            $fileName = $data->{$this->config('name')};
+            $fileName = $data->{$this->getConfig('name')};
             $pathInfo = pathinfo($fileName);
 
-            $file = $this->getFile($data->{$this->config('content')});
+            $file = $this->getFile($data->{$this->getConfig('content')});
             $fileType = 'image/jpg';
             if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
                 $fileType = $this->fileTypes[$pathInfo['extension']];

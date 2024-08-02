@@ -11,7 +11,7 @@ class AdvancedNameSearchBehavior extends Behavior
     public function addSearchConditions(Query $query, $options = [])
     {
         $conditions = $this->getNameSearchConditions($options);
-        if (array_key_exists('OR', $options)) {
+        if (isset($options['OR'])) {
             $conditions = array_merge($conditions, $options['OR']);
         }
         $query->where(['OR' => $conditions]);
@@ -23,16 +23,16 @@ class AdvancedNameSearchBehavior extends Behavior
     {
         $conditions = [];
         $searchByUserName = false;
-        if (array_key_exists('searchByUserName', $options)) {
+        if (isset($options['searchByUserName'])) {
             $searchByUserName = $options['searchByUserName'];
         }
 
-        if (array_key_exists('searchTerm', $options)) {
+        if (isset($options['searchTerm'])) {
             $search = $options['searchTerm'];
         }
 
-        $alias = $this->_table->alias();
-        if (array_key_exists('alias', $options)) {
+        $alias = $this->_table->getAlias();
+        if (isset($options['alias'])) {
             $alias = $options['alias'];
         }
         $alias = '`'.$alias.'`';
@@ -46,7 +46,7 @@ class AdvancedNameSearchBehavior extends Behavior
 
          */
         // Starts POCOR-6532
-        if (array_key_exists('aliasidentity', $options)) {
+        if (isset($options['aliasidentity'])) {
             $aliasidentity = $options['aliasidentity'];
         }
         //POCOR-7149 starts
@@ -77,9 +77,9 @@ class AdvancedNameSearchBehavior extends Behavior
                             $alias . '.last_name LIKE' => $searchString,
                             $alias . '.identity_number LIKE' => $searchString, // Adding the search by identity.
                             // Starts POCOR-6532
-                            $aliasidentity . '.number LIKE' => $searchString //POCOR-6647 : commented code because it was throwing 404 while searching for student/Staff 
+                            $aliasidentity . '.number LIKE' => $searchString //POCOR-6647 : commented code because it was throwing 404 while searching for student/Staff
                             // Ends POCOR-6532
-                            // Adding the search by user identity table number column 
+                            // Adding the search by user identity table number column
                         ]
                     ];
                 }else{
@@ -94,7 +94,7 @@ class AdvancedNameSearchBehavior extends Behavior
                         ]
                     ];
                 }//POCOR-7115 ends
-                
+
                 if ($searchByUserName) {
                     $conditions['OR'][$alias . '.`username` LIKE '] = $searchString;
                 }

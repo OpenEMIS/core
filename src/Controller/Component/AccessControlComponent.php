@@ -6,6 +6,8 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
+use Cake\Http\Session;
 
 class AccessControlComponent extends Component
 {
@@ -22,11 +24,11 @@ class AccessControlComponent extends Component
 
     public $components = ['Auth', 'Page.Page'];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->controller = $this->_registry->getController();
-        $this->action = $this->request->params['action'];
-        $this->Session = $this->request->session();
+        $this->action = $this->getController()->getRequest()->getParam('action');
+        $this->Session = $this->getController()->getRequest()->getSession();
         $this->accessMap = [];
 
         if (!is_null($this->Auth->user()) && $this->Auth->user('super_admin') == 0) {
@@ -44,7 +46,7 @@ class AccessControlComponent extends Component
         }
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         // need to execute before PageComponent::beforeRender
@@ -53,7 +55,7 @@ class AccessControlComponent extends Component
     }
 
     // Is called after the controller executes the requested action’s logic, but before the controller renders views and layout.
-    public function beforeRender(Event $event)
+    public function beforeRender(Event|\Cake\Event\EventInterface $event)
     {
         if ($this->controller instanceof \Page\Controller\PageController) {
             $page = $this->Page;
@@ -63,7 +65,7 @@ class AccessControlComponent extends Component
 
             foreach ($actions as $action => $value) {
                 if ($value == true && in_array($action, $allowedActions)) {
-                    $check = $this->check(['controller' => $this->controller->name, 'action' => $action]);
+                    $check = $this->check(['controller' => $this->controller->getName(), 'action' => $action]);
                     if ($check == false) {
                         $disabledActions[] = $action;
                     }
@@ -139,9 +141,10 @@ class AccessControlComponent extends Component
 
     public function buildPermissions()
     {
+
         $this->Session->delete('Permissions'); // remove all permission first
-        $operations = $this->config('operations');
-        $separator = $this->config('separator');
+        $operations = $this->getConfig('operations');
+        $separator = $this->getConfig('separator');
         $userId = $this->Auth->user('id');
         $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
 
@@ -234,6 +237,10 @@ class AccessControlComponent extends Component
         }
     }
 
+    /**
+     * need to investigate this function for the permission of super role
+     * and other role POCOR-8379
+    */
     public function check($url = [], $roleIds = [])
     {
         $superAdmin = $this->Auth->user('super_admin');
@@ -241,6 +248,13 @@ class AccessControlComponent extends Component
         if ($superAdmin || !is_array($url)) { // if $url is a string, then skip checking of permission
             return true;
         }
+        //POCOR-8379 Starts use if condition only
+        if($this->controller->getName() != 'GuardianNavs'){
+            $superUser = $this->isSuperRole();//V4 POCOR-8385
+            if ($superUser || !is_array($url)) { // if $url is a string, then skip checking of permission
+                return true;
+            }
+        }//POCOR-8379 Ends
 
         // we only need controller and action
         foreach ($url as $i => $val) {
@@ -249,25 +263,29 @@ class AccessControlComponent extends Component
             }
         }
         // Log::write('debug', $url);
-
+         //POCOR-8087:: Allow all user for survey app
+         if(($this->controller->getName() == 'Rest') && ($this->action == 'survey')){
+            return true;
+        }
+        //POCOR-8087::End
         if (empty($url)) {
-            $url = ['controller' => $this->controller->name, 'action' => $this->action];
+            $url = ['controller' => $this->controller->getName(), 'action' => $this->action];
         } else {
-            if (!array_key_exists('controller', $url)) {
-                $url['controller'] = $this->controller->name;
+            if (!isset($url['controller'])) {
+                $url['controller'] = $this->controller->getName();
             }
         }
         $url = $this->checkAccessMap($url);
         $checkUrl = [];
 
-        if (!(array_key_exists('controller', $url) && array_key_exists('action', $url) && array_key_exists('0', $url))) {
-            if (array_key_exists('0', $url) && array_key_exists('1', $url) && array_key_exists('2', $url)) {
+        if (!(isset($url['controller']) && isset($url['action']) && isset($url[0]))) {
+            if (isset($url[0]) && isset($url[1]) && isset($url[2])) {
                 $url['controller'] = $url[0];
                 $url['action'] = $url[1];
                 $url[0] = $url[2];
                 unset($url[1]);
                 unset($url[2]);
-            } elseif (array_key_exists('0', $url) && array_key_exists('1', $url)) {
+            } elseif (isset($url[0]) && isset($url[1])) {
                 $url['controller'] = $url[0];
                 $url['action'] = $url[1];
                 unset($url[0]);
@@ -277,18 +295,27 @@ class AccessControlComponent extends Component
 
         // exclude profile controllers
         /*commenting Profiles, ProfileInsurances and ProfileBodyMasses as per task POCOR-5312 permission requirement*/
-        if($this->request->params['action'] == 'TrainingNeeds'){//POCOR-6292 starts
-           $excludedController = ['ProfileApplicationAttachments', 'ProfileApplicationInstitutionChoices' /*'ProfileBodyMasses'*/, 'ProfileComments', /*'ProfileInsurances', 'Profiles', */ 'ScholarshipsDirectory'];//POCOR-6292 ends
+        if($this->getController()->getRequest()->getParam('action') == 'TrainingNeeds'){//POCOR-6292 starts
+           $excludedController = ['ProfileApplicationAttachments',
+               'ProfileApplicationInstitutionChoices'
+               /*'ProfileBodyMasses'*/,
+               'ProfileComments',
+               /*'ProfileInsurances', 'Profiles', */
+               'ScholarshipsDirectory'];//POCOR-6292 ends
         }else{
-            //For POCOR-6202 uncomment the profile module  
-            $excludedController = ['ProfileApplicationAttachments', 'ProfileApplicationInstitutionChoices' /*'ProfileBodyMasses'*/, 'ProfileComments', /*'ProfileInsurances', 'Profiles', */ 'Profiles', 'ScholarshipsDirectory'];
+            //For POCOR-6202 uncomment the profile module
+            $excludedController = ['ProfileApplicationAttachments',
+                'ProfileApplicationInstitutionChoices' /*'ProfileBodyMasses'*/,
+                'ProfileComments',
+                /*'ProfileInsurances', 'Profiles', */ 'Profiles',
+                'ScholarshipsDirectory'];
         }
 
-        if (array_key_exists('controller', $url)) {
+        if (isset($url['controller'])) {
             $checkUrl[] = $url['controller'];
             unset($url['controller']);
         }
-        if (array_key_exists('action', $url)) {
+        if (isset($url['action'])) {
             $checkUrl[] = $url['action'];
             unset($url['action']);
         }
@@ -299,9 +326,9 @@ class AccessControlComponent extends Component
         $permissionKey = implode('.', $url);
         // Log::write('debug', $permissionKey);
 
-        if ($controller == $this->controller->name) {
+        if ($controller == $this->controller->getName()) {
             $event = $this->controller->dispatchEvent('Controller.SecurityAuthorize.isActionIgnored', [$action], $this);
-            if ($event->result == true) {
+            if ($event->getResult() == true) {
                 return true;
             }
         }
@@ -328,7 +355,7 @@ class AccessControlComponent extends Component
     // the purpose of this function is to allow multiple actions linked to the same permission
     public function addAccessMap($key)
     {
-        $controller = $this->controller->name;
+        $controller = $this->controller->getName();
         $this->accessMap["$controller.$key"] = "$controller.%s";
     }
 
@@ -337,17 +364,17 @@ class AccessControlComponent extends Component
         $urlValues = array_values($url);
         $key = implode('.', [$urlValues[0], $urlValues[1]]);
 
-        $request = $this->request;
+        $request = $this->getController()->getRequest();
         $accessMap = $this->accessMap;
 
-        if (array_key_exists($key, $accessMap)) {
+        if (isset($accessMap[$key])) {
             $action = 'index';
             if (isset($urlValues[2])) {
                 if (!is_numeric($urlValues[2]) && !$this->isUuid($urlValues[2])) { // this is an action
                     $action = $urlValues[2];
                 }
             } else {
-                $paramsPass = $request->params['pass'];
+                $paramsPass = $request->getParam('pass');
                 if (count($paramsPass) > 0) {
                     if (!is_numeric($paramsPass[0]) && !$this->isUuid($paramsPass[0])) { // this is an action
                         $action = array_shift($paramsPass);
@@ -396,6 +423,23 @@ class AccessControlComponent extends Component
     {
         $superAdmin = $this->Auth->user('super_admin');
         return $superAdmin == 1;
+    }
+
+    public function isSuperRole()
+    {
+        $superUser = 0;
+        $isStudent = $_SESSION['Auth']['User']['is_student'];
+        $isStaff = $_SESSION['Auth']['User']['is_staff'];
+        $isGuardian = $_SESSION['Auth']['User']['is_guardian'];
+        $superAdmin = $_SESSION['Auth']['User']['super_admin']; //POCOR-8339
+        if(($isStudent == 1 && $isStaff == 1 && $isGuardian == 1)){
+            $superUser = 1;
+        }
+        //POCOR-8339
+        if(($isStudent == 1 && $isStaff == 1 && $isGuardian == 1 && $superAdmin == 0)){
+            $superUser = 0;
+        }
+        return $superUser;
     }
 
     public function getRolesByUser($userId = null)

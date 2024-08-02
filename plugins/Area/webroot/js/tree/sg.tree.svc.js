@@ -32,6 +32,8 @@ function SgTreeSvc($q, KdDataSvc) {
         recordOnly = (recordOnly === undefined)? 0: recordOnly;
         KdDataSvc.init({area: model});
         var success = function(response, deferred) {
+            // console.log("response");
+            // console.log(response);
             var returnData = response.data.data;
             deferred.resolve(returnData);
         };

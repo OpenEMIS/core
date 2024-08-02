@@ -7,10 +7,11 @@ use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use Cake\Event\EventInterface;
 
 class SurveysController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadComponent('Paginator');
@@ -44,50 +45,53 @@ class SurveysController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Survey.SurveyRecipients']);
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
+        if ($this->getPlugin() == 'Survey') {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
 
         $tabElements = [
             'Questions' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Questions'],
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Questions'],
                 'text' => __('Questions')
             ],
             'Forms' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Forms'],
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Forms'],
                 'text' => __('Forms')
             ],
             'Rules' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Rules'],
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Rules'],
                 'text' => __('Rules')
             ],
 
             //POCOR-7271
             'Filters' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Filters'],
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Filters'],
                 'text' => __('Filters')
             ],
             'Status' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Status'],
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Status'],
                 'text' => __('Status')
             ],
 
             //POCOR-7271
             'Recipients' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Recipients'],
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Recipients'],
                 'text' => __('Recipients')
             ],
         ];
         $name = $this->name;
-        $action = $this->request->action;
+        $action = $this->request->getParam('action');
         $actionName = __(Inflector::humanize($action));
         $header = $name .' - '.$actionName;
-        $this->Navigation->addCrumb(__($name), ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $action]);
+        $this->Navigation->addCrumb(__($name), ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $action]);
         $this->Navigation->addCrumb($actionName);
         $this->set('contentHeader', $header);
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
-        $this->set('selectedAction', $this->request->action);
+        $this->set('selectedAction', $this->request->getParam('action'));
     }
 
     public function Rules($pass = 'index')
@@ -110,9 +114,8 @@ class SurveysController extends AppController
 
     private function attachAngularModules()
     {
-        $action = $this->request->action;
-        $pass = isset($this->request->pass[0]) ? $this->request->pass[0] : 'index';
-        // pr($action);
+        $action = $this->request->getParam('action');
+        $pass = isset($this->request->getParam('pass')[0]) ? $this->request->getParam('pass')[0] : 'index';
         switch ($action) {
             case 'Rules':
                 if ($pass == 'edit' && $this->checkSurveyRuleEditPermission()) {
@@ -147,7 +150,7 @@ class SurveysController extends AppController
     public function _getSelectOptions()
     {
         //Return all required options and their key
-        $query = $this->request->query;
+        $query = $this->request->getQuery();
 
         $statusOptions = ['1' => 'Current', '0' => 'Past'];
         $selectedStatus = isset($query['status']) ? $query['status'] : key($statusOptions);

@@ -14,12 +14,12 @@ class InfrastructureShiftBehavior extends Behavior
     private $isOwner = false;
     private $isOccupier = false;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateActionButtons'] = ['callable' => 'onUpdateActionButtons', 'priority' => 100];
@@ -47,11 +47,11 @@ class InfrastructureShiftBehavior extends Behavior
         $buttons = $model->onUpdateActionButtons($event, $entity, $buttons);
         // Occupier is not allow to edit/delete regardless permission
         if ($this->isOccupier) {
-            if (array_key_exists('edit', $buttons)) {
+            if (isset($buttons['edit'])) {
                 unset($buttons['edit']);    //remove edit action from the action button
             }
 
-            if (array_key_exists('remove', $buttons)) {
+            if (isset($buttons['remove'])) {
                 unset($buttons['remove']);  // remove delete action from the action button
             }
         }
@@ -63,9 +63,7 @@ class InfrastructureShiftBehavior extends Behavior
     {
         $model = $this->_table;
 
-        $session = $model->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
-
+        $institutionId = $model->getQueryString('institution_id');
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $academicPeriodId = $AcademicPeriods->getCurrent();
 
@@ -96,9 +94,9 @@ class InfrastructureShiftBehavior extends Behavior
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $model = $this->_table;
-        $session = $model->request->session();
+        $session = $model->request->getSession();
 
-        $sessionKey = $model->registryAlias() . '.warning';
+        $sessionKey = $model->getRegistryAlias() . '.warning';
         if ($session->check($sessionKey)) {
             $messageKey = $session->read($sessionKey);
             $model->Alert->warning($messageKey);
@@ -118,9 +116,10 @@ class InfrastructureShiftBehavior extends Behavior
 
     private function isAcademicInstitution()
     {
-        $session = $this->_table->request->session();
+        $session = $this->_table->request->getSession();
         $InstitutionsTable = TableRegistry::get('Institution.Institutions');
-        $institutionId = $session->read('Institution.Institutions.id');
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->_table->getQueryString('institution_id');
         $classification = $InstitutionsTable->get($institutionId)->classification;
         return $classification == $InstitutionsTable::ACADEMIC;
     }
@@ -128,8 +127,8 @@ class InfrastructureShiftBehavior extends Behavior
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $model = $this->_table;
-        $session = $model->request->session();
-        $sessionKey = $model->registryAlias() . '.warning';
+        $session = $model->request->getSession();
+        $sessionKey = $model->getRegistryAlias() . '.warning';
 
         if ($this->isOccupier) {
             $session->write($sessionKey, 'InstitutionInfrastructures.occupierAddNotAllowed');
@@ -147,8 +146,8 @@ class InfrastructureShiftBehavior extends Behavior
     public function editBeforeAction(Event $event, ArrayObject $extra)
     {
         $model = $this->_table;
-        $session = $model->request->session();
-        $sessionKey = $model->registryAlias() . '.warning';
+        $session = $model->request->getSession();
+        $sessionKey = $model->getRegistryAlias() . '.warning';
 
         if ($this->isOccupier || ($this->isOwner == false && $this->isOccupier == false && $this->isAcademicInstitution())) {
             $session->write($sessionKey, 'InstitutionInfrastructures.occupierEditNotAllowed');
@@ -161,8 +160,8 @@ class InfrastructureShiftBehavior extends Behavior
     public function deleteBeforeAction(Event $event, ArrayObject $extra)
     {
         $model = $this->_table;
-        $session = $model->request->session();
-        $sessionKey = $model->registryAlias() . '.warning';
+        $session = $model->request->getSession();
+        $sessionKey = $model->getRegistryAlias() . '.warning';
 
         if ($this->isOccupier || ($this->isOwner == false && $this->isOccupier == false && $this->isAcademicInstitution())) {
             $session->write($sessionKey, 'InstitutionInfrastructures.occupierDeleteNotAllowed');
@@ -179,8 +178,9 @@ class InfrastructureShiftBehavior extends Behavior
         if ($this->isOccupier) {
             $model = $this->_table;
 
-            $session = $model->request->session();
-            $institutionId = $session->read('Institution.Institutions.id');
+            $session = $model->request->getSession();
+            $institutionId = $model->getQueryString('institution_id');
+            //$institutionId = $session->read('Institution.Institutions.id');
 
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
             $academicPeriodId = $AcademicPeriods->getCurrent();

@@ -9,7 +9,8 @@ use Cake\Log\Log;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Session;
+//use Cake\Network\Session;
+use Cake\Http\Session;
 
 class TrackDeleteBehavior extends Behavior
 {
@@ -18,7 +19,7 @@ class TrackDeleteBehavior extends Behavior
 ** Link/Map ControllerActionComponent events
 **
 ******************************************************************************************************************/
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -36,9 +37,9 @@ class TrackDeleteBehavior extends Behavior
     public function trackDelete(Entity $entity)
     {
         try {
-            $DeletedRecords = TableRegistry::get('DeletedRecords');
-            $source = $entity->source();
-            $entityTable = TableRegistry::get($source);
+            $DeletedRecords = TableRegistry::getTableLocator()->get('DeletedRecords');
+            $source = $entity->getSource();
+            $entityTable = TableRegistry::getTableLocator()->get($source);
             $entityData = $entity->toArray();
             $session = new Session();
             if (is_null($session->read('Auth.User.id'))) {
@@ -46,17 +47,17 @@ class TrackDeleteBehavior extends Behavior
             }else {
                 $userId = $session->read('Auth.User.id');
             }
-            if (!is_array($entityTable->primaryKey())) { // single primary key
-                $referenceKey = $entity->{$entityTable->primaryKey()};
+            if (!is_array($entityTable->getPrimaryKey())) { // single primary key
+                $referenceKey = $entity->{$entityTable->getPrimaryKey()};
             } else { // composite primary keys
                 $referenceKey = json_encode($DeletedRecords->getIdKeys($entityTable, $entityData, false));
             }
             // catering for 'binary' field type start
             $binaryDataFieldNames = [];
-            $schema = $entityTable->schema();
+            $schema = $entityTable->getSchema();
             foreach ($schema->columns() as $key => $value) {
-                $schemaColumnData = $schema->column($value);
-                if (array_key_exists('type', $schemaColumnData) && $schemaColumnData['type'] == 'binary') {
+                $schemaColumnData = $schema->getColumn($value);
+                if (isset($schemaColumnData['type']) && $schemaColumnData['type'] == 'binary') {
                     $binaryDataFieldNames[] = $value;
                 }
             }
@@ -87,7 +88,7 @@ class TrackDeleteBehavior extends Behavior
             $statement = $query->execute();
             $statement->closeCursor();
         } catch (Exception $e) {
-            Log::write('error', $this->_table->alias() . ' -> ' . __METHOD__ . ': ' . $e->getMessage());
+            Log::write('error', $this->_table->getAlias() . ' -> ' . __METHOD__ . ': ' . $e->getMessage());
         }
     }
 

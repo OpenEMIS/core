@@ -10,8 +10,8 @@ use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 
 class StaffSubjectsTable extends AppTable  {
-    public function initialize(array $config) {
-        $this->table('institution_subject_staff');
+    public function initialize(array $config): void {
+        $this->setTable('institution_subject_staff');
 
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
@@ -46,7 +46,7 @@ class StaffSubjectsTable extends AppTable  {
         $qualificationLevels = TableRegistry::get('qualification_levels');
         $staffQualificationsSpecialisations = TableRegistry::get('staff_qualifications_specialisations');
         $qualificationSpecialisations = TableRegistry::get('qualification_specialisations');
-        $institutionPositions = TableRegistry::get('institution_positions');
+        $institutionPositions = TableRegistry::get('Institution.institution_positions');
         $staffPositionTitles = TableRegistry::get('staff_position_titles');
         $genders = TableRegistry::get('User.Genders');
         $mainNationalities = TableRegistry::get('FieldOption.Nationalities');
@@ -178,17 +178,17 @@ class StaffSubjectsTable extends AppTable  {
             'institution_code'  => 'institutions.code',
             'institution'  => 'institutions.name',
             'openEMIS_no'  => 'security_users.openemis_no',
-            'default_identity'  => 'IFNULL(default_staff_identities.staff_default_identity_number, "")',
-            'other_identities'  => 'IFNULL(other_staff_identities.staff_other_identity_numbers, "")',
+            'default_identity'  => 'IFNULL(`default_staff_identities`.`staff_default_identity_number`, "")',
+            'other_identities'  => 'IFNULL(`other_staff_identities`.`staff_other_identity_numbers`, "")',
             'first_name'  => 'security_users.first_name',
-            'middle_name'  => 'IFNULL(security_users.middle_name, "")',
-            'third_name'  => 'IFNULL(security_users.third_name, "")',
+            'middle_name'  => 'IFNULL(`security_users`.`middle_name`, "")',
+            'third_name'  => 'IFNULL(`security_users`.`third_name`, "")',
             'last_name'  => 'security_users.last_name',
             'gender'  => 'genders.name',
-            'nationality'  => 'IFNULL(staff_nationalities.nationality_name, "")',
-            'staff_status'  => 'IF(staff_status.staff_id IS NULL, "Not Assigned", "Assigned")',
-            'qualification_title'  => 'IFNULL(staff_qualification_titles.staff_qualification_combined, "")',
-            'qualification_specializations'  => 'IFNULL(staff_qualification_titles.staff_specialisation_combined, "")',
+            'nationality'  => 'IFNULL(`staff_nationalities`.`nationality_name`, "")',
+            'staff_status'  => 'IF(`staff_status`.`staff_id` IS NULL, "Not Assigned", "Assigned")',
+            'qualification_title'  => 'IFNULL(`staff_qualification_titles`.`staff_qualification_combined`, "")',
+            'qualification_specializations'  => 'IFNULL(`staff_qualification_titles`.`staff_specialisation_combined`, "")',
             'subject'  => 'institution_subjects.name',
             'grade'  => 'education_grades.name',
             'class'  => 'institution_classes.name',

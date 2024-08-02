@@ -8,7 +8,7 @@ use Cake\Event\Event;
 
 class CustomFieldsController extends AppController
 {
-	public function initialize() {
+	public function initialize(): void {
 		parent::initialize();
 
 		$this->ControllerAction->models = [
@@ -20,10 +20,10 @@ class CustomFieldsController extends AppController
 		$this->loadComponent('Paginator');
     }
 
-    public function beforeFilter(Event $event) {
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event) {
     	parent::beforeFilter($event);
-    	$plugin = $this->plugin;
-    	$name = $this->name;
+    	$plugin = $this->getPlugin();
+    	$name = $this->getName();
 
 		$tabElements = [
 			'Modules' => [

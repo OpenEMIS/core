@@ -16,7 +16,7 @@ class GenerateAllClassProfilesShell extends Shell
 {
     private $sleepTime = 5;
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('CustomExcel.ClassProfiles');
@@ -43,7 +43,7 @@ class GenerateAllClassProfilesShell extends Shell
                 ->order([
                     $this->ClassProfileProcesses->aliasField('created'),
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->first();
 
             if (!empty($recordToProcess)) {
@@ -77,7 +77,11 @@ class GenerateAllClassProfilesShell extends Shell
                 $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
             }
         }
-        posix_kill(getmypid(), SIGKILL);
+        try {
+            posix_kill(getmypid(), 9);
+        } catch (\Exception $exception) {
+            $this->out($exception->getMessage());
+        }
     }
 
     private function recursiveCallToMyself($args)

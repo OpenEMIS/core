@@ -10,11 +10,11 @@ use Scholarship\Controller\AttachmentsController as BaseController;
 
 class ScholarshipApplicationAttachmentsController extends BaseController
 {
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
 
-        $queryString = $this->request->query['queryString'];
+        $queryString = $this->request->getQuery['queryString'];
         $applicantId = $this->paramsDecode($queryString)['applicant_id'];
         $scholarshipId = $this->paramsDecode($queryString)['scholarship_id']; // v4
         $userName = $this->Users->get($applicantId)->name;

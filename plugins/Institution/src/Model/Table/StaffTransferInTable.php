@@ -6,7 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
 use Institution\Model\Table\InstitutionStaffTransfersTable;
@@ -14,7 +14,7 @@ use Cake\Log\Log;
 
 class StaffTransferInTable extends InstitutionStaffTransfersTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts']);
@@ -26,15 +26,31 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
 
         $this->toggle('add', false);
         if ($this->behaviors()->has('Workflow')) {
-            $this->behaviors()->get('Workflow')->config([
-                'institution_key' => 'new_institution_id'
-            ]);
+            // $this->behaviors()->get('Workflow')->config([
+            //     'institution_key' => 'new_institution_id'
+            // ]);
+
+            $reorderBehavior = $this->behaviors()->get('Workflow');
+            $reorderBehavior->setConfig('institution_key', 'new_institution_id');
         }
+
+        $this->addBehavior('Institution.InstitutionTab'
+            , [
+                'appliedAction' => ['StaffTransferIn' => [
+                        'assignee_id',
+                        'new_institution_id',
+                        'previous_institution_id',
+                        'transfer_type'
+                    ]
+                ]
+            ]
+        );
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('new_start_date', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'previous_end_date', false],
@@ -51,7 +67,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
             ->notEmpty(['new_institution_position_id', 'new_FTE', 'new_staff_type_id', 'new_start_date', 'workflow_assignee_id','assignee_id']);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['UpdateAssignee.onSetSchoolBasedConditions'] = 'onSetSchoolBasedConditions';
@@ -74,7 +90,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         }
         //POCOR-7034 end
         parent::beforeAction($event, $extra);
-
+        $this->field('is_homeroom'); //POCOR-7780
         $this->field('previous_institution_staff_id', ['type' => 'hidden']);
         $this->field('previous_staff_type_id', ['type' => 'hidden']);
         $this->field('previous_FTE', ['type' => 'hidden']);
@@ -90,7 +106,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         $this->field('previous_end_date', ['type' => 'hidden']);
         $this->field('previous_effective_date', ['type' => 'hidden']);
         $this->field('comment', ['type' => 'hidden']);
-
+        $this->field('is_homeroom', ['type' => 'string']); //POCOR-7780
         $this->field('assignee_id', ['sort' => ['field' => 'assignee_id']]);
         $this->field('previous_institution_id', ['sort' => ['field' => 'PreviousInstitutions.code']]);
         $this->field('new_start_date', ['sort' => ['field' => 'new_start_date']]);
@@ -99,8 +115,11 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $requestInstitutionId = $this->request->getParam('institutionId');
+        $institutionId = isset($requestInstitutionId) ? $this->paramsDecode($requestInstitutionId)['id'] : $getInstitutionId;
+        //$session = $this->request->session();
+        //$institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
 
         $query->find('InstitutionStaffTransferIn', ['institution_id' => $institutionId]);
         $extra['auto_contain_fields'] = ['PreviousInstitutions' => ['code'], 'NewInstitutions' => ['code']];
@@ -130,10 +149,12 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         if (empty($entity->previous_end_date)) {
             $this->field('previous_end_date', ['type' => 'hidden']);
         }
+        $this->field('is_homeroom', ['entity' => $entity, 'type' => 'string']); //POCOR-7780
 
         $this->setFieldOrder([
             'previous_information_header', 'staff_id', 'previous_institution_id', 'previous_end_date',
             'new_information_header', 'new_institution_id', 'new_institution_position_id', 'new_staff_type_id', 'new_FTE', 'new_start_date', 'new_end_date',
+            'is_homeroom', //POCOR-7780
             'transfer_reasons_header', 'comment',
             // hidden fields
             'all_visible', 'previous_effective_date', 'previous_institution_staff_id', 'previous_staff_type_id', 'previous_FTE', 'transfer_type'
@@ -148,21 +169,37 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         }
         return $value;
     }
+    //POCOR-7780:start
+    public function onGetIsHomeroom(Event $event, Entity $entity)
+    {
+        $this->log(print_r($entity->is_homeroom, true), 'debug');
+        return ($entity->is_homeroom) ? __('Yes') : __('No');
+    }
+    //POCOR-7780:end
 
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
         // to allow institution_position field to be populated on first load
-        $this->request->data[$this->alias()]['new_institution_id'] = $entity->new_institution_id;
-        $this->request->data[$this->alias()]['new_FTE'] = $entity->new_FTE;
-        $this->request->data[$this->alias()]['new_start_date'] = $entity->new_start_date;
-        $this->request->data[$this->alias()]['new_end_date'] = $entity->new_end_date;
+        $requestData = $this->request->getData();
+        $requestData[$this->getAlias()]['new_institution_id'] = $entity->new_institution_id;
+        $requestData[$this->getAlias()]['new_FTE'] = $entity->new_FTE;
+        $requestData[$this->getAlias()]['new_start_date'] = $entity->new_start_date;
+        $requestData[$this->getAlias()]['new_end_date'] = $entity->new_end_date;
     }
 
     public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['Users', 'NewInstitutions', 'PreviousInstitutions']);
     }
-
+    //POCOR-7870:start
+    public function addAfterAction(Event $event, Entity $entity)
+    {
+        $this->field('is_homeroom',[
+            'type'=>'select'
+        ]);
+        $this->fields['is_homeroom']['options'] = [0=>'No',1=>'Yes'];
+    }
+    //POCOR-7870:end
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('previous_information_header', ['type' => 'section', 'title' => __('Transfer From')]);
@@ -179,11 +216,20 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         $this->field('new_institution_position_id', ['type' => 'select']);
         $this->field('new_staff_type_id', ['type' => 'select']);
         // $this->field('shifts_id', ['type' => 'chosenSelect','placeholder' => __('Select Shifts'),]);
+        //POCOR-7780:start
+        $this->field('is_homeroom',[
+            'entity' => $entity,
+            'type'=>'select'
+        ]);
+        $this->fields['is_homeroom']['options'] = [0=>'No',1=>'Yes'];
+        $this->fields['is_homeroom']['value'] = $entity->is_homeroom;
+        //POCOR-7780:end
+
         $this->field('transfer_reasons_header', ['type' => 'section', 'title' => __('Other Information')]);
         $this->field('comment');
     }
 
-    public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStaffId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -193,7 +239,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         }
     }
 
-    public function onUpdateFieldPreviousInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPreviousInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -203,7 +249,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         }
     }
 
-    public function onUpdateFieldPreviousEndDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPreviousEndDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -219,7 +265,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         }
     }
 
-    public function onUpdateFieldPreviousEffectiveDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPreviousEffectiveDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -230,7 +276,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         }
     }
 
-    public function onUpdateFieldNewInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNewInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -240,21 +286,22 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         }
     }
 
-    public function onUpdateFieldNewInstitutionPositionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNewInstitutionPositionId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $options = [];
-            if (!empty($request->data[$this->alias()]['new_institution_id']) && !empty($request->data[$this->alias()]['new_FTE']) && !empty($request->data[$this->alias()]['new_start_date'])) {
+            $requestData = $request->getData();
+            if (!empty($requestData[$this->getAlias()]['new_institution_id']) && !empty($requestData[$this->getAlias()]['new_FTE']) && !empty($requestData[$this->getAlias()]['new_start_date'])) {
                 $PositionsTable = TableRegistry::get('Institution.InstitutionPositions');
 
                 $userId = $this->Auth->user('id');
                 $isAdmin = $this->AccessControl->isAdmin();
-                $activeStatusId = $this->Workflow->getStepsByModelCode($PositionsTable->registryAlias(), 'ACTIVE');
+                $activeStatusId = $this->Workflow->getStepsByModelCode($PositionsTable->getRegistryAlias(), 'ACTIVE');
 
-                $institutionId = $request->data[$this->alias()]['new_institution_id'];
-                $fte = $request->data[$this->alias()]['new_FTE'];
-                $startDate = $request->data[$this->alias()]['new_start_date'];
-                $endDate = !empty($request->data[$this->alias()]['new_end_date']) ? $request->data[$this->alias()]['new_end_date'] : '';
+                $institutionId = $requestData[$this->getAlias()]['new_institution_id'];
+                $fte = $requestData[$this->getAlias()]['new_FTE'];
+                $startDate = $requestData[$this->getAlias()]['new_start_date'];
+                $endDate = !empty($requestData[$this->getAlias()]['new_end_date']) ? $requestData[$this->getAlias()]['new_end_date'] : '';
 
                 $options = $PositionsTable->getInstitutionPositions($userId, $isAdmin, $activeStatusId, $institutionId, $fte, $startDate, $endDate);
             }
@@ -265,7 +312,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         }
     }
 
-    public function onUpdateFieldNewFTE(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNewFTE(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             // need to specify select option for approve action
@@ -275,7 +322,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         }
     }
 
-    public function onUpdateFieldNewStaffTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNewStaffTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'approve'])) {
             $options = $this->NewStaffTypes->find('list')->toArray();
@@ -286,10 +333,12 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
         }
     }
     
-    public function onUpdateFieldShiftsId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldShiftsId(Event $event, array $attr, $action, ServerRequest $request)
     {
-      
-        $institutionId = !empty($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $requestInstitutionId = $this->request->getParam('institutionId');     
+        $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $getInstitutionId;
+        //$institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $session->read('Institution.Institutions.id');
         
         if (in_array($action, ['edit', 'approve'])) {
             $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getCurrent();
@@ -339,7 +388,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->getRequest()->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -373,8 +422,8 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Users->alias(), $this->NewInstitutions->alias(), $this->PreviousInstitutions->alias(), $this->CreatedUser->alias(),'Assignees'])
-            ->matching($Statuses->alias().'.'.$StepsParams->alias(), function ($q) use ($Statuses, $StepsParams, $doneStatus, $incomingInstitution) {
+            ->contain([$this->Users->getAlias(), $this->NewInstitutions->getAlias(), $this->PreviousInstitutions->getAlias(), $this->CreatedUser->getAlias(),'Assignees'])
+            ->matching($Statuses->getAlias().'.'.$StepsParams->getAlias(), function ($q) use ($Statuses, $StepsParams, $doneStatus, $incomingInstitution) {
                 return $q->where([
                     $Statuses->aliasField('category <> ') => $doneStatus,
                     $StepsParams->aliasField('name') => 'institution_owner',
@@ -416,7 +465,7 @@ class StaffTransferInTable extends InstitutionStaffTransfersTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if(in_array($action, ['add','edit'])) { 
             $assigneeOptions = [$this->Auth->user('id') => __('Auto Assign')]; //POCOR-7080

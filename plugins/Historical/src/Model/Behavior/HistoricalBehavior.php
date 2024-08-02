@@ -9,7 +9,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 
 class HistoricalBehavior extends Behavior
@@ -31,7 +31,7 @@ class HistoricalBehavior extends Behavior
         'pages' => ['index']
     ];
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = 'beforeAction';
@@ -47,21 +47,24 @@ class HistoricalBehavior extends Behavior
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $controller = $this->_table->controller->name;
+        $controller = $this->_table->controller->getName();
         $action = $this->_table->action;
 
         // To only show the historical edit/remove button if the current plugin is the allowedController
-        if (!in_array($controller, $this->config('allowedController')) && $this->_table->registryAlias() == $this->config('model')) {
+        if (!in_array($controller, $this->getConfig('allowedController')) && $this->_table->getRegistryAlias() == $this->getConfig('model')) {
             $this->_table->toggle('edit', false);
             $this->_table->toggle('remove', false);
         }
 
-        if (in_array($controller, $this->config('allowedController')) && in_array($action, $this->config('pages'))) {
+        if (in_array($controller, $this->getConfig('allowedController')) && in_array($action, $this->getConfig('pages'))) {
             $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
 
-            $historicalUrl = $this->config('historicalUrl');
+            $historicalUrl = $this->getConfig('historicalUrl');
             $historicalUrl[] = 'add';
-
+            $request = $this->_table->request;
+            if($this->_table->controller->getName() == 'Directories' && isset($request->getParam('pass')[1])) {
+                $historicalUrl[1] = $request->getParam('pass')[1];
+            }
             $toolbarButtonsArray['HistoricalAdd']['attr'] = [
                 'class' => 'btn btn-xs btn-default',
                 'data-toggle' => 'tooltip',
@@ -83,6 +86,7 @@ class HistoricalBehavior extends Behavior
         if ($this->isHistorialModel()) {
             $this->_table->controller->Alert->info('Historical.addEdit', ['reset' => true]);
             $this->updateBreadcrumbAndPageTitle();
+            $this->updateBackButton($extra);
         }
     }
 
@@ -114,11 +118,16 @@ class HistoricalBehavior extends Behavior
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $controller = $this->_table->controller->name;
-        if ($this->checkHasAccess('remove') && in_array($controller, $this->config('allowedController'))) {
+        $controller = $this->_table->controller->getName();
+        if ($this->checkHasAccess('remove') && in_array($controller, $this->getConfig('allowedController'))) {
             $model = $this->_table;
-            $removeUrl = $this->config('historicalUrl');
+            $removeUrl = $this->getConfig('historicalUrl');
             $removeUrl[] = 'remove';
+
+            if ($model->controller->getName() === 'Directories') {
+                $request = $this->_table->request;
+                $removeUrl[1] = $request->getParam('pass')[1];
+            }
             $this->setupRemoveModal($removeUrl);
         }
     }
@@ -128,9 +137,10 @@ class HistoricalBehavior extends Behavior
         try {
             $model = $this->_table;
             $mainQuery = $model->find();
-            $HistoricalModelTable = TableRegistry::get($this->config('model'));
-            $historicalQuery = $HistoricalModelTable->find();
+            $HistoricalModelTable = TableRegistry::get($this->getConfig('model'));
 
+            //$historicalQuery = $HistoricalModelTable->find()->select(['id']);
+            $historicalQuery = $HistoricalModelTable->find();
             $selectList = new ArrayObject([]);
             $defaultOrder = new ArrayObject([]);
 
@@ -158,11 +168,11 @@ class HistoricalBehavior extends Behavior
 
             $query
                 ->select($selectedFields, true)
-                ->from([$model->alias() => $mainQuery])
+                ->from([$model->getAlias() => $mainQuery])
                 ->where(['1 = 1'], [], true);
 
             $request = $this->_table->request;
-            if (is_null($request->query('sort')) && !empty($defaultOrder)) {
+            if (is_null($request->getQuery('sort')) && !empty($defaultOrder)) {
                 // default display sort
                 $order = $defaultOrder->getArrayCopy();
                 $query->order($order);
@@ -181,12 +191,14 @@ class HistoricalBehavior extends Behavior
     public function getHistoricalActionButtons(array $buttons, $id)
     {
         $model = $this->_table;
-        $controller = $model->controller->name;
-        $baseUrl = $this->config('historicalUrl');
-        $encodedId = $model->paramsEncode(['id' => $id]);
-
+        $controller = $model->controller->getName();
+        $baseUrl = $this->getConfig('historicalUrl');
+       // $encodedId = $model->paramsEncode(['id' => $id]);
+        $queryString = $model->getQueryString();
+        $queryString['id'] = $id;
+        $encodedId = $model->paramsEncode($queryString);
         // view
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             $viewUrl = $baseUrl;
             $viewUrl[] = 'view';
             $viewUrl[] = $encodedId;
@@ -194,7 +206,7 @@ class HistoricalBehavior extends Behavior
         }
 
         // edit and remove
-        if (in_array($controller, $this->config('allowedController'))) {
+        if (in_array($controller, $this->getConfig('allowedController'))) {
             if ($this->checkHasAccess('edit')) {
                 $editUrl = $baseUrl;
                 $editUrl[] = 'edit';
@@ -236,7 +248,6 @@ class HistoricalBehavior extends Behavior
                 $buttons['remove'] = $remove;
             }
         }
-
         return $buttons;
     }
 
@@ -246,8 +257,8 @@ class HistoricalBehavior extends Behavior
 
         // breadcrumb update
         $NavigationComponent = $model->controller->Navigation;
-        $currentCrumb = Inflector::humanize(Inflector::underscore($model->alias()));
-        $newCrumb = Inflector::humanize(Inflector::underscore(str_replace('Historical', '', $model->alias())));
+        $currentCrumb = Inflector::humanize(Inflector::underscore($model->getAlias()));
+        $newCrumb = Inflector::humanize(Inflector::underscore(str_replace('Historical', '', $model->getAlias())));
         $NavigationComponent->substituteCrumb($currentCrumb, $newCrumb);
 
         // page title update
@@ -267,24 +278,32 @@ class HistoricalBehavior extends Behavior
 
     private function getOriginUrl()
     {
-        $originUrl = $this->config('originUrl');
-
+        $originUrl = $this->getConfig('originUrl');
         $model = $this->_table;
-        if ($model->controller->name === 'Directories') {
+        if ($model->controller->getName() === 'Directories') {
             $originUrl['plugin'] = 'Directory';
-            $originUrl['controller'] = $model->controller->name;
-        } elseif ($model->controller->name === 'Institutions') {
+            $originUrl['controller'] = $model->controller->getName();
+            $request = $this->_table->request;
+
+            $decodeQueryString = $request->getParam('pass')[1];
+            $queryString = $model->paramsDecode($decodeQueryString);
+            if(isset($queryString['id'])) {
+                unset($queryString['id']);
+            }
+            $originUrl[0] = 'index';
+            $originUrl[1] = $model->paramsEncode($queryString);
+        } elseif ($model->controller->getName() === 'Institutions') {
             $originUrl['plugin'] = 'Institution';
-            $originUrl['controller'] = $model->controller->name;
-        } elseif ($model->controller->name === 'Staff') {
+            $originUrl['controller'] = $model->controller->getName();
+        } elseif ($model->controller->getName() === 'Staff') {
             $originUrl['plugin'] = 'Staff';
-            $originUrl['controller'] = $model->controller->name;
-        } elseif ($model->controller->name === 'Profiles') {
+            $originUrl['controller'] = $model->controller->getName();
+        } elseif ($model->controller->getName() === 'Profiles') {
             $originUrl['plugin'] = 'Profile';
-            $originUrl['controller'] = $model->controller->name;
-        } elseif ($model->controller->name === 'Guardians') {
+            $originUrl['controller'] = $model->controller->getName();
+        } elseif ($model->controller->getName() === 'Guardians') {
             $originUrl['plugin'] = 'Guardian';
-            $originUrl['controller'] = $model->controller->name;
+            $originUrl['controller'] = $model->controller->getName();
         }
         return $originUrl;
     }
@@ -292,17 +311,17 @@ class HistoricalBehavior extends Behavior
     private function getStaffName()
     {
         $model = $this->_table;
-        $session = $model->request->session();
+        $session = $model->request->getSession();
 
-        if ($model->controller->name === 'Directories') {
+        if ($model->controller->getName() === 'Directories') {
             if ($session->check('Directory.Directories.name')) {
                 return $session->read('Directory.Directories.name');
             }
-        } elseif ($model->controller->name === 'Institutions' || $model->controller->name === 'Staff') {
+        } elseif ($model->controller->getName() === 'Institutions' || $model->controller->getName() === 'Staff') {
             if ($session->check('Staff.Staff.name')) {
                 return $session->read('Staff.Staff.name');
             }
-        } elseif ($model->controller->name === 'Profiles') {
+        } elseif ($model->controller->getName() === 'Profiles') {
             return $model->Auth->user('name');
         }
         return null;
@@ -310,7 +329,7 @@ class HistoricalBehavior extends Behavior
 
     private function isHistorialModel()
     {
-        return $this->_table->registryAlias() === $this->config('model');
+        return $this->_table->getRegistryAlias() === $this->getConfig('model');
     }
 
     private function setupRemoveModal($removeUrl)
@@ -318,7 +337,7 @@ class HistoricalBehavior extends Behavior
         $model = $this->_table;
 
         $modal = [];
-        $modal['title'] = $model->getHeader($model->alias());
+        $modal['title'] = $model->getHeader($model->getAlias());
         $modal['buttons'] = ['<button type="submit" class="btn btn-default">' . __('Delete') . '</button>'];
         $modal['cancelButton'] = true;
         $modal['form'] = [
@@ -340,9 +359,11 @@ class HistoricalBehavior extends Behavior
             return true;
         }
 
-        $historicalUrl = $this->config('historicalUrl');
+        $historicalUrl = $this->getConfig('historicalUrl');
         $historicalController = $historicalUrl['controller'];
         $historicalTable = $historicalUrl['action'];
+
         return $model->AccessControl->check([$historicalController, $historicalTable, $action]);
     }
+
 }

@@ -17,16 +17,16 @@ have received a copy of the GNU General Public License along with this program. 
 namespace FieldOption\Model\Behavior;
 
 use ArrayObject;
-use Cake\ORM\Entity;
+use Cake\Event\Event;
 use Cake\ORM\Behavior;
+use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
-use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\Validation\Validator;
 
-class FieldOptionBehavior extends Behavior {
-    public function initialize(array $config)
+class FieldOptionBehavior extends Behavior
+{
+    public function initialize(array $config): void
     {
         $this->_table->setDeleteStrategy('restrict');
     }
@@ -34,7 +34,7 @@ class FieldOptionBehavior extends Behavior {
     public function getDefaultValue()
     {
         $value = '';
-        $primaryKey = $this->_table->primaryKey();
+        $primaryKey = $this->_table->getPrimaryKey();
         $entity = $this->getDefaultEntity();
         return $entity->{$primaryKey};
     }
@@ -54,7 +54,7 @@ class FieldOptionBehavior extends Behavior {
         return $entity;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction'];
@@ -70,6 +70,10 @@ class FieldOptionBehavior extends Behavior {
         if (!$data->offsetExists('default')) {
             $data['default'] = '0';
         }
+        //POCOR-7485 starts
+        if (!$data->offsetExists('visible')) {
+            $data['visible'] = '0';
+        }//POCOR-7485 ends
     }
 
     public function buildValidator(Event $event, Validator $validator, $name)
@@ -95,7 +99,8 @@ class FieldOptionBehavior extends Behavior {
                 ]);
         }
         //POCOR-5668 add external validation starts
-        if(isset($this->_table->alias) && $this->_table->alias == 'Nationalities'){
+        $tableAlias = $this->_table->getAlias();
+        if(isset($tableAlias) && $tableAlias == 'Nationalities'){
             $validator
                 ->requirePresence('external_validation')
                 ->add('external_validation', [
@@ -109,15 +114,14 @@ class FieldOptionBehavior extends Behavior {
         //POCOR-5668 add external validation ends
         $validator
             ->requirePresence('visible')
-            ->requirePresence('default')            
-            ;
+            ->requirePresence('default');
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
         // only perform for v4
         if ($this->_table->hasBehavior('ControllerAction')) {
             if ($entity->has('default') && $entity->default == 1) {
-                $this->_table->updateAll(['default' => 0], [$this->_table->primaryKey().' != ' => $entity->{$this->_table->primaryKey()}]);
+                $this->_table->updateAll(['default' => 0], [$this->_table->getPrimaryKey().' != ' => $entity->{$this->_table->getPrimaryKey()}]);
             }
         }
     }
@@ -146,12 +150,8 @@ class FieldOptionBehavior extends Behavior {
 
     }
 
-    private function addFieldOptionControl(ArrayObject $extra, $data = []) {
-        $extra['elements']['controls'] = ['name' => 'FieldOption.controls', 'data' => $data, 'order' => 2];
-    }
-
-    // for CA v4
-    public function onGetEditable(Event $event, Entity $entity) {
+    public function onGetEditable(Event $event, Entity $entity)
+    {
         return $entity->editable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
     }
 
@@ -160,22 +160,53 @@ class FieldOptionBehavior extends Behavior {
         return $entity->default == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
     }
 
+    // for CA v4
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $model = $this->_table;
         $fieldOptions = $this->buildFieldOptions();
-        $selectedOption = $model->alias;
+        $selectedOption = $model->getAlias();
         $this->addFieldOptionControl($extra, ['fieldOptions' => $fieldOptions, 'selectedOption' => $selectedOption]);
 
         $model->field('default', ['options' => $model->getSelectOptions('general.yesno'), 'after' => 'visible']);
-        //POCOR-5668 add external validation starts
-        if($model->alias == 'Nationalities'){
-            $model->field('external_validation', ['options' => $model->getSelectOptions('general.enabledisable'), 'after' => 'default', 'default'=>0]);
+        //POCOR-5668 add external validation starts, POCOR-7981
+        if ($model->alias == 'Nationalities') {
+            $defaultOptions = ['' => '-- '.__('Select').' --'];
+            $zeroOptions = ['0' =>__('None')];
+            $externalTypes = TableRegistry::get('Configuration.ConfigItems');
+            $externalTypeOptions = $externalTypes
+                ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                ->where(['type' => 'External Data Source - Identity',
+                    'value' => 1])
+                ->toArray();
+            $externalTypeOptions = $zeroOptions + $externalTypeOptions;
+            $options = $defaultOptions + $externalTypeOptions;
+            $model->field('external_validation',
+                ['options' =>
+                    $options,
+                    'after' => 'default',
+                    'default' => 0
+                ]
+            );
+            $model->field('is_refugee',
+                ['options' =>
+                    $model->getSelectOptions('general.yesno'),
+                    'attr' => ['label' => __('Refugee')],
+                    'before' => 'international_code',
+                    'after' => 'external_validation',
+                    'default' => 0
+                ]); //POCOR-7980
         }
         //POCOR-5668 add external validation ends
         $model->field('editable', ['options' => $model->getSelectOptions('general.yesno'), 'visible' => ['index' => true], 'after' => 'default']);
 
         $extra['config']['selectedLink'] = ['controller' => 'FieldOptions', 'action' => 'index'];
+    }
+
+    private function addFieldOptionControl(ArrayObject $extra, $data = [])
+    {
+        $extra['elements']['controls'] = ['name' => 'FieldOption.controls', 'data' => $data, 'order' => 2];
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -196,7 +227,7 @@ class FieldOptionBehavior extends Behavior {
     {
         $model = $this->_table;
         $model->field('name', ['after' => 'editable']);
-        $fields = ['visible', 'default', 'editable', 'name', 'international_code', 'national_code','external_validation'];
+        $fields = ['visible', 'default', 'editable', 'name', 'international_code', 'national_code', 'external_validation'];
         foreach ($fields as $field) {
             if (array_key_exists($field, $model->fields)) {
                 if (is_array($model->fields[$field]['visible'])) {

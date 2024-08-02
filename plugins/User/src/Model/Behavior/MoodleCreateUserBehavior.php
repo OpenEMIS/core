@@ -14,11 +14,12 @@ use Cake\ORM\TableRegistry;
 class MoodleCreateUserBehavior extends Behavior
 {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
 
     }
 
+    // change in POCOR-8381
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $isNew = $entity->isNew();
@@ -31,11 +32,11 @@ class MoodleCreateUserBehavior extends Behavior
             return;
         }
 
-        if ($isNew) { //For Add action only
+        if ($isNew) { // For Add action only
             $moodleApi = new MoodleApi();
             if ($moodleApi->enableUserCreation()) {
                 $response = $moodleApi->createUser($entity);
-                if ($response->code != 200) {
+                if ($response->getStatusCode() != 200) {  // Use getStatusCode() instead of accessing $code directly
                     throw new Exception("Network Error");
                 }
             }

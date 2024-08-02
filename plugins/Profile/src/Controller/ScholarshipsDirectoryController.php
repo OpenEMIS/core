@@ -8,23 +8,33 @@ use Cake\Core\Configure;
 use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
 use App\Model\Traits\OptionsTrait;
+use ControllerAction\Model\Traits\SecurityTrait;
+use Cake\Utility\Security;
 
 class ScholarshipsDirectoryController extends PageController
 {
     use OptionsTrait;
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Profile.ScholarshipsDirectory');
         $this->loadModel('Education.EducationFieldOfStudies');
         $this->loadModel('Configuration.ConfigItems');
-        $this->Page->loadElementsFromTable($this->ScholarshipsDirectory);
+        $this->loadComponent('Page.Page');//POCOR-7485
 
-        $this->Page->disable(['add', 'edit', 'delete']);
+        if ($this->Page !== null && $this->ScholarshipsDirectory !== null) {
+            $this->Page->loadElementsFromTable($this->ScholarshipsDirectory);
+        }
+
+        if ($this->Page !== null) {
+            $this->Page->disable(['add', 'edit', 'delete']);
+        }
+        $this->loadComponent('Auth');
+
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $event = parent::implementedEvents();
         $event['Controller.Page.onRenderFieldOfStudies'] = 'onRenderFieldOfStudies';
@@ -33,12 +43,13 @@ class ScholarshipsDirectoryController extends PageController
         return $event;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
         parent::beforeFilter($event);
 
         $applicantId = $this->Auth->user('id');
+
         $applicantName = $this->Auth->user('name');
         $encodedApplicantId = $this->paramsEncode(['id' => $applicantId]);
         $currency = $this->ConfigItems->value('currency');
@@ -80,13 +91,13 @@ class ScholarshipsDirectoryController extends PageController
                     'plugin' => 'Profile',
                     'controller' => 'Profiles',
                     'action' => 'ScholarshipApplications',
-                    'index'
-                ],
+                                    ],
                 'iconClass' => 'fa kd-back',
                 'linkOptions' => ['title' => __('Back'), 'id' => 'btn-back']
             ],
             'options' => []
         ]);
+//        die($this->viewBuilder()->getTemplate());
     }
 
     public function view($id)
@@ -205,4 +216,29 @@ class ScholarshipsDirectoryController extends PageController
             return $entity->duration . ' ' . __('Years');
         }
     }
+
+    public function beforeRender(Event|\Cake\Event\EventInterface $event)
+    {
+
+        $this->viewBuilder()->addHelpers(['Html', 'Form', 'Paginator', 'Label', 'Url']);
+        $this->viewBuilder()->addHelper('OpenEmis.Navigation');
+        $action = $this->getRequest()->getParam('action');;
+
+        if (in_array($action, ['index', 'view', 'add', 'edit', 'delete'])) {
+            $viewFile = 'Page/' . $action;
+            $this->viewBuilder()->setTemplate($viewFile);
+        }
+    }
+
+    /*public function paramsEncode($params = [])
+    {
+        $sessionId = Security::hash('session_id', 'sha256');
+        $jsonParam = json_encode($params);
+        $base64Param = $this->urlsafeB64Encode($jsonParam);
+        $params[$sessionId] = session_id();
+        $jsonParamWithSessionTocken = json_encode($params);
+        $signature = Security::hash($jsonParamWithSessionTocken, 'sha256', true);
+        $base64Signature = $this->urlsafeB64Encode($signature);
+        return "$base64Param.$base64Signature";
+    }*/
 }
