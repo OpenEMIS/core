@@ -270,7 +270,7 @@ class EducationSystemsTable extends ControllerActionTable
         $education_levels = TableRegistry::get('Education.EducationLevels');
     	$educationLevelsData = $education_levels
 							    ->find()
-							    ->where([$education_levels->aliasField('education_system_id') => $entity->education_system_id])
+							    ->where([$education_levels->aliasField('education_system_id') => $entity->id])
 							    ->All()
 		                        ->toArray();
 
