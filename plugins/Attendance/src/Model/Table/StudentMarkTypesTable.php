@@ -15,21 +15,21 @@ class StudentMarkTypesTable extends ControllerActionTable
 {
     private $defaultMarkType;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('student_attendance_mark_types');
+        $this->setTable('student_attendance_mark_types');
         parent::initialize($config);
 
         //$this->toggle('add', false);
         $this->toggle('remove', true);//POCOR-7393 Case 2nd
         $this->toggle('reorder', false);
 
-        $this->removeBehavior('Reorder');
+        // $this->removeBehavior('Reorder');
         $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
         $this->defaultMarkType = $StudentAttendanceMarkTypes->getDefaultMarkType();
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
         $validator
             ->add('code', [
@@ -45,11 +45,11 @@ class StudentMarkTypesTable extends ControllerActionTable
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {    
-        if (!is_null($requestData[$this->alias()]['student_attendance_type_id']) && !is_null($requestData[$this->alias()]['code'])
+        if (!is_null($requestData[$this->getAlias()]['student_attendance_type_id']) && !is_null($requestData[$this->getAlias()]['code'])
         ) {
-            $code = $requestData[$this->alias()]['code'];
-            $attendancePerDay = $requestData[$this->alias()]['attendance_per_day'];
-            $attendanceTypeId = $requestData[$this->alias()]['student_attendance_type_id'];
+            $code = $requestData[$this->getAlias()]['code'];
+            $attendancePerDay = $requestData[$this->getAlias()]['attendance_per_day'];
+            $attendanceTypeId = $requestData[$this->getAlias()]['student_attendance_type_id'];
 
             $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
             $attendanceType = $StudentAttendanceTypes
@@ -72,14 +72,14 @@ class StudentMarkTypesTable extends ControllerActionTable
                 if (!$resultSet->isEmpty()) {
                     // delete any records if set attendance type back to default
                     $this
-                    ->updateAll(['student_attendance_type_id' => $attendanceTypeId,'attendance_per_day' => $attendancePerDay], ['code' => $requestData[$this->alias()]['code']]);
+                    ->updateAll(['student_attendance_type_id' => $attendanceTypeId,'attendance_per_day' => $attendancePerDay], ['code' => $requestData[$this->getAlias()]['code']]);
                 } 
             
 
             $studentMarkData = $this
                     ->find()
                     ->where([
-                        $this->aliasField('code') => $requestData[$this->alias()]['code']
+                        $this->aliasField('code') => $requestData[$this->getAlias()]['code']
                     ])
                     ->all()
                     ->toArray();
@@ -146,13 +146,13 @@ class StudentMarkTypesTable extends ControllerActionTable
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
-        if (!is_null($requestData[$this->alias()]['name']) && !is_null($requestData[$this->alias()]['student_attendance_type_id']) && !is_null($requestData[$this->alias()]['code'])
+        if (!is_null($requestData[$this->getAlias()]['name']) && !is_null($requestData[$this->getAlias()]['student_attendance_type_id']) && !is_null($requestData[$this->getAlias()]['code'])
         ) {             
-            $attendancePerDay = $requestData[$this->alias()]['attendance_per_day'];
+            $attendancePerDay = $requestData[$this->getAlias()]['attendance_per_day'];
             $studentMarkData = $this
                     ->find()
                     ->where([
-                        $this->aliasField('code') => $requestData[$this->alias()]['code']
+                        $this->aliasField('code') => $requestData[$this->getAlias()]['code']
                     ])
                     ->all()
                     ->toArray();
@@ -216,7 +216,7 @@ class StudentMarkTypesTable extends ControllerActionTable
             $StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id = ') => $id
         ])
         
-        ->order(['order'=>'asc'])         
+        ->order([$StudentAttendancePerDayPeriods->aliasField('order')=>'asc'])         
         ->all()
        ->toArray();
 
@@ -297,13 +297,14 @@ class StudentMarkTypesTable extends ControllerActionTable
 
         $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
         $StudentAttendancePerDayPeriodsData = $StudentAttendancePerDayPeriods
-        ->find('all')
-        ->where([
-            $StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id = ') => $id
-        ])
-        ->order(['order'=>'asc']) 
-        ->all()
-        ->toArray();
+                                        ->find('all')
+                                        ->where([
+                                            $StudentAttendancePerDayPeriods->aliasField('student_attendance_mark_type_id = ') => $id
+                                        ])
+                                        ->order([$StudentAttendancePerDayPeriods->aliasField('order') => 'asc']) 
+                                        ->all()
+                                        ->toArray();
+
         if (!empty($entity->attendance_per_day)) {
                 $attendance_per_day = $entity->attendance_per_day;
         } else {
@@ -364,13 +365,15 @@ class StudentMarkTypesTable extends ControllerActionTable
         }
     } */
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action)
     {
         
     }
 
 
-    public function onUpdateFieldStudentAttendanceTypeId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldStudentAttendanceTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStudentAttendanceTypeId(Event $event, array $attr, $action)
     {
             $entity = $attr['entity'];
             if (!empty($entity)) {                
@@ -392,7 +395,8 @@ class StudentMarkTypesTable extends ControllerActionTable
             return $attr;
     }
 
-    public function onUpdateFieldAttendancePerDay(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldAttendancePerDay(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAttendancePerDay(Event $event, array $attr, $action)
     {
         $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
         
@@ -491,12 +495,17 @@ class StudentMarkTypesTable extends ControllerActionTable
     public function addEditOnChangeAcademicPeriodId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
-        unset($request->query['period']);
+        $period = $request->getQuery('period');
+        if (isset($period)) {
+            unset($request->query['period']);
+        }
+
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
-                    $request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('academic_period_id', $request->getData($this->getAlias()))) {
+                    $data = $request->getData($this->getAlias());
+                    $request->query['period'] = $data['academic_period_id'];
                 }
             }
         }
@@ -506,7 +515,7 @@ class StudentMarkTypesTable extends ControllerActionTable
     {
         $request = $this->request;
 
-        $attendance_per_day = $request->data[$this->alias()]['attendance_per_day'];
+        $attendance_per_day = $request->getData($this->getAlias())['attendance_per_day'];
         $this->controller->set('attendance_per_day', $attendance_per_day);
 
         $entity->attendanceTypeId = $this->defaultMarkType['student_attendance_type_id'];
@@ -514,7 +523,7 @@ class StudentMarkTypesTable extends ControllerActionTable
 
     public function addEditOnChangeAttendanceType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $attendanceTypeId = $data[$this->alias()]['student_attendance_type_id'];
+        $attendanceTypeId = $data[$this->getAlias()]['student_attendance_type_id'];
         $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
         $entity->attendanceTypeId = $attendanceTypeId;
         $attendanceType = $StudentAttendanceTypes
@@ -542,10 +551,54 @@ class StudentMarkTypesTable extends ControllerActionTable
     {   
         $id = $entity->id;
         if(!empty($id)){
-            $studentAttendancePerDayPeriodsTable = TableRegistry::get('student_attendance_per_day_periods');
+            $studentAttendancePerDayPeriodsTable = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
             $studentAttendancePerDayPeriodsTable->deleteAll([
                 $studentAttendancePerDayPeriodsTable->aliasField('student_attendance_mark_type_id') => $id
             ]);
         }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+        if ($field == 'name') {
+            return __('Name');
+        }elseif ($field == 'code') {
+            return __('Code');
+        }elseif ($field == 'type') {
+            return __('Type');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }elseif ($field == 'attendance_per_day') {
+            return __('Attendance Per Day');
+        }elseif ($field == 'visible') {
+            return __('Visible');
+        }elseif ($field == 'periods') {
+            return __('Periods');
+        }elseif ($field == 'student_attendance_type_id') {
+            return __('Student Attendance Type');
+        }elseif ($field == 'hours_required') {
+            return __('Hours Required');
+        }elseif ($field == 'education_grade_id') {
+            return __('Education Grade');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
     }
 }

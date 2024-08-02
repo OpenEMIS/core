@@ -24,9 +24,9 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
     // fte options
     public $fteOptions = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff_releases');
+        $this->setTable('institution_staff_releases');
         parent::initialize($config);
 
         // Mandatory data
@@ -47,7 +47,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('User.AdvancedNameSearch');
 
-        $this->fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
+        $this->fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1.00' => '100%'];
     }
 
     private $workflowEvents = [
@@ -60,7 +60,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         ]
     ];
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Workflow.getEvents'] = 'getWorkflowEvents';
@@ -122,33 +122,36 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
     {
         $canAddButtons = false;
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
-        $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $requestInstitutionId = $this->request->getParam('institutionId');
+        $currentInstitutionId = isset($requestInstitutionId) ? $this->paramsDecode($requestInstitutionId)['id'] : $getInstitutionId;
+        //$currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
 
         $ConfigStaffReleaseTable = TableRegistry::get('Configuration.ConfigStaffReleases');
         $isRestricted = $ConfigStaffReleaseTable->checkStaffReleaseRestrictedBetweenSameType($entity->previous_institution_id, $entity->new_institution_id);
 
         if (!$isRestricted) {
-            
+
             if ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->new_institution_id) {
                 $canAddButtons = $this->NewInstitutions->isActive($entity->new_institution_id);
             } else if ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id) {
                 $canAddButtons = $this->PreviousInstitutions->isActive($entity->previous_institution_id);
             }
-            
+
         }
-        
+
         $isRestrictedDiffrentProvider = $ConfigStaffReleaseTable->checkStaffReleaseRestrictedBetweenDifferentProvider($entity->previous_institution_id, $entity->new_institution_id);
 
         if (!$isRestrictedDiffrentProvider) {
-            
+
             if ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->new_institution_id) {
                 $canAddButtons = $this->NewInstitutions->isActive($entity->new_institution_id);
             } else if ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id) {
                 $canAddButtons = $this->PreviousInstitutions->isActive($entity->previous_institution_id);
             }
-            
+
         }
-        
+
         return $canAddButtons;
     }
 
@@ -184,7 +187,10 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
     public function onGetStatusId(Event $event, Entity $entity)
     {
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
-        $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $requestInstitutionId = $this->request->getParam('institutionId');
+        $currentInstitutionId = isset($requestInstitutionId) ? $this->paramsDecode($requestInstitutionId)['id'] : $getInstitutionId;
+        //$currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
 
         $belongsToCurrentInstitution = ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->new_institution_id) || ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id);
 
@@ -198,7 +204,9 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
     public function onGetWorkflowStatus(Event $event, Entity $entity)
     {
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
-        $currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $requestInstitutionId = $this->request->getParam('institutionId');
+        $currentInstitutionId = isset($requestInstitutionId) ? $this->paramsDecode($requestInstitutionId)['id'] : $getInstitutionId;
 
         $belongsToCurrentInstitution = ($institutionOwner == self::INCOMING && $currentInstitutionId == $entity->new_institution_id) || ($institutionOwner == self::OUTGOING && $currentInstitutionId == $entity->previous_institution_id);
 
@@ -316,7 +324,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if (!$entity->isNew() && $entity->dirty('status_id')) {
+        if (!$entity->isNew() && $entity->getDirty('status_id')) {
             if (!$entity->all_visible) {
                 $currentInstitutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
                 $previousInstitutionOwner = $this->getWorkflowStepsParamValue($entity->getOriginal('status_id'), 'institution_owner');
@@ -332,7 +340,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
     {
         $institutionId = $options['institution_id'];
         $incomingInstitution = self::INCOMING;
-        $pending = array_key_exists('pending_records', $options) ? $options['pending_records'] : false;
+        $pending = isset($options['pending_records']) ? $options['pending_records'] : false;
 
         $query
             ->matching('Statuses.WorkflowStepsParams', function ($q) {
@@ -356,7 +364,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
     {
         $institutionId = $options['institution_id'];
         $outgoingInstitution = self::OUTGOING;
-        $pending = array_key_exists('pending_records', $options) ? $options['pending_records'] : false;
+        $pending = isset($options['pending_records']) ? $options['pending_records'] : false;
 
         $query
             ->matching('Statuses.WorkflowStepsParams', function ($q) {

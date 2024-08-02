@@ -10,7 +10,7 @@ class UpdateSecurityGroupUsersShell extends Shell
 {
     private $homeroomRoleId;
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Security.SecurityRoles');

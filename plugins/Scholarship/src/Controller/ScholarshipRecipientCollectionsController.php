@@ -27,7 +27,7 @@ class ScholarshipRecipientCollectionsController extends PageController
         $this->currency = $this->ConfigItems->value('currency');
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
         parent::beforeFilter($event);

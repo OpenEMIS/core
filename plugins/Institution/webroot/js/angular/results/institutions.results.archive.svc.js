@@ -1001,6 +1001,7 @@ function InstitutionsResultsArchiveSvc($http, $q, $filter, KdDataSvc, KdSessionS
 
                             if (isMarksType) {
                                 var marks = parseFloat(subjectStudent.AssessmentItemResults.marks);
+                                studentResults['period_' + parseInt(assessmentPeriodId)] = '';
                                 if (!isNaN(marks)) {
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = marks;
                                 }

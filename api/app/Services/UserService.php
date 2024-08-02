@@ -24,9 +24,6 @@ class UserService extends Controller
             //dd('data', $data);
             $resp = [];
             foreach($data['data'] as $k => $d){
-                /*if($d['id'] == 8815){
-                    dd($d);
-                }*/
                 $resp[$k]['id'] = $d['id'];
                 $resp[$k]['username'] = $d['username'];
                 $resp[$k]['password'] = $d['password'];
@@ -62,6 +59,17 @@ class UserService extends Controller
                 $resp[$k]['is_student'] = $d['is_student'];
                 $resp[$k]['is_staff'] = $d['is_staff'];
                 $resp[$k]['is_guardian'] = $d['is_guardian'];
+
+                // For POCOR-8398 start...
+                $resp[$k]['staff_position_grade_id'] = null;
+                $resp[$k]['staff_position_grade_name'] = null;
+
+                if(isset($d['institution_staff'])){
+                    $resp[$k]['staff_position_grade_id'] = $d['institution_staff']['staff_position_grade']['id'];
+                    $resp[$k]['staff_position_grade_name'] = $d['institution_staff']['staff_position_grade']['name'];
+                }
+                // For POCOR-8398 end...
+
                 $resp[$k]['modified_user_id'] = $d['modified_user_id'];
                 $resp[$k]['modified'] = $d['modified'];
                 $resp[$k]['created_user_id'] = $d['created_user_id'];
@@ -89,12 +97,21 @@ class UserService extends Controller
         try {
             $data = $this->userRepository->getUsersData($userId)
                 ->map(function ($item, $key) {
-
                     if($item['photo_content']){
                         $photo_content = base64_encode($item['photo_content']);
                     } else {
                         $photo_content = Null;
                     }
+
+                    // For POCOR-8398 start...
+                    $staff_position_grade_id = null;
+                    $staff_position_grade_name = null;
+
+                    if(isset($item['institutionStaff'])){
+                        $staff_position_grade_id = $item['institutionStaff']['staffPositionGrade']['id'];
+                        $staff_position_grade_name = $item['institutionStaff']['staffPositionGrade']['name'];
+                    }
+                    // For POCOR-8398 end...
 
 
                     return [
@@ -156,7 +173,9 @@ class UserService extends Controller
                         "studentStatus" => [
                             "key" => (!empty($item["institutionStudent"]["studentStatus"]["id"]))?$item["institutionStudent"]["studentStatus"]["id"]:'',
                             "value" => (!empty($item["institutionStudent"]["studentStatus"]["name"]))?$item["institutionStudent"]["studentStatus"]["name"]:'',
-                        ]
+                        ],
+                        "staff_position_grade_id" => $staff_position_grade_id,
+                        "staff_position_grade_name" => $staff_position_grade_name,
                     ];
                     
                 });
@@ -247,4 +266,78 @@ class UserService extends Controller
         }
     }
 
+
+
+    //pocor-7545 starts
+    public function addUsers($request)
+    {
+        try {
+            $data = $this->userRepository->addUsers($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'User is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('User is not created/updated successfully.');
+        }
+    }
+    //pocor-7545 ends
+    //POCOR-7716 start
+    public function getStudentAdmissionStatus()
+    {
+        try {
+            $data = $this->userRepository->getStudentAdmissionStatus();
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Default Student Admission Status',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Default Student Admission Status Not Found');
+        }
+    }
+    //POCOR-7716 end
+
+
+    //POCOR-8136 start
+    public function getUserPermissions()
+    {
+        try {
+            $data = $this->userRepository->getUserPermissions();
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get User Permissions List.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('User Permissions List Not Found.');
+        }
+    }
+    //POCOR-8136 end
+
+
+    //POCOR-8139 Starts
+
+    public function externalDataSources($request)
+    {
+        try {
+            $data = $this->userRepository->externalDataSources($request);
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get data from external data sources.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get data from external data sources.');
+        }
+    }
+    
+    //POCOR-8139 Ends
 }

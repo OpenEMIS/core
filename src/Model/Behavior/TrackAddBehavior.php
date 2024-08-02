@@ -19,7 +19,7 @@ class TrackAddBehavior extends Behavior
 ** Link/Map ControllerActionComponent events
 **
 ******************************************************************************************************************/
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -57,7 +57,7 @@ class TrackAddBehavior extends Behavior
                 $schema = $entityTable->schema();
                 foreach ($schema->columns() as $key => $value) {
                     $schemaColumnData = $schema->column($value);
-                    if (array_key_exists('type', $schemaColumnData) && $schemaColumnData['type'] == 'binary') {
+                    if (isset($schemaColumnData['type']) && $schemaColumnData['type'] == 'binary') {
                         $binaryDataFieldNames[] = $value;
                     }
                 }

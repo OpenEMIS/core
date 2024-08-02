@@ -7,7 +7,7 @@ use App\Model\Table\ControllerActionTable;
 
 class OutcomeGradingOptionsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->belongsTo('OutcomeGradingTypes', ['className' => 'Outcome.OutcomeGradingTypes']);
@@ -20,7 +20,7 @@ class OutcomeGradingOptionsTable extends ControllerActionTable
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -36,5 +36,5 @@ class OutcomeGradingOptionsTable extends ControllerActionTable
             ])
             ->requirePresence('name')
             ->allowEmpty('outcome_grading_type_id');
-    }
+    }*/
 }

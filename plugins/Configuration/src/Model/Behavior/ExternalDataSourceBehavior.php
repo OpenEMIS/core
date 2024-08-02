@@ -16,13 +16,13 @@ class ExternalDataSourceBehavior extends Behavior
 
     private $alias;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
-        $this->alias = $this->_table->alias();
+        $this->alias = $this->_table->getAlias();
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -63,7 +63,7 @@ class ExternalDataSourceBehavior extends Behavior
 
     public function indexBeforeAction(Event $event)
     {
-        if ($this->_table->request->query['type_value'] == 'External Data Source Identity') {
+        if ($this->_table->request->getQuery('type_value') == 'External Data Source Identity') {
             $urlParams = $this->_table->url('view');
             $externalDataSourceId = $this->_table->find()
                 ->where([
@@ -72,7 +72,7 @@ class ExternalDataSourceBehavior extends Behavior
                 ->first()
                 ->id;
             $urlParams[0] = $externalDataSourceId;
-            if (isset($this->_table->request->pass[0]) && $this->_table->request->pass[0] == $externalDataSourceId) {
+            if (isset($this->_table->request->getParam('pass')[0]) && $this->_table->request->getParam('pass')[0] == $externalDataSourceId) {
             } else {
                 $this->_table->controller->redirect($urlParams);
             }
@@ -86,11 +86,11 @@ class ExternalDataSourceBehavior extends Behavior
             if (!empty($key)) {
                 $configItem = $this->_table->get($key);
                 if ($configItem->type == 'External Data Source Identity' && $configItem->code == 'external_data_source_type') {
-                    if (isset($this->_table->request->data[$this->alias]['value']) && !empty($this->_table->request->data[$this->alias]['value'])) {
-                        $value = $this->_table->request->data[$this->alias]['value'];
+                    if (isset($this->_table->request->data[$this->getAlias()]['value']) && !empty($this->_table->request->data[$this->getAlias()]['value'])) {
+                        $value = $this->_table->request->data[$this->getAlias()]['value'];
                     } else {
                         $value = $configItem->value;
-                        $this->_table->request->data[$this->alias]['value'] = $value;
+                        $this->_table->request->data[$this->getAlias()]['value'] = $value;
                     }
                     if ($value != 'None') {
                         $this->_table->field('custom_data_source', ['type' => 'external_data_source_type', 'valueClass' => 'table-full-width', 'visible' => [ 'edit' => true, 'view' => true ]]);
@@ -108,7 +108,7 @@ class ExternalDataSourceBehavior extends Behavior
                 $configItem = $this->_table->get($key);
                 if ($configItem->type == 'External Data Source Identity' && $configItem->code == 'external_data_source_type') {
                     $this->_table->field('default_value', ['visible' => false]);
-                    $value = $this->_table->request->data[$this->alias]['value'];
+                    $value = $this->_table->request->data[$this->getAlias()]['value'];
                     if ($value != 'None') {
                         $this->_table->setFieldOrder(['type', 'label', 'value', 'custom_data_source']);
                     }
@@ -127,14 +127,14 @@ class ExternalDataSourceBehavior extends Behavior
         if (isset($extra['toolbarButtons']['back'])) {
             unset($extra['toolbarButtons']['back']);
         }
-        if (isset($this->_table->request->query['type_value']) && $this->_table->request->query['type_value'] == 'External Data Source Identity') {
+        if (!is_null($this->_table->request->getQuery('type_value')) && $this->_table->request->getQuery('type_value') == 'External Data Source Identity') {
             $this->_table->buildSystemConfigFilters();
         }
     }
 
     protected function processAuthentication(&$attribute, $authenticationType)
     {
-        $ExternalDataSourceAttributesTable = TableRegistry::get('ExternalDataSourceAttributes');
+        $ExternalDataSourceAttributesTable = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
         $attributesArray = $ExternalDataSourceAttributesTable->find()->where([$ExternalDataSourceAttributesTable->aliasField('external_data_source_type') => $authenticationType])->toArray();
         $attributeFieldsArray = $this->_table->array_column($attributesArray, 'attribute_field');
         foreach ($attribute as $key => $values) {
@@ -155,7 +155,7 @@ class ExternalDataSourceBehavior extends Behavior
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $configItem = $data[$this->alias];
+        $configItem = $data[$this->getAlias()];
         if ($configItem['type'] == 'External Data Source Identity') {
             $configItem['value'] = lcfirst(Inflector::camelize($configItem['value'], ' '));
 
@@ -171,8 +171,8 @@ class ExternalDataSourceBehavior extends Behavior
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $ExternalDataSourceAttributesTable = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
-        if ($data[$this->alias]['value'] != 'None' && $data[$this->alias]['type'] == 'External Data Source Identity' && empty($entity->errors())) {
-            $externalDataSourceType = $data[$this->alias]['value'];
+        if ($data[$this->getAlias()]['value'] != 'None' && $data[$this->getAlias()]['type'] == 'External Data Source Identity' && empty($entity->getErrors())) {
+            $externalDataSourceType = $data[$this->getAlias()]['value'];
             $ExternalDataSourceAttributesTable->deleteAll(
                 ['external_data_source_type' => $externalDataSourceType]
             );
@@ -227,7 +227,7 @@ class ExternalDataSourceBehavior extends Behavior
     {
         switch ($action) {
             case "view":
-                $externalDataSourceType = $this->_table->request->data[$this->alias]['value'];
+                $externalDataSourceType = $this->_table->request->data[$this->getAlias()]['value'];
                 $attribute = [];
                 $methodName = lcfirst(Inflector::camelize($externalDataSourceType, ' ')).'ExternalSource';
                 if (method_exists($this, $methodName)) {
@@ -248,7 +248,7 @@ class ExternalDataSourceBehavior extends Behavior
                 break;
 
             case "edit":
-                $externalDataSourceType = $this->_table->request->data[$this->alias]['value'];
+                $externalDataSourceType = $this->_table->request->data[$this->getAlias()]['value'];
                 $attribute = [];
                 $methodName = lcfirst(Inflector::camelize($externalDataSourceType, ' ')).'ExternalSource';
                 if (method_exists($this, $methodName)) {

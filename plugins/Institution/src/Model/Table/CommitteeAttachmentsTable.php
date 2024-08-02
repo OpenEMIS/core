@@ -8,28 +8,34 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 
 class CommitteeAttachmentsTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_committee_attachments');
+        $this->setTable('institution_committee_attachments');
         parent::initialize($config);
 
         $this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all', 'useDefaultName' => true]);
         $this->belongsTo('InstitutionCommittees', ['className' => 'Institution.InstitutionCommittees', 'foreignKey' =>'institution_committee_id']);
          $this->toggle('search', false);
         //change behaviour config
-        // if ($this->behaviors()->has('ControllerAction')) {
-        //     $this->behaviors()->get('ControllerAction')->config([
-        //         'actions' => [
-        //             'download' => ['show' => true] //to show download on toolbar
-        //         ]
-        //     ]);
-        // }
+        if ($this->behaviors()->has('ControllerAction')) {
+            $this->behaviors()->get('ControllerAction')->setConfig([
+                'actions' => [
+                    'download' => ['show' => true] //to show download on toolbar
+                ]
+            ]);
+        }
+
+         $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['CommitteeAttachments' =>['id']
+            ]
+        ]);
+
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -41,28 +47,31 @@ class CommitteeAttachmentsTable extends ControllerActionTable
         $this->setFieldOrder([
             'name', 'description','file_content'
         ]);
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        $institutionId = $this->getInstitutionID();
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);        
         
-        $query = $this->request->query['querystring']; 
+        $query = $this->request->getQuery('querystring'); 
         $this->setupTabElements($encodedInstitutionId, $query);
     }
 
      public function setupTabElements($encodedInstitutionId, $query)
     {
         $tabElements = [];
-        $decodeCommitteeId = $this->paramsDecode($query);
-        $committeeId = $decodeCommitteeId['institution_committee_id'];
-        $encodeCommitteeId = $this->paramsEncode(['id' => $committeeId]);
-
+        //$decodeCommitteeId = $this->paramsDecode($query);
+        //$committeeId = $decodeCommitteeId['institution_committee_id'];
+        //$encodeCommitteeId = $this->paramsEncode(['id' => $committeeId]);
+        $queryString = $this->request->getQuery('queryString');
+        if(empty($queryString)){
+            $queryString = $this->request->getParam('pass')[1];
+        }
         $tabElements = [
             'InstitutionCommittees' => [
-                 'url' => ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'Committees','view', $encodeCommitteeId],
+                 'url' => ['plugin' => 'Institution','controller' => 'Institutions', 'action' => 'Committees','view', 'queryString' => $queryString],
                 'text' => __('Overview')
             ],
             'Attachments' => [
-                'url' => ['plugin' => 'Institution', 'institutionId' => $encodedInstitutionId, 'controller' => 'Institutions', 'action' => 'CommitteeAttachments', 'querystring' => $query],
+                'url' => ['plugin' => 'Institution','controller' => 'Institutions', 'action' => 'CommitteeAttachments', 'queryString' => $queryString],
                 'text' => __('Attachments')
             ]
         ];
@@ -88,9 +97,9 @@ class CommitteeAttachmentsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-      
-        $queryString = $this->paramsDecode($this->request->query['querystring']);
-        $institutionCommitteeId = $queryString['institution_committee_id'];
+        
+        $queryString = $this->paramsDecode($this->request->getQuery('queryString'));
+        $institutionCommitteeId = $queryString['id'];
         $query->where([$this->aliasField('institution_committee_id') => $institutionCommitteeId]);
       
     }
@@ -101,8 +110,8 @@ class CommitteeAttachmentsTable extends ControllerActionTable
         $this->field('file_name', ['visible' => false]);
         $this->setFieldOrder(['name', 'description', 'file_content']);
 
-        $queryString = $this->paramsDecode($this->request->query['querystring']);
-        $institutionCommitteeId = $queryString['institution_committee_id'];
+        $queryString = $this->paramsDecode($this->request->getQuery('queryString'));
+        $institutionCommitteeId = $queryString['id'];
         $this->field('institution_committee_id',['type'=>'hidden','value'=>$institutionCommitteeId]);
     }
 
@@ -112,8 +121,10 @@ class CommitteeAttachmentsTable extends ControllerActionTable
         $this->field('file_name', ['visible' => false]);
         $this->setFieldOrder(['name', 'description', 'file_content']);
 
-        $queryString = $this->paramsDecode($this->request->query['querystring']);
-        $institutionCommitteeId = $queryString['institution_committee_id'];
+        $queryString = $this->paramsDecode($this->request->getQuery('queryString'));
+       // echo "<pre>"; print_r($queryString); die;
+        //$institutionCommitteeId = $queryString['institution_committee_id'];
+        $institutionCommitteeId = $queryString['id'];
         $this->field('institution_committee_id',['type'=>'hidden','value'=>$institutionCommitteeId]);
        
 

@@ -16,7 +16,7 @@ class OutcomesController extends AppController
     public function GradingTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Outcome.OutcomeGradingTypes']); }
     // End
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->ControllerAction->models = [
@@ -28,32 +28,32 @@ class OutcomesController extends AppController
     {
         $tabElements = [
             'Templates' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Templates'],
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Templates'],
                 'text' => __('Templates')
             ],
             'Periods' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Periods'],
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Periods'],
                 'text' => __('Periods')
             ],
             'GradingTypes' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'GradingTypes'],
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'GradingTypes'],
                 'text' => __('Grading Types')
             ],
         ];
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
-        $this->set('selectedAction', $this->request->action);
+        $this->set('selectedAction', $this->request->getParam('action'));
     }
 
     public function getOutcomeTemplateTabs($params = [])
     {
         $tabElements = [
             'Templates' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Templates', 0 => 'view'],
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Templates', 0 => 'view'],
                 'text' => __('Overview')
             ],
             'Criterias' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Criterias'],
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Criterias'],
                 'text' => __('Criterias')
             ]
         ];
@@ -78,7 +78,16 @@ class OutcomesController extends AppController
         $header .= ' - ' . $model->getHeader($model->alias);
         $this->set('contentHeader', $header);
 
-        $this->Navigation->addCrumb('Outcomes', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
+        $this->Navigation->addCrumb('Outcomes', ['plugin' => $this->getPlugin(), 'controller' => $this->name, 'action' => $model->alias]);
         $this->Navigation->addCrumb($model->getHeader($model->alias));
+    }
+
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    {
+        if ($this->getPlugin() == 'Outcome') {
+            $this->Security->setConfig('validatePost', false);
+        }
+        parent::beforeFilter($event);
+
     }
 }

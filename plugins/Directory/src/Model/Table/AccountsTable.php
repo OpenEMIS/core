@@ -11,12 +11,12 @@ use Cake\Utility\Inflector;
 use App\Model\Table\AppTable;
 
 class AccountsTable extends AppTable {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		$this->addBehavior('User.Account', ['permission' => ['Directories', 'Accounts', 'edit']]);
 		parent::initialize($config);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 		return $validator;
 	}
@@ -24,14 +24,14 @@ class AccountsTable extends AppTable {
     private function setupTabElements()
     {
         $tabElements = $this->controller->getUserTabElements();
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         $guardianId = $session->read('Guardian.Guardians.id');
         $studentId = $session->read('Student.Students.id');
         $isStudent = $session->read('Directory.Directories.is_student');
         $isGuardian = $session->read('Directory.Directories.is_guardian');
         $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
         $guardianToStudent = $session->read('Directory.Directories.guardianToStudent');
-
+        
         if (!empty($isGuardian) && !empty($studentId) && !empty($guardianToStudent)) {
             $tabElements = $this->controller->getUserTabElements(['id' => $studentId, 'userRole' => 'Students']);
         } elseif (!empty($isStudent) && !empty($guardianId) && !empty($studentToGuardian)) {
@@ -41,7 +41,7 @@ class AccountsTable extends AppTable {
         }
 
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -55,15 +55,13 @@ class AccountsTable extends AppTable {
     */
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
     {
-        //echo "<pre>"; print_r($this->request);die;
-        $userActivities = TableRegistry::get('user_activities');
-        $userTable = TableRegistry::get('security_users');
+        $userActivities = TableRegistry::get('User.UserActivities');
+        $userTable = TableRegistry::get('User.Users');
         $user = $this->Auth->user();
         $userId = $user['id'];
         $currentTimeZone = date("Y-m-d H:i:s");
-        $newpassword = $entity->extractOriginalChanged($entity->visibleProperties());
-        $setPassword =  $newpassword['password'];
-
+        //$newpassword = $entity->extractOriginalChanged($entity->visibleProperties());
+        $setPassword =  $entity->password;
         $securityData = $userTable->find()->where([$userTable->aliasField('id')=>$entity->id])->first()->username;
         $check = strcmp($securityData, $entity->username);
         if($check==0){
@@ -89,6 +87,26 @@ class AccountsTable extends AppTable {
                 ];
         $entity = $userActivities->newEntity($data);
         $save =  $userActivities->save($entity);
+    }
+
+     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'username') {
+            return __('Username');
+        } elseif ($field == 'last_login') {
+            return __('Last Login');
+        } elseif ($field == 'roles') {
+            return __('Roles');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+
+        $message = __('Your password has been reset successfully.');
+        $this->Alert->success($message, ['type' => 'string', 'reset' => true]);
+        return $this->controller->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => $this->getAlias(),'view',$this->request->getParam('pass')[1]]);
     }
 
 }

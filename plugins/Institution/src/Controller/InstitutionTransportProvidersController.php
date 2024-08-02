@@ -4,7 +4,7 @@ namespace Institution\Controller;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use App\Controller\PageController;
-
+//@todo redo
 class InstitutionTransportProvidersController extends PageController
 {
     public function initialize()
@@ -15,21 +15,29 @@ class InstitutionTransportProvidersController extends PageController
         $this->loadComponent('Institution.InstitutionInactive');
     }
 
-	public function beforeFilter(Event $event)
+	public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        $institutionId = $this->getInstitutionID();
+        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
         $institutionName = $session->read('Institution.Institutions.name');
 
-    	parent::beforeFilter($event);
+        parent::beforeFilter($event);
 
-        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-
-		$page = $this->Page;
+        $page = $this->Page;
 
         // set Breadcrumb
-        $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-        $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $encodedInstitutionId, $encodedInstitutionId]);
+        $page->addCrumb('Institutions', [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'Institutions',
+            'index']);
+        $page->addCrumb($institutionName, [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'dashboard',
+            'institutionId' => $encodedInstitutionId,
+            $encodedInstitutionId]);
         $page->addCrumb('Providers');
 
         // set header
@@ -87,5 +95,21 @@ class InstitutionTransportProvidersController extends PageController
         }
 
         return $rows;
+    }
+
+    private function getInstitutionID()
+    {
+        $session = $this->request->getSession();
+        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
+        $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
+        $encodedInstitutionID = isset($this->request->getAttribute('params')['institutionId']) ?
+            $this->request->getAttribute('params')['institutionId'] :
+            $encodedInstitutionIDFromSession;
+        try {
+            $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
+        } catch (\Exception $exception) {
+            $institutionID = $insitutionIDFromSession;
+        }
+        return $institutionID;
     }
 }

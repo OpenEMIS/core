@@ -10,7 +10,7 @@ use Cake\ORM\TableRegistry;
 
 class ReportCardsController extends AppController
 {
-    public function initialize() {
+    public function initialize(): void {
         parent::initialize();
         $this->loadComponent('Paginator');
     }
@@ -26,23 +26,22 @@ class ReportCardsController extends AppController
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
         $header = __('Report Cards');
-        $header .= ' - ' . $model->getHeader($model->alias);
-        $this->Navigation->addCrumb('Report Cards', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
+        $header .= ' - ' . $model->getHeader($model->getAlias());
+        $this->Navigation->addCrumb('Report Cards', ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $model->getAlias()]);
         $this->set('contentHeader', $header);
     }
 
     public function getReportCardTab($id)
     {
-        $encodedParam = $this->request->params['pass'][1];
-
+        $encodedParam = $this->request->getParam('pass')[1];
         $tabElements = [
             'ReportCards' => [
                 'text' => __('Overview'),
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Templates', 'view', $encodedParam]
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Templates', 'view', $encodedParam]
             ],
             'ReportCardEmail' => [
                 'text' => __('Email'),
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ReportCardEmail', 'view', $encodedParam]
+                'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'ReportCardEmail', 'view', $encodedParam]
             ]
         ];
 
@@ -64,5 +63,11 @@ class ReportCardsController extends AppController
             $tabElements[$key]['url'] = array_merge($sessionUrl, ['action' => $key, 'index']);
         }
         return $this->TabPermission->checkTabPermission($tabElements);
+    }
+
+    public function beforeRender(Event|\Cake\Event\EventInterface $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 }

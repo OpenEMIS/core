@@ -7,19 +7,19 @@ use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\I18n\Time;
-
+use Cake\Utility\Text;
 use App\Model\Table\ControllerActionTable;
 
 class InstitutionGradesTable extends ControllerActionTable
 {
     private $institutionId;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_grades');
+        $this->setTable('institution_grades');
         parent::initialize($config);
 
         $this->belongsTo('EducationGrades',['className' => 'Education.EducationGrades']);
@@ -36,13 +36,18 @@ class InstitutionGradesTable extends ControllerActionTable
         $this->toggle('search', false);
         $this->setDeleteStrategy('restrict');
 
-        $this->addBehavior('ContactExcel', ['excludes' => ['start_date', 'end_date', 'start_year', 'end_year'], 'pages' => ['index']]); //POCOR-6898 change Excel to ContactExcel Behaviour
+        // $this->addBehavior('ContactExcel', ['excludes' => ['start_date', 'end_date', 'start_year', 'end_year'], 'pages' => ['index']]); //POCOR-6898 change Excel to ContactExcel Behaviour //Commented V4
+        $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Programmes' =>['id']
+            ]
+        ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         $validator
         ->allowEmpty('end_date')
         ->add('end_date', 'ruleCompareDateReverse', [
@@ -61,13 +66,13 @@ class InstitutionGradesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra) {
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
-        $this->institutionId = $this->Session->read('Institution.Institutions.id');
+        $this->institutionId = $this->getInstitutionID();
         $this->field('start_date', ['visible' => ['index'=>false, 'view'=>false, 'edit'=>false],'onChangeReload' => true,'sort' => ['field' => $this->aliasField('start_date')]]);
         $this->field('end_date', ['visible' => ['index'=>false, 'view'=>false, 'edit'=>false],'onChangeReload' => true,'sort' => ['field' => $this->aliasField('end_date')]]);
         $this->field('academic_period_id', ['visible' => ['index'=>false, 'view'=>false, 'add'=>true, 'edit'=>true],'onChangeReload' => true,'sort' => ['field' => $this->aliasField('end_date')]]);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Programmes','Students - Academic');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Programmes','Students - Academic');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -89,6 +94,7 @@ class InstitutionGradesTable extends ControllerActionTable
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
+        $institutionId = $this->getInstitutionID();
         $today = new DateTime();
         $startDate = $today->format('d-m-Y');
         $this->field('level');
@@ -97,6 +103,7 @@ class InstitutionGradesTable extends ControllerActionTable
         $this->field('education_grade_id');
         $this->field('education_subject_id');
         $this->field('academic_period_id');
+        $this->field('institution_id',['type' => 'hidden','value' => $institutionId]);
 
         if ($this->action == 'add') {
             $this->field('start_date', ['value' => $startDate]);
@@ -114,7 +121,7 @@ class InstitutionGradesTable extends ControllerActionTable
                 'end_date','education_subject_id'
             ]);
         }
-    }      
+    }
 
 
 /******************************************************************************************************************
@@ -124,28 +131,37 @@ class InstitutionGradesTable extends ControllerActionTable
 ******************************************************************************************************************/
 public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 {
-    $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+    $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
     // Academic Periods filter
     $academicPeriodOptions = $AcademicPeriod->getYearList(['isEditable' => true]);
-    $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $AcademicPeriod->getCurrent();
+    $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $AcademicPeriod->getCurrent();
     $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
 
     $query->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
     ->where([
         'EducationSystems.academic_period_id' => $selectedAcademicPeriod
-    ]);
+    ])
+    ->order(['EducationLevels.order' =>'ASC','EducationCycles.order'=>'ASC','EducationProgrammes.order' => 'ASC','EducationGrades.order' => 'ASC']); //POCOR-8021 //POCOR:8048:: Modify order
     $sortList = [$this->aliasField('start_date'), $this->aliasField('end_date')];
 
     if (array_key_exists('sortWhitelist', $extra['options'])) {
         $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
     }
-
+    $queryString = $this->getQueryString();
+    $encodedQueryString = $this->paramsEncode($queryString);
     $extra['options']['sortWhitelist'] = $sortList;
-    $extra['elements']['controls'] = ['name' => 'Institution.Programmes/controls', 'data' => [], 'options' => [], 'order' => 1];
+    $extra['elements']['controls'] = ['name' => 'Institution.Programmes/controls', 'options' => [], 'order' => 1,'data' => [
 
-    $requestQuery = $this->request->query;
-    $sortable = array_key_exists('sort', $requestQuery) ? true : false;
+                'encodedQueryString' => $encodedQueryString,
+
+                'periodOptions'=> $academicPeriodOptions,
+                'selectedPeriod'=> $extra['selectedAcademicPeriodOptions']
+            ],
+        ];
+
+    $requestQuery = $this->request->getQuery();
+    $sortable = isset($requestQuery['sort']) ? true : false;
 
     if (!$sortable) {
         $query->order([
@@ -174,7 +190,7 @@ public function viewEditBeforeQuery(Event $event, Query $query)
 ******************************************************************************************************************/
 public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
 {
-    $errors = $entity->errors();
+    $errors = $entity->getErrors();
     $process = function($model, $entity) use ($data, $errors) {
             /**
              * PHPOE-2117
@@ -192,106 +208,105 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                     $gradeEntities = [];
                     $gradeSubjectEntities = [];
 
-                    if ($data['grades']['education_grade_id'] != 0
-                        && $data['grades']['education_grade_id'] != ''
-                    ) {
+                    if ($data['grades']['education_grade_id'] != 0 && $data['grades']['education_grade_id'] != '') {
                         $error = false;
-                    $gradeIsSelected = true;
-                    $grade['education_grade_id'] = $data['grades']['education_grade_id'];
-                            // need to set programme value since it was marked as required in validationDefault()
-                    $grade['programme'] = $entity->programme;
-                    $grade['academic_period_id'] = $entity->academic_period_id;//POCOR-7234
-                    $Institutions = TableRegistry::get('Institution.Institutions');
-                    $InstitutionData = $Institutions->find()
-                                ->select([
-                                    'date_opened' => $Institutions->aliasField('date_opened'),
-                                ])
-                                ->where([
-                                    $Institutions->aliasField('id') => $entity->institution_id
-                                ])
-                                ->first();
-                    $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                        $gradeIsSelected = true;
+                        $grade['education_grade_id'] = $data['grades']['education_grade_id'];
+                                // need to set programme value since it was marked as required in validationDefault()
+                        $grade['programme'] = $entity->programme;
+                        $grade['academic_period_id'] = $entity->academic_period_id;//POCOR-7234
+                        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+                        $InstitutionData = $Institutions->find()
+                                    ->select([
+                                        'date_opened' => $Institutions->aliasField('date_opened'),
+                                    ])
+                                    ->where([
+                                        $Institutions->aliasField('id') => $entity->institution_id
+                                    ])
+                                    ->first();
+                        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
-                    if ($entity->has('academic_period_id')) {
-                        $AcademicPeriodData = $AcademicPeriod->find()
-                                ->select([
-                                    'start_date' => $AcademicPeriod->aliasField('start_date'),
-                                ])
-                                ->where([
-                                    $AcademicPeriod->aliasField('id') => $entity->academic_period_id
-                                ])
-                                ->first();
-                    }
-                    if (!empty($AcademicPeriodData->start_date)) {
-                        $start_date = $AcademicPeriodData->start_date;
-                        if($start_date < $InstitutionData->date_opened) {
-                            $start_date = $InstitutionData->date_opened;
+                        if ($entity->has('academic_period_id')) {
+                            $AcademicPeriodData = $AcademicPeriod->find()
+                                    ->select([
+                                        'start_date' => $AcademicPeriod->aliasField('start_date'),
+                                    ])
+                                    ->where([
+                                        $AcademicPeriod->aliasField('id') => $entity->academic_period_id
+                                    ])
+                                    ->first();
                         }
-                        $grade['start_date'] = $start_date;
-                    }
-
-                    $grade['institution_id'] = $entity->institution_id;
-                    if ($entity->has('end_date')) {
-                        $grade['end_date'] = $entity->end_date;
-                    }
-
-
-                    $gradeEntities[] = $this->newEntity($grade);
-                    
-                    if ($gradeEntities[0]->errors()) {
-                        $error = true;
-                    }
-                }
-
-                if ($error && $gradeIsSelected) {
-                    $model->Alert->error($this->aliasField('failedSavingGrades'));
-                    return false;
-                } else if (!$gradeIsSelected) {
-                    $model->Alert->error($this->aliasField('noGradeSelected'));
-                    return false;
-                } else {
-                    foreach ($gradeEntities as $grade) {
-                        $entity->education_grade_id = $grade->education_grade_id;
-                        $result = $this->save($grade);
-                        $lastInsertId = $result->id;
-
-                    // POCOR 5001
-                    if (count($data['grades']['education_grade_subject_id']) > 0) {
-                        $gradeSubjectEntities = $data['grades']['education_grade_subject_id'];
-                        $createdUserId = $this->Session->read('Auth.User.id');
-                        $institutionProgramGradeSubjectID = [];
-                        $subjectArr = [];
-                        $GradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
-                        $institutionProgramGradeSubject = TableRegistry::get('InstitutionProgramGradeSubjects');
-                        /*POCOR-6368 starts*/
-                        $tmpArr = array_filter($gradeSubjectEntities);
-                        if (!empty($tmpArr)) {
-                            foreach($gradeSubjectEntities as $gradeSubjectId) {
-                                $subjectArr[] = $gradeSubjectId; 
-                                if ($gradeSubjectId > 0) {
-                                    $gradeSubject = $institutionProgramGradeSubject->newEntity();
-                                    $gradeSubject->institution_grade_id = $lastInsertId;
-                                    $gradeSubject->education_grade_subject_id = $gradeSubjectId;
-                                    $gradeSubject->education_grade_id = $data['grades']['education_grade_id'];
-                                    $gradeSubject->institution_id = $entity->institution_id;
-                                    $gradeSubject->created_user_id = $createdUserId;
-                                    $today = new DateTime();
-                                    $gradeSubject->created = $today->format('Y-m-d H:i:s');
-                                    $institutionProgramGradeSubject->save($gradeSubject);
-                                    array_push($institutionProgramGradeSubjectID,$gradeSubject->id);
-                                }
+                        if (!empty($AcademicPeriodData->start_date)) {
+                            $start_date = $AcademicPeriodData->start_date;
+                            if($start_date < $InstitutionData->date_opened) {
+                                $start_date = $InstitutionData->date_opened;
                             }
-                        }  else {
-                                $getGradeSubjects = $GradesSubjects
-                                            ->find()
-                                            ->select([$GradesSubjects->aliasField('education_subject_id')])
-                                            ->where([
-                                                $GradesSubjects->aliasField('education_grade_id') => $grade['education_grade_id'],
-                                                $GradesSubjects->aliasField('visible') => 1
-                                            ]);
-                                if (!empty($getGradeSubjects)) {
+                            $grade['start_date'] = $start_date;
+                        }
+
+                        $grade['institution_id'] = $entity->institution_id;
+                        if ($entity->has('end_date')) {
+                            $grade['end_date'] = $entity->end_date;
+                        }
+
+
+                        $gradeEntities[] = $this->newEntity($grade);
+
+                        if ($gradeEntities[0]->getErrors()) {
+                            $error = true;
+                        }
+                    }
+
+                    if ($error && $gradeIsSelected) {
+                        $model->Alert->error($this->aliasField('failedSavingGrades'));
+                        return false;
+                    } else if (!$gradeIsSelected) {
+                        $model->Alert->error($this->aliasField('noGradeSelected'));
+                        return false;
+                    } else {
+
+                        foreach ($gradeEntities as $grade) {
+                            $entity->education_grade_id = $grade->education_grade_id;
+                            $result = $this->save($grade);
+                            $lastInsertId = $result['id'];
+                            //echo "<pre>";print_r($lastInsertId);die;
+                            // POCOR 5001
+                            if (count($data['grades']['education_grade_subject_id']) > 0) {
+                                $gradeSubjectEntities = $data['grades']['education_grade_subject_id'];
+                                $createdUserId = $this->Session->read('Auth.User.id');
+                                $institutionProgramGradeSubjectID = [];
+                                $subjectArr = [];
+                                $GradesSubjects = TableRegistry::getTableLocator()->get('Education.EducationGradesSubjects');
+                                $institutionProgramGradeSubject = TableRegistry::getTableLocator()->get('Institution.InstitutionProgramGradeSubjects');
+                                /*POCOR-6368 starts*/
+                                $tmpArr = array_filter($gradeSubjectEntities);
+                                if (!empty($tmpArr)) {
+                                    foreach($gradeSubjectEntities as $gradeSubjectId) {
+                                        $subjectArr[] = $gradeSubjectId;
+                                        if ($gradeSubjectId > 0) {
+                                            $gradeSubject = $institutionProgramGradeSubject->newEntity([]);
+                                            $gradeSubject->institution_grade_id = $lastInsertId;
+                                            $gradeSubject->education_grade_subject_id = $gradeSubjectId;
+                                            $gradeSubject->education_grade_id = $data['grades']['education_grade_id'];
+                                            $gradeSubject->institution_id = $entity->institution_id;
+                                            $gradeSubject->created_user_id = $createdUserId;
+                                            $today = new DateTime();
+                                            $gradeSubject->created = $today->format('Y-m-d H:i:s');
+                                            $institutionProgramGradeSubject->save($gradeSubject);
+                                            array_push($institutionProgramGradeSubjectID,$gradeSubject->id);
+                                        }
+                                    }
+                                }  else {
+                                    $getGradeSubjects = $GradesSubjects
+                                                ->find()
+                                                ->select([$GradesSubjects->aliasField('education_subject_id')])
+                                                ->where([
+                                                    $GradesSubjects->aliasField('education_grade_id') => $grade['education_grade_id'],
+                                                    $GradesSubjects->aliasField('visible') => 1
+                                                ]);
+                                    if (!empty($getGradeSubjects)) {
                                         foreach ($getGradeSubjects->toArray() as $values) {
-                                            $gradeSubject = $institutionProgramGradeSubject->newEntity();
+                                            $gradeSubject = $institutionProgramGradeSubject->newEntity([]);
                                             $gradeSubject->institution_grade_id = $lastInsertId;
                                             $gradeSubject->education_grade_subject_id = $values->education_subject_id;
                                             $gradeSubject->education_grade_id = $data['grades']['education_grade_id'];
@@ -302,143 +317,144 @@ public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, A
                                             $institutionProgramGradeSubject->save($gradeSubject);
                                             array_push($institutionProgramGradeSubjectID,$gradeSubject->id);
                                         }
+                                    }
+                                }
+                                //POCOR-7298 start
+                                //echo "<pre>";print_r($data);
+                                //echo "<pre>";print_r($entity->id);die('pk');
+                                //$lastInsertId = $entity->id;
+                                $lastInsertId = $lastInsertId;
+                                $academicPeriodId = $entity->academic_period_id;
+                                $insertAcademicPeriod =   $this->updateAll(
+                                                            ['academic_period_id' => $academicPeriodId],    //field
+                                                            [
+                                                             'id' => $lastInsertId,
+                                                            ] //condition
+                                                        );
+                                    //POCOR-7298 end
+
+                                /*POCOR-6368 ends*/
+                                if(!empty($this->controllerAction) && ($this->controllerAction == 'Programmes')) {
+                                    $educationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+
+                                    $bodyData = $educationGrades->find('all',
+                                            [ 'contain' => [
+                                                'EducationProgrammes',
+                                                'EducationProgrammes.EducationCycles.EducationLevels',
+                                                'EducationProgrammes.EducationCycles',
+                                                'EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'
+
+                                            ],
+                                            ])->where([
+                                                $educationGrades->aliasField('education_programme_id') => $entity->programme
+                                            ]);
+
+                                    $institution = $this->find('all',
+                                                [ 'contain' => [
+                                                    'Institutions',
+                                                    'Institutions.InstitutionClasses',
+                                                ],
+                                                ])->where([
+                                                    $this->aliasField('institution_id') => $entity->institution_id
+                                                ]);
+
+                                    $institutionProgramGradeSubject = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
+                                    $sub = $institutionProgramGradeSubject->find()
+                                            ->where([
+                                                'id IN' => $data['grades']['education_grade_subject_id']
+                                            ]);
+
+                                    $subject = [];
+                                    if (!empty($sub)) {
+                                        foreach ($sub as $key => $value) {
+                                            $subject[] = $value['code'] . " - " . $value['name'];
+                                        }
+                                    }
+
+                                    if (!empty($bodyData)) {
+                                        foreach ($bodyData as $key => $value) {
+                                            $education_system_name = $value->education_programme->education_cycle->education_level->education_system->name;
+                                            $education_level_name = $value->education_programme->education_cycle->education_level->name;
+                                            $education_cycle_name = $value->education_programme->education_cycle->name;
+                                            $education_programme_code = $value->education_programme->code;
+                                            $education_programme_name = $value->education_programme->name;
+                                            $education_programme_name = $value->education_programme->name;
+                                            $start_date = $start_date;
+                                            //POCOR-6184
+                                            $education_system_id = $value->education_programme->education_cycle->education_level->education_system->id;
+                                            $education_level_id = $value->education_programme->education_cycle->education_level->id;
+                                            $education_cycle_id = $value->education_programme->education_cycle->id;
+                                            $education_programme_id = $value->education_programme->id;
+                                        }
+                                    }
+
+                                    if (!empty($institution)) {
+                                        foreach ($institution as $key => $value) {
+                                            $institution_name = $value->institution->name;
+                                            $institution_code = $value->institution->code;
+                                            $institution_classes = [];
+                                        }
+                                    }
+
+                                    $body = [
+                                        'education_system_id' => !empty($education_system_id) ? $education_system_id : NULL,
+                                        'education_system_name' => !empty($education_system_name) ? $education_system_name : NULL,
+                                        'education_level_id' => !empty($education_level_id) ? $education_level_id : NULL,
+                                        'education_level_name' => !empty($education_level_name) ? $education_level_name : NULL,
+                                        'education_cycle_id' => !empty($education_cycle_id) ? $education_cycle_id : NULL,
+                                        'education_cycle_name' => !empty($education_cycle_name) ? $education_cycle_name : NULL,
+                                        'education_programme_id' => !empty($education_programme_id) ? $education_programme_id : NULL,
+                                        'education_programme_code' => !empty($education_programme_code) ? $education_programme_code : NULL,
+                                        'education_programme_name' => !empty($education_programme_name) ? $education_programme_name : NULL,
+                                        'institution_id' => !empty($entity->institution_id) ? $entity->institution_id : NULL,
+                                        'institution_name' => !empty($institution_name) ? $institution_name : NULL,
+                                        'institution_code' => !empty($institution_code) ? $institution_code : NULL,
+                                        'institution_grade_id' => !empty($lastInsertId) ? $lastInsertId : NULL,
+                                        'institution_programme_grade_subjects_id' => !empty($institutionProgramGradeSubjectID) ? $institutionProgramGradeSubjectID : NULL,
+                                        'institution_subject_name' => !empty($subject) ? $subject : NULL,
+                                        'start_date' => !empty($start_date) ? date("d-m-Y", strtotime($start_date)) : NULL
+                                    ];
+
+                                    $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
+                                    if ($this->Auth->user()) {
+                                        $Webhooks->triggerShell('programme_create', ['username' => $username],$body);
+                                    }
                                 }
                             }
-                            //POCOR-7298 start
-                            $lastInsertId = $entity->id;
-                            $academicPeriodId = $entity->academic_period_id;
-                            $insertAcademicPeriod =   $this->updateAll(
-                                                ['academic_period_id' => $academicPeriodId],    //field
-                                                [
-                                                 'id' => $lastInsertId, 
-                                                ] //condition
-                                                );
-                            //POCOR-7298 end
-
-                        /*POCOR-6368 ends*/
-                        if(!empty($this->controllerAction) && ($this->controllerAction == 'Programmes')) {
-                               $educationGrades = TableRegistry::get('Education.EducationGrades');
-
-                               $bodyData = $educationGrades->find('all',
-                                [ 'contain' => [
-                                    'EducationProgrammes',
-                                    'EducationProgrammes.EducationCycles.EducationLevels',
-                                    'EducationProgrammes.EducationCycles',
-                                    'EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'
-
-                                ],
-                            ])->where([
-                                $educationGrades->aliasField('education_programme_id') => $entity->programme
-                            ]);
-
-                            $institution = $this->find('all',
-                                [ 'contain' => [
-                                    'Institutions',
-                                    'Institutions.InstitutionClasses',
-                                ],
-                            ])->where([
-                                $this->aliasField('institution_id') => $entity->institution_id
-                            ]);
-
-                            $institutionProgramGradeSubject = TableRegistry::get('Education.EducationSubjects');
-                            $sub = $institutionProgramGradeSubject->find()
-                            ->where([
-                                'id IN' => $data['grades']['education_grade_subject_id']
-                            ]);
-
-                            $subject = [];
-                            if (!empty($sub)) {
-                             foreach ($sub as $key => $value) {
-                                 $subject[] = $value['code'] . " - " . $value['name'];
-                             }
-                         }
-
-                         if (!empty($bodyData)) {
-                            foreach ($bodyData as $key => $value) {
-                                $education_system_name = $value->education_programme->education_cycle->education_level->education_system->name;
-                                $education_level_name = $value->education_programme->education_cycle->education_level->name;
-                                $education_cycle_name = $value->education_programme->education_cycle->name;
-                                $education_programme_code = $value->education_programme->code;
-                                $education_programme_name = $value->education_programme->name;
-                                $education_programme_name = $value->education_programme->name;
-                                $start_date = $start_date;
-                                //POCOR-6184
-                                $education_system_id = $value->education_programme->education_cycle->education_level->education_system->id;
-                                $education_level_id = $value->education_programme->education_cycle->education_level->id;
-                                $education_cycle_id = $value->education_programme->education_cycle->id;
-                                $education_programme_id = $value->education_programme->id;
-
-                            }
                         }
-
-                        if (!empty($institution)) {
-                            foreach ($institution as $key => $value) {
-                                $institution_name = $value->institution->name;
-                                $institution_code = $value->institution->code;
-                                $institution_classes = [];
-                            }
-                        }
-
-                        $body = [
-                            'education_system_id' => !empty($education_system_id) ? $education_system_id : NULL,
-                            'education_system_name' => !empty($education_system_name) ? $education_system_name : NULL,
-                            'education_level_id' => !empty($education_level_id) ? $education_level_id : NULL,
-                            'education_level_name' => !empty($education_level_name) ? $education_level_name : NULL,
-                            'education_cycle_id' => !empty($education_cycle_id) ? $education_cycle_id : NULL,
-                            'education_cycle_name' => !empty($education_cycle_name) ? $education_cycle_name : NULL,
-                            'education_programme_id' => !empty($education_programme_id) ? $education_programme_id : NULL,
-                            'education_programme_code' => !empty($education_programme_code) ? $education_programme_code : NULL,
-                            'education_programme_name' => !empty($education_programme_name) ? $education_programme_name : NULL,
-                            'institution_id' => !empty($entity->institution_id) ? $entity->institution_id : NULL,
-                            'institution_name' => !empty($institution_name) ? $institution_name : NULL,
-                            'institution_code' => !empty($institution_code) ? $institution_code : NULL,
-                            'institution_grade_id' => !empty($lastInsertId) ? $lastInsertId : NULL,
-                            'institution_programme_grade_subjects_id' => !empty($institutionProgramGradeSubjectID) ? $institutionProgramGradeSubjectID : NULL,
-                            'institution_subject_name' => !empty($subject) ? $subject : NULL,
-                            'start_date' => !empty($start_date) ? date("d-m-Y", strtotime($start_date)) : NULL
-                        ];
-
-                        $Webhooks = TableRegistry::get('Webhook.Webhooks');
-                            if ($this->Auth->user()) {
-                                $Webhooks->triggerShell('programme_create', ['username' => $username],$body);
-                            }
-                        }
+                        return true;
                     }
+
+                } else {
+                    $model->Alert->error($this->aliasField('noGradeSelected'));
+                    return false;
                 }
-                return true;
+            } else {
+                $model->Alert->error($this->aliasField('noGradeSelected'));
+                return false;
             }
+    };
+
+    if (empty($errors) || count($errors)==1) {
+
+        $educationGradeId = ($data['grades']['education_grade_id'] =='') ? 0:$data['grades']['education_grade_id'];
+        $existingGradeCount = $this->find()
+            ->select([$this->EducationGrades->aliasField('name')])
+            ->contain([$this->EducationGrades->getAlias()])
+            ->where([
+                $this->EducationGrades->aliasField('education_programme_id') => $entity->programme,
+                $this->aliasField('education_grade_id') => $educationGradeId,
+                $this->aliasField('institution_id') => $entity->institution_id
+            ])
+            ->count();
+        if ($existingGradeCount) {
+            $this->Alert->warning($this->aliasField('gradesAlreadyAdded'));
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('index'));
         } else {
-            $model->Alert->error($this->aliasField('noGradeSelected'));
-            return false;
+            return $process;
         }
-    } else {
-        $model->Alert->error($this->aliasField('noGradeSelected'));
-        return false;
     }
-};
-
-if (empty($errors) || count($errors)==1) {
-
-    $educationGradeId = ($data['grades']['education_grade_id'] =='')
-    ?0:$data['grades']['education_grade_id'];
-    $existingGradeCount = $this->find()
-    ->select([$this->EducationGrades->aliasField('name')])
-    ->contain([$this->EducationGrades->alias()])
-    ->where([
-        $this->EducationGrades->aliasField('education_programme_id') => $entity->programme,
-        $this->aliasField('education_grade_id') => $educationGradeId,
-        $this->aliasField('institution_id') => $entity->institution_id
-    ])
-    ->count();
-
-    if ($existingGradeCount) {
-        $this->Alert->warning($this->aliasField('gradesAlreadyAdded'));
-        $event->stopPropagation();
-        return $this->controller->redirect($this->url('index'));
-    } else {
-        return $process;
-    }
-}
 }
 
 public function editBeforeSave(Event $event, Entity $entity,
@@ -451,7 +467,7 @@ public function editBeforeSave(Event $event, Entity $entity,
 ) {
         $gradeSubjectEntities = $data['grades']['education_grade_subject_id'];
     $createdUserId = $this->Session->read('Auth.User.id');
-    $institutionClassGrades = TableRegistry::get('InstitutionClassGrades')
+    $institutionClassGradesData = TableRegistry::get('Institution.InstitutionClassGrades')
     ->find()->select([
         'InstitutionClassGrades.education_grade_id',
         'InstitutionClassGrades.institution_class_id',
@@ -466,7 +482,7 @@ public function editBeforeSave(Event $event, Entity $entity,
         'InstitutionClassGrades.education_grade_id'=>$entity->education_grade->id,
         'InstitutionClasses.institution_id = '.$entity->institution_id,
     ])
-    ->first();
+    ->toArray();
 
     $gradeSubjectEntities = array_values(
         array_filter($gradeSubjectEntities)
@@ -475,8 +491,8 @@ public function editBeforeSave(Event $event, Entity $entity,
     foreach($gradeSubjectEntities as $gradeSubjectId){
 
         if($gradeSubjectId > 0){
-            $institutionProgramGradeSubject = TableRegistry::get('InstitutionProgramGradeSubjects');
-            $gradeSubject = $institutionProgramGradeSubject->newEntity();
+            $institutionProgramGradeSubject = TableRegistry::get('Institution.InstitutionProgramGradeSubjects');
+            $gradeSubject = $institutionProgramGradeSubject->newEntity([]);
 
             $gradeSubject->institution_grade_id = $entity->id;
             $gradeSubject->education_grade_subject_id = $gradeSubjectId;
@@ -490,13 +506,13 @@ public function editBeforeSave(Event $event, Entity $entity,
         }
     }
 
-    $academicPeriodId = $institutionClassGrades->InstitutionClasses['academic_period_id'];
+    $academicPeriodId = $entity->academic_period_id;
 
-    if (!empty($institutionClassGrades)) {
+    if (!empty($institutionClassGradesData)) {
             /**
              * get the list of education_grade_id from the education_grades array
              */
-            $grades = $institutionClassGrades->education_grade_id;
+            $grades = $entity->education_grade->id;
             $EducationGrades = TableRegistry::get('Education.EducationGrades');
             /**
              * from the list of grades, find the list of subjects group by grades in (education_grades_subjects) where visible = 1
@@ -533,14 +549,13 @@ public function editBeforeSave(Event $event, Entity $entity,
                 foreach ($educationGradeSubjects as $gradeSubject) {
 
                     foreach ($gradeSubject->education_subjects as $subject) {
-
                         if(in_array($subject->id, $gradeSubjectEntities)){
 
                             if (!isset($educationSubjects[$gradeSubject->id.'_'.$subject->id])) {
                                 $educationSubjects[$gradeSubject->id.'_'.$subject->id] = [
                                     'id' => $subject->id,
                                     'education_grade_id' => $gradeSubject->id,
-                                    'name' => $subject->name
+                                    'name' => $subject->name,
                                 ];
                             }
 
@@ -586,44 +601,58 @@ public function editBeforeSave(Event $event, Entity $entity,
                  * else create a record in institution_subjects (InstitutionSubjects)
                  * and link to the subject in institution_class_subjects (InstitutionClassSubjects) with status 1
                  */
+
+                //POCOR-7815 start
                 $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+                $EducationGradeSubjects= TableRegistry::get('Education.EducationGradesSubjects');
+                $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+                $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
                 $newSchoolSubjects = [];
+                $InstutionClassList=[];
+                $InstitutionClassStudentsData=[];
+                $StudentExistData=[];
 
                 foreach ($educationSubjects as $key => $educationSubject) {
                     $existingSchoolSubjects = false;
+                    $class_students=[];
+                    foreach ($institutionClassGradesData as $newKey=>$institutionClassGrades){
+                            $InstutionClassList[] = $institutionClassGrades->institution_class_id;
+                        if (array_key_exists($key, $institutionSubjectsIds)) {
+                            $existingSchoolSubjects = $InstitutionClassSubjects->find()
+                            ->where([
+                                $InstitutionClassSubjects->aliasField('institution_class_id') => $institutionClassGrades->institution_class_id,
+                                $InstitutionClassSubjects->aliasField('institution_subject_id').' IN' => $institutionSubjectsIds[$key],
+                            ])
+                            ->select(['id'])
+                            ->toArray();
+                        }
 
-                    if (array_key_exists($key, $institutionSubjectsIds)) {
-                        $existingSchoolSubjects = $InstitutionClassSubjects->find()
-                        ->where([
-                            $InstitutionClassSubjects->aliasField('institution_class_id') => $institutionClassGrades->institution_class_id,
-                            $InstitutionClassSubjects->aliasField('institution_class_id').' IN' => $institutionSubjectsIds[$key],
-                        ])
-                        ->select(['id'])
-                        ->first();
+                        if (!$existingSchoolSubjects) {
+                            $class_students[]= [
+                                        'status' => 1,
+                                        'institution_class_id' => $institutionClassGrades->institution_class_id
+                            ];
+                        }
+
                     }
-
-                    if (!$existingSchoolSubjects) {
-                        $newSchoolSubjects[$key] = [
+                    if(!empty($class_students)){
+                        $newSchoolSubjects[$newKey] = [
                             'name' => $educationSubject['name'],
                             'institution_id' => $entity->institution_id,
                             'education_grade_id' => $educationSubject['education_grade_id'],
                             'education_subject_id' => $educationSubject['id'],
                             'academic_period_id' => $academicPeriodId,
-                            'class_subjects' => [
-                                [
-                                    'status' => 1,
-                                    'institution_class_id' => $institutionClassGrades->institution_class_id
-                                ]
-                            ]
+                            'class_subjects' => $class_students
                         ];
                     }
                 }
 
+                //adding data in institution_subjects table
                 if (!empty($newSchoolSubjects)) {
                     $newSchoolSubjects = $InstitutionSubjects->newEntities($newSchoolSubjects);
                     foreach ($newSchoolSubjects as $subject) {
                         $institutionProgramGradeSubjects =
-                        TableRegistry::get('InstitutionProgramGradeSubjects')
+                        TableRegistry::get('Institution.InstitutionProgramGradeSubjects')
                         ->find('list')
                         ->where(['InstitutionProgramGradeSubjects.education_grade_id' => $subject->education_grade_id,
                             'InstitutionProgramGradeSubjects.education_grade_subject_id' => $subject->education_subject_id,
@@ -632,14 +661,59 @@ public function editBeforeSave(Event $event, Entity $entity,
                         ->count();
 
                         if($institutionProgramGradeSubjects > 0){
-                            $InstitutionSubjects->save($subject);
+                          $StudentExistData[]=  $InstitutionSubjects->save($subject);
                         }
                     }
                     unset($subject);
                 }
+
+                //adding data in institution_subject_students
+                if(!empty($StudentExistData)){
+                    foreach($StudentExistData as $subjectKey=>$SubjectData){
+                        foreach($SubjectData->class_subjects as $ClassKey=>$ClassSubjectData){
+                             $autoAllocation=$EducationGradeSubjects->find()->where([$EducationGradeSubjects->aliasField('education_grade_id')=>$SubjectData->education_grade_id,
+                                                     $EducationGradeSubjects->aliasField('education_subject_id') => $SubjectData->education_subject_id])->select('auto_allocation')->first()->auto_allocation;
+                             if($autoAllocation==1){
+                                $InstitutionClassStudentsData = $InstitutionClassStudents->find()->where([
+                                                            $InstitutionClassStudents->aliasField('student_status_id') => 1,
+                                                            $InstitutionClassStudents->aliasField('education_grade_id') => $SubjectData->education_grade_id,
+                                                            $InstitutionClassStudents->aliasField('institution_class_id') => $ClassSubjectData->institution_class_id,
+                                                            $InstitutionClassStudents->aliasField('institution_id') => $SubjectData->institution_id,
+                                                            $InstitutionClassStudents->aliasField('academic_period_id') => $SubjectData->academic_period_id
+                                                        ])->toArray();
+                                if(!empty($InstitutionClassStudentsData)){
+                                    foreach( $InstitutionClassStudentsData as $k=>$ClassStudentData){
+                                            $studentSubjectData = [
+                                                "id" => Text::uuid(),
+                                                "student_id" => $ClassStudentData->student_id,
+                                                "institution_subject_id" =>  $SubjectData->id,
+                                                "institution_class_id" => $ClassStudentData->institution_class_id,
+                                                "institution_id" => $ClassStudentData->institution_id,
+                                                "academic_period_id" => $SubjectData->academic_period_id,
+                                                "education_subject_id" => $SubjectData->education_subject_id,
+                                                "education_grade_id" => $SubjectData->education_grade_id,
+                                                "student_status_id" => 1,
+                                                "created" => $today->format('Y-m-d H:i:s'),
+                                                "created_user_id" => $createdUserId
+                                            ];
+                                            $savStudentData = $InstitutionSubjectStudents->newEntity($studentSubjectData);
+                                            $saveData  = $InstitutionSubjectStudents->save($savStudentData);
+                                            unset($savStudentData);
+                                            unset($saveData);
+
+                                    }
+                                }
+                             }
+
+                                                    }
+                    }
+                }
+
+                //POCOR-7815 end
                 unset($newSchoolSubjects);
                 unset($InstitutionSubjects);
                 unset($InstitutionClassSubjects);
+
             }
         }
 
@@ -660,7 +734,7 @@ public function editBeforeSave(Event $event, Entity $entity,
             $this->aliasField('id') => $entity->id
         ]);
 
-        $institutionProgramGradeSubject = TableRegistry::get('InstitutionProgramGradeSubjects');
+        $institutionProgramGradeSubject = TableRegistry::get('Institution.InstitutionProgramGradeSubjects');
         $programmeSubjects = $institutionProgramGradeSubject->find()
         ->select('education_grade_subject_id')
         ->where([
@@ -733,14 +807,14 @@ if ($this->Auth->user()) {
 }
 }
 
+
     // POCOR 5001
 public function beforeDelete(Event $event, Entity $entity) {
-
-        // Delete Institution Program Grade Subjects
-    TableRegistry::get('InstitutionProgramGradeSubjects')
-    ->deleteAll(['institution_grade_id' => $entity->id,
-        'education_grade_id' => $entity->education_grade_id
-    ]);
+    // Delete Institution Program Grade Subjects
+    TableRegistry::getTableLocator()->get('Institution.InstitutionProgramGradeSubjects')
+        ->deleteAll(['institution_grade_id' => $entity->id,
+            'education_grade_id' => $entity->education_grade_id
+        ]);
     if(!empty($this->controllerAction) && ($this->controllerAction == 'Programmes')) {
         $bodyData = $this->find('all',
             [ 'contain' => [
@@ -756,20 +830,20 @@ public function beforeDelete(Event $event, Entity $entity) {
             'institution_grades_id' => !empty($entity->id) ? $entity->id : NULL,
         ];
         if($this->action == 'remove') {
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
             if ($this->Auth->user()) {
                 $username = $this->Auth->user()['username'];
                 $Webhooks->triggerShell('programme_delete', ['username' => $username], $body);
             }
         }
-
     }
 }
 
 public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 {
-    $Institution = TableRegistry::get('Institution.Institutions');
-    $institution = $Institution->find()->where([$Institution->aliasField($Institution->primaryKey()) => $this->institutionId])->first();
+    $Institution = TableRegistry::getTableLocator()->get('Institution.Institutions');
+    $institutionId = $this->getInstitutionID();
+    $institution = $Institution->find()->where([$Institution->aliasField($Institution->getPrimaryKey()) => $institutionId])->first();
 
     if (empty($institution->date_opened)) {
         $institution->date_opened = new Time('01-01-1970');
@@ -806,7 +880,7 @@ public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 
 public function addOnChangeLevel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
 {
-    $data[$this->alias()]['programme'] = 0;
+    $data[$this->getAlias()]['programme'] = 0;
 }
 
 /******************************************************************************************************************
@@ -818,14 +892,14 @@ public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra
 {
     $education_system_id = $entity->education_grade->education_programme->education_cycle->education_level->education_system_id;
 
-    $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-    $EducationSystems = TableRegistry::get('Education.EducationSystems');
+    $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+    $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
 
     $AcademicPeriodData = $AcademicPeriod->find()
             ->select([
                 'name' => $AcademicPeriod->aliasField('name'),
             ])
-            ->innerJoin([$EducationSystems->alias() => $EducationSystems->table()],
+            ->innerJoin([$EducationSystems->getAlias() => $EducationSystems->getTable()],
                 [
                     $EducationSystems->aliasField('academic_period_id = ') . $AcademicPeriod->aliasField('id'),
                 ]
@@ -845,8 +919,8 @@ public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra
     $this->fields['programme']['value'] = $programme->id;
     $this->fields['education_grade_id']['attr']['value'] = $entity->education_grade->name;
 
-    $Institution = TableRegistry::get('Institution.Institutions');
-    $institution = $Institution->find()->where([$Institution->aliasField($Institution->primaryKey()) => $this->institutionId])->first();
+    $Institution = TableRegistry::getTableLocator()->get('Institution.Institutions');
+    $institution = $Institution->find()->where([$Institution->aliasField($Institution->getPrimaryKey()) => $this->institutionId])->first();
     $this->fields['start_date']['date_options']['startDate'] = $institution->date_opened->format('d-m-Y');
     $this->fields['end_date']['date_options']['startDate'] = $institution->date_opened->format('d-m-Y');
 }
@@ -868,12 +942,12 @@ public function onGetProgramme(Event $event, Entity $entity)
 }
 
 public function onGetEducationSubjectId(Event $event, Entity $entity)
-{  
+{
     $gradeId = $entity->education_grade_id;
     $institution_id = $entity->institution['id'];
-    $EducationGradesSubjects = TableRegistry::get('institution_program_grade_subjects');
+    $EducationGradesSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionProgramGradeSubjects');
     $subjectCount = $EducationGradesSubjects->find()
-    ->where([$EducationGradesSubjects->aliasField('education_grade_id') => $gradeId,
+                    ->where([$EducationGradesSubjects->aliasField('education_grade_id') => $gradeId,
     $EducationGradesSubjects->aliasField('institution_id') => $institution_id])
                     ->toArray();
     $count = 0;
@@ -884,9 +958,9 @@ public function onGetEducationSubjectId(Event $event, Entity $entity)
     }
 }
 
-public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
 {
-    $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+    $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
     if ($action == 'add') {
         $periodOptions = $AcademicPeriods->getYearList(['isEditable' => true]);
         $attr['type'] = 'select';
@@ -899,16 +973,21 @@ public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action
     return $attr;
 }
 
-public function onUpdateFieldLevel(Event $event, array $attr, $action, Request $request)
+public function onUpdateFieldLevel(Event $event, array $attr, $action, ServerRequest $request)
 {
     if ($action == 'add') {
-        $academicPeriodId = $request->data($this->aliasField('academic_period_id'));
-        $EducationLevels = TableRegistry::get('Education.EducationLevels');
+        $academicPeriodId = $request->getData($this->aliasField('academic_period_id'));
+        if(!empty($academicPeriodId)){
+            $condition = ['EducationSystems.academic_period_id' => $academicPeriodId];
+        }else{
+            $condition = ['EducationSystems.academic_period_id IS' => null];
+        }
+        $EducationLevels = TableRegistry::getTableLocator()->get('Education.EducationLevels');
         $levelOptions = $EducationLevels->find('list', ['valueField' => 'system_level_name'])
         ->find('visible')
         ->find('order')
         ->contain(['EducationSystems'])
-        ->where(['EducationSystems.academic_period_id' => $academicPeriodId])
+        ->where($condition)
         ->toArray();
         $attr['empty'] = true;
         $attr['options'] = $levelOptions;
@@ -919,15 +998,15 @@ public function onUpdateFieldLevel(Event $event, array $attr, $action, Request $
     return $attr;
 }
 
-public function onUpdateFieldProgramme(Event $event, array $attr, $action, Request $request)
+public function onUpdateFieldProgramme(Event $event, array $attr, $action, ServerRequest $request)
 {
     if ($action == 'add') {
         $attr['empty'] = true;
         $attr['options'] = [];
 
         if ($this->request->is(['post', 'put'])) {
-            $levelId = $this->request->data($this->aliasField('level'));
-            $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+            $levelId = $this->request->getData($this->aliasField('level'));
+            $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
             $query = $EducationProgrammes->find('list', ['valueField' => 'cycle_programme_name'])
             ->find('visible')
             ->find('order')
@@ -946,14 +1025,14 @@ public function onUpdateFieldProgramme(Event $event, array $attr, $action, Reque
     return $attr;
 }
 
-public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
 {
     if ($action == 'add') {
         $attr['type'] = 'element';
         $attr['element'] = 'Institution.Programmes/grades';
-
+        $attr['data'] = array();
         if ($request->is(['post', 'put'])) {
-            $programmeId = $request->data($this->aliasField('programme'));
+            $programmeId = $request->getData($this->aliasField('programme'));
 
             if (empty($programmeId)) {
                 $programmeId = 0;
@@ -965,7 +1044,7 @@ public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action
             ->where(['EducationGrades.education_programme_id' => $programmeId])
             ->toArray();
 
-            $institutionId = $this->Session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionID();
             $exists = $this->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade_id'])
             ->where([$this->aliasField('institution_id') => $institutionId])
             ->toArray();
@@ -980,7 +1059,7 @@ public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action
     return $attr;
 }
 
-public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
+public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, ServerRequest $request)
 {
     if ($action == 'add') {
         $attr['type'] = 'element';
@@ -988,12 +1067,12 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
 
         if ($request->is(['post', 'put'])) {
 
-            $educationGradeId = $request->data($this->aliasField('grades.education_grade_id'));
+            $educationGradeId = $request->getData($this->aliasField('grades.education_grade_id'));
 
             if (!empty($educationGradeId)) {
 
                 $existingSubjectsInGrade =
-                TableRegistry::get('Education.EducationGradesSubjects')
+                TableRegistry::getTableLocator()->get('Education.EducationGradesSubjects')
                 ->find('list', [
                     'keyField' => 'education_subject_id',
                     'valueField' => 'education_subject_id'
@@ -1001,7 +1080,7 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
                 ->where(['EducationGradesSubjects.education_grade_id' => $educationGradeId])
                 ->toArray();
 
-                $subjectQuery = TableRegistry::get('Education.EducationSubjects')
+                $subjectQuery = TableRegistry::getTableLocator()->get('Education.EducationSubjects')
                 ->find()
                 //->find('visible') //POCOR-5931
                 ->find('order');
@@ -1021,11 +1100,11 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
     } else if ($action == 'edit') {
         $attr['type'] = 'element';
         $attr['element'] = 'Institution.Programmes/subjects';
-        $programmeId = $this->paramsDecode($this->request->pass[1])['id'];
+        $programmeId = $this->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
 
         if (!empty($programmeId)) {
 
-            $institutionId = $this->Session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionID();
             $institutionGrade = $this->find()
             ->where([$this->aliasField('id') => $programmeId,
                 $this->aliasField('institution_id') => $institutionId
@@ -1033,7 +1112,7 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
             ->first();
 
             $existingSubjectsInGrade =
-            TableRegistry::get('Education.EducationGradesSubjects')
+            TableRegistry::getTableLocator()->get('Education.EducationGradesSubjects')
             ->find('list', [
                 'keyField' => 'education_subject_id',
                 'valueField' => 'education_subject_id'
@@ -1041,7 +1120,7 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
             ->where(['EducationGradesSubjects.education_grade_id' => $institutionGrade->education_grade_id])
             ->toArray();
 
-            $subjectQuery = TableRegistry::get('Education.EducationSubjects')
+            $subjectQuery = TableRegistry::getTableLocator()->get('Education.EducationSubjects')
             ->find()
             //->find('visible') //POCOR-5931
             ->find('order');
@@ -1056,7 +1135,7 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
             $subjectOptions = $subjectQuery->toArray();
 
             $institutionProgramGradeSubjects =
-            TableRegistry::get('InstitutionProgramGradeSubjects')
+            TableRegistry::getTableLocator()->get('Institution.InstitutionProgramGradeSubjects')
             ->find('list', [
                 'keyField' => 'education_grade_subject_id',
                 'valueField' => 'education_grade_subject_id'
@@ -1064,7 +1143,7 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
             ->where(['InstitutionProgramGradeSubjects.education_grade_id' => $institutionGrade->education_grade_id,
                 'InstitutionProgramGradeSubjects.institution_grade_id' => $programmeId
             ])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->toArray();
         }
 
@@ -1073,11 +1152,11 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
     }else if ($action == 'view') {
         $attr['type'] = 'element';
         $attr['element'] = 'Institution.Programmes/subjects';
-        $programmeId = $this->paramsDecode($this->request->pass[1])['id'];
+        $programmeId = $this->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
 
         if (!empty($programmeId)) {
 
-            $institutionId = $this->Session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionID();
             $institutionGrade = $this
             ->find()
             ->where([$this->aliasField('id') => $programmeId,
@@ -1086,7 +1165,7 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
             ->first();
 
             $existingSubjectsInGrade =
-            TableRegistry::get('InstitutionProgramGradeSubjects')
+            TableRegistry::getTableLocator()->get('Institution.InstitutionProgramGradeSubjects')
             ->find('list', [
                 'keyField' => 'education_grade_subject_id',
                 'valueField' => 'education_grade_subject_id'
@@ -1094,12 +1173,12 @@ public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $acti
             ->where(['InstitutionProgramGradeSubjects.education_grade_id' => $institutionGrade->education_grade_id,
                 'InstitutionProgramGradeSubjects.institution_grade_id' => $programmeId
             ])
-            ->hydrate(false)
+            ->enableHydration(false)
             ->toArray();
 
                     // only show subjects that have been added in the grade
             if (!empty($existingSubjectsInGrade)) {
-                $subjectQuery = TableRegistry::get('Education.EducationSubjects')
+                $subjectQuery = TableRegistry::getTableLocator()->get('Education.EducationSubjects')
                 ->find()
                 //->find('visible') //POCOR-5931
                 ->find('order');
@@ -1171,7 +1250,7 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
 			'EducationSystems.academic_period_id' => $academicPeriodId,
 			$conditions
 		])
-        ->order(['EducationGrades.education_programme_id', 'EducationGrades.order']);
+        ->order(['EducationLevels.order' =>'ASC','EducationCycles.order'=>'ASC','EducationProgrammes.order' => 'ASC','EducationGrades.order' => 'ASC']); //POCOR-8185 - Update order by fields for sorting
         $data = $query->toArray();
 
         if($listOnly) {
@@ -1240,7 +1319,7 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
             $academicPeriodConditions['end_date >='] = $startDate;
         }
 
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $query = $AcademicPeriods->find('list')
         ->select(['id', 'name'])
         ->where($academicPeriodConditions)
@@ -1296,8 +1375,8 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
 
     public function findEducationGradeInCurrentInstitution(Query $query, array $options)
     {
-        $academicPeriodId = (array_key_exists('academic_period_id', $options))? $options['academic_period_id']: null;
-        $institutionId = (array_key_exists('institution_id', $options))? $options['institution_id']: null;
+        $academicPeriodId = (isset($options['academic_period_id']))? $options['academic_period_id']: null;
+        $institutionId = (isset($options['institution_id']))? $options['institution_id']: null;
 
         $query->contain('EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems');
         $query->where([
@@ -1316,12 +1395,12 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
         $educationGradeId = $entity->education_grade_id;
         $entity->name = $EducationGrades->get($educationGradeId)->name;
         $institutionId = $entity->institution_id;
-      
-        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
         $associatedStudentRecordsCount = $InstitutionStudents->find()
         ->where([
             $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
@@ -1342,7 +1421,7 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
         $extra['associatedRecordsss'][] = ['model' => 'InstitutionEnrolledStudents', 'count' => $enrolledStudentsRecordsCount];
         //End:POCOR-6964
         // to get the institution_class_id related to the education_grade_id
-        $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+        $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
         $associatedClassObj = $InstitutionClassGrades->find()
         ->where([
             $InstitutionClassGrades->aliasField('education_grade_id') => $educationGradeId,
@@ -1351,7 +1430,7 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
 
         // will check if the institution_class_id are in the Institutions.
         $associatedClassCount = 0;
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
 
         foreach ($associatedClassObj as $key => $obj) {
             $institutionsClassId = $obj['institution_class_id'];
@@ -1405,9 +1484,9 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $AcademicPeriod->getCurrent();
+        $institutionId = $this->getInstitutionID();
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $AcademicPeriod->getCurrent();
         $query
         ->select(['grade_name' => 'EducationGrades.name', 'programme_name' => $query->func()->concat([
             'EducationCycles.name' => 'literal',
@@ -1418,7 +1497,7 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
             " - ",
             'EducationLevels.name' => 'literal'
         ])])
-        ->LeftJoin([$this->EducationGrades->alias() => $this->EducationGrades->table()],[
+        ->LeftJoin([$this->EducationGrades->getAlias() => $this->EducationGrades->getTable()],[
             $this->EducationGrades->aliasField('id').' = ' . $this->aliasField('education_grade_id')
         ])
         ->LeftJoin(['EducationProgrammes' => 'education_programmes'],[
@@ -1445,22 +1524,22 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
         $gradeId = $entity->education_grade_id;
         $institution_id = $entity->institution_id;
 
-        $EducationGradesSubjects = TableRegistry::get('institution_program_grade_subjects');
+        $EducationGradesSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionProgramGradeSubjects');
         $subjectCount = $EducationGradesSubjects->find()
         ->where([$EducationGradesSubjects->aliasField('education_grade_id') => $gradeId,
         $EducationGradesSubjects->aliasField('institution_id') => $institution_id])
                         ->toArray();
         $count = 0;
         if (!empty($subjectCount)) {
-        return $count = count($subjectCount);
+            return $count = count($subjectCount);
         } else {
-        return $count;
+            return $count;
         }
     }
 
     public function getNextAvailableEducationGradesForTransfer($nextPeriodId){
         if (!empty($nextPeriodId)) {
-            $EducationGradesSubjects = TableRegistry::get('institution_grades');
+            $EducationGradesSubjects = TableRegistry::getTableLocator()->get('institution_grades');
             $gradeOptionsData =   $EducationGradesSubjects
             ->find('all')
              ->select([
@@ -1510,9 +1589,9 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
             }
             if ($getNextProgrammeGrades) {
                 if ($firstGradeOnly) {
-                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextProgrammeFirstGradeList($programmeId);
+                    $nextProgrammesGradesOptions = TableRegistry::getTableLocator()->get('Education.EducationProgrammesNextProgrammes')->getNextProgrammeFirstGradeList($programmeId);
                 } else {
-                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
+                    $nextProgrammesGradesOptions = TableRegistry::getTableLocator()->get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
                 }
                 $results = $gradeOptions + $nextProgrammesGradesOptions;
             } else {
@@ -1521,6 +1600,31 @@ public function getGradeOptionsForIndex($institutionsId, $academicPeriodId, $lis
             return $results;
         } else {
             return [];
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'level') {
+            return __('Level');
+        } elseif ($field == 'programme') {
+            return __('Programme');
+        } elseif ($field == 'education_grade_id') {
+            return __('Education Grade');
+        } elseif ($field == 'education_subject_id') {
+            return __('Education Subject');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
 

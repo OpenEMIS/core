@@ -14,8 +14,8 @@ use App\Model\Table\ControllerActionTable;
 class StaffSubjectsTable extends ControllerActionTable {
     use MessagesTrait;
 
-    public function initialize(array $config) {
-        $this->table('institution_subject_staff');
+    public function initialize(array $config): void {
+        $this->setTable('institution_subject_staff');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
@@ -33,25 +33,30 @@ class StaffSubjectsTable extends ControllerActionTable {
          */
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Subjects' =>['institution_subject_id','institution_id']
+            ]
+        ]);
+        $this->addBehavior('Staff.StaffTab');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra) {       
+    public function indexBeforeAction(Event $event, ArrayObject $extra) {
         //echo "<pre>"; print_r($extra['query']->toArray());die;
         $this->field('academic_period', []);
         //start:POCOR-5274
-        $this->field('institution_class',['sort'  => ['field' =>'InstitutionClasses.name']]);        
+        $this->field('institution_class',['sort'  => ['field' =>'InstitutionClasses.name']]);
         $this->field('institution_subject_id', [ 'sort' => ['field' => 'InstitutionSubjects.name']]);
         //end:POCOR-5274
         $this->field('education_subject', []);
         $this->field('male_students', []);
         $this->field('female_students', []);
-
+        $this->field('staff_id', ['visible' => false]);
         $this->setFieldOrder([
             'academic_period',
             'institution_id',
@@ -63,8 +68,8 @@ class StaffSubjectsTable extends ControllerActionTable {
         ]);
 
         // Start POCOR-5188
-		if($this->request->params['controller'] == 'Staff'){
-			$is_manual_exist = $this->getManualUrl('Institutions','Subjects','Staff - Career');       
+		if($this->request->getParam('controller') == 'Staff'){
+			$is_manual_exist = $this->getManualUrl('Institutions','Subjects','Staff - Career');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -73,7 +78,7 @@ class StaffSubjectsTable extends ControllerActionTable {
 					'escape' => false,
 					'target'=>'_blank'
 				];
-		
+
 				$helpBtn['url'] = $is_manual_exist['url'];
 				$helpBtn['type'] = 'button';
 				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -81,8 +86,8 @@ class StaffSubjectsTable extends ControllerActionTable {
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->params['controller'] == 'Directories'){ 
-			$is_manual_exist = $this->getManualUrl('Directory','Subjects','Staff - Career');       
+		}elseif($this->request->getParam('controller') == 'Directories'){
+			$is_manual_exist = $this->getManualUrl('Directory','Subjects','Staff - Career');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -108,18 +113,18 @@ class StaffSubjectsTable extends ControllerActionTable {
         $data = $query->toArray() ;
         $institutionId = $data[0]['institution_id'];
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $academicPeriodId = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $AcademicPeriods->getCurrent();
+        $academicPeriodId = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $AcademicPeriods->getCurrent();
         $query->contain([
             'InstitutionSubjects'
         ]);
         //start:POCOR-5274
         $query->find('withClass', ['institution_id' => $institutionId, 'period_id' => $academicPeriodId]);
-        
+
         $sortList = ['InstitutionSubjects.name','start_date','end_date','InstitutionClasses.name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
-        //end:POCOR-5274       
+        //end:POCOR-5274
 
         $extra['options']['sortWhitelist'] = $sortList;
         // Academic Periods
@@ -131,9 +136,9 @@ class StaffSubjectsTable extends ControllerActionTable {
         $academicPeriodOptions = $AcademicPeriods->getYearList();
         $academicPeriodOptions += ['0'=>'All Acedemic Period'];
         //end:POCOR-5274
-        if(!empty($this->request->query('academic_period_id'))){
-            $academicPeriodId = $this->request->query('academic_period_id');                     
-        }    
+        if(!empty($this->request->getQuery('academic_period_id'))){
+            $academicPeriodId = $this->request->getQuery('academic_period_id');
+        }
         //start:POCOR-5274
         if($academicPeriodId == 0){
             $query->toArray();
@@ -142,15 +147,18 @@ class StaffSubjectsTable extends ControllerActionTable {
         }
         //end:POCOR-5274
         $this->controller->set(compact('academicPeriodOptions','academicPeriodId'));
-               
-                
+
+
     }
 
     //start:POCOR-5274
     public function findWithClass(Query $query, array $options)
     {
         $queryData = $query->toArray();
-        $staff_id = $queryData[0]['staff_id']; 
+        $staff_id = $queryData[0]['staff_id'];
+        if($staff_id == NULL){
+            $staff_id  = 1;
+        }
 
         $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
@@ -158,13 +166,13 @@ class StaffSubjectsTable extends ControllerActionTable {
         return $query
             ->select([$Classes->aliasField('name')])
             ->leftJoin(
-                [$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()],
+                [$InstitutionClassSubjects->getAlias() => $InstitutionClassSubjects->getTable()],
                 [
                     $InstitutionClassSubjects->aliasField('institution_subject_id = ') . $this->aliasField('institution_subject_id')
                 ]
             )
             ->leftJoin(
-                [$Classes->alias() => $Classes->table()],
+                [$Classes->getAlias() => $Classes->getTable()],
                 [
                     $Classes->aliasField('id = ') . $InstitutionClassSubjects->aliasField('institution_class_id')
                 ]
@@ -172,30 +180,35 @@ class StaffSubjectsTable extends ControllerActionTable {
             ->where([$this->aliasField('staff_id') => $staff_id])
             ->group([$InstitutionClassSubjects->aliasField('institution_subject_id')]);//POCOR-6710
     }
-    //end:POCOR-5274   
-     
+    //end:POCOR-5274
+
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        
+
         if ($this->action == 'index') {
-            
-            $indexElements[] = ['name' => 'Staff.Staff/controls', 'data' => [], 'options' => [], 'order' => 0];
+            $queryString = $this->getQueryString();
+            $encodedQueryString = $this->paramsEncode($queryString);
+
+            $indexElements[] = ['name' => 'Staff.Staff/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 0];
             $extra['elements'] = array_merge($extra['elements'], $indexElements);
         }
-       
+
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             $institutionId = $entity->institution_subject->institution_id;
             $url = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'Subjects',
-                'view',
-                $this->paramsEncode(['id' => $entity->institution_subject->id]),
-                'institution_id' => $institutionId,
+                0 => 'view',
+                //1 => $encodedQueryString,//here we got staff_id, user_id and institution_id
+                $this->paramsEncode(['id' => $entity->institution_subject->id, 'institution_id' => $institutionId]),
+
             ];
             $buttons['view']['url'] = $url;
         }
@@ -204,17 +217,19 @@ class StaffSubjectsTable extends ControllerActionTable {
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra) {
         $options = ['type' => 'staff'];
-        $tabElements = $this->controller->getCareerTabElements($options);
+        $tabElements = $this->getCareerTabElements($options);
+        $controllerName = $this->controller->getName();
+        $selectedAction = 'Subjects';
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'Subjects');
+        $this->controller->set('selectedAction', $selectedAction);
 
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        $staffId = $session->read('Staff.Staff.id');
-        $institutionId = $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        $staffId = $this->getStaffID();
+        $institutionId = $this->getInstitutionID();
         $institutionName = TableRegistry::get('Institution.Institutions')->get($institutionId)->name;
 
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
@@ -248,14 +263,14 @@ class StaffSubjectsTable extends ControllerActionTable {
 
         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
         if (
-            array_key_exists($this->alias(), $this->request->data)
-             && array_key_exists('academic_period_id', $this->request->data[$this->alias()])
-             && !empty($this->request->data[$this->alias()]['academic_period_id']))
+            array_key_exists($this->getAlias(), $this->request->getData())
+             && array_key_exists('academic_period_id', $this->request->getData()[$this->getAlias()])
+             && !empty($this->request->getData()[$this->getAlias()]['academic_period_id']))
         {
             $classOptions = $InstitutionClasses->find('list')
                 ->where([
-                    $InstitutionClasses->aliasField('institution_id') => $this->request->data[$this->alias()]['institution_id'],
-                    $InstitutionClasses->aliasField('academic_period_id') => $this->request->data[$this->alias()]['academic_period_id']
+                    $InstitutionClasses->aliasField('institution_id') => $this->request->getData()[$this->getAlias()]['institution_id'],
+                    $InstitutionClasses->aliasField('academic_period_id') => $this->request->getData()[$this->getAlias()]['academic_period_id']
                 ])
                 ->toArray()
                 ;
@@ -280,8 +295,8 @@ class StaffSubjectsTable extends ControllerActionTable {
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra) {
-        $session = $this->request->session();
-        $staffId = $session->read('Staff.Staff.id');
+        $session = $this->request->getSession();
+        $staffId = $this->getStaffID();
         $subjectOptions = $this->getSubjectOptions();
         // this 'save' does not redirect, need to re-extract the $subjectOptions after saving is done
         $this->fields['subjects']['data']['subjects'] = $subjectOptions;
@@ -291,17 +306,17 @@ class StaffSubjectsTable extends ControllerActionTable {
 
     private function getSubjectOptions() {
         $subjectOptions = [];
-        
+
         if (
-            array_key_exists($this->alias(), $this->request->data)
-             && array_key_exists('institution_class_id', $this->request->data[$this->alias()])
-             && !empty($this->request->data[$this->alias()]['institution_class_id']))
+            array_key_exists($this->getAlias(), $this->request->getData())
+             && array_key_exists('institution_class_id', $this->request->getData()[$this->getAlias()])
+             && !empty($this->request->getData()[$this->getAlias()]['institution_class_id']))
         {
             //institution_subject_staff
 
             $subjectOptions = $this->InstitutionSubjects->find()
                 ->matching('Classes', function ($q) {
-                    return $q->where(['Classes.id' => $this->request->data[$this->alias()]['institution_class_id']]);
+                    return $q->where(['Classes.id' => $this->request->getData()[$this->getAlias()]['institution_class_id']]);
                 })
                 ->contain([
                     'Teachers' => function ($q) {
@@ -309,18 +324,18 @@ class StaffSubjectsTable extends ControllerActionTable {
                     }
                 ])
                 ->where([
-                    $this->InstitutionSubjects->aliasField('institution_id') => $this->request->data[$this->alias()]['institution_id'],
-                    $this->InstitutionSubjects->aliasField('academic_period_id') => $this->request->data[$this->alias()]['academic_period_id']
+                    $this->InstitutionSubjects->aliasField('institution_id') => $this->request->getData()[$this->getAlias()]['institution_id'],
+                    $this->InstitutionSubjects->aliasField('academic_period_id') => $this->request->getData()[$this->getAlias()]['academic_period_id']
                 ])
                 ->order([
                         $this->InstitutionSubjects->aliasField('name')
                     ])
                 ->toArray();
-                
+
             // data massage for teacher names
             foreach ($subjectOptions as $key => $value) {
                 $tempTeacherArray = [];
-                
+
                 if ($value->has('teachers')) {
                     foreach ($value->teachers as $tkey => $tvalue) {
                         $tempTeacherArray[$tvalue->id] = $tvalue->name;
@@ -337,13 +352,13 @@ class StaffSubjectsTable extends ControllerActionTable {
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         $extra['redirect'] = false;
-        $subjectOptions = (array_key_exists('subjectOptions', $extra))? $extra['subjectOptions']: [];
-        $staffId = (array_key_exists('staffId', $extra))? $extra['staffId']: null;
+        $subjectOptions = (isset($extra['subjectOptions']))? $extra['subjectOptions']: [];
+        $staffId = (isset($extra['staffId']))? $extra['staffId']: null;
         $process = function ($model, $entity) use ($requestData, $subjectOptions, $staffId) {
             if (empty($staffId)) return false;
             $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
             $result = false;
-            if (array_key_exists('Subjects', $requestData)) {
+            if (isset($requestData['Subjects'])) {
                 foreach ($requestData['Subjects'] as $key => $value) {
                     $selectedSubjects[] = $value['subject_id'];
                 }
@@ -382,11 +397,32 @@ class StaffSubjectsTable extends ControllerActionTable {
                 return __('Class');
             case 'institution_subject_id':
                 return __('Name');
+            case 'academic_period':
+                return __('Academic Period');
+            case 'institution_id':
+                return __('Institution');
+            case 'education_subject':
+                return __('Education Subject');
+            case 'male_students':
+                return __('Male Students');
+            case 'female_students':
+                return __('Female Students');
+            case 'start_date':
+                return __('Start Date');
+            case 'end_date':
+                return __('End Date');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-    //end:POCOR-5274
 
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
@@ -396,7 +432,7 @@ class StaffSubjectsTable extends ControllerActionTable {
                 $buttonsArray = $buttons->getArrayCopy();
                 $indexesToRemove = [];
                 foreach ($buttonsArray as $key => $value) {
-                    if (array_key_exists('attr', $value)) {
+                    if (isset($value['attr'])) {
                         if (array_key_exists('value', $value['attr'])) {
                             if ($value['attr']['value'] == 'save') {
                                 // save button identification
@@ -416,8 +452,8 @@ class StaffSubjectsTable extends ControllerActionTable {
 
     public function addOnChangeAcademicPeriodId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
         $dataArray = $data->getArrayCopy();
-        if (array_key_exists($this->alias(), $dataArray) && array_key_exists('institution_class_id', $dataArray[$this->alias()]) ) {
-            unset($dataArray[$this->alias()]['institution_class_id']);
+        if (array_key_exists($this->getAlias(), $dataArray) && array_key_exists('institution_class_id', $dataArray[$this->getAlias()]) ) {
+            unset($dataArray[$this->getAlias()]['institution_class_id']);
         }
 
         $data->exchangeArray($dataArray);

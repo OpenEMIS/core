@@ -122,6 +122,11 @@ trait MessagesTrait
             'validationRules' => 'Validation Rules',
             'currentNotDeletable' => 'This record cannot be deleted because it is set as Current',
             'custom_validation_pattern' => 'Please enter a valid format',
+            'custom_validation_minimum_height' => 'Height is less then minimum height.',
+            'custom_validation_maximum_height' => 'Height is more then maximum height.',
+            'custom_validation_minimum_weight' => 'Height is less then minimum weight.',
+            'custom_validation_maximum_weight' => 'Height is more then maximum weight.',
+            'custom_validation_land_size' => 'Size is greater then config size.',
             //'bulk_student_transfer_in' => 'Bulk Student Transfer is updated. Pending Student Transfer from Sending Institution.',
             'bulk_student_transfer_in' => 'Bulk Student is updated.', //POCOR-7007 change message
             'bulk_student_transfer_out' => 'Students Transferred Successful.',
@@ -131,7 +136,10 @@ trait MessagesTrait
                     'telephone' => 'Telephone cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution',
                     'fax' => 'Fax cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution',
                     'both' => 'Telephone & Fax cannot be empty for Exam Centres to be set into Institutions->Contacts->Institution'
-            ]
+            ],
+            'dateCheck' =>'Please enter effective date.', //POCOR-7769
+            'dodmsg' => 'Date of Death cannot be earlier then Date of Birth' //POCOR-7982
+            ,'survey_already_used' => 'There is existing data in Institutions>Survey>Forms'//POCOR-8096
         ],
         'fileUpload' => [
             'single' => '*File size should not be larger than 2MB.',
@@ -183,7 +191,7 @@ trait MessagesTrait
             'change_in_building_type' => [
                 'restrictEdit' => 'Not allowed to change building type in the same day.'
             ],
-            'sizeGreater' => 'Please adjust the building size to be smaller than the land size to proceed.'
+            'sizeGreater' => 'Please adjust the building size to be smaller than or equal to the land size to proceed.' //POCOR-7826
         ],
         'InstitutionFloors' => [
             'noFloors' => 'No Floor found',
@@ -198,7 +206,7 @@ trait MessagesTrait
             'change_in_floor_type' => [
                 'restrictEdit' => 'Not allowed to change floor type in the same day.'
             ],
-            'sizeGreater' => 'Please adjust the floor size to be smaller than the building size to proceed.'
+            'sizeGreater' => 'Please adjust the floor size to be smaller than or equal to the building size to proceed.' //POCOR-7826
         ],
         'InstitutionRooms' => [
             'noRooms' => 'No Room found',
@@ -214,7 +222,7 @@ trait MessagesTrait
                 'restrictEdit' => 'Not allowed to change room type in the same day.'
             ],
             'select_subject' => 'Select Subject',
-            'sizeGreater' => 'Please adjust the room size to be smaller than the floor size to proceed.'
+            'sizeGreater' => 'Please adjust the room size to be smaller or equal to the floor size to proceed.' //POCOR-7826
         ],
         'InfrastructureCustomFields' => [
             'infrastructure_level_id' => 'Level Name'
@@ -398,7 +406,9 @@ trait MessagesTrait
                 'fail' => 'You have entered an invalid username or password.',
                 'inactive' => 'Your account has been disabled.',
                 'remoteFail' => 'Remote authentication failed, please try local login.',
-                'changePassword' => 'This is the first time that you are logging in, please change your password.'
+                'changePassword' => 'This is the first time that you are logging in, please change your password.',
+                'locked_account'=> 'Your account has been locked. Please contact system administrator for assistance.'//POCOR-2976
+
             ],
             'noAccess' => 'You do not have access to this location.',
             'emptyFields' => 'Some of the required fields for this authentication type are empty.'
@@ -464,7 +474,7 @@ trait MessagesTrait
         'Users' => [
             'student_category' => 'Category',
             'status' => 'Status',
-            'select_student' => 'Select Student', 
+            'select_student' => 'Select Student',
             'select_users' => 'Select Users', // POCOR-7362
             'select_student_empty' => 'No Other Student Available',
             'add_all_student' => 'Add All Students',
@@ -514,6 +524,11 @@ trait MessagesTrait
         'WorkflowStatuses' => [
             'noSteps' => 'No Available Workflow Steps'
         ],
+        //POCOR-7613 start
+        'Cases'=>[
+            'noAssignee' => 'Configuration for Workflow Assignee is incomplete. Please contact System Administrator.'
+        ],
+        //POCOR-7613 end
         'InstitutionQualityVisits' => [
             'noPeriods' => 'No Available Periods',
             'noClasses' => 'No Available Classes',
@@ -616,7 +631,9 @@ trait MessagesTrait
             'exists' => 'Student has already dropped out from the school.',
             'approve' => 'Withdraw request has been approved successfully.',
             'reject' => 'Withdraw request has been rejected successfully.',
-            'hasTransferApplication' => 'There is a pending transfer application for this student at the moment, please remove the transfer application before making another request.'
+            'hasTransferApplication' => 'There is a pending transfer application for this student at the moment, please remove the transfer application before making another request.',
+            'wrongAcademicPeriod' => 'This Academic Period Is Not Editable.', //POCOR-8003
+            'wrongStatus' => 'The Student Is Not Enrolled', //POCOR-8003
         ],
         'Import' => [
             'total_rows' => 'Total Rows:',
@@ -651,8 +668,10 @@ trait MessagesTrait
             'exam_centre_dont_match' => 'Examination and centre combination cannot be found.',
             'identity_type_doesnt_match' => 'Identity type selected must be %s.',
             'identity_number_exist' => 'Identity Number for %s already exists.',
-            'identity_type_required' => 'Identity Type cant be empty if Identity Number is specified.',
-            'identity_number_required' => 'Identity Number cant be empty if Identity Type is specified.',
+            'identity_type_required' => 'Identity Type is required.',
+            'identity_number_required' => 'Identity Type / Number is required.', // POCOR-7973
+            'identity_type_for_number_required' => 'Identity Type cant be empty if Identity Number is specified.', // POCOR-7973
+            'identity_number_for_type_required' => 'Identity Number cant be empty if Identity Type is specified.', // POCOR-7973
             'identity_number_invalid_pattern' => 'Invalid Identity Number pattern.',
             'staff_title_grade_not_match' => 'Selected value does not match with Staff Position Title Type',
             'contact_required' => 'Contact is required',
@@ -661,14 +680,20 @@ trait MessagesTrait
         'ImportInstitutionSurveys' => [
             'restrictImport' => 'Import operation is not allowed as the record is already Done'
         ],
+
         'TrainingSessions' => [
             'trainer_type' => 'Type',
-            'trainer' => 'Trainer'
+            'trainer' => 'Trainer',
+            'evaluator_types' => 'Type',
+            'evaluator' => 'Evaluator'
         ],
+
         'TrainingSessionResults' => [
             'noResultTypes' => 'You need to configure Result Types under Training Course.',
             'noTrainees' => 'No Available Trainees'
         ],
+
+
         'StaffTrainingApplications' => [
             'success' => 'This session has been added successfully.',
             'fail' => 'Failed to add the session.',
@@ -749,6 +774,7 @@ trait MessagesTrait
         'Templates' => [
             'addSuccess' => 'Competency Template was added successfully, please set up the Competency Items',
             'alreadyexist' => 'The competency for the education grade has been added.',
+            'specialCharr' => 'Special characters are not allowed in name.', //POCOR-7860
         ],
         'Items' => [
             'addSuccess' => 'Competency Item was added successfully, please set up the Competency Criterias'
@@ -765,7 +791,11 @@ trait MessagesTrait
             'select_classification' => 'Select Classification'
         ],
         'UserNationalities' => [
-            'noRecordRemain' => 'There should be at least one Nationality record'
+            'noRecordRemain' => 'There should be at least one Nationality record',
+            'ValidateNumberSuccess' => 'Identity number validate successfully.',
+            'ValidateNumberFail' => 'Please enter correct identity number.',
+            'IdentityNumberNotExist' => 'Identity number should not be blank.',
+            'NationalitiesRecordNoRemain' => 'There must be at least one Preferred Nationality.',
         ],
         'StudentAbsence' => [
             'deleteRecord' => 'Student absence record deleted successfully'
@@ -1535,7 +1565,7 @@ trait MessagesTrait
                     'ruleValidatePreferred' => 'There must be one Preferred Contact for each Contact Type'
                 ],
             ],
-            'Identities' => [
+            'IdentitiesPersonal' => [
                 'identity_type_id' => [
                     'ruleNotBlank' => 'Please select a Type',
                     'custom_validation' => 'Identity Type exists for this Nationality'
@@ -1665,6 +1695,14 @@ trait MessagesTrait
                 'date_to' => [
                     'ruleCompareDateReverse' => 'Date To should not be earlier than Date From'
                 ]
+            ],
+            'Identities' => [
+                'issue_date' => [
+                    'ruleCompareDate' => 'Please select',
+                ],
+                'identity_type_id' => [
+                    'ruleCustomIdentityType' => 'Please select',
+                ],
             ],
         ],
         'Student' => [
@@ -2009,7 +2047,7 @@ trait MessagesTrait
                 'range' => 'Text should be between %d and %d characters'
             ],
             'number' => [
-                'minValue' => 'Number should not be lesser than %d',
+                'minValue' => 'Number should not be less than %d',
                 'maxValue' => 'Number should not be greater than %d',
                 'range' => 'Number should be between %d and %d'
             ],
@@ -2526,7 +2564,7 @@ trait MessagesTrait
                 ]
             ]
         ], //POCOR-7271 end
-        
+
         'SpecialNeeds' => [
             'SpecialNeedsReferrals' => [
                 'date' => [
@@ -2601,6 +2639,9 @@ trait MessagesTrait
         ],
         'StudentMarkTypeStatuses' => [
             'statusAlreadyAdded' => 'Attendance for the selected Education Grade already added.',
+        ],
+        'Messaging'=>[//POCOR-7458
+            'email'=>'Message has been send successfully'
         ]
 
     ];
@@ -2608,8 +2649,8 @@ trait MessagesTrait
 
     public function getMessage($code, $options = [])
     {
-        $sprintf = (array_key_exists('sprintf', $options))? $options['sprintf']: [];
-        $defaultMessage = (array_key_exists('defaultMessage', $options))? $options['defaultMessage']: true;
+        $sprintf = (isset($options['sprintf']))? $options['sprintf']: [];
+        $defaultMessage = (isset($options['defaultMessage']))? $options['defaultMessage']: true;
 
         $Labels = TableRegistry::get('Labels');
         $message = Cache::read($code, $Labels->getDefaultConfig());
@@ -2631,6 +2672,6 @@ trait MessagesTrait
             }
         }
 
-        return !is_array($message) ? vsprintf(__($message), $sprintf) : $message;
+        return !is_array($message) ? vsprintf(__($message), (array)$sprintf) : $message;
     }
 }

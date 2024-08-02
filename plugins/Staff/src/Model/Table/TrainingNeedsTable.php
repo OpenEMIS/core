@@ -8,12 +8,17 @@ use Staff\Model\Table\TrainingNeedsAppTable;
 
 class TrainingNeedsTable extends TrainingNeedsAppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('staff_training_needs');
+        $this->setTable('staff_training_needs');
         parent::initialize($config);
 
         $this->addBehavior('Workflow.Workflow', ['model' => 'Institution.StaffTrainingNeeds']);
+        $this->addBehavior('User.UserTab', [
+            'appliedAction' => ['TrainingNeeds' =>
+                ['id'],
+            ]
+        ]);
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -44,6 +49,49 @@ class TrainingNeedsTable extends TrainingNeedsAppTable
     {
         $tabElements = $this->controller->getTrainingTabElements();
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'type':
+                return __('Type');
+            case 'status_id':
+                return __('Status');
+            case 'training_course_id':
+                return __('Training Course');
+            case 'training_need_category_id':
+                return __('Training Need Category');
+            case 'modified':
+                return __('Modified'); 
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'training_priority_id':
+                return __('Training Priority');
+            case 'reason':
+                return __('Reason');
+            case 'assignee_id':
+                return __('Assignee'); 
+            case 'course_code':
+                return __('Course Code'); 
+            case 'course_name':  
+                return __('Course Name'); 
+            case 'course_description':  
+                return __('Course Description');
+            case 'training_need_competency_id':  
+                return __('Training Need Competency'); 
+            case 'training_need_standard_id':  
+                return __('Training Need Standard');
+            case 'training_need_sub_standard_id':  
+                return __('Training Need Sub Standard'); 
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+    
 }

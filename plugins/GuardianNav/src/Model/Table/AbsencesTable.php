@@ -6,17 +6,17 @@ use Cake\Validation\Validator;
 use Cake\Event\Event;
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
-use Cake\ORM\Query; 
+use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\Locator\TableLocator;
 use App\Model\Table\ControllerActionTable;
 
 class AbsencesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_absences');
+        $this->setTable('institution_student_absences');
         parent::initialize($config);
-
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         // $this->belongsTo('StudentAbsenceReasons', ['className' => 'Institution.StudentAbsenceReasons']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -26,10 +26,9 @@ class AbsencesTable extends ControllerActionTable
         $this->belongsTo('InstitutionStudentAbsenceDays', ['className' => 'Institution.InstitutionStudentAbsenceDays', 'foreignKey' => 'institution_student_absence_day_id']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades', 'foreignKey' => 'education_grade_id']);
         $this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'foreignKey' => 'education_grade_id']);
-
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         return $events;
@@ -40,26 +39,26 @@ class AbsencesTable extends ControllerActionTable
         // $this->fields['student_absence_reason_id']['type'] = 'select';
         $this->fields['institution_student_absence_day_id']['visible'] = false;
         // POCOR-5245
-        $queryString = $this->request->query('queryString');
-        if ($queryString) {
+        $queryString = $this->request->getQuery('queryString');
+        if ($this->action == 'remove' && $queryString) {
             $event->stopPropagation();
-            $condition = $this->paramsDecode($queryString);            
-            $entity = $this->get($condition['id']);            
+            $condition = $this->paramsDecode($queryString);
+            $entity = $this->get($condition['id']);
             $institutionStudentAbsenceDaysEntity = $this->InstitutionStudentAbsenceDays->get($entity->institution_student_absence_day_id);
             $this->InstitutionStudentAbsenceDays->delete($institutionStudentAbsenceDaysEntity);
             TableRegistry::get('InstitutionStudentAbsenceDetails')
                     ->deleteAll(['student_id'=>$entity->student_id,
                             'date'=>$entity->date,
-                            ]);            
-            
+                            ]);
+
             $this->delete($entity);
             $this->Alert->success('StudentAbsence.deleteRecord', ['reset'=>true]);
-            return $this->controller->redirect(['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Absences','index']);
+            return $this->controller->redirect(['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'Absences','index']);
         }
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $settings)
-    {  
+    {
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['institution_id']['visible'] = false;
         $this->fields['education_grade_id']['visible'] = false;
@@ -71,7 +70,7 @@ class AbsencesTable extends ControllerActionTable
     }
 
     public function onGetPeriods(Event $event, Entity $entity)
-    {   
+    {
         $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
         $result = $StudentAttendancePerDayPeriods
             ->find()
@@ -82,8 +81,8 @@ class AbsencesTable extends ControllerActionTable
     }
 
     public function onGetSubjects(Event $event, Entity $entity)
-    {   
-        $InstitutionSubjects = TableRegistry::get('institution_subjects');
+    {
+        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
         $result = $InstitutionSubjects
             ->find()
             ->select(['name'])
@@ -95,33 +94,34 @@ class AbsencesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        if ($this->request->query('user_id') !== null) {
-            $staffId = $this->request->query('user_id');
+        if ($this->request->getQuery('user_id') !== null) {
+            $staffId = $this->request->getQuery('user_id');
             $this->Session->write('Staff.Staff.id', $staffId);
         } else {
             $staffId = $this->Session->read('Staff.Staff.id');
         }
 
         $academicPeriodList = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        if (empty($this->request->query['academic_period'])) {
-            $this->request->query['academic_period'] = $AcademicPeriod->getCurrent();
+        if (empty($this->request->getQuery('academic_period'))) {
+            $selectedPeriod = $AcademicPeriod->getCurrent();
+            //$this->request = $this->request->withQueryParams(['academic_period' => $selectedPeriod]);
+        } else {
+            $selectedPeriod = $this->request->getQuery('academic_period');
         }
-        $selectedPeriod = $this->request->query['academic_period'];
-
-        $this->request->query['academic_period'] = $selectedPeriod;
         $this->advancedSelectOptions($academicPeriodList, $selectedPeriod);
+        $dateFrom = $this->request->getQuery('dateFrom');
+        $dateTo = $this->request->getQuery('dateTo');
+        $selectedSubject = $this->request->getQuery('education_subject_id');
 
-
-        // $selectedPeriod = $this->request->query['academic_period_id'];
-        $dateFrom = $this->request->query['dateFrom'];
-        $dateTo = $this->request->query['dateTo'];
-        $selectedSubject = $this->request->query['education_subject_id'];
-
-        $this->request->query['academic_period_id'] = $selectedPeriod;
-        $this->request->query['dateFrom'] = $dateFrom;
-        $this->request->query['dateTo'] = $dateTo;
+        $this->request = $this->request->withQueryParams([
+            'academic_period' => $selectedPeriod,
+            'academic_period_id' => $selectedPeriod,
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo
+        ]);
 
         if ($selectedPeriod != 0) {
             $this->controller->set(compact('academicPeriodList', 'selectedPeriod'));
@@ -147,25 +147,37 @@ class AbsencesTable extends ControllerActionTable
             $dateFromOptions = ['-1' => __('Select Date from')] + $dateFromOptions;
 
             $dateToOptions = ['-1' => __('Select Date To')] + $dateToOptions;
-            $conditions = [
-                $this->aliasField('academic_period_id') => $selectedPeriod,
-                //$this->aliasField('institution_id') => $institutionId,
+            /*POCOR-6267 starts*/
+            if (!is_null($institutionId)) {
+                $conditions = [
+                    $this->aliasField('academic_period_id') => $selectedPeriod,
+                    $this->aliasField('institution_id') => $institutionId,
+                    $this->aliasField('absence_type_id !=') => 0
                 ];
-            if(!empty($this->request->query('dateFrom')) && $this->request->query('dateFrom') != '-1'){
+            } else {
+                $conditions = [
+                    $this->aliasField('academic_period_id') => $selectedPeriod,
+                    $this->aliasField('absence_type_id !=') => 0
+                ];
+            }
+            /*POCOR-6267 ends*/
+
+            if(!empty($this->request->getQuery('dateFrom')) && $this->request->getQuery('dateFrom') != '-1'){
                 $academicPeriodObj = $AcademicPeriod->get($selectedPeriod);
                 $startYear = $academicPeriodObj->start_year;
                 $endYear = $academicPeriodObj->end_year;
-                
+
                 if (date("Y") >= $startYear && date("Y") <= $endYear && !is_null($currentdateFrom)) {
-                    $selectedDateFrom = !is_null($this->request->query('dateFrom')) ? $this->request->query('dateFrom') : $currentdateFrom;
+                    $selectedDateFrom = !is_null($this->request->getQuery('dateFrom')) ? $this->request->getQuery('dateFrom') : $currentdateFrom;
                 } else {
                     $selectedDateFrom = $this->queryString('dateFrom', $dateFromOptions);
                 }
                 if (date("Y") >= $startYear && date("Y") <= $endYear) {
-                    $selectedDateTo = !is_null($this->request->query('dateTo')) ? $this->request->query('dateTo') : $currentdateTo;
+                    $selectedDateTo = !is_null($this->request->getQuery('dateTo')) ? $this->request->getQuery('dateTo') : $currentdateTo;
                 } else {
                     $selectedDateTo = $this->queryString('dateTo', $dateToOptions);
                 }
+
                 $weekStartDate = $dateFrom[$selectedDateFrom][0];
                 $weekEndDate = $dateFrom[$selectedDateTo][0];
                 $startDate = $weekStartDate;
@@ -183,11 +195,19 @@ class AbsencesTable extends ControllerActionTable
                     ];
                 }
                 $conditions = array_merge($conditions, $dateConditions);
-            }else{
-                $conditions = [
-                    $this->aliasField('academic_period_id') => $selectedPeriod,
-                    //$this->aliasField('institution_id') => $institutionId,
+            } else {
+                if (!is_null($institutionId)) {
+                    $conditions = [
+                        $this->aliasField('academic_period_id') => $selectedPeriod,
+                        $this->aliasField('institution_id') => $institutionId,
+                        $this->aliasField('absence_type_id !=') => 0//POCOR-7167
                     ];
+                } else {
+                    $conditions = [
+                        $this->aliasField('academic_period_id') => $selectedPeriod,
+                        $this->aliasField('absence_type_id !=') => 0//POCOR-7167
+                    ];
+                }
             }
 
             $this->advancedSelectOptions($dateFromOptions, $selectedDateFrom);
@@ -196,19 +216,18 @@ class AbsencesTable extends ControllerActionTable
             $this->advancedSelectOptions($dateToOptions, $selectedDateTo);
             $this->controller->set(compact('dateToOptions', 'selectedDateTo'));
 
-            
             $query
                 ->find('all')
                 ->where($conditions);
-                $extra['elements']['controls'] = ['name' => 'GuardianNav.Absences/controls', 'data' => [], 'options' => [], 'order' => 1];
+                $extra['elements']['controls'] = ['name' => 'GuardianNav.Absences/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
         }
     }
-    
+
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         parent::onUpdateActionButtons($event, $entity, $buttons);
         unset($buttons['edit']);
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             $institutionId = $entity->institution->id;
             $url = [
                 'plugin' => 'Institution',
@@ -221,13 +240,13 @@ class AbsencesTable extends ControllerActionTable
             $buttons['view']['url'] = $url;
 
             // POCOR-1893 unset the view button on profiles controller
-            if ($this->controller->name == 'Profiles') {
+            if ($this->controller->getName() == 'Profiles') {
                 unset($buttons['view']);
             }
             // end POCOR-1893
         }
-        
-        if (array_key_exists('remove', $buttons)) {
+
+        if (isset($buttons['remove'])) {
             $institutionId = $entity->institution->id;
             $url = [
                 'plugin' => 'Student',
@@ -239,7 +258,7 @@ class AbsencesTable extends ControllerActionTable
             $buttons['remove']['url'] = $url;
 
             // POCOR-5245 unset the view button on profiles controller
-            if ($this->controller->name == 'Profiles') {
+            if ($this->controller->getName() == 'Profiles') {
                 unset($buttons['remove']);
             }
             // end POCOR-5245
@@ -247,13 +266,13 @@ class AbsencesTable extends ControllerActionTable
 
         return $buttons;
     }
-    
+
     private function setupTabElements()
     {
         $options['type'] = 'student';
         $tabElements = $this->controller->getAcademicTabElements($options);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     public function indexAfterAction(Event $event, $data)
@@ -264,15 +283,15 @@ class AbsencesTable extends ControllerActionTable
     public function beforeFind( Event $event, Query $query )
     {
 		$userData = $this->Session->read();
-        $session = $this->request->session();//POCOR-6267
-        if ($userData['Auth']['User']['is_guardian'] == 1) { 
+        $session = $this->request->getSession();//POCOR-6267
+        if ($userData['Auth']['User']['is_guardian'] == 1) {
             /*POCOR-6267 starts*/
             if ($this->request->controller == 'GuardianNavs') {
                 $studentId = $session->read('Student.Students.id');
             }/*POCOR-6267 ends*/ else {
-                $sId = $userData['Student']['ExaminationResults']['student_id']; 
+                $sId = $userData['Student']['ExaminationResults']['student_id'];
                 if (!empty($sId)) {
-                    $studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+                    $studentId = $sId;
                 } else {
                     $studentId = $session->read('Student.Students.id');
                 }
@@ -292,18 +311,19 @@ class AbsencesTable extends ControllerActionTable
                 }
             }
         }
-		
-        $InstitutionStudentAbsenceDetails = TableRegistry::get('Institution.InstitutionStudentAbsenceDetails');
+
+        $tableLocator = new TableLocator();
+        $InstitutionStudentAbsenceDetails = $tableLocator->get('InstitutionStudentAbsenceDetails');
         $query
             ->find('all')
-            ->autoFields(true)
+            ->enableAutoFields(true)
             ->select([
                 'comment' => $InstitutionStudentAbsenceDetails->aliasField('comment'),
                 'periods' => $InstitutionStudentAbsenceDetails->aliasField('period'),
                 'subjects' => $InstitutionStudentAbsenceDetails->aliasField('subject_id')
             ])
             ->leftJoin(
-            [$InstitutionStudentAbsenceDetails->alias() => $InstitutionStudentAbsenceDetails->table()],
+            [$InstitutionStudentAbsenceDetails->getAlias() => $InstitutionStudentAbsenceDetails->getTable()],
             [
                 $InstitutionStudentAbsenceDetails->aliasField('student_id = ') . $this->aliasField('student_id'),
                 $InstitutionStudentAbsenceDetails->aliasField('date = ') . $this->aliasField('date'),
@@ -313,5 +333,5 @@ class AbsencesTable extends ControllerActionTable
             ]
         )->where($where);
     }
-    
+
 }

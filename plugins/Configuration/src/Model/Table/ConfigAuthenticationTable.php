@@ -3,7 +3,7 @@ namespace Configuration\Model\Table;
 
 use ArrayObject;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
@@ -17,10 +17,9 @@ class ConfigAuthenticationTable extends ControllerActionTable
     public $authenticationType;
     private $options = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        //print_r('hi'); die;
-        $this->table('config_items');
+        $this->setTable('config_items');
         parent::initialize($config);
         $this->addBehavior('Configuration.Authentication');
         $this->toggle('remove', false);
@@ -38,7 +37,7 @@ class ConfigAuthenticationTable extends ControllerActionTable
 
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         return $validator->add('value', 'ruleLocalLogin', [
                     'rule' => 'checkLocalLogin'
@@ -91,10 +90,10 @@ class ConfigAuthenticationTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request)
     {   //POCOR-7156 starts
         if (in_array($action, ['edit', 'add'])) {
-            $id= $this->paramsDecode($request->params['pass'][1]);
+            $id= $this->paramsDecode($request->getParam('pass')[1]);
             if (!empty($id)) {
                 $entity = $this->get($id);
                 $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');

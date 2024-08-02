@@ -25,6 +25,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         getAcademicPeriods: getAcademicPeriods,
         getEducationGrades: getEducationGrades,
         getClasses: getClasses,
+        getClassCapacity: getClassCapacity,
         getColumnDefs: getColumnDefs,
         getStudentData: getStudentData,
         postEnrolledStudent: postEnrolledStudent,
@@ -42,11 +43,8 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         resetExternalVariable: resetExternalVariable,
         getGenders: getGenders,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
-        getAddNewStudentConfig: getAddNewStudentConfig,
-        //start POCOR-6172-HINDOL
-        getMultipleInstitutionsStudentEnrollmentConfig: getMultipleInstitutionsStudentEnrollmentConfig,
-        //end POCOR-6172-HINDOL
-        getUserContactTypes: getUserContactTypes,
+        getConfigItemValue: getConfigItemValue,
+        getContactTypes: getContactTypes,
         getIdentityTypes: getIdentityTypes,
         getIdentityTypesExternalSave: getIdentityTypesExternalSave,
         getNationalities: getNationalities,
@@ -81,6 +79,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         getCspdData: getCspdData,
         getEducationGrade: getEducationGrade,
         getEducationGradeAddStudent: getEducationGradeAddStudent,
+        getStudentAdmissionStatus:getStudentAdmissionStatus,//POCOR-7716
     };
 
     var models = {
@@ -161,6 +160,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         let url = angular.baseUrl + '/Directories/directoryInternalSearch';
         $http.post(url, {params: param})
         .then(function(response){
+            // console.log(response);
             deferred.resolve(response);
         }, function(error) {
             deferred.reject(error);
@@ -233,29 +233,76 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
 
     function getAddressAreaId () {
         selectedAddressAreaId = $window.localStorage.getItem('address_area_id');
+        if (selectedAddressAreaId !== null) {  // localStorage returns null if the item is not found
+            try {
         return JSON.parse(selectedAddressAreaId);
+            } catch (e) {
+                console.error('Error parsing JSON from localStorage', e);
+                return null; // or handle the error as needed
+            }
+        } else {
+            // Handle the case where selectedBirthplaceAreaId is not found in localStorage
+            return null; // or any default value you prefer
+        }
+        return null;
     }
 
     function getAddressArea () {
         selectedAddressArea = $window.localStorage.getItem('address_area');
+        if (selectedAddressArea !== null) {  // localStorage returns null if the item is not found
+            try {
         return JSON.parse(selectedAddressArea);
+            } catch (e) {
+                console.error('Error parsing JSON from localStorage', e);
+                return null; // or handle the error as needed
+            }
+        } else {
+            // Handle the case where selectedBirthplaceAreaId is not found in localStorage
+            return null; // or any default value you prefer
+        }
+        return null;
     }
 
     function getBirthplaceAreaId () {
-        selectedBirthplcaeAreaId = $window.localStorage.getItem('birthplace_area_id');
-        return JSON.parse(selectedBirthplcaeAreaId);
+        selectedBirthplaceAreaId = $window.localStorage.getItem('birthplace_area_id');
+        if (selectedBirthplaceAreaId !== null) {  // localStorage returns null if the item is not found
+            try {
+                return JSON.parse(selectedBirthplaceAreaId);
+            } catch (e) {
+                console.error('Error parsing JSON from localStorage', e);
+                return null; // or handle the error as needed
+            }
+        } else {
+            // Handle the case where selectedBirthplaceAreaId is not found in localStorage
+            return null; // or any default value you prefer
+        }
+        return null;
     }
 
     function getBirthplaceArea () {
-        selectedBirthplcaeArea = $window.localStorage.getItem('birthplace_area');
-        return JSON.parse(selectedBirthplcaeArea);
+        selectedBirthplaceArea = $window.localStorage.getItem('birthplace_area');
+        if (selectedBirthplaceArea !== null) {  // localStorage returns null if the item is not found
+            try {
+                return JSON.parse(selectedBirthplaceArea);
+            } catch (e) {
+                console.error('Error parsing JSON from localStorage', e);
+                return null; // or handle the error as needed
+            }
+        } else {
+            // Handle the case where selectedBirthplaceAreaId is not found in localStorage
+            return null; // or any default value you prefer
+        }
+        return null;
     }
 
     function saveStudentDetails(param) {
+        // console.log(param);
         var deferred = $q.defer();
         let url = angular.baseUrl + '/Institutions/saveStudentData';
         $http.post(url, param)
         .then(function(response){
+            // console.log('saveStudentDetails OK');
+            // console.log(response);
             deferred.resolve(response);
         }, function(error) {
             deferred.reject(error);
@@ -609,7 +656,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
 
                         }
 
-                        
+
                         setTimeout(()=>{
                             modifiedUser['start_date'] = vm.formatDateForSaving(userRecord['start_date']);
                             StudentUser.edit(modifiedUser)
@@ -838,13 +885,15 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
 
     function getGenders()
     {
-        var success = function(response, deferred) {
-            var genderRecords = response.data.data;
-            deferred.resolve(genderRecords);
-        };
-        return Genders
-            .select()
-            .ajax({success:success, defer: true});
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/getGenders/';
+        $http.get(url)
+            .then(function(response){
+                deferred.resolve(response);
+            }, function(error) {
+                deferred.reject(error);
+            });
+        return deferred.promise;
     };
 
     function postEnrolledStudent(data) {
@@ -954,6 +1003,20 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         return deferred.promise;
     }
 
+    //POCOR-8170 -- Start
+    function getClassCapacity(param) {
+        var deferred = $q.defer();
+        let url = angular.baseUrl + '/Institutions/getClassCapacity';
+        $http.post(url, {params: param})
+        .then(function(response){
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    };
+    //POCOR-8170 -- End
+
     function getColumnDefs() {
         var filterParams = {
             cellHeight: 30
@@ -969,7 +1032,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
 
     function getUniqueOpenEmisId() {
         var deferred = $q.defer();
-        let url = angular.baseUrl + '/Institutions/getUniqueOpenemisId/Student';
+        let url = angular.baseUrl + '/Directories/getUniqueOpenemisId';
         $http.get(url)
         .then(function(response){
             deferred.resolve(response.data.openemis_no);
@@ -981,7 +1044,7 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
 
     function generatePassword() {
         var deferred = $q.defer();
-        let url = angular.baseUrl + '/Institutions/getAutoGeneratedPassword';
+        let url = angular.baseUrl + '/Directories/getAutoGeneratedPassword';
         $http.get(url)
         .then(function(response){
             deferred.resolve(response.data.password);
@@ -1019,20 +1082,31 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
             .where({type: 'Add New Student'})
             .ajax({defer: true});
     }
-
-    //POCOR-6172-HINDOL[START]
-    function getMultipleInstitutionsStudentEnrollmentConfig() {
-        return ConfigItems
-            .select()
-            .where({code: 'multiple_institutions_student_enrollment'})
-            .ajax({defer: true});
+    //POCOR-7716 start
+    function getStudentAdmissionStatus() {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Institutions/getStudentAdmissionStatus';
+        $http.get(url)
+            .then(function (response) {
+                // console.log(response);
+            deferred.resolve(response);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
     }
-    //POCOR-6172-HINDOL[END]
+    //POCOR-7716 end
 
-    function getUserContactTypes() {
-        return ContactTypes
-            .select()
-            .ajax({defer: true});
+    function getContactTypes() {
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/getContactType/';
+        $http.get(url)
+            .then(function(response){
+                deferred.resolve(response);
+            }, function(error) {
+                deferred.reject(error);
+            });
+        return deferred.promise;
     }
 
     function getIdentityTypes() {
@@ -1042,11 +1116,15 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
     }
 
     function getNationalities() {
-        return Nationalities
-            .select()
-            .contain(['IdentityTypes'])
-            .order(['Nationalities.order'])
-            .ajax({defer: true});
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Directories/getNationalities/';
+        $http.get(url)
+            .then(function(response){
+                deferred.resolve(response);
+            }, function(error) {
+                deferred.reject(error);
+            });
+        return deferred.promise;
     }
 
     function getSpecialNeedTypes() {
@@ -1128,11 +1206,15 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
      * @returns {Case 1: for None  [{"value":"None","showExternalSearch ":false}]}
     *  @returns {Case 2: for rest values [{"value":"OpenEMIS Identity","showExternalSearch ":true}]}
      */
-    function checkConfigForExternalSearch()
+    function checkConfigForExternalSearch(nationality_id, identity_type_id)
     {
         var deferred = $q.defer();
         let url = angular.baseUrl + '/Institutions/checkConfigurationForExternalSearch';
-        $http.get(url)
+        let params = {
+            'nationality_id' : nationality_id,
+            'identity_type_id' : identity_type_id
+        };
+        $http.post(url, {params: params})
             .then(function (response)
             {
                 deferred.resolve(response.data[0]);
@@ -1164,4 +1246,26 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
             });
         return deferred.promise;
     }
+
+    function getConfigItemValue(code) {
+        var success = function(response, deferred) {
+            var results = response.data.data;
+            if (angular.isObject(results) && results.length > 0) {
+                var configItemValue = (results[0].value.length > 0) ? results[0].value : results[0].default_value;
+                deferred.resolve(configItemValue);
+            } else {
+                deferred.reject('There is no ' + code + ' configured');
+            }
+        };
+
+        return ConfigItems
+            .where({
+                code: code
+            })
+            .ajax({
+                success: success,
+                defer: true
+            });
+    }
+
 };

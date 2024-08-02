@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use JWTAuth;
+use Tymon\JWTAuth\Facades\JWTFactory;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -44,6 +45,7 @@ use App\Models\AcademicPeriod;
 use App\Models\StudentStatuses;
 use App\Models\Nationalities;
 use App\Models\Workflows;
+use App\Models\WorkflowSteps;//POCOR-7716
 use App\Models\InstitutionStudentTransfers;
 use App\Models\UserNationalities;
 use App\Models\IdentityTypes;
@@ -63,6 +65,9 @@ use App\Models\StudentCustomField;
 use App\Models\UserContacts;
 use App\Models\StudentGuardians;
 use App\Models\OpenemisTemp;
+use App\Models\ExternalDatasourceAttribute;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Http;
 
 class UserRepository extends Controller
 {
@@ -71,22 +76,23 @@ class UserRepository extends Controller
         try {
             $params = $request->all();
 
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
-            
-            $users = SecurityUsers::with('identityType', 'nationalities', 'identities');
+            $users = SecurityUsers::with('identityType', 'nationalities', 'identities', 'institutionStaff', 'institutionStaff.staffPositionGrade');
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
                 $users = $users->orderBy($col, $orderBy);
             }
-            $list = $users->paginate($limit)->toArray();
-            
-            return $list;
-            
+
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $users->paginate($limit)->toArray();
+            } else{
+                $users = $users->get()->toArray();
+                $resp['data'] = $users;
+            }
+
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -111,7 +117,9 @@ class UserRepository extends Controller
                     'institutionStudent.studentStatus',
                     'identities',
                     'nationality',
-                    'identityType'
+                    'identityType',
+                    'institutionStaff',
+                    'institutionStaff.staffPositionGrade'
                 )
                     ->where('id', $userId)
                     ->get();
@@ -135,6 +143,8 @@ class UserRepository extends Controller
         DB::beginTransaction();
         try {
             $param = $request->all();
+
+            $param['date_of_birth'] = date("Y-m-d", strtotime($param['date_of_birth']));
             
             $param['is_diff_school'] = (array_key_exists('is_diff_school', $param)) ? $param['is_diff_school'] : 0;
 
@@ -147,15 +157,22 @@ class UserRepository extends Controller
             if(isset($param['end_date'])){
                 $end_date = date("Y-m-d", strtotime($param['end_date']));
             }
+
+            $start_year = Null;
+            $end_year = Null;
+            $academicPeriod = Null;
             
-            $academicPeriod = AcademicPeriod::where('id', $param['academic_period_id'])->first();
+            if(isset($param['academic_period_id'])){
+                $academicPeriod = AcademicPeriod::where('id', $param['academic_period_id'])->first();
 
-            if(!$academicPeriod){
-                return 2;
+                if(!$academicPeriod){
+                    return 2;
+                }
+
+                $start_year = $academicPeriod->start_year;
+                $end_year = $academicPeriod->end_year;
             }
-
-            $start_year = $academicPeriod->start_year;
-            $end_year = $academicPeriod->end_year;
+            
 
             //get prefered language
             $pref_lang = ConfigItem::where('code', 'language')->where('type', 'System')->first();
@@ -272,6 +289,7 @@ class UserRepository extends Controller
                             $checkUserNationality = UserNationalities::where('nationality_id', $nationality->id)->where('security_user_id', $user_record_id)->first();
 
                             if(!$checkUserNationality){
+                                $storeArr = [];
                                 $storeArr['id'] = Str::uuid();
                                 $storeArr['preferred'] = 1;
                                 $storeArr['nationality_id'] = $nationality->id;
@@ -287,12 +305,13 @@ class UserRepository extends Controller
                     if(isset($nationality->id) && ($param['identity_type_id'] && $param['identity_type_id'] != '') && ($param['identity_number'] && $param['identity_number'] != '')){
 
                         $identityTypes = IdentityTypes::where('name', $param['identity_type_name']??"")->first();
-
+                        
                         if($identityTypes){
                             $userIdentity = UserIdentities::where('nationality_id', $nationality->id)->where('identity_type_id', $param['identity_type_id'])->where('number', $param['identity_number'])->first();
                             
                             if(!$userIdentity){
-                                $storeArr['identity_type_id'] = $identityTypes->first();
+                                $storeArr = [];
+                                $storeArr['identity_type_id'] = $identityTypes->id;
                                 $storeArr['nationality_id'] = $nationality->id;
                                 $storeArr['number'] = $param['identity_number'];
                                 $storeArr['security_user_id'] = $user_record_id;
@@ -304,26 +323,26 @@ class UserRepository extends Controller
                         }
                     }
 
+                    if ((isset($param['student_admission_status_value']) && $param['student_admission_status_value'] == 0) || (isset($param['student_admission_status']) && strtolower($param['student_admission_status']) == "enrolled")) {//POCOR-7716
+                        if($param['education_grade_id'] && $param['academic_period_id'] && $param['institution_id']){
+                            $entityStudentsData = [
+                                'id' => Str::uuid(),
+                                'student_status_id' => $param['student_status_id']??1,
+                                'student_id' => $user_record_id,
+                                'education_grade_id' => $param['education_grade_id'],
+                                'academic_period_id' => $param['academic_period_id'],
+                                'start_date' => $start_date??null,
+                                'start_year' => $start_year??null,
+                                'end_date' => $end_date??null,
+                                'end_year' => $end_year??null,
+                                'institution_id' => $param['institution_id'],
+                                'created_user_id' => JWTAuth::user()->id,
+                                'created' => Carbon::now()->toDateTimeString()
+                            ];
 
-                    if($param['education_grade_id'] && $param['academic_period_id'] && $param['institution_id']){
-                        $entityStudentsData = [
-                            'id' => Str::uuid(),
-                            'student_status_id' => $param['student_status_id']??1,
-                            'student_id' => $user_record_id,
-                            'education_grade_id' => $param['education_grade_id'],
-                            'academic_period_id' => $param['academic_period_id'],
-                            'start_date' => $start_date??null,
-                            'start_year' => $start_year??null,
-                            'end_date' => $end_date??null,
-                            'end_year' => $end_year??null,
-                            'institution_id' => $param['institution_id'],
-                            'created_user_id' => JWTAuth::user()->id,
-                            'created' => Carbon::now()->toDateTimeString()
-                        ];
-
-                        $store = InstitutionStudent::insert($entityStudentsData);
+                            $store = InstitutionStudent::insert($entityStudentsData);
+                        }
                     }
-
 
 
                     $workflows = Workflows::join('workflow_steps', 'workflow_steps.workflow_id', '=', 'workflows.id')
@@ -331,7 +350,13 @@ class UserRepository extends Controller
                     ->where('workflows.name', 'Student Admission')
                     ->select('workflow_steps.id as workflowSteps_id')
                     ->first();
-
+                    $workflowStepId = $workflows->workflowSteps_id;
+                    if(isset($param['student_admission_status_value']) && isset($param['student_admission_status'])){ //POCOR-8184
+                        if ($param['student_admission_status_value'] !== 0 && strtolower($param['student_admission_status']) !== "enrolled") {
+                            $workflowStepId = $param['student_admission_status_value'];
+                        }
+                    }
+                    
 
 
                     if (!empty($param['education_grade_id']) && !empty($param['institution_id']) && !empty($param['academic_period_id']) && !empty($param['institution_class_id']) && !empty($workflows)) {
@@ -339,7 +364,7 @@ class UserRepository extends Controller
                             'start_date' => $start_date??null,
                             'end_date' => $end_date??null,
                             'student_id' => $user_record_id,
-                            'status_id' => $workflows->workflowSteps_id,
+                            'status_id' =>  $workflowStepId,
                             'assignee_id' => JWTAuth::user()->id, //POCOR7080
                             'institution_id' => $param['institution_id']??"",
                             'academic_period_id' => $param['academic_period_id'],
@@ -354,8 +379,8 @@ class UserRepository extends Controller
 
 
 
-                    if($param['education_grade_id'] && $param['academic_period_id'] && $param['institution_id'] && $param['institution_class_id']){
-                        $entityAdmissionData = [
+                    if(isset($param['education_grade_id']) && isset($param['academic_period_id']) && isset($param['institution_id']) && isset($param['institution_class_id'])){
+                        $entityClassData = [
                             'id' => Str::uuid(),
                             'student_id' => $user_record_id,
                             'institution_class_id' => $param['institution_class_id'],
@@ -368,7 +393,7 @@ class UserRepository extends Controller
                         ];
                         $check = InstitutionClassStudents::where('student_id', $user_record_id)->where('institution_class_id', $param['institution_class_id'])->where('education_grade_id', $param['education_grade_id'])->first();
                         if(!$check){
-                            $store = InstitutionClassStudents::insert($entityAdmissionData);
+                            $store = InstitutionClassStudents::insert ($entityClassData);
                         } else {
                             $update = InstitutionClassStudents::where('student_id', $user_record_id)
                                 ->where('institution_class_id', $param['institution_class_id'])
@@ -381,7 +406,7 @@ class UserRepository extends Controller
                     }
 
 
-                    if($param['education_grade_id'] && $param['academic_period_id'] && $param['institution_id'] && $param['institution_class_id']){
+                    if(isset($param['education_grade_id']) && isset($param['academic_period_id']) && isset($param['institution_id']) && isset($param['institution_class_id'])){
                         $instClsSubjects = InstitutionClassSubjects::select(
                             'institution_class_id',
                             'institution_subject_id',
@@ -490,11 +515,27 @@ class UserRepository extends Controller
     public function getUsersGender($request)
     {
         try {
-            
-            $usersGender = Gender::get();
-            
-            return $usersGender;
-            
+            $params = $request->all();
+
+            $usersGender = new Gender();
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $usersGender = $usersGender->orderBy($col, $orderBy);
+            }
+                        
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $usersGender->paginate($limit)->toArray();
+                
+            } else {
+                $list = $usersGender->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
+            return $list;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Users Gender list from DB',
@@ -559,24 +600,29 @@ class UserRepository extends Controller
 
 
                 //Checking if values exists start...
-
-                $staffType = StaffTypes::where('id', $staffTypeId)->first();
-                if(empty($staffType)){
-                    return 3; //Staff type don't exists...
+                if(isset($staffTypeId)){
+                    $staffType = StaffTypes::where('id', $staffTypeId)->first();
+                    if(empty($staffType)){
+                        return 3; //Staff type don't exists...
+                    }
                 }
-
                 
-                $staffPositionGrade = DB::table('staff_position_grades')->where('id', $staff_position_grade_id)->first();
-                if(empty($staffPositionGrade)){
-                    return 4; //Staff position grade don't exists...
-                }
 
-                
-                $institutionPosition = DB::table('institution_positions')->where('id', $institutionPositionId)->where('institution_id', $institutionId)->first();
-                if(empty($institutionPosition)){
-                    return 5; //Institution Position don't exists...
+                if(isset($staff_position_grade_id) && $staff_position_grade_id > 0){
+                    $staffPositionGrade = DB::table('staff_position_grades')->where('id', $staff_position_grade_id)->first();
+                    if(empty($staffPositionGrade)){
+                        return 4; //Staff position grade don't exists...
+                    }
                 }
-                //Checking if values exists end...
+                
+
+                if(isset($institutionId) && isset($institutionPositionId)){
+                    $institutionPosition = DB::table('institution_positions')->where('id', $institutionPositionId)->where('institution_id', $institutionId)->first();
+                    if(empty($institutionPosition)){
+                        return 5; //Institution Position don't exists...
+                    }
+                }
+                
 
 
 
@@ -603,6 +649,11 @@ class UserRepository extends Controller
                 //get Student Status List
                 $statuses = StaffStatuses::pluck('id', 'code')->toArray();
                 
+
+                //For POCOR-8184 Start
+                $dateOfBirth = date("Y-m-d", strtotime($requestData['date_of_birth']));
+                
+                //For POCOR-8184 End
 
                 //get nationality data
                 $nationalities = '';
@@ -637,6 +688,7 @@ class UserRepository extends Controller
 
 
                 if ($isSameSchool == 1) {
+                    
                     $CheckStaffExist = SecurityUsers::where(['openemis_no' => $openemisNo
                         ])->first();
 
@@ -861,6 +913,7 @@ class UserRepository extends Controller
                     }
 
                 } elseif($isDiffSchool == 1) {
+                    
                     $workflowResults = Workflows::join('workflow_steps', 'workflow_steps.workflow_id', '=', 'workflows.id')
                         ->where('workflow_steps.name', 'Open')
                         ->where('workflows.name', 'Staff Transfer - Receiving')
@@ -1156,7 +1209,7 @@ class UserRepository extends Controller
                 'Failed to store staff data.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
+            
             return $this->sendErrorResponse('Failed to store staff data.');
         }
     }
@@ -1203,12 +1256,15 @@ class UserRepository extends Controller
                 $pref_lang = ConfigItem::where(['code' => 'language','type' => 'System'])->first();
 
                 //Check guardian relation id...
-                if($guardianRelationId){
+                if(isset($guardianRelationId)){
+                    if($guardianRelationId){
                     $check = DB::table('guardian_relations')->where('id', $guardianRelationId)->first();
-                    if(empty($check)){
-                        return 3; //Guardian Relation Id is invalid...
+                        if(empty($check)){
+                            return 3; //Guardian Relation Id is invalid...
+                        }
                     }
                 }
+                
 
                 //get nationality data
                 $nationalities = '';
@@ -1240,41 +1296,72 @@ class UserRepository extends Controller
                 }
 
 
-                
+                $dateOfBirth = date("Y-m-d", strtotime($requestData['date_of_birth']));
                 
                 if (!empty($openemisNo)) {
                     
                     $CheckGaurdianExist = SecurityUsers::where(['openemis_no' => $openemisNo])->first();
-                    $existGaurdianId = $CheckGaurdianExist->id;
 
-                    $entityData = [
-                        'id' => !empty($existGaurdianId) ? $existGaurdianId : '',
-                        //'openemis_no' => $openemisNo,
-                        'openemis_no' => $CheckGaurdianExist->openemis_no??$openemisNo,
-                        'first_name' => $firstName,
-                        'middle_name' => $middleName,
-                        'third_name' => $thirdName,
-                        'last_name' => $lastName,
-                        'preferred_name' => $preferredName,
-                        'gender_id' => $genderId,
-                        'date_of_birth' => $dateOfBirth,
-                        'nationality_id' => !empty($nationalityId) ? $nationalityId : Null,
-                        'preferred_language' => $pref_lang->value,
-                        'username' => $username,
-                        'password' => $password,
-                        'address' => $address,
-                        'address_area_id' => $addressAreaId,
-                        'birthplace_area_id' => $birthplaceAreaId,
-                        'postal_code' => $postalCode,
-                        'photo_name' => $photoName,
-                        'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
-                        'is_guardian' => 1,
-                        'created_user_id' => $userId,
-                        'created' => date('Y-m-d H:i:s'),
-                    ];
+                    if($CheckGaurdianExist){
+                        $existGaurdianId = $CheckGaurdianExist->id;
 
-                    $SecurityUserResult = $CheckGaurdianExist;
-                    $securityUserUpdate = SecurityUsers::where('id', $CheckGaurdianExist->id)->update($entityData);
+                        $entityData = [
+                            'id' => !empty($existGaurdianId) ? $existGaurdianId : '',
+                            //'openemis_no' => $openemisNo,
+                            'openemis_no' => $CheckGaurdianExist->openemis_no??$openemisNo,
+                            'first_name' => $firstName,
+                            'middle_name' => $middleName,
+                            'third_name' => $thirdName,
+                            'last_name' => $lastName,
+                            'preferred_name' => $preferredName,
+                            'gender_id' => $genderId,
+                            'date_of_birth' => $dateOfBirth,
+                            'nationality_id' => !empty($nationalityId) ? $nationalityId : Null,
+                            'preferred_language' => $pref_lang->value,
+                            'username' => $username,
+                            'password' => $password,
+                            'address' => $address,
+                            'address_area_id' => $addressAreaId,
+                            'birthplace_area_id' => $birthplaceAreaId,
+                            'postal_code' => $postalCode,
+                            'photo_name' => $photoName,
+                            'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                            'is_guardian' => 1,
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s'),
+                        ];
+
+                        $SecurityUserResult = $CheckGaurdianExist;
+                        $securityUserUpdate = SecurityUsers::where('id', $CheckGaurdianExist->id)->update($entityData);
+                    } else {
+                        $entityData = [
+                            'openemis_no' => $openemisNo??Null,
+                            'first_name' => $firstName,
+                            'middle_name' => $middleName,
+                            'third_name' => $thirdName,
+                            'last_name' => $lastName,
+                            'preferred_name' => $preferredName,
+                            'gender_id' => $genderId,
+                            'date_of_birth' => $dateOfBirth,
+                            'nationality_id' => !empty($nationalityId) ? $nationalityId : Null,
+                            'preferred_language' => $pref_lang->value,
+                            'username' => $username,
+                            'password' => $password,
+                            'address' => $address,
+                            'address_area_id' => $addressAreaId,
+                            'birthplace_area_id' => $birthplaceAreaId,
+                            'postal_code' => $postalCode,
+                            'photo_name' => $photoName,
+                            'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
+                            'is_guardian' => 1,
+                            'created_user_id' => $userId,
+                            'created' => date('Y-m-d H:i:s'),
+                        ];
+                        
+                        $securityUserId = SecurityUsers::insertGetId($entityData);
+                        $SecurityUserResult = SecurityUsers::where('id', $securityUserId)->first();
+                    }
+                    
                 } else {
 
                     $openemis_no = $this->getNewOpenemisNo();
@@ -1297,7 +1384,7 @@ class UserRepository extends Controller
                         'postal_code' => $postalCode,
                         'photo_name' => $photoName,
                         'photo_content' => !empty($photoContent) ? file_get_contents($photoContent) : '',
-                        'is_staff' => 1,
+                        'is_guardian' => 1,
                         'created_user_id' => $userId,
                         'created' => date('Y-m-d H:i:s'),
                     ];
@@ -1397,7 +1484,7 @@ class UserRepository extends Controller
                 'Failed to store guardian data.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
+            
             return $this->sendErrorResponse('Failed to store guardian data.');
         }
     }
@@ -1472,5 +1559,398 @@ class UserRepository extends Controller
             return $this->sendErrorResponse('Failed to get new openemis number.');
         }
     }
-}
 
+
+
+    //pocor-7545 starts
+    public function addUsers($request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+
+            if(isset($data['id']) && $data['id'] != ""){
+                $check = SecurityUsers::where('id', $data['id'])->first();
+                if(!$check){
+                    return 2;
+                }
+
+                $id = $data['id'];
+                unset($data['id']);
+                $data['modified_user_id'] = JWTAuth::user()->id;
+                $data['modified'] = Carbon::now()->toDateTimeString();
+                $update = SecurityUsers::where('id', $id)->update($data);
+            } else {
+                $userData = $this->setUserData($data);
+                if(count($userData) > 0){
+                    $insert = SecurityUsers::insert($userData);
+                }
+            }
+
+            DB::commit();
+            return 1;
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error(
+                'User is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('User is not created/updated successfully.');
+        }
+    }
+
+
+
+    public function setUserData($params)
+    {
+        try {
+            $userArr = [];
+            if(count($params) > 0){
+                $userArr['username'] = $params['username']??"";
+                $userArr['password'] = $params['password']??"";
+                $userArr['openemis_no'] = $params['openemis_no']??"";
+                $userArr['first_name'] = $params['first_name'];
+                $userArr['middle_name'] = $params['middle_name']??"";
+                $userArr['third_name'] = $params['third_name']??"";
+                $userArr['last_name'] = $params['last_name'];
+                $userArr['preferred_name'] = $params['preferred_name']??"";
+                $userArr['email'] = $params['email']??"";
+                $userArr['address'] = $params['address']??"";
+                $userArr['postal_code'] = $params['postal_code']??"";
+                $userArr['address_area_id'] = $params['address_area_id']??Null;
+                $userArr['birthplace_area_id'] = $params['birthplace_area_id']??Null;
+                $userArr['gender_id'] = $params['gender_id'];
+                $userArr['date_of_birth'] = $params['date_of_birth'];
+                $userArr['date_of_death'] = $params['date_of_death']??Null;
+                $userArr['nationality_id'] = $params['nationality_id']??Null;
+                $userArr['identity_type_id'] = $params['identity_type_id']??Null;
+                $userArr['identity_number'] = $params['identity_number']??Null;
+                $userArr['status'] = $params['status']??1;
+                $userArr['external_reference'] = $params['external_reference']??Null;
+                $userArr['super_admin'] = $params['super_admin']??0;
+                $userArr['last_login'] = $params['last_login']??Null;
+                $userArr['photo_name'] = $params['photo_name']??Null;
+                
+                if(isset($params['photo_content'])){
+                    $userArr['photo_content'] = file_get_contents($params['photo_content']);
+                }
+                $userArr['preferred_language'] = $params['preferred_language']??"en";
+                $userArr['is_student'] = $params['is_student']??0;
+                $userArr['is_staff'] = $params['is_staff']??0;
+                $userArr['is_guardian'] = $params['is_guardian']??0;
+
+                $userArr['created_user_id'] = JWTAuth::user()->id;
+                $userArr['created'] = Carbon::now()->toDateTimeString();
+            }
+            
+            return $userArr;
+            
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+    //pocor-7545 ends
+    //POCOR-7716 start
+    public function getStudentAdmissionStatus()
+    {
+        try {
+            $configItemResult = ConfigItem::where('code', 'student_admission_status')->first();
+            $studentStatus = !empty($configItemResult->value) ? $configItemResult->value : $configItemResult->default_value;
+            
+            if ($studentStatus == 0) {
+                $result_array[] = ["id" => 0, "name" => "Enrolled"];
+            } else {
+                $status = WorkflowSteps::findOrFail($studentStatus)->name;
+                $result_array[] = ["id" => $studentStatus, "name" => $status];
+            }
+            return $result_array;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Student Admission Status.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to get Student Admission Status.');
+        }
+        
+    }
+    //POCOR-7716 end
+
+
+
+    //POCOR-8136 start
+    public function getUserPermissions()
+    {
+        try {
+            $permissions = checkAccess();
+            $list = [];
+            if(isset($permissions)){
+                $list = $permissions;
+            }
+            return $list;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get User Permissions List.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('User Permissions List Not Found.');
+        }
+    }
+    //POCOR-8136 end
+
+
+    //POCOR-8139 Starts
+
+    public function externalDataSources($request)
+    {
+        try {
+            $params = $request->all();
+            
+            $authToken = $request->header('authorization');
+
+            $authToken = str_replace("Bearer ", "", $authToken);
+            //dd($authToken);
+
+            $attributes = ExternalDatasourceAttribute::join('config_items', 'config_items.value', '=', 'external_data_source_attributes.external_data_source_type')
+                ->where('config_items.code', '=', 'external_data_source_type')
+                ->pluck('external_data_source_attributes.value', 'attribute_field')
+                ->toArray();
+
+            if(count($attributes) > 0){
+                $clientId = $attributes['client_id'];
+                $scope = $attributes['scope'];
+                $tokenUri = $attributes['token_uri'];
+                $privateKey = $attributes['private_key'];
+
+                //$token = $this->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
+
+                $token = $params['access_token'];
+
+                $data = [
+                    'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                    'assertion' => $token
+                ];
+
+                $requestData = $params;
+                $firstName = (array_key_exists('first_name', $requestData))? $requestData['first_name']: null;
+                $lastName = (array_key_exists('last_name', $requestData))? $requestData['last_name']: null;
+                $openemisNo = (array_key_exists('openemis_no', $requestData))? $requestData['openemis_no']: null;
+                $identityNumber = (array_key_exists('identity_number', $requestData))? $requestData['identity_number']: null;
+                $dateOfBirth = (array_key_exists('date_of_birth', $requestData) && !empty($requestData['date_of_birth']))? date('Y-m-d', strtotime($requestData['date_of_birth'])): null;
+                $limit = (array_key_exists('limit', $requestData)) ? $requestData['limit']: 10;
+                $page = (array_key_exists('page', $requestData)) ? $requestData['page']: 1;
+                $id = (array_key_exists('id', $requestData)) ? $requestData['id']: '';
+
+
+                if(!empty($identityNumber)){
+                    $fieldMapping = [
+                        '{page}' => $page,
+                        '{limit}' => $limit,
+                        '{first_name}' => '',
+                        '{last_name}' => '',
+                        '{date_of_birth}' => '',
+                        '{identity_number}' => $identityNumber
+                    ];//POCOR-5672 ends
+                }else{
+                    $fieldMapping = [
+                        '{page}' => $page,
+                        '{limit}' => $limit,
+                        '{first_name}' => $firstName,
+                        '{last_name}' => $lastName,
+                        '{date_of_birth}' => $dateOfBirth,
+                        '{identity_number}' => $identityNumber
+                    ];
+                }
+
+                $response = HTTP::post($attributes['token_uri'], $data);
+                
+
+                $noData['data'] = [];
+                $noData['total'] = 0;
+
+
+
+                if ($response->ok()) {
+                    $body = $response->body('json_decode');
+                    $body = json_decode($body);
+                    
+                    $recordUri = $attributes['record_uri'];
+
+                    foreach ($fieldMapping as $key => $map) {
+                        $recordUri = str_replace($key, $map, $recordUri);
+                    }
+
+                    //$newToken = $this->getJwtToken($clientId, $scope, $tokenUri, $privateKey);
+                    
+                    $response = HTTP::withHeaders(['Authorization' => $body->token_type.' '.$body->access_token]
+                    )->get($recordUri);
+                    
+                    
+                    if ($response->ok()) {
+                        $body = $response->body('json_decode');
+                        $body = json_decode($body);
+                        return $body;
+                    } else {
+                        return $noData;
+                    }
+                } else {
+                    return $noData;
+                }
+
+            } else {
+                return [];
+            }
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get data from external data sources.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get data from external data sources.');
+        }
+    }
+    
+
+
+    public function generateServerAuthorisationToken($clientId, $scope, $tokenUri, $encryptedPrivateKey)
+    {
+        try {
+            $user = JWTAuth::user();
+
+            $keyAndSecret = explode('.', $encryptedPrivateKey);
+            $privateKey = '';
+            if (count($keyAndSecret) == 2) {
+                list($privateKey, $secret) = $keyAndSecret;
+
+                /*$secret = openssl_private_decrypt($this->urlsafeB64Decode($secret), $protectedKey, Configure::read('Application.private.key'));
+                if ($secret) {
+                    $privateKey = Security::decrypt($this->urlsafeB64Decode($privateKey), $protectedKey);
+                }*/
+
+                $privateKey = config('constantvalues.identity_privatekey');
+
+            }
+
+            $exp = intval(strtotime(Date("H:i:s"))) + 3600;
+            $iat = strtotime(Date("H:i:s"));
+
+            
+
+            $payload = json_encode([
+                'iss' => $clientId,
+                'scope' => $scope,
+                'aud' => $tokenUri,
+                'exp' => $exp,
+                'iat' => $iat
+            ]);
+
+            $header = json_encode([
+                'typ' => 'JWT',
+                'alg' => 'RS256'
+            ]);
+
+
+            $base64UrlHeader = $this->base64UrlEncode($header);
+            $base64UrlPayload = $this->base64UrlEncode($payload);
+            //dd($base64UrlPayload);
+            $signature = hash_hmac('sha256', "$base64UrlHeader.$base64UrlPayload", $privateKey, true); 
+
+            $privateKeyId = openssl_pkey_get_private($privatekey);
+            dd($privateKeyId); 
+
+
+            $base64UrlSignature = $this->base64UrlEncode($signature);
+            
+
+            $token = "$base64UrlHeader.$base64UrlPayload.$base64UrlSignature";
+
+            //dd("JWT: ",$jwt);
+
+            //$token = JWTAuth::encode(JWTFactory::make( $payload2 ), $privateKey, 'RS256');
+            
+            return $token;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in generateServerAuthorisationToken.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return false;
+        }
+    }
+
+
+    public function urlsafeB64Decode($input)
+    {
+        $str = $input;
+        $remainder = strlen($input) % 4;
+        if ($remainder) {
+            $padlen = 4 - $remainder;
+            $input .= str_repeat('=', $padlen);
+        }
+        
+        return base64_decode(strtr($input, '-_', '+/'));
+    }
+
+    public function base64UrlEncode($text)
+    {   
+        return str_replace(
+            ['+', '/', '='],
+            ['-', '_', ''],
+            base64_encode($text)
+        );
+    }
+
+
+
+    public function getJwtToken($clientId, $scope, $tokenUri, $encryptedPrivateKey)
+    {
+        try {
+
+            $privateKey = config('constantvalues.identity_privatekey');
+            $exp = intval(strtotime(Date("H:i:s"))) + 3600;
+            $iat = strtotime(Date("H:i:s"));
+
+            
+
+            $payload = json_encode([
+                'iss' => $clientId,
+                'scope' => $scope,
+                'aud' => $tokenUri,
+                'exp' => $exp,
+                'iat' => $iat
+            ]);
+
+            $header = json_encode([
+                'typ' => 'JWT',
+                'alg' => 'HS256'
+            ]);
+
+
+            $base64UrlHeader = $this->base64UrlEncode($header);
+            $base64UrlPayload = $this->base64UrlEncode($payload);
+            //dd($base64UrlPayload);
+            $signature = hash_hmac('sha256', "$base64UrlHeader.$base64UrlPayload", $privateKey, true);  
+
+
+            $base64UrlSignature = $this->base64UrlEncode($signature);
+            
+
+            $token = "$base64UrlHeader.$base64UrlPayload.$base64UrlSignature";
+
+            return $token;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in getJwtToken.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return false;
+        }
+    }
+    //POCOR-8139 Ends
+}

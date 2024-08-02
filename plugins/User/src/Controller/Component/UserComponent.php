@@ -17,14 +17,14 @@ class UserComponent extends Component
     private $controller = null;
 
     public $components = ['Area.Areapicker'];
-    
-    public function initialize(array $config)
+
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->controller = $this->_registry->getController();
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $event = parent::implementedEvents();
         $event['Controller.Page.onRenderPhotoContent'] = 'onRenderPhotoContent';
@@ -34,8 +34,8 @@ class UserComponent extends Component
         return $event;
     }
 
-    public function beforeFilter(Event $event)
-    {   
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    {
         $request = $this->request;
         $action = $request->action;
 
@@ -45,21 +45,21 @@ class UserComponent extends Component
             $this->renderIndex();
         } else if ($action == 'view') {
             $this->renderView();
-       
+
         }
     }
 
-    public function renderIndex() 
+    public function renderIndex()
     {
         $this->controller->Page->exclude(['first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'email','address', 'postal_code', 'address_area_id', 'birthplace_area_id', 'nationality_id', 'photo_content']);
     }
 
-    public function renderView() 
+    public function renderView()
     {
         $this->controller->Page->get('photo_content')
                         ->setAttributes('fileNameField', 'photo_name')
                         ->setAttributes('type', 'image');
-                
+
         $this->controller->Page->addNew('information')
                         ->setControlType('section');
         $this->controller->Page->addNew('location')
@@ -72,13 +72,13 @@ class UserComponent extends Component
                         ->setControlType('section');
 
 
-        $this->controller->Page->move('information')->first();            
+        $this->controller->Page->move('information')->first();
         $this->controller->Page->move('photo_content')->after('information');
         $this->controller->Page->move('email')->after('identity_number');
-        $this->controller->Page->move('location')->after('email'); 
-        $this->controller->Page->move('address')->after('location'); 
-        $this->controller->Page->move('postal_code')->after('address'); 
-       
+        $this->controller->Page->move('location')->after('email');
+        $this->controller->Page->move('address')->after('location');
+        $this->controller->Page->move('postal_code')->after('address');
+
         $this->controller->Page->move('address_area')->after('postal_code');
         $this->controller->Page->move('address_area_id')->after('address_area');
         $this->controller->Page->move('birthplace_area')->after('address_area_id');
@@ -105,12 +105,12 @@ class UserComponent extends Component
     }
 
     public function onRenderPhotoContent(Event $event, Entity $entity, PageElement $element)
-    { 
+    {
         $fileContent = $entity->photo_content;
         $userEntity = $entity;
-        
+
         if (empty($fileContent) && is_null($fileContent)) {
-            
+
             $element->setControlType('string');
 
             if (($userEntity) && $userEntity->is_student) {
@@ -122,7 +122,7 @@ class UserComponent extends Component
             } else {
                    $value = $this->defaultUserProfileIndex;
             }
-        } 
+        }
         return $value;
     }
 }

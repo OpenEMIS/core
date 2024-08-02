@@ -12,7 +12,7 @@ use Cake\Core\Configure;
 
 class ExternalDataSourceAttributesTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -45,7 +45,7 @@ class ExternalDataSourceAttributesTable extends ControllerActionTable
         $ConfigItemTable = TableRegistry::get('ConfigItems');
         $externalSourceType = $ConfigItemTable
             ->find()
-            ->select([$ConfigItemTable->aliasField('value')])
+            ->select([$ConfigItemTable->aliasField('name')]) // POCOR-7981
             ->where([$ConfigItemTable->aliasField('code') => 'external_data_source_type'])
             ->first();
 
@@ -89,14 +89,14 @@ class ExternalDataSourceAttributesTable extends ControllerActionTable
 
     public function findUri(Query $query, array $options = [])
     {
-        $ConfigItemTable = TableRegistry::get('ConfigItems');
+        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
         $externalSourceType = $ConfigItemTable
             ->find()
-            ->select([$ConfigItemTable->aliasField('value')])
+            ->select([$ConfigItemTable->aliasField('name')]) // POCOR-7981
             ->where([$ConfigItemTable->aliasField('code') => 'external_data_source_type'])
             ->first();
 
-        $externalSourceType = $externalSourceType['value'];
+        $externalSourceType = $externalSourceType['name']; // POCOR-7981
         $attributeField = isset($options['record_type']) ? $options['record_type'] : null;
         return $query
             ->select([$this->aliasField('value')])

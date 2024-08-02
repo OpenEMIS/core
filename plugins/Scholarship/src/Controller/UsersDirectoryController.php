@@ -7,15 +7,16 @@ use App\Controller\PageController;
 
 class UsersDirectoryController extends PageController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Scholarship.UsersDirectory');
         $this->loadComponent('User.User');
+        $this->loadComponent('Page.Page');
         $this->Page->loadElementsFromTable($this->UsersDirectory);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $event = parent::implementedEvents();
         $event['Controller.Page.getEntityRowActions'] = 'getEntityRowActions';
@@ -23,7 +24,7 @@ class UsersDirectoryController extends PageController
         return $event;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
         parent::beforeFilter($event);
@@ -73,7 +74,7 @@ class UsersDirectoryController extends PageController
 
         $page->addToolbar('back', []); // to fix the order of the buttons
 
-        if ($this->AccessControl->check(['Scholarships', 'Applications', 'add'])) { 
+        if ($this->AccessControl->check(['Scholarships', 'Applications', 'add'])) {
             $page->addToolbar('Apply', [
                 'type' => 'element',
                 'element' => 'Page.button',

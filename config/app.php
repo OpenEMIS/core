@@ -9,8 +9,8 @@ return [
      * Development Mode:
      * true: Errors and warnings shown.
      */
-    //'debug' => filter_var(env('DEBUG', false), FILTER_VALIDATE_BOOLEAN),
-    'debug' => false,
+    'debug' => filter_var(env('DEBUG', false), FILTER_VALIDATE_BOOLEAN),
+    //'debug' => true,
 
     /**
      * Configure basic information about the application.
@@ -76,7 +76,7 @@ return [
      * enable timestamping regardless of debug value.
      */
     'Asset' => [
-        // 'timestamp' => true,
+         'timestamp' => true,
     ],
 
     /**
@@ -113,6 +113,15 @@ return [
             'className' => 'File',
             'prefix' => 'myapp_cake_model_',
             'path' => CACHE . 'models/',
+            'serialize' => true,
+            'duration' => '+2 minutes',
+            'url' => env('CACHE_CAKEMODEL_URL', null),
+        ],
+
+        '_cake_routes_' => [
+            'className' => 'File',
+            'prefix' => 'myapp_cake_routes_',
+            'path' => CACHE . 'routes/',
             'serialize' => true,
             'duration' => '+2 minutes',
             'url' => env('CACHE_CAKEMODEL_URL', null),
@@ -281,7 +290,8 @@ return [
             'database' => 'test_myapp',
             'encoding' => 'utf8',
             'timezone' => 'UTC',
-            'cacheMetadata' => true,
+            //'cacheMetadata' => true,
+            'cacheMetadata' => false,
             'quoteIdentifiers' => false,
             'log' => false,
             //'init' => ['SET GLOBAL innodb_stats_on_metadata = 0'],
@@ -306,7 +316,7 @@ return [
             'file' => 'error',
             'levels' => ['warning', 'error', 'critical', 'alert', 'emergency'],
             'url' => env('LOG_ERROR_URL', null),
-        ],  
+        ],
     ],
 
     /**
@@ -355,5 +365,12 @@ return [
     'installerCore' => true,
     'installerSchool' => false,
     'installerCensus' => false,
-    'installerVaccinations' => false
+    'installerVaccinations' => false,
+    //POCOR-7485 for angular build start
+    'BUILD_MAIN' => define('BUILD_MAIN', 'angular/main.e960dd01416aada109b0'),
+    'BUILD_POLYFILLS' => define('BUILD_POLYFILLS', 'angular/polyfills.0947d4c9434ec41ea5bf'),
+    'BUILD_RUNTIME' => define('BUILD_RUNTIME', 'angular/runtime.7b63b9fd40098a2e8207'),
+    'BUILD_SCRIPTS' => define('BUILD_SCRIPTS', 'angular/scripts.986023b5d731304047cb'),
+    'STYLE_GUIDE' => define('STYLE_GUIDE', 'angular/main/styles.da9cec2553232f6df040')
+    //POCOR-7485 for angular build end
 ];

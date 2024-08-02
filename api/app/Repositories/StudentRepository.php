@@ -14,6 +14,7 @@ use App\Models\InstitutionClasses;
 use App\Models\StudentAttendanceMarkedRecords;
 use App\Models\InstitutionStaffAttendances;
 use App\Models\SecurityUsers;
+use App\Models\InstitutionClassStudents;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -24,13 +25,22 @@ class StudentRepository extends Controller
     public function getStudents($request)
     {
         try {
-            $params = $request->all();
 
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['super_admin'] != 1){
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
+                }
             }
+            //For POCOR-7772 End
+
+            $params = $request->all();
 
             $list = InstitutionStudent::with('institution:id,code,name', 'educationGrade:id,name', 'securityUser', 'securityUser.gender:id,name', 'studentStatus', 'academicPeriod:id,name');
 
@@ -40,13 +50,28 @@ class StudentRepository extends Controller
                 $list = $list->where('academic_period_id', $academic_period_id);
             }
 
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $list = $list->whereIn('institution_students.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
                 $list = $list->orderBy($col, $orderBy);
             }
-            $list = $list->paginate($limit)->toArray();
-            return $list;
+
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
+            return $resp;
 
         } catch (\Exception $e) {
             Log::error(
@@ -63,13 +88,22 @@ class StudentRepository extends Controller
     public function getInstitutionStudents($request, $institutionId)
     {
         try {
-            $params = $request->all();
 
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['super_admin'] != 1){
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
+                }
             }
+            //For POCOR-7772 End
+
+            $params = $request->all();
 
             $list = InstitutionStudent::with('institution:id,code,name', 'educationGrade:id,name', 'securityUser', 'securityUser.gender:id,name', 'studentStatus', 'academicPeriod:id,name')->where('institution_id', $institutionId);
 
@@ -79,14 +113,28 @@ class StudentRepository extends Controller
                 $list = $list->where('academic_period_id', $academic_period_id);
             }
 
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $list = $list->whereIn('institution_students.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
                 $list = $list->orderBy($col, $orderBy);
             }
-            $list = $list->paginate($limit)->toArray();
-            return $list;
-            
+
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $list->paginate($limit)->toArray();
+            } else{
+                $list = $list->get()->toArray();
+                $resp['data'] = $list;
+            }
+
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -101,6 +149,21 @@ class StudentRepository extends Controller
     public function getInstitutionStudentData($request, $institutionId, $studentId)
     {
         try {
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['super_admin'] != 1){
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
+                }
+            }
+            //For POCOR-7772 End
+
             $data = InstitutionStudent::with(
                     'institution:id,code,name', 
                     'educationGrade:id,name', 
@@ -110,8 +173,15 @@ class StudentRepository extends Controller
                     'academicPeriod:id,name'
                 )
                 ->where('institution_id', $institutionId)
-                ->where('student_id', $studentId)
-                ->first();
+                ->where('student_id', $studentId);
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $data = $data->whereIn('institution_students.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
+            $data = $data->first();
 
             if($data){
                 $data = $data->toArray();
@@ -134,13 +204,22 @@ class StudentRepository extends Controller
     public function getStudentAbsences($request)
     {
         try {
-            $params = $request->all();
 
-            $limit = config('constantvalues.defaultPaginateLimit');
-
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['super_admin'] != 1){
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
+                }
             }
+            //For POCOR-7772 End
+
+            $params = $request->all();
 
             $getStudents = InstitutionStudentAbsenceDetails::with(
                         'securityUser',
@@ -157,6 +236,12 @@ class StudentRepository extends Controller
                 $getStudents = $getStudents->where('academic_period_id', $academic_period_id);
             }
 
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $getStudents = $getStudents->whereIn('institution_student_absence_details.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
             $getStudents = $getStudents->select('student_id', 'institution_id', 'academic_period_id', 'institution_class_id', 'education_grade_id', 'modified_user_id', 'modified', 'created_user_id', 'created')->groupby('institution_id', 'student_id');
 
             if(isset($params['order'])){
@@ -165,13 +250,24 @@ class StudentRepository extends Controller
                 $getStudents = $getStudents->orderBy($col, $orderBy);
             }
 
-            $getStudents = $getStudents->paginate($limit)->toArray();
+            //$getStudents = $getStudents->paginate($limit)->toArray();
             //dd("getStudents", $getStudents);
+
+
+            //For POCOR-8215/8216 start...          
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $getStudents->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $getStudents->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
 
             $data = [];
 
-            if(count($getStudents['data']) > 0){
-                foreach($getStudents['data'] as $k => $d){
+            if(count($list['data']) > 0){
+                foreach($list['data'] as $k => $d){
                     
                     $data[$k] = $d;
                     $dateData = InstitutionStudentAbsenceDetails::with('absenceType:id,name', 'studentAbsenceReason:id,name', 'period:id,name', 'subject:id,name')->where('student_id', $d['student_id'])->where('institution_id', $d['institution_id'])->get()->toArray();
@@ -194,9 +290,9 @@ class StudentRepository extends Controller
                 }
             }
             
-            $getStudents['data'] = $data;
+            $list['data'] = $data;
 
-            return $getStudents;
+            return $list;
             
         } catch (\Exception $e) {
             Log::error(
@@ -215,11 +311,20 @@ class StudentRepository extends Controller
         try {
             $params = $request->all();
 
-            $limit = config('constantvalues.defaultPaginateLimit');
 
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['super_admin'] != 1){
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
+                }
             }
+            //For POCOR-7772 End
 
             $getStudents = InstitutionStudentAbsenceDetails::with(
                         'securityUser',
@@ -244,13 +349,34 @@ class StudentRepository extends Controller
                 $getStudents = $getStudents->orderBy($col, $orderBy);
             }
 
-            $getStudents = $getStudents->paginate($limit)->toArray();
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $getStudents = $getStudents->whereIn('institution_student_absence_details.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
+
+
+            //$getStudents = $getStudents->paginate($limit)->toArray();
             //dd("getStudents", $getStudents);
+
+
+            //For POCOR-8215/8216 start...          
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $getStudents->paginate($limit)->toArray();
+                
+            } else {
+                $list['data'] = $getStudents->get()->toArray();
+            }
+            //For POCOR-8215/8216 end...
+
 
             $data = [];
 
-            if(count($getStudents['data']) > 0){
-                foreach($getStudents['data'] as $k => $d){
+            if(count($list['data']) > 0){
+                foreach($list['data'] as $k => $d){
                     
                     $data[$k] = $d;
                     $dateData = InstitutionStudentAbsenceDetails::with('absenceType:id,name', 'studentAbsenceReason:id,name', 'period:id,name', 'subject:id,name')->where('student_id', $d['student_id'])->where('institution_id', $d['institution_id'])->get()->toArray();
@@ -273,9 +399,9 @@ class StudentRepository extends Controller
                 }
             }
             
-            $getStudents['data'] = $data;
+            $list['data'] = $data;
             
-            return $getStudents;
+            return $list;
             
         } catch (\Exception $e) {
             Log::error(
@@ -291,6 +417,21 @@ class StudentRepository extends Controller
     public function getInstitutionStudentAbsencesData($request, $institutionId, $studentId)
     {
         try {
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['super_admin'] != 1){
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
+                }
+            }
+            //For POCOR-7772 End
+
             $getStudent = InstitutionStudentAbsenceDetails::with(
                         'securityUser',
                         'securityUser.gender:id,name',
@@ -300,8 +441,15 @@ class StudentRepository extends Controller
                         'institution:id,code,name'
                     )
                     ->where('institution_id', $institutionId)
-                    ->where('student_id', $studentId)
-                    ->first();
+                    ->where('student_id', $studentId);
+
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $getStudent = $getStudent->whereIn('institution_student_absence_details.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+
+            $getStudent = $getStudent->first();
 
             if($getStudent){
                 $getStudent = $getStudent->toArray();
@@ -344,7 +492,10 @@ class StudentRepository extends Controller
     public function getEducationGrades($request)
     {
         try {
-            $sql = 'SELECT
+
+            $params = $request->all();
+
+            /*$sql = 'SELECT
                 academic_periods.name as academic_period_name
                 ,student_mark_type_statuses.academic_period_id
                 ,education_grades.name as education_grade_name
@@ -366,10 +517,50 @@ class StudentRepository extends Controller
                 LEFT JOIN student_attendance_per_day_periods ON student_attendance_per_day_periods.student_attendance_mark_type_id = student_attendance_mark_types.id
                 ORDER BY education_grades.id ASC,student_attendance_per_day_periods.id ASC';
 
-            $list = DB::select(DB::raw($sql));
-            return $list;
+            $list = DB::select(DB::raw($sql));*/
+            
+
+
+            $lists = DB::table('student_mark_type_status_grades')
+                ->join('education_grades', 'education_grades.id', '=', 'student_mark_type_status_grades.education_grade_id')
+                ->join('student_mark_type_statuses', 'student_mark_type_statuses.id', '=', 'student_mark_type_status_grades.student_mark_type_status_id')
+                ->join('student_attendance_mark_types', 'student_attendance_mark_types.id', '=', 'student_mark_type_statuses.student_attendance_mark_type_id')
+                ->join('academic_periods', 'academic_periods.id', '=', 'student_mark_type_statuses.academic_period_id')
+                ->join('student_attendance_types', 'student_attendance_types.id', '=', 'student_attendance_mark_types.student_attendance_type_id')
+                ->join('config_items', function ($q){
+                    $q->where('config_items.code', '=', 'calculate_daily_attendance');
+                })
+                ->leftjoin('student_attendance_per_day_periods', 'student_attendance_per_day_periods.student_attendance_mark_type_id', '=', 'student_attendance_mark_types.id')
+                ->select(
+                    'academic_periods.name as academic_period_name',
+                    'student_mark_type_statuses.academic_period_id',
+                    'education_grades.name as education_grade_name',
+                    'student_mark_type_status_grades.education_grade_id',
+                    'student_attendance_types.code as attendance_by',
+                    'student_attendance_per_day_periods.id',
+                    'student_attendance_types.code',
+                    'student_attendance_per_day_periods.name',
+                    'attendance_per_day',
+                    'date_enabled',
+                    'date_disabled',
+                    'config_items.value'
+                )
+                ->orderBy('education_grades.id', 'ASC')
+                ->orderBy('student_attendance_per_day_periods.id', 'ASC');
+
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $lists->paginate($limit)->toArray();
+            } else{
+                $lists = $lists->get()->toArray();
+                $resp['data'] = $lists;
+            }
+
+            return $resp;
             
         } catch (\Exception $e) {
+            
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -383,6 +574,29 @@ class StudentRepository extends Controller
     public function getClassesSubjects($request, $institutionId)
     {
         try {
+
+            //For POCOR-7772 Start
+            $permissions = checkAccess();
+            
+            if(isset($permissions)){
+                if($permissions['super_admin'] != 1){
+                    //For POCOR-8077 Start...
+                    if($permissions['allowAllInstitutions'] != 1){
+                        $institution_Ids = $permissions['institutionIds'];
+                    } 
+                    //For POCOR-8077 End...
+                }
+            }
+            //For POCOR-7772 End
+            $params = $request->all();
+
+            $limit = config('constantvalues.defaultPaginateLimit');
+
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+            }
+
+
             $data = InstitutionClasses::select(
                     'institution_classes.academic_period_id',
                     'institution_classes.institution_id',
@@ -401,11 +615,32 @@ class StudentRepository extends Controller
                     )
                     ->join('institution_class_subjects', 'institution_class_subjects.institution_class_id', '=', 'institution_classes.id')
                     ->join('institution_subjects', 'institution_subjects.id', '=', 'institution_class_subjects.institution_subject_id')
-                    ->where('institution_classes.institution_id', $institutionId)
-                    ->get();
+                    ->where('institution_classes.institution_id', $institutionId);
 
-            
-            return $data;
+            //For POCOR-7772 Start
+            if(isset($institution_Ids)){
+                $data = $data->whereIn('institution_classes.institution_id', $institution_Ids);
+            }
+            //For POCOR-7772 End
+                 
+
+            if(isset($params['order'])){
+                $orderBy = $params['order_by']??"ASC";
+                $col = $params['order'];
+                $data = $data->orderBy($col, $orderBy);
+            }
+
+            $resp = [];
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $resp = $data->paginate($limit)
+                ->toArray();
+            } else{
+                $data = $data->get()->toArray();
+                $resp['data'] = $data;
+            }
+
+            return $resp;
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -489,6 +724,14 @@ class StudentRepository extends Controller
         DB::beginTransaction();
         try {
             $param = $request->all();
+
+            $isLinked = $this->checkIfStudentLinked($param);
+            
+            if(!$isLinked){
+                return 3;
+            }
+
+
             $check = InstitutionStudentAbsenceDetails::where([
                 'student_id' => $param['student_id'],
                 'institution_id' => $param['institution_id'],
@@ -498,6 +741,8 @@ class StudentRepository extends Controller
                 'period' => $param['period'],
                 'subject_id' => $param['subject_id']
             ])->first();
+
+
 
             if($check){
                 $updateArr['academic_period_id'] = $param['academic_period_id'];
@@ -595,17 +840,21 @@ class StudentRepository extends Controller
                 'academic_period_id' => $param['academic_period_id'],
                 'date' => $param['date']
             ])->first();
-
+            
             if($check){
                 $param['modified_user_id'] = JWTAuth::user()->id;
                 $param['modified'] = Carbon::now()->toDateTimeString();
+                $param['xyz'] = 1234;
+                
+                //This function removes the unnecessary columns...
+                $values = removeNonColumnFields($param, 'institution_staff_attendances');
                 
                 $update = InstitutionStaffAttendances::where([
                     'staff_id' => $param['staff_id'],
                     'institution_id' => $param['institution_id'],
                     'academic_period_id' => $param['academic_period_id'],
                     'date' => $param['date']
-                ])->update($param);
+                ])->update($values);
 
                 $resp = 2;
 
@@ -614,8 +863,10 @@ class StudentRepository extends Controller
                 $param['created_user_id'] = JWTAuth::user()->id;
                 $param['created'] = Carbon::now()->toDateTimeString();
                 
+                //This function removes the unnecessary columns...
+                $values = removeNonColumnFields($param, 'institution_staff_attendances');
                 
-                $store = InstitutionStaffAttendances::insert($param);
+                $store = InstitutionStaffAttendances::insert($values);
                 $resp = 1;
             }
 
@@ -662,5 +913,28 @@ class StudentRepository extends Controller
     }
 
     //POCOR-7547 End...
-}
 
+
+
+    public function checkIfStudentLinked($param)
+    {
+        try {
+            $check = InstitutionClassStudents::where([
+                    'academic_period_id' => $param['academic_period_id'],
+                    'education_grade_id' => $param['education_grade_id'],
+                    'institution_id' => $param['institution_id'],
+                    'institution_class_id' => $param['institution_class_id'],
+                    'student_id' => $param['student_id'],
+                ])
+                ->first();
+
+            if($check){
+                return true;
+            } else {
+                return false; 
+            }
+        }catch(\Exception $e) {
+            return false;
+        }
+    }
+}

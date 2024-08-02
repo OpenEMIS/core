@@ -16,15 +16,15 @@ class RenderDateBehavior extends RenderBehavior {
 	use IdGeneratorTrait;
 	use PickerTrait;
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
         parent::initialize($config);
     }
 
 	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
 		$dataArray = $data->getArrayCopy();
-		if (array_key_exists('custom_field_values', $dataArray)) {
+		if (isset($dataArray['custom_field_values'])) {
 			foreach ($dataArray['custom_field_values'] as $key => $value) {
-				if (array_key_exists('date_value', $value)) {
+				if (isset($value['date_value'])) {
 					if (array_key_exists('field_type', $dataArray['custom_field_values'][$key])) {
 						if ($dataArray['custom_field_values'][$key]['field_type'] == $this->fieldTypeCode) {
 							$convertedDate = $this->convertForDatePicker($dataArray['custom_field_values'][$key]['date_value']);
@@ -69,17 +69,17 @@ class RenderDateBehavior extends RenderBehavior {
 			$attr['fieldName'] = $fieldPrefix.".date_value";
 			$unlockFields[] = $attr['fieldName'];
 
-			$attr['id'] = $attr['model'] . '_' . $attr['field']; 
-			if (array_key_exists('fieldName', $attr)) {
+			$attr['id'] = $attr['model'] . '_' . $attr['field'];
+			if (isset($attr['fieldName'])) {
 				$attr['id'] = $this->_domId($attr['fieldName']);
-			} 
+			}
 
 			$defaultDate = false;
 			if (!isset($attr['default_date'])) {
 				$attr['default_date'] = $defaultDate;
 			}
 
-			if (!array_key_exists('value', $attr)) {
+			if (!isset($attr['value'])) {
 				if (!is_null($savedValue)) {
 					if ($savedValue instanceof Time || $savedValue instanceof Date) {
 						$attr['value'] = $savedValue->format('d-m-Y');
@@ -89,7 +89,7 @@ class RenderDateBehavior extends RenderBehavior {
 				} else if ($attr['default_date']) {
 					$attr['value'] = date('d-m-Y');
 				}
-			} else {	
+			} else {
 				if ($attr['value'] instanceof Time || $savedValue instanceof Date) {
 					$attr['value'] = $attr['value']->format('d-m-Y');
 				} else {
@@ -98,11 +98,11 @@ class RenderDateBehavior extends RenderBehavior {
 			}
 
 			$attr['null'] = !$attr['customField']['is_mandatory'];
-			$event->subject()->viewSet('datepicker', $attr);
-			$value = $event->subject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
+			$event->getSubject()->viewSet('datepicker', $attr);
+			$value = $event->getSubject()->renderElement('ControllerAction.bootstrap-datepicker/datepicker_input', ['attr' => $attr]);
 
-			$form = $event->subject()->Form;
-			
+			$form = $event->getSubject()->Form;
+
 			$value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
 			$unlockFields[] = $fieldPrefix.".".$attr['attr']['fieldKey'];
             if (!is_null($savedId)) {

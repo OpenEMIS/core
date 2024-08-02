@@ -13,13 +13,13 @@ class SurveyBehavior extends Behavior {
 		]
 	];
 
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		parent::initialize($config);
-		$models = $this->config('models');
+		$models = $this->getConfig('models');
 		foreach ($models as $key => $model) {
 			if (!is_null($model)) {
 				$this->{$key} = TableRegistry::get($model);
-				$this->{lcfirst($key).'Key'} = Inflector::underscore(Inflector::singularize($this->{$key}->alias())) . '_id';
+				$this->{lcfirst($key).'Key'} = Inflector::underscore(Inflector::singularize($this->{$key}->getAlias())) . '_id';
 			} else {
 				$this->{$key} = null;
 			}
@@ -27,7 +27,7 @@ class SurveyBehavior extends Behavior {
 	}
 
 	public function getForms($surveyFormId = null) {
-		$module = $this->config('module');
+		$module = $this->getConfig('module');
 		$customModule = $this->CustomModules
 			->find('all')
 			->select([

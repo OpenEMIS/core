@@ -21,9 +21,9 @@ use Cake\Datasource\ConnectionManager;
 class TrainingEmployeeQualificationTable extends AppTable
 {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff');
+        $this->setTable('institution_staff');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
@@ -47,7 +47,7 @@ class TrainingEmployeeQualificationTable extends AppTable
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
-            'name' => $this->alias(),
+            'name' => $this->getAlias(),
             'table' => $this,
             'query' => $this->find(),
             'orientation' => 'landscape'
@@ -157,20 +157,20 @@ class TrainingEmployeeQualificationTable extends AppTable
             )*/
             ->group(['Users.id'])
             ->leftJoin(
-                [$qualification->alias() => $qualification->table()],
+                [$qualification->getAlias() => $qualification->getTable()],
                 [$qualification->aliasField('staff_id = ') . $this->aliasfield('staff_id')]
             )->leftJoin(
-                [$qualificationtitle->alias() => $qualificationtitle->table()],
+                [$qualificationtitle->getAlias() => $qualificationtitle->getTable()],
                 [$qualificationtitle->aliasField('id = ') . $qualification->aliasField('qualification_title_id')]
             )->leftJoin(
-                [$qualificationCountry->alias() => $qualificationCountry->table()],
+                [$qualificationCountry->getAlias() => $qualificationCountry->getTable()],
                 [$qualificationCountry->aliasField('id = ') . $qualification->aliasField('qualification_country_id')]
             )->leftJoin(
-                [$educationFieldOfStudy->alias() => $educationFieldOfStudy->table()],
+                [$educationFieldOfStudy->getAlias() => $educationFieldOfStudy->getTable()],
                 [$educationFieldOfStudy->aliasField('id = ') . $qualification->aliasField('education_field_of_study_id')]
             )
             ->leftJoin(
-                [$qualificationlevel->alias() => $qualificationlevel->table()],
+                [$qualificationlevel->getAlias() => $qualificationlevel->getTable()],
                 [$qualificationlevel->aliasField('id = ') . $qualificationtitle->aliasField('qualification_level_id')]
             );
     
@@ -658,16 +658,16 @@ class TrainingEmployeeQualificationTable extends AppTable
     */
     public function onExcelGetSubMajor(Event $event, Entity $entity)
     {
-        $qualification = TableRegistry::get('Staff.Qualifications');
-        $qualificationtitlespecial = TableRegistry::get('FieldOption.QualificationSpecialisations');
-        $qualificationspecial = TableRegistry::get('staff_qualifications_specialisations');
+        $qualification = TableRegistry::getTableLocator()->get('Staff.Qualifications');
+        $qualificationtitlespecial = TableRegistry::getTableLocator()->get('FieldOption.QualificationSpecialisations');
+        $qualificationspecial = TableRegistry::getTableLocator()->get('Staff.QualificationsSpecialisations');
         $submajor = $qualificationspecial->find()
             ->innerJoin(
-                [$qualification->alias() => $qualification->table()],
+                [$qualification->getAlias() => $qualification->getTable()],
                 [$qualification->aliasField('id = ') . $qualificationspecial->aliasField('staff_qualification_id')]
             )
             ->innerJoin(
-                [$qualificationtitlespecial->alias() => $qualificationtitlespecial->table()],
+                [$qualificationtitlespecial->getAlias() => $qualificationtitlespecial->getTable()],
                 [$qualificationtitlespecial->aliasField('id = ') .$qualificationspecial->aliasField('qualification_specialisation_id')]
             )
             ->select([
@@ -701,11 +701,11 @@ class TrainingEmployeeQualificationTable extends AppTable
         $educationSubjects = TableRegistry::get('Education.EducationSubjects');
         $subjectRecord = $StaffSubjects->find()
             ->innerJoin(
-                [$qualification->alias() => $qualification->table()],
+                [$qualification->getAlias() => $qualification->getTable()],
                 [$qualification->aliasField('id = ') . $StaffSubjects->aliasField('staff_qualification_id')]
             )
             ->innerJoin(
-                [$educationSubjects->alias() => $educationSubjects->table()],
+                [$educationSubjects->getAlias() => $educationSubjects->getTable()],
                 [$educationSubjects->aliasField('id = ') .$StaffSubjects->aliasField('education_subject_id')]
             )
             ->select([

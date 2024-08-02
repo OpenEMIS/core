@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
@@ -15,9 +15,9 @@ class ReportCardEmailTable extends ControllerActionTable
 {
     private $alertTypeFeatures = [];
 
-	public function initialize(array $config)
+	public function initialize(array $config): void
     {
-        $this->table('report_cards');
+        $this->setTable('report_cards');
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
@@ -53,7 +53,7 @@ class ReportCardEmailTable extends ControllerActionTable
         ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -66,12 +66,12 @@ class ReportCardEmailTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        if (array_key_exists('back', $toolbarButtonsArray)) {
-            $encodedParam = $this->request->params['pass'][1];
+        if (isset($toolbarButtonsArray['back'])) {
+            $encodedParam = $this->request->getAttribute('params')['pass'][1];
 
             $backUrl = [
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
+                'plugin' => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
                 'action' => 'Templates',
                 'view',
                 $encodedParam
@@ -110,7 +110,7 @@ class ReportCardEmailTable extends ControllerActionTable
         $this->setupFields($event, $entity);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -123,7 +123,7 @@ class ReportCardEmailTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStartDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -137,7 +137,7 @@ class ReportCardEmailTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -151,7 +151,7 @@ class ReportCardEmailTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -168,7 +168,7 @@ class ReportCardEmailTable extends ControllerActionTable
     {
         $tabElements = $this->controller->getReportCardTab($entity->id);
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', $this->getAlias());
     }
 
     private function setupFields(Event $event, Entity $entity)
@@ -178,7 +178,7 @@ class ReportCardEmailTable extends ControllerActionTable
         $this->field('name', ['type' => 'readonly', 'attr' => ['required' => false]]);
         $this->field('description', ['attr' => ['disabled' => 'disabled']]);
         $this->field('academic_period_id', ['entity' => $entity]);
-        
+
         $this->field('start_date', ['entity' => $entity]);
         $this->field('end_date', ['entity' => $entity]);
 
@@ -204,7 +204,7 @@ class ReportCardEmailTable extends ControllerActionTable
     // Start POCOR-5188
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-		$is_manual_exist = $this->getManualUrl('Administration','Email Templates','Report Cards');       
+		$is_manual_exist = $this->getManualUrl('Administration','Email Templates','Report Cards');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -222,5 +222,61 @@ class ReportCardEmailTable extends ControllerActionTable
 			$extra['toolbarButtons']['help'] = $helpBtn;
 		}
     }
-    // End POCOR-5188
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'visible':
+                return __('Visible');
+            case 'name':
+                return __('Name');
+            case 'international_code':
+                return __('International Code');
+            case 'national_code':
+                return __('National Code');
+            case 'editable':
+                return __('Editable');
+            case 'default':
+                return __('Default');
+            case 'code':
+                return __('Code');
+            case 'description':
+                return __('Description');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'start_date':
+                return __('Start Date');
+            case 'end_date':
+                return __('End Date');
+            case 'description':
+                return __('Description');
+            case 'education_grade_id':
+                return __('Education Grade');
+            case 'pdf_page_number':
+                return __('Pdf Page number');
+            case 'subject':
+                return __('Subjects');
+            case 'message':
+                return __('Message');
+            case 'generate_start_date':
+                return __('Start Date');
+            case 'generate_end_date':
+                return __('End Date');
+            case 'default_message':
+                return __('Default Message');
+            case 'default_subject':
+                return __('Default Subjects');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

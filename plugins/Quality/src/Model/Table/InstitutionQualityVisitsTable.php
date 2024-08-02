@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\I18n\Date;
@@ -17,7 +17,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
 {
     private $SubjectStaff = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
@@ -44,15 +44,19 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
         ]);
 
         // setting this up to be overridden in viewAfterAction(), this code is required
-        $this->behaviors()->get('ControllerAction')->config(
+        $this->behaviors()->get('ControllerAction')->setConfig(
             'actions.download.show',
             true
         );
 
         $this->SubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Visits'=>['id']]
+        ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -63,11 +67,12 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
+        //$institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
 
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        $periodId = $this->request->query['academic_period_id'];
+        $periodId = $this->request->getQuery('academic_period_id');
 
         $query
             ->where([$this->aliasField('institution_id') => $institutionId])
@@ -205,7 +210,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
             $filename = $entity->file_content;
             return !empty($filename);
         };
-        $this->behaviors()->get('ControllerAction')->config(
+        $this->behaviors()->get('ControllerAction')->setConfig(
             'actions.download.show',
             $showFunc
         );
@@ -241,7 +246,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
     {
         if ($entity->staff) {
             if ($this->action == 'view') {
-                return $event->subject()->Html->link($entity->staff->name_with_id, [
+                return $event->getSubject()->Html->link($entity->staff->name_with_id, [
                     'plugin' => 'Institution',
                     'controller' => 'Institutions',
                     'action' => 'StaffUser',
@@ -254,18 +259,21 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
         } elseif ($action == 'add' || $action == 'edit') {
-            $institutionId = $this->Session->read('Institution.Institutions.id');
+            //$institutionId = $this->Session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionID();
             $Subjects = $this->Subjects;
 
             $periodOptions = $this->AcademicPeriods->getYearList(['withSelect' => true, 'isEditable' => true]);
-            if (is_null($request->query('period'))) {
-                $this->request->query['period'] = '';
+            if (is_null($request->getQuery('period'))) {
+                $queryParams = $this->request->getQueryParams();
+                $queryParams['period'] = '';
+                $this->request = $this->request->withQueryParams($queryParams);
             }
-            $selectedPeriod = $this->queryString('period', $periodOptions);
+            $selectedPeriod = $this->getQueryString('period', $periodOptions);
             $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
                 'message' => '{{label}} - ' . $this->getMessage('general.noSubjects'),
                 'callable' => function ($id) use ($Subjects, $institutionId) {
@@ -274,8 +282,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
                         ->where([
                             $Subjects->aliasField('institution_id') => $institutionId,
                             $Subjects->aliasField('academic_period_id') => $id
-                        ])
-                        ->count();
+                        ])->count();
                 }
             ]);
 
@@ -286,19 +293,20 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionSubjectId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionSubjectId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
         } elseif ($action == 'add' || $action == 'edit') {
-            $institutionId = $this->Session->read('Institution.Institutions.id');
+            //$institutionId = $this->Session->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionID();
             $SubjectStaff = $this->SubjectStaff;
 
             if ($action == 'add') {
-                $selectedPeriod = $request->query('period');
+                $selectedPeriod = $request->getQuery['period'];
             } elseif ($action == 'edit') {
                 $selectedPeriod = $attr['entity']->academic_period_id;
             }
-
+            // echo "<pre>";print_r($request);die;
             $classOptions = [];
             if (!is_null($selectedPeriod)) {
                 $classOptions = $this->Subjects
@@ -310,10 +318,12 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
                     ->toArray();
                 $classOptions = ['' => __('-- Select Subject --')] + $classOptions;
 
-                if (is_null($request->query('subject'))) {
-                    $this->request->query['subject'] = '';
+                if (is_null($request->getQuery('subject'))) {
+                    $queryParams = $this->request->getQueryParams();
+                    $queryParams['subject'] = '';
+                    $this->request = $this->request->withQueryParams($queryParams);
                 }
-                $selectedClass = $this->queryString('subject', $classOptions);
+                $selectedClass = $this->getQueryString('subject', $classOptions);
                 $this->advancedSelectOptions($classOptions, $selectedClass, [
                     'message' => '{{label}} - ' . $this->getMessage('general.noStaff'),
                     'callable' => function ($id) use ($SubjectStaff) {
@@ -334,12 +344,12 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStaffId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
         } elseif ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
-                $selectedClass = $request->query('subject');
+                $selectedClass = $request->getQuery('subject');
             } elseif ($action == 'edit') {
                 $selectedClass = $attr['entity']->institution_subject_id;
             }
@@ -365,7 +375,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEvaluator(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEvaluator(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
         } elseif ($action == 'add') {
@@ -388,13 +398,15 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
     public function addEditOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['period']);
-        unset($request->query['subject']);
+        $queryParams = $request->getQueryParams();
+        unset($queryParams['period']);
+        unset($queryParams['subject']);
+        $request = $request->withQueryParams($queryParams);
 
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
-                    $request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('academic_period_id', $request->getData()[$this->getAlias()])) {
+                    $request->getQuery['period'] = $request->getData($this->getAlias())['academic_period_id'];
                 }
             }
         }
@@ -403,12 +415,16 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
     public function addEditOnChangeSubject(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->query['subject']);
-
+        $queryParams = $request->getQueryParams();
+        unset($queryParams['subject']);
+        $request = $request->withQueryParams($queryParams);
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('institution_subject_id', $request->data[$this->alias()])) {
-                    $request->query['subject'] = $request->data[$this->alias()]['institution_subject_id'];
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('institution_subject_id', $request->getData($this->getAlias()))) {
+                    $queryParams = $request->getQueryParams();
+                    $institutionSubjectId = $this->request->getData($this->getAlias())['institution_subject_id'];
+                    $queryParams['subject'] = $institutionSubjectId;
+                    $request = $request->withQueryParams($queryParams);
                 }
             }
         }
@@ -427,10 +443,8 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
         $this->field('quality_visit_type_id', ['type' => 'select']);
         $this->field('file_name', [
             'type' => 'hidden',
-            'visible' => ['view' => false, 'edit' => true]
-        ]);
+            'visible' => ['view' => false, 'edit' => true]]);
         $this->field('file_content', ['visible' => ['view' => false, 'edit' => true]]);
-
         $this->setFieldOrder([
             'date', 'academic_period_id', 'institution_subject_id', 'staff_id',
             'evaluator', 'quality_visit_type_id', 'comment', 'file_name', 'file_content'
@@ -440,5 +454,31 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
     public function setupValues(Entity $entity)
     {
         $entity->evaluator = $entity->created_user->name;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'date':
+                return __('Date');
+            case 'staff_id':
+                return __('Staff');
+            case 'comment':
+                return __('Comment');
+            case 'evaluator':
+                return __('Evaluator System');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

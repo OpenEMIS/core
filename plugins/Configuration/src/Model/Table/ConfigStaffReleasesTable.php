@@ -7,7 +7,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 
@@ -23,9 +23,9 @@ class ConfigStaffReleasesTable extends ControllerActionTable
     CONST RESTRICT_STAFF_RELEASE_BETWEEN_DIFFERENT_PROVIDER = 'restrict_staff_release_between_different_provider';
     CONST SELECTION_DISABLE = "0";
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('config_items');
+        $this->setTable('config_items');
         parent::initialize($config);
 
         $this->addBehavior('Configuration.ConfigItems');
@@ -98,10 +98,10 @@ class ConfigStaffReleasesTable extends ControllerActionTable
                         $jsonData = stripslashes(html_entity_decode($entity->value));
                         $valuesData = json_decode($jsonData,true);
 
-                        if (array_key_exists('selection', $valuesData)) {
+                        if (isset($valuesData['selection'])) {
                             $entity->value_selection = $valuesData['selection'];
                             $entity->value = '';
-                            if (array_key_exists('values', $valuesData)) {
+                            if (isset($valuesData['values'])) {
                                 $institutionTypesIds = explode(",", $valuesData['values']);
                                 $entity->value = $this->getInstitutionTypes($institutionTypesIds);
                             }
@@ -112,7 +112,7 @@ class ConfigStaffReleasesTable extends ControllerActionTable
 
                         $entity->value_selection = $valuesData['selection'];
                         $entity->value = '';
-                        if (array_key_exists('values', $valuesData)) {
+                        if (isset($valuesData['values'])) {
                             $institutionTypesIds = explode(",", $valuesData['values']);
                             $entity->value = $this->getInstitutionTypes($institutionTypesIds);
                         }
@@ -123,10 +123,10 @@ class ConfigStaffReleasesTable extends ControllerActionTable
                         $jsonData = stripslashes(html_entity_decode($entity->value));
                         $valuesData = json_decode($jsonData,true);
 
-                        if (array_key_exists('selection', $valuesData)) {
+                        if (isset($valuesData['selection'])) {
                             $entity->value_selection = $valuesData['selection'];
                             $entity->value = '';
-                            if (array_key_exists('values', $valuesData)) {
+                            if (isset($valuesData['values'])) {
                                 $institutionSectorsIds = explode(",", $valuesData['values']);
                                 $entity->value = $this->getInstitutionSectors($institutionSectorsIds);
                             }
@@ -137,7 +137,7 @@ class ConfigStaffReleasesTable extends ControllerActionTable
 
                         $entity->value_selection = $valuesData['selection'];
                         $entity->value = '';
-                        if (array_key_exists('values', $valuesData)) {
+                        if (isset($valuesData['values'])) {
                             $institutionSectorsIds = explode(",", $valuesData['values']);
                             $entity->value = $this->getInstitutionSectors($institutionSectorsIds);
                         }
@@ -191,9 +191,9 @@ class ConfigStaffReleasesTable extends ControllerActionTable
                     if (!empty($entity->value)) {
                         $jsonData = stripslashes(html_entity_decode($entity->value));
                         $valuesData = json_decode($jsonData,true);
-                        if (array_key_exists('selection', $valuesData)) {
+                        if (isset($valuesData['selection'])) {
                             if ($valuesData['selection'] !== self::SELECTION_DISABLE) {
-                                if (array_key_exists('values', $valuesData)) {
+                                if (isset($valuesData['values'])) {
                                     $institutionTypeIds = explode(",", $valuesData['values']);
                                     $list = $this->InstitutionTypes
                                         ->getList()
@@ -210,9 +210,9 @@ class ConfigStaffReleasesTable extends ControllerActionTable
                     if (!empty($entity->value)) {
                         $jsonData = stripslashes(html_entity_decode($entity->value));
                         $valuesData = json_decode($jsonData,true);
-                        if (array_key_exists('selection', $valuesData)) {
+                        if (isset($valuesData['selection'])) {
                             if ($valuesData['selection'] !== self::SELECTION_DISABLE) {
-                                if (array_key_exists('values', $valuesData)) {
+                                if (isset($valuesData['values'])) {
                                     $institutionSectorsIds = explode(",", $valuesData['values']);
                                     $list = $this->InstitutionSectors
                                         ->getList()
@@ -255,7 +255,7 @@ class ConfigStaffReleasesTable extends ControllerActionTable
                         $valuesData = json_decode($jsonData,true);
 
                         // Assign default valut to be empty for display purpose if its selection disable
-                        if (array_key_exists('selection', $valuesData)) {
+                        if (isset($valuesData['selection'])) {
                             if ($valuesData['selection'] == self::SELECTION_DISABLE) {
                                 $entity->default_value = " ";
                             }
@@ -277,7 +277,7 @@ class ConfigStaffReleasesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onUpdateFieldValueSelection(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldValueSelection(Event $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
 
@@ -310,7 +310,7 @@ class ConfigStaffReleasesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
 
@@ -400,9 +400,9 @@ class ConfigStaffReleasesTable extends ControllerActionTable
         $staffReleaseByTypesJsonData = stripslashes(html_entity_decode($staffReleaseByTypesJsonString));
         $staffReleaseByTypesValues = json_decode($staffReleaseByTypesJsonData,true);;
 
-        if (array_key_exists('selection', $staffReleaseByTypesValues)) {
+        if (isset($staffReleaseByTypesValues['selection'])) {
             if ($staffReleaseByTypesValues['selection'] !== self::SELECTION_DISABLE) {
-                if (array_key_exists('values', $staffReleaseByTypesValues)) {
+                if (isset($staffReleaseByTypesValues['values'])) {
                     $enableStaffReleasesByTypeIds = explode(",", $staffReleaseByTypesValues['values']);
                     if (in_array($institutionTypeId, $enableStaffReleasesByTypeIds)) {
                         $isEnable = true;
@@ -417,9 +417,9 @@ class ConfigStaffReleasesTable extends ControllerActionTable
         $staffReleaseBySectorsJsonData = stripslashes(html_entity_decode($staffReleaseBySectorsJsonString));
         $staffReleaseBySectorsValues = json_decode($staffReleaseBySectorsJsonData,true);
 
-        if (array_key_exists('selection', $staffReleaseBySectorsValues)) {
+        if (isset($staffReleaseBySectorsValues['selection'])) {
             if ($staffReleaseBySectorsValues['selection'] !== self::SELECTION_DISABLE) {
-                if (array_key_exists('values', $staffReleaseBySectorsValues)) {
+                if (isset($staffReleaseBySectorsValues['values'])) {
                     $enableStaffReleasesBySectorsIds = explode(",", $staffReleaseBySectorsValues['values']);
                     if (in_array($institutionSectorId, $enableStaffReleasesBySectorsIds)) {
                         $isEnable = true;
@@ -447,7 +447,7 @@ class ConfigStaffReleasesTable extends ControllerActionTable
         }
         return $isRestricted;
     }
-    
+
     public function checkStaffReleaseRestrictedBetweenDifferentProvider($institutionId = 0, $compareInstitutionId = 0)
     {
         $isRestricted = false;
@@ -472,7 +472,7 @@ class ConfigStaffReleasesTable extends ControllerActionTable
 
         return $institutionTypeId == $compareInstitutionTypeId;
     }
-    
+
     public function compareInstitutionDifferentType($institutionId = 0, $compareInstitutionId = 0)
     {
         $Institutions = TableRegistry::get('Institution.Institutions');

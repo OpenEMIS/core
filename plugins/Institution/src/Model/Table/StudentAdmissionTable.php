@@ -8,7 +8,7 @@ use Cake\ORM\Entity;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Controller\Component;
 use Cake\I18n\Time;
 use Cake\Utility\Hash;
@@ -43,9 +43,9 @@ class StudentAdmissionTable extends ControllerActionTable
         ]
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_admission');
+        $this->setTable('institution_student_admission');
 
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
@@ -65,31 +65,34 @@ class StudentAdmissionTable extends ControllerActionTable
         ]);
 
         $this->toggle('add', true);
+        $this->addBehavior('Institution.InstitutionTab',
+            ['appliedAction' => ['StudentAdmission' => ['id']]
+        ]);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         $validator
             ->add('academic_period_id', [
                 'ruleCheckValidAcademicPeriodId' => [
                     'rule' => ['checkValidAcademicPeriodId'],
-                    'on' => function ($context) {  
-                        if (array_key_exists('academic_period_id', $context['data']) && !empty($context['data']['academic_period_id'])) {           
+                    'on' => function ($context) {
+                        if (array_key_exists('academic_period_id', $context['data']) && !empty($context['data']['academic_period_id'])) {
                             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-                            $academicPeriodExists = $AcademicPeriods->exists([$AcademicPeriods->primaryKey() => $context['data']['academic_period_id']]);
+                            $academicPeriodExists = $AcademicPeriods->exists([$AcademicPeriods->getPrimaryKey() => $context['data']['academic_period_id']]);
 
                             return $academicPeriodExists;
                         }
                         return false;
                     }
                 ]
-            ])   
+            ])
             ->add('start_date', [
                 'ruleCompareDate' => [
                     'rule' => ['compareDate', 'end_date', false],
-                    'on' => function ($context) {  
+                    'on' => function ($context) {
                         return (array_key_exists('end_date', $context['data']) && !empty($context['data']['end_date']));
                     }
                 ],
@@ -98,10 +101,10 @@ class StudentAdmissionTable extends ControllerActionTable
                 ],
                 'ruleInAcademicPeriod' => [
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []],
-                    'on' => function ($context) {  
-                        if (array_key_exists('academic_period_id', $context['data']) && !empty($context['data']['academic_period_id'])) {           
+                    'on' => function ($context) {
+                        if (array_key_exists('academic_period_id', $context['data']) && !empty($context['data']['academic_period_id'])) {
                             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-                            $academicPeriodExists = $AcademicPeriods->exists([$AcademicPeriods->primaryKey() => $context['data']['academic_period_id']]);
+                            $academicPeriodExists = $AcademicPeriods->exists([$AcademicPeriods->getPrimaryKey() => $context['data']['academic_period_id']]);
 
                             return $academicPeriodExists;
                         }
@@ -112,10 +115,10 @@ class StudentAdmissionTable extends ControllerActionTable
             ->add('end_date', [
                 'ruleInAcademicPeriod' => [
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []],
-                    'on' => function ($context) {  
-                        if (array_key_exists('academic_period_id', $context['data']) && !empty($context['data']['academic_period_id'])) {           
+                    'on' => function ($context) {
+                        if (array_key_exists('academic_period_id', $context['data']) && !empty($context['data']['academic_period_id'])) {
                             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-                            $academicPeriodExists = $AcademicPeriods->exists([$AcademicPeriods->primaryKey() => $context['data']['academic_period_id']]);
+                            $academicPeriodExists = $AcademicPeriods->exists([$AcademicPeriods->getPrimaryKey() => $context['data']['academic_period_id']]);
 
                             return $academicPeriodExists;
                         }
@@ -141,10 +144,10 @@ class StudentAdmissionTable extends ControllerActionTable
                         //POCOR-6172-HINDOL[END]
                         if (array_key_exists('institution_id', $context['data']) && !empty($context['data']['institution_id']) && array_key_exists('education_grade_id', $context['data']) && !empty($context['data']['education_grade_id'])) {
                             $Institutions = TableRegistry::get('Institution.Institutions');
-                            $institutionExists = $Institutions->exists([$Institutions->primaryKey() => $context['data']['institution_id']]);
+                            $institutionExists = $Institutions->exists([$Institutions->getPrimaryKey() => $context['data']['institution_id']]);
 
                             $EducationGrades = TableRegistry::get('Education.EducationGrades');
-                            $educationGradeExists = $EducationGrades->exists([$EducationGrades->primaryKey() => $context['data']['education_grade_id']]);
+                            $educationGradeExists = $EducationGrades->exists([$EducationGrades->getPrimaryKey() => $context['data']['education_grade_id']]);
 
                             return ($institutionExists && $educationGradeExists && $context['newRecord']);
                         }
@@ -159,13 +162,13 @@ class StudentAdmissionTable extends ControllerActionTable
                 ],
                 'ruleCheckAdmissionAgeWithEducationCycleGrade' => [
                     'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
-                    'on' => function ($context) {  
-                        if (array_key_exists('academic_period_id', $context['data']) && !empty($context['data']['academic_period_id']) && array_key_exists('education_grade_id', $context['data']) && !empty($context['data']['education_grade_id'])) {           
+                    'on' => function ($context) {
+                        if (array_key_exists('academic_period_id', $context['data']) && !empty($context['data']['academic_period_id']) && array_key_exists('education_grade_id', $context['data']) && !empty($context['data']['education_grade_id'])) {
                             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-                            $academicPeriodExists = $AcademicPeriods->exists([$AcademicPeriods->primaryKey() => $context['data']['academic_period_id']]);
+                            $academicPeriodExists = $AcademicPeriods->exists([$AcademicPeriods->getPrimaryKey() => $context['data']['academic_period_id']]);
 
                             $EducationGrades = TableRegistry::get('Education.EducationGrades');
-                            $educationGradeExists = $EducationGrades->exists([$EducationGrades->primaryKey() => $context['data']['education_grade_id']]);
+                            $educationGradeExists = $EducationGrades->exists([$EducationGrades->getPrimaryKey() => $context['data']['education_grade_id']]);
 
                             return ($academicPeriodExists && $educationGradeExists && $context['newRecord']);
                         }
@@ -180,10 +183,10 @@ class StudentAdmissionTable extends ControllerActionTable
             ])
             ->add('gender_id', 'ruleCompareStudentGenderWithInstitution', [
                 'rule' => ['compareStudentGenderWithInstitution'],
-                'on' => function ($context) {  
+                'on' => function ($context) {
                     if (array_key_exists('institution_id', $context['data']) && !empty($context['data']['institution_id'])) {
                         $Institutions = TableRegistry::get('Institution.Institutions');
-                        $institutionExists = $Institutions->exists([$Institutions->primaryKey() => $context['data']['institution_id']]);
+                        $institutionExists = $Institutions->exists([$Institutions->getPrimaryKey() => $context['data']['institution_id']]);
 
                         return ($institutionExists && $context['newRecord']);
                     }
@@ -193,49 +196,49 @@ class StudentAdmissionTable extends ControllerActionTable
             ->add('education_grade_id', [
                 'ruleCheckEducationGradeExist' => [
                     'rule' => ['checkEducationGradeExist'],
-                    'on' => function ($context) {  
+                    'on' => function ($context) {
                         if (array_key_exists('institution_id', $context['data']) && !empty($context['data']['institution_id']) && array_key_exists('education_grade_id', $context['data']) && !empty($context['data']['education_grade_id'])) {
                             $Institutions = TableRegistry::get('Institution.Institutions');
-                            $institutionExists = $Institutions->exists([$Institutions->primaryKey() => $context['data']['institution_id']]);
+                            $institutionExists = $Institutions->exists([$Institutions->getPrimaryKey() => $context['data']['institution_id']]);
 
                             $EducationGrades = TableRegistry::get('Education.EducationGrades');
-                            $educationGradeExists = $EducationGrades->exists([$EducationGrades->primaryKey() => $context['data']['education_grade_id']]);
+                            $educationGradeExists = $EducationGrades->exists([$EducationGrades->getPrimaryKey() => $context['data']['education_grade_id']]);
 
                             return ($institutionExists && $educationGradeExists && $context['newRecord']);
                         }
                         return false;
                     },
                     'last' => true
-                ], 
+                ],
                 'ruleCheckProgrammeEndDate' => [
                     'rule' => ['checkProgrammeEndDate', 'education_grade_id']
                 ]
             ])
-            ->allowEmpty('institution_class_id')           
+            ->allowEmpty('institution_class_id')
             ->add('institution_class_id', [
                 'ruleCheckValidClassId' => [
                     'rule' => ['checkValidClassId'],
-                    'on' => function ($context) {  
-                        if (array_key_exists('institution_class_id', $context['data']) && !empty($context['data']['institution_class_id'])) {  
+                    'on' => function ($context) {
+                        if (array_key_exists('institution_class_id', $context['data']) && !empty($context['data']['institution_class_id'])) {
                             if (array_key_exists('institution_id', $context['data']) && !empty($context['data']['institution_id'])) {
                                 if (array_key_exists('education_grade_id', $context['data']) && !empty($context['data']['education_grade_id'])) {
                                     if (array_key_exists('academic_period_id', $context['data']) && !empty($context['data']['academic_period_id'])){
                                         $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-                                        $institutionClassExists = $InstitutionClasses->exists([$InstitutionClasses->primaryKey() => $context['data']['institution_class_id']]);
+                                        $institutionClassExists = $InstitutionClasses->exists([$InstitutionClasses->getPrimaryKey() => $context['data']['institution_class_id']]);
 
                                         $Institutions = TableRegistry::get('Institution.Institutions');
-                                        $institutionExists = $Institutions->exists([$Institutions->primaryKey() => $context['data']['institution_id']]);
+                                        $institutionExists = $Institutions->exists([$Institutions->getPrimaryKey() => $context['data']['institution_id']]);
 
                                         $EducationGrades = TableRegistry::get('Education.EducationGrades');
-                                        $educationGradeExists = $EducationGrades->exists([$EducationGrades->primaryKey() => $context['data']['education_grade_id']]);
+                                        $educationGradeExists = $EducationGrades->exists([$EducationGrades->getPrimaryKey() => $context['data']['education_grade_id']]);
 
                                         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-                                        $academicPeriodExists = $AcademicPeriods->exists([$AcademicPeriods->primaryKey() => $context['data']['academic_period_id']]);
+                                        $academicPeriodExists = $AcademicPeriods->exists([$AcademicPeriods->getPrimaryKey() => $context['data']['academic_period_id']]);
 
-                                        return ($institutionClassExists && $institutionExists && $educationGradeExists && $academicPeriodExists);  
+                                        return ($institutionClassExists && $institutionExists && $educationGradeExists && $academicPeriodExists);
                                     }
                                 }
-                            }         
+                            }
                         }
                         return false;
                     },
@@ -243,40 +246,43 @@ class StudentAdmissionTable extends ControllerActionTable
                 ],
                 'ruleClassMaxLimit' => [
                     'rule' => ['checkInstitutionClassMaxLimit'],
-                    'on' => function ($context) {  
-                        if (array_key_exists('institution_class_id', $context['data']) && !empty($context['data']['institution_class_id'])) {           
+                    'on' => function ($context) {
+                        if (array_key_exists('institution_class_id', $context['data']) && !empty($context['data']['institution_class_id'])) {
                             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-                            $institutionClassExists = $InstitutionClasses->exists([$InstitutionClasses->primaryKey() => $context['data']['institution_class_id']]);
+                            $institutionClassExists = $InstitutionClasses->exists([$InstitutionClasses->getPrimaryKey() => $context['data']['institution_class_id']]);
 
                             return $institutionClassExists;
                         }
                         return false;
                     }
                 ]
-            ])
-            ->add('status_id', 'ruleCheckStatusIdValid', [
-                'rule' => ['checkStatusIdValid'],
-                'provider' => 'table',
-                'on' => function ($context) {
-                    if (array_key_exists('action_type', $context['data']) && $context['data']['action_type'] == 'imported') {
-                        return true;
-                    }
-                    return false;
-                }
-            
             ]);
+        //POCOR-7716 start
+        // for removing check for status_id during import
+        // ->add('status_id', 'ruleCheckStatusIdValid', [
+        //     'rule' => ['checkStatusIdValid'],
+        //     'provider' => 'table',
+        //     'on' => function ($context) {
+        //         if (array_key_exists('action_type', $context['data']) && $context['data']['action_type'] == 'imported') {
+        //             return true;
+        //         }
+        //         return false;
+        //     }
 
+        // ]);
+        //POCOR-7716 end
         return $validator;
     }
 
     // foreign key rules
-    public function buildRules(RulesChecker $rules)
+    public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $excludedFields = ['status_id', 'assignee_id'];
+        $excludedFields = ['assignee_id'];//POCOR-7716
         foreach ($this->associations() as $assoc) {
-            $associatedModel = TableRegistry::get($assoc->className());
-            $fieldName = $assoc->foreignKey();
-            
+            $associatedModel = $assoc->getTarget();
+            $fieldName = $assoc->getForeignKey();
+            //$associatedModel = TableRegistry::get($assoc->className());//not use in cakephp 4
+            //$fieldName = $assoc->foreignKey();//not use in cakephp 4
             if(!in_array($fieldName, $excludedFields)) {
                 $rules->add($rules->existsIn($fieldName, $associatedModel, $fieldName.' does not exists.'));
             }
@@ -285,7 +291,7 @@ class StudentAdmissionTable extends ControllerActionTable
         return $rules;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Students.afterSave'] = 'studentsAfterSave';
@@ -361,7 +367,7 @@ class StudentAdmissionTable extends ControllerActionTable
     }
 
     public function studentsAfterSave(Event $event, $student)
-    { 
+    {
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $statusList = $StudentStatuses->findCodeList();
         $Enrolled = $statusList['CURRENT'];
@@ -374,7 +380,7 @@ class StudentAdmissionTable extends ControllerActionTable
 //        $this->log($student, 'debug');
         //POCOR-6500 starts
         //get student role
-        $securityRolesTbl = TableRegistry::get('security_roles');
+        $securityRolesTbl = TableRegistry::get('Security.SecurityRoles');
         $securityRoles = $securityRolesTbl->find()
                                 ->where([
                                     $securityRolesTbl->aliasField('code') => 'STUDENT',
@@ -393,7 +399,7 @@ class StudentAdmissionTable extends ControllerActionTable
 
                 //POCOR-6500 ends
                 // get the first step in 'REJECTED' workflow statuses
-                $workflowEntity = $this->getWorkflow($this->registryAlias());
+                $workflowEntity = $this->getWorkflow($this->getRegistryAlias());
                 $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
                 $statuses = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentAdmission', 'REJECTED');
                 ksort($statuses);
@@ -403,7 +409,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 if (!empty($rejectedStatusEntity)) {
                     $doneStatus = self::DONE;
                     $pendingAdmissions = $this->find()
-                        ->innerJoinWith($this->Statuses->alias(), function ($q) use ($doneStatus) {
+                        ->innerJoinWith($this->Statuses->getAlias(), function ($q) use ($doneStatus) {
                             return $q->where(['category <> ' => $doneStatus]);
                         })
                         ->where([
@@ -440,17 +446,17 @@ class StudentAdmissionTable extends ControllerActionTable
                     }
                 }
             }
-            
+
         } else { // edit
 
             // to cater logic if during undo promoted / graduate (without immediate enrolled record), there is still pending admission / transfer
-            if ($student->dirty('student_status_id')) {
+            if ($student->getDirty('student_status_id')) {
                 $oldStatus = $student->getOriginal('student_status_id');
                 $newStatus = $student->student_status_id;
                 $UndoPromotion = $oldStatus == $Promoted && $newStatus == $Enrolled;
                 $UndoGraduation = $oldStatus == $Graduated && $newStatus == $Enrolled;
                 $UndoWithdraw = $oldStatus == $Withdraw && $newStatus == $Enrolled;
-                
+
                 if ($UndoPromotion || $UndoGraduation || $UndoWithdraw) {
                     $this->removePendingAdmission($student->student_id, $student->institution_id);
                 }
@@ -472,7 +478,7 @@ class StudentAdmissionTable extends ControllerActionTable
         //remove all pending transfer requests
         //could not include grade / academic period because not always valid. (promotion/graduation/repeat and transfer/admission can be done on different grade / academic period)
         $pendingTransfers = $StudentTransfers->find()
-            ->innerJoinWith($StudentTransfers->Statuses->alias(), function ($q) use ($doneStatus) {
+            ->innerJoinWith($StudentTransfers->Statuses->getAlias(), function ($q) use ($doneStatus) {
                 return $q->where(['category <> ' => $doneStatus]);
             })
             ->where([
@@ -489,7 +495,7 @@ class StudentAdmissionTable extends ControllerActionTable
 
         //remove all pending admission requests
         $pendingAdmissions = $this->find()
-            ->innerJoinWith($this->Statuses->alias(), function ($q) use ($doneStatus) {
+            ->innerJoinWith($this->Statuses->getAlias(), function ($q) use ($doneStatus) {
                 return $q->where(['category <> ' => $doneStatus]);
             })
             ->where([$this->aliasField('student_id') => $studentId])
@@ -502,12 +508,14 @@ class StudentAdmissionTable extends ControllerActionTable
         }
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
     {
-        $session = $this->request->session();
-        $institutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        $paramInstitutionId = $this->request->getAttribute('param')['institutionId'];
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $institutionId = isset($paramInstitutionId) ? $this->paramsDecode($paramInstitutionId)['id'] : $getInstitutionId;
         $studentsUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'institutionId' => $this->paramsEncode(['id' => $institutionId]), 'action' => 'Students'];
-        $previousTitle = Inflector::humanize(Inflector::underscore($this->alias()));
+        $previousTitle = Inflector::humanize(Inflector::underscore($this->getAlias()));
 
         $Navigation->substituteCrumb($previousTitle, 'Students', $studentsUrl);
         $Navigation->addCrumb($previousTitle);
@@ -516,9 +524,13 @@ class StudentAdmissionTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $toolbarButtons = $extra['toolbarButtons'];
-        $session = $this->request->session();
-        $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+        $session = $this->request->getSession();
+        $paramInstitutionId = $this->request->getAttribute('param')['institutionId'];
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $institutionId = !empty($paramInstitutionId) ? $this->ControllerAction->paramsDecode($paramInstitutionId)['id'] : $getInstitutionId;
 
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         if ($this->action == 'index') {
             $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
             $toolbarButtons['back']['attr'] = [
@@ -531,9 +543,10 @@ class StudentAdmissionTable extends ControllerActionTable
             $toolbarButtons['back']['url'] = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
-                'institutionId' => $this->paramsEncode(['id' => $institutionId]),
                 'action' => 'Students',
-                0 => 'index'
+                0 => 'index',
+                1 => $encodedQueryString
+                //'institutionId' => $this->paramsEncode(['id' => $institutionId]),
             ];
 
         } elseif ($this->action == 'edit') {
@@ -542,6 +555,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 $toolbarButtons['back']['url']['action'] = 'index';
                 unset($toolbarButtons['back']['url'][0]);
             }
+
             unset($toolbarButtons['back']['url'][1]);
         }
     }
@@ -552,6 +566,9 @@ class StudentAdmissionTable extends ControllerActionTable
         $this->field('start_date', ['type' => 'hidden']);
         $this->field('end_date', ['type' => 'hidden']);
         $this->setFieldOrder(['status_id', 'assignee_id', 'student_id', 'academic_period_id', 'education_grade_id', 'institution_class_id']);
+
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         // process Toolbar buttons
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         $url = [
@@ -564,6 +581,7 @@ class StudentAdmissionTable extends ControllerActionTable
         $toolbarButtonsArray['bulkAdmission']['label'] = '<i class="fa kd-transfer"></i>';
         $toolbarButtonsArray['bulkAdmission']['attr']['title'] = __('Bulk Admission');
         $toolbarButtonsArray['bulkAdmission']['url'] = $url;
+        $toolbarButtonsArray['bulkAdmission']['url'][1] = $encodedQueryString;
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 
@@ -600,8 +618,8 @@ class StudentAdmissionTable extends ControllerActionTable
         $value = '';
         if ($entity->has('user')) {
             //POCOR-7738 start
-            if (($this->request->pass)[0] == "view"){
-                 $value = $entity->user->name; 
+            if (($this->request->getParam('pass'))[0] == "view"){
+                 $value = $entity->user->name;
             }
             else{
                  $value = $entity->user->name_with_id;
@@ -625,7 +643,7 @@ class StudentAdmissionTable extends ControllerActionTable
             'view',
             $encodedUserId
         ];
-        return $event->subject()->HtmlField->link($value, $url);
+        return $event->getSubject()->HtmlField->link($value, $url);
     }
     //POCOR-7738 end
     public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request)
@@ -680,12 +698,12 @@ class StudentAdmissionTable extends ControllerActionTable
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
-    {   
+    {
         //this is meant to force gender_id validation
         if ($data->offsetExists('student_id')) {
-            if ($this->Users->exists([$this->Users->primaryKey() => $data['student_id']])) {
+            if ($this->Users->exists([$this->Users->getPrimaryKey() => $data['student_id']])) {
                 $studentId = $data['student_id'];
-                
+
                 if (!$data->offsetExists('gender_id')) {
                     $query = $this->Users->get($studentId);
                     $data['gender_id'] = $query->gender_id;
@@ -696,19 +714,46 @@ class StudentAdmissionTable extends ControllerActionTable
         // For third party restful call
         if($data->offsetExists('action_type') && $data['action_type'] == 'third_party') {
             if($data->offsetExists('academic_period_id')) {
-                if ($this->AcademicPeriods->exists([$this->AcademicPeriods->primaryKey() => $data['academic_period_id']])) {
+                if ($this->AcademicPeriods->exists([$this->AcademicPeriods->getPrimaryKey() => $data['academic_period_id']])) {
                     $data['end_date'] = $this->AcademicPeriods->get($data['academic_period_id'])->end_date->format('Y-m-d');
                 }
             }
 
             if(!$data->offsetExists('institution_class_id')) {
-                $data['institution_class_id'] = null;                
+                $data['institution_class_id'] = null;
             }
-            
+
             $data['status_id'] = WorkflowBehavior::STATUS_OPEN;
-            $data['assignee_id'] = WorkflowBehavior::AUTO_ASSIGN;        
-        }   
-   }
+            $data['assignee_id'] = WorkflowBehavior::AUTO_ASSIGN;
+        }
+        //POCOR-7716 start(setting default admission status during import)
+        if($data['action_type'] == 'imported'){
+            //getting default value of student admission status
+            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $configItemResult = $ConfigItems->find()->where([
+                $ConfigItems->aliasField('code') => "student_admission_status"
+            ])->first();
+            $studentStatus = !empty($configItemResult->value) ? $configItemResult->value : $configItemResult->default_value;
+            $workflows = TableRegistry::get('Workflow.Workflows');
+            $workflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+            $workflowResults = $workflows->find()
+                ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
+                ->LeftJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()], [
+                    $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
+                    $workflowSteps->aliasField('name') => 'Approved'
+                ])
+                ->where([
+                    $workflows->aliasField('name') => 'Student Admission'
+                ])
+                ->first();
+            if ($studentStatus == 0) {// for enrolled
+                $data['status_id']= $workflowResults->workflowSteps_id;
+            } else {// for other statuses
+                $data['status_id'] = $workflowSteps->get($studentStatus)->id;
+            }
+            //POCOR-7716 end
+        }
+    }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
@@ -716,20 +761,20 @@ class StudentAdmissionTable extends ControllerActionTable
             if ($entity->has('action_type') && $entity->action_type == 'imported') { // Import logic
                 $WorkflowActions = TableRegistry::get('Workflow.WorkflowActions');
                 $triggeringStep = $WorkflowActions->getEventTriggeringStep('Institution.StudentAdmission', 'Workflow.onApprove');
-                
-                if(!empty($triggeringStep) && $entity->status_id == $triggeringStep) {  
+
+                if(!empty($triggeringStep) && $entity->status_id == $triggeringStep) {
                     if ($this->save($entity)) {
                         $this->addInstitutionStudent($entity);
                     }
                 }
             } else if ($entity->has('action_type') && $entity->action_type == 'default') { // AngularJs logic
-                // auto approve admission and add student into the institution 
+                // auto approve admission and add student into the institution
                 $superAdmin = Hash::get($_SESSION['Auth'], 'User.super_admin');
                 $executePermission = isset($_SESSION['Permissions']) && Hash::check($_SESSION['Permissions'], 'Institutions.StudentAdmission.execute');
 
                 // creator must be admin or have 'Student Admission -> Execute' permission
                 if ($superAdmin || $executePermission) {
-                    $workflowEntity = $this->getWorkflow($this->registryAlias());
+                    $workflowEntity = $this->getWorkflow($this->getRegistryAlias());
 
                     // get the first step in 'APPROVED' workflow statuses
                     $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
@@ -774,7 +819,7 @@ class StudentAdmissionTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->getRequest()->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -802,8 +847,8 @@ class StudentAdmissionTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Users->alias(), $this->Institutions->alias(), $this->CreatedUser->alias(),'Assignees'])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->contain([$this->Users->getAlias(), $this->Institutions->getAlias(), $this->CreatedUser->getAlias(),'Assignees'])
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
             ->where([$this->aliasField('assignee_id') => $userId,
@@ -842,7 +887,7 @@ class StudentAdmissionTable extends ControllerActionTable
 
     public function findByQueue(Query $query, array $options)
     {
-        $classId = array_key_exists('institution_class_id', $options) ? $options['institution_class_id'] : null;
+        $classId = isset($options['institution_class_id']) ? $options['institution_class_id'] : null;
         $conditions = [];
 
         if(!is_null($classId)){
@@ -853,7 +898,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 ->where([
                     $this->aliasField('institution_class_id') => $classId
                 ]);
-          
+
             $results = $query->first();
 
             if(!empty($results->pending_queue)) {
@@ -873,7 +918,7 @@ class StudentAdmissionTable extends ControllerActionTable
                             $row['institution_class']['vacancy'] = $row['institution_class']['capacity'] - ($row['institution_class']['total_male_students'] + $row['institution_class']['total_female_students']);
                             return $row;
                         });
-                    });  
+                    });
             }
         } else {
             $query->where(['1=0']);
@@ -883,19 +928,19 @@ class StudentAdmissionTable extends ControllerActionTable
 
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Institutions > Students > Student Admission';
-            $workflowModelsTable = TableRegistry::get('workflow_models');
-            $workflowStepsTable = TableRegistry::get('workflow_steps');
+            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
             $Workflows = TableRegistry::get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
                             'workflow_id'=>$Workflows->aliasField('id'),
                             'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
-                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                            ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                                 [
                                     $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
                                 ])
@@ -910,11 +955,11 @@ class StudentAdmissionTable extends ControllerActionTable
                             ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $request->session();
+            /*$session = $request->getSession();
             if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
-            }
-            $institutionId = $institutionId;
+            }*/
+            $institutionId = $getInstitutionId = $this->getQueryString('institution_id');
             $assigneeOptions = [];
             if (!is_null($stepId)) {
                 $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
@@ -924,7 +969,7 @@ class StudentAdmissionTable extends ControllerActionTable
                     $Areas = TableRegistry::get('Area.Areas');
                     $Institutions = TableRegistry::get('Institution.Institutions');
                     if ($isSchoolBased) {
-                        if (is_null($institutionId)) {                        
+                        if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
                         } else {
                             $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
@@ -940,12 +985,12 @@ class StudentAdmissionTable extends ControllerActionTable
                                     ->find('userList', ['where' => $where])
                                     ->leftJoinWith('SecurityGroups.Institutions');
                             $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
-                            
+
                             // Region based assignee
                             $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                             $regionBasedAssigneeQuery = $SecurityGroupUsers
                                         ->find('UserList', ['where' => $where, 'area' => $areaObj]);
-                            
+
                             $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
                             // End
                             $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
@@ -984,18 +1029,18 @@ class StudentAdmissionTable extends ControllerActionTable
         Log::write('debug', $security_group_id);
         //check student already exist
         $student_security_groups = self::getStudentSecurityGroups($student_id, $student_role_id);
-        Log::write('debug', $student_security_groups);
+        //Log::write('debug', $student_security_groups);
         //check that the student is not in other groups
         if (sizeof($student_security_groups) == 0) {
-            Log::write('debug', $student_id);
-            Log::write('debug', $security_group_id);
-            Log::write('debug', $student_role_id);
+            //Log::write('debug', $student_id);
+            //Log::write('debug', $security_group_id);
+            //Log::write('debug', $student_role_id);
             self::createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id);
             return;
         }
         //update user's security_group_id in security_group_users table
         $previous_security_group_id = self::getPreviousSecurityGroupId($institution_id, $student_id);
-        Log::write('debug', $previous_security_group_id);
+       // Log::write('debug', $previous_security_group_id);
         //check that the student is should be transferred
         if (in_array($previous_security_group_id, $student_security_groups)) {
             self::makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id);
@@ -1015,7 +1060,7 @@ class StudentAdmissionTable extends ControllerActionTable
      */
     private static function makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id)
     {
-        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+        $securityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
         $securityGroupUsersTbl->updateAll(
             [
                 'security_group_id' => $security_group_id,
@@ -1039,9 +1084,9 @@ class StudentAdmissionTable extends ControllerActionTable
     private static function getPreviousSecurityGroupId($institution_id, $student_id)
     {
         $previous_security_group_id = 0;
-        $institutionTbl = TableRegistry::get('institutions');
-        $InstitutionStudentsTbl = TableRegistry::get('institution_students');
-        $TransfersTbl = TableRegistry::get('institution_student_transfers');
+        $institutionTbl = TableRegistry::get('Institution.Institutions');
+        $InstitutionStudentsTbl = TableRegistry::get('Institution.InstitutionStudents');
+        $TransfersTbl = TableRegistry::get('Institution.InstitutionStudentTransfers');
         $StudentTransfers = $InstitutionStudentsTbl
             ->find()
             ->select([
@@ -1049,7 +1094,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 $TransfersTbl->aliasField('institution_id'),
                 $TransfersTbl->aliasField('previous_institution_id')
             ])
-            ->leftJoin([$TransfersTbl->alias() => $TransfersTbl->table()],
+            ->leftJoin([$TransfersTbl->getAlias() => $TransfersTbl->getTable()],
                 [
                     $TransfersTbl->aliasField('student_id') . '=' . $student_id,
                     $TransfersTbl->aliasField('institution_id') => $institution_id
@@ -1082,7 +1127,7 @@ class StudentAdmissionTable extends ControllerActionTable
      */
     private static function getStudentSecurityGroups($student_id, $student_role_id)
     {
-        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+        $securityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
         $countSecurityGroupStudent = $securityGroupUsersTbl->find('all')
             ->select('security_group_id')
             ->where([
@@ -1100,7 +1145,7 @@ class StudentAdmissionTable extends ControllerActionTable
      */
     private static function getStudentSecurityRoleId()
     {
-        $securityRolesTbl = TableRegistry::get('security_roles');
+        $securityRolesTbl = TableRegistry::get('Security.SecurityRoles');
         $securityRoles = $securityRolesTbl->find()
             ->where([
                 $securityRolesTbl->aliasField('code') => 'STUDENT',
@@ -1116,7 +1161,7 @@ class StudentAdmissionTable extends ControllerActionTable
      */
     private static function getInstitutionSecurityGroupId($institution_id)
     {
-        $institutionTbl = TableRegistry::get('institutions');
+        $institutionTbl = TableRegistry::get('Institution.Institutions');
         $security_group_id = null;
         $institutions = $institutionTbl->find()
             ->where([
@@ -1126,7 +1171,7 @@ class StudentAdmissionTable extends ControllerActionTable
             $security_group_id = $institutions->security_group_id;
         }
         if ($security_group_id != null) {
-            $securityGroupInstitutionsTbl = TableRegistry::get('security_group_institutions');
+            $securityGroupInstitutionsTbl = TableRegistry::get('Security.SecurityGroupInstitutions');
             $securityGroupInstitutions = $securityGroupInstitutionsTbl->find()
                 ->where([
                     $securityGroupInstitutionsTbl->aliasField('security_group_id') => $security_group_id,
@@ -1157,7 +1202,7 @@ class StudentAdmissionTable extends ControllerActionTable
     private static function createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id)
     {
         $id = Text::uuid();
-        $securityGroupUsersTbl = TableRegistry::get('security_group_users');
+        $securityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
         $security_group_data = [
             'id' => $id,
             'security_group_id' => $security_group_id,

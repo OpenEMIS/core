@@ -17,7 +17,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
     const FORMULA_SUM = "SUM";
     const FORMULA_AVG = "AVG";
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->hasOne('AppraisalFormsCriterias', [
@@ -38,13 +38,13 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
         $this->belongsTo('AppraisalCriterias', [
             'className' => 'StaffAppraisal.AppraisalCriterias',
             'foreignKey' => [
-                'appraisal_form_id', 
+                'appraisal_form_id',
                 'appraisal_criteria_id'
             ]
         ]);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Appraisal.add.afterSave'] = 'updateAppraisalScore';
@@ -57,7 +57,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
     public function updateAppraisalScore(Event $event, Entity $entity, ArrayObject $requestData, $alias)
     {
         // Form ID
-        $requestData[$this->alias()]['id'] = $entity->id;
+        $requestData[$this->getAlias()]['id'] = $entity->id;
 
         $this->createAppraisalFormsCriteriasScoresRecord($requestData);
     }
@@ -150,7 +150,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
     }
 
     private function evaluateScore($currentCriteria, ArrayObject $proccessedCriteriaScore)
-    {   
+    {
         $criteriaCountLink = count($currentCriteria->appraisal_forms_criterias_scores_links);
 
         if ($criteriaCountLink > 0) {
@@ -164,14 +164,14 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
                     //take the id and check with processed
                     if (isset($proccessedCriteriaScore[$childCriteriaLink->appraisal_criteria_id])) {
                         $totalScore += $proccessedCriteriaScore[$childCriteriaLink->appraisal_criteria_id];
-                    } 
+                    }
                 }
             }
 
             // Calculate score based on the criteria params.
-            if ($currentCriteria->has('params') && !empty($currentCriteria->params)) {                             
+            if ($currentCriteria->has('params') && !empty($currentCriteria->params)) {
                 $scoreEntityParams = json_decode($currentCriteria->params, true);
-                if (!is_null($scoreEntityParams) && array_key_exists('formula', $scoreEntityParams)) {
+                if (!is_null($scoreEntityParams) && isset($scoreEntityParams['formula'])) {
                     $formula = $scoreEntityParams['formula'];
                     switch ($formula) {
                         case self::FORMULA_AVG:
@@ -195,7 +195,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
     {
         $AppraisalScoreAnswers = TableRegistry::get('StaffAppraisal.AppraisalScoreAnswers');
         $data = [];
-        
+
         // Calculated all the score fields, time to save to DB
         foreach ($proccessedCriteriaScore as $criteriaScoreId => $answer) {
             $data[] = [
@@ -208,7 +208,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
 
         if (!empty($data)) {
             $newEntities = $AppraisalScoreAnswers->newEntities($data);
-            $AppraisalScoreAnswers->connection()->transactional(function () use ($AppraisalScoreAnswers, $newEntities) {
+            $AppraisalScoreAnswers->getConnection()->transactional(function () use ($AppraisalScoreAnswers, $newEntities) {
                 foreach ($newEntities as $entity) {
                     $AppraisalScoreAnswers->save($entity);
                 }
@@ -217,7 +217,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
 
     }
 
-    private function createAppraisalFormsCriteriasScoresRecord($requestData) 
+    private function createAppraisalFormsCriteriasScoresRecord($requestData)
     {
         $appraisalFormsCriteriasScores = TableRegistry::get('StaffAppraisal.AppraisalFormsCriteriasScores');
 
@@ -229,7 +229,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
             $actualDataToBeSave = [];
             foreach ($requestData['AppraisalForms']['appraisal_criterias'] as $appraisalFormCriteriasEntity) {
 
-                $criteriasFieldType = strtoupper($appraisalFormCriteriasEntity['_joinData']['field_type']);                
+                $criteriasFieldType = strtoupper($appraisalFormCriteriasEntity['_joinData']['field_type']);
 
                 switch ($criteriasFieldType) {
                     case self::FIELD_TYPE_SCORE:
@@ -249,7 +249,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
             if (!is_null($actualDataToBeSave)) {
                 // Process all the entities as a single transaction
                 $newEntities = $appraisalFormsCriteriasScores->newEntities($actualDataToBeSave);
-                $appraisalFormsCriteriasScores->connection()->transactional(function () use ($appraisalFormsCriteriasScores, $newEntities) {
+                $appraisalFormsCriteriasScores->getConnection()->transactional(function () use ($appraisalFormsCriteriasScores, $newEntities) {
                 foreach ($newEntities as $entity) {
                     $appraisalFormsCriteriasScores->save($entity, ['atomic' => false]);
                     }
@@ -284,7 +284,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
         $appraisalFormCriteriasFromRequestData = $requestData['AppraisalForms']['appraisal_criterias'];
         foreach ($appraisalFormCriteriasFromRequestData as $obj) {
             $criteriaIdFromRequestData[] = $obj['id'];
-        }        
+        }
 
         $result = array_diff($criteriaIdFromTable,$criteriaIdFromRequestData);
 

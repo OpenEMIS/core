@@ -42,6 +42,8 @@ function SecurityPermissionEditSvc($http, $q, $filter, KdDataSvc) {
 
     function getPermissions(roleId, module) {
         var success = function(response, deferred) {
+            console.log('getPermissions');
+            console.log(response);
             deferred.resolve(response.data.data);
         };
         return SecurityFunctions

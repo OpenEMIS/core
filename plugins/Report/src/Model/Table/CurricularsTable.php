@@ -20,12 +20,12 @@ class CurricularsTable extends AppTable
 {
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_curriculars');
+        //POCOR-8028 removed academic period
+        $this->setTable('institution_curriculars');
         parent::initialize($config);
-        
-        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('CurricularTypes', ['className' => 'FieldOption.CurricularTypes']);
         
@@ -38,18 +38,14 @@ class CurricularsTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
+        //POCOR-8028 removed academic period
         $requestData = json_decode($settings['process']['params']);
         $areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
-        $academicPeriodId = $requestData->academic_period_id;
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $periodEntity = $AcademicPeriods->get($academicPeriodId);
-        $startDate = $periodEntity->start_date->format('Y-m-d');
-        $endDate = $periodEntity->end_date->format('Y-m-d');
         $InstitutionCurricularStaff = TableRegistry::get('Institution.InstitutionCurricularStaff');
         $InstitutionCurricularStudent = TableRegistry::get('Institution.InstitutionCurricularStudents');
-        $InstitutionCurricularPosition = TableRegistry::get('curricular_positions');
-        $InstitutionCurriculartypes = TableRegistry::get('curricular_types');
+        $InstitutionCurricularPosition = TableRegistry::get('FieldOption.CurricularPositions');
+        $InstitutionCurriculartypes = TableRegistry::get('FieldOption.CurricularTypes');
         $staff = TableRegistry::get('Security.Users');
         $student = TableRegistry::get('Security.Users');
         $Genders = TableRegistry::get('User.Genders');
@@ -57,7 +53,6 @@ class CurricularsTable extends AppTable
         $UserIdentities = TableRegistry::get('User.Identities');
         $conditions = [];
         
-        $conditions['AcademicPeriods.id'] = $academicPeriodId; 
         if (!empty($institutionId) && $institutionId > 0) {
             $conditions['Institutions.id'] = $institutionId; 
         }
@@ -68,7 +63,6 @@ class CurricularsTable extends AppTable
             ->select([
                 'institution_code' => 'Institutions.code',
                 'institution_name' => 'Institutions.name',               
-                'academic_period_name' => 'AcademicPeriods.name',               
                 'area_code' => 'Areas.code',
                 'area_name' => 'Areas.name',
                 'area_administratives_code' => 'AreaAdministratives.code',
@@ -93,12 +87,7 @@ class CurricularsTable extends AppTable
                 
             ])
             ->contain([
-                'AcademicPeriods' => [
-                    'fields' => [
-                        'AcademicPeriods.id',
-                        'AcademicPeriods.name'
-                    ]
-                ],
+                //POCOR-8028 removed academic period
                 'Institutions' => [
                     'fields' => [
                         'Institutions.id',
@@ -120,30 +109,30 @@ class CurricularsTable extends AppTable
                 ],
             ])
             ->leftJoin(
-                    [$InstitutionCurricularStaff->alias() => $InstitutionCurricularStaff->table()],
+                    [$InstitutionCurricularStaff->getAlias() => $InstitutionCurricularStaff->getTable()],
                     [
                         $InstitutionCurricularStaff->aliasField('institution_curricular_id = ') . $this->aliasField('id'),
                     ]
                 )
             ->leftJoin(
-                    [$InstitutionCurricularStudent->alias() => $InstitutionCurricularStudent->table()],
+                    [$InstitutionCurricularStudent->getAlias() => $InstitutionCurricularStudent->getTable()],
                     [
                         $InstitutionCurricularStudent->aliasField('institution_curricular_id = ') . $this->aliasField('id')
                     ]
                 )
             ->leftJoin(
-                    [$InstitutionCurricularPosition->alias() => $InstitutionCurricularPosition->table()],
+                    [$InstitutionCurricularPosition->getAlias() => $InstitutionCurricularPosition->getTable()],
                     [
                         $InstitutionCurricularPosition->aliasField('id = ') . $InstitutionCurricularStudent->aliasField('curricular_position_id')
                     ]
                 )
              ->leftJoin(
-                    [$student->alias() => $student->table()],
+                    [$student->getAlias() => $student->getTable()],
                     [
                         $student->aliasField('id = ') . $InstitutionCurricularStudent->aliasField('student_id')
                     ])
              ->leftJoin(
-                    [$InstitutionCurriculartypes->alias() => $InstitutionCurriculartypes->table()],
+                    [$InstitutionCurriculartypes->getAlias() => $InstitutionCurriculartypes->getTable()],
                     [
                         $InstitutionCurriculartypes->aliasField('id = ') . $this->aliasField('curricular_type_id')
                     ])
@@ -153,14 +142,8 @@ class CurricularsTable extends AppTable
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
+        //POCOR-8028 removed academic period
         $newFields = [];
-
-        $newFields[] = [
-            'key' => 'academic_period_name',
-            'field' => 'academic_period_name',
-            'type' => 'integer',
-            'label' => __('Academic Period')
-        ];
 
         $newFields[] = [
             'key' => 'Institutions.code',
@@ -290,7 +273,7 @@ class CurricularsTable extends AppTable
                         'last_name' => $staff->aliasField('last_name')
                     ])
                     ->leftJoin(
-                    [$staff->alias() => $staff->table()],
+                    [$staff->getAlias() => $staff->getTable()],
                     [
                         $staff->aliasField('id = ') . $InstitutionCurricularStaff->aliasField('staff_id'),
                     ])
@@ -304,6 +287,6 @@ class CurricularsTable extends AppTable
 
     public function onExcelGetCategory(Event $event, Entity $entity)
     {
-         return $entity->category ? __('Curricular') : __('Extracurricular');
+         return $entity->category ? __('Co-Curricular') : __('Extracurricular');
     }
 }

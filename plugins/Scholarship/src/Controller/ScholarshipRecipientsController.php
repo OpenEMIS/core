@@ -1,6 +1,6 @@
 <?php
 namespace Scholarship\Controller;
-
+use App\Controller\AppController;
 use ArrayObject;
 
 use Cake\Event\Event;
@@ -9,9 +9,9 @@ use Cake\I18n\Date;
 use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
 
-class ScholarshipRecipientsController extends PageController
+class ScholarshipRecipientsController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Scholarship.Scholarships');
@@ -19,10 +19,11 @@ class ScholarshipRecipientsController extends PageController
         $this->loadModel('Scholarship.RecipientActivityStatuses');
         $this->loadModel('Scholarship.RecipientActivities');
         $this->loadComponent('Scholarship.ScholarshipTabs');
-        $this->Page->loadElementsFromTable($this->ScholarshipRecipients);
+        $this->loadComponent('Page.Page');
+        // $this->Page->loadElementsFromTable($this->ScholarshipRecipients);
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $event = parent::implementedEvents();
         $event['Controller.Page.onRenderStatus'] = 'onRenderStatus';
@@ -30,273 +31,277 @@ class ScholarshipRecipientsController extends PageController
         return $event;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
     	$page = $this->Page;
         parent::beforeFilter($event);
+		// $page->addCrumb('Scholarships', ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Scholarships', 'index']);
+		// $page->addCrumb('Recipients');
 
-		$page->addCrumb('Scholarships', ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Scholarships', 'index']);
-		$page->addCrumb('Recipients');
+		// $page->setHeader(__('Scholarships') . ' - ' . __('Recipients'));
 
-		$page->setHeader(__('Scholarships') . ' - ' . __('Recipients'));
-
-        $page->disable(['add', 'delete']);
+        // $page->disable(['add', 'delete']);
     }
 
-    public function beforeRender(Event $event)
+    public function ScholarshipRecipients()
     {
-        $page = $this->Page;
-        parent::beforeRender($event);
-
-        $action = $this->request->action;
-        $toolbars = $page->getToolbars();
-
-        // remove queryString for index page
-        switch ($action) {
-            case 'view':
-                if ($toolbars->offsetExists('back')) {
-                    $toolbars['back']['data']['urlParams'] = false;
-                }
-                break;
-            case 'edit':
-                if ($toolbars->offsetExists('list')) {
-                    $toolbars['list']['data']['urlParams'] = false;
-                }
-                break;
-        }
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.SecurityRoles']);
     }
 
-    public function index()
-    {
-        parent::index();
-        $page = $this->Page;
+    // public function beforeRender(Event|\Cake\Event\EventInterface $event)
+    // {
+    //     $page = $this->Page;
+    //     parent::beforeRender($event);
 
-        $page->exclude(['scholarship_recipient_activity_status_id', 'approved_amount']);
+    //     $action = $this->request->getParam('action');
+    //     $toolbars = $page->getToolbars();
 
-        $page->addNew('status')
-            ->setSortable(true);
-        $page->addNew('openemis_no')
-            ->setDisplayFrom('recipient.openemis_no')
-            ->setSortable(true);
-        $page->addNew('financial_assistance_type')
-            ->setDisplayFrom('scholarship.financial_assistance_type.name')
-            ->setSortable(true);
-        $page->get('recipient_id')->setSortable(true);
-        $page->get('scholarship_id')
-            ->setSortable(true)
-            ->setLabel('Scholarship Name');
+    //     // remove queryString for index page
+    //     switch ($action) {
+    //         case 'view':
+    //             if ($toolbars->offsetExists('back')) {
+    //                 $toolbars['back']['data']['urlParams'] = false;
+    //             }
+    //             break;
+    //         case 'edit':
+    //             if ($toolbars->offsetExists('list')) {
+    //                 $toolbars['list']['data']['urlParams'] = false;
+    //             }
+    //             break;
+    //     }
+    // }
 
-        $page->move('status')->first();
-        $page->move('openemis_no')->after('status');
-        $page->move('recipient_id')->after('openemis_no');
-        $page->move('financial_assistance_type')->after('recipient_id');
-        $page->move('scholarship_id')->after('financial_assistance_type');
-    }
+    // public function index()
+    // {
+    //     parent::index();
+    //     $page = $this->Page;
 
-    public function view($id)
-    {
-        parent::view($id);
-        $page = $this->Page;
-        $entity = $page->getData();
-        $this->setupTabElements();
+    //     $page->exclude(['scholarship_recipient_activity_status_id', 'approved_amount']);
 
-        $page->exclude(['scholarship_recipient_activity_status_id']);
+    //     $page->addNew('status')
+    //         ->setSortable(true);
+    //     $page->addNew('openemis_no')
+    //         ->setDisplayFrom('recipient.openemis_no')
+    //         ->setSortable(true);
+    //     $page->addNew('financial_assistance_type')
+    //         ->setDisplayFrom('scholarship.financial_assistance_type.name')
+    //         ->setSortable(true);
+    //     $page->get('recipient_id')->setSortable(true);
+    //     $page->get('scholarship_id')
+    //         ->setSortable(true)
+    //         ->setLabel('Scholarship Name');
 
-        $page->addNew('status');
-        $page->addNew('openemis_no')
-            ->setDisplayFrom('recipient.openemis_no');
-        $page->addNew('financial_assistance_type')
-            ->setDisplayFrom('scholarship.financial_assistance_type.name');
+    //     $page->move('status')->first();
+    //     $page->move('openemis_no')->after('status');
+    //     $page->move('recipient_id')->after('openemis_no');
+    //     $page->move('financial_assistance_type')->after('recipient_id');
+    //     $page->move('scholarship_id')->after('financial_assistance_type');
+    // }
 
-        $page->get('scholarship_id')
-            ->setLabel('Scholarship Name');
-        $totalAwardAmountLabel = $this->Scholarships->addCurrencySuffix('Total Award Amount');
-        $page->addNew('total_award_amount')
-            ->setDisplayFrom('scholarship.total_amount')
-            ->setLabel($totalAwardAmountLabel);
-        $approvedAwardAmountLabel = $this->Scholarships->addCurrencySuffix('Approved Award Amount');
-        $page->addNew('approved_amount')
-            ->setLabel($approvedAwardAmountLabel);
+    // public function view($id)
+    // {
+    //     parent::view($id);
+    //     $page = $this->Page;
+    //     $entity = $page->getData();
+    //     $this->setupTabElements();
 
-        $activityStatusData = $this->getActivityStatusData($entity);
-        $page->addNew('activity_status')
-            ->setControlType('table')
-            ->setAttributes('column', [
-                ['label' => __('Date'), 'key' => 'date'],
-                ['label' => __('Transition'), 'key' => 'transition'],
-                ['label' => __('Comments'), 'key' => 'comments'],
-                ['label' => __('Last Executer'), 'key' => 'last_executer'],
-                ['label' => __('Last Execution Date'), 'key' => 'last_execution_date']
-            ])
-            ->setAttributes('row', $activityStatusData);
+    //     $page->exclude(['scholarship_recipient_activity_status_id']);
 
-        $page->move('status')->first();
-        $page->move('openemis_no')->after('status');
-        $page->move('recipient_id')->after('openemis_no');
-        $page->move('financial_assistance_type')->after('recipient_id');
-        $page->move('scholarship_id')->after('financial_assistance_type');
-        $page->move('total_award_amount')->after('scholarship_id');
-        $page->move('approved_amount')->after('total_award_amount');
-        $page->move('activity_status')->after('approved_amount');
-    }
+    //     $page->addNew('status');
+    //     $page->addNew('openemis_no')
+    //         ->setDisplayFrom('recipient.openemis_no');
+    //     $page->addNew('financial_assistance_type')
+    //         ->setDisplayFrom('scholarship.financial_assistance_type.name');
 
-    public function edit($id)
-    {
-        parent::edit($id);
-        $page = $this->Page;
-        $entity = $page->getData();
+    //     $page->get('scholarship_id')
+    //         ->setLabel('Scholarship Name');
+    //     $totalAwardAmountLabel = $this->Scholarships->addCurrencySuffix('Total Award Amount');
+    //     $page->addNew('total_award_amount')
+    //         ->setDisplayFrom('scholarship.total_amount')
+    //         ->setLabel($totalAwardAmountLabel);
+    //     $approvedAwardAmountLabel = $this->Scholarships->addCurrencySuffix('Approved Award Amount');
+    //     $page->addNew('approved_amount')
+    //         ->setLabel($approvedAwardAmountLabel);
 
-        $this->setupTabElements();
+    //     $activityStatusData = $this->getActivityStatusData($entity);
+    //     $page->addNew('activity_status')
+    //         ->setControlType('table')
+    //         ->setAttributes('column', [
+    //             ['label' => __('Date'), 'key' => 'date'],
+    //             ['label' => __('Transition'), 'key' => 'transition'],
+    //             ['label' => __('Comments'), 'key' => 'comments'],
+    //             ['label' => __('Last Executer'), 'key' => 'last_executer'],
+    //             ['label' => __('Last Execution Date'), 'key' => 'last_execution_date']
+    //         ])
+    //         ->setAttributes('row', $activityStatusData);
 
-        $page->get('scholarship_recipient_activity_status_id')
-            ->setLabel('Status');
-        $page->addNew('openemis_no')
-            ->setDisplayFrom('recipient.openemis_no');
-        $page->addNew('financial_assistance_type')
-            ->setDisplayFrom('scholarship.financial_assistance_type.name');
-        $page->get('scholarship_id')
-            ->setLabel('Scholarship Name');
-        $totalAwardAmountLabel = $this->Scholarships->addCurrencySuffix('Total Award Amount');
-        $totalAwardAmountValue = $entity->scholarship->total_amount;
-        $page->addNew('total_award_amount')
-            ->setDisplayFrom('scholarship.total_amount')
-            ->setLabel($totalAwardAmountLabel)
-            ->setValue($totalAwardAmountValue);
-        $approvedAmountLabel = $this->Scholarships->addCurrencySuffix('Approved Award Amount');
-        $page->get('approved_amount')
-            ->setLabel($approvedAmountLabel)
-            ->setRequired(true)
-            ->setAttributes('onblur', 'return utility.checkDecimal(this, 2);');
-        $page->addNew('activity_status')
-            ->setControlType('section');
+    //     $page->move('status')->first();
+    //     $page->move('openemis_no')->after('status');
+    //     $page->move('recipient_id')->after('openemis_no');
+    //     $page->move('financial_assistance_type')->after('recipient_id');
+    //     $page->move('scholarship_id')->after('financial_assistance_type');
+    //     $page->move('total_award_amount')->after('scholarship_id');
+    //     $page->move('approved_amount')->after('total_award_amount');
+    //     $page->move('activity_status')->after('approved_amount');
+    // }
 
-        $lastActivityDate = $this->getLastActivityDate($entity);
-        $page->addNew('date')
-            ->setControlType('date')
-            ->setAttributes('minDate', $lastActivityDate);
+    // public function edit($id)
+    // {
+    //     parent::edit($id);
+    //     $page = $this->Page;
+    //     $entity = $page->getData();
 
-        $nextStatusOptions = $this->RecipientActivityStatuses
-            ->find('optionList', ['defaultOption' => false])
-            ->where([
-                $this->RecipientActivityStatuses->aliasField('id <>') => $entity->scholarship_recipient_activity_status_id
-            ])
-            ->toArray();
+    //     $this->setupTabElements();
 
-        $page->addNew('next_status')
-            ->setControlType('select')
-            ->setOptions($nextStatusOptions);
+    //     $page->get('scholarship_recipient_activity_status_id')
+    //         ->setLabel('Status');
+    //     $page->addNew('openemis_no')
+    //         ->setDisplayFrom('recipient.openemis_no');
+    //     $page->addNew('financial_assistance_type')
+    //         ->setDisplayFrom('scholarship.financial_assistance_type.name');
+    //     $page->get('scholarship_id')
+    //         ->setLabel('Scholarship Name');
+    //     $totalAwardAmountLabel = $this->Scholarships->addCurrencySuffix('Total Award Amount');
+    //     $totalAwardAmountValue = $entity->scholarship->total_amount;
+    //     $page->addNew('total_award_amount')
+    //         ->setDisplayFrom('scholarship.total_amount')
+    //         ->setLabel($totalAwardAmountLabel)
+    //         ->setValue($totalAwardAmountValue);
+    //     $approvedAmountLabel = $this->Scholarships->addCurrencySuffix('Approved Award Amount');
+    //     $page->get('approved_amount')
+    //         ->setLabel($approvedAmountLabel)
+    //         ->setRequired(true)
+    //         ->setAttributes('onblur', 'return utility.checkDecimal(this, 2);');
+    //     $page->addNew('activity_status')
+    //         ->setControlType('section');
 
-        $page->addNew('comments', ['length' => ''])
-            ->setControlType('textarea');
+    //     $lastActivityDate = $this->getLastActivityDate($entity);
+    //     $page->addNew('date')
+    //         ->setControlType('date')
+    //         ->setAttributes('minDate', $lastActivityDate);
 
-        $page->move('scholarship_recipient_activity_status_id')->first();
-        $page->move('openemis_no')->after('scholarship_recipient_activity_status_id');
-        $page->move('recipient_id')->after('openemis_no');
-        $page->move('financial_assistance_type')->after('recipient_id');
-        $page->move('scholarship_id')->after('financial_assistance_type');
-        $page->move('total_award_amount')->after('scholarship_id');
-        $page->move('approved_amount')->after('total_award_amount');
-        $page->move('activity_status')->after('approved_amount');
-    }
+    //     $nextStatusOptions = $this->RecipientActivityStatuses
+    //         ->find('optionList', ['defaultOption' => false])
+    //         ->where([
+    //             $this->RecipientActivityStatuses->aliasField('id <>') => $entity->scholarship_recipient_activity_status_id
+    //         ])
+    //         ->toArray();
 
-    public function setupTabElements()
-    {
-        $page = $this->Page;
-        $tabElements = $this->ScholarshipTabs->getScholarshipRecipientTabs();
+    //     $page->addNew('next_status')
+    //         ->setControlType('select')
+    //         ->setOptions($nextStatusOptions);
 
-        foreach ($tabElements as $tab => $tabAttr) {
-            $page->addTab($tab)
-                ->setTitle($tabAttr['text'])
-                ->setUrl($tabAttr['url']);
-        }
+    //     $page->addNew('comments', ['length' => ''])
+    //         ->setControlType('textarea');
 
-        // set active tab
-        $page->getTab('Recipients')->setActive('true');
-    }
+    //     $page->move('scholarship_recipient_activity_status_id')->first();
+    //     $page->move('openemis_no')->after('scholarship_recipient_activity_status_id');
+    //     $page->move('recipient_id')->after('openemis_no');
+    //     $page->move('financial_assistance_type')->after('recipient_id');
+    //     $page->move('scholarship_id')->after('financial_assistance_type');
+    //     $page->move('total_award_amount')->after('scholarship_id');
+    //     $page->move('approved_amount')->after('total_award_amount');
+    //     $page->move('activity_status')->after('approved_amount');
+    // }
 
-    public function onRenderStatus(Event $event, Entity $entity, PageElement $element)
-    {
-        $page = $this->Page;
+    // public function setupTabElements()
+    // {
+    //     $page = $this->Page;
+    //     $tabElements = $this->ScholarshipTabs->getScholarshipRecipientTabs();
 
-        if ($page->is(['index', 'view'])) {
-            if ($entity->has('recipient_activity_status') && $entity->recipient_activity_status->has('name')) {
-                return '<span class="status highlight">' . $entity->recipient_activity_status->name . '</span>';
-            }
-        }
-    }
+    //     foreach ($tabElements as $tab => $tabAttr) {
+    //         $page->addTab($tab)
+    //             ->setTitle($tabAttr['text'])
+    //             ->setUrl($tabAttr['url']);
+    //     }
 
-    public function getEntityRowActions(Event $event, $entity, ArrayObject $rowActions)
-    {
-        $rowActionsArray = $rowActions->getArrayCopy();
+    //     // set active tab
+    //     $page->getTab('Recipients')->setActive('true');
+    // }
 
-        $recipientId = $entity->recipient_id;
-        $scholarshipId = $entity->scholarship_id;
-        $queryString = $this->paramsEncode([
-            'recipient_id' => $recipientId,
-            'scholarship_id' => $scholarshipId
-        ]);
+    // public function onRenderStatus(Event $event, Entity $entity, PageElement $element)
+    // {
+    //     $page = $this->Page;
 
-        if (array_key_exists('view', $rowActions)) {
-            $rowActionsArray['view']['url']['queryString'] = $queryString;
-        }
+    //     if ($page->is(['index', 'view'])) {
+    //         if ($entity->has('recipient_activity_status') && $entity->recipient_activity_status->has('name')) {
+    //             return '<span class="status highlight">' . $entity->recipient_activity_status->name . '</span>';
+    //         }
+    //     }
+    // }
 
-        if (array_key_exists('edit', $rowActions)) {
-            $rowActionsArray['edit']['url']['queryString'] = $queryString;
-        }
+    // public function getEntityRowActions(Event $event, $entity, ArrayObject $rowActions)
+    // {
+    //     $rowActionsArray = $rowActions->getArrayCopy();
 
-        $rowActions->exchangeArray($rowActionsArray);
-    }
+    //     $recipientId = $entity->recipient_id;
+    //     $scholarshipId = $entity->scholarship_id;
+    //     $queryString = $this->paramsEncode([
+    //         'recipient_id' => $recipientId,
+    //         'scholarship_id' => $scholarshipId
+    //     ]);
 
-    private function getActivityStatusData(Entity $entity)
-    {
-        $rows = [];
+    //     if (isset($rowActions['view'])) {
+    //         $rowActionsArray['view']['url']['queryString'] = $queryString;
+    //     }
 
-        if ($entity->has('recipient_activities')) {
-            foreach ($entity->recipient_activities as $key => $obj) {
-                $prevStatusName = $obj->prev_recipient_activity_status_name;
-                $statusName = $obj->recipient_activity_status_name;
+    //     if (isset($rowActions['edit'])) {
+    //         $rowActionsArray['edit']['url']['queryString'] = $queryString;
+    //     }
 
-                $transitionDisplay = '<span class="status past">' . __($prevStatusName) . '</span>';
-                $transitionDisplay .= '<span class="transition-arrow"></span>';
-                if (count($entity->recipient_activities) - 1 == $key) {
-                    $transitionDisplay .= '<span class="status highlight">' . __($statusName) . '</span>';
-                } else {
-                    $transitionDisplay .= '<span class="status past">' . __($statusName) . '</span>';
-                }
+    //     $rowActions->exchangeArray($rowActionsArray);
+    // }
 
-                $rows[] = [
-                    'date' => $this->ScholarshipRecipients->formatDate($obj->date),
-                    'transition' => $transitionDisplay,
-                    'comments' => nl2br($obj->comments),
-                    'last_executer' => $obj->created_user->name,
-                    'last_execution_date' => $obj->created->format('Y-m-d H:i:s')
-                ];
-            }
-        }
+    // private function getActivityStatusData(Entity $entity)
+    // {
+    //     $rows = [];
 
-        return $rows;
-    }
+    //     if ($entity->has('recipient_activities')) {
+    //         foreach ($entity->recipient_activities as $key => $obj) {
+    //             $prevStatusName = $obj->prev_recipient_activity_status_name;
+    //             $statusName = $obj->recipient_activity_status_name;
 
-    private function getLastActivityDate(Entity $entity) 
-    {
-        $lastActivityDate = [];
+    //             $transitionDisplay = '<span class="status past">' . __($prevStatusName) . '</span>';
+    //             $transitionDisplay .= '<span class="transition-arrow"></span>';
+    //             if (count($entity->recipient_activities) - 1 == $key) {
+    //                 $transitionDisplay .= '<span class="status highlight">' . __($statusName) . '</span>';
+    //             } else {
+    //                 $transitionDisplay .= '<span class="status past">' . __($statusName) . '</span>';
+    //             }
 
-        $conditions = [
-            'recipient_id' => $entity->recipient_id,
-            'scholarship_id' => $entity->scholarship_id
-        ];
+    //             $rows[] = [
+    //                 'date' => $this->ScholarshipRecipients->formatDate($obj->date),
+    //                 'transition' => $transitionDisplay,
+    //                 'comments' => nl2br($obj->comments),
+    //                 'last_executer' => $obj->created_user->name,
+    //                 'last_execution_date' => $obj->created->format('Y-m-d H:i:s')
+    //             ];
+    //         }
+    //     }
 
-        $query = $this->RecipientActivities->find();
-        $entity = $query->where([$conditions])
-            ->select([
-                'date' => $query->func()->max('date')
-            ])
-            ->first();
+    //     return $rows;
+    // }
 
-        $lastActivityDate['day'] = $entity->date->format('d');
-        $lastActivityDate['month'] = $entity->date->format('m');
-        $lastActivityDate['year'] = $entity->date->format('Y');
+    // private function getLastActivityDate(Entity $entity)
+    // {
+    //     $lastActivityDate = [];
 
-        return $lastActivityDate;
-    }
+    //     $conditions = [
+    //         'recipient_id' => $entity->recipient_id,
+    //         'scholarship_id' => $entity->scholarship_id
+    //     ];
+
+    //     $query = $this->RecipientActivities->find();
+    //     $entity = $query->where([$conditions])
+    //         ->select([
+    //             'date' => $query->func()->max('date')
+    //         ])
+    //         ->first();
+
+    //     $lastActivityDate['day'] = $entity->date->format('d');
+    //     $lastActivityDate['month'] = $entity->date->format('m');
+    //     $lastActivityDate['year'] = $entity->date->format('Y');
+
+    //     return $lastActivityDate;
+    // }
 }

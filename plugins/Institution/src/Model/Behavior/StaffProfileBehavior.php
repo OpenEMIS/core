@@ -7,7 +7,7 @@ use Cake\Event\Event;
 
 class StaffProfileBehavior extends Behavior
 {
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.StaffPositionProfiles.getAssociatedModelData'] = 'staffPositionProfilesGetAssociatedModelData';

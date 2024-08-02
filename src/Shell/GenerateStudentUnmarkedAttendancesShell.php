@@ -12,7 +12,7 @@ use Cake\Console\Shell;
 class GenerateStudentUnmarkedAttendancesShell extends Shell
 {
 	
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('Cases.InstitutionCases');

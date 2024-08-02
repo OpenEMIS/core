@@ -12,16 +12,15 @@ class InfrastructureWashSanitationsController extends PageController
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('AcademicPeriod.AcademicPeriods');        
-        $this->Page->loadElementsFromTable($this->InfrastructureWashSanitations);        
+        $this->loadModel('AcademicPeriod.AcademicPeriods');
+        $this->Page->loadElementsFromTable($this->InfrastructureWashSanitations);
         $this->Page->disable(['search']); // to disable the search function
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $session = $this->request->session();
-        $requestQuery = $this->request->query;
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $this->getInstitutionID();
         $institutionName = $session->read('Institution.Institutions.name');
 
         parent::beforeFilter($event);
@@ -31,8 +30,17 @@ class InfrastructureWashSanitationsController extends PageController
         $page = $this->Page;
 
         // set Breadcrumb
-        $page->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-        $page->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $encodedInstitutionId, $encodedInstitutionId]);
+        $page->addCrumb('Institutions', [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'Institutions',
+            'index']);
+        $page->addCrumb($institutionName, [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'dashboard',
+            'institutionId' => $encodedInstitutionId,
+            $encodedInstitutionId]);
         $page->addCrumb(__('Sanitation'));
 
         // set institution_id
@@ -58,7 +66,7 @@ class InfrastructureWashSanitationsController extends PageController
     }
 
     public function index()
-    {   
+    {
         $page = $this->Page;
 
         // set default ordering
@@ -125,7 +133,7 @@ class InfrastructureWashSanitationsController extends PageController
     }
 
     private function addEdit()
-    {   
+    {
         $page = $this->Page;
 
         $page->exclude(['infrastructure_wash_sanitation_total_male', 'infrastructure_wash_sanitation_total_female', 'infrastructure_wash_sanitation_total_mixed']);
@@ -175,13 +183,13 @@ class InfrastructureWashSanitationsController extends PageController
             ->setLabel('Mixed (Non-functional)')
             ->setControlType('integer');
 
-        $page->move('infrastructure_wash_sanitation_quality_id')->after('infrastructure_wash_sanitation_mixed_nonfunctional'); 
-        $page->move('infrastructure_wash_sanitation_accessibility_id')->after('infrastructure_wash_sanitation_quality_id'); 
+        $page->move('infrastructure_wash_sanitation_quality_id')->after('infrastructure_wash_sanitation_mixed_nonfunctional');
+        $page->move('infrastructure_wash_sanitation_accessibility_id')->after('infrastructure_wash_sanitation_quality_id');
     }
 
     public function view($id)
     {
-        parent::view($id); 
+        parent::view($id);
         $page = $this->Page;
         $entity = $page->getData();
         $quantity = $this->getSanitationQuantity($entity);
@@ -198,7 +206,7 @@ class InfrastructureWashSanitationsController extends PageController
              ])
              ->setAttributes('row', $quantity);
 
-         $page->move('quantities')->after('infrastructure_wash_sanitation_use_id'); 
+         $page->move('quantities')->after('infrastructure_wash_sanitation_use_id');
     }
 
     private function getSanitationQuantity(Entity $entity)
@@ -232,5 +240,21 @@ class InfrastructureWashSanitationsController extends PageController
         $rows[] = ['gender' => 'Female', 'functional' => $female_functional, 'nonfunctional' => $female_nonfunctional];
         $rows[] = ['gender' => 'Mixed', 'functional' => $mixed_functional, 'nonfunctional' => $mixed_nonfunctional];
         return $rows;
+    }
+
+    private function getInstitutionID()
+    {
+        $session = $this->request->session();
+        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
+        $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
+        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
+            $this->request->params['institutionId'] :
+            $encodedInstitutionIDFromSession;
+        try {
+            $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
+        } catch (\Exception $exception) {
+            $institutionID = $insitutionIDFromSession;
+        }
+        return $institutionID;
     }
 }

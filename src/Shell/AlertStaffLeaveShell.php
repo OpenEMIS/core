@@ -11,7 +11,7 @@ use App\Shell\AlertShell;
 
 class AlertStaffLeaveShell extends AlertShell
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 

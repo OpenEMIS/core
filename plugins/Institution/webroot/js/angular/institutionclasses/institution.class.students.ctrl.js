@@ -7,7 +7,6 @@ angular.module('institution.class.students.ctrl', ['agGrid', 'kd-angular-multi-s
 InstitutionClassStudentsController.$inject = ['$scope', '$q', '$window', '$http', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionClassStudentsSvc'];
 
 function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionClassStudentsSvc) {
-
     var Controller = this;
 
     // Constants
@@ -78,6 +77,8 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
         if (Controller.classId != null) {
             InstitutionClassStudentsSvc.getClassDetails(Controller.classId)
             .then(function(response) {
+                console.log('getClassDetails')
+                console.log(response)
                 Controller.selectedTeacher = response.staff_id;
 
                 var secondaryTeachers = [];
@@ -192,6 +193,8 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
     });
 
     function changeStaff(key) {
+        console.log("Controller.mainTeacherOptions");
+        console.log(Controller.mainTeacherOptions);
         var newOptions = [];
         for (var i = 0; i < Controller.mainTeacherOptions.length; i++) {
             if (key instanceof Array) {
@@ -297,6 +300,7 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
                     Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'message', 'general.edit.success');
                     $http.get(Controller.alertUrl)
                     .then(function(response) {
+                        //alert(Controller.redirectUrl);
                         $window.location.href = Controller.redirectUrl;
                     }, function (error) {
                         console.log(error);

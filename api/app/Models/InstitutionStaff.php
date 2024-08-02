@@ -33,4 +33,22 @@ class InstitutionStaff extends Model
     {
         return $this->belongsTo(InstitutionPositions::class, 'institution_position_id', 'id');
     }
+
+
+    public function user()
+    {
+        return $this->belongsTo(SecurityUsers::class, 'staff_id', 'id');
+    }
+
+
+    public function classes()
+    {
+        return $this->hasMany(InstitutionClasses::class, 'staff_id', 'staff_id');
+    }
+
+
+    public function staffPositionGrade()
+    {
+        return $this->belongsTo(StaffPositionGrades::class, 'staff_position_grade_id', 'id');
+    }
 }

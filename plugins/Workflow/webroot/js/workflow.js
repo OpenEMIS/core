@@ -22,7 +22,7 @@ var Workflow = {
 		Workflow.hideError();
 	},
 
-	copy: function(jsonObj, actionType = 'transition') { 
+	copy: function(jsonObj, actionType = 'transition') {
 		if (actionType == 'transition') {
 			$('.workflowtransition-assignee-id').val('');
 			$('.workflowtransition-comment').val('');
@@ -171,7 +171,8 @@ var Workflow = {
 
 	getTransitionAssigneeOptions: function(assigneeUrl, isSchoolBased, nextStepId, autoAssignAssignee) {
 		var url = assigneeUrl;
-
+		//alert('assigneeUrl');
+		//alert(assigneeUrl);
 		$.ajax({
 			url: url,
 			dataType: "json",

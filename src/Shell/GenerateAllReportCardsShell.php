@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Shell;
 
 use ArrayObject;
@@ -9,12 +10,13 @@ use Cake\I18n\Time;
 use Cake\I18n\Date;
 use DateTime;
 use Cake\Console\Shell;
+use Cake\I18n\FrozenTime;
 
 class GenerateAllReportCardsShell extends Shell
 {
     private $sleepTime = 5;
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadModel('CustomExcel.ReportCards');
@@ -26,7 +28,7 @@ class GenerateAllReportCardsShell extends Shell
     {
         //POCOR-7067 Starts
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $timeZone= $ConfigItems->value("time_zone");
+        $timeZone = $ConfigItems->value("time_zone");
         date_default_timezone_set($timeZone);//POCOR-7067 Ends
         if (!empty($this->args[0]) && !empty($this->args[1])) {
             $systemProcessId = $this->SystemProcesses->addProcess('GenerateAllReportCards', getmypid(), $this->args[0], '', $this->args[1]);
@@ -48,25 +50,24 @@ class GenerateAllReportCardsShell extends Shell
                     $this->ReportCardProcesses->aliasField('created'),
                     $this->ReportCardProcesses->aliasField('student_id')
                 ])
-                ->hydrate(false)
+                ->enableHydration(false)
                 ->first();
 
-                // echo '<pre>';
-                // print_r($recordToProcess ); die;
+            // echo '<pre>';
+            // print_r($recordToProcess ); die;
 
             if (!empty($recordToProcess)) {
-                $this->out('Generating report card for Student '.$recordToProcess['student_id'].' ('. Time::now() .')');
+                $this->out('Generating report card for Student ' . $recordToProcess['student_id'] . ' (' . FrozenTime::now() . ')');
                 try {
-                    $todayDate = Time::now();
-                    $todayDate = Time::parse('now');
+                    $todayDate = FrozenTime::now();
+                    $todayDate = FrozenTime::parse('now');
                     $_now = $todayDate->i18nFormat('yyyy-MM-dd HH:mm:ss');
                     $this->ReportCardProcesses->updateAll(['status' => $this->ReportCardProcesses::RUNNING, 'modified' => $_now], [
                         'report_card_id' => $recordToProcess['report_card_id'],
                         'institution_class_id' => $recordToProcess['institution_class_id'],
                         'student_id' => $recordToProcess['student_id']
                     ]);
-                }
-                catch (\Exception $e) {
+                } catch (\Exception $e) {
                     $this->out('Error in update report ' . $recordToProcess['student_id']);
                     $this->out($e->getMessage());
                 }
@@ -78,29 +79,33 @@ class GenerateAllReportCardsShell extends Shell
                 try {
                     $this->ReportCards->renderExcelTemplate($excelParams);
                 } catch (\Exception $e) {
-                    $this->out('Error generating Report Card for Student ' . $recordToProcess['student_id']);
+                    $this->out('Error generating Report Card for Student One ' . $recordToProcess['student_id']);
                     $this->out($e->getMessage());
                 }
 
-                $this->out('End generating report card for Student '.$recordToProcess['student_id'].' ('. Time::now() .')');
-                $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
+                $this->out('End generating report card for Student Two ' . $recordToProcess['student_id'] . ' (' . FrozenTime::now() . ')');
+                $this->SystemProcesses->updateProcess($systemProcessId, FrozenTime::now(), $this->SystemProcesses::COMPLETED);
                 $this->recursiveCallToMyself($this->args);
             } else {
-                $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
+                $this->SystemProcesses->updateProcess($systemProcessId, FrozenTime::now(), $this->SystemProcesses::COMPLETED);
             }
         }
-        posix_kill(getmypid(), SIGKILL);
+        try {
+            posix_kill(getmypid(), 9);
+        } catch (\Exception $exception) {
+            $this->out($exception->getMessage());
+        }
     }
 
     private function recursiveCallToMyself($args)
     {
-        $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllReportCards '.$args[0] . " " . $args[1];
+        $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllReportCards ' . $args[0] . " " . $args[1];
         $logs = ROOT . DS . 'logs' . DS . 'GenerateAllReportCards.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
         try {
             $pid = exec($shellCmd);
-        } catch(\Exception $ex) {
-            $this->out('error : ' . __METHOD__ . ' exception when recursiveCallToMyself : '. $ex);
+        } catch (\Exception $ex) {
+            $this->out('error : ' . __METHOD__ . ' exception when recursiveCallToMyself : ' . $ex);
         }
     }
 }

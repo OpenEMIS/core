@@ -8,7 +8,7 @@ use Cake\ORM\Table;
 
 class AcademicPeriodsController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
@@ -24,10 +24,22 @@ class AcademicPeriodsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'AcademicPeriod.AcademicPeriodLevels']);
     }
 
-    public function beforeFilter(Event $event)
-    {
-        parent::beforeFilter($event);
+//    public function AcademicPeriods()
+//    {
+//        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'AcademicPeriod.AcademicPeriods']);
+//    }
 
+    public function Periods()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'AcademicPeriod.AcademicPeriods']);
+    }
+
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    {
+        if ($this->getPlugin() == 'AcademicPeriod') {
+            $this->Security->setConfig('validatePost', false);
+        }
+        parent::beforeFilter($event);
         $tabElements = [
             'Levels' => [
                 'url' => ['plugin' => 'AcademicPeriod', 'controller' => 'AcademicPeriods', 'action' => 'Levels'],
@@ -40,7 +52,8 @@ class AcademicPeriodsController extends AppController
         ];
         $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         $this->set('tabElements', $tabElements);
-        $this->set('selectedAction', $this->request->action);
+        $this->set('selectedAction', $this->request->getParam('action'));
+
     }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)

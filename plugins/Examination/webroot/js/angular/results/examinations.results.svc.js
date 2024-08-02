@@ -62,9 +62,9 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
                 var subjects = [];
                 angular.forEach(examinationSubjects, function(examinationSubject, key)
                 {
-                    if (examinationSubject.hasOwnProperty('examination_item')) {
-                        if (examinationSubject.examination_item.weight > 0) {
-                            this.push(examinationSubject.examination_item);
+                    if (examinationSubject.hasOwnProperty('examination_subject')) { //POCOR-8111 change object examination_item to examination_subject
+                        if (examinationSubject.examination_subject.weight > 0) {
+                            this.push(examinationSubject.examination_subject);
                         }
                     }
                 }, subjects);

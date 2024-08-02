@@ -275,6 +275,14 @@ function InstitutionAssociationsController($scope, $q, $window, $http, UtilsSvc,
         var postData = {};
         postData.id = Controller.classId;
         postData.name = Controller.associationName;
+        if(postData.name === ''){ // POCOR-7994
+            AlertSvc.error(
+                Controller,
+                'The record is not saved due to errors encountered.'
+            );
+            Controller.postError.name = ['Name Is Required'];
+            return;
+        }
         postData.associationStudents = associationStudents;
         postData.institution_id = Controller.institutionId;
         postData.academic_period_id = Controller.academicPeriodId;
@@ -293,9 +301,13 @@ function InstitutionAssociationsController($scope, $q, $window, $http, UtilsSvc,
                 if (error instanceof Array && error.length == 0) {
                     Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'alertType', 'success');
                     Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'message', 'general.edit.success');
+                    var queryString1 = localStorage.getItem('queryString1');
+                    var queryString2 = localStorage.getItem('queryString2');
                     $http.get(Controller.alertUrl)
                         .then(function(response) {
-                            $window.location.href = Controller.redirectUrl;
+                            //$window.location.href = Controller.redirectUrl;
+                            var successUrl = angular.baseUrl + '/Institution/Institutions/Associations/view/' + queryString1 + '/' + queryString2;
+                            $window.location.href = successUrl;
                         }, function(error) {
                             console.log(error);
                         });

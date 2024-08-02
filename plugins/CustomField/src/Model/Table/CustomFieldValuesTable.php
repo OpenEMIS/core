@@ -2,24 +2,25 @@
 namespace CustomField\Model\Table;
 
 use Cake\Validation\Validator;
+use Cake\Log\Log;
 use App\Model\Table\AppTable;
 
 class CustomFieldValuesTable extends AppTable
 {
 	protected $extra = ['scope' => 'custom_field_id'];
 
-	public function initialize(array $config)
+	public function initialize(array $config): void
 	{
 		parent::initialize($config);
 		$this->belongsTo('CustomFields', ['className' => 'CustomField.CustomFields']);
 		$this->belongsTo('CustomRecords', ['className' => 'CustomField.CustomRecords']);
 	}
 
-	public function validationDefault(Validator $validator)
+	public function validationDefault(Validator $validator): Validator
 	{
 		$validator = parent::validationDefault($validator);
 		$scope = $this->extra['scope'];
-
+		$validator->setProvider('custom', $this);
 		$validator
 			// TEXT validation
 			->allowEmpty('text_value', function ($context) {
@@ -30,15 +31,28 @@ class CustomFieldValuesTable extends AppTable
 				return true;
 			})
 			->add('text_value', 'ruleUnique', [
-				'rule' => ['validateUnique', ['scope' => $scope]],
-				'provider' => 'table',
-				'message' => __('This field has to be unique'),
-				'on' => function ($context) {
-					if (array_key_exists('unique', $context['data'])) {
-						return $context['data']['unique'];
-					}
-			    }
-			])
+		        'rule' => function ($value, $context) {
+		            // POCOR-8202.Check if uniqueness is required
+                    // POCOR-8332 fixed
+		            $unique = isset($context['data']['unique']) ? (bool)$context['data']['unique'] : false;
+		            // If uniqueness is not required (unique = 0), return true
+		            if (!$unique) {
+		                return true;
+		            }
+		            $scope = $context['scope'] ?? [];
+		            // Query the database to check for existing records with the same 'text_value'
+		            $query = $this->find()->where(['text_value' => $value]);
+		            foreach ($scope as $field => $val) {
+		                $query->andWhere([$field => $val]);
+		            }
+		            if (!empty($context['data']['id'])) {
+		                $query->andWhere(['id !=' => $context['data']['id']]);
+		            }
+
+		            return $query->count() === 0;
+		        },
+		        'message' => __('This field has to be unique')
+		    ])
 			->add('text_value', 'ruleCustomText', [
 				'rule' => ['validateCustomText'],
 				'provider' => 'table',
@@ -54,7 +68,7 @@ class CustomFieldValuesTable extends AppTable
 				'on' => function ($context) {
 					if (array_key_exists('params', $context['data']) && !empty($context['data']['params'])) {
 						$params = json_decode($context['data']['params'], true);
-						return array_key_exists('url', $params);
+						return isset($params['url']);
 					}
 				}
 			])
@@ -67,14 +81,33 @@ class CustomFieldValuesTable extends AppTable
 				return true;
 			})
 			->add('number_value', 'ruleUnique', [
-				'rule' => ['validateUnique', ['scope' => $scope]],
-				'provider' => 'table',
-				'message' => __('This field has to be unique'),
-				'on' => function ($context) {
-					if (array_key_exists('unique', $context['data'])) {
-						return $context['data']['unique'];
-					}
-			    }
+			    'rule' => function ($value, $context) {
+			        // Check if uniqueness is required
+                    // POCOR-8332 fixed
+			        $unique = isset($context['data']['unique']) ? (bool) $context['data']['unique'] : false;
+
+			        // If uniqueness is not required, return true
+			        if (!$unique) {
+			            return true;
+			        }
+			        $values = is_array($value) ? $value : [$value];
+			        foreach ($values as $numberValue) {
+			            $query = $this->find()->where(['number_value' => $numberValue]);
+			            // Exclude the current record if it's being edited
+			            if (!empty($context['data']['id'])) {
+			                $query->andWhere(['id !=' => $context['data']['id']]);
+			            }
+
+			            // If any value is not unique, return false
+			            if ($query->count() !== 0) {
+			                return false;
+			            }
+			        }
+
+			        // All values are unique, return true
+			        return true;
+			    },
+			    'message' => __('All values of this field must be unique')
 			])
 			->add('number_value', 'ruleCustomNumber', [
 				'rule' => ['validateCustomNumber'],

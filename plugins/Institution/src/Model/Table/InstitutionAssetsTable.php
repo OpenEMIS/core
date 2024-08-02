@@ -17,21 +17,21 @@ use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use Cake\View\NumberHelper;
 use Cake\Network\Session;
+use Cake\Http\ServerRequest;
+use Cake\ORM\Locator\TableLocator;
 
 class InstitutionAssetsTable extends ControllerActionTable
 {
     use OptionsTrait;
-
-
     private $accessibilityOptions = [];
     private $purposeOptions = [];
     public $currency = '';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
-//        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        //$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AssetStatuses', ['className' => 'Institution.AssetStatuses']);
         $this->belongsTo('AssetTypes', ['className' => 'Institution.AssetTypes']);
@@ -41,15 +41,19 @@ class InstitutionAssetsTable extends ControllerActionTable
         $this->belongsTo('AssetConditions', ['className' => 'Institution.AssetConditions']);
         $this->belongsTo('InstitutionRooms', ['className' => 'Institution.InstitutionRooms']);
 
+        $this->addBehavior('Import.ImportLink');
         // POCOR-6152 export button <vikas.rathore@mail.valuecoders.com>
         $this->addBehavior('Excel', [
             'excludes' => [
-//                'academic_period_id',
+                //'academic_period_id',
                 'id'
             ],
             'pages' => ['index'],
         ]);
         // POCOR-6152 export button <vikas.rathore@mail.valuecoders.com>
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['InstitutionAssets'=>['id']]
+        ]);
     }
 
     // POCOR-6152 set breadcrumb header <vikas.rathore@mail.valuecoders.com>
@@ -59,7 +63,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         $userType = '';
         $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
 
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $this->currency = $ConfigItems->value('currency');
 
         // Start POCOR-5188
@@ -87,21 +91,17 @@ class InstitutionAssetsTable extends ControllerActionTable
     // setting up  fields and filter POCOR-6152
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-
         $extra = $this->setFilterOptions($extra);
         $this->setFieldsOrder();
-
     }
-
     // setting up  fields and filter POCOR-6152
-
 
     // setting up query for index POCOR-6152 start
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-//        $academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
-        $assetType = ($this->request->query('asset_type_id')) ? $this->request->query('asset_type_id') : 0;
-        $accessibility = $this->request->query('accessibility');;
+        //$academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
+        $assetType = ($this->request->getQuery('asset_type_id')) ? $this->request->getQuery('asset_type_id') : 0;
+        $accessibility = $this->request->getQuery('accessibility');;
 
         if ($assetType > 0) {
             $query->where([
@@ -114,52 +114,51 @@ class InstitutionAssetsTable extends ControllerActionTable
             ]);
         }
 
-//        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-//            return $results->map(function ($row) {
-//                if($row->purpose == 1){
-//                    $row['purpose'] = 'Teaching';
-//                }else{
-//                    $row['purpose'] = 'Non-Teaching';
-//                }
-//
-//                if($row->accessibility == 1){
-//                    $row['accessibility'] = 'Accessible';
-//                }else{
-//                    $row['accessibility'] = 'Not Accessible';
-//                }
-//
-//                return $row;
-//            });
-//        });
+        // $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+        //  return $results->map(function ($row) {
+        //     if($row->purpose == 1){
+        //        $row['purpose'] = 'Teaching';
+        //     }else{
+        //        $row['purpose'] = 'Non-Teaching';
+        //     }
+        //
+        //     if($row->accessibility == 1){
+        //        $row['accessibility'] = 'Accessible';
+        //     }else{
+        //        $row['accessibility'] = 'Not Accessible';
+        //     }
+        //
+        //     return $row;
+        //    });
+        //  });
     }
     // setting up query for index POCOR-6152 ends
 
     // POCOR-6152 Export Functionality 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
-//        $academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
-        $assetType = ($this->request->query('asset_type_id')) ? $this->request->query('asset_type_id') : 0;
-        $accessibility = $this->request->query('accessibility');
-
-        $query->select([
-        ])
-            ->where([
+        $query->select([]);
+        if(isset( $this->request)){
+            $session = $this->request->getSession();
+            //$institutionId = $session->read('Institution.Institutions.id');
+            $institutionId  = $this->getInstitutionID();
+            $query->where([
                 $this->aliasField('institution_id') => $institutionId,
             ]);
-
-        if ($assetType > 0) {
-            $query->where([
-                $this->aliasField('asset_type_id') => $assetType
-            ]);
+            $assetType = ($this->request->getQuery('asset_type_id')) ? $this->request->getQuery('asset_type_id') : 0;
+            $accessibility = $this->request->getQuery('accessibility');
+            if ($assetType > 0) {
+                $query->where([
+                    $this->aliasField('asset_type_id') => $assetType
+                ]);
+            }
+            if ($accessibility != "") {
+                $query->where([
+                    $this->aliasField('accessibility') => $accessibility
+                ]);
+            }
         }
-        if ($accessibility != "") {
-            $query->where([
-                $this->aliasField('accessibility') => $accessibility
-            ]);
-        }
-
+        //$academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
                 if ($row->purpose == 1) {
@@ -176,12 +175,12 @@ class InstitutionAssetsTable extends ControllerActionTable
                 return $row;
             });
         });
+        /**/
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-
-        $this->log($fields, 'debug');
+        //$this->log($fields, 'debug');
         $extraField[] = [
             'key' => 'InstitutionAssets.code',
             'field' => 'code',
@@ -210,12 +209,12 @@ class InstitutionAssetsTable extends ControllerActionTable
             'label' => __('Type')
         ];
 
-        $extraField[] = [
-            'key' => 'InstitutionAssets.asset_make_id',
-            'field' => 'asset_make_id',
-            'type' => 'string',
-            'label' => __('Make')
-        ];
+        // $extraField[] = [
+        //     'key' => 'InstitutionAssets.asset_make_id',
+        //     'field' => 'asset_make_id',
+        //     'type' => 'string',
+        //     'label' => __('Make')
+        // ];
 
         $extraField[] = [
             'key' => 'InstitutionAssets.asset_model_id',
@@ -234,7 +233,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         $extraField[] = [
             'key' => 'InstitutionAssets.purchase_date',
             'field' => 'purchase_date',
-            'type' => 'date',
+            'type' => 'string',
             'label' => __('Purchase Date')
         ];
 
@@ -255,7 +254,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         $extraField[] = [
             'key' => 'InstitutionAssets.stocktake_date',
             'field' => 'stocktake_date',
-            'type' => 'date',
+            'type' => 'string',
             'label' => __('Stocktake Date')
         ];
 
@@ -294,12 +293,12 @@ class InstitutionAssetsTable extends ControllerActionTable
             'label' => __('Condition')
         ];
 
-        $extraField[] = [
-            'key' => 'InstitutionAssets.depreciation',
-            'field' => 'depreciation',
-            'type' => 'string',
-            'label' => __('Depreciation')
-        ];
+        //        $extraField[] = [
+        //            'key' => 'InstitutionAssets.depreciation',
+        //            'field' => 'depreciation',
+        //            'type' => 'string',
+        //            'label' => __('Disposal')
+        //        ];
 
         $extraField[] = [
             'key' => 'InstitutionAssets.asset_status_id',
@@ -340,23 +339,21 @@ class InstitutionAssetsTable extends ControllerActionTable
         $this->fields['user_id']['empty'] = true;
         $this->fields['user_id']['options'] = $userOptions;
         $this->fields['accessibility']['type'] = 'select';
-//        $this->log($this->fields['asset_make_id'], 'debug');
+        //$this->log($this->fields['asset_make_id'], 'debug');
         $this->fields['purpose']['options'] = $this->purposeOptions;
         $this->fields['accessibility']['options'] = $this->accessibilityOptions;
-
     }
 
     private function getMakeOptions()
     {
         $makeOptions = [];
-        if (array_key_exists($this->alias(), $this->request->data)
-            && array_key_exists('asset_type_id', $this->request->data[$this->alias()])
-            && !empty($this->request->data[$this->alias()]['asset_type_id'])) {
-            $asset_type_id = $this->request->data[$this->alias()]['asset_type_id'];
-            $makes = TableRegistry::get('asset_makes');
+        if (array_key_exists($this->getAlias(), $this->request->getData())
+            && array_key_exists('asset_type_id', $this->request->getData($this->getAlias())) && !empty($this->request->getData($this->getAlias())['asset_type_id'])) {
+            $asset_type_id = $this->request->getData($this->getAlias())['asset_type_id'];
+            $makes = TableRegistry::getTableLocator()->get('FieldOption.AssetMakes');
             $makeOptions = $makes->find('list')
                 ->select(['id', 'name'])
-                ->orderAsc('order')
+                ->orderAsc($makes->aliasField('order'))
                 ->where([
                     $makes->aliasField('visible') => 1,
                     $makes->aliasField('asset_type_id') => $asset_type_id
@@ -369,14 +366,13 @@ class InstitutionAssetsTable extends ControllerActionTable
     private function getModelOptions()
     {
         $modelOptions = [];
-        if (array_key_exists($this->alias(), $this->request->data)
-            && array_key_exists('asset_type_id', $this->request->data[$this->alias()])
-            && !empty($this->request->data[$this->alias()]['asset_make_id'])) {
-            $asset_make_id = $this->request->data[$this->alias()]['asset_make_id'];
-            $models = TableRegistry::get('asset_models');
+        if (array_key_exists($this->getAlias(), $this->request->getData())
+            && array_key_exists('asset_type_id', $this->request->getData($this->getAlias())) && !empty($this->request->getData($this->getAlias())['asset_make_id'])) {
+            $asset_make_id = $this->request->getData($this->getAlias())['asset_make_id'];
+            $models = TableRegistry::getTableLocator()->get('FieldOption.AssetModels');
             $modelOptions = $models->find('list')
                 ->select(['id', 'name'])
-                ->orderAsc('order')
+                ->orderAsc($models->aliasField('order'))
                 ->where([
                     $models->aliasField('visible') => 1,
                     $models->aliasField('asset_make_id') => $asset_make_id
@@ -389,19 +385,23 @@ class InstitutionAssetsTable extends ControllerActionTable
     private function getUserOptions()
     {
         $userOptions = [];
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
-        $staff = TableRegistry::get('institution_staff');
+        $session = $this->request->getSession();
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
+        $staff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
         $staff_ids = $staff->find('all')
             ->select('staff_id')
             ->where(['institution_id' => $institutionId])
             ->toArray();
+
         $staffIds = $this->array_column($staff_ids, 'staff_id');
         $staffIds = array_unique($staffIds);
         if (empty($staffIds)) {
             $staffIds = [0];
         }
-        $users = TableRegistry::get('security_users');
+
+        $tableLocator = new TableLocator();
+        $users = $tableLocator->get('SecurityUsers');
         $user_options = $users->find('all')
             ->select(['id',
                 'first_name',
@@ -424,19 +424,21 @@ class InstitutionAssetsTable extends ControllerActionTable
                 });
             })
             ->toArray();
+        
         foreach ($user_options as $user_option) {
             $userOptions[$user_option->id] = $user_option->name;
         }
-//            $this->log($userOptions, 'debug');
+        //$this->log($userOptions, 'debug');
         return $userOptions;
     }
 
     private function getLocationOptions()
     {
         $roomOptions = [];
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
-        $rooms = TableRegistry::get('institution_rooms');
+        $session = $this->request->getSession();
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
+        $rooms = TableRegistry::getTableLocator()->get('Institution.InstitutionRooms');
         $room_options = $rooms->find('all')
             ->select(['id',
                 'code',
@@ -457,7 +459,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         foreach ($room_options as $room_option) {
             $roomOptions[$room_option->id] = $room_option->code_name;
         }
-//            $this->log($roomOptions, 'debug');
+        //$this->log($roomOptions, 'debug');
         return $roomOptions;
     }
 
@@ -490,19 +492,21 @@ class InstitutionAssetsTable extends ControllerActionTable
             ->toArray();
 
         $assetTypeOptions = ['' => __('All Types')] + $assetTypes;
-        $extra['selectedAssetType'] = $this->request->query('asset_type_id');
+        $extra['selectedAssetType'] = $this->request->getQuery('asset_type_id');
         // set asset types filter POCOR-6152
 
         // set Accessibilities filter POCOR-6152
         $this->accessibilityOptions = $this->getSelectOptions($this->aliasField('accessibility'));
 
         $accessibilityOptions = ['' => __('All Accessibilities')] + $this->accessibilityOptions;
-        $extra['selectedAccessibility'] = $this->request->query('accessibility');
+        $extra['selectedAccessibility'] = $this->request->getQuery('accessibility');
         // set Accessibilities filter POCOR-6152
-
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
         $extra['elements']['control'] = [
             'name' => 'Institution.Assets/controls',
             'data' => [
+                'encodedQueryString' => $encodedQueryString,
                 'assetTypeOptions' => $assetTypeOptions,
                 'selectedAssetType' => $extra['selectedAssetType'],
                 'accessibilityOptions' => $accessibilityOptions,
@@ -515,28 +519,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
-    {
-        if ($field == 'asset_status_id') {
-            return __('Status');
-        }
-        if ($field == 'asset_condition_id') {
-            return __('Condition');
-        }
-        if ($field == 'asset_type_id') {
-            return __('Type');
-        }
-        if ($field == 'asset_make_id') {
-            return __('Make');
-        }
-        if ($field == 'asset_model_id') {
-            return __('Model');
-        }
-        if ($field == 'institution_room_id') {
-            return __('Location');
-        }
-        return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-    }
+    
 
     public function onGetUserId(Event $event, Entity $entity)
     {
@@ -553,9 +536,9 @@ class InstitutionAssetsTable extends ControllerActionTable
     public function onGetPurpose(Event $event, Entity $entity)
     {
         if ($entity->purpose) {
-            $purpose = 'Non-Teaching';
-        } else {
             $purpose = 'Teaching';
+        } else {
+            $purpose = 'Non-Teaching';
         }
         return $purpose;
     }
@@ -579,6 +562,14 @@ class InstitutionAssetsTable extends ControllerActionTable
         return $formattedAmount; // Output: $1,234.56
     }
 
+    public function onExcelGetPurchaseDate(Event $event, Entity $entity) {
+        return $this->formatDate($entity->purchase_date);
+    }
+
+    public function onExcelGetStocktakeDate(Event $event, Entity $entity) {
+        return $this->formatDate($entity->stocktake_date);
+    }
+
     public function onExcelGetCost(Event $event, Entity $entity)
     {
         if (!$entity->cost) {
@@ -590,20 +581,20 @@ class InstitutionAssetsTable extends ControllerActionTable
 
     public function onGetDepreciation(Event $event, Entity $entity)
     {
-        if (!$entity->depreciation) {
+        //if (!$entity->depreciation) {
             return "";
-        }
-        $formattedAmount = $this->currency . ' ' . number_format($entity->depreciation, 2);
-        return $formattedAmount; // Output: $1,234.56
+        //}
+        //$formattedAmount = $this->currency . ' ' . number_format($entity->depreciation, 2);
+        //return $formattedAmount; // Output: $1,234.56
     }
 
     public function onExcelGetDepreciation(Event $event, Entity $entity)
     {
-        if (!$entity->depreciation) {
+        //if (!$entity->depreciation) {
             return "";
-        }
-        $formattedAmount = $this->currency . '' . number_format($entity->depreciation, 2);
-        return $formattedAmount; // Output: $1,234.56
+        //}
+        //$formattedAmount = $this->currency . '' . number_format($entity->depreciation, 2);
+        //return $formattedAmount; // Output: $1,234.56
     }
 
     /**
@@ -617,7 +608,13 @@ class InstitutionAssetsTable extends ControllerActionTable
         if (!$relatedField) {
             return null;
         }
-        $Table = TableRegistry::get($tableName);
+        
+        if($tableName == 'security_users'){
+            $tableName = 'SecurityUsers';
+        }
+        $tableLocator = new TableLocator();
+        //$Table = TableRegistry::getTableLocator()->get($tableName);
+        $Table = $tableLocator->get($tableName);
         try {
             $related = $Table->get($relatedField);
             return $related->toArray();
@@ -629,7 +626,13 @@ class InstitutionAssetsTable extends ControllerActionTable
 
     public function onUpdateFieldAssetTypeId(Event $event, array $attr, $action, $request)
     {
+        $optionsTable = TableRegistry::getTableLocator()->get('Institution.AssetTypes');
+        $getOptions = $optionsTable->find('list')->select(['id','name'])->toArray();
         if ($action == 'add' || $action == 'edit') {
+            $attr['type'] = 'select';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = false;
+            $attr['options'] = $getOptions;
             $attr['onChangeReload'] = 'changeAssetTypeId';
         }
         return $attr;
@@ -637,20 +640,57 @@ class InstitutionAssetsTable extends ControllerActionTable
 
     public function addEditOnChangeAssetTypeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $this->request->data[$this->alias()]['asset_type_id'] = $entity->asset_type_id;
+        $this->request->getData($this->getAlias())['asset_type_id'] = $entity->asset_type_id;
     }
 
     public function onUpdateFieldAssetMakeId(Event $event, array $attr, $action, $request)
     {
+        $getRequest = $this->request->getData();
+        $data = isset($getRequest) ? $getRequest : null;
+        $data = isset($data[$this->getAlias()]) ? $data[$this->getAlias()] : null;
+        $where = ["1=1"];
+        $option = isset($data['asset_type_id']) ? $data['asset_type_id'] : null;
+        $optionsTable = TableRegistry::getTableLocator()->get('FieldOption.AssetMakes');
+
+        if($option){
+            $where = [$optionsTable->aliasField('asset_type_id') => $option];
+        }
+        $getOptions = $optionsTable->find('list')->select(['id','name'])->where($where)->toArray();
+
         if ($action == 'add' || $action == 'edit') {
-            $attr['onChangeReload'] = 'changeAssetMakeId';
+            $attr['type'] = 'select';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = true;
+            $attr['options'] = $getOptions;
+            $attr['onChangeReload'] = 'changeAssetTypeId';
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldAssetModelId(Event $event, array $attr, $action, $request)
+    {
+        $getRequest = $this->request->getData();
+        $data = isset($getRequest) ? $getRequest : null;
+        $data = isset($data[$this->getAlias()]) ? $data[$this->getAlias()] : null;
+        $where = ["1=1"];
+        $option = isset($data['asset_make_id']) ? $data['asset_make_id'] : null;
+        $optionsTable = TableRegistry::getTableLocator()->get('FieldOption.AssetModels');
+        if($option){
+            $where = [$optionsTable->aliasField('asset_make_id') => $option];
+        }
+        $getOptions = $optionsTable->find('list')->select(['id','name'])->where($where)->toArray();
+        if ($action == 'add' || $action == 'edit') {
+            $attr['type'] = 'select';
+            $attr['attr']['multiple'] = false;
+            $attr['select'] = true;
+            $attr['options'] = $getOptions;
         }
         return $attr;
     }
 
     public function addEditOnChangeAssetMakeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $this->request->data[$this->alias()]['asset_make_id'] = $entity->asset_make_id;
+        $this->request->getData($this->getAlias())['asset_make_id'] = $entity->asset_make_id;
     }
 
     private function setFieldsOrder()
@@ -671,9 +711,66 @@ class InstitutionAssetsTable extends ControllerActionTable
         $this->field('user_id', ['visible' => true]);
         $this->field('accessibility', ['visible' => true]);
         $this->field('asset_condition_id', ['visible' => true]);
-        $this->field('depreciation', ['visible' => true]);
+        $this->field('depreciation', ['visible' => false]);
         $this->field('asset_status_id', ['visible' => true]);
     }
 
-
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        if ($field == 'asset_status_id') {
+            return __('Status');
+        }
+        if ($field == 'code') {
+            return __('Code');
+        }
+        if ($field == 'description') {
+            return __('Description');
+        }
+        if ($field == 'purpose') {
+            return __('Purpose');
+        }
+        if ($field == 'asset_condition_id') {
+            return __('Condition');
+        }
+        if ($field == 'asset_type_id') {
+            return __('Type');
+        }
+        if ($field == 'asset_make_id') {
+            return __('Make');
+        }
+        if ($field == 'asset_model_id') {
+            return __('Model');
+        }
+        if ($field == 'institution_room_id') {
+            return __('Location');
+        }
+        if ($field == 'serial_number') {
+            return __('Serial Number');
+        }
+        if ($field == 'purchase_date') {
+            return __('Purchase Date');
+        }
+        if ($field == 'purchase_order') {
+            return __('Purchase Order');
+        }
+        if ($field == 'stocktake_date') {
+            return __('Stocktake Date');
+        }
+        if ($field == 'lifespan') {
+            return __('Lifespan');
+        }
+        if ($field == 'accessibility') {
+            return __('Accessibility');
+        }
+        if ($field == 'user_id') {
+            return __('User');
+        }
+        if ($field == 'cost') {
+            return __('Cost');
+        }
+        //        if ($field == 'depreciation') {
+        //            return __('Disposal');
+        //        }
+        return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+    }
 }

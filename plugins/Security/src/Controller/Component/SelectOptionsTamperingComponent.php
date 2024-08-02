@@ -4,18 +4,20 @@ namespace Security\Controller\Component;
 use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Controller\Exception\AuthSecurityException;
+use Cake\Http\ServerRequest;
 
 class SelectOptionsTamperingComponent extends Component {
     const DEFAULT_MESSAGE = 'Dropdown Options has been tampered';
 
     public function startup(Event $event) {
+        $serverRequest = new ServerRequest;
         // Select options form tampering
-        $session = $this->request->session();
+        $session = $this->getController()->getRequest()->getSession();
         if ($session->check('FormTampering')) {
-            if ($this->request->is(['post', 'put', 'delete'])) {
+            if ($serverRequest->is(['post', 'put', 'delete'])) {
                 $formTamperingSession = $session->read('FormTampering');
                 $formTamperingReload = $session->read('FormTamperingReload');
-                $requestData = $this->request->data;
+                $requestData = $this->request->getData();
 
                 $msg = [];
                 if ($requestData !== $formTamperingReload) {
@@ -28,7 +30,7 @@ class SelectOptionsTamperingComponent extends Component {
                     $session->delete('FormTampering');
                     $session->write('FormTamperingReload', $requestData);
                 }
-            } else if (!$this->request->is('ajax')) {
+            } else if (!$serverRequest->is('ajax')) {
                 $session->delete('FormTampering');
                 $session->delete('FormTamperingReload');
             }

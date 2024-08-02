@@ -1,49 +1,37 @@
 <?php
 namespace MoodleApi\Controller;
 
+use ArrayObject;
+use App\Controller\AppController;
 use Cake\Event\Event;
-use App\Controller\PageController;
+use Cake\ORM\Table;
 
-
-class MoodleApiLogController extends PageController
+class MoodleApiLogController extends AppController
 {
+	public function initialize(): void {
+        //echo "asffs";die;
+		parent::initialize();
 
-    public function initialize()
-    {
-        parent::initialize();
-        $this->Page->disable(['add', 'edit', 'delete']);
-        $this->Page->loadElementsFromTable($this->MoodleApiLog);
     }
 
-    public function beforeFilter(Event $event)
-    {
+    public function Alerts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.Alerts']); }
+    public function AlertRules() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.AlertRules']); }
+    public function mlog() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'MoodleApi.MoodleApiLog']); }
+
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event) {
+        if ($this->getPlugin() == $this->getPlugin()) {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
-        $page = $this->Page;
-
-        // set Breadcrumb
-        $page->addCrumb('Moodle Api Log', ['plugin' => 'MoodleApi', 'controller' => 'MoodleApiLog', 'log']);
-
-        $header = $page->getHeader();
-        $page->setHeader($header);
     }
 
-    public function index()
-    {
-        $page = $this->Page;
-        $page->exclude(['callback', 'callback_param']);
+	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
+		$header = __('Communications');
 
-        $statusesOptions = $this->MoodleApiLog->getStatuses();
-        $page->get('status')
-            ->setControlType('select')
-            ->setOptions($statusesOptions);
+		$header .= ' - ' . $model->getHeader($model->alias);
+		$this->Navigation->addCrumb('Communications', ['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => $model->alias]);
+		$this->Navigation->addCrumb($model->getHeader($model->alias));
 
-        parent::index();
+		$this->set('contentHeader', $header);
     }
-
-    public function view($id)
-    {
-        $page = $this->Page;
-        parent::view($id);
-    }
-
 }

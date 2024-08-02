@@ -7,7 +7,6 @@ use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use ArrayObject;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
@@ -15,6 +14,7 @@ use Cake\Datasource\ConnectionManager;
 use Cake\Log\Log;
 use App\Model\Traits\MessagesTrait;
 use Cake\I18n\Date;
+use Cake\Http\ServerRequest;
 
 /**
  * DeletedLogs Model
@@ -29,9 +29,21 @@ use Cake\I18n\Date;
  * @method \Archive\Model\Entity\DataManagementCopy[] patchEntities($entities, array $data, array $options = [])
  * @method \Archive\Model\Entity\DataManagementCopy findOrCreate($search, callable $callback = null, $options = [])
  */
+
 class DataManagementCopyTable extends ControllerActionTable
 {
     use MessagesTrait;
+    //POCOR-7924:start
+    const REPORT_CARDS = 'Report Card Templates';
+    const EDUCATION_STRUCTURE = 'Education Structure';
+    const INSTITUTION_PROGRAMMES_GRADES_AND_SUBJECTS = 'Institution Programmes, Grades and Subjects';
+    const SHIFTS = 'Shifts';
+    const INFRASTRUCTURE = 'Infrastructure';
+    const RISKS = 'Risks';
+    const PERFORMANCE_COMPETENCIES = 'Performance Competencies';
+    const PERFORMANCE_ASSESSMENTS = 'Performance Assessments';
+    const PERFORMANCE_OUTCOMES = 'Institution Performance Outcomes';
+    //POCOR-7924:end
 
     /**
      * Initialize method
@@ -39,26 +51,26 @@ class DataManagementCopyTable extends ControllerActionTable
      * @param array $config The configuration for the Table.
      * @return void
      */
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
-        $this->table('data_management_copy');
-        $this->displayField('id');
-        $this->primaryKey('id');
+        $this->setTable('data_management_copy');
+        $this->getDisplayField('id');
+        $this->getPrimaryKey('id');
 
         $this->belongsTo('AcademicPeriods', [
             'foreignKey' => 'from_academic_period',
             'joinType' => 'INNER',
             'className' => 'AcademicPeriod.AcademicPeriods'
         ]);
-
+        
         $this->toggle('view', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator->integer('id')->allowEmpty('id', 'create');
         $validator->requirePresence('from_academic_period', 'create')->notEmpty('from_academic_period');
@@ -95,25 +107,25 @@ class DataManagementCopyTable extends ControllerActionTable
 
     }
 
-    public function onUpdateFieldFromAcademicPeriod(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFromAcademicPeriod(Event $event, array $attr, $action, ServerRequest $request)
     {
         $condition = [];
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
         $attr['options'] = $academicPeriodOptions;
-		$attr['onChangeReload'] = true;
-        return $attr;
-    }
-
-    public function onUpdateFieldToAcademicPeriod(Event $event, array $attr, $action, Request $request)
-    {
-        $condition = [$this->AcademicPeriods->aliasField('id').' <> ' => $request['data']['DataManagementCopy']['from_academic_period']];
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
-        // list($periodOptions, $selectedPeriod) = array_values($this->AcademicPeriods->getYearList(['conditions' => $condition]));
-
-        $attr['options'] = $academicPeriodOptions;
         $attr['onChangeReload'] = true;
         return $attr;
     }
+
+    // public function onUpdateFieldToAcademicPeriod(Event $event, array $attr, $action, Request $request)
+    // {
+    //     $condition = [$this->AcademicPeriods->aliasField('id').' <> ' => $request['data']['DataManagementCopy']['from_academic_period']];
+    //     $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
+    //     // list($periodOptions, $selectedPeriod) = array_values($this->AcademicPeriods->getYearList(['conditions' => $condition]));
+
+    //     $attr['options'] = $academicPeriodOptions;
+    //     $attr['onChangeReload'] = true;
+    //     return $attr;
+    // }
 
     public function getAcademicPeriodOptions($querystringPeriod)
     {
@@ -135,7 +147,7 @@ class DataManagementCopyTable extends ControllerActionTable
             return false;
         }
 
-        $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
         $EducationSystems = TableRegistry::get('Education.EducationSystems');
 
@@ -164,7 +176,7 @@ class DataManagementCopyTable extends ControllerActionTable
                 ->where(['academic_period_id' => $entity->to_academic_period])
                 ->toArray();
             //POCOR-7568 start
-            if($entity->features =="Education Structure"){
+            if($entity->features == self::EDUCATION_STRUCTURE){
                     if(!empty($EducationSystemsdata)){
                         $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);//if education structure data already exist
                         return false;
@@ -177,7 +189,7 @@ class DataManagementCopyTable extends ControllerActionTable
             }
             }
         }
-        if($entity->features == 'Institution Programmes, Grades and Subjects'){
+        if($entity->features == self::INSTITUTION_PROGRAMMES_GRADES_AND_SUBJECTS){
             $EducationSystemsdata = $EducationSystems
                 ->find('all')
                 ->where(['academic_period_id' => $entity->to_academic_period])
@@ -243,7 +255,7 @@ class DataManagementCopyTable extends ControllerActionTable
                 }
             }
         }
-        if($entity->features == 'Shifts'){
+        if($entity->features == self::SHIFTS){
             $InstitutionShiftsData = $InstitutionShifts
                 ->find('all')
                 ->where(['academic_period_id ' => $entity->to_academic_period])
@@ -254,7 +266,7 @@ class DataManagementCopyTable extends ControllerActionTable
                    return false;}//POCOR-7576-shifts
             }
         }
-        if($entity->features == 'Infrastructure'){
+        if($entity->features == self::INFRASTRUCTURE){
             $InstitutionBuildingsData = $InstitutionBuildings
                 ->find('all')
                 ->where(['academic_period_id ' => $entity->to_academic_period])
@@ -299,7 +311,7 @@ class DataManagementCopyTable extends ControllerActionTable
                 $existRecord = $this->find('all',['conditions'=>[
                     'from_academic_period'=>$entity->from_academic_period,
                     'to_academic_period' => $entity->to_academic_period,
-                    'features' => 'Infrastructure'
+                    'features' => self::INFRASTRUCTURE
                 ]])->first();
                 if(!empty($existRecord)){
                     $this->delete($existRecord);
@@ -317,7 +329,7 @@ class DataManagementCopyTable extends ControllerActionTable
         }
         // Start POCOR-5337
         $RiskData = TableRegistry::get('Institution.Risks');
-        if($entity->features == 'Risks'){
+        if($entity->features == self::RISKS){
             $RiskRecords = $RiskData
                 ->find('all')
                 ->where(['academic_period_id ' => $entity->to_academic_period])
@@ -327,7 +339,7 @@ class DataManagementCopyTable extends ControllerActionTable
                 return false;
             }
         }// End POCOR-5337
-        if($entity->features == "Performance Competencies"){
+        if($entity->features == self::PERFORMANCE_COMPETENCIES){
             if($entity->from_academic_period == $entity->to_academic_period){
                 $this->Alert->error('CopyData.genralerror', ['reset' => true]);
                 return false;
@@ -400,17 +412,33 @@ class DataManagementCopyTable extends ControllerActionTable
         }
         // Start POCOR-6423
         $AssessmentData = TableRegistry::get('Assessment.Assessments');
-        if ($entity->features == 'Performance Assessments') {
+        if ($entity->features == self::PERFORMANCE_ASSESSMENTS) {
             $AssessmentRecords = $AssessmentData
                 ->find('all')
                 ->where(['academic_period_id ' => $entity->to_academic_period])
-                ->toArray();
-            if (!empty($AssessmentRecords)) {
+                ->count();
+            $PreviousAssessmentRecords = $AssessmentData
+                ->find('all')
+                ->where(['academic_period_id ' => $entity->from_academic_period])
+                ->count();
+            if($AssessmentRecords>= $PreviousAssessmentRecords) {
                 $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
                 return false;
             }
         }
         // End POCOR-6423
+        // POCOR-7764-start
+        $ReportCard = TableRegistry::get('ReportCard.ReportCards');
+        if ($entity->features == self::REPORT_CARDS) {
+            $ReportCardData = $ReportCard->find('all')
+                ->where(['academic_period_id ' => $entity->to_academic_period])
+                ->toArray();
+            if (!empty($ReportCardData)) {
+                $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
+                return false;
+            }
+        }
+        // POCOR-7764-end
     }
 
     /***************POCOR-7326 Start*********************** */
@@ -452,229 +480,22 @@ class DataManagementCopyTable extends ControllerActionTable
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $Institutions = TableRegistry::get('Institution.Institutions');
-        $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-        $institution_program_grade_subjects = TableRegistry::get('institution_program_grade_subjects');
+        $institution_program_grade_subjects = TableRegistry::get('Institution.InstitutionProgramGradeSubjects');
         $currentData = "'".date('Y-m-d H:i:s')."'";
 
         $from_academic_period = $entity->from_academic_period;
         $to_academic_period = $entity->to_academic_period;
 
-        if($entity->features == "Institution Programmes, Grades and Subjects"){
-            $InstitutionGradesdata = $InstitutionGrades
-                ->find('all')
-                ->toArray();
+        if($entity->features == self::INSTITUTION_PROGRAMMES_GRADES_AND_SUBJECTS){
             $from_academic_period = $entity->from_academic_period;
             $to_academic_period = $entity->to_academic_period;
-            $FromAcademicPeriodsData = $AcademicPeriods
-                        ->find()
-                        ->select(['start_date', 'start_year','id'])
-                        ->where(['id' => $from_academic_period])
-                        ->first();
-
-            $ToAcademicPeriodsData = $AcademicPeriods
-            ->find()
-            ->select(['start_date', 'start_year','end_date'])
-            ->where(['id' => $to_academic_period])
-            ->first();
-
-            // $InstitutionGradesdataToInsert = $InstitutionGrades
-            // ->find('all')
-            // ->where(['start_year' => $FromAcademicPeriodsData['start_year']])
-            // ->toArray();
-
-            $InstitutionGradesdatasToInsert = $InstitutionGrades
-            ->find('all')
-            ->where(['academic_period_id' =>  $from_academic_period])
-            ->toArray();
-
-            $InsIds = [];
-            foreach($InstitutionGradesdatasToInsert as $ke => $ig_data){
-                $InsIds[] = $ig_data->institution_id;
-            }
-
-            $Unmatched =[];
-            $Matched = [];
-
-            $institutions = $Institutions->find('all')->toArray();        
-            // foreach($InstitutionGradesdataToInsert AS $InstitutionGradesdataValue){
-                foreach($institutions as $institutionKey => $Institution){ 
-                        $InstitutionGradesdataValue = $InstitutionGrades
-                                                        ->find()
-                                                        ->contain('EducationGrades')
-                                                        ->where(['academic_period_id' => $from_academic_period,'institution_id'=> $Institution->id])
-                                                        ->toArray();
-                   //for removing duplicate records POCOR-7657 start
-                        if(!empty($InstitutionGradesdataValue)){
-                            foreach($InstitutionGradesdataValue as $key=>$newData){
-
-                                            $existingRecord = $InstitutionGrades
-                                                                            ->find()
-                                                                            ->contain('EducationGrades')
-                                                                            ->where(['academic_period_id' => $to_academic_period,
-                                                                                      'institution_id' => $Institution->id,
-                                                                                      'EducationGrades.name'=>$newData->education_grade->name])
-                                                                            ->first();
-                                            if(empty($existingRecord)){
-                                                try {
-                                                 $statement = $connection->prepare('INSERT INTO institution_grades( education_grade_id, academic_period_id, 
-                                                                                  start_date, start_year, end_date, end_year, institution_id, modified_user_id, 
-                                                                                  modified, created_user_id, created)
-                                                                                  VALUES (:education_grade_id, :academic_period_id, :start_date,  
-                                                                                  :start_year, :end_date, :end_year, :institution_id, 
-                                                                                  :modified_user_id, :modified, :created_user_id, :created)');
-
-                                                                $statement->execute([
-                                                                'education_grade_id' => $newData['education_grade_id'],
-                                                                'academic_period_id' => $to_academic_period,
-                                                                'start_date' => $ToAcademicPeriodsData['start_date']->format('Y-m-d'),
-                                                                'start_year' => $ToAcademicPeriodsData['start_year'],
-                                                                'end_date' => null,
-                                                                'end_year' => null,
-                                                                'institution_id' =>$newData['institution_id'],
-                                                                'modified_user_id' => 2,
-                                                                'modified' => date('Y-m-d H:i:s'),
-                                                                'created_user_id' => 2,
-                                                                'created' => date('Y-m-d H:i:s')
-                                                                ]);
-                
-                                                    }catch (\PDOException $e) {
-                                                        echo "<pre>";print_r($e);die;
-                                                    }
-                                            
-                                                } }
-                        }
-
-                }
-                //POCOR-7657 end
-            $from_start_date = $ToAcademicPeriodsData['start_date']->format('Y-m-d');
-            $to_end_date = $ToAcademicPeriodsData['end_date']->format('Y-m-d');
-            $to_start_year = $ToAcademicPeriodsData['start_year'];
-            $from_start_date = "'".$from_start_date."'";
-            $to_end_date = "'".$to_end_date."'";
-            $final_from_start_date = $ToAcademicPeriodsData['start_date']->format('Y-m-d');
-            $statement = $connection->prepare("SELECT education_systems.academic_period_id,correct_grade.id AS correct_grade_id,institution_grades.* FROM `institution_grades`
-            INNER JOIN education_grades wrong_grade ON wrong_grade.id = institution_grades.education_grade_id
-            INNER JOIN education_grades correct_grade ON correct_grade.code = wrong_grade.code
-            INNER JOIN education_programmes ON correct_grade.education_programme_id = education_programmes.id
-            INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
-            INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
-            INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
-            LEFT JOIN academic_periods ON institution_grades.academic_period_id=academic_periods.id
-            AND academic_periods.academic_period_level_id != -1
-            AND education_systems.academic_period_id = academic_periods.id
-            WHERE correct_grade.id != institution_grades.education_grade_id AND academic_periods.id=$to_academic_period");
-            
-            $statement->execute();
-            $row = $statement->fetchAll(\PDO::FETCH_ASSOC);
-            foreach($row AS $rowData){
-                $InstitutionGrades->updateAll(
-                    ['education_grade_id' => $rowData['correct_grade_id']],    //field
-                    ['education_grade_id' => $rowData['education_grade_id'], 'academic_period_id' => $rowData['academic_period_id'], 'institution_id'=>$rowData['institution_id'],  'start_date' => $final_from_start_date, 'start_year' => $to_start_year]
-                );//updated for checking academic_period_also
-            }
-
-
-            //to insert data in institution_program_grade_subjects[START]
-            $conn = ConnectionManager::get('default');
-            $queryData="SELECT subq3.new_inst_grade_id, subq3.new_ed_grade_id, subq2.subject_id, subq2.inst_id, '1', $currentData
-            FROM (SELECT
-                institutions.id institution_id,
-                education_grades.id edu_grade_id,
-                institution_grades.id old_institution_grade_id,
-                institution_program_grade_subjects.institution_grade_id old_instit_grade_id,
-                institution_program_grade_subjects.education_grade_subject_id subject_id,
-                institution_program_grade_subjects.institution_id inst_id
-            FROM institution_program_grade_subjects
-            INNER JOIN institution_grades ON institution_grades.id = institution_program_grade_subjects.institution_grade_id
-            INNER JOIN education_grades ON education_grades.id = institution_grades.education_grade_id
-            INNER JOIN institutions ON institutions.id = institution_grades.institution_id
-            INNER JOIN education_programmes ON education_programmes.id = education_grades.education_programme_id
-            INNER JOIN education_cycles ON education_cycles.id = education_programmes.education_cycle_id
-            INNER JOIN education_levels ON education_levels.id = education_cycles.education_level_id
-            INNER JOIN education_systems ON education_systems.id = education_levels.education_system_id
-            INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
-            WHERE academic_periods.id = $from_academic_period) subq2
-        INNER JOIN (SELECT 
-        subq.old_edu_grade_id old_ed_grade_id,
-        subq1.new_edu_grade_id new_ed_grade_id,
-        subq.old_institution_grade_id old_inst_grade_id,
-        subq1.new_institution_grade_id new_inst_grade_id
-        FROM(SELECT
-            education_levels.name old_edu_level_name,
-            education_cycles.name old_edu_cycle_name,
-            education_programmes.code old_edu_programme_name,
-            education_grades.id old_edu_grade_id,
-            education_grades.code old_edu_grade_code,
-            institution_grades.id old_institution_grade_id,
-            institution_grades.institution_id old_institution_id
-        FROM `institution_grades`
-        INNER JOIN education_grades ON education_grades.id = institution_grades.education_grade_id
-        INNER JOIN institutions ON institutions.id = institution_grades.institution_id
-        INNER JOIN education_programmes ON education_programmes.id = education_grades.education_programme_id
-        INNER JOIN education_cycles ON education_cycles.id = education_programmes.education_cycle_id
-        INNER JOIN education_levels ON education_levels.id = education_cycles.education_level_id
-        INNER JOIN education_systems ON education_systems.id = education_levels.education_system_id
-        INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
-        WHERE academic_periods.id = $from_academic_period) subq
-        INNER JOIN (SELECT 
-            education_levels.name new_edu_level_name,
-            education_cycles.name new_edu_cycle_name,
-            education_programmes.code new_edu_programme_name,
-            education_grades.id new_edu_grade_id,
-            education_grades.code new_edu_grade_code,
-            institution_grades.id new_institution_grade_id,
-            institution_grades.institution_id new_institution_id
-        FROM `institution_grades`
-        INNER JOIN education_grades ON education_grades.id = institution_grades.education_grade_id
-        INNER JOIN institutions ON institutions.id = institution_grades.institution_id
-        INNER JOIN education_programmes ON education_programmes.id = education_grades.education_programme_id
-        INNER JOIN education_cycles ON education_cycles.id = education_programmes.education_cycle_id
-        INNER JOIN education_levels ON education_levels.id = education_cycles.education_level_id
-        INNER JOIN education_systems ON education_systems.id = education_levels.education_system_id
-        INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
-        WHERE academic_periods.id = $to_academic_period) subq1 ON subq1.new_edu_level_name = subq.old_edu_level_name AND subq1.new_edu_programme_name = subq.old_edu_programme_name AND subq1.new_edu_grade_code = subq.old_edu_grade_code AND subq1.new_edu_cycle_name = subq.old_edu_cycle_name AND subq1.new_institution_id = subq.old_institution_id) subq3 ON subq3.old_inst_grade_id = subq2.old_instit_grade_id";
-        //for not inserting duplicate records
-        $result=$conn->execute($queryData)->fetchAll('assoc');
-        $institutionGradeSubjects=TableRegistry::get('institution_program_grade_subjects');
-        foreach($result as $key =>$institutionGradeSubjectData) {
-
-          
-                $existingRecord =$institutionGradeSubjects->find()
-                    ->where([
-                        'institution_grade_id'=> $institutionGradeSubjectData['new_inst_grade_id'],
-                        'education_grade_id'=> $institutionGradeSubjectData['new_ed_grade_id'], 
-                        'education_grade_subject_id'=> $institutionGradeSubjectData['subject_id'],
-                        'institution_id'=> $institutionGradeSubjectData['inst_id'],
-                    ])
-                    ->first();
-                if (empty($existingRecord)) {
-                    try {
-                      
-                        $statement = $connection->prepare("INSERT INTO `institution_program_grade_subjects`
-                         (`institution_grade_id`, `education_grade_id`, `education_grade_subject_id`, 
-                         `institution_id`, `created_user_id`, `created`)
-                         VALUES (:institution_grade_id,:education_grade_id,:education_grade_subject_id,
-                          :institution_id, :created_user_id, :created)");
-                        $statement->execute([
-                            'institution_grade_id' => $institutionGradeSubjectData['new_inst_grade_id'],
-                            'education_grade_id' => $institutionGradeSubjectData['new_ed_grade_id'],
-                            'education_grade_subject_id' => $institutionGradeSubjectData['subject_id'],
-                            'institution_id' => $institutionGradeSubjectData['inst_id'],
-                            'created_user_id' => 2,
-                            'created' => date('Y-m-d H:i:s')
-                        ]);
-                        
-                    } catch (\PDOException $e) {
-                        echo "<pre>";
-                        print_r($e);
-                        die;
-                    }
-                }
-            }
-            
+            $copyFrom = $from_academic_period;
+            $copyTo = $to_academic_period;
+            $this->triggerCopyShell('InstitutionProgramAndGrade', $copyFrom, $copyTo);
         }
-        if($entity->features == "Shifts"){
+        if($entity->features == self::SHIFTS){
             $from_academic_period = $entity->from_academic_period;
             $to_academic_period = $entity->to_academic_period;
             $copyFrom = $from_academic_period;
@@ -682,7 +503,7 @@ class DataManagementCopyTable extends ControllerActionTable
             $this->triggerCopyShell('Shift', $copyFrom, $copyTo);
         }
         
-        if($entity->features == "Infrastructure"){
+        if($entity->features == self::INFRASTRUCTURE){
             $from_academic_period = $entity->from_academic_period;
             $to_academic_period = $entity->to_academic_period;
             $copyFrom = $from_academic_period;
@@ -909,25 +730,53 @@ class DataManagementCopyTable extends ControllerActionTable
             //**************************POCOR-7326 End************************************** */
 
 
-            $this->triggerCopyShell('Infrastructure', $copyFrom, $copyTo);
+            $this->triggerCopyShell(self::INFRASTRUCTURE, $copyFrom, $copyTo);
         }
 
         // Start POCOR-5337
-        if($entity->features == "Risks"){
+        if($entity->features == self::RISKS){
             $from_academic_period = $entity->from_academic_period;
             $to_academic_period = $entity->to_academic_period;
             $copyFrom = $from_academic_period;
             $copyTo = $to_academic_period;
             $this->triggerCopyShell('Risk', $copyFrom, $copyTo);
         }
+        $outcomeTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
+        $outcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
+        if($entity->features == self::PERFORMANCE_OUTCOMES){
+            if($entity->from_academic_period == $entity->to_academic_period){
+                $this->Alert->error('CopyData.genralerror', ['reset' => true]);
+                return false;
+            }
+            $outcomeTemplatesData = $outcomeTemplates
+                ->find('all')
+                ->where(['academic_period_id ' => $entity->to_academic_period])
+                ->count();
+            $outcomeCriteriasData = $outcomeCriterias
+                ->find('all')
+                ->where(['academic_period_id ' => $entity->to_academic_period])
+                ->count();
+            $previousOutcomeTemplatesData = $outcomeTemplates
+                ->find('all')
+                ->where(['academic_period_id ' => $entity->from_academic_period])
+                ->count();
+            $previousOutcomeCriteriasData = $outcomeCriterias
+                ->find('all')
+                ->where(['academic_period_id ' => $entity->from_academic_period])
+                ->count();
+            if($outcomeTemplatesData>=$previousOutcomeTemplatesData && $outcomeCriteriasData>=$previousOutcomeCriteriasData){
+                $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
+                return false;
+            }
+        }
         // End POCOR-5337
-        if ($entity->features == "Performance Competencies") {
+        if ($entity->features == self::PERFORMANCE_COMPETENCIES) {
             $this->log('=======>Before triggerPerformanceCompetenciesShell', 'debug');
             $this->triggePerformanceCompetenciesShell('PerformanceCompetencies',$entity->from_academic_period, $entity->to_academic_period, $entity->competency_criterias_value, $entity->competency_templates_value, $entity->competency_items_value);
             $this->log(' <<<<<<<<<<======== After triggerPerformanceCompetenciesShell', 'debug');
         }
         //POCOR-7568 start
-        if ($entity->features == "Education Structure") {
+        if ($entity->features == self::EDUCATION_STRUCTURE) {
             $from_academic_period = $entity->from_academic_period;
             $to_academic_period = $entity->to_academic_period;
             $copyFrom = $from_academic_period;
@@ -936,7 +785,7 @@ class DataManagementCopyTable extends ControllerActionTable
         }
         //POCOR-7568 end
         // Start POCOR-6423
-        if ($entity->features == "Performance Assessments") {
+        if ($entity->features == self::PERFORMANCE_ASSESSMENTS) {
             $from_academic_period = $entity->from_academic_period;
             $to_academic_period = $entity->to_academic_period;
             $copyFrom = $from_academic_period;
@@ -944,413 +793,22 @@ class DataManagementCopyTable extends ControllerActionTable
             $this->triggerCopyShell('PerformanceAssessment', $copyFrom, $copyTo);
         }
         // End POCOR-6423
+        // Start POCOR-7764
+        if ($entity->features == self::REPORT_CARDS) {
+            $copyFrom = $entity->from_academic_period;
+            $copyTo = $entity->to_academic_period;
+            $this->triggerCopyShell('CopyReportCard', $copyFrom, $copyTo);
+        }
+        // End POCOR-7764
+        // Start POCOR-6425
+        if ($entity->features == self::PERFORMANCE_OUTCOMES) {
+            $this->log('=======>Before triggerPerformanceOutcomesShell', 'debug');
+            $this->triggePerformanceOutcomesShell('PerformanceOutcomes', $entity->from_academic_period, $entity->to_academic_period);
+            $this->log(' <<<<<<<<<<======== After triggerPerformanceOutcomesShell', 'debug');
+        }
+        // End POCOR-6425
     }
-    
-    // public function afterSave(Event $event, Entity $entity, ArrayObject $data){
-    //     ini_set('memory_limit', '2G');
-    //     $connection = ConnectionManager::get('default');
-    //     $EducationSystems = TableRegistry::get('Education.EducationSystems');
-    //     $EducationLevels = TableRegistry::get('Education.EducationLevels');
-    //     $EducationCycles = TableRegistry::get('Education.EducationCycles');
-    //     $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
-    //     $EducationGrades = TableRegistry::get('Education.EducationGrades');
-    //     $Institutions = TableRegistry::get('Institution.Institutions');
-    //     $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
-    //     $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-    //     $institution_program_grade_subjects = TableRegistry::get('institution_program_grade_subjects');
-    //     $currentData = "'".date('Y-m-d H:i:s')."'";
 
-    //     $from_academic_period = $entity->from_academic_period;
-    //     $to_academic_period = $entity->to_academic_period;
-
-    //     if($entity->features == "Institution Programmes, Grades and Subjects"){
-    //         $InstitutionGradesdata = $InstitutionGrades
-    //             ->find('all')
-    //             ->toArray();
-    //         $from_academic_period = $entity->from_academic_period;
-    //         $to_academic_period = $entity->to_academic_period;
-    //         $FromAcademicPeriodsData = $AcademicPeriods
-    //                     ->find()
-    //                     ->select(['start_date', 'start_year'])
-    //                     ->where(['id' => $from_academic_period])
-    //                     ->first();
-
-    //         $ToAcademicPeriodsData = $AcademicPeriods
-    //         ->find()
-    //         ->select(['start_date', 'start_year','end_date'])
-    //         ->where(['id' => $to_academic_period])
-    //         ->first();
-
-    //         $InstitutionGradesdataToInsert = $InstitutionGrades
-    //         ->find('all')
-    //         ->where(['start_year' => $FromAcademicPeriodsData['start_year']])
-    //         ->toArray();
-        
-    //         foreach($InstitutionGradesdataToInsert AS $InstitutionGradesdataValue){
-            
-    //             try{
-    //                 $statement = $connection->prepare('INSERT INTO institution_grades 
-    //                 (
-    //                 education_grade_id, 
-    //                 academic_period_id,
-    //                 start_date,
-    //                 start_year,
-    //                 end_date,
-    //                 end_year,
-    //                 institution_id,
-    //                 modified_user_id,
-    //                 modified,
-    //                 created_user_id,
-    //                 created)
-                    
-    //                 VALUES (:education_grade_id,
-    //                 :academic_period_id,
-    //                 :start_date, 
-    //                 :start_year,
-    //                 :end_date,
-    //                 :end_year,
-    //                 :institution_id,
-    //                 :modified_user_id,
-    //                 :modified,
-    //                 :created_user_id,
-    //                 :created)');
-
-    //                 $statement->execute([
-    //                 'education_grade_id' => $InstitutionGradesdataValue->education_grade_id,
-    //                 'academic_period_id' => $to_academic_period,
-    //                 'start_date' => $ToAcademicPeriodsData['start_date']->format('Y-m-d'),
-    //                 'start_year' => $ToAcademicPeriodsData['start_year'],
-    //                 'end_date' => null,
-    //                 'end_year' => null,
-    //                 'institution_id' => $InstitutionGradesdataValue->institution_id,
-    //                 'modified_user_id' => 2,
-    //                 'modified' => date('Y-m-d H:i:s'),
-    //                 'created_user_id' => 2,
-    //                 'created' => date('Y-m-d H:i:s')
-    //                 ]);
-                
-    //             }catch (PDOException $e) {
-    //                 echo "<pre>";print_r($e);die;
-    //             }
-    //         }
-    //         //This code is for copy one academic period to onother[Start]
-    //         $from_start_date = $ToAcademicPeriodsData['start_date']->format('Y-m-d');
-    //         $to_end_date = $ToAcademicPeriodsData['end_date']->format('Y-m-d');
-    //         $to_start_year = $ToAcademicPeriodsData['start_year'];
-    //         $from_start_date = "'".$from_start_date."'";
-    //         $to_end_date = "'".$to_end_date."'";
-    //         $final_from_start_date = $ToAcademicPeriodsData['start_date']->format('Y-m-d');
-    //         $statement = $connection->prepare("SELECT education_systems.academic_period_id,correct_grade.id AS correct_grade_id,institution_grades.* FROM `institution_grades`
-    //         INNER JOIN education_grades wrong_grade ON wrong_grade.id = institution_grades.education_grade_id
-    //         INNER JOIN education_grades correct_grade ON correct_grade.code = wrong_grade.code
-    //         INNER JOIN education_programmes ON correct_grade.education_programme_id = education_programmes.id
-    //         INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
-    //         INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
-    //         INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
-    //         LEFT JOIN academic_periods ON institution_grades.start_date BETWEEN $from_start_date AND $to_end_date
-    //         AND academic_periods.academic_period_level_id != -1
-    //         AND education_systems.academic_period_id = academic_periods.id
-    //         WHERE correct_grade.id != institution_grades.education_grade_id AND academic_periods.id=$to_academic_period");
-
-    //         $statement->execute();
-    //         $row = $statement->fetchAll(\PDO::FETCH_ASSOC);
-    //         foreach($row AS $rowData){
-    //             $InstitutionGrades->updateAll(
-    //                 ['education_grade_id' => $rowData['correct_grade_id']],    //field
-    //                 ['education_grade_id' => $rowData['education_grade_id'], 'institution_id'=>$rowData['institution_id'],  'start_date' => $final_from_start_date, 'start_year' => $to_start_year]
-    //             );
-    //         }
-
-
-    //         //to insert data in institution_program_grade_subjects[START]
-    //         $conn = ConnectionManager::get('default');
-    //         $queryData = "INSERT INTO `institution_program_grade_subjects` (`institution_grade_id`, `education_grade_id`, `education_grade_subject_id`, `institution_id`, `created_user_id`, `created`)
-    //         SELECT subq3.new_inst_grade_id, subq3.new_ed_grade_id, subq2.subject_id, subq2.inst_id, '1', $currentData
-    //         FROM (SELECT
-    //             institutions.id institution_id,
-    //             education_grades.id edu_grade_id,
-    //             institution_grades.id old_institution_grade_id,
-    //             institution_program_grade_subjects.institution_grade_id old_instit_grade_id,
-    //             institution_program_grade_subjects.education_grade_subject_id subject_id,
-    //             institution_program_grade_subjects.institution_id inst_id
-    //         FROM institution_program_grade_subjects
-    //         INNER JOIN institution_grades ON institution_grades.id = institution_program_grade_subjects.institution_grade_id
-    //         INNER JOIN education_grades ON education_grades.id = institution_grades.education_grade_id
-    //         INNER JOIN institutions ON institutions.id = institution_grades.institution_id
-    //         INNER JOIN education_programmes ON education_programmes.id = education_grades.education_programme_id
-    //         INNER JOIN education_cycles ON education_cycles.id = education_programmes.education_cycle_id
-    //         INNER JOIN education_levels ON education_levels.id = education_cycles.education_level_id
-    //         INNER JOIN education_systems ON education_systems.id = education_levels.education_system_id
-    //         INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
-    //         WHERE academic_periods.id = $from_academic_period) subq2
-    //     INNER JOIN (SELECT 
-    //     subq.old_edu_grade_id old_ed_grade_id,
-    //     subq1.new_edu_grade_id new_ed_grade_id,
-    //     subq.old_institution_grade_id old_inst_grade_id,
-    //     subq1.new_institution_grade_id new_inst_grade_id
-    //     FROM(SELECT
-    //         education_levels.name old_edu_level_name,
-    //         education_cycles.name old_edu_cycle_name,
-    //         education_programmes.code old_edu_programme_name,
-    //         education_grades.id old_edu_grade_id,
-    //         education_grades.code old_edu_grade_code,
-    //         institution_grades.id old_institution_grade_id,
-    //         institution_grades.institution_id old_institution_id
-    //     FROM `institution_grades`
-    //     INNER JOIN education_grades ON education_grades.id = institution_grades.education_grade_id
-    //     INNER JOIN institutions ON institutions.id = institution_grades.institution_id
-    //     INNER JOIN education_programmes ON education_programmes.id = education_grades.education_programme_id
-    //     INNER JOIN education_cycles ON education_cycles.id = education_programmes.education_cycle_id
-    //     INNER JOIN education_levels ON education_levels.id = education_cycles.education_level_id
-    //     INNER JOIN education_systems ON education_systems.id = education_levels.education_system_id
-    //     INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
-    //     WHERE academic_periods.id = $from_academic_period) subq
-    //     INNER JOIN (SELECT 
-    //         education_levels.name new_edu_level_name,
-    //         education_cycles.name new_edu_cycle_name,
-    //         education_programmes.code new_edu_programme_name,
-    //         education_grades.id new_edu_grade_id,
-    //         education_grades.code new_edu_grade_code,
-    //         institution_grades.id new_institution_grade_id,
-    //         institution_grades.institution_id new_institution_id
-    //     FROM `institution_grades`
-    //     INNER JOIN education_grades ON education_grades.id = institution_grades.education_grade_id
-    //     INNER JOIN institutions ON institutions.id = institution_grades.institution_id
-    //     INNER JOIN education_programmes ON education_programmes.id = education_grades.education_programme_id
-    //     INNER JOIN education_cycles ON education_cycles.id = education_programmes.education_cycle_id
-    //     INNER JOIN education_levels ON education_levels.id = education_cycles.education_level_id
-    //     INNER JOIN education_systems ON education_systems.id = education_levels.education_system_id
-    //     INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
-    //     WHERE academic_periods.id = $to_academic_period) subq1 ON subq1.new_edu_level_name = subq.old_edu_level_name AND subq1.new_edu_programme_name = subq.old_edu_programme_name AND subq1.new_edu_grade_code = subq.old_edu_grade_code AND subq1.new_edu_cycle_name = subq.old_edu_cycle_name AND subq1.new_institution_id = subq.old_institution_id) subq3 ON subq3.old_inst_grade_id = subq2.old_instit_grade_id";
-    //         $conn->execute($queryData);
-    //     }
-    //     if($entity->features == "Shifts"){
-    //         $from_academic_period = $entity->from_academic_period;
-    //         $to_academic_period = $entity->to_academic_period;
-    //         $copyFrom = $from_academic_period;
-    //         $copyTo = $to_academic_period;
-    //         $this->triggerCopyShell('Shift', $copyFrom, $copyTo);
-    //     }
-        
-    //     if($entity->features == "Infrastructure"){
-    //         $from_academic_period = $entity->from_academic_period;
-    //         $to_academic_period = $entity->to_academic_period;
-    //         $copyFrom = $from_academic_period;
-    //         $copyTo = $to_academic_period;
-
-    //         //***********************POCOR-7326 Start******************************* */    
-
-    //         $InstitutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
-    //         $InstitutionFloors = TableRegistry::get('Institution.InstitutionFloors');
-    //         $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
-    //         $InstitutionLands = TableRegistry::get('Institution.InstitutionLands');
-    //         $Institutions = TableRegistry::get('Institution.Institutions');
-    //         $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
-
-    //         $InstitutionLandsData = $InstitutionLands
-    //             ->find('all')
-    //             ->where(['academic_period_id ' => $entity->to_academic_period])
-    //             ->toArray();
-
-
-
-    //         $institutions = $Institutions->find('all')->toArray();
-    //         $InsIds = [];
-    //         foreach($InstitutionLandsData as $ke => $institutionLand){
-    //             $InsIds[] = $institutionLand->institution_id;
-    //         }
-    //         //Check here Land entity for each school**
-    //         $Unmatched =[];
-    //         $Matched = [];
-    //         foreach($institutions as $k => $Insti){ 
-    //             if (!in_array($Insti->id, $InsIds)) {
-    //                $Unmatched[$k] = $Insti->id;
-    //                //*********Save Land/Bulding/Floor/room */
-    //                $InstitutionLandDataa = $InstitutionLands
-    //                ->find('all')
-    //                ->where(['academic_period_id ' => $entity->from_academic_period,'institution_id'=> $Insti->id])
-    //                ->first();
-
-    //                $AcademicPeriod = $AcademicPeriods->get($entity->to_academic_period);
-
-    //                 $newLandEntity = $InstitutionLands->newEntity([
-    //                     'code'=> $this->codeGenerateL($Insti->code,$k+1),
-    //                     'name'=> $InstitutionLandDataa->name,
-    //                     'start_date' => $AcademicPeriod->start_date,
-    //                     'start_year' => $AcademicPeriod->start_year,
-    //                     'end_date' => $AcademicPeriod->end_date,
-    //                     'end_year' => $AcademicPeriod->end_year,
-    //                     'year_acquired'=> $InstitutionLandDataa->year_acquired,
-    //                     'year_disposed' => $InstitutionLandDataa->year_disposed,
-    //                     'area' => $InstitutionLandDataa->area,
-    //                     'accessibility'=> $InstitutionLandDataa->accessibility,
-    //                     'comment'=> $InstitutionLandDataa->comment,
-    //                     'institution_id'=> $InstitutionLandDataa->institution_id,
-    //                     'academic_period_id'=> $AcademicPeriod->id,
-    //                     'land_type_id'=> $InstitutionLandDataa->land_type_id,
-    //                     'land_status_id'=> $InstitutionLandDataa->land_status_id,
-    //                     'infrastructure_ownership_id'=> $InstitutionLandDataa->infrastructure_ownership_id,
-    //                     'infrastructure_condition_id'=> $InstitutionLandDataa->infrastructure_condition_id,
-    //                     'previous_institution_land_id'=> $InstitutionLandDataa->previous_institution_land_id,
-    //                     'modified_user_id'=> $InstitutionLandDataa->modified_user_id,
-    //                     'modified'=> $InstitutionLandDataa->modified,
-    //                     'created_user_id'=> $InstitutionLandDataa->created_user_id,
-    //                     'created'=> $InstitutionLandDataa->created,
-
-    //                 ]);
-                    
-    //                 if($saveLandEntity = $InstitutionLands->save($newLandEntity)){
-                        
-    //                     $InstitutionBuildingData = $InstitutionBuildings
-    //                     ->find('all')
-    //                     ->where(['institution_land_id ' => $InstitutionLandDataa->id])
-    //                     ->toArray();
-    //                     foreach($InstitutionBuildingData as $kei=> $building){
-
-    //                         $newBuildingEntity = $InstitutionBuildings->newEntity([
-    //                             'code'=>$this->codeGenerateB($Insti->code,$k+1,$kei+1),
-    //                             'name'=>$building->name,
-    //                             'start_date' => $AcademicPeriod->start_date,
-    //                             'start_year' => $AcademicPeriod->start_year,
-    //                             'end_date' => $AcademicPeriod->end_date,
-    //                             'end_year' => $AcademicPeriod->end_year,
-    //                             'year_acquired'=>$building->year_acquired,
-    //                             'year_disposed'=>$building->year_disposed,
-    //                             'area'=>$building->area,
-    //                             'accessibility'=>$building->accessibility,
-    //                             'comment'=>$building->comment,
-    //                             'institution_land_id'=>$saveLandEntity->id,
-    //                             'institution_id'=>$building->institution_id,
-    //                             'academic_period_id'=>$AcademicPeriod->id,
-    //                             'building_type_id'=>$building->building_type_id,
-    //                             'building_status_id'=>$building->building_status_id,
-    //                             'infrastructure_ownership_id'=>$building->infrastructure_ownership_id,
-
-    //                             'infrastructure_condition_id'=>$building->infrastructure_condition_id,
-    //                             'previous_institution_building_id'=>$building->previous_institution_building_id,
-    //                             'modified_user_id'=>$building->modified_user_id,
-    //                             'modified'=>$building->modified,
-    //                             'created_user_id'=>$building->created_user_id,
-    //                             'created'=>$building->created
-
-    //                         ]);
-
-    //                         if($saveBuilding = $InstitutionBuildings->save($newBuildingEntity)){
-    //                             $InstitutionFloorData = $InstitutionFloors
-    //                             ->find('all')
-    //                             ->where(['institution_building_id ' => $building->id])
-    //                             ->toArray();
-
-    //                             foreach($InstitutionFloorData as $kkey => $floor){
-    //                                 $newFloorEntity = $InstitutionFloors->newEntity([
-
-    //                                     'code'=>$this->codeGenerateF($Insti->code,$k+1,$kei+1,$kkey+1),
-    //                                     'name'=>$floor->name,
-    //                                     'start_date' => $AcademicPeriod->start_date,
-    //                                     'start_year' => $AcademicPeriod->start_year,
-    //                                     'end_date' => $AcademicPeriod->end_date,
-    //                                     'end_year' => $AcademicPeriod->end_year,
-                                    
-    //                                     'area'=>$floor->area,
-    //                                     'accessibility'=>$floor->accessibility,
-    //                                     'comment'=>$floor->comment,
-    //                                     'institution_building_id'=>$saveBuilding->id,
-    //                                     'institution_id'=>$floor->institution_id,
-    //                                     'academic_period_id'=>$AcademicPeriod->id,
-    //                                     'floor_type_id'=>$floor->floor_type_id,
-    //                                     'floor_status_id'=>$floor->floor_status_id,
-                                        
-    //                                     'infrastructure_condition_id'=>$floor->infrastructure_condition_id,
-    //                                     'previous_institution_floor_id'=>$floor->previous_institution_floor_id,
-    //                                     'modified_user_id'=>$floor->modified_user_id,
-    //                                     'modified'=>$floor->modified,
-    //                                     'created_user_id'=>$floor->created_user_id,
-    //                                     'created'=>$floor->created
-
-    //                                 ]);
-                                   
-    //                                 if($saveFloor = $InstitutionFloors->save($newFloorEntity)){
-                                        
-    //                                     $InstitutionRoomData = $InstitutionRooms
-    //                                     ->find('all')
-    //                                     ->where(['institution_floor_id ' => $floor->id])
-    //                                     ->toArray();
-
-    //                                     foreach($InstitutionRoomData as $no=>$room){
-    //                                         $newRoomEntity = $InstitutionRooms->newEntity([
-    //                                             'code'=>$this->codeGenerateR($Insti->code,$k+1,$kei+1,$kkey+1,$no+1),
-    //                                             'name'=>$room->name,
-    //                                             'start_date' => $AcademicPeriod->start_date,
-    //                                             'start_year' => $AcademicPeriod->start_year,
-    //                                             'end_date' => $AcademicPeriod->end_date,
-    //                                             'end_year' => $AcademicPeriod->end_year,
-                                            
-                                            
-    //                                             'accessibility'=>$room->accessibility,
-    //                                             'comment'=>$room->comment,
-                                            
-                                                
-    //                                             'room_type_id'=>$room->room_type_id,
-    //                                             'room_status_id'=>$room->room_status_id,
-    //                                             'institution_floor_id'=>$saveFloor->id,
-
-    //                                             'institution_id'=>$room->institution_id,
-    //                                             'academic_period_id'=>$AcademicPeriod->id,
-
-    //                                             'infrastructure_condition_id'=>$room->infrastructure_condition_id,
-    //                                             'area'=>$room->area,
-    //                                             'previous_institution_room_id'=>$room->previous_institution_room_id,
-    //                                             'modified_user_id'=>$room->modified_user_id,
-    //                                             'modified'=>$room->modified,
-    //                                             'created_user_id'=>$room->created_user_id,
-    //                                             'created'=>$room->created
-    //                                         ]);
-                                            
-    //                                         $InstitutionRooms->save($newRoomEntity);
-    //                                     }
-    //                                 }
-    //                             }
-    //                         }
-                        
-    //                     }
-
-    //                 };
-
-
-    //             } else {
-    //                 $Matched[$k] = $Insti->id;
-    //             }
-               
-    //         }
-    //         if(!empty($Unmatched)){
-    //             $this->Alert->success('CopyData.updatedRecord', ['reset' => true]);
-    //             return false;
-    //         }elseif(!empty($Matched)){
-    //             $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
-    //             return false;
-    //         }
-
-
-    //         $this->triggerCopyShell('Infrastructure', $copyFrom, $copyTo);
-    //     }
-
-    //     // Start POCOR-5337
-    //     if($entity->features == "Risks"){
-    //         $from_academic_period = $entity->from_academic_period;
-    //         $to_academic_period = $entity->to_academic_period;
-    //         $copyFrom = $from_academic_period;
-    //         $copyTo = $to_academic_period;
-    //         $this->triggerCopyShell('Risk', $copyFrom, $copyTo);
-    //     }
-    //     // End POCOR-5337
-
-        
-    //     if($entity->features == "Performance Competencies"){
-    //         $this->log('=======>Before triggerPerformanceCompetenciesShell', 'debug');
-    //         $this->triggePerformanceCompetenciesShell('PerformanceCompetencies',$entity->from_academic_period, $entity->to_academic_period, $entity->competency_criterias_value, $entity->competency_templates_value, $entity->competency_items_value);
-    //         $this->log(' <<<<<<<<<<======== After triggerPerformanceCompetenciesShell', 'debug');
-    //     }
-    // }
 
      /*
     * Function to copy Shift and Infrastucture from old academic period to new academic period
@@ -1374,13 +832,17 @@ class DataManagementCopyTable extends ControllerActionTable
 
     public function getFeatureOptions(){
         $options = [
-            'Education Structure' => __('Education Structure'),//POCOR-7568
-            'Institution Programmes, Grades and Subjects' => __('Institution Programmes, Grades and Subjects'),
-            'Shifts' => __('Shifts'),
-            'Infrastructure' => __('Infrastructure'),
-            'Risks' => __('Risks'), // POCOR-5337
-            'Performance Competencies' => __('Performance Competencies'),
-            'Performance Assessments' => __('Institution Performance Assessments') // POCOR-6423
+            // POCOR-7924:start
+            self::EDUCATION_STRUCTURE => __(self::EDUCATION_STRUCTURE),//POCOR-7568
+            self::INSTITUTION_PROGRAMMES_GRADES_AND_SUBJECTS => __(self::INSTITUTION_PROGRAMMES_GRADES_AND_SUBJECTS),
+            self::SHIFTS => __(self::SHIFTS),
+            self::INFRASTRUCTURE => __(self::INFRASTRUCTURE),
+            self::RISKS => __(self::RISKS), // POCOR-5337
+            self::PERFORMANCE_COMPETENCIES => __(self::PERFORMANCE_COMPETENCIES),
+            self::PERFORMANCE_OUTCOMES => __('Performance Outcomes'),
+            self::PERFORMANCE_ASSESSMENTS => __('Institution Performance Assessments'), // POCOR-6423
+            self::REPORT_CARDS => __(self::REPORT_CARDS) // POCOR-7764 // POCOR-7924: end
+
         ];
         return $options;
     }
@@ -1388,6 +850,12 @@ class DataManagementCopyTable extends ControllerActionTable
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
+            case 'from_academic_period':
+                return __('From Academic Period');
+            case 'to_academic_period':
+                return __('To Academic Period');
+            case 'features':
+                return __('Features');
             case 'created_user_id':
                 return __('Created By');
             case 'created':
@@ -1399,7 +867,7 @@ class DataManagementCopyTable extends ControllerActionTable
 
     public function onGetToAcademicPeriod(Event $event, Entity $entity)
     {
-        $AcademicPeriodsData = TableRegistry::get('Academic.AcademicPeriods');
+        $AcademicPeriodsData = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods'); //TableRegistry::get('Academic.AcademicPeriods');
         $result = $AcademicPeriodsData
             ->find()
             ->select(['name'])
@@ -1472,7 +940,7 @@ class DataManagementCopyTable extends ControllerActionTable
         return true;
     }
     
-     //POCOR-7576-shifts end
+    //POCOR-7576-shifts end
     //POCOR-7576-institution programme start
     private function checkInstitutionCopiedData($copyFrom,$copyTo){
         $educationGradesTable = TableRegistry::get('Education.EducationGrades');
@@ -1550,7 +1018,8 @@ class DataManagementCopyTable extends ControllerActionTable
         return true;
         
    }
- 
+
+    //POCOR-7576-institution programme end
     public function filter_array($array,$term,$column){
         $matches = array();
         foreach($array as $a){
@@ -1591,5 +1060,24 @@ class DataManagementCopyTable extends ControllerActionTable
 
     }
     //POCOR-7576-institution programme end 
-   
+
+    /*
+    * Function to copy outcome_criterias and outcome_templates to new academic period
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return boolean
+    * @ticket POCOR-6425
+    */
+
+    public function triggePerformanceOutcomesShell($shellName, $from_academic_period = null, $to_academic_period = null)
+    {
+        $args = '';
+        $args .= !is_null($from_academic_period) ? ' ' . $from_academic_period : '';
+        $args .= !is_null($to_academic_period) ? ' ' . $to_academic_period : '';
+        $cmd = ROOT . DS . 'bin' . DS . 'cake ' . $shellName . $args;
+        $logs = ROOT . DS . 'logs' . DS . $shellName . '.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        exec($shellCmd);
+        Log::write('debug', $shellCmd);
+    }
+
 }

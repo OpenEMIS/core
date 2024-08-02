@@ -10,9 +10,9 @@ use App\Model\Table\AppTable;
 class WorkflowInstitutionTable extends AppTable
 {
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table("institution_surveys");
+        $this->setTable("institution_surveys");
         parent::initialize($config);
 
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);

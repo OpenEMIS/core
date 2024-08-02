@@ -23,7 +23,7 @@ class ApiSecuritiesController extends PageController
         $this->loadModel('ApiScopes');
         $this->loadModel('ApiSecurities');
 
-        $this->Page->disable(['add', 'delete']);
+        $this->Page->setDisable(['add', 'delete']);
     }
 
     public function implementedEvents()
@@ -36,11 +36,11 @@ class ApiSecuritiesController extends PageController
         $event['Controller.Page.onRenderDelete'] = 'onRenderIcon';
         $event['Controller.Page.onRenderExecute'] = 'onRenderIcon';
         $event['Controller.Page.onRenderApiScopeId'] = 'onRenderApiScopeId';
- 
+
         return $event;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         parent::beforeFilter($event);
         //POCOR-7520[START]
@@ -58,7 +58,7 @@ class ApiSecuritiesController extends PageController
             'controller' => 'ApiSecurities',
             'action' => 'index'
         ]);
-        
+
         // set header
         $page->setHeader(__('API Securities'));
 
@@ -80,7 +80,7 @@ class ApiSecuritiesController extends PageController
             ->toArray();
 
         $queryString = $page->getQueryString();
-        if (!array_key_exists('api_scope_id', $queryString)) {
+        if (!isset($queryString['api_scope_id'])) {
             $firstScopeOption = $scopeOptions[0]['value'];
             $page->setQueryString('api_scope_id', $firstScopeOption);
         }
@@ -172,11 +172,11 @@ class ApiSecuritiesController extends PageController
     public function onRenderApiScopeId(Event $event, Entity $entity, PageElement $element)
     {
         $page = $this->Page;
-        
+
         if ($page->is(['view', 'edit'])) {
             $apiScopeId = $this->getApiScopeId();
             $apiScopeName = $this->ApiScopes->get($apiScopeId)->name;
-            
+
             return $apiScopeName;
         }
     }
@@ -204,7 +204,7 @@ class ApiSecuritiesController extends PageController
         $page = $this->Page;
         $entity = !is_null($entity) ? $entity : $page->getData();
         $apiScopeId = $this->getApiScopeId();
-        
+
         if (!empty($entity->api_scopes)) {
             foreach ($entity->api_scopes as $obj) {
                 if ($obj->id == $apiScopeId) {
@@ -219,7 +219,7 @@ class ApiSecuritiesController extends PageController
         $page = $this->Page;
         $queryString = $page->getQueryString();
 
-        if (!array_key_exists('api_scope_id', $queryString)) {
+        if (!isset($queryString['api_scope_id'])) {
             pr('Query String Error');
             die;
         }

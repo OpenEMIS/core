@@ -131,7 +131,7 @@ function InstitutionsResultsController($q,
 
             var promise;
 
-            $scope.editPermission = result[0].is_editable;
+             $scope.editPermission = result[0].is_editable;
             $scope.subjects = result;
 
             promise = InstitutionsResultsSvc.getStudentStatusId("CURRENT");
@@ -411,7 +411,7 @@ function InstitutionsResultsController($q,
         function handleGetSubjectEditPermissionSetPeriods(result) {
             // console.log('handleGetSubjectEditPermissionSetPeriods');
             // console.log(JSON.stringify(result));
-            var promise;
+             var promise;
             $scope.editPermissionForSelectedSubject = result;
             promise = InstitutionsResultsSvc.getPeriods(
                 $scope.assessment_id,

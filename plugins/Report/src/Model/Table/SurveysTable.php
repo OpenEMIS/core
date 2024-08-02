@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\Collection\Collection;
@@ -21,15 +21,15 @@ class SurveysTable extends AppTable
     const COMPLETED = 3;
     const SURVEY_DISABLED = -1;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_surveys');
+        $this->setTable('institution_surveys');
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
-        $this->belongsTo('AreaLevels', ['className' => 'AreaLevel.AreaLevels']);
+        $this->belongsTo('AreaLevels', ['className' => 'Area.AreaLevels']);
 
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
@@ -49,11 +49,11 @@ class SurveysTable extends AppTable
         $this->addBehavior('Report.InstitutionSecurity');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         /*POCOR-6695 starts*/
-        $feature = $this->request->data[$this->alias()]['feature'];
+        $feature = $this->request->getData($this->getAlias())['feature'];
         if (in_array($feature, ['Report.SurveysReport'])) {
             $validator = $validator
                     ->notEmpty('academic_period_id')
@@ -87,12 +87,12 @@ class SurveysTable extends AppTable
         $this->ControllerAction->field('area_id', ['type' => 'hidden', 'attr' => ['label'=>'Area Name']]);
     }
     //POCOR - 7415 end
-    public function onUpdateFieldInstitutionStatus(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionStatus(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-           $attr['options'] = $this->controller->getInstitutionStatusOptions($this->alias());
+            $attr['options'] = $this->controller->getInstitutionStatusOptions($this->getAlias());
 
-            if (!(isset($this->request->data[$this->alias()]['institution_status']))) {
+            if (!(isset($this->request->getData($this->getAlias())['institution_status']))) {
                 $option = $attr['options'];
                 $options = [
                     'Active' => __('Active'),
@@ -106,15 +106,15 @@ class SurveysTable extends AppTable
         }
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $attr['options'] = $this->controller->getFeatureOptions($this->alias());
+            $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
             $attr['onChangeReload'] = true;
-            if (!(isset($this->request->data[$this->alias()]['feature']))) {
+            if (!(isset($this->request->getData($this->getAlias())['feature']))) {
                 $option = $attr['options'];
                 reset($option);
-                $this->request->data[$this->alias()]['feature'] = key($option);
+                $this->request->getData($this->getAlias())['feature'] = key($option);
             }
             return $attr;
         }
@@ -429,6 +429,45 @@ class SurveysTable extends AppTable
         if($institutionID > 0){
             $condition['Institutions.id'] = $institutionID;
         }
+        //POCOR-7821 start(for filtering data based on status(completed, not completed))
+        $status= $requestData->status;
+        if(!empty($status) && $status != "all"){
+            $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
+            $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+            $WorkflowStatuses = TableRegistry::get('Workflow.WorkflowStatuses');
+            $WorkflowStatusesSteps = TableRegistry::get('Workflow.WorkflowStatusesSteps');
+            $statusData = $this->find()->select([
+                    "status_id" => $this->aliasField('status_id'),
+                    "status_name" => $WorkflowSteps->aliasField('name')
+                    ])
+                    ->innerJoin([$WorkflowSteps->getAlias() => $WorkflowSteps->getTable()], [
+                        $WorkflowSteps->aliasField('id=') . $this->aliasField('status_id')
+                    ])
+                    ->innerJoin([$WorkflowStatusesSteps->getAlias() => $WorkflowStatusesSteps->getTable()], [
+                        $WorkflowStatusesSteps->aliasField('workflow_step_id=') . $WorkflowSteps->aliasField('id')
+                    ])
+                    ->innerJoin([$WorkflowStatuses->getAlias() => $WorkflowStatuses->getTable()], [
+                        $WorkflowStatuses->aliasField('id=') . $WorkflowStatusesSteps->aliasField('workflow_status_id')
+                    ])
+                    ->innerJoin([$WorkflowModels->getAlias() => $WorkflowModels->getTable()], [
+                        $WorkflowModels->aliasField('id=') . $WorkflowStatuses->aliasField('workflow_model_id')
+                    ])->where([
+                        $WorkflowModels->aliasField('name') => "Institutions > Survey > Forms",
+                        $WorkflowStatuses->aliasField('id') => $status
+                    ])->group($this->aliasField('status_id'))
+                    ->toArray();
+
+            foreach ($statusData as $key => $value) {
+                    $statusList[] = $value['status_id'];
+            }
+            $statusCondition = [
+                    $this->aliasField('status_id').' IN ' => array_values($statusList)
+            ];
+            $condition = array_merge($condition, $statusCondition);
+        }
+        //POCOR-7821 end
+       
+        
         // POCOR-6440 end
 
         $query->select([
@@ -453,7 +492,8 @@ class SurveysTable extends AppTable
                 'Institutions.Areas',
                 'Institutions.AreaAdministratives',
                 'Institutions.Statuses'
-            ])->where([$condition]);
+            ])->where([$condition
+            ])->group(['Surveys.id']); //POCOR-8226 added group by to avoid duplicates
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -501,22 +541,23 @@ class SurveysTable extends AppTable
         ];
     }
 
-    public function onUpdateFieldSurveyForm(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSurveyForm(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            if (isset($this->request->data[$this->alias()]['feature'])) {
-                $feature = $this->request->data[$this->alias()]['feature'];
-                $academicPeriodId = $this->request->data['Surveys']['academic_period_id'];
+            if (isset($this->request->getData($this->getAlias())['feature'])) {
+                $feature = $this->request->getData($this->getAlias())['feature'];
+                $academicPeriodId = $request->getData('Surveys')['academic_period_id'];
                 $todayDate = date('Y-m-d');
                 $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
-                if ($feature == $this->registryAlias() || $feature == 'Report.SurveysReport') {
-                    $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
+                if ($feature == $this->getRegistryAlias() || $feature == 'Report.SurveysReport') {
+                    // $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
+                    $SurveyStatusTable = TableRegistry::getTableLocator()->get('Survey.SurveyStatuses');
                     $surveyFormOptions = $this->SurveyForms
                                         ->find('list')
-                                        ->leftJoin([$SurveyStatusTable->alias() => $SurveyStatusTable->table()], [
+                                        ->leftJoin([$SurveyStatusTable->getAlias() => $SurveyStatusTable->getTable()], [
                                             $SurveyStatusTable->aliasField('survey_form_id = ') . $this->SurveyForms->aliasField('id'),
                                         ])
-                                        ->leftJoin([$SurveyStatusTable->SurveyStatusPeriods->alias() => $SurveyStatusTable->SurveyStatusPeriods->table()], [
+                                        ->leftJoin([$SurveyStatusTable->SurveyStatusPeriods->getAlias() => $SurveyStatusTable->SurveyStatusPeriods->getTable()], [
                                             $SurveyStatusTable->SurveyStatusPeriods->aliasField('survey_status_id = ') . $SurveyStatusTable->aliasField('id'),
                                         ])
                                         ->where([
@@ -536,10 +577,10 @@ class SurveysTable extends AppTable
                         $attr['attr']['required'] = true;
                     }
                     
-                    if (empty($this->request->data[$this->alias()]['survey_form'])) {
+                    if (empty($this->request->getData($this->getAlias())['survey_form'])) {
                         $option = $attr['options'];
                         reset($option);
-                        $this->request->data[$this->alias()]['survey_form'] = key($option);
+                        $this->request->getData($this->getAlias())['survey_form'] = key($option);
                     }
                     return $attr;
                 }
@@ -547,12 +588,13 @@ class SurveysTable extends AppTable
         }
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $feature = $this->request->data[$this->alias()]['feature'];
-            $surveyForm = $this->request->data[$this->alias()]['survey_form'];
-            $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
+            $feature = $this->request->getData($this->getAlias())['feature'];
+            $surveyForm = $this->request->getData($this->getAlias())['survey_form'];
+            // $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
+            $SurveyStatusTable = TableRegistry::get('Survey.SurveyStatuses');
             $academicPeriodOptions = $SurveyStatusTable
                 ->find('list', [
                     'keyField' => 'academic_id',
@@ -565,25 +607,25 @@ class SurveysTable extends AppTable
             $attr['options'] = $academicPeriodOptions;
             $attr['onChangeReload'] = true;
             $attr['type'] = 'select';
-            if (empty($this->request->data[$this->alias()]['academic_period_id'])) {
+            if (empty($this->request->getData($this->getAlias())['academic_period_id'])) {
                 $option = $attr['options'];
                 reset($option);
-                $this->request->data[$this->alias()]['academic_period_id'] = key($option);
+                $this->request->getData($this->getAlias())['academic_period_id'] = key($option);
             }
             return $attr;
         }
     }
 
-    public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            if (isset($this->request->data[$this->alias()]['feature'])
-                && isset($this->request->data[$this->alias()]['academic_period_id'])) {
-                $feature = $this->request->data[$this->alias()]['feature'];
-                $surveyForm = $this->request->data[$this->alias()]['survey_form'];
-                $academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+            if (isset($this->request->getData($this->getAlias())['feature'])
+                && isset($this->request->getData($this->getAlias())['academic_period_id'])) {
+                $feature = $this->request->getData($this->getAlias())['feature'];
+                $surveyForm = $this->request->getData($this->getAlias())['survey_form'];
+                $academicPeriodId = $this->request->getData($this->getAlias())['academic_period_id'];
 
-                if ($feature == $this->registryAlias()) {
+                if ($feature == $this->getRegistryAlias()) {
                     $surveyStatuses = $this->Workflow->getWorkflowStatuses('Institution.InstitutionSurveys');
                     $attr['type'] = 'select';
                     $surveyTable = $this;
@@ -609,11 +651,11 @@ class SurveysTable extends AppTable
             return "COMPLETED";
         }
     }
-    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
-            $Areas = TableRegistry::get('AreaLevel.AreaLevels');
+        if (isset($request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
+            $Areas = TableRegistry::get('Area.AreaLevels');
             $entity = $attr['entity'];
             if ($action == 'add') {
                 $areaOptions = $Areas
@@ -645,14 +687,14 @@ class SurveysTable extends AppTable
         return $result;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     { 
-        $areaId = $request->data[$this->alias()]['area_id'];
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
+        $areaId = $request->getData($this->getAlias())['area_id'];
+        $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
             $institutionList = [];
-            if (array_key_exists('area_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['area_id']) && $areaId != -1) {
+            if (array_key_exists('area_id', $request->getData($this->getAlias())) && !empty($request->getData($this->getAlias())['area_id']) && $areaId != -1) {
                 $institutionQuery = $InstitutionsTable
                     ->find('list', [
                         'keyField' => 'id',
@@ -704,7 +746,7 @@ class SurveysTable extends AppTable
             } else {
                 if (in_array($feature, ['Report.Surveys', 'Report.SurveysReport']) && count($institutionList) > 1) { //POCOR-6695 add condition 'Report.SurveysReport'
                     // POCOR-6440 starts
-                    if (array_key_exists('area_id', $request->data[$this->alias()]) && !empty($request->data[$this->alias()]['area_id']) && $areaId != -1) {
+                    if (array_key_exists('area_id', $request->getData($this->getAlias())) && !empty($request->getData($this->getAlias())['area_id']) && $areaId != -1) {
                         $institutionQuery = $InstitutionsTable
                         ->find('list', [
                             'keyField' => 'id',
@@ -758,11 +800,11 @@ class SurveysTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAreaId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($this->request->data[$this->alias()]['feature'])) {
-            $feature = $this->request->data[$this->alias()]['feature'];
-            $Areas = TableRegistry::get('Area.Areas');
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
+            $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
             $entity = $attr['entity'];
             if ($action == 'add') {
                 $areaOptions = $Areas
@@ -782,21 +824,20 @@ class SurveysTable extends AppTable
     }
 
     //POCOR-6695 Starts
-    public function onUpdateFieldSurveySection(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSurveySection(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $surveyForm = $this->request->data[$this->alias()]['survey_form'];
+        $surveyForm = $this->request->getData($this->getAlias())['survey_form'];
         if ($action == 'add') {
-            if (isset($this->request->data[$this->alias()]['feature'])) {
-                $feature = $this->request->data[$this->alias()]['feature'];
-                $academicPeriodId = $this->request->data['Surveys']['academic_period_id'];
-                $surveyFormId = $this->request->data['Surveys']['survey_form_id'];
+            if (isset($this->request->getData($this->getAlias())['feature'])) {
+                $feature = $this->request->getData($this->getAlias())['feature'];
+                $academicPeriodId = $this->request->getData('Surveys')['academic_period_id'];
+                $surveyFormId = $this->request->getData('Surveys')['survey_form_id'];
                 $todayDate = date('Y-m-d');
                 $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
                 if ($feature == 'Report.SurveysReport') {
-                    $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
+                    $SurveyStatusTable = TableRegistry::get ('Survey.SurveyStatuses');
                     $surveyQuestions = TableRegistry::get('FieldOption.IdentityTypes');
                     $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
-
                     $surveyFormOptions = $surveySection
                         ->find('list', ['keyField' => 'id', 'valueField' => 'section'])
                         ->where([
@@ -816,10 +857,10 @@ class SurveysTable extends AppTable
                         $attr['attr']['required'] = true;
                     }
                     
-                    if (empty($this->request->data[$this->alias()]['survey_section'])) {
+                    if (empty($this->request->getData($this->getAlias())['survey_section'])) {
                         $option = $attr['options'];
                         reset($option);
-                        $this->request->data[$this->alias()]['survey_section'] = key($option);
+                        $this->request->getData($this->getAlias())['survey_section'] = key($option);
                     }
                     return $attr;
                 }
@@ -827,27 +868,37 @@ class SurveysTable extends AppTable
         }
     }//End of POCOR-6695
     //POCOR-6695 Starts
-    public function onUpdateFieldTableQuestion(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTableQuestion(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $surveyQuestionId = $this->request->data[$this->alias()]['survey_section'];
-        $surveySectionQuestions = TableRegistry::get('Survey.SurveyFormsQuestions')
+        $surveyQuestionId = $this->request->getData($this->getAlias())['survey_section'];
+        if(isset($surveyQuestionId)){
+            $surveyQuestionId = $this->request->getData($this->getAlias())['survey_section'];
+        }else{
+            $surveyQuestionId = '';
+        }
+        $surveySectionQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions')
                 ->find('all', ['conditions' => ['id' => $surveyQuestionId]])
                 ->first();
+        if(!empty($surveySectionQuestions)){
+           $surveySectionQuestionName  = $surveySectionQuestions->section;
+        }else{
+          $surveySectionQuestionName = '';  
+        }
         if ($action == 'add') {
-            if (isset($this->request->data[$this->alias()]['feature'])) {
-                $feature = $this->request->data[$this->alias()]['feature'];
-                $academicPeriodId = $this->request->data['Surveys']['academic_period_id'];
+            if (isset($this->request->getData($this->getAlias())['feature'])) {
+                $feature = $this->request->getData($this->getAlias())['feature'];
+                $academicPeriodId = $this->request->getData('Surveys')['academic_period_id'];
                 $todayDate = date('Y-m-d');
                 $todayTimestamp = date('Y-m-d H:i:s', strtotime($todayDate));
                 if ($feature == 'Report.SurveysReport') {
-                    $SurveyStatusTable = $this->SurveyForms->surveyStatuses;
+                    $SurveyStatusTable = TableRegistry::get('Survey.SurveyStatuses');
                     $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
                     $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
                     $surveyFormOptions = $surveySection
                                         ->find('list', ['keyField' => 'survey_question_id', 'valueField' => 'name'])
                                         ->where([
                                             $surveySection->aliasField('section') => 
-                                            $surveySectionQuestions->section
+                                            $surveySectionQuestionName
                                         ])->toArray();
                     if (!empty($surveyFormOptions)) {
                         $attr['options'] = $surveyFormOptions;
@@ -860,14 +911,42 @@ class SurveysTable extends AppTable
                         $attr['attr']['required'] = true;
                     }
                     
-                    if (empty($this->request->data[$this->alias()]['survey_questions'])) {
+                    if (empty($this->request->getData($this->getAlias())['survey_questions'])) {
                         $option = $attr['options'];
                         reset($option);
-                        $this->request->data[$this->alias()]['survey_questions'] = key($option);
+                        $this->request->getData($this->getAlias())['survey_questions'] = key($option);
                     }
                     return $attr;
                 }
             }
         }
     }//End of POCOR-6695
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'feature':
+                return __('Feature');
+            case 'format':
+                return __('Format');
+            case 'academic_period_id':
+                return __('Academic Period');
+            case 'area_level_id':
+                return __('Area Level');
+            case 'survey_form':
+                return __('Survey Form');
+            case 'institution_id':
+                return __('Institution');
+            case 'institution_status':
+                return __('Institution Status');
+            case 'survey_section':
+                return __('Survey Section');
+             case 'table_question':
+                return __('Table Question');
+            case 'status':
+                return __('Status');
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

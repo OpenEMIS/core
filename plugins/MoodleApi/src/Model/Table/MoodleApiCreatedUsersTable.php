@@ -11,7 +11,7 @@ use App\Model\Table\ControllerActionTable;
 
 class MoodleApiCreatedUsersTable extends ControllerActionTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config):void
     {
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'core_user_id']);

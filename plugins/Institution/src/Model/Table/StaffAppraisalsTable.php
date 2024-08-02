@@ -12,15 +12,16 @@ use Cake\Network\Request;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use App\Model\Table\ControllerActionTable;
 use Cake\Log\Log;
+use Cake\Http\ServerRequest;
 use Cake\ORM\TableRegistry;
 
 class StaffAppraisalsTable extends ControllerActionTable
 {    
     public $staff;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff_appraisals');
+        $this->setTable('institution_staff_appraisals');
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
@@ -81,14 +82,22 @@ class StaffAppraisalsTable extends ControllerActionTable
         ]);
 
         // setting this up to be overridden in viewAfterAction(), this code is required for file download
-        $this->behaviors()->get('ControllerAction')->config(
+        $this->behaviors()->get('ControllerAction')->getConfig(
             'actions.download.show',
             true
         );
+
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['StaffAppraisals' =>
+                ['id','staff_id', 'institution_id']
+            ]
+        ]);
+        $this->addBehavior('Staff.StaffTab');
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
+        $validator->setProvider('custom', $this);
         return $validator
             ->allowEmpty('file_content')
             ->add('appraisal_period_from', [
@@ -118,13 +127,20 @@ class StaffAppraisalsTable extends ControllerActionTable
         }
 
         if ($this->action != 'download') {
-            if (!is_null($this->request->query('user_id'))) {
-                $userId = $this->request->query('user_id');
+            if (!is_null($this->request->getQuery('user_id'))) {
+                $userId = $this->request->getQuery('user_id');
             } else {
-                $session = $this->request->session();
+                // $userId = $this->getStaffId();
+                // echo "<pre>"; print_r('$userId');
+                // echo "<pre>"; print_r($userId);
+                // die;
+                $session = $this->request->getSession();
                 if ($session->check('Staff.Staff.id')) {
                     $userId = $session->read('Staff.Staff.id');
                 }
+            }
+            if(empty($userId) && isset($this->request->getParam('pass')[1])) {
+                $userId =  $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1])['staff_id'];
             }
 
             if (!is_null($userId)) {
@@ -133,6 +149,7 @@ class StaffAppraisalsTable extends ControllerActionTable
                 $this->controller->set('contentHeader', $staff->name. ' - ' .__('Appraisals'));
             }
         }
+        $this->field('institution_id', ['type' => 'hidden']);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -178,7 +195,7 @@ class StaffAppraisalsTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
-        $session = $controller->request->session();
+        $session = $controller->getRequest()->getSession();
 
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
@@ -212,15 +229,15 @@ class StaffAppraisalsTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('preferred_name')
             ])
             ->contain([
-                $this->Users->alias(),
-                $this->AppraisalTypes->alias(),
-                $this->AppraisalForms->alias(),
-                $this->AppraisalPeriods->alias(),
-                $this->Institutions->alias(),
-                $this->CreatedUser->alias(),
+                $this->Users->getAlias(),
+                $this->AppraisalTypes->getAlias(),
+                $this->AppraisalForms->getAlias(),
+                $this->AppraisalPeriods->getAlias(),
+                $this->Institutions->getAlias(),
+                $this->CreatedUser->getAlias(),
                 'Assignees'
             ])
-            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+            ->matching($this->Statuses->getAlias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([
                     $Statuses->aliasField('category <> ') => $doneStatus
                 ]);
@@ -278,10 +295,10 @@ class StaffAppraisalsTable extends ControllerActionTable
                 $this->aliasField('id') => $institutionStaffAppraisalsId,
                 $AppraisalFormsCriteriasScores->aliasField('final_score') => 1
             ])
-            ->innerJoin([$AppraisalFormsCriteriasScores->alias() => $AppraisalFormsCriteriasScores->table()], [
+            ->innerJoin([$AppraisalFormsCriteriasScores->getAlias() => $AppraisalFormsCriteriasScores->getTable()], [
                 $AppraisalFormsCriteriasScores->aliasField('appraisal_form_id = ') . $this->aliasField('appraisal_form_id'),
             ])
-            ->innerJoin([$AppraisalScoreAnswers->alias() => $AppraisalScoreAnswers->table()], [
+            ->innerJoin([$AppraisalScoreAnswers->getAlias() => $AppraisalScoreAnswers->getTable()], [
                 $AppraisalScoreAnswers->aliasField('appraisal_form_id = ') . $AppraisalFormsCriteriasScores->aliasField('appraisal_form_id'),
                 $AppraisalScoreAnswers->aliasField('appraisal_criteria_id = ') . $AppraisalFormsCriteriasScores->aliasField('appraisal_criteria_id'),
                 $AppraisalScoreAnswers->aliasField('institution_staff_appraisal_id = ') . $institutionStaffAppraisalsId
@@ -301,31 +318,32 @@ class StaffAppraisalsTable extends ControllerActionTable
     private function setupTabElements()
     {
         $options['type'] = 'staff';
-        $userId = $this->request->query('user_id');
+        $userId = $this->request->getQuery('user_id');
         if (!is_null($userId)) {
             $options['user_id'] = $userId;
         }
 
-        $tabElements = $this->controller->getCareerTabElements($options);
+        //$tabElements = $this->controller->getCareerTabElements($options);
+        $tabElements = $this->getCareerTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'StaffAppraisals');
     }
 
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Staff > Career > Appraisals';
-            $workflowModelsTable = TableRegistry::get('workflow_models');
-            $workflowStepsTable = TableRegistry::get('workflow_steps');
+            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
             $Workflows = TableRegistry::get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
                             'workflow_id'=>$Workflows->aliasField('id'),
                             'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
-                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                            ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                                 [
                                     $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
                                 ])
@@ -340,10 +358,11 @@ class StaffAppraisalsTable extends ControllerActionTable
                             ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $request->session();
-            if ($session->check('Institution.Institutions.id')) {
-                $institutionId = $session->read('Institution.Institutions.id');
-            }
+            // $session = $request->getSession();
+            // if ($session->check('Institution.Institutions.id')) {
+            //     $institutionId = $session->read('Institution.Institutions.id');
+            // }
+            $institutionId = $this->getInstitutionID();
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {
@@ -397,4 +416,38 @@ class StaffAppraisalsTable extends ControllerActionTable
             return $attr;
         }
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'appraisal_period_id') {
+            return __('Appraisal Period');
+        } elseif ($field == 'appraisal_form_id') {
+            return __('Appraisal Form');
+        } elseif ($field == 'appraisal_period_from') {
+            return __('Appraisal Period From');
+        } elseif ($field == 'appraisal_period_to') {
+            return __('Appraisal Period To');
+        } elseif ($field == 'date_appraised') {
+            return __('Date Appraised');
+        } elseif ($field == 'file_content') {
+            return __('Attachment');
+        } elseif ($field == 'comment') {
+            return __('Comment');
+        } elseif ($field == 'assignee_id') {
+            return __('Assignee');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
 }

@@ -29,22 +29,29 @@ class CreateUsersComponent extends Component
         return json_encode($password);
     }
     /**
-     * Get response for User Data from CSPD api 
+     * Get response for User Data from CSPD api
      * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      * @return array
-     * @ticket POCOR-6930
-    **/ 
-    public function getResponseForCspd($soapUrl,$soapUser,$soapPassword,$xml_post_string)
+     * @ticket POCOR-6930, POCOR-7916
+     **/
+    public function getResponseForCspd($soapUrl, $soapUser, $soapPassword, $xml_post_string, $soapAction = "http://tempuri.org/IVitalEvents/gePersonal")
     {
         $headers = array(
-                  "Content-type: application/soap+xml;charset=\"utf-8\"",
-                  "Accept: application/soap+xml",
-                  "Cache-Control: no-cache",
-                  "Pragma: no-cache",
-                  "SOAPAction: http://tempuri.org/IVitalEvents/gePersonal", 
-                  "Content-length: ".strlen($xml_post_string),
-              ); //SOAPAction: your op URL
-
+            "Accept: application/soap+xml",
+            "Cache-Control: no-cache",
+            "Pragma: no-cache",
+            "Content-length: ".strlen($xml_post_string),
+        ); //SOAPAction: your op URL
+        if($soapAction == "http://tempuri.org/IVitalEvents/gePersonal"){
+            $headers[] = "Content-Type: application/xml";
+            $headers[] = "soapAction: http://tempuri.org/IVitalEvents/gePersonal";
+        }
+        if($soapAction == "http://tempuri.org/IVitalEvents/getPersonalByName"){
+            $headers[] = "Content-Type: text/xml; charset=utf-8";
+            $headers[] = "soapAction: http://tempuri.org/IVitalEvents/getPersonalByName";
+        }
+//        $this->log($headers, 'debug');
         $url = $soapUrl;
         // PHP cURL  for https connection with auth
         $ch = curl_init();
@@ -58,7 +65,7 @@ class CreateUsersComponent extends Component
         curl_setopt($ch, CURLOPT_POSTFIELDS, $xml_post_string); // the SOAP request
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         // converting
-        $response = curl_exec($ch); 
+        $response = curl_exec($ch);
         curl_close($ch);
         return $response;
     }
@@ -67,11 +74,11 @@ class CreateUsersComponent extends Component
      * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
      * @return array
      * @ticket POCOR-6930
-    **/ 
+     **/
     public function XMLtoArray($xml) {
         $previous_value = libxml_use_internal_errors(true);
         $dom = new DOMDocument('1.0', 'UTF-8');
-        $dom->preserveWhiteSpace = false; 
+        $dom->preserveWhiteSpace = false;
         $dom->loadXml($xml);
         libxml_use_internal_errors($previous_value);
         if (libxml_get_errors()) {
@@ -84,7 +91,7 @@ class CreateUsersComponent extends Component
      * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
      * @return array
      * @ticket POCOR-6930
-    **/ 
+     **/
     public function DOMtoArray($root) {
         $result = array();
         if ($root->hasAttributes()) {

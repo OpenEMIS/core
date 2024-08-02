@@ -16,7 +16,7 @@ class SingleGradeBehavior extends Behavior
 {
     use EventTrait;
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.add.afterSave'] = ['callable' => 'addAfterSave', 'priority' => 9];
@@ -46,8 +46,8 @@ class SingleGradeBehavior extends Behavior
         
         $numberOfClasses = 1;
 
-        if ($request->is(['post']) && array_key_exists($model->alias(), $request->data)) {
-            $modelData = $request->data[$model->alias()];
+        if ($request->is(['post']) && array_key_exists($model->getAlias(), $request->getData())) {
+            $modelData = $request->getData()[$model->getAlias()];
             $selectedEducationGradeId = $modelData['education_grade'];
             $numberOfClasses = $modelData['number_of_classes'];
             /**
@@ -72,11 +72,13 @@ class SingleGradeBehavior extends Behavior
 
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
         $session = $this->_table->Session;
-        $institutionId = $session->read('Institution.Institutions.id');
+        // Call a method from another behavior attached to the same table
+        $institutionId =  $this->_table->getBehavior('InstitutionTab')->getInstitutionID();
+        // $institutionId = $session->read('Institution.Institutions.id');
 
         $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $gradeOptions = [0 => '-- '.__('Select').' --'] + $gradeOptions;
-//echo 'ssssss';print_r($institutionShiftId);die;
+        //echo 'ssssss';print_r($institutionShiftId);die;
         $this->_table->advancedSelectOptions($gradeOptions, $selectedEducationGradeId, [
             'message' => '{{label}} - ' . $this->_table->getMessage($this->_table->aliasField('expiredGrade')),
             'callable' => function ($id) use ($InstitutionGrades, $institutionId, $AcademicPeriodTable, $selectedAcademicPeriodId) {
@@ -133,11 +135,44 @@ class SingleGradeBehavior extends Behavior
         $unitOptions = [0 => '-- '.__('Select').' --'] + $unitOptions;//POCOR-7336
         $courseOptions = [0 => '-- '.__('Select').' --'] + $courseOptions; //POCOR-7336
         //POCOR-7680 start
-        $institutionId = $session->read('Institution.Institutions.id');
+        //$institutionId = $session->read('Institution.Institutions.id');
+        $institutionId =  $this->_table->getBehavior('InstitutionTab')->getInstitutionID();
         $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
         //POCOR-7680 end
+
+        //POCOR-7803::Start
+        $configItems = TableRegistry::get('Configuration.ConfigItems');
+        $configItemsData = $configItems->find()->where(['type'=>'Fields for Institutions Classes Details Page'])->toArray();
+        foreach($configItemsData as $configItemsData1){
+            if(($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 0)){
+                $unitEnable = 0;
+            }elseif(($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 1)){
+                $unitEnable = 1;
+            }
+            if(($configItemsData1['code'] == 'class_ins_course') && ($configItemsData1['value'] == 0)){
+                $courseEnable = 0;
+            }elseif(($configItemsData1['code'] == 'class_ins_course') && ($configItemsData1['value'] == 1)){
+                $courseEnable = 1;
+            }
+        }
+        //POCOR-7803::End
+
+        $LabelTable = TableRegistry::get('Labels');
+        $unitname = $LabelTable->find()->where(['module_name' =>'Institutions -> Classes' , 'field_name' =>'Unit'])->first();
+        if($unitname != null){
+           $unit =  $unitname->name;
+        }
+    
+        $CourseName = $LabelTable->find()->where(['module_name' =>'Institutions -> Classes' , 'field_name' =>'Course'])->first();
+        if($CourseName != null){
+           $Courses =  $CourseName->name;
+        }
         $model->field('single_grade_field', [
             'type'      => 'element',
+            'unitEnable'      => $unitEnable, //POCOR-7803
+            'courseEnable'      => $courseEnable, //POCOR-7803
+            'unitLabel'      => $unit, //POCOR-8271
+            'courseLabel'      => $Courses, //POCOR-8271
             'element'   => 'Institution.Classes/single_grade',
             'data'      => [    'numberOfClasses'   => $numberOfClasses,
                                 // 'staffOptions'      => $model->getStaffOptions($institutionId, 'add', $selectedAcademicPeriodId,0, $institutionShiftId,$homeTeacher),
@@ -190,8 +225,8 @@ class SingleGradeBehavior extends Behavior
                 $classes = $model->newEntities($requestData['MultiClasses']);
                 $error = false;
                 foreach ($classes as $key => $class) {
-                    if ($class->errors()) {
-                        $error = $class->errors();
+                    if ($class->getErrors()) {
+                        $error = $class->getErrors();
                         $requestData['MultiClasses'][$key]['errors'] = $error;
                     }
                 }
@@ -231,22 +266,24 @@ class SingleGradeBehavior extends Behavior
                         $errorMessage .= Inflector::classify($key);
                     }
                     unset($value);
-                    $model->log($error, 'debug');
+                    //$model->log($error, 'debug');
+                    $model->log(json_encode($error), 'debug');
                     /**
                      * unset all field validation except for "name" to trigger validation error in ControllerActionComponent
                      */
                     foreach ($model->fields as $value) {
                         if ($value['field'] != 'name' || $value['field'] != 'staff_id') {
-                            $model->validator()->remove($value['field']);
+                            $model->getValidator()->remove($value['field']);
                         }
                     }
                     unset($value);
                     $model->fields['single_grade_field']['data']['classes'] = $classes;
-                    $model->request->data['MultiClasses'] = $requestData['MultiClasses'];
+                    //$model->request->data['MultiClasses'] = $requestData['MultiClasses'];
+                    $model->request = $model->request->withData('MultiClasses', $requestData['MultiClasses']);//POCOR-8323
                     return false;
                 }
             } else {
-                $requestData['errorMessage'] = 'Institution.'.$model->alias().'.noGrade';
+                $requestData['errorMessage'] = 'Institution.'.$model->getAlias().'.noGrade';
                 return false;
             }
         };
@@ -257,7 +294,7 @@ class SingleGradeBehavior extends Behavior
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         $model = $this->_table;
-        $errors = $entity->errors();
+        $errors = $entity->getErrors();
         if (isset($requestData['errorMessage'])) {
             if (!empty($requestData['errorMessage'])) {
                 $model->Alert->error($requestData['errorMessage'], ['reset'=>true]);

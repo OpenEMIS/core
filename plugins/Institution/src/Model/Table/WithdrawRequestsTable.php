@@ -10,15 +10,15 @@ use Cake\Validation\Validator;
 use Cake\I18n\Date;
 use App\Model\Table\ControllerActionTable;
 use Cake\Log\Log;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 class WithdrawRequestsTable extends ControllerActionTable
 {
     const NEW_REQUEST = 0;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_student_withdraw');
+        $this->setTable('institution_student_withdraw');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
@@ -32,53 +32,119 @@ class WithdrawRequestsTable extends ControllerActionTable
         $this->toggle('view', false);
         $this->toggle('remove', false);
         $this->toggle('index', false);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['WithdrawRequests' =>['id','student_id','institution_id']
+            ]
+        ]);
+
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data)
     {
-        if (!$entity->invalid()) {
-            $studentId = $this->Session->read('Student.Students.id');
+        $queryString = $this->getQueryString();
+        $institutionStudentId = $this->getQueryString('institution_student_id');
+        $encodedQueryString = $this->paramsEncode($queryString);
+        if (!$entity->getInvalid()) {
+            $studentId = $this->getStudentID();
             $action = $this->url('add');
             $action['action'] = 'StudentUser';
             $action[0] = 'view';
-            $action[1] = $this->paramsEncode(['id' => $studentId]);
-            $action['id'] = $this->Session->read($this->registryAlias().'.id');
+            $action[1] = $encodedQueryString;
+            $action[2] = $this->paramsEncode(['id' => $studentId]);
+            //$action['id'] = $this->Session->read($this->getRegistryAlias().'.id');
+            $action['id'] = $institutionStudentId;
 
             $event->stopPropagation();
-            $this->Session->delete($this->registryAlias().'.id');
+            //$this->Session->delete($this->getRegistryAlias().'.id');
             return $this->controller->redirect($action);
         }
     }
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
-        $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-        $StudentTransfersTable = TableRegistry::get('Institution.InstitutionStudentTransfers');
-        $pendingTransferStatuses = $StudentTransfersTable->getStudentTransferWorkflowStatuses('PENDING');
+//        POCOR-8003 refactured
+        $status_can_be_changed = $this->checkStatusCanBeChanged($entity);
 
-        $conditions = [
-            'student_id' => $entity->student_id,
-            'status_id IN ' => $pendingTransferStatuses,
-            'previous_education_grade_id' => $entity->education_grade_id,
-            'previous_institution_id' => $entity->institution_id,
-            'previous_academic_period_id' => $entity->academic_period_id
-        ];
-
-        $count = $StudentTransfersTable->find()
-            ->where($conditions)
-            ->count();
-
-        if ($count > 0) {
-            $process = function ($model, $entity) {
-                $this->Alert->error('StudentWithdraw.hasTransferApplication');
-            };
-            return $process;
+        if ($status_can_be_changed['can'] == false) {
+            $Students = TableRegistry::get('Institution.Students');
+            $action = $this->url('index');
+            $action['action'] = $Students->getAlias();
+            $event->stopPropagation();
+            $this->Alert->error($status_can_be_changed['message']);
+            return $this->controller->redirect($action);
         }
+    }
+
+
+    /**
+     * POCOR-8003
+     * @param Entity $entity
+     * @return array
+     */
+    private function checkStatusCanBeChanged(Entity $entity)
+    {
+        $status_can_be_changed = true;
+        $StudentsTable = TableRegistry::get('Institution.Students');
+        $student_id = $entity->student_id;
+        $institution_id = $entity->institution_id;
+        $education_grade_id = $entity->education_grade_id;
+        $academic_period_id = $entity->academic_period_id;
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $editableAcademicPeriods = $AcademicPeriods->getYearList(['isEditable' => true]);
+        $Enrolled = $StudentStatuses->getIdByCode('CURRENT');
+        $message = "";
+        $is_the_year_editable = array_key_exists($academic_period_id, $editableAcademicPeriods);
+        if ($status_can_be_changed == true && !$is_the_year_editable) {
+            $status_can_be_changed = false;
+            $message = 'StudentWithdraw.wrongAcademicPeriod';
+        }
+
+        if ($status_can_be_changed == true) {
+            $currentStudentRecord = $StudentsTable->find()
+                ->where([$StudentsTable->aliasField('student_id') => $student_id,
+                    $StudentsTable->aliasField('institution_id') => $institution_id,
+                    $StudentsTable->aliasField('academic_period_id') => $academic_period_id,
+                    $StudentsTable->aliasField('education_grade_id') => $education_grade_id,
+                    $StudentsTable->aliasField('student_status_id') => $Enrolled])
+                ->first();
+            if (empty($currentStudentRecord)) {
+                $status_can_be_changed = false;
+                $message = 'StudentWithdraw.wrongStatus';
+            }
+        }
+
+
+        if ($status_can_be_changed == true) {
+            $StudentTransfersTable = TableRegistry::get('Institution.InstitutionStudentTransfers');
+            $pendingTransferStatuses = $StudentTransfersTable->getStudentTransferWorkflowStatuses('PENDING');
+            $conditions = [
+                'student_id' => $entity->student_id,
+                'status_id IN ' => $pendingTransferStatuses,
+                'previous_education_grade_id' => $entity->education_grade_id,
+                'previous_institution_id' => $entity->institution_id,
+                'previous_academic_period_id' => $entity->academic_period_id
+            ];
+
+            $count = $StudentTransfersTable->find()
+                ->where($conditions)
+                ->count();
+
+            if ($count > 0) {
+                $status_can_be_changed = false;
+                $message = 'StudentWithdraw.hasTransferApplication';
+            }
+        }
+
+        $can_be_changed = ['can' => $status_can_be_changed, 'message' => $message];
+        return $can_be_changed;
     }
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        if ($this->Session->check($this->registryAlias().'.id')) {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        if ($this->Session->check($this->getRegistryAlias().'.id')) {
             $this->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
             $this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
             $this->field('academic_period_id', ['type' => 'hidden', 'attr' => ['value' => $entity->academic_period_id]]);
@@ -96,38 +162,42 @@ class WithdrawRequestsTable extends ControllerActionTable
         } else {
             $Students = TableRegistry::get('Institution.Students');
             $action = $this->url('index');
-            $action['action'] = $Students->alias();
+            $action['action'] = $Students->getAlias();
             $event->stopPropagation();
             return $this->controller->redirect($action);
         }
 
         $toolbarButtons = $extra['toolbarButtons'];
-        $studentId = $this->Session->read('Student.Students.id');
+        $studentId = $this->getStudentID();
         $Students = TableRegistry::get('Institution.StudentUser');
-        $toolbarButtons['back']['url']['action'] = $Students->alias();
+        $toolbarButtons['back']['url']['action'] = $Students->getAlias();
         $toolbarButtons['back']['url'][0] = 'view';
-        $toolbarButtons['back']['url'][1] = $this->paramsEncode(['id' => $studentId]);
+        $toolbarButtons['back']['url'][1] =  $encodedQueryString;
+        $toolbarButtons['back']['url'][2] = $this->paramsEncode(['id' => $studentId]);
     }
 
     public function addOnInitialize(Event $event, Entity $entity)
     {
-        $institutionId = $this->Session->read('Institution.Institutions.id');
-        $id = $this->Session->read($this->registryAlias().'.id');
+        $institutionId = $this->getInstitutionID();
+        //$id = $this->Session->read($this->getRegistryAlias().'.id');
+        $id = $this->getQueryString('institution_student_id');
         $Students = TableRegistry::get('Institution.Students');
         $student = $Students->get($id);
         $entity->student_id = $student->student_id;
         $entity->academic_period_id = $student->academic_period_id;
         $entity->education_grade_id = $student->education_grade_id;
         $entity->institution_id = $student->institution_id;
+        $entity->id = $id;
 
-        $this->request->data[$this->alias()]['student_id'] = $entity->student_id;
-        $this->request->data[$this->alias()]['academic_period_id'] = $entity->academic_period_id;
-        $this->request->data[$this->alias()]['education_grade_id'] = $entity->education_grade_id;
+        $this->request->getData()[$this->getAlias()]['student_id'] = $entity->student_id;
+        $this->request->getData()[$this->getAlias()]['academic_period_id'] = $entity->academic_period_id;
+        $this->request->getData()[$this->getAlias()]['education_grade_id'] = $entity->education_grade_id;
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
         $validator->add('effective_date', 'ruleDateAfterEnrollment', [
                     'rule' => ['dateAfterEnrollment'],
                     'provider' => 'table'
@@ -135,7 +205,7 @@ class WithdrawRequestsTable extends ControllerActionTable
         return $validator;
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
@@ -144,29 +214,37 @@ class WithdrawRequestsTable extends ControllerActionTable
 
     public function onUpdateFieldEffectiveDate(Event $event, array $attr, $action, $request)
     {
-        $id = $this->Session->read($this->registryAlias().'.id');
+       // $id = $this->Session->read($this->getRegistryAlias().'.id');
+        $id = $this->getQueryString('institution_student_id');
         $studentData = TableRegistry::get('Institution.Students')->get($id);
+
         $enrolledDate = $studentData['start_date']->format('d-m-Y');
-        $attr['date_options'] = ['startDate' => $enrolledDate];
+        //POCOR-8003:start
+        $academicPeriodId = $studentData['academic_period_id'];
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $periodEntity = $AcademicPeriods->get($academicPeriodId);
+        $endDate = $periodEntity->end_date->format('d-m-Y');
+        $attr['date_options'] = ['startDate' => $enrolledDate, 'endDate' => $endDate];
+        //POCOR-8003:end
 
         return $attr;
     }
 
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Institutions > Students > Student Withdraw';
-        $workflowModelsTable = TableRegistry::get('workflow_models');
-            $workflowStepsTable = TableRegistry::get('workflow_steps');
+            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
             $Workflows = TableRegistry::get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
                             'workflow_id'=>$Workflows->aliasField('id'),
                             'is_school_based'=>$workflowModelsTable->aliasField('is_school_based')])
-                            ->LeftJoin([$workflowModelsTable->alias() => $workflowModelsTable->table()],
+                            ->LeftJoin([$workflowModelsTable->getAlias() => $workflowModelsTable->getTable()],
                                 [
                                     $workflowModelsTable->aliasField('id') . ' = '. $Workflows->aliasField('workflow_model_id')
                                 ])
@@ -181,10 +259,11 @@ class WithdrawRequestsTable extends ControllerActionTable
                             ->where([$workflowStepsTable->aliasField('workflow_id') => $workflowId])
                             ->first();
             $stepId = $workflowStepsOptions->stepId;
-            $session = $request->session();
-            if ($session->check('Institution.Institutions.id')) {
+            $session = $request->getSession();
+            /*if ($session->check('Institution.Institutions.id')) {
                 $institutionId = $session->read('Institution.Institutions.id');
-            }
+            }*/
+            $institutionId = $this->getInstitutionID();
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {
@@ -195,7 +274,7 @@ class WithdrawRequestsTable extends ControllerActionTable
                     $Areas = TableRegistry::get('Area.Areas');
                     $Institutions = TableRegistry::get('Institution.Institutions');
                     if ($isSchoolBased) {
-                        if (is_null($institutionId)) {                        
+                        if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
                         } else {
                             $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
@@ -211,12 +290,12 @@ class WithdrawRequestsTable extends ControllerActionTable
                                     ->find('userList', ['where' => $where])
                                     ->leftJoinWith('SecurityGroups.Institutions');
                             $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
-                            
+
                             // Region based assignee
                             $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                             $regionBasedAssigneeQuery = $SecurityGroupUsers
                                         ->find('UserList', ['where' => $where, 'area' => $areaObj]);
-                            
+
                             $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
                             // End
                             $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;

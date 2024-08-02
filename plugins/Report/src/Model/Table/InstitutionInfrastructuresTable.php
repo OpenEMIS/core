@@ -27,16 +27,16 @@ class InstitutionInfrastructuresTable extends AppTable
     const NO_STUDENT = 1;
     const NO_STAFF = 2;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         
-        $this->table('institutions');
+        $this->setTable('institutions');
 
         parent::initialize($config);
         //$this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);
         $this->addBehavior('Excel', ['excludes' => ['security_group_id', 'logo_name'], 'pages' => false]);
         $this->addBehavior('Report.ReportList');
-     
+        $this->addBehavior('Report.AreaList');//POCOR-7794
 
     }
 
@@ -89,8 +89,8 @@ class InstitutionInfrastructuresTable extends AppTable
         // ];
 
         //POCOR-6650 Starts
-        $AreaLevelTbl = TableRegistry::get('area_levels');
-        $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->hydrate(false)->toArray();
+        $AreaLevelTbl = TableRegistry::get('Area.AreaLevels');
+        $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->enableHydration(false)->toArray();
          
         $newFields[] = [
             'key' => '',
@@ -307,20 +307,20 @@ class InstitutionInfrastructuresTable extends AppTable
         $infrastructureType = $requestData->infrastructure_type;
         $institutionTypeId = $requestData->institution_type_id;
         $areaId = $requestData->area_education_id;
-        
-        $institutionLands = TableRegistry::get('Institution.InstitutionLands');
+        $areaLevelId = $requestData->area_level_id; //POCOR-7794
+        //$institutionLands = TableRegistry::get('Institution.InstitutionLands');
         $institutionFloors = TableRegistry::get('Institution.InstitutionFloors');
         $institutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
         $institutionRooms = TableRegistry::get('Institution.InstitutionRooms');
-        $buildingTypes = TableRegistry::get('building_types');
-        $infrastructureCondition = TableRegistry::get('infrastructure_conditions');
-        $infrastructureStatus = TableRegistry::get('infrastructure_statuses');
-        $institutionStatus = TableRegistry::get('institution_statuses');
-        $infrastructureOwnerships = TableRegistry::get('infrastructure_ownerships');
-        $infrastructureLevels = TableRegistry::get('infrastructure_levels');
-        $areas = TableRegistry::get('areas');
+        $buildingTypes = TableRegistry::get('Infrastructure.BuildingTypes');
+        $infrastructureCondition = TableRegistry::get('Infrastructure.InfrastructureConditions');
+        $infrastructureStatus = TableRegistry::get('Infrastructure.InfrastructureStatuses');
+        $institutionStatus = TableRegistry::get('Institution.InstitutionStatuses');
+        $infrastructureOwnerships = TableRegistry::get('Institution.InfrastructureOwnerships');
+        $infrastructureLevels = TableRegistry::get('Institution.InfrastructureLevels');
+        $areas = TableRegistry::get('Area.Areas');
 
-        $institutions = TableRegistry::get('institutions');
+        $institutions = TableRegistry::get('Institution.Institutions');
 
         if($infrastructureLevel == 1) { $level = "Lands"; $type ='land';}
         if($infrastructureLevel == 2) { $level = "Buildings"; $type ='building';}
@@ -334,9 +334,23 @@ class InstitutionInfrastructuresTable extends AppTable
         if (!empty($institutionId)) {
             $conditions[$this->aliasField('id')] = $institutionId;
         }
-        if (!empty($areaId) && $areaId != -1) {
-            $conditions[$this->aliasField('area_id')] = $areaId;
+        //POCOR-7794 start
+        $areaList = [];
+        if (
+            $areaLevelId > 1 && $areaId > 1
+        ) {
+            $areaList = $this->getAreaList($areaLevelId, $areaId);
+        } elseif ($areaLevelId > 1) {
+
+            $areaList = $this->getAreaList($areaLevelId, 0);
+        } elseif ($areaId > 1) {
+            $areaList = $this->getAreaList(0, $areaId);
         }
+        if (!empty($areaList)) {
+            $conditions[$this->aliasField('area_id IN')] = $areaList;
+        }
+        //POCOR-7794 end
+
         $institutions = TableRegistry::get('Institution.Institutions');
         $institutionIds = $institutions->find('list', [
                                                     'keyField' => 'id',
@@ -383,20 +397,20 @@ class InstitutionInfrastructuresTable extends AppTable
 						->LeftJoin(['InfrastructureTypes' => $type.'_types'], [
 							'InfrastructureTypes.id = ' . $type.'_type_id',
 						])
-						->LeftJoin([$infrastructureCondition->alias() => $infrastructureCondition->table()], ['Institution'.$level.'.'.'infrastructure_condition_id = ' . $infrastructureCondition->aliasField('id'),
+						->LeftJoin([$infrastructureCondition->getAlias() => $infrastructureCondition->getTable()], ['Institution'.$level.'.'.'infrastructure_condition_id = ' . $infrastructureCondition->aliasField('id'),
 						])
-						->LeftJoin([$infrastructureStatus->alias() => $infrastructureStatus->table()], [
+						->LeftJoin([$infrastructureStatus->getAlias() => $infrastructureStatus->getTable()], [
 							'Institution'.$level.'.'.$type.'_status_id = ' . $infrastructureStatus->aliasField('id'),
 						])
 						//POCOR-5698 two new columns added here
 						//status
-						->LeftJoin(['Institutions' => $institutions->table()], [
+						->LeftJoin(['Institutions' => $institutions->getTable()], [
 							'Institution'.$level.'.'.'institution_id = Institutions.id',
 						])
-						->LeftJoin([$areas->alias() => $areas->table()], [
+						->LeftJoin([$areas->getAlias() => $areas->getTable()], [
 							'Institutions.area_id = ' . $areas->aliasField('id'),
 						])
-						->LeftJoin(['InstitutionStatuses' => $institutionStatus->table()], [
+						->LeftJoin(['InstitutionStatuses' => $institutionStatus->getTable()], [
 							'InstitutionStatuses.id = Institutions.institution_status_id',
 						])
 						//shift
@@ -408,11 +422,13 @@ class InstitutionInfrastructuresTable extends AppTable
 							'ShiftOptions.id = InstitutionShifts.shift_option_id'
 						])
 						//POCOR-5698 two new columns ends here
-						->LeftJoin([$infrastructureOwnerships->alias() => $infrastructureOwnerships->table()], [
+						->LeftJoin([$infrastructureOwnerships->getAlias() => $infrastructureOwnerships->getTable()], [
 							'Institution'.$level.'.'.$type.'_status_id = ' . $infrastructureOwnerships->aliasField('id'),
 						])
 					->where($conditions);
-		} else if ($infrastructureLevel == 3) {
+		} 
+        if ($infrastructureLevel == 3) 
+        {
             $InstitutionBuildings = 'buildings';
 			$query
 					->select(['land_infrastructure_code'=>'Institution'.$level.'.'.'code',
@@ -443,20 +459,20 @@ class InstitutionInfrastructuresTable extends AppTable
                         ->LeftJoin([ 'Institution'.$InstitutionBuildings => 'institution_'.lcfirst($InstitutionBuildings) ], [
                             'Institution'.$InstitutionBuildings.'.'.'institution_id = ' . $this->aliasField('id'),
                         ])//POCOR-6731
-						->LeftJoin([$infrastructureCondition->alias() => $infrastructureCondition->table()], ['Institution'.$level.'.'.'infrastructure_condition_id = ' . $infrastructureCondition->aliasField('id'),
+						->LeftJoin([$infrastructureCondition->getAlias() => $infrastructureCondition->getTable()], ['Institution'.$level.'.'.'infrastructure_condition_id = ' . $infrastructureCondition->aliasField('id'),
 						])
-						->LeftJoin([$infrastructureStatus->alias() => $infrastructureStatus->table()], [
+						->LeftJoin([$infrastructureStatus->getAlias() => $infrastructureStatus->getTable()], [
 							'Institution'.$level.'.'.$type.'_status_id = ' . $infrastructureStatus->aliasField('id'),
 						])
 						//POCOR-5698 two new columns added here
 						//status
-						->LeftJoin(['Institutions' => $institutions->table()], [
+						->LeftJoin(['Institutions' => $institutions->getTable()], [
 							'Institution'.$level.'.'.'institution_id = Institutions.id',
 						])
-						->LeftJoin([$areas->alias() => $areas->table()], [
+						->LeftJoin([$areas->getAlias() => $areas->getTable()], [
 							'Institutions.area_id = ' . $areas->aliasField('id'),
 						])
-						->LeftJoin(['InstitutionStatuses' => $institutionStatus->table()], [
+						->LeftJoin(['InstitutionStatuses' => $institutionStatus->getTable()], [
 							'InstitutionStatuses.id = Institutions.institution_status_id',
 						])
 						//shift
@@ -468,11 +484,13 @@ class InstitutionInfrastructuresTable extends AppTable
 							'ShiftOptions.id = InstitutionShifts.shift_option_id'
 						])
 						//POCOR-5698 two new columns ends here
-						->LeftJoin([$infrastructureOwnerships->alias() => $infrastructureOwnerships->table()], [
+						->LeftJoin([$infrastructureOwnerships->getAlias() => $infrastructureOwnerships->getTable()], [
 							'Institution'.$level.'.'.$type.'_status_id = ' . $infrastructureOwnerships->aliasField('id'),
 						])
 					->where($conditions);
-		} else {
+		}  
+        if ($infrastructureLevel == 4)  
+        {
             $InstitutionBuildings = 'buildings';
             $InstitutionFloors = 'floors';
             $query
@@ -497,12 +515,12 @@ class InstitutionInfrastructuresTable extends AppTable
                         'institution_floor_name' => 'Institution'.$InstitutionFloors.'.'.'name',
                         //End POCOR-6731
                         ])
-                ->innerJoin([$areas->alias() => $areas->table()],[
+                ->innerJoin([$areas->getAlias() => $areas->getTable()],[
                    $this->aliasField('area_id = ') . $areas->aliasField('id'),
                 ])
 
                 
-                ->LeftJoin(['InstitutionStatuses' => $institutionStatus->table()], [
+                ->LeftJoin(['InstitutionStatuses' => $institutionStatus->getTable()], [
                     'InstitutionStatuses.id = '. $this->aliasField('institution_status_id'),
                 ])
                 ->innerJoin(['AcademicPeriods' => 'academic_periods'], [
@@ -554,14 +572,14 @@ class InstitutionInfrastructuresTable extends AppTable
                     'Institution'.$InstitutionBuildings.'.'.'institution_id = ' . $this->aliasField('id'),
                     'Institution'.$InstitutionBuildings.'.'.'academic_period_id = ' . 'Institution'.$InstitutionFloors.'.'.'academic_period_id',
                 ])
-                ->LeftJoin([$infrastructureCondition->alias() => $infrastructureCondition->table()], ['Institution'.$level.'.'.'infrastructure_condition_id = ' . $infrastructureCondition->aliasField('id'),
+                ->LeftJoin([$infrastructureCondition->getAlias() => $infrastructureCondition->getTable()], ['Institution'.$level.'.'.'infrastructure_condition_id = ' . $infrastructureCondition->aliasField('id'),
                 ])
-                ->LeftJoin([$infrastructureStatus->alias() => $infrastructureStatus->table()], [
+                ->LeftJoin([$infrastructureStatus->getAlias() => $infrastructureStatus->getTable()], [
                     'Institution'.$level.'.'.$type.'_status_id = ' . $infrastructureStatus->aliasField('id'),
                 ])
                             //POCOR-5698 two new columns added here
                             //status
-                ->LeftJoin([$infrastructureOwnerships->alias() => $infrastructureOwnerships->table()], [
+                ->LeftJoin([$infrastructureOwnerships->getAlias() => $infrastructureOwnerships->getTable()], [
                             'Institution'.$level.'.'.$type.'_status_id = ' . $infrastructureOwnerships->aliasField('id'),
                 ])
                 ->join([
@@ -574,26 +592,22 @@ class InstitutionInfrastructuresTable extends AppTable
                         ]
                     ],
                 ])
-                ->where([
-                    $this->aliasField('id') => $institutionId,
-                    'AcademicPeriods.id' => $academicPeriodId,
-
-                ]);
+                ->where([$conditions]); // POCOR-8026
 		}
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($type) {
             return $results->map(function ($row) use($type) {
 			
-                $areas1 = TableRegistry::get('areas');
+                $areas1 = TableRegistry::get('Area.Areas');
                 $areasData = $areas1
                             ->find()
-                            ->where([$areas1->alias('code')=>$row->area_code])
+                            ->where([$areas1->getAlias('code')=>$row->area_code])
                             ->first();
                 $row['region_code'] = '';            
                 $row['region_name'] = '';
                 if(!empty($areasData)){
-                    $areas = TableRegistry::get('areas');
-                    $areaLevels = TableRegistry::get('area_levels');
-                    $institutions = TableRegistry::get('institutions');
+                    $areas = TableRegistry::get('Area.Areas');
+                    $areaLevels = TableRegistry::get('Area.AreaLevels');
+                    $institutions = TableRegistry::get('Institution.Institutions');
                     $val = $areas
                                 ->find()
                                 ->select([
@@ -601,13 +615,13 @@ class InstitutionInfrastructuresTable extends AppTable
                                     $areas1->aliasField('name'),
                                     ])
                                 ->leftJoin(
-                                    [$areaLevels->alias() => $areaLevels->table()],
+                                    [$areaLevels->getAlias() => $areaLevels->getTable()],
                                     [
                                         $areas->aliasField('area_level_id  = ') . $areaLevels->aliasField('id')
                                     ]
                                 )
                                 ->leftJoin(
-                                    [$institutions->alias() => $institutions->table()],
+                                    [$institutions->getAlias() => $institutions->getTable()],
                                     [
                                         $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
                                     ]
@@ -623,7 +637,7 @@ class InstitutionInfrastructuresTable extends AppTable
                     }
                 } 
 				
-				$InfrastructureCustomFields = TableRegistry::get('infrastructure_custom_fields');
+				$InfrastructureCustomFields = TableRegistry::get('Infrastructure.InfrastructureCustomFields');
                 if(!empty($row['level_id'])) { 
 					$customFieldData = $InfrastructureCustomFields->find()
 						->select([
@@ -655,7 +669,7 @@ class InstitutionInfrastructuresTable extends AppTable
 							$infrastructureCustomFields = TableRegistry::get('infrastructure_custom_fields');
 							$fieldValue = $infrastructureCustomFieldOptions->find()
 											->select([$infrastructureCustomFieldOptions->aliasField('name')])
-											->innerJoin([$infrastructureCustomFields->alias() => $infrastructureCustomFields->table()],[
+											->innerJoin([$infrastructureCustomFields->alias() => $infrastructureCustomFields->getTable()],[
 									            $infrastructureCustomFields->aliasField('id').' = ' . $infrastructureCustomFieldOptions->aliasField('infrastructure_custom_field_id')
 									        ])
 									        ->innerJoin(['CustomFieldValues' => lcfirst($type).'_custom_field_values' ], [

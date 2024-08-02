@@ -19,9 +19,9 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
     private $workingDays = [];
     private $schoolClosedDays = [];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_classes');
+        $this->setTable('institution_classes');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -220,17 +220,17 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                 });
             })
         ;
-         
+
     }
 
 
-    
+
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
         $sheetData = $settings['sheet']['sheetData'];
         $newFields = $this->getClassFields();
-        
+
         $year = $sheetData['year'];
         $month = $sheetData['month'];
         $startDay = $sheetData['startDay'];
@@ -274,7 +274,7 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
 
     public function findByGrades(Query $query, array $options)
     {
-        $sortable = array_key_exists('sort', $options) ? $options['sort'] : false;
+        $sortable = isset($options['sort']) ? $options['sort'] : false;
 
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $EducationStages = TableRegistry::get('Education.EducationStages');
@@ -296,11 +296,11 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
             ->join([$join])
 
             ->innerJoin(
-                [$EducationGrades->alias() => $EducationGrades->table()],
+                [$EducationGrades->getAlias() => $EducationGrades->getTable()],
                 [$EducationGrades->aliasField('id = ') . 'InstitutionClassGrades.education_grade_id']
             )
             ->innerJoin(
-                [$EducationStages->alias() => $EducationStages->table()],
+                [$EducationStages->getAlias() => $EducationStages->getTable()],
                 [$EducationStages->aliasField('id = ') . 'EducationGrades.education_stage_id']
             );
 
@@ -373,8 +373,8 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         //     'field' => 'total_unmark',
         //     'type' => 'string',
         //     'label' => 'Unmarked'
-        // ]; 
-                     
+        // ];
+
         //End of POCOR-7039
         $newFields[] = [
             'key' => 'InstitutionClasses.staff_id',
@@ -401,11 +401,12 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                 'institution_field_alias' => $this->aliasField($this->association('Institutions')->foreignKey())
             ]);
         }
-            
-        $institutionList = $query
-            ->group('institution_id')
-            ->extract('institution_id')
-            ->toArray();
+
+        $institutionListData = $query
+                    ->select(['institution_id'])
+                    ->distinct(['institution_id']);
+
+        $institutionList =  $institutionListData->all()->toList();
 
         return $this->getInstitutionClosedDates($startDate, $endDate, $institutionList);
     }

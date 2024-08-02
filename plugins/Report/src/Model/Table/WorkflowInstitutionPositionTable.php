@@ -15,9 +15,9 @@ class WorkflowInstitutionPositionTable extends AppTable
 {
     use OptionsTrait;
 
-    public function initialize(array $config) 
+    public function initialize(array $config): void
     {
-        $this->table("institution_positions");
+        $this->setTable("institution_positions");
         parent::initialize($config);
 
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
@@ -40,13 +40,13 @@ class WorkflowInstitutionPositionTable extends AppTable
 
     public function onExcelGetIsHomeroom(Event $event, Entity $entity)
     {
-        $institutionStaff = TableRegistry::get('institution_staff');
-        $institutionPositions = TableRegistry::get('institution_positions');
+        $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
+        $institutionPositions = TableRegistry::get('Institution.InstitutionPositions');
         
         $options = $this->getSelectOptions('general.yesno');
         $homeroomData =  $institutionPositions->find('all')
                          ->select(['is_homeroom'=> $institutionStaff->aliasField('is_homeroom')])
-                         ->leftJoin([$institutionStaff->alias() => $institutionStaff->table()],
+                         ->leftJoin([$institutionStaff->getAlias() => $institutionStaff->getTable()],
                             [$institutionStaff->aliasField('institution_position_id = ') . $this->aliasField('id')])
                          ->first();
 

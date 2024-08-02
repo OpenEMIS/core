@@ -3,7 +3,7 @@ namespace Examination\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Controller\Component;
 use ArrayObject;
 use Cake\Validation\Validator;
@@ -18,7 +18,7 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
 
     private $examCentreId = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
         $this->addBehavior('Area.Areapicker');
@@ -36,15 +36,15 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
         $this->setDeleteStrategy('restrict');
     }
 
-    public function implementedEvents() {
+    public function implementedEvents(): array {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
     {
-        $queryString = $request->query['queryString'];
+        $queryString = $this->request->getQuery('queryString');
         $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
         $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'view', 'queryString' => $queryString];
 
@@ -53,7 +53,7 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
         $Navigation->addCrumb('Rooms');
     }
 
-    public function validationDefault(Validator $validator)
+    /*public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -77,13 +77,12 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
                 'rule' => 'checkRoomCapacityMoreThanStudents',
                 'on' => 'update'
             ]);
-    }
+    }*/
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->controller->getExamCentresTab();
         $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
-
         // Set the header of the page
         $examCentreName = $this->ExaminationCentres->get($this->examCentreId)->name;
         $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Rooms'));
@@ -170,7 +169,7 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
-            $this->Examinations->alias()
+            $this->Examinations->getAlias()
         ];
 
         $ExamRoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomsExaminationsStudents');
@@ -184,5 +183,34 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
             ->where([$ExamRoomInvigilators->aliasField('examination_centre_room_id') => $entity->id])
             ->count();
         $extra['associatedRecords'][] = ['model' => 'Invigilators', 'count' => $associatedInvigilatorsCount];
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'institution_id') {
+            return __('Institution');
+        } elseif ($field == 'academic_period_id') {
+            return __('Academic Period');
+        } elseif ($field == 'examination_centre_id') {
+            return __('Examination Centre');
+        } elseif ($field == 'size') {
+            return __('Size');
+        }elseif ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'number_of_seats') {
+            return __('Number Of Seats');
+        } elseif ($field == 'institutions') {
+            return __('Institutions');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 }

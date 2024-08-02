@@ -11,6 +11,8 @@ class StudentCustomFormField extends Model
 
     public $timestamps = false;
     protected $table = "student_custom_forms_fields";
+    protected $primaryKey = 'id';
+    public $incrementing = false;
 
 
     public function studentCustomField()

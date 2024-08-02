@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace OpenEmis\Model\Behavior;
 
 use Cake\ORM\Entity;
@@ -14,38 +14,38 @@ use Cake\ORM\TableRegistry;
  *
  * Usage:
  * Firstly, add this behavior in model's initialize function.
- * 
+ *
  * public function initialize(array $config) {
  *      .............
- *      
+ *
  *      $this->addBehavior('OpenEmis.Map');
- *      
+ *
  *      .............
  * }
  *
- * 
+ *
  * Secondly, defines the field in model's beforeAction()
  *
  *  public function beforeAction($event) {
  *      .............
- *      
+ *
  *      $this->ControllerAction->field('map', ['type' => 'map']);
- *      
+ *
  *      .............
  *  }
  *
  * If the $entity does not have 'latitude' and 'longitude' properties,
  * you have to define it as the field $attr before ControllerAction events are called or do it during field declaration.
- * 
+ *
  *      $this->ControllerAction->field('map', ['type' => 'map', 'latitude' => $latitude_val, 'longitude' => $longitude_val]);
  *
- * If the $entity do have the required properties but 'latitude' and 'longitude' parameters are defined in the field declaration, 
+ * If the $entity do have the required properties but 'latitude' and 'longitude' parameters are defined in the field declaration,
  * values in the field declaration will be shown.
- * 
+ *
  */
 class MapBehavior extends Behavior
 {
-    public function implementedEvents() 
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $newEvent = [
@@ -88,7 +88,7 @@ class MapBehavior extends Behavior
         }
     }
 
-    public function onGetMapElement(Event $event, $action, Entity $entity, $attr, $options) 
+    public function onGetMapElement(Event $event, $action, Entity $entity, $attr, $options)
     {
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $mapZoom = $ConfigItems->value('map_zoom');
@@ -105,7 +105,7 @@ class MapBehavior extends Behavior
             'type' => 'basic'
         ];
 
-        if (array_key_exists('latitude', $attr) && array_key_exists('longitude', $attr)) {
+        if (isset($attr['latitude']) && isset($attr['longitude'])) {
             $mapPosition = [
                 'lng' => $attr['longitude'],
                 'lat' => $attr['latitude']
@@ -123,8 +123,8 @@ class MapBehavior extends Behavior
             ];
             $attr['mapConfig'] = json_encode($mapConfig);
             $attr['mapPosition'] = json_encode($mapPosition);
-            
-            return $event->subject()->renderElement('OpenEmis.map', ['attr' => $attr]);
+
+            return $event->getSubject()->renderElement('OpenEmis.map', ['attr' => $attr]);
         }
 
         return '<span class="error-message">' . __('Both latitude and longitude value have to be set for map to render') . '<span>';

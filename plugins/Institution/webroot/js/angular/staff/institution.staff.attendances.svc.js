@@ -121,7 +121,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             }
         };
         return AcademicPeriods
-            .find('DaysForPeriodWeek', {
+            .find('daysForPeriodWeek', {
                 academic_period_id: academicPeriodId,
                 week_id: weekId,
                 institution_id: institutionId,
@@ -134,8 +134,8 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
-        return InstitutionShifts.find('StaffShiftOptions', 
-        {institution_id: institutionId, 
+        return InstitutionShifts.find('StaffShiftOptions',
+        {institution_id: institutionId,
             academic_period_id: academicPeriodId})
                 .ajax({success: success, defer: true});
         }
@@ -170,6 +170,8 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
 
     // column definitions
     function getColumnDefs(selectedDayDate) {
+        console.log("selectedDayDate");
+        console.log(selectedDayDate);
         var columnDefs = [];
         var menuTabs = [ "filterMenuTab" ];
         var filterParams = {
@@ -186,14 +188,14 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         }
 
         columnDefs.push({
-            headerName: translateText.translated.openemis_no,
+            headerName: 'OpenEMIS ID',
             field: "_matchingData.Users.openemis_no",
             pinned: direction,
             menuTabs: []
         });
 
         columnDefs.push({
-            headerName: translateText.translated.Name,
+            headerName: 'Name',
             field: "_matchingData.Users.name",
             filter: "text",
             filterParams: filterParams,
@@ -202,7 +204,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         });
 
         columnDefs.push({
-            headerName: translateText.translated.TimeIn + " - " + translateText.translated.TimeOut,
+            headerName: 'Time In' + " - " + 'Time Out',
             field: "attendance." + selectedDayDate,
             menuTabs: [],
             suppressSorting: true,
@@ -214,7 +216,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         });
 
         columnDefs.push({
-            headerName: translateText.translated.Leave,
+            headerName: 'Leave',
             field: "attendance." + selectedDayDate,
             menuTabs: [],
             suppressSorting: true,
@@ -226,7 +228,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         });
 
         columnDefs.push({
-            headerName: translateText.translated.Comments,
+            headerName: 'Comments',
             field: "attendance." + selectedDayDate + ".comment",
             menuTabs: [],
             suppressSorting: true,
@@ -255,14 +257,14 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         }
 
         columnDefs.push({
-            headerName: translateText.translated.openemis_no,
+            headerName: 'OpenEMIS ID',
             field: "_matchingData.Users.openemis_no",
             pinned: direction,
             menuTabs: []
         });
 
         columnDefs.push({
-            headerName: translateText.translated.Name,
+            headerName: 'Name',
             field: "_matchingData.Users.name",
             filter: "text",
             filterParams: filterParams,
@@ -322,7 +324,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         var timeIn = params.value.time_in;
         var timeOut = params.value.time_out;
         var data = params.data;
-        
+
         var staffId = params.data.staff_id;
         var rowIndex = params.rowIndex;
         var timeinPickerId = 'time-in-' + rowIndex;
@@ -330,24 +332,24 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         var time = '';
         var historyUrl = data.historyUrl;
         var successInstitutionShifts = function(response, deferred) {
-          //POCOR-5885  Edit: Time in reverted to default time 
+          //POCOR-5885  Edit: Time in reverted to default time
         //    if(response.data.data.length > 0){
-              
-        //       params.value.time_in = response.data.data[0].startTime; 
+
+        //       params.value.time_in = response.data.data[0].startTime;
         //    }
-            
+
             deferred.resolve(response.data.data);
         };
-        
+
         /*var shiftsAttendance =  Staff.find('StaffShiftsAttendance', // comment in POCOR-7180
          {staff_id: staffId})
                 .ajax({success: successInstitutionShifts, defer: true});*/
-        
+
 		var ownEdit = params.context.ownEdit;
         var otherEdit = params.context.otherEdit;
         var permissionStaffId = params.context.permissionStaffId;
         var staffId = params.data.staff_id;
-       
+
         var conditionStatus = 0
         if(ownEdit == 0 && otherEdit == 1 && permissionStaffId != staffId){
             conditionStatus = 1;
@@ -356,7 +358,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         }else if(ownEdit == 1 && otherEdit == 1){
             conditionStatus = 1;
         }
-        
+
         if (action == 'edit' && conditionStatus == 1) {
             var divElement = document.createElement('div');
             var timeInInputDivElement = createTimeElement(params, 'time_in', rowIndex);
@@ -514,10 +516,15 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
 
         // div element
         var timeInputDivElement = document.createElement('div');
-        if (!isDisabled) timeInputDivElement.setAttribute('id', timepickerId); // for pop up
-        timeInputDivElement.setAttribute('class', 'input-group time');
+        // if (!isDisabled)
+        timeInputDivElement.setAttribute('id', timepickerId); // for pop up
+        //POCOR-7770 to hide
+        if (!isDisabled) timeInputDivElement.setAttribute('class', 'input-group time timepicker');
+        if (isDisabled) timeInputDivElement.setAttribute('class', 'input-group time');
+        //END POCOR-7770 to hide
         var timeInputElement = document.createElement('input');
-        timeInputElement.setAttribute('class', 'form-control');
+        if (!isDisabled)  timeInputElement.setAttribute('class', 'form-control timPikr'); //POCOR-7918
+        if (isDisabled)  timeInputElement.setAttribute('class', 'form-control'); //POCOR-7918
         if (isDisabled) timeInputElement.setAttribute('disabled', true); // for styling ui
         timeInputElement.setAttribute('readonly', 'readonly');
         var timeSpanElement = document.createElement('span');
@@ -529,6 +536,9 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             timeInputElement.setAttribute("class", "form-control form-error");
         }
         setTimeout(function(event) {
+            if (isDisabled){
+                return;
+            }
             var timepickerControl = $('#' + timepickerId).timepicker({defaultTime: time, showInputs: true,minuteStep:1});
             $('#' + timepickerId).timepicker().on("hide.timepicker", function (e) {
                 UtilsSvc.isAppendSpinner(true, 'institution-staff-attendances-table');
@@ -540,64 +550,89 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
                     time24Hour = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
                 }
                 saveStaffAttendance(params, timeKey, time24Hour, academicPeriodId)
-                .then(
-                    function(response) {
-                        clearError(data, timeKey);
-                        if (Object.keys(response.data.error).length > 0 || response.data.error.length > 0) {
-                            setError(data, timeKey, true, { id: timepickerId, elm: timeInputElement });
-                            var errorMsg = 'There was an error when saving record';
-                            if (typeof response.data.error === 'string') {
-                                errorMsg = response.data.error;
-                            } else if (response.data.error.time_out.ruleCompareTimeReverse) {
-                                errorMsg = response.data.error.time_out.ruleCompareTimeReverse;
-                            } else if (response.data.error.time_out.timeInShouldNotEmpty) {
-                                errorMsg = response.data.error.time_out.timeInShouldNotEmpty;
+                    .then(
+                        function (response) {
+                            clearError(data, timeKey);
+                            if (Object.keys(response.data.error).length > 0 || response.data.error.length > 0) {
+                                setError(data, timeKey, true, {id: timepickerId, elm: timeInputElement});
+                                var errorMsg = 'There was an error when saving record';
+                                if (typeof response.data.error === 'string') {
+                                    errorMsg = response.data.error;
+                                } else if (response.data.error.time_out.ruleCompareTimeReverse) {
+                                    errorMsg = response.data.error.time_out.ruleCompareTimeReverse;
+                                } else if (response.data.error.time_out.timeInShouldNotEmpty) {
+                                    errorMsg = response.data.error.time_out.timeInShouldNotEmpty;
+                                }
+
+                                AlertSvc.error(scope, errorMsg);
+                            } else {
+                                AlertSvc.success(scope, 'Time record successfully saved.');
+                                params.value.isNew = false;
+                                params.value[timeKey] = time24Hour;
+                                setError(data, timeKey, false, {id: timepickerId, elm: timeInputElement});
                             }
-                            
-                            AlertSvc.error(scope, errorMsg);
-                        } else {
-                            AlertSvc.success(scope, 'Time record successfully saved.');
-                            params.value.isNew = false;
-                            params.value[timeKey] = time24Hour;
-                            setError(data, timeKey, false, { id: timepickerId, elm: timeInputElement });
+                        },
+                        function (error) {
+                            clearError(data, timeKey);
+                            setError(data, timeKey, true, {id: timepickerId, elm: timeInputElement});
+                            AlertSvc.error(scope, 'There was an error when saving record');
                         }
-                    },
-                    function(error) {
-                        clearError(data, timeKey);
-                        setError(data, timeKey, true, { id: timepickerId, elm: timeInputElement });
-                        AlertSvc.error(scope, 'There was an error when saving record');
-                    }
-                )
-                .finally(function() {
-                    UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
-                    var refreshParams = {
-                        columns: [
-                            'attendance.' + data.date,
-                        ],
-                        force: true
-                    };
-                    params.api.refreshCells(refreshParams);
-                });
-            });
-            $(document).on('DOMMouseScroll mousewheel scroll', function() {
+                    )
+                    .finally(function () {
+                        UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
+                        var refreshParams = {
+                            columns: [
+                                'attendance.' + data.date,
+                            ],
+                            force: true
+                        };
+                        params.api.refreshCells(refreshParams);
+                    });
+                UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
+                timeInputElement.setAttribute('readonly', 'readonly');
+            })
+            //POCOR-7770 to hide
+                .on('keyup', function(e) {
+                if(e.keyCode == 9) {
+                    $('.timepicker').each(function() {
+                        var element = $(this);
+                        if (element.attr('id') !== timepickerId) {
+                            element.timepicker('hideWidget');
+                        }
+                    });
+                }
+            })
+            //END POCOR-7770 to hide
+            ;
+
+            $(document).on('DOMMouseScroll mousewheel scroll', function () {
                 window.clearTimeout(t);
-                t = setTimeout(function(event) {
+                t = setTimeout(function (event) {
                     timepickerControl.timepicker('place');
                 });
             });
         }, 1);
 
-        timeInputElement.addEventListener('select', function(event) {
+        timeInputElement.addEventListener('select', function (event) {
             $(this).click();
         });
 
-        timeInputElement.addEventListener('click', function(event) {
+        timeInputElement.addEventListener('click', function (event) {
             timeInputElement.removeAttribute('readonly', 'readonly');
-            $('#' + timepickerId).timepicker();
+            //POCOR-7770 to hide
+            $('.timepicker').each(function() {
+                var element = $(this);
+                if (element.attr('id') !== timepickerId) {
+                    element.timepicker('hideWidget');
+                }
+            });
+// Initialize the timepicker for the specific timepicker you want to show
+            $('#' + timepickerId).timepicker('showWidget');
+            //END POCOR-7770 to hide
         });
-        
-        timeInputElement.addEventListener('keydown', function(event) {
-            if(event.keyCode != 8){
+
+        timeInputElement.addEventListener('keydown', function (event) {
+            if (event.keyCode != 8) {
                 event.preventDefault();
             }
         });

@@ -1,4 +1,5 @@
 <?php
+
 namespace Report\Controller;
 
 use ArrayObject;
@@ -9,46 +10,60 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\ORM\ResultSet;
 use PHPExcel_IOFactory;
+use Cake\Http\Exception\NotFoundException;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use Cake\Event\EventInterface;
 
 class ReportsController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->ControllerAction->models = [
-            'Directory'  => ['className' => 'Report.Directory', 'actions' => ['index', 'add']],
-            'Institutions'	=> ['className' => 'Report.Institutions', 'actions' => ['index', 'add']],
-            'Profiles'	=> ['className' => 'Report.Profiles', 'actions' => ['index', 'add']],
-            'Students'	 	=> ['className' => 'Report.Students', 'actions' => ['index', 'add']],
-            'Staff'	 		=> ['className' => 'Report.Staff', 'actions' => ['index', 'add']],
-            'Textbooks'     => ['className' => 'Report.Textbooks', 'actions' => ['index', 'add']],
-            'Trainings' 	=> ['className' => 'Report.Trainings', 'actions' => ['index', 'add']],
-            'Examinations'	=> ['className' => 'Report.Examinations', 'actions' => ['index', 'add']],
-            'Scholarships'  => ['className' => 'Report.Scholarships', 'actions' => ['index', 'add']],
-            'Surveys'	 	=> ['className' => 'Report.Surveys', 'actions' => ['index', 'add']],
+            'Directory' => ['className' => 'Report.Directory', 'actions' => ['index', 'add']],
+            'Institutions' => ['className' => 'Report.Institutions', 'actions' => ['index', 'add']],
+            'Profiles' => ['className' => 'Report.Profiles', 'actions' => ['index', 'add']],
+            'Students' => ['className' => 'Report.Students', 'actions' => ['index', 'add']],
+            'Staff' => ['className' => 'Report.Staff', 'actions' => ['index', 'add']],
+            'Textbooks' => ['className' => 'Report.Textbooks', 'actions' => ['index', 'add']],
+            'Trainings' => ['className' => 'Report.Trainings', 'actions' => ['index', 'add']],
+            'Examinations' => ['className' => 'Report.Examinations', 'actions' => ['index', 'add']],
+            'Scholarships' => ['className' => 'Report.Scholarships', 'actions' => ['index', 'add']],
+            'Surveys' => ['className' => 'Report.Surveys', 'actions' => ['index', 'add']],
             'InstitutionRubrics' => ['className' => 'Report.InstitutionRubrics', 'actions' => ['index', 'add']],
             'DataQuality' => ['className' => 'Report.DataQuality', 'actions' => ['index', 'add']],
             'Audits' => ['className' => 'Report.Audits', 'actions' => ['index', 'add']],
             'Workflows' => ['className' => 'Report.Workflows', 'actions' => ['index', 'add']],
-            'UisStatistics'	=> ['className' => 'Report.UisStatistics', 'actions' => ['index', 'add']],
+            'UisStatistics' => ['className' => 'Report.UisStatistics', 'actions' => ['index', 'add']],
             'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']],
             'Performance' => ['className' => 'Report.Performance', 'actions' => ['index', 'add']]
         ];
         $this->loadComponent('Paginator');
         $this->loadComponent('Training.Training');
+        $this->loadComponent('Navigation');
     }
 
-    public function beforeFilter(Event $event)
-    {
+    public function beforeFilter(EventInterface $event)
+    { 
+        if ($this->getPlugin() == 'Report') {
+            $this->Security->setConfig('validatePost', false);
+        }
         parent::beforeFilter($event);
-        $header = 'Reports';
-        $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $this->request->action]);
-        $this->Navigation->addCrumb($this->request->action);
+        //POCOR-8034 : start
+        $header = __('Reports');
+        $action = $this->getRequest()->getParam('action');
+        if ($action != 'ViewReport') {
+            $this->Navigation->addCrumb($header, ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' =>$this->getRequest()->getParam('action')]);
+            $crumbTitle = __(Inflector::humanize(Inflector::underscore($action)));
+            $this->Navigation->addCrumb($crumbTitle);
+        }
+        // POCOR-8034: end
     }
 
     public function onInitialize(Event $event, Table $table, ArrayObject $extra)
     {
-        $header = __('Reports') . ' - ' . __($table->alias());
+        $header = __('Reports') . ' - ' . __($table->getAlias());
         $this->set('contentHeader', $header);
     }
 
@@ -67,12 +82,12 @@ class ReportsController extends AppController
         if ($module == 'Directory') {
             $options = [
                 'Report.Directory' => __('User Default Identity'),
-                'Report.Users'     => __('User List')
+                'Report.Users' => __('User List')
             ];
         } elseif ($module == 'Institutions') {
             $options = [
                 'Report.Institutions' => __('Institutions'),
-                'Report.InstitutionAssociations' => __('Associations'),
+                'Report.InstitutionAssociations' => __('Houses'), //POCOR-7938
                 'Report.InstitutionPositions' => __('Institution Positions'),
                 'Report.InstitutionProgrammes' => __('Programmes'),
                 'Report.InstitutionClasses' => __('Classes'),
@@ -98,6 +113,7 @@ class ReportsController extends AppController
                 'Report.WashReports' => __('Wash Report'),
                 'Report.Guardians' => __('Guardians'),
                 'Report.InstitutionInfrastructures' => __('Infrastructure'),
+                'Report.InstitutionAssets' => __('Assets'),
                 'Report.SpecialNeedsFacilities' => __('Special Needs Facilities'),
                 'Report.InstitutionCommittees' => __('Committees'),
                 //'Report.InstitutionSubjectsClasses' => __('Subjects/Classes'),//POCOR-5852
@@ -107,6 +123,7 @@ class ReportsController extends AppController
                 'Report.Expenditure' => __('Expenditure Report'),
                 'Report.StudentAbsencesPerDays' => __('Student Absences per Day'), //POCOR-7276
                 'Report.Curriculars' => __('Curriculars'), //POCOR-6673
+                'Report.InstitutionInfrastructureSummaryReport' => __('Institution Infrastructure Summary Report'), //POCOR-8006
             ];
         } elseif ($module == 'Students') {
             $options = [
@@ -118,11 +135,13 @@ class ReportsController extends AppController
                 //'Report.StudentGuardians' => __('Guardians'), //POCOR-5393
                 'Report.HealthReports' => __('Student Health Report'),
                 'Report.BodyMassStatusReports' => __('BMI Status Report'),
-                'Report.StudentsRiskAssessment' => __('Risk Assessment Report') ,
+                'Report.StudentsRiskAssessment' => __('Risk Assessment Report'),
                 'Report.SubjectsBookLists' => __('Subject and Book List'),
                 'Report.StudentNotAssignedClass' => __('Not Assigned to Class'),
                 'Report.StudentsEnrollmentSummary' => __('Enrollment Summary'),
-                'Report.SpecialNeeds' => __('Special Needs')
+                'Report.SpecialNeeds' => __('Special Needs'),
+                'Report.Outcomes' => __('Outcomes'), //POCOR-5791
+                'Report.Competencies' => __('Competencies'), //POCOR-5791
 
             ];
         } elseif ($module == 'Staff') {
@@ -196,28 +215,30 @@ class ReportsController extends AppController
                 'Report.PotentialWrongBirthdates' => __('Potential Wrong Birthdates'),
                 'Report.EnrollmentOutliers' => __('Enrollment Outliers'),//POCOR-7211
                 'Report.AgeOutliers' => __('Age Outliers'),//POCOR-7211
+                'Report.ValidationReport' => __('Validation Report'),//POCOR-8144
             ];
         } elseif ($module == 'Audits') {
             $options = [
                 'Report.AuditLogins' => __('Logins'),
+                'Report.AuditLastLogins' => __('Last Login'), //POCOR-7970
                 'Report.AuditInstitutions' => __('Institutions'),
                 'Report.AuditUsers' => __('Users')
-                ,'Report.AuditSecuritiesRolesPermissions' => __('Security Roles and Permissions') // POCOR-499
-                ,'Report.AuditSecuritiesGroupUserRoles' => __('Security Group User Roles') // POCOR-499
+                , 'Report.AuditSecuritiesRolesPermissions' => __('Security Roles and Permissions') // POCOR-499
+                , 'Report.AuditSecuritiesGroupUserRoles' => __('Security Group User Roles') // POCOR-499
             ];
         } elseif ($module == 'Examinations') {
             $options = [
-                'Report.RegisteredStudentsExaminationCentre' => __('Registered Students by Examination Centre'),
+
                 'Report.NotRegisteredStudents' => __('Not Registered Students'),
+                'Report.RegisteredStudentsExaminationCentre' => __('Registered Students by Examination Centre'),
                 'Report.ExaminationResults' => __('Examination Results'),
             ];
         } elseif ($module == 'UisStatistics') {
             $options = [
                 'Report.Uis2' => __('UIS-A2'),
                 'Report.Uis3' => __('UIS-A3'),
-                
-                
-                
+
+
                 'Report.Uis5' => __('UIS-A5'),
                 'Report.Uis6' => __('UIS-A6'),
 
@@ -228,10 +249,10 @@ class ReportsController extends AppController
                 'Report.Uis13' => __('UIS-A13'),
             ];
         } elseif ($module == 'Workflows') {
-        $options = [
-            'Report.WorkflowRecords' => __('Workflow Records')
-        ];
-    } /*POCOR-6513 starts - added feature's option for Performance report*/
+            $options = [
+                'Report.WorkflowRecords' => __('Workflow Records')
+            ];
+        } /*POCOR-6513 starts - added feature's option for Performance report*/
         elseif ($module == 'Performance') {
             $options = [
                 'Report.Performance' => __('Assessment Missing Mark Entry')
@@ -251,17 +272,15 @@ class ReportsController extends AppController
         $this->autoRender = false;
         $userId = $this->Auth->user('id');
         $dataSet = [];
-
-        if (isset($this->request->query['ids'])) {
-            $ids = $this->request->query['ids'];
-
+        if ($this->getRequest()->getQuery['ids']!=null) {
+            $ids = $this->getRequest()->getQuery['ids'];
             $fields = array(
                 'ReportProgress.status',
                 'ReportProgress.modified',
                 'ReportProgress.current_records',
                 'ReportProgress.total_records'
             );
-            $ReportProgress = TableRegistry::get('Report.ReportProgress');
+            $ReportProgress = TableRegistry::getTableLocator()->get('Report.ReportProgress');
             if (!empty($ids)) {
                 $results = $ReportProgress
                     ->find()
@@ -309,72 +328,81 @@ class ReportsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Report.Profiles']);
     }
 
-    // view report
+    // View report
     public function ViewReport()
     {
         ini_set('memory_limit', '-1');
-        $data = $_GET;
-        //POCOR-7000
-        // $explode_data = explode("/", $data['file_path']);
+        $data = $this->request->getQuery();
+        $file = $this->request->getData('file_path');
+        $data['file_path'] = $this->request->getQuery('file_path');
+
         $replace_data = str_replace('\\', '/', $data['file_path']);
-        if (!empty($this->request->param('institutionId'))) {
-            $institutionId = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+        $institutionId = $this->getInstitutionID();
+
+        if ($data['module'] == NULL) {
+           $dataModule =  $data['amp;module'];
         } else {
-            $session = $this->request->session();
-            $institutionId = $session->read('Institution.Institutions.id');
+            $dataModule = $data['module'];
         }
 
-        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
-        $this->Navigation->addCrumb($data['module']);
-        $header = __('Reports') . ' - ' .$data['module'];
+        $this->Navigation->addCrumb(__('Reports'), [
+            'plugin' => $this->getPlugin(),
+            'controller' => $this->getName(),
+            'action' => $dataModule
+        ]);
 
-        //$inputFileName = WWW_ROOT. 'export/'.end($explode_data);
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
+        $this->Navigation->addCrumb($crumbTitle);
+
+        $moduleTitle = __(Inflector::humanize(Inflector::underscore($dataModule)));
+        $this->Navigation->addCrumb($moduleTitle);
+
+        $header = __('Reports') . ' - ' . $moduleTitle;
+
         $inputFileName = $replace_data;
-        //end of POCOR-7000
+        // POCOR-8289 - for view report chagne in IOFactory logic
+        try {
+            $inputFileType = IOFactory::identify($inputFileName);
+            $objReader = IOFactory::createReader($inputFileType);
+            $spreadsheet = $objReader->load($inputFileName);
+        } catch (\Exception $e) {
+            throw new NotFoundException(__('Error loading file: ') . $e->getMessage());
+        }
 
-        $inputFileType = PHPExcel_IOFactory::identify($inputFileName);
-        $objReader = PHPExcel_IOFactory::createReader($inputFileType);
-        $objPHPExcel = $objReader->load($inputFileName);
-
-        $sheet = $objPHPExcel->getSheet(0);
+        $sheet = $spreadsheet->getSheet(0);
         $highestRow = $sheet->getHighestRow();
-        if ($data['module'] == 'InstitutionStatistics' ) {
-             $highestRow = $sheet->getHighestRow() + 1;
+        if ($data['module'] == 'InstitutionStatistics') {
+            $highestRow = $sheet->getHighestRow() + 1;
         }
         $highestColumn = $sheet->getHighestColumn();
 
-        for ($row = 1; $row <= 1; $row++){
-            $rowHeader = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
-                NULL,
-                TRUE,
-                FALSE);
+        for ($row = 1; $row <= 1; $row++) {
+            $rowHeader = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
         }
 
         $rowHeaderNew = $this->array_flatten($rowHeader);
-        for ($row = 2; $row <= $highestRow -1; $row++){
-            //  Read a row of data into an array
-            $rowData[] = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row,
-                NULL,
-                TRUE,
-                FALSE);
-            if($this->isEmptyRow(reset($rowData))) { continue; }
-            //  Insert row data array into your database of choice here
+        for ($row = 2; $row <= $highestRow - 1; $row++) {
+            $rowData[] = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
+            if ($this->isEmptyRow(reset($rowData))) {
+                continue;
+            }
         }
-        foreach($rowData as $newKey => $newDataVal){
-            foreach($newDataVal as $kay2 => $new_data_arr){
-                if(isset($new_data_arr)){
+
+        foreach ($rowData as $newKey => $newDataVal) {
+            foreach ($newDataVal as $kay2 => $new_data_arr) {
+                if (isset($new_data_arr)) {
                     $newArr2[] = array_combine($rowHeaderNew, $new_data_arr);
                 }
             }
         }
-//        print_r($newArr2);die();
+
         $this->set('rowHeader', $rowHeader);
         $this->set('newArr2', $newArr2);
-
         $this->set('contentHeader', $header);
     }
 
-    function array_flatten($array) {
+    function array_flatten($array)
+    {
         if (!is_array($array)) {
             return false;
         }
@@ -389,21 +417,38 @@ class ReportsController extends AppController
         return $result;
     }
 
-    function isEmptyRow($row) {
-        foreach($row as $cell){
+    function isEmptyRow($row)
+    {
+        foreach ($row as $cell) {
             if (null !== $cell) return false;
         }
         return true;
     }
 
-     /**
-     * Add New Feature Report Training  
+    /**
+     * Add New Feature Report Training
      * @author Akshay Patodi <akshay.patodi@mail.valuecoders.com>
      * @ticket POCOR-6592
      */
-    
+
     public function StudentGuardians()
     {
         $this->ControllerAction->process(['alias' => _FUNCTION_, 'className' => 'Student.Guardians']);
+    }
+
+    private function getInstitutionID()
+    {
+        $session = $this->request->getSession();
+        $insitutionIDFromSession = $session->read('Institution.Institutions.id');
+        $encodedInstitutionIDFromSession = $this->paramsEncode(['id' => $insitutionIDFromSession]);
+        $encodedInstitutionID = isset($this->request->params['institutionId']) ?
+            $this->request->params['institutionId'] :
+            $encodedInstitutionIDFromSession;
+        try {
+            $institutionID = $this->paramsDecode($encodedInstitutionID)['id'];
+        } catch (\Exception $exception) {
+            $institutionID = $insitutionIDFromSession;
+        }
+        return $institutionID;
     }
 }

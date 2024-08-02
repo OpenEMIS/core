@@ -1,7 +1,8 @@
 <?php
 use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/Trainings', ['plugin' => 'Training', 'controller' => 'Trainings'], function ($routes) {
+Router::scope('/Trainings', ['plugin' => 'Training', 'controller' => 'Trainings'], function (RouteBuilder $routes) {
 
     $routes->connect('/',
         ['action' => 'Trainings']

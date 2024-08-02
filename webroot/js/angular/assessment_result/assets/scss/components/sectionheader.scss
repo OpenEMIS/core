@@ -1,0 +1,29 @@
+@charset "UTF-8";
+
+/* Section Header V1.1.0 */
+
+.section-header {
+    .selection-wrapper {
+        label {
+            font-weight: 700;
+        }
+    }
+    h6 {
+        display: block !important;
+        color: #333;
+        font-weight: bold !important;
+        padding: $padding10 !important;
+        font-size: $textSizeS !important;
+        margin: $noMargin $noMargin $margin15 $noMargin !important;
+        border-bottom: $greyCBorder;
+        width: 100%;
+    }
+}
+
+.rtl {
+    .section-header {
+        .check-input {
+            margin: $noMargin $noMargin -3px $margin10 !important;
+        }
+    }
+}

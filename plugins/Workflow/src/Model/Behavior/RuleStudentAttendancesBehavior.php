@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
 use Workflow\Model\Behavior\RuleBehavior;
@@ -33,7 +33,7 @@ class RuleStudentAttendancesBehavior extends RuleBehavior
         ]
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
     }
@@ -56,10 +56,10 @@ class RuleStudentAttendancesBehavior extends RuleBehavior
         }
     }
 
-    public function onUpdateFieldAbsenceTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAbsenceTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            $lookupModel = $this->config('rule.absence_type_id.lookupModel');
+            $lookupModel = $this->getConfig('rule.absence_type_id.lookupModel');
             $modelTable = TableRegistry::get($lookupModel);
             $lateId = $modelTable->findByCode('LATE')->extract('id')->first();
             unset($attr['options'][$lateId]);
@@ -71,11 +71,11 @@ class RuleStudentAttendancesBehavior extends RuleBehavior
     {
         $model = $this->_table;
         if ($model->action == 'index' && $entity->has('rule')) {
-            $ruleConfig = $this->config('rule');
+            $ruleConfig = $this->getConfig('rule');
             $ruleArray = json_decode($entity->rule, true);
 
             $list = [];
-            if (array_key_exists('where', $ruleArray)) {
+            if (isset($ruleArray['where'])) {
                 $where = $ruleArray['where'];
                 foreach ($where as $field => $fieldValue) {
                     $label = Inflector::humanize($field);
@@ -85,7 +85,7 @@ class RuleStudentAttendancesBehavior extends RuleBehavior
                     $value = __($label) . ': ';
 
                     if (isset($ruleConfig[$field]['lookupModel'])) {
-                        $lookupModel = $this->config('rule.'.$field.'.lookupModel');
+                        $lookupModel = $this->getConfig('rule.'.$field.'.lookupModel');
                         $modelTable = TableRegistry::get($lookupModel);
 
                         try {

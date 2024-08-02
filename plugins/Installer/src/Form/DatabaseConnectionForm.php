@@ -121,7 +121,7 @@ return [
      * @param \Cake\Form\Schema $schema From schema
      * @return \Cake\Form\Schema
      */
-    protected function _buildSchema(Schema $schema)
+    protected function _buildSchema(Schema $schema): Schema
     {
         return $schema->addField('database_server_host', ['type' => 'string'])
             ->addField('database_server_port', ['type' => 'string'])
@@ -164,7 +164,7 @@ return [
      * @param array $data Form data.
      * @return bool
      */
-    protected function _execute(array $data)
+    protected function _execute(array $data): bool
     {   
         $current_time_limit = ini_get('max_execution_time');
         set_time_limit(300);
@@ -232,7 +232,7 @@ return [
 
             Configure::load('datasource', 'default');
             Configure::load('app_extra', 'default');
-            ConnectionManager::config(Configure::consume('Datasources'));
+            ConnectionManager::getConfig(Configure::consume('Datasources'));
             $connection = ConnectionManager::get('default');
        
             $dbConfig = $connection->config();

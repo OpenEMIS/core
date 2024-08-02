@@ -1,5 +1,6 @@
 # User specific & automatically generated files #
 #################################################
+app_local.php
 datasource.php
 test_datasource.php
 app_extra.php
@@ -69,3 +70,12 @@ api/.idea
 api/resources/views/generateOtp.blade.php
 api/resources/views/registrationSuccess.blade.php
 api/config/constants.php
+
+
+# For Frontend Angular 11
+frontend/dist
+frontend/tmp
+frontend/out-tsc
+frontend/bazel-out
+frontend/node_modules
+api/storage/api-docs

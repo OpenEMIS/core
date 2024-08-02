@@ -12,7 +12,7 @@ use Cake\Event\Event;
 use Cake\Datasource\ConnectionManager;
 
 class UserCascadeBehavior extends Behavior {
-	public function initialize(array $config) {
+	public function initialize(array $config): void {
 		// $this->showSQL();
 	}
 
@@ -33,7 +33,7 @@ class UserCascadeBehavior extends Behavior {
 	// (tables that contains security_user_id, student_id, staff_id, guardian_id)
 	// excluding the one specified
 	private function cleanUserRecords($userId) {
-		$tables = ConnectionManager::get('default')->schemaCollection()->listTables();
+		$tables = ConnectionManager::get('default')->getSchemaCollection()->listTables();
 
 		// will update this table to set value to 0 instead of deleting
 		$excludes = ['institution_classes'];
@@ -59,7 +59,7 @@ class UserCascadeBehavior extends Behavior {
 			}
 		}
 
-		$table = TableRegistry::get('institution_classes');
+		$table = TableRegistry::get('Institution.InstitutionClasses');
 		$table->updateAll(
 			['staff_id' => 0],
 			['staff_id' => $userId]

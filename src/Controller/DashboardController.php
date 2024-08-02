@@ -9,27 +9,29 @@ use Cake\ORM\Table;
 use App\Controller\AppController;
 use Cake\Log\Log;
 use Cake\I18n\Time;
+use App\Model\Table\AlertsTable;
+use Cake\Controller\Controller;
+use Cake\Event\EventInterface;
 
 class DashboardController extends AppController
 {
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
 
-        // $this->ControllerAction->model('Notices');
-        // $this->loadComponent('Paginator');
+         $this->ControllerAction->model('Notices');
+         $this->loadComponent('Paginator');
 
         $this->attachAngularModules();
         $this->loadModel('Workflow.WorkflowRules');
-        $workflowRules = $this->WorkflowRules->find()->where(['feature' => 'StudentUnmarkedAttendances'])->hydrate(false)->toArray();
+        $workflowRules = $this->WorkflowRules->find()->where(['feature' => 'StudentUnmarkedAttendances'])->toArray();
         if (!empty($workflowRules)) {
             //$this->triggerUnmarkedAttendanceShell(); //POCOR-7489 comment it for taking time and utlized the max cpu memory on server
         }
 
         //$this->triggerAutomatedStudentWithdrawalShell();
         //$this->triggerInstitutionClassSubjectsShell(); // By Anand Stop the InstitutionClassSubjects shell
-
-        $this->callAlerts(); //POCOR-7558
+       // $this->callAlerts(); //POCOR-7558
 
     }
 
@@ -40,7 +42,7 @@ class DashboardController extends AppController
     }
     // end of CAv4
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
@@ -52,22 +54,40 @@ class DashboardController extends AppController
         return true;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
+
         $user = $this->Auth->user();
-        if (is_array($user) && array_key_exists('last_login', $user) && is_null($user['last_login'])) {
-            $userInfo = TableRegistry::get('User.Users')->get($user['id']);
+
+        if (is_array($user) && isset($user['last_login']) && is_null($user['last_login'])) {
+            $userInfo = TableRegistry::getTableLocator()->get('User.Users')->get($user['id']);
             if ($userInfo->password) {
                 $this->Alert->warning('security.login.changePassword');
                 $lastLogin = $userInfo->last_login;
-                $this->request->session()->write('Auth.User.last_login', $lastLogin);
+                $this->request->getSession()->write('Auth.User.last_login', $lastLogin);
                 $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Accounts', 'edit', $this->ControllerAction->paramsEncode(['id' => $user['id']])]);
             }
 
         }
         $header = __('Home Page');
         $this->set('contentHeader', $header);
+
+        $rootPath = dirname($_SERVER['REQUEST_URI']);
+        //$expirationTime = (new FrozenTime())->addDay();
+        $cookie = new \Cake\Http\Cookie\Cookie(
+            'my_base_url',
+            $rootPath/*,
+            $expirationTime,
+            $fullBaseUrl,
+            $httpHost,
+            true,
+            true */
+        );
+
+        // Write the cookie
+        $this->response = $this->response->withCookie($cookie);
+
     }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
@@ -82,10 +102,10 @@ class DashboardController extends AppController
         $user = $this->Auth->user();
         /*POCOR-6395 starts*/
         if (!$this->AccessControl->isAdmin()) {
-            $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-            $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
-            $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
-            $SecurityRoleFunctions = TableRegistry::get('Security.SecurityRoleFunctions');
+            $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+            $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+            $SecurityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+            $SecurityRoleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
             $roleIds = [];
             $functionId = $SecurityFunctions->find()
                 ->where([
@@ -121,27 +141,28 @@ class DashboardController extends AppController
                 $this->set('hasPermission', $hasPermission);
             }
         }
+
         /*POCOR-6395 ends*/
-        $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
+        $StudentStatusUpdates = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates');
         $StudentStatusUpdates->checkRequireUpdate();
+
         $this->set('ngController', 'DashboardCtrl as DashboardController');
         if ($this->AccessControl->isAdmin()) {
             $this->set('isAdmin', true);
         }
-
-        $profileData = $this->getProfileCompletnessData($user['id']);
-        $this->set('profileCompletness', $profileData);
+//        $profileData = $this->getProfileCompletnessData($user['id']); //POCOR-8074-6
+//        $this->set('profileCompletness', $profileData);
         $this->set('noBreadcrumb', true);
+
     }
 
     private function attachAngularModules()
     {
-        $action = $this->request->action;
-
+        $action = $this->getRequest()->getAttribute('params')['action'];
         switch ($action) {
             case 'index':
                 $this->Angular->addModules([
-                    'alert.svc',
+                   // 'alert.svc',
                     'dashboard.ctrl',
                     'dashboard.svc'
                 ]);
@@ -159,7 +180,7 @@ class DashboardController extends AppController
         Log::write('debug', $shellCmd);
 
     }
-    
+
     private function triggerInstitutionClassSubjectsShell()
     {
         $script = 'InstitutionClassSubjects';
@@ -173,76 +194,77 @@ class DashboardController extends AppController
 
     public function getProfileCompletnessData($userId)
     {
+
         $data = array();
         //$data['percentage'] = 0;//POCOR-6395
         $profileComplete = 0;
-        $securityUsers = TableRegistry::get('security_users');
+        $securityUsers = TableRegistry::getTableLocator()->get('User.Users');
         $securityUsersData = $securityUsers->find()
             ->select([
-                'created' => 'security_users.created',
-                'modified' => 'security_users.modified',
+                'created' => 'Users.created',
+                'modified' => 'Users.modified',
             ])
             ->where([$securityUsers->aliasField('id') => $userId])
-            ->order(['security_users.modified' => 'desc'])
+            ->order(['Users.modified' => 'desc'])
             ->limit(1)
             ->first();
 
-        $userDemographics = TableRegistry::get('user_demographics');
+        $userDemographics = TableRegistry::getTableLocator()->get('User.Demographic');
         $userDemographicsData = $userDemographics->find()
             ->select([
-                'created' => 'user_demographics.created',
-                'modified' => 'user_demographics.modified',
+                'created' => 'Demographic.created',
+                'modified' => 'Demographic.modified',
             ])
             ->where([$userDemographics->aliasField('security_user_id') => $userId])
-            ->order(['user_demographics.modified' => 'desc'])
+            ->order(['Demographic.modified' => 'desc'])
             ->limit(1)
             ->first();
 
-        $userIdentities = TableRegistry::get('user_identities');
+        $userIdentities = TableRegistry::getTableLocator()->get('User.Identities');
         $userIdentitiesData = $userIdentities->find()
             ->select([
-                'created' => 'user_identities.created',
-                'modified' => 'user_identities.modified',
+                'created' => 'Identities.created',
+                'modified' => 'Identities.modified',
             ])
             ->where([$userIdentities->aliasField('security_user_id') => $userId])
-            ->order(['user_identities.modified' => 'desc'])
+            ->order(['Identities.modified' => 'desc'])
             ->limit(1)
             ->first();
         ;
-        $userNationalities = TableRegistry::get('user_nationalities');
+        $userNationalities = TableRegistry::getTableLocator()->get('User.Nationalities');
         $userNationalitiesData = $userNationalities->find()
             ->select([
-                'created' => 'user_nationalities.created',
-                'modified' => 'user_nationalities.modified',
+                'created' => 'Nationalities.created',
+                'modified' => 'Nationalities.modified',
             ])
             ->where([$userNationalities->aliasField('security_user_id') => $userId])
-            ->order(['user_nationalities.modified' => 'desc'])
+            ->order(['Nationalities.modified' => 'desc'])
             ->limit(1)
             ->first();
 
-        $userContacts = TableRegistry::get('user_contacts');
+        $userContacts = TableRegistry::getTableLocator()->get('User.Contacts');
         $userContactsData = $userContacts->find()
             ->select([
-                'created' => 'user_contacts.created',
-                'modified' => 'user_contacts.modified',
+                'created' => 'Contacts.created',
+                'modified' => 'Contacts.modified',
             ])
             ->where([$userContacts->aliasField('security_user_id') => $userId])
-            ->order(['user_contacts.modified' => 'desc'])
+            ->order(['Contacts.modified' => 'desc'])
             ->limit(1)
             ->first();
 
-        $userLanguages = TableRegistry::get('user_languages');
+        $userLanguages = TableRegistry::getTableLocator()->get('User.UserLanguages');
         $userLanguagesData = $userLanguages->find()
             ->select([
-                'created' => 'user_languages.created',
-                'modified' => 'user_languages.modified',
+                'created' => 'UserLanguages.created',
+                'modified' => 'UserLanguages.modified',
             ])
             ->where([$userLanguages->aliasField('security_user_id') => $userId])
-            ->order(['user_languages.modified' => 'desc'])
+            ->order(['UserLanguages.modified' => 'desc'])
             ->limit(1)
             ->first();
-        // config 
-        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        // config
+        $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $enabledTypeList = $ConfigItem
             ->find()
             ->order('type')
@@ -439,7 +461,7 @@ class DashboardController extends AppController
             $data[4]['modifiedDate'] = 'Not updated';
         }
 
-        $userLanguages = TableRegistry::get('user_languages');
+        $userLanguages =TableRegistry::getTableLocator()->get('user_languages');
         $userLanguagesData = $userLanguages->find()
             ->select([
                 'created' => 'user_languages.created',
@@ -465,8 +487,8 @@ class DashboardController extends AppController
         // $profilePercentage = 100/$totalProfileComplete * $profileComplete;
         // $profilePercentage = round($profilePercentage);
         //$data['percentage'] = $profilePercentage;
-        // config 
-        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        // config
+        $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $typeList = $ConfigItem
             ->find('list', [
                 'keyField' => 'name',
@@ -514,7 +536,7 @@ class DashboardController extends AppController
         $cmd = ROOT . DS . 'bin' . DS . 'cake AutomatedStudentWithdrawal';
         $nohup = 'nohup ' . $cmd . '> /dev/null 2>/dev/null &';
         exec($nohup);
-        Log::write('debug', $nohup); 
+        Log::write('debug', $nohup);
     }*/
 
     //    private function triggerInstitutionClassSubjectsShell()
@@ -525,7 +547,7 @@ class DashboardController extends AppController
 //        $cmd = ROOT . DS . 'bin' . DS . 'cake InstitutionClassSubjects';
 //        $nohup = 'nohup ' . $cmd . '> /dev/null 2>/dev/null &';
 //        exec($nohup);
-//        Log::write('debug', $nohup); 
+//        Log::write('debug', $nohup);
 //    }
 
 
@@ -536,9 +558,9 @@ class DashboardController extends AppController
     //POCOR-7558 start
     private function callAlerts()
     {
-        $AlertsTable = TableRegistry::get('Alert.Alerts');
+        $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
         $AlertsData = $AlertsTable->find('all')->toArray();
-        $lastRunDates = TableRegistry::get('Alert.AlertRules')->getLastRunDate();
+        $lastRunDates = TableRegistry::getTableLocator()->get('Alert.AlertRules')->getLastRunDate();
         $mainAlerts = [];
         foreach ($AlertsData as $key => $value) {
             $currentDate = Time::now()->format('Y-m-d');
@@ -559,7 +581,7 @@ class DashboardController extends AppController
                 }
             }
             if ($currentDate > $finalDate || empty($otherDate)) {
-                $AlertRulesTable = TableRegistry::get('Alert.AlertRules');
+                $AlertRulesTable = TableRegistry::getTableLocator()->get('Alert.AlertRules');
                 $AlertRules = $AlertRulesTable->find()->
                     where([
                         $AlertRulesTable->aliasField('feature') => $value['name'],
@@ -574,7 +596,7 @@ class DashboardController extends AppController
 
         foreach ($mainAlerts as $key => $value) {
             $user = $this->Auth->user();
-            $systemProcesses = TableRegistry::get('SystemProcesses');
+            $systemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
             $systemProcessEntity = $systemProcesses->newEntity([
                 'name' => $value['feature'],
                 'status' => 1,

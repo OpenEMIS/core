@@ -19,13 +19,14 @@ class CsvBehavior extends Behavior
         'pages' => []
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->config('excludes', array_merge($this->config('default_excludes'), $this->config('excludes')));
-        if (!array_key_exists('filename', $config)) {
-            $this->config('filename', $this->_table->alias());
+        $this->setConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
+        if (!isset($config['filename'])) {
+            $this->setConfig('filename', $this->_table->getAlias());
         }
-        $folder = WWW_ROOT . $this->config('folder');
+
+        $folder = WWW_ROOT . $this->getConfig('folder');
 
         if (!file_exists($folder)) {
             umask(0);
@@ -38,8 +39,8 @@ class CsvBehavior extends Behavior
         $model = $this->_table;
 
         $_settings = [
-            'file' => $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.csv',
-            'path' => WWW_ROOT . $this->config('folder') . DS,
+            'file' => $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.csv',
+            'path' => WWW_ROOT . $this->getConfig('folder') . DS,
             'download' => true,
             'purge' => true,
             'query' => $this->_table->find()
@@ -57,8 +58,8 @@ class CsvBehavior extends Behavior
         $process = $_settings['process'];
         $processId = $process->id;
 
-        $sqlFilename = $this->config('filename') . '_' . $processId . '.sql';
-        $sqlFilepath = $_settings['path'] . $sqlFilename;
+        $sqlFilename = $this->getConfig('filename') . '_' . $processId . '.sql';
+        $sqlFilepath = $_settings['path'] . $sqlFilename;-
         $_settings['file_path_sql'] = $sqlFilepath;
         // End: sql filepath
 
@@ -66,7 +67,7 @@ class CsvBehavior extends Behavior
         $this->createSqlFile($_settings);
         $this->exportToCsv($_settings);
         $this->deleteSqlFile($_settings);
-    
+
         $model->dispatchEvent('ExcelTemplates.Model.onCsvGenerateComplete', [$_settings], $this);
     }
 
@@ -74,13 +75,30 @@ class CsvBehavior extends Behavior
     {
         $process = $settings['process'];
         $query = $settings['query'];
-        $sql = array_key_exists('sql', $settings) ? $settings['sql'] : $query->sql();
-        
+        $sql = isset($settings['sql']) ? $settings['sql'] : $query->sql();
+
+        // Check if $sql is null or empty
+        if ($sql === null || empty($sql)) {
+            return;
+        }
+
+        // Escape SQL query
+        $sql = $this->escapeSql($sql);
+
         $ReportProgress = TableRegistry::get('Report.ReportProgress');
         $ReportProgress->updateAll(
-            ['sql' => $sql],
+            ['`sql`' => $sql],
             ['id' => $process->id]
         );
+
+    }
+
+    private function escapeSql($sql)
+    {
+        // Escape SQL query
+        // This is a simplified example, you might need to improve this based on your requirements
+        //return "'" . addslashes($sql) . "'";
+        return str_replace("'", "''", $sql);
     }
 
     private function createSqlFile($settings)
@@ -110,11 +128,13 @@ class CsvBehavior extends Behavior
         $connectionConfig = ConnectionManager::get('default')->config();
         $username = $connectionConfig['username'];
         $password = $connectionConfig['password'];
-        $host = array_key_exists('host', $connectionConfig) ? $connectionConfig['host'] : null;
-        $port = array_key_exists('port', $connectionConfig) ? $connectionConfig['port'] : null;
+        $host = isset($connectionConfig['host']) ? $connectionConfig['host'] : null;
+        $port = isset($connectionConfig['port']) ? $connectionConfig['port'] : null;
         $database = $connectionConfig['database'];
 
-        $exportCmd = DS . 'bin'. DS . 'mysql';
+        $mysqlPath = trim(shell_exec('which mysql'));
+        $exportCmd = $mysqlPath;
+        //$exportCmd = DS . 'bin'. DS . 'mysql';
         $exportCmd .= ' --user=' . $username;
         $exportCmd .= ' --password=' . $password;
         if (!is_null($host) && strtolower($host) != 'localhost') {
@@ -130,6 +150,7 @@ class CsvBehavior extends Behavior
         $exportCmd .= ' < ' . $sqlFilepath;
         $exportCmd .= '| sed -e \'s/\t/\",\"/g;s/^/\"/g;s/$/\"/g\'';
         $exportCmd .= ' > ' . $csvFilepath;
+        echo "Export Command: $exportCmd<br>";
 
         try {
             $pid = exec($exportCmd);

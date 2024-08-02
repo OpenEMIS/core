@@ -281,7 +281,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
         // console.log(dayListOptions.length);
         vm.dayListOptions = dayListOptions;
 
-        if (dayListOptions.length > 1) {
+        // if (dayListOptions.length > 1) {
             angular.forEach(dayListOptions, function(day) {
                 if (day.selected == true) {
                    vm.selectedDay = (angular.isDefined(day.closed) && day.closed) ? -1 : day.id;
@@ -292,7 +292,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
                    vm.gridOptions.context.schoolClosed = vm.schoolClosed;
                 }
             });
-        }
+        // }
         if (dayListOptions.length < 1) {
             vm.selectedDay = -1;
             vm.gridOptions.context.date = vm.selectedDay;
@@ -336,9 +336,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
                         vm.allLeaveCount = vm.allLeaveCount + 1;
                     }
                     if (attendance.absence_type_id == 3) {
-                        vm.allLateCount = vm.allLateCount + 1;
-                        vm.globalLateCount = vm.allLateCount
-                       vm.allLateCount = vm.allLateCount + 1;
+                        vm.allLateCount++; //POCOR-8118
                     }
                 });
                 // $scope.$apply();
@@ -355,6 +353,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
             if (vm.allLateCount == 0) {
                 vm.allLateCount = '-';
             }
+            vm.globalLateCount = vm.allLateCount; //POCOR-8118
             $timeout(function() {
                 vm.allLateCount = vm.globalLateCount; // replace 'NEW VALUE' with the update//POCOR-7255
             })
@@ -422,7 +421,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
     };
 
     vm.onExcelClick = function() {
-        vm.excelSelectedAcademicPeriodUrl = vm.excelUrl + '?academic_period_id=' + vm.selectedAcademicPeriod;
+        vm.excelSelectedAcademicPeriodUrl = vm.excelUrl + '?academic_period_id=' + vm.selectedAcademicPeriod+'&institution_id='+vm.institutionId;
         $window.location.href = vm.excelSelectedAcademicPeriodUrl;
     };
 }

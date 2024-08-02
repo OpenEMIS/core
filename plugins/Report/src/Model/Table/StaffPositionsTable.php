@@ -15,9 +15,9 @@ class StaffPositionsTable extends AppTable
 {
     use OptionsTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_positions');
+        $this->setTable('institution_positions');
         parent::initialize($config);
         
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
@@ -150,32 +150,32 @@ class StaffPositionsTable extends AppTable
                 ]
             ])
             ->leftJoin(
-                    [$InstitutionStaff->alias() => $InstitutionStaff->table()],
+                    [$InstitutionStaff->getAlias() => $InstitutionStaff->getTable()],
                     [
                         $InstitutionStaff->aliasField('institution_position_id = ') . $this->aliasField('id'),
                         $InstitutionStaff->aliasField('institution_id = ') . $this->aliasField('institution_id')
                     ]
                 )
             ->leftJoin(
-                    [$Staff->alias() => $Staff->table()],
+                    [$Staff->getAlias() => $Staff->getTable()],
                     [
                         $Staff->aliasField('id = ') . $InstitutionStaff->aliasField('staff_id')
                     ]
                 )
             ->leftJoin(
-                    [$Genders->alias() => $Genders->table()],
+                    [$Genders->getAlias() => $Genders->getTable()],
                     [
                         $Genders->aliasField('id = ') . $Staff->aliasField('gender_id')
                     ]
                 )
             ->leftJoin(
-                    [$UserIdentities->alias() => $UserIdentities->table()],
+                    [$UserIdentities->getAlias() => $UserIdentities->getTable()],
                     [
                         $UserIdentities->aliasField('security_user_id = ') . $Staff->aliasField('id')
                     ]
                 )
             ->leftJoin(
-                    [$IdentityTypes->alias() => $IdentityTypes->table()],
+                    [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
                     [
                         $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
                     ]
