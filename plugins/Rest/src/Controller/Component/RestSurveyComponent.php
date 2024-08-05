@@ -112,7 +112,7 @@ class RestSurveyComponent extends Component
     public function getXXList($instanceId, $id, $insCode, $acamic)
     {
         $title = $this->Form->get($id)->name;
-        $institutionSurveysTbl = TableRegistry::get('institution_surveys');
+        $institutionSurveysTbl = TableRegistry::get('Institution.InstitutionSurveys');
         $institutionTbl = TableRegistry::get('Institution.Institutions');
         $insData = $institutionTbl->find('all', ['conditions' => ['code' => $insCode]])->first();
         $insId = $insData->id;
@@ -509,8 +509,8 @@ class RestSurveyComponent extends Component
     {
         $thresholdDataaa = json_decode($extra['value'], true);
 
-        $InstitutionStudentSurveysTbl = TableRegistry::get('institution_student_surveys');
-        $InstitutionStudentSurveyAnswersTbl = TableRegistry::get('institution_student_survey_answers');
+        $InstitutionStudentSurveysTbl = TableRegistry::get('Institution.InstitutionStudentSurveys');
+        $InstitutionStudentSurveyAnswersTbl = TableRegistry::get('Institution.InstitutionStudentSurveyAnswers');
         $students = $thresholdDataaa;
         foreach ($students as $w => $stu) {
             $alreadyExistData = $InstitutionStudentSurveysTbl->find('all', ['conditions' => [
@@ -960,10 +960,10 @@ class RestSurveyComponent extends Component
     {
 
         $title = $this->Form->get($id)->name;
-        $institutionClassStudentsTbl = TableRegistry::get('institution_class_students');
-        $SurveyFormsQuestionsTbl = TableRegistry::get('survey_forms_questions');
-        $institutionStudentSurveysTbl = TableRegistry::get('institution_student_surveys');
-        $surveyQuestionChoicesTbl = TableRegistry::get('survey_question_choices');
+        $institutionClassStudentsTbl = TableRegistry::get('Institution.InstitutionClassStudents');
+        $SurveyFormsQuestionsTbl = TableRegistry::get('Survey.SurveyFormsQuestions');
+        $institutionStudentSurveysTbl = TableRegistry::get('Institution.StudentSurveys');
+        $surveyQuestionChoicesTbl = TableRegistry::get('Survey.SurveyQuestionChoices');
         $institution_student_survey_answers_tbl = TableRegistry::get('institution_student_survey_answers');
 
         $institutionTbl = TableRegistry::get('Institution.Institutions');
