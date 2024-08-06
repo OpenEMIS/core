@@ -71,16 +71,18 @@ class SurveyController extends Controller
         try {
             $data = $this->surveyService->uploadXform($request);
             
-            if($data == 0){
-                return $this->sendErrorResponse('Invalid institution code.');
+            if($data == 1){
+                return $this->sendSuccessResponse('Survey xfrom uploaded successfully.');
             } elseif($data == 2){
                 return $this->sendErrorResponse('No record found for institution for the form for the period.');
             } elseif($data == 3){
                 return $this->sendErrorResponse('Survey is already expired.');
             } elseif($data == 4){
                 return $this->sendErrorResponse('Survey is already completed.');
-            } elseif($data == 1){
-                return $this->sendSuccessResponse('Survey xfrom uploaded successfully.');
+            } elseif($data == 5){
+                return $this->sendErrorResponse("You're not allowed to upload survey for this institution.");
+            } elseif($data == 6){
+                return $this->sendErrorResponse('Invalid institution code.');
             } else {
                 return $this->sendErrorResponse('Failed to upload survey xform.');
             }

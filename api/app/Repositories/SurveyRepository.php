@@ -26,6 +26,7 @@ use App\Models\SurveyStatusPeriods;
 use App\Models\InstitutionSurveyAnswers;
 use App\Models\InstitutionSurveyTableCells;
 use App\Models\SurveyQuestionChoices;
+use App\Models\CustomModules;
 
 
 define("NS_XHTML", "http://www.w3.org/1999/xhtml");
@@ -41,29 +42,38 @@ class SurveyRepository extends Controller
         try {
             $params = $request->all();
 
-            $limit = config('constants.defaultPaginateLimit');
+            $todayDate = date('Y-m-d');
+            $todayTimestamp = date('Y-m-d', strtotime($todayDate));
 
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-            }
+            $surveys = SurveyForms::select('survey_forms.*')
+                        ->with('customModule')
+                        ->join('survey_statuses', 'survey_statuses.survey_form_id', '=', 'survey_forms.id')
+                        ->where('date_disabled', '>=', $todayTimestamp)
+                        ->where('date_enabled', '<=', $todayTimestamp);
 
-            $surveys = InstitutionSurveys::with('surveyForms','surveyForms.customModule');
 
-            if(isset($params['institution_id'])){
-                $surveys = $surveys->where('institution_id', $params['institution_id']);
-            }
+            $moduleOptions = CustomModules::where('visible', 1)->where('parent_id', 0)->pluck('model', 'id')->toArray();
+
+            $selectedModule = isset($options['module']) ? $options['module'] : key($moduleOptions);
+            
+            $surveys = $surveys->where('custom_module_id', $selectedModule);
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
                 $surveys = $surveys->orderBy($col, $orderBy);
             }
-
-            $list = $surveys->paginate($limit)->toArray();
+            
+            if(isset($params['limit'])){
+                $limit = $params['limit'];
+                $list = $surveys->paginate($limit)->toArray();
+            } else {
+                $list['data'] = $surveys->get()->toArray();
+            }
+            
             
             return $list;
         } catch (\Exception $e) {
-            
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -92,6 +102,7 @@ class SurveyRepository extends Controller
                     xmlns:oe="' . NS_OE . '">
                 </html>';
 
+
             //Creating SimpleXML Object
             $xml = new \SimpleXMLElement($xmlstr);
 
@@ -99,6 +110,7 @@ class SurveyRepository extends Controller
             //$newsXML->addAttribute('newsPagePrefix', 'Times of India');
 
             $headNode = $xml->addChild("head", null, NS_XHTML);
+
             $bodyNode = $xml->addChild("body", null, NS_XHTML);
             $headNode->addChild("title", $surveyForm->name, NS_XHTML);
             $metaNode = $headNode->addChild("meta", null, NS_XHTML);
@@ -121,6 +133,7 @@ class SurveyRepository extends Controller
             $fieldNode->addAttribute("ref", $this->getRef($instanceId, $references));
             $fieldNode->addAttribute("oe-type", "string");
             $fieldNode->addChild("label", "Institution Code", NS_XF);
+
 
             $this->setBindNode($modelNode, $instanceId, $references, ['type' => 'string', 'required' => true]);
 
@@ -149,14 +162,12 @@ class SurveyRepository extends Controller
                 $periodOptions = $periodListResults->toArray();
                 
                 foreach ($periodOptions as $key => $period) {
-                    
                     $itemNode = $fieldNode->addChild("item", null, NS_XF);
                     $itemNode->addChild("label", htmlspecialchars($period['academic_period_name']), NS_XF);
                     $itemNode->addChild("value", htmlspecialchars($period['academic_period_id']), NS_XF);
                 }
             }
-            
-
+            //dd($modelNode, $instanceId, $references);
             $this->setBindNode($modelNode, $instanceId, $references, ['type' => 'integer', 'required' => true]);
 
             // used to build validation rules
@@ -164,11 +175,12 @@ class SurveyRepository extends Controller
 
 
             $rules = SurveyRules::where('survey_form_id', $surveyFormId)->get()->toArray();
-
+            
             //$rules = new ArrayObject($rules);
-
+            
             $sectionName = null;
             foreach ($fields as $key => $field) {
+
                 $extra = [];
                 $extra['index'] = $key + 1;
                 $extra['subIndex'] = 0;
@@ -187,11 +199,10 @@ class SurveyRepository extends Controller
                 // For relevancy
                 $extra['field_id'] = $field['field_id'];
                 $extra['rules'] = $rules;
-
+                
                 if (is_null($sectionName)) {
                     $parentNode = $bodyNode;
                 }
-
 
                 // Section
                 if ($field['section_name'] != $sectionName) {
@@ -204,11 +215,9 @@ class SurveyRepository extends Controller
 
                 }
                 // End
-
                 $fieldTypeFunction = strtolower($field['field_type']);
-
+                
                 if (method_exists($this, $fieldTypeFunction)) {
-                    
                     // here to add logic of xform
                     $this->$fieldTypeFunction($field, $parentNode, $instanceId, $extra);
 
@@ -226,10 +235,27 @@ class SurveyRepository extends Controller
             Log::error(
                 'Failed to download survey xform.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
-
+            );  
             return $this->sendErrorResponse('Failed to download survey xform.');
         }
+    }
+
+
+    private function staff_list($field, $parentNode, $instanceId, $extra)
+    {   
+        $extra['tagName'] = 'staff_list';
+        $extra['is_staff_list_field'] = 'yesss';
+        $extra['bindType'] = 'string';
+        $this->setCommonNode($field, $parentNode, $instanceId, $extra);
+    }
+
+    private function note($field, $parentNode, $instanceId, $extra)
+    {
+        $noteBreakNode = $parentNode->addChild('group', null, NS_XF);
+        $noteBreakNode->addAttribute("ref", $field['field_id']);
+        $noteBreakNode->addChild("label", htmlspecialchars($field['default_name'], ENT_QUOTES), NS_XF);
+        $noteBreakNode->addAttribute("oe-type", "note");
+        $noteBreakNode->addChild("p", htmlspecialchars($field['default_description'], ENT_QUOTES), NS_XHTML);
     }
 
 
@@ -252,6 +278,7 @@ class SurveyRepository extends Controller
         $required = array_key_exists('required', $attr) ? $attr['required'] : false;
         $constraint = array_key_exists('constraint', $attr) ? $attr['constraint'] : null;
 
+        //dd("setBindNode: ", $bindType, $required, $constraint);
         $bindNode = $modelNode->addChild("bind", null, NS_XF);
         $bindNode->addAttribute("ref", $this->getRef($instanceId, $references));
         $bindNode->addAttribute("type", $bindType);
@@ -311,6 +338,7 @@ class SurveyRepository extends Controller
                 ->where('survey_forms_questions.survey_form_id', $id)
                 ->get()
                 ->toArray();
+
         return $list;
     }
 
@@ -325,14 +353,14 @@ class SurveyRepository extends Controller
 
 
     private function setCommonNode($field, $parentNode, $instanceId, $extra)
-    {
+    {   
         $tagName = array_key_exists('tagName', $extra) ? $extra['tagName'] : 'input';
         $bindType = array_key_exists('bindType', $extra) ? $extra['bindType'] : 'string';
 
         $this->setBodyNode($field, $parentNode, $instanceId, $tagName, $extra);
         $extra['type'] = $bindType;
-        $extra['required'] = $field->default_is_mandatory;
-
+        $extra['required'] = $field['default_is_mandatory'];
+        
         if (isset($extra['constraint']) && empty($extra['constraint'])) {
             unset($extra['constraint']);
         }
@@ -741,8 +769,9 @@ class SurveyRepository extends Controller
             }
 
             if (!is_null($validationType)) {
-                $bindType = "decimal".Inflector::camelize($validationType).$extra['index'];
-
+                //$bindType = "decimal".Inflector::camelize($validationType).$extra['index'];
+                $bindType = "decimal".Str::camel($validationType).$extra['index'];
+                
                 // introduce subIndex to handle question inside repeater has validation
                 $subIndex = $extra['subIndex'];
                 if (!empty($subIndex)) {
@@ -758,7 +787,8 @@ class SurveyRepository extends Controller
                 $restriction->addAttribute("base", "xf:decimal");
 
                 foreach ($validations as $key => $value) {
-                    $condition = $restriction->addChild(Inflector::variable($key), null, NS_XSD);
+                    //$condition = $restriction->addChild(Inflector::variable($key), null, NS_XSD);
+                    $condition = $restriction->addChild(Str::camel($key), null, NS_XSD);
                     $condition->addAttribute("value", $value);
                 }
             }
@@ -1072,7 +1102,7 @@ class SurveyRepository extends Controller
         try {
             $params = $request->all();
             $xml = file_get_contents('php://input');
-            
+
             if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $formAlias = 'SurveyForms';
                 $fieldAlias = 'SurveyQuestions';
@@ -1088,7 +1118,7 @@ class SurveyRepository extends Controller
                 $xmlstr = '<?xml version="1.0" encoding="UTF-8"?>' . $xmlResponse;
 
                 $xml = new \SimpleXMLElement($xmlstr);
-
+                
                 $periodId = $xml->{$formAlias}->AcademicPeriods->__toString();
                 $formId = $xml->{$formAlias}->attributes()->id->__toString();
                 $institutionCode = $xml->{$formAlias}->Institutions->__toString();
@@ -1097,32 +1127,31 @@ class SurveyRepository extends Controller
                 $institutionResult = Institutions::where(DB::raw('lower(code)'), strtolower($institutionCode))->first();
                 
                 if (empty($institutionResult)) {
-                    return 0; //Invalid institution code
+                    return 6; //Invalid institution code
                 }
 
                 $institutionId = $institutionResult->id;
                 // end of check for institutionId
 
-                $userId = 2;
-                $userEntity = SecurityUsers::where('id', $userId)->first();
+                //$userId = 2;
+                $user = JWTAuth::user();
+                $userId = $user->id;
+                
+                //$userEntity = SecurityUsers::where('id', $userId)->first();
+                $userEntity = $user;
+                $permissions = checkAccess();
+                
                 // checking of access only if the user is not super admin    
                 if ($userEntity->super_admin == 0) {
-                    /*$userHasAccess = $Institutions
-                        ->find('byAccess', ['userId' => $userId])
-                        ->where([
-                            $Institutions->aliasField('id') => $institutionId
-                        ])
-                        ->count();
-
-                    if ($userHasAccess == 0) {
-                        return $generateErrorResponse(['message' => __('You do not have the permission to upload this survey')], 500);
-                    }*/
+                    if(!in_array($institutionId, $permissions['institutionIds'])){
+                        return 5; //not allowed.
+                    }
                 } 
 
                 // build survey records than check if the record don't exist, it is a invalid combination
                 $buildSurveyRecords = $this->buildSurveyRecords($institutionId, $formId, $periodId);
+                
 
-                //dd("institutionId: ".$institutionId, "formId: ".$formId, "periodId: ".$periodId);
                 $institutionSurveyResults = InstitutionSurveys::with('status')->where('survey_form_id', $formId)->where('institution_id', $institutionId)->where('academic_period_id', $periodId)->first();
 
                 if(empty($institutionSurveyResults)){
@@ -1158,7 +1187,7 @@ class SurveyRepository extends Controller
                 
                 $answers = [];
                 $fields = $xml->{$formAlias}->{$fieldAlias};
-
+                
                 foreach ($fields as $field) {
                     $fieldId = $field->attributes()->id->__toString();
                     //dd($fieldId);
@@ -1167,7 +1196,7 @@ class SurveyRepository extends Controller
                     $responseValue = urldecode($field->__toString());
 
                     $fieldTypeFunction = "upload" . ucfirst(strtolower($fieldType));
-                    //dd($fieldTypeFunction);
+                    dd($fieldTypeFunction);
 
                     if (method_exists($this, $fieldTypeFunction)) {
                         $responseData = [
@@ -1211,7 +1240,7 @@ class SurveyRepository extends Controller
                 'Failed to upload survey xform.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
+            dd($e);
             return $this->sendErrorResponse('Failed to upload survey xform.');
         }
     }
@@ -1416,7 +1445,7 @@ class SurveyRepository extends Controller
     }
 
 
-    public function buildSurveyRecords($institutionId = 6, $surveyFormId = null, $academicPeriodId = null)
+    public function buildSurveyRecords($institutionId = null, $surveyFormId = null, $academicPeriodId = null)
     {
         $surveyForms = new SurveyForms();
         if(!is_null($surveyFormId)){
@@ -1435,7 +1464,7 @@ class SurveyRepository extends Controller
             $registryAlias = 'Institution.InstitutionSurveys';
             $openStatusId = null;
             $workflow = $this->getWorkflow($registryAlias, null, $surveyFormId);
-            //dd("workflow", $workflow->WorkflowSteps);
+            
             if(count($filterTypeQuery) > 0){
                 if (!empty($workflow)) {
                     foreach ($workflow->WorkflowSteps as $workflowStep) {
@@ -1577,19 +1606,8 @@ class SurveyRepository extends Controller
     {
         $questions = SurveyRules::where('survey_form_id', $surveyFormId)->where('enabled', 1)->pluck('survey_question_id');
 
-        /*$CustomFieldValues = $this->FieldValue;
-        $CustomTableCells = $this->TableCell;
-        $CustomFieldValues->deleteAll([
-            'survey_question_id IN ' => $questions,
-            'institution_survey_id' => $recordId
-        ]);*/
 
         $deleteInstitutionSurveyAnswers = InstitutionSurveyAnswers::whereIn('survey_question_id', $questions)->where('institution_survey_id', $recordId)->delete();
-
-        /*$CustomTableCells->deleteAll([
-            'survey_question_id IN ' => $questions,
-            'institution_survey_id' => $recordId
-        ]);*/
 
         $delInstitutionSurveyTableCells = InstitutionSurveyTableCells::whereIn('survey_question_id', $questions)->where('institution_survey_id', $recordId)->delete();
     }
