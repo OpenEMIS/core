@@ -32,7 +32,7 @@ class ReorderBehavior extends Behavior {
 			$primaryKey = $model->getPrimaryKey();
 			$orderField = $this->getConfig('orderField');
 
-			$encodedIds = json_decode($request->data("ids"));
+			$encodedIds = json_decode($request->getData("ids"));
 
 			$ids = [];
 			$idKeys = [];
@@ -50,18 +50,18 @@ class ReorderBehavior extends Behavior {
 					->select($orderField)
 					->where(['OR' => $idKeys])
 					->order([$model->aliasField($orderField)])
-					->hydrate(false)
+					->enableHydration(false)
 					->toArray();
 
 				$originalOrder = array_reverse($originalOrder);
 				foreach ($ids as $id) {
 					$orderValue = array_pop($originalOrder);
 					/** POCOR-6677 starts - storing order as per reorder numbering to overcome duplication of order no*/
-					if ($model->alias() == 'SecurityRoles') {
+					if ($model->getAlias() == 'SecurityRoles') {
 						$model->updateAll([$orderField => $init], [$id]);
 						$init++; 
 					} else {
-						$model->updateAll([$orderField => $orderValue[$orderField]], [$id]);
+						$model->updateAll(["`$orderField`" => $orderValue[$orderField]], [$id]);
 					}
 					/** POCOR-6677 ends*/ 
 				}
