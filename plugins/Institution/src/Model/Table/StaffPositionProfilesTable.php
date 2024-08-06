@@ -1289,7 +1289,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
     }
     public function viewAfterAction(Event $event, Entity $entity, $extra)
     {
-        die('kjkj');
         $StaffTable = TableRegistry::get('Institution.Staff');
         $staffEntity = $StaffTable->find()
             ->contain(['StaffTypes'])
@@ -1396,7 +1395,7 @@ echo "<pre>"; print_r($this->paramsEncode(['id' => $queryString['id']]));die;*/
             }
             //echo "<pre>"; print_r($url);die;
             $event->stopPropagation();
-            return $this->controller->redirect($url);
+            return $this->controller->redirect($staffTableViewUrl);
         }
     }
 
