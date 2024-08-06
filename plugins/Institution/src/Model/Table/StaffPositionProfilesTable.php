@@ -239,7 +239,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $this->belongsTo('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
         $this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes', 'foreignKey' => 'staff_type_id']);
 
-//        $this->staffChangeTypesList = $this->StaffChangeTypes->findCodeList();
+        $this->staffChangeTypesList = $this->StaffChangeTypes->findCodeList();
 //        $this->addBehavior('Institution.StaffValidation');
         $this->addBehavior('Workflow.Workflow');
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -421,7 +421,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
             } 
              //Both case
             $query=$InstitutionStaff->getQuery();
-            $query ->update()
+            $query->update()
                    ->set(['is_homeroom' => $entity->homeroom_teacher])
                    ->where(['id' => $entity->institution_staff_id])
                    ->execute();
@@ -437,7 +437,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $institutionId = $this->getQueryString('institution_id');
             $url = $this->url('view');
             $url['action'] = 'Staff';
-            $url[1] = $this->paramsEncode(['id' => $entity['institution_staff_id'], 'institution_id' =>$institutionId]);
+            $url[1] = $this->paramsEncode(['id' => $institutionId, 'institution_id' =>$institutionId, 'institution_staff_id' => $entity['institution_staff_id']]);
+            //echo "<pre>"; print_r($url);die;
             return $this->controller->redirect($url);
         }
         //POCOR-7289 ends
@@ -613,13 +614,23 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function addAfterSave(Event $event, $entity, $requestData, ArrayObject $extra)
     {
+        $queryString = $this->getQueryString();
+       // echo "<pre>"; print_r($queryString);die;
+        $encodedQueryString = $this->paramsEncode($queryString);
         if (!$entity->getErrors()) {
             $StaffTable = TableRegistry::get('Institution.Staff');
-            $url = $this->url('view');
+           // $url = $this->url('view');
+            $url['plugin'] = 'Institution';
+            $url['controller'] = 'Institutions';
             $url['action'] = 'Staff';
-            $url[1] = $this->paramsEncode(['id' => $entity['institution_staff_id']]);
+            $url[0] = 'view';
+            $url[1] = $encodedQueryString;
+            $url[2] = $this->paramsEncode(['id' => $entity['institution_staff_id']]);
+            /*$url['?'] = [
+            ]*/
             $event->stopPropagation();
             $this->Session->write('Institution.StaffPositionProfiles.addSuccessful', true);
+          //  echo "<pre>"; print_r($url);die;
             return $this->controller->redirect($url);
         }
 
@@ -1064,7 +1075,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
                         $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
                         $options = $attr['options'];
-                        $attr['attr']['value'] = $options[strval($entity->FTE)];
+                        $fteString = strval($entity->FTE);
+                        $fteval = rtrim($fteString, '.0');
+                        $attr['attr']['value'] = $options[$fteval];
                     }
                 } else {
                     $attr['visible'] = false;
@@ -1264,10 +1277,19 @@ class StaffPositionProfilesTable extends ControllerActionTable
             }
             $this->Session->delete('Institution.StaffPositionProfiles.errors');
         }
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        
+        $url = $this->url('view');
+        $url['action'] = 'StaffPositionProfiles';
+        $url[0] = $encodedQueryString;
+        $url[1] = $this->paramsEncode(['id' => $entity['institution_staff_id']]);
+        return $this->controller->redirect($url);
+        
     }
-
     public function viewAfterAction(Event $event, Entity $entity, $extra)
     {
+        die('kjkj');
         $StaffTable = TableRegistry::get('Institution.Staff');
         $staffEntity = $StaffTable->find()
             ->contain(['StaffTypes'])
@@ -1314,8 +1336,15 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $requestData['staff_status_id'] = $entity->staff_id;
             $requestData['institution_position_id'] = $entity->institution_position_id;
             $requestData['institution_id'] = $entity->institution_id;
-            $requestData['staff_change_type_id'] = '';
-            $this->request = $this->request->withData($this->getAlias(), $requestData);
+            $requestData['staff_change_type_id'] = $this->staffChangeTypesList;
+            //$this->request = $this->request->withData($this->getAlias(), $requestData);
+            // Ensure staff_change_type_id is set correctly
+        if (!isset($requestData['staff_change_type_id'])) {
+            $requestData['staff_change_type_id'] = ''; // Set a default value if not present
+        }
+
+        // Use the entity's set method to assign the request data
+        $entity->set($requestData);
             return false;
         } else {
             return $staffPositionProfilesRecord;
@@ -1326,13 +1355,19 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
         $staffEntity = TableRegistry::get('Institution.Staff')->get($entity->institution_staff_id);
         $this->Session->write('Institution.StaffPositionProfiles.staffRecord', $staffEntity);
-        $data = $this->request->getData();
-        $data['staff_change_type_id'] = $entity->staff_change_type_id;
-        $this->request = $this->request->withData($this->getAlias(),$data);
+        //$data = $this->request->getData();
+        //$data['staff_change_type_id'] = $entity->staff_change_type_id;
+        //$this->request = $this->request->withData($this->getAlias(),$data);
+        //$this->request->data[$this->alias()]['staff_change_type_id'] = $entity->staff_change_type_id;
+        $this->request = $this->request->withData($this->getAlias(). '.staff_change_type_id',$entity->staff_change_type_id);
     }
 
     public function addOnInitialize(Event $event, Entity $entity)
     {
+
+        $queryString = $this->getQueryString();
+        $institution_staff_id = $queryString['id'];
+        $encodedQueryString = $this->paramsEncode($queryString);
         $addOperation = $this->initialiseVariable($entity);
         if ($addOperation) {
             $institutionStaffId = $this->request->getQuery('institution_staff_id');
@@ -1340,16 +1375,31 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 $url = $this->url('index');
             } else {
                 $staffTableViewUrl = $this->url('view');
-                $staffTableViewUrl['action'] = 'Staff';
-                $staffTableViewUrl[1] = $institutionStaffId;
+/*echo "<pre>"; print_r($staffTableViewUrl);
+echo "<pre>"; print_r($staffTableViewUrl['?']);
+echo "<pre>"; print_r($this->paramsEncode(['id' => $queryString['id']]));die;*/
+                $staffTableViewUrl['action'] = 'StaffPositionProfiles';
+                $staffTableViewUrl[0] = 'view';
+                $staffTableViewUrl[1] = $encodedQueryString;
+              //  $staffTableViewUrl[1] = $institutionStaffId;
                 $this->Session->write('Institution.StaffPositionProfiles.viewBackUrl', $staffTableViewUrl);
-                $url = $this->url('view');
-                $url[1] = $this->paramsEncode(['id' => $addOperation->id]);
+                //$url = $this->url('view');
+                
+                $url['plugin'] = 'Institution';
+                $url['controller'] = 'Institutions';
+                $url['action'] = 'StaffPositionProfiles';
+               
+                $url[0] = 'view';
+                $url[1] = $encodedQueryString;
+                $url[2] = $this->paramsEncode(['id' => $addOperation->id,'institution_staff_id' => $institution_staff_id]);
+                // $url['?'] = $staffTableViewUrl['?'];
             }
+            //echo "<pre>"; print_r($url);die;
             $event->stopPropagation();
             return $this->controller->redirect($url);
         }
     }
+
 
     public function findWorkbench(Query $query, array $options)
     {
