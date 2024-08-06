@@ -118,9 +118,9 @@ class InstitutionStandardsTable extends AppTable
         $this->ControllerAction->field('external_reference', ['type' => 'hidden']);
         $this->ControllerAction->field('birthplace_area_id', ['type' => 'hidden']);
         $this->ControllerAction->field('photo_content', ['type' => 'hidden']);
-
+        $this->ControllerAction->field('failed_logins', ['type' => 'hidden']);
         $session = $this->request->getSession();
-        $params = $this->ControllerAction->getQueryString();
+        $params = $this->getQueryString();
         $institution_id = $params['institution_id'];
         $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'value' => $institution_id]);
         $this->ControllerAction->field('format');
@@ -129,7 +129,7 @@ class InstitutionStandardsTable extends AppTable
     public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request)
     {
         $session = $this->request->getSession();
-        $params = $this->ControllerAction->getQueryString();
+        $params = $this->getQueryString();
         $institution_id = $params['institution_id'];
         $this->request->getData($this->getAlias())['current_institution_id'] = $institution_id;
         $this->request->getData($this->getAlias())['institution_id'] = $institution_id;
@@ -157,7 +157,9 @@ class InstitutionStandardsTable extends AppTable
         if (!isset($this->request->getData()[$this->getAlias()]['feature'])) {
             $options = $attr['options'];
             reset($options);
-            $this->request->getData()[$this->getAlias()]['feature'] = key($options);
+           // $this->request->getData()[$this->getAlias()]['feature'] = key($options);
+           $data = ['feature' => key($options)]; //POCOR-8485
+           $this->request = $this->request->withData($this->getAlias(), $data);
         }
         return $attr;
     }
@@ -174,9 +176,12 @@ class InstitutionStandardsTable extends AppTable
             $attr['type']           = 'select';
             $attr['select']         = false;
             $attr['onChangeReload'] = true;
+            
             if (empty($this->request->getData($this->getAlias())['academic_period_id'])) {
-                    $request->getData($this->getAlias())['academic_period_id'] = $currentPeriod;
-                    //$this->request->withData($this->getAlias(), $currentPeriod);
+                    //$request->getData($this->getAlias())['academic_period_id'] = $currentPeriod;
+                    $requestData = $this->request->getData($this->getAlias());
+                    $requestData['academic_period_id'] = $currentPeriod;
+                    $this->request = $this->request->withData($this->getAlias(), $requestData);
                 }
             return $attr;
         }
@@ -228,7 +233,7 @@ class InstitutionStandardsTable extends AppTable
     */
     public function onUpdateFieldAssessmentId(Event $event, array $attr, $action,ServerRequest $request)
     {
-        $report = $request->getData($this->getAlias())['feature'];
+        $report = $this->request->getData($this->getAlias())['feature'];
         if ($report=='Institution.InstitutionStandardMarksEntered') {
             $academicPeriodId =  $this->request->getData($this->getAlias())['academic_period_id'];
             //POCOR-7474-HINDOL TYPO FIX
@@ -297,9 +302,12 @@ class InstitutionStandardsTable extends AppTable
             $academicPeriodId =  $this->request->getData($this->getAlias())['academic_period_id'];
             $academic_period = TableRegistry::get('AcademicPeriod.AcademicPeriods');
             $getyear = $academic_period->find('all')
-                   ->select(['name'=>$academic_period->aliasField('name')])
-                   ->where(['id'=>$academicPeriodId])
-                   ->limit(1);
+                   ->select(['name'=>$academic_period->aliasField('name')]);
+            // ->where(['id'=>$academicPeriodId]) //POCOR-8485
+            if(!empty($academicPeriodId)) {
+                $getyear = $getyear->where(['id'=>$academicPeriodId]);
+            }
+            $getyear = $getyear->limit(1);
             foreach($getyear->toArray() as $val) {
                 $year  = $val['name'];
             }
@@ -961,7 +969,7 @@ class InstitutionStandardsTable extends AppTable
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
-        $params = $this->ControllerAction->getQueryString();
+        $params = $this->getQueryString();
         $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
         switch ($action) {
             case 'add':
@@ -975,6 +983,13 @@ class InstitutionStandardsTable extends AppTable
             break;
         }  
         
+    }
+
+    public function addAfterSave(Event $event, Entity|\Cake\ORM\Entity $entity, ArrayObject $data) //POCOR-8485
+    {
+        $param = $this->request->getParam('pass')[1];
+        $url = ['plugin' => $this->request->getParam('plugin'), 'controller' => $this->request->getParam('controller'), 'action' =>  'InstitutionStandards', '0' => 'index','1' => $param ];
+        return $this->controller->redirect($url);
     }
 
 }
