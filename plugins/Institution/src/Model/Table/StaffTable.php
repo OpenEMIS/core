@@ -2299,6 +2299,7 @@ class StaffTable extends ControllerActionTable
             $genderCode = $value['gender_code'];
             $dataSet[$genderCode] = [__($value['gender']), $value['count']];
         }*/
+        
         //POCOR-8501 start
         foreach ($InstitutionStaffCount->toArray() as $value) {
             $genderCode = $value['gender_code'];
