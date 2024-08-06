@@ -4351,7 +4351,7 @@ class NavigationComponent extends Component
 
                 // Check if the role is only restricted to a certain page
                 foreach ($restrictedTo as $restrictedURL) {
-                    if (count(array_intersect($restrictedURL, $url)) > 0) {
+                    if (count(array_intersect((array)$restrictedURL, $url)) > 0) {
                         break;
                     } else {
                         $rolesRestrictedTo = [];
