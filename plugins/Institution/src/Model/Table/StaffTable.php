@@ -2288,9 +2288,7 @@ class StaffTable extends ControllerActionTable
             'gender' => 'Genders.name',
             'gender_code' => 'Genders.code'
         ])
-       // ->distinct([$this->aliasField('staff_id')])
         ->group(['Users.gender_id', 'Genders.name', 'Genders.code']);
-        //echo "<pre>"; print_r($InstitutionStaffCount->sql());die;
 
         // Creating the data set
         $dataSet = [
@@ -2301,6 +2299,7 @@ class StaffTable extends ControllerActionTable
             $genderCode = $value['gender_code'];
             $dataSet[$genderCode] = [__($value['gender']), $value['count']];
         }*/
+        //POCOR-8501 start
         foreach ($InstitutionStaffCount->toArray() as $value) {
             $genderCode = $value['gender_code'];
             if (isset($dataSet[$genderCode])) {
@@ -2308,7 +2307,7 @@ class StaffTable extends ControllerActionTable
             } else {
                 $dataSet[$genderCode] = [__($value['gender']), $value['count']];
             }
-        }
+        } //POCOR-8501 end
         $params['dataSet'] = array_values($dataSet);
         unset($InstitutionRecords);
         return $params;
