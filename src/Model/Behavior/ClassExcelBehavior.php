@@ -934,8 +934,9 @@ class ClassExcelBehavior extends Behavior
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $action = $this->_table->action;
+        $pages = $this->getConfig('pages') ?? [];//POCOR-8480
         //POCOR-5852 starts add  || $action == 'index' condition
-        if (in_array($action, $this->getConfig('pages')) || $action == 'index') {
+        if (in_array($action, $pages) || $action == 'index') {
             $toolbarButtons = isset($extra['toolbarButtons']) ? $extra['toolbarButtons'] : [];
             $toolbarAttr = [
                 'class' => 'btn btn-xs btn-default',

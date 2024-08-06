@@ -686,7 +686,7 @@ class EducationGradesTable extends ControllerActionTable
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
-        $this->association('Institutions')->name('InstitutionProgrammes');
+        $this->association('Education')->name('InstitutionProgrammes');
     }
 
     public function afterAction(Event $event, ArrayObject $extra)

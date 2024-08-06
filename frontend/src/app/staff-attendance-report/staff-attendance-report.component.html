@@ -1,0 +1,13 @@
+<kd-progressloader *ngIf="displayLoading" configType="small-spinner" [configvalue]="null"></kd-progressloader>
+<kd-breadcrumb [config]="breadcrumbList"></kd-breadcrumb>
+<kd-pageheader [config]="pageheader"></kd-pageheader>
+<div class="mt-4 margin-bottom10 margin-left10 margin-right10">
+    <kd-view
+        displayType="form"
+        [inputData]="_confirmationData"
+        [api]="api"
+        [button]="_formButtons"
+        (submitEvent)="_submitEvent($event)"
+        (buttonEvent)="_buttonEvent($event)">
+    </kd-view>
+</div>

@@ -51,4 +51,12 @@ class InstitutionStaff extends Model
     {
         return $this->belongsTo(StaffPositionGrades::class, 'staff_position_grade_id', 'id');
     }
+
+
+    //For POCOR-8491 Start...
+    public function staffCustomFieldValue()
+    {
+        return $this->hasMany(StaffCustomFieldValues::class, 'staff_id', 'staff_id');
+    }
+    //For POCOR-8491 End...
 }

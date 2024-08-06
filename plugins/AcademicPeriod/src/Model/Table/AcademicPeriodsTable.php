@@ -36,7 +36,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         $this->hasMany('AppraisalPeriods', ['className' => 'StaffAppraisal.AppraisalPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('AssessmentAssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('Assessments', ['className' => 'Assessment.Assessments', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('CalendarEvents', ['className' => 'calendar_events', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('CalendarEvents', ['className' => 'Institution.CalendarEvents', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ClassAttendanceRecords', ['className' => 'Institution.ClassAttendanceRecords', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ClassProfileProcesses', ['className' => 'class_profile_processes', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ClassProfileTemplates', ['className' => 'class_profile_templates', 'foreignKey' => 'academic_period_id', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -253,7 +253,8 @@ class AcademicPeriodsTable extends ControllerActionTable
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
 //        $entity = $this->find()->select(['current'])->where($ids)->first();
-
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
         // die silently when a non super_admin wants to delete
         if (!$this->AccessControl->isAdmin()) {
             $event->stopPropagation();
@@ -439,6 +440,8 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity)
     {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
         $this->request->getData($this->getAlias())['current'] = $entity->current;
         $this->field('visible');
 
@@ -809,9 +812,10 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function getList($params = [])
     {
+        //POCOR-8480 starts
         if (!is_array($params)) {
             $params = [];
-        }
+        }//POCOR-8480 ends
         $withLevels = isset($params['withLevels']) ? $params['withLevels'] : true;
         $withSelect = isset($params['withSelect']) ? $params['withSelect'] : false;
         $isEditable = isset($params['isEditable']) ? $params['isEditable'] : null;

@@ -1,3 +1,12 @@
+### [4.1.0] - 2024-07-24
+- Implemented: Develop Meals feature in Angular v11
+- Implemented: Develop authentication function from Angular v11 to v4 APIs
+- Implemented: Apply OpenEMIS StyleGuide v11 to OpenEMIS Core
+- Bug Fixed: Integrate existing API to use the base URL that is provided in Login API
+- Bug Fixed: Reports(Automation) Part Two: Page is unable to load
+- Bug Fixed: Administration>System Setup(Automation): Page is unable to load
+- Bug Fixed: Workbench(Libya): Workbench is empty even though there are pending survey issues
+
 ### [4.0.13] - 2024-07-18
 - Bug Fixed: Fix for PHP 8.3 changes
 
