@@ -4343,29 +4343,50 @@ class NavigationComponent extends Component
         $linkOnly = [];
         foreach ($navigations as $key => $value) {
             $rolesRestrictedTo = $roles;
-            //print_r($roles);die;
+
             if (isset($value['link']) && !$value['link']) {
                 $linkOnly[] = $key;
             } else {
-
                 $params = [];
                 if (isset($value['params'])) {
                     $params = $value['params'];
                 }
                 $url = $this->getLink($key, $params);
 
+                // Ensure $url is an array and has necessary keys
+                if (!is_array($url) || !isset($url['controller'], $url['action'], $url['plugin'])) {
+                    // Log or handle the case where $url is not as expected
+                    // Example: Log error and continue or skip this navigation item
+                    unset($navigations[$key]);
+                    continue;
+                }
+
+                // Check if $restrictedTo is an array
+                if (!is_array($restrictedTo)) {
+                    // Log or handle the case where $restrictedTo is not an array
+                    // Example: Log error and continue or skip this navigation item
+                    unset($navigations[$key]);
+                    continue;
+                }
+
                 // Check if the role is only restricted to a certain page
-                foreach ($restrictedTo as $restrictedURL) {
-                    if (count(array_intersect($restrictedURL, $url)) > 0) {
+                $isRestricted = false;
+                foreach ($restrictedTo as $restrictedURLs) {
+                    if (!is_array($restrictedURLs)) {
+                        // Log or handle the case where $restrictedURLs is not an array
+                        // Example: Log error and continue or skip this navigation item
+                        continue;
+                    }
+
+                    $intersection = array_intersect($restrictedURLs, $url);
+                    if (count($intersection) > 0) {
+                        $isRestricted = true;
                         break;
-                    } else {
-                        $rolesRestrictedTo = [];
                     }
                 }
-                // $ignoredAction will be excluded from permission checking
-                // Define the array of plugins to ignore
-                $ignoredPlugins = [];
-                if (array_key_exists('controller', $url) && !in_array($url['plugin'],$ignoredPlugins)) {
+
+                // If roles are restricted, check permissions
+                if ($isRestricted) {
                     if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
                         unset($navigations[$key]);
                     }
