@@ -900,7 +900,7 @@ class AppController extends Controller
     private function checkAccessControl()
     {
 
-        $params = $this->request->getParam('params');
+        $params = $this->request->getAttribute('params');
         // POCOR-7833 MOVE ALL SKIP ACCESS TO ONE FUNCTION
         if ($this->skipCheckAccessControl($params)) {
             return;
@@ -930,7 +930,7 @@ class AppController extends Controller
         if (!$check) {
             $this->log(__FUNCTION__, 'debug');
             if ($params !== null) {
-                $this->log($params, 'debug');
+                $this->log((string)$params, 'debug');
             }
             $this->Alert->warning('general.notAccess');
             return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);

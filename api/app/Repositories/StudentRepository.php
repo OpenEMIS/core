@@ -41,8 +41,11 @@ class StudentRepository extends Controller
             //For POCOR-7772 End
 
             $params = $request->all();
-
-            $list = InstitutionStudent::with('institution:id,code,name', 'educationGrade:id,name', 'securityUser', 'securityUser.gender:id,name', 'studentStatus', 'academicPeriod:id,name');
+            //For POCOR-8491 Start...
+            $list = InstitutionStudent::with('institution:id,code,name', 'educationGrade:id,name', 'securityUser', 'securityUser.gender:id,name', 'studentStatus', 'academicPeriod:id,name',
+                'studentCustomFieldValue:id,text_value,number_value,decimal_value,textarea_value,date_value,time_value,file,student_custom_field_id,student_id',
+                'studentCustomFieldValue.studentCustomField:id,name');
+            //For POCOR-8491 End...
 
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
@@ -70,7 +73,7 @@ class StudentRepository extends Controller
                 $list = $list->get()->toArray();
                 $resp['data'] = $list;
             }
-
+            
             return $resp;
 
         } catch (\Exception $e) {
@@ -105,8 +108,12 @@ class StudentRepository extends Controller
 
             $params = $request->all();
 
-            $list = InstitutionStudent::with('institution:id,code,name', 'educationGrade:id,name', 'securityUser', 'securityUser.gender:id,name', 'studentStatus', 'academicPeriod:id,name')->where('institution_id', $institutionId);
-
+            //For POCOR-8491 Start...
+            $list = InstitutionStudent::with('institution:id,code,name', 'educationGrade:id,name', 'securityUser', 'securityUser.gender:id,name', 'studentStatus', 'academicPeriod:id,name',
+                'studentCustomFieldValue:id,text_value,number_value,decimal_value,textarea_value,date_value,time_value,file,student_custom_field_id,student_id',
+                'studentCustomFieldValue.studentCustomField:id,name')->where('institution_id', $institutionId);
+            //For POCOR-8491 End...
+            
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
 
@@ -164,16 +171,21 @@ class StudentRepository extends Controller
             }
             //For POCOR-7772 End
 
+
+            //For POCOR-8491 Start...
             $data = InstitutionStudent::with(
                     'institution:id,code,name', 
                     'educationGrade:id,name', 
                     'securityUser', 
                     'securityUser.gender:id,name', 
                     'studentStatus', 
-                    'academicPeriod:id,name'
+                    'academicPeriod:id,name',
+                    'studentCustomFieldValue:id,text_value,number_value,decimal_value,textarea_value,date_value,time_value,file,student_custom_field_id,student_id',
+                    'studentCustomFieldValue.studentCustomField:id,name'
                 )
                 ->where('institution_id', $institutionId)
                 ->where('student_id', $studentId);
+            //For POCOR-8491 End...
 
             //For POCOR-7772 Start
             if(isset($institution_Ids)){
@@ -964,4 +976,41 @@ class StudentRepository extends Controller
         }
     }
     //For POCOR-8505 End...
+
+    
+    //For POCOR-8491 Start...
+    public function getStudentClasses($institutionId, $studentId)
+    {
+        try {
+            $studentClasses = InstitutionClassStudents::with('institutionClass', 'institutionClass.subjects.institutionSubject')
+                    ->where('institution_id', $institutionId)
+                    ->where('student_id', $studentId)
+                    ->get()
+                    ->toArray();
+
+            $list = [];
+
+            foreach ($studentClasses as $key => $studentClass) {
+                $list[$key]['id'] = $studentClass['institution_class']['id'];
+                $list[$key]['name'] = $studentClass['institution_class']['name'];
+                $subjects = [];
+                foreach ($studentClass['institution_class']['subjects'] as $s => $subject) {
+                    $subjects[$s]['id'] = $subject['institution_subject']['id'];
+                    $subjects[$s]['name'] = $subject['institution_subject']['name'];
+                }
+                $list[$key]['subjects'] = $subjects;
+                
+            }
+
+            return $list;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in getStudentClasses method.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return false;
+        }
+    }
+    //For POCOR-8491 End...
 }

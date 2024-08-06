@@ -117,7 +117,7 @@ class StudentReportCardsTable extends ControllerActionTable
             }
             $session = $this->request->getSession();//POCOR-6267
             //$student_id = $this->getStudentID();
-            $student_id = !empty($this->getStudentID()) ? $this->getStudentID() : !empty($session->read('Student.Students.id')) ? $session->read('Student.Students.id') : 0; //POCOR-8413
+            $student_id = !empty($this->getStudentID()) ? $this->getStudentID() : (!empty($session->read('Student.Students.id')) ? $session->read('Student.Students.id') : 0); //POCOR-8413
             $query
             ->contain('AcademicPeriods', 'Institutions', 'EducationGrades')            
             ->where([$this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED,
