@@ -2282,23 +2282,32 @@ class StaffTable extends ControllerActionTable
         $query = $params['query'];
         $InstitutionRecords = clone $query;
         $InstitutionStaffCount = $InstitutionRecords
-            ->matching('Users.Genders')
-            ->select([
-                // 'count' => $InstitutionRecords->func()->count('DISTINCT staff_id'),
-                'count' => $InstitutionRecords->func()->count('DISTINCT ' . $this->aliasField('staff_id')), //POCOR-6971
-                'gender' => 'Genders.name',
-                'gender_code' => 'Genders.code'
-            ])
-            ->group('Users.gender_id');
+        ->matching('Users.Genders')
+        ->select([
+            'count' => $InstitutionRecords->func()->count('DISTINCT ' . $this->aliasField('staff_id')),
+            'gender' => 'Genders.name',
+            'gender_code' => 'Genders.code'
+        ])
+       // ->distinct([$this->aliasField('staff_id')])
+        ->group(['Users.gender_id', 'Genders.name', 'Genders.code']);
+        //echo "<pre>"; print_r($InstitutionStaffCount->sql());die;
 
         // Creating the data set
         $dataSet = [
-            'M' => [],
-            'F' => [],
+            'M' => [__('Male'), 0],
+            'F' => [__('Female'), 0],
         ];
+        /*foreach ($InstitutionStaffCount->toArray() as $value) {
+            $genderCode = $value['gender_code'];
+            $dataSet[$genderCode] = [__($value['gender']), $value['count']];
+        }*/
         foreach ($InstitutionStaffCount->toArray() as $value) {
-            //Compile the dataset
-            $dataSet[$value['gender_code']] = [__($value['gender']), $value['count']];
+            $genderCode = $value['gender_code'];
+            if (isset($dataSet[$genderCode])) {
+                $dataSet[$genderCode][1] += $value['count'];
+            } else {
+                $dataSet[$genderCode] = [__($value['gender']), $value['count']];
+            }
         }
         $params['dataSet'] = array_values($dataSet);
         unset($InstitutionRecords);
