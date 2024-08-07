@@ -87,6 +87,8 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
                     'rule' => ['range', 0, 9999.99]
                 ]
             ])
+			->requirePresence('name')
+			->requirePresence('result_type')
 			->requirePresence('grading_options');
 	}
 
@@ -135,6 +137,8 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 **
 ******************************************************************************************************************/
 	public function addEditBeforeAction(Event $event, ArrayObject $extra) {
+		$connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
 		if ($this->action=='edit') {
 			$this->fields['visible']['visible'] = false;
 		}
@@ -149,12 +153,12 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 	{
 		// $gradingOptions will contain the GradeOptionId and the association.(1 for true and 0 for false)
 		$AssessmentGradingOptions = TableRegistry::get('Assessment.AssessmentGradingOptions');
-		$gradingOptions = [];
+		$gradingOptions = [];//dd($entity->grading_options);
 		if (!is_null($entity->grading_options)) {
 			foreach ($entity->grading_options as $key => $gradingOption) {
 				$gradingOptionId = $gradingOption->id;
 				$gradingOptions[$gradingOptionId] = 0;
-				if ($this->hasAssociatedRecords($AssessmentGradingOptions, $gradingOption, $extra)) {
+				if (!empty($gradingOptionId) && $this->hasAssociatedRecords($AssessmentGradingOptions, $gradingOption, $extra)) {
 					$gradingOptions[$gradingOptionId] = 1;
 				}
 			}
@@ -341,7 +345,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
         }elseif ($field == 'max') {
             return __('Max');
         }elseif ($field == 'result_type') {
-            return __('Result');
+            return __('Result Type');
         }elseif ($field == 'grading_options') {
             return __('Grading Options');
         }elseif ($field == 'visible') {

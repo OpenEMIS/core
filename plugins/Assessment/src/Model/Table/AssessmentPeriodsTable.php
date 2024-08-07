@@ -51,10 +51,10 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->requirePresence('academic_period_id')
             ->allowEmpty('weight')
@@ -65,6 +65,8 @@ class AssessmentPeriodsTable extends ControllerActionTable
                 'rule' => ['range', 0, 2],
                 'last' => true
             ])
+            ->requirePresence('assessment_id')
+            ->requirePresence('name')
             ->add('code', [
                 'ruleUniqueCodeByForeignKeyAcademicPeriod' => [
                     'rule' => ['uniqueCodeByForeignKeyAcademicPeriod', 'Assessments', 'assessment_id', 'academic_period_id'], //($foreignKeyModel, $foreignKeyField, $academicFieldName)
@@ -85,18 +87,19 @@ class AssessmentPeriodsTable extends ControllerActionTable
             ->add('date_enabled', 'ruleCompareDate', [
                 'rule' => ['compareDate', 'date_disabled', true]
             ])
-            ->allowEmpty('academic_term', function ($context) {
-                if (array_key_exists('assessment_id', $context['data'])) {
-                    $query = $this
-                        ->find()
-                        ->where([
-                            $this->aliasField('assessment_id') => $context['data']['assessment_id'],
-                            $this->aliasField('academic_term IS NOT NULL')
-                        ]);
-                    return $query->count() == 0;
-                }
-            });
-    }*/
+            // ->allowEmpty('academic_term', function ($context) {
+            //     if (array_key_exists('assessment_id', $context['data'])) {
+            //         $query = $this
+            //             ->find()
+            //             ->where([
+            //                 $this->aliasField('assessment_id') => $context['data']['assessment_id'],
+            //                 $this->aliasField('academic_term IS NOT NULL')
+            //             ]);
+            //         return $query->count() == 0;
+            //     }
+            // })
+            ;
+    }
 
     public function findUniqueAssessmentTerms(Query $query, array $options)
     {
@@ -416,7 +419,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
     {
         $getAssessment_id = $this->request->getAttribute('params')['pass'][1];
         $entityId = $this->ControllerAction->paramsDecode($getAssessment_id)['id'];
-        $checNewSubjecAdded = $this->gradingSubjectAdd($entity);//POCOR-7322
+        $checNewSubjecAdded = $this->gradingSubjectAdd($entity, $entityId);//POCOR-7322
         $this->field('education_subjects', [
             'type' => 'element',
             'element' => 'Assessment.assessment_periods',
@@ -464,11 +467,12 @@ class AssessmentPeriodsTable extends ControllerActionTable
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         //patch data to handle fail save because of validation error. this one to complete necessary field needed.
-        if (array_key_exists($this->getAlias(), $requestData)) {
+        if (isset($requestData[$this->getAlias()])) {
             if (array_key_exists('education_subjects', $requestData[$this->getAlias()])) {
                 foreach ($requestData[$this->getAlias()]['education_subjects'] as $key => $item) {
                     $requestData[$this->getAlias()]['education_subjects'][$key]['_joinData']['assessment_id'] = $requestData[$this->getAlias()]['assessment_id'];
                 }
+                $this->request = $this->request->withData($this->getAlias(), $requestData[$this->getAlias()]); //POCOR-8520
             }
         }
 
@@ -482,7 +486,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
     {
         $getAssessment_id = $this->request->getAttribute('params')['pass'][1];
         $entityId = $this->ControllerAction->paramsDecode($getAssessment_id)['id'];
-        $checNewSubjecAdded = $this->gradingSubjectAdd($entity); //POCOR-7322
+        $checNewSubjecAdded = $this->gradingSubjectAdd($entity, $entityId); //POCOR-7322
         if (!$entity->isNew()) { //for edit
             $id = $entityId;
             $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
@@ -594,7 +598,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
             if (array_key_exists($this->getAlias(), $request->getData())) {
                 if (array_key_exists('academic_period_id', $request->getData()[$this->getAlias()])) {
                     $academicPeriodId = $request->getData()[$this->getAlias()]['academic_period_id'];
-                    $request = $request->withQueryParams(['period' => $academicPeriodId]);
+                    $this->request = $request->withQueryParams(['period' => $academicPeriodId]);
 
                 }
             }
@@ -662,7 +666,9 @@ class AssessmentPeriodsTable extends ControllerActionTable
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->getAlias(), $request->getData())) {
                 if (array_key_exists('assessment_id', $request->getData()[$this->getAlias()])) {
-                    $request->getQuery['template'] = $request->getData()[$this->getAlias()]['assessment_id'];
+                    //$request->getQuery['template'] = $request->getData()[$this->getAlias()]['assessment_id'];
+                    $queryParams['template'] = $request->getData()[$this->getAlias()]['assessment_id'];
+                    $this->request = $request->withQueryParams($queryParams);
 
                     $educationSubjects = $this->Assessments->AssessmentItems->getAssessmentItemSubjects($request->getData()[$this->getAlias()]['assessment_id']);
                     $data[$this->getAlias()]['education_subjects'] = $educationSubjects;
