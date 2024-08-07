@@ -222,6 +222,12 @@ class TrainingService extends Controller
                         $evaluators[$e]['openemis_no'] = $evaluator['openemis_no'];
                         $evaluators[$e]['full_name'] = $evaluator['full_name'];
                         $evaluators[$e]['name_with_id'] = $evaluator['name_with_id'];
+                        if($evaluator['is_staff'] == 0 && $evaluator['is_student'] == 0 && $evaluator['is_guardian'] == 0){
+                            $evaluators[$e]['type'] = "Others";
+                        }
+                        if($evaluator['is_staff'] == 1){
+                            $evaluators[$e]['type'] = "Staff";
+                        }
                     }
                     $resp[$k]['evaluators'] = $evaluators;
 
@@ -237,6 +243,12 @@ class TrainingService extends Controller
                         $trainers[$e]['openemis_no'] = $trainer['openemis_no'];
                         $trainers[$e]['full_name'] = $trainer['full_name'];
                         $trainers[$e]['name_with_id'] = $trainer['name_with_id'];
+                        if($trainer['is_staff'] == 0 && $trainer['is_student'] == 0 && $trainer['is_guardian'] == 0){
+                            $trainers[$e]['type'] = "Others";
+                        }
+                        if($trainer['is_staff'] == 1){
+                            $trainers[$e]['type'] = "Staff";
+                        }
                     }
                     $resp[$k]['trainers'] = $trainers;
                     //For POCOR-8526 End...
@@ -316,6 +328,12 @@ class TrainingService extends Controller
                     $evaluators[$e]['openemis_no'] = $evaluator['openemis_no'];
                     $evaluators[$e]['full_name'] = $evaluator['full_name'];
                     $evaluators[$e]['name_with_id'] = $evaluator['name_with_id'];
+                    if($evaluator['is_staff'] == 0 && $evaluator['is_student'] == 0 && $evaluator['is_guardian'] == 0){
+                        $evaluators[$tr]['type'] = "Others";
+                    }
+                    if($evaluator['is_staff'] == 1){
+                        $evaluators[$tr]['type'] = "Staff";
+                    }
                 }
 
                 //For POCOR-8526 Start...
@@ -330,6 +348,12 @@ class TrainingService extends Controller
                     $trainers[$tr]['openemis_no'] = $trainer['openemis_no'];
                     $trainers[$tr]['full_name'] = $trainer['full_name'];
                     $trainers[$tr]['name_with_id'] = $trainer['name_with_id'];
+                    if($trainer['is_staff'] == 0 && $trainer['is_student'] == 0 && $trainer['is_guardian'] == 0){
+                        $trainers[$tr]['type'] = "Others";
+                    }
+                    if($trainer['is_staff'] == 1){
+                        $trainers[$tr]['type'] = "Staff";
+                    }
                 }
                 $resp['trainers'] = $trainers;
                 //For POCOR-8526 End...
@@ -348,6 +372,7 @@ class TrainingService extends Controller
                 'Failed to fetch Training Session Data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
+            dd($e);
             return $this->sendErrorResponse('Training Session Data Not Found.');
         }
     }
