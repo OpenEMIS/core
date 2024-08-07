@@ -29802,6 +29802,16 @@
                 "operationId": "e7ee640a015bcc4b789f3edc03843f40",
                 "parameters": [
                     {
+                        "name": "training_course_id",
+                        "in": "query",
+                        "description": "Filter by training course id.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
                         "name": "order",
                         "in": "query",
                         "description": "Order",
