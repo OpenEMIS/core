@@ -209,7 +209,7 @@ class AssessmentsTable extends ControllerActionTable {
     {
         $class = __CLASS__;
         $line = __LINE__;
-        $entity = $this->setIdEntityFromQueryString($class, $line, $entity);
+        //$entity = $this->setIdEntityFromQueryString($class, $line, $entity);
         $this->setupFields($event, $entity); // POCOR-8074-3 entity needed for dependant select field
         // POCOR-7999 refactured
         if ($this->action == 'edit') {
@@ -348,8 +348,8 @@ class AssessmentsTable extends ControllerActionTable {
     function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         //patch data to handle fail save because of validation error.
-        if (array_key_exists($this->getAlias(), $requestData)) {
-            if (array_key_exists('assessment_items', $requestData[$this->getAlias()])) {
+        if (isset($requestData[$this->getAlias()])) {
+            if (isset($requestData[$this->getAlias()]['assessment_items'])) {
                 $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
                 foreach ($requestData[$this->getAlias()]['assessment_items'] as $key => $item) {
                     $subjectId = $item['education_subject_id'];

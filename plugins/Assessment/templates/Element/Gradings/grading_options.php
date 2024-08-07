@@ -16,6 +16,10 @@
 
 	<div class="input clearfix">
 		<div class="clearfix">
+		<!-- <label><?php echo __('Grading Options'); ?></label>
+		<button type="button" class="btn btn-default" title="<?php echo __('Add New Option'); ?>" aria-expanded="true" onclick="$('#reload').val('reload').click();" >
+		    <i class="fa fa-plus"></i> <span><?php echo __('Add New Option'); ?></span>
+		</button> -->
 		<?php
 			echo $this->Form->input('<i class="fa fa-plus"></i> <span>'.__('Add New Option').'</span>', [
 				'label' => __('Grading Options'),
@@ -50,7 +54,7 @@
 					<tbody id='table_grading_options'>
 
 						<?php
-						if (count($data->grading_options)>0) :
+						if (!empty($data->grading_options) && count($data->grading_options)>0) :
 							// iterate each row
 							foreach ($data->grading_options as $key => $record) :
 								$rowErrors = $record->getErrors();
