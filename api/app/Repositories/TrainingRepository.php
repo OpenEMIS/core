@@ -158,10 +158,18 @@ class TrainingRepository  extends Controller
             $data = [];
             $list = TrainingSession::select('training_sessions.*', 'training_courses.name as training_course_name', 'training_providers.name as training_provider_name')
                     ->with('trainingSessionTrainee:id,first_name,middle_name,third_name,last_name,openemis_no', 
-                        'trainingSessionEvaluator:id,first_name,middle_name,third_name,last_name,openemis_no'
+                        'trainingSessionEvaluator:id,first_name,middle_name,third_name,last_name,openemis_no',
+                        'trainingSessionTrainers:id,first_name,middle_name,third_name,last_name,openemis_no',
                     )
                     ->join('training_courses', 'training_sessions.training_course_id', '=', 'training_courses.id')
                     ->join('training_providers', 'training_sessions.training_provider_id', '=', 'training_providers.id');
+
+
+            //For POCOR-8526 Start...
+            if(isset($params['training_course_id'])){
+                $list = $list->where('training_course_id', $params['training_course_id']);
+            }
+            //For POCOR-8526 End...
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -195,13 +203,16 @@ class TrainingRepository  extends Controller
         try {
             $data = TrainingSession::select('training_sessions.*', 'training_courses.name as training_course_name', 'training_providers.name as training_provider_name')
                     ->with('trainingSessionTrainee:id,first_name,middle_name,third_name,last_name,openemis_no', 
-                        'trainingSessionEvaluator:id,first_name,middle_name,third_name,last_name,openemis_no'
+                        'trainingSessionEvaluator:id,first_name,middle_name,third_name,last_name,openemis_no',
+                        'trainingSessionTrainers:id,first_name,middle_name,third_name,last_name,openemis_no'
                     )
                     ->join('training_courses', 'training_sessions.training_course_id', '=', 'training_courses.id')
                     ->join('training_providers', 'training_sessions.training_provider_id', '=', 'training_providers.id')
                     ->where('training_sessions.id', $sessionId)
-                    ->first()
-                    ->toArray();
+                    ->first();
+            if(isset($data)){
+                $data = $data->toArray();
+            }
 
             return $data;
         } catch (\Exception $e) {
