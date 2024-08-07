@@ -419,7 +419,7 @@ class GuardianNavsTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('photo_content', ['type' => 'image', 'before' => 'openemis_no']);
+//        $this->field('photo_content', ['type' => 'image', 'before' => 'openemis_no']);
         $this->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
         $this->fields['student_id']['order'] = 10;
         $extra['toolbarButtons']['back']['url']['action'] = 'StudentProgrammes';
