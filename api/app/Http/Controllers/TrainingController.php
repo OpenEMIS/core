@@ -374,7 +374,7 @@ class TrainingController extends Controller
      *                     @OA\Property(property="assignee_id", type="integer", example=8805),
      *                     @OA\Property(property="status_id", type="integer", example=15),
      *                     @OA\Property(property="area_id", type="integer", example=1),
-     *                     @OA\Property(property="trainers", type="array",
+     *                     @OA\Property(property="trainees", type="array",
      *                         @OA\Items(
      *                             type="object",
      *                             @OA\Property(property="id", type="integer", example=505),
@@ -398,6 +398,19 @@ class TrainingController extends Controller
      *                             @OA\Property(property="openemis_no", type="string", example="1522284820"),
      *                             @OA\Property(property="full_name", type="string", example="Amanda  Wells"),
      *                             @OA\Property(property="name_with_id", type="string", example="1522284820 - Amanda  Wells")
+     *                         )
+     *                     ),
+     *                     @OA\Property(property="trainers", type="array",
+     *                         @OA\Items(
+     *                             type="object",
+     *                             @OA\Property(property="id", type="integer", example=680),
+     *                             @OA\Property(property="first_name", type="string", example="Amanda"),
+     *                             @OA\Property(property="middle_name", type="string", nullable=true, example=null),
+     *                             @OA\Property(property="third_name", type="string", nullable=true, example=null),
+     *                             @OA\Property(property="last_name", type="string", example="Foster"),
+     *                             @OA\Property(property="openemis_no", type="string", example="1522277355"),
+     *                             @OA\Property(property="full_name", type="string", example="Amanda  Foster"),
+     *                             @OA\Property(property="name_with_id", type="string", example="1522277355 - Amanda  Foster")
      *                         )
      *                     ),
      *                     @OA\Property(property="modified_user_id", type="integer", example=2),
@@ -464,7 +477,7 @@ class TrainingController extends Controller
      *                     @OA\Property(property="assignee_id", type="integer", example=8805),
      *                     @OA\Property(property="status_id", type="integer", example=15),
      *                     @OA\Property(property="area_id", type="integer", example=1),
-     *                     @OA\Property(property="trainers", type="array",
+     *                     @OA\Property(property="trainees", type="array",
      *                         @OA\Items(
      *                             type="object",
      *                             @OA\Property(property="id", type="integer", example=505),
@@ -488,6 +501,19 @@ class TrainingController extends Controller
      *                             @OA\Property(property="openemis_no", type="string", example="1522284820"),
      *                             @OA\Property(property="full_name", type="string", example="Amanda  Wells"),
      *                             @OA\Property(property="name_with_id", type="string", example="1522284820 - Amanda  Wells")
+     *                         )
+     *                     ),
+     *                     @OA\Property(property="trainers", type="array",
+     *                         @OA\Items(
+     *                             type="object",
+     *                             @OA\Property(property="id", type="integer", example=680),
+     *                             @OA\Property(property="first_name", type="string", example="Amanda"),
+     *                             @OA\Property(property="middle_name", type="string", nullable=true, example=null),
+     *                             @OA\Property(property="third_name", type="string", nullable=true, example=null),
+     *                             @OA\Property(property="last_name", type="string", example="Foster"),
+     *                             @OA\Property(property="openemis_no", type="string", example="1522277355"),
+     *                             @OA\Property(property="full_name", type="string", example="Amanda  Wells"),
+     *                             @OA\Property(property="name_with_id", type="string", example="1522277355 - Amanda  Foster")
      *                         )
      *                     ),
      *                     @OA\Property(property="modified_user_id", type="integer", example=2),
