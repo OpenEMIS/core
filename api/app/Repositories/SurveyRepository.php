@@ -27,6 +27,8 @@ use App\Models\InstitutionSurveyAnswers;
 use App\Models\InstitutionSurveyTableCells;
 use App\Models\SurveyQuestionChoices;
 use App\Models\CustomModules;
+use App\Models\InstitutionStudentSurvey;
+use App\Models\SurveyQuestion;
 
 
 define("NS_XHTML", "http://www.w3.org/1999/xhtml");
@@ -1196,7 +1198,7 @@ class SurveyRepository extends Controller
                     $responseValue = urldecode($field->__toString());
 
                     $fieldTypeFunction = "upload" . ucfirst(strtolower($fieldType));
-                    dd($fieldTypeFunction);
+                    
 
                     if (method_exists($this, $fieldTypeFunction)) {
                         $responseData = [
@@ -1222,7 +1224,7 @@ class SurveyRepository extends Controller
 
                         $questionId = $extra['data']['survey_question_id'];
                         $show = $this->isRelevantQuestion($rules, $questionId, $answers, $responseValue);
-
+                        
                         if ($show) {
                             $this->$fieldTypeFunction($field, $institutionSurveyEntity, $extra);
                         }
@@ -1240,7 +1242,6 @@ class SurveyRepository extends Controller
                 'Failed to upload survey xform.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            dd($e);
             return $this->sendErrorResponse('Failed to upload survey xform.');
         }
     }
@@ -1304,7 +1305,7 @@ class SurveyRepository extends Controller
     {
         $data = $extra['data'];
         $value = $extra['value'];
-
+        
         $this->deleteFieldValue($data, $extra);
         if (strlen($value) != 0) {
             $data[$key] = $value;
@@ -1317,6 +1318,8 @@ class SurveyRepository extends Controller
     {
         $model = $extra['model'];
 
+        $answerData['id'] = Str::uuid();
+        
         /*$answerEntity = $model->newEntity($answerData);
         if (!$model->save($answerEntity)) {
             Log::write('debug', $answerEntity->errors());
@@ -1407,6 +1410,203 @@ class SurveyRepository extends Controller
                 $data['number_value'] = $checkboxValue;
                 $this->saveFieldValue($data, $extra);
             }
+        }
+    }
+
+
+    private function uploadStudentList($field, $entity, $extra)
+    {
+        $thresholdDataaa = json_decode($extra['value'], true);
+        $students = $thresholdDataaa;
+
+        foreach ($students as $w => $stu) {
+            $alreadyExistData = InstitutionStudentSurvey::where(
+                    [
+                        'status_id' => 1,
+                        'institution_id' => $stu['institution_id'],
+                        'student_id' => $stu['student_id'],
+                        'academic_period_id' => $stu['academic_period_id'],
+                        'survey_form_id' => $stu['student_list_form_id'],
+                        'parent_form_id' => $stu['parent_form_id'],
+                    ]
+                )->first();
+
+            if(empty($alreadyExistData)){
+                $insertArr['status_id'] = 1;
+                $insertArr['institution_id'] = $stu['institution_id'];
+                $insertArr['student_id'] = $stu['student_id'];
+                $insertArr['academic_period_id'] = $stu['academic_period_id'];
+                $insertArr['survey_form_id'] = $stu['student_list_form_id'];
+                $insertArr['parent_form_id'] = $stu['institution_form_id'];
+                $insertArr['created_user_id'] = JWTAuth::user()->id;
+                $insertArr['created'] = date('Y-m-d H:i:s');
+
+                $newRecordId = InstitutionStudentSurvey::insertGetId($insertArr);
+
+                $successData = InstitutionStudentSurvey::where('id', $newRecordId)->first();
+            } else {
+                $successData = $alreadyExistData;
+            }
+
+            if ($successData) {
+                $questions = $stu['questions'];
+                foreach ($questions as $t => $ques) {
+                    $duplicateData11 = InstitutionStudentSurveyAnswer::where([
+                            'survey_question_id' => $ques['student_list_survey_question_id'],
+                            'parent_survey_question_id' => $ques['parent_survey_question_id'],
+                            'institution_student_survey_id' => $successData['id'],
+                        ])
+                        ->delete();
+
+                    if (!empty($ques['survey_answer'])) {
+                        if (($ques['student_list_survey_question_type'] == "DROPDOWN") || ($ques['student_list_survey_question_type'] == "NUMBER")) {
+                            $AnsEntity = InstitutionStudentSurveyAnswer::insert([
+                                'id' => Str::uuid(),
+                                'number_value' => $ques['survey_answer'],
+                                'survey_question_id' => $ques['student_list_survey_question_id'],
+                                'parent_survey_question_id' => $ques['parent_survey_question_id'],
+                                'institution_student_survey_id' => $successData['id'],
+                                'created_user_id' => JWTAuth::user()->id,
+                                'created' => date('Y-m-d H:i:s'),
+                            ]);
+                        } else if($ques['student_list_survey_question_type'] == "TEXT") {
+                            $AnsEntity = InstitutionStudentSurveyAnswer::insert([
+                                'id' => Str::uuid(),
+                                'text_value' => $ques['survey_answer'],
+                                'survey_question_id' => $ques['student_list_survey_question_id'],
+                                'parent_survey_question_id' => $ques['parent_survey_question_id'],
+                                'institution_student_survey_id' => $successData['id'],
+                                'created_user_id' => JWTAuth::user()->id,
+                                'created' => date('Y-m-d H:i:s'),
+                            ]);
+                        } else if($ques['student_list_survey_question_type'] == "DECIMAL") {
+                            $AnsEntity = InstitutionStudentSurveyAnswer::insert([
+                                'id' => Str::uuid(),
+                                'decimal_value' => $ques['survey_answer'],
+                                'survey_question_id' => $ques['student_list_survey_question_id'],
+                                'parent_survey_question_id' => $ques['parent_survey_question_id'],
+                                'institution_student_survey_id' => $successData['id'],
+                                'created_user_id' => JWTAuth::user()->id,
+                                'created' => date('Y-m-d H:i:s'),
+                            ]);
+                        } else if ($ques['student_list_survey_question_type'] == "TEXTAREA") {
+                            $AnsEntity = InstitutionStudentSurveyAnswer::insert([
+                                'id' => Str::uuid(),
+                                'textarea_value' => $ques['survey_answer'],
+                                'survey_question_id' => $ques['student_list_survey_question_id'],
+                                'parent_survey_question_id' => $ques['parent_survey_question_id'],
+                                'institution_student_survey_id' => $successData['id'],
+                                'created_user_id' => JWTAuth::user()->id,
+                                'created' => date('Y-m-d H:i:s'),
+                            ]);
+                        } else if($ques['student_list_survey_question_type'] == "DATE") {
+                            $AnsEntity = InstitutionStudentSurveyAnswer::insert([
+                                'id' => Str::uuid(),
+                                'date_value' => $ques['survey_answer'],
+                                'survey_question_id' => $ques['student_list_survey_question_id'],
+                                'parent_survey_question_id' => $ques['parent_survey_question_id'],
+                                'institution_student_survey_id' => $successData['id'],
+                                'created_user_id' => JWTAuth::user()->id,
+                                'created' => date('Y-m-d H:i:s'),
+                            ]);
+                        } else if($ques['student_list_survey_question_type'] == "TIME") {
+                            $AnsEntity = InstitutionStudentSurveyAnswer::insert([
+                                'id' => Str::uuid(),
+                                'time_value' => $ques['survey_answer'],
+                                'survey_question_id' => $ques['student_list_survey_question_id'],
+                                'parent_survey_question_id' => $ques['parent_survey_question_id'],
+                                'institution_student_survey_id' => $successData['id'],
+                                'created_user_id' => JWTAuth::user()->id,
+                                'created' => date('Y-m-d H:i:s'),
+                            ]);
+                        }
+                    }
+                }
+            }
+        }
+
+        //$this->processUpload('student_list', ['sada']);
+    }
+
+
+    private function uploadDate($field, $entity, $extra)
+    {
+        $this->processUpload('date_value', $extra);
+    }
+
+    private function uploadTime($field, $entity, $extra)
+    {
+        $this->processUpload('time_value', $extra);
+    }
+
+
+    private function uploadCoordinates($field, $entity, $extra)
+    {
+        $data = $extra['data'];
+        $value = $extra['value'];
+        $this->deleteFieldValue($data, $extra);
+        if (strlen($value) != 0) {
+            if (count(explode(" ", $value)) == 2) {
+                list($latitudeValue, $longitudeValue) = explode(" ", $value, 2);
+                $json = json_encode([
+                    'latitude' => $latitudeValue,
+                    'longitude' => $longitudeValue
+                ]);
+                $data['text_value'] = $json;
+                $this->saveFieldValue($data, $extra);
+            }
+        }
+    }
+
+
+    private function uploadFile($field, $entity, $extra)
+    {
+        $data = $extra['data'];
+        $value = $extra['value'];
+
+        $this->deleteFieldValue($data, $extra);
+        if (strlen($value) != 0) {
+            // expected format received from mobile
+            // filename.jpg|data:image/jpg;base64,urlencode( base64_encode( file_get_contents( $filepath) ) )
+            list($fileName, $fileData) = explode("|", $value, 2);
+            list($fileTypeStr, $encodedStr) = explode(";", $fileData, 2);
+            list($encodeType, $encoded) = explode(",", $encodedStr, 2);
+            $decoded = base64_decode($encoded);
+
+            $answerData = array_merge($data, [
+                'text_value' => $fileName,  // File Name
+                'file' => $decoded  // File Content
+            ]);
+            $this->saveFieldValue($answerData, $extra);
+        }
+    }
+
+
+    private function uploadRepeater($field, $entity, $extra)
+    {
+        $data = $extra['data'];
+        $value = $extra['value'];
+        $recordKey = $extra['recordKey'];
+        $formKey = $extra['formKey'];
+        $fieldKey = $extra['fieldKey'];
+
+        $formId = null;
+        $fieldId = $data[$fieldKey];
+
+
+        // Get Survey Form ID
+        $fieldEntity = SurveyQuestion::where('id', $fieldId)->first();
+        if (isset($fieldEntity->params) && !empty($fieldEntity->params)) {
+            $params = json_decode($fieldEntity->params, true);
+            if (array_key_exists($formKey, $params)) {
+                $formId = $params[$formKey];
+            }
+        }
+        // End
+
+
+        if (!is_null($formId)) {
+            //
         }
     }
 
