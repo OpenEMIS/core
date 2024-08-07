@@ -501,10 +501,10 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
     // this.Rest.setSession();
     let token = localStorage.getItem("loginToken");
     if (!token) {
-      let userName = sessionStorage.getItem('username');
-      let password = sessionStorage.getItem('password');
-      console.log(userName, password, "userName");
-
+      let userName = sessionStorage.getItem('nbn');
+      let password = sessionStorage.getItem('pbn');
+      const chars = password.split('.');
+      password = chars[0];
       if (userName == null && password == null) {
         setTimeout(() => {
           this.counter = this.counter + 1;
@@ -516,6 +516,8 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
         }, 1500);
       } else {
         var decodedPassword = atob(password);
+        decodedPassword = decodedPassword.replace(/^"(.*)"$/, '$1');
+        console.log(decodedPassword,"decodedPassword");
         if (userName && decodedPassword) {
           this.loginApi(userName, decodedPassword);
         } else {

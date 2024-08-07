@@ -34,9 +34,17 @@ export class StudentMealResultComponent implements OnInit {
     {
       custom: true,
       icon: 'fa fa-download',
-      tooltip: 'Download',
+      tooltip: 'Failed Download',
       callback: (): void => {
         this.generateExcel();
+      }
+    },
+    {
+      custom: true,
+      icon: 'fa fa-download',
+      tooltip: 'Success Download',
+      callback: (): void => {
+        this.generateSuccessExcel();
       }
     },
     ],
@@ -87,6 +95,53 @@ export class StudentMealResultComponent implements OnInit {
     } else {
       this.meal_import_result = this.dataFromRoute.meal_import_result;
       this.meal_report = this.dataFromRoute.meal_imported;
+    //   this.meal_report = {
+    //     "total_count": 2,
+    //     "records_added": {
+    //         "count": 0,
+    //         "rows": []
+    //     },
+    //     "records_updated": {
+    //         "count": 0,
+    //         "rows": []
+    //     },
+    //     "records_failed": {
+    //         "count": 2,
+    //         "rows": [
+    //             {
+    //                 "row_number": 2,
+    //                 "data": {
+    //                     "Date ( DD/MM/YYYY )": 36809,
+    //                     " OpenEMIS ID": 2382817343,
+    //                     "Meal Programme Code": "Meal Programme",
+    //                     "Meal Received Code": "NotReceived",
+    //                     "Meal Benefit Name": 2,
+    //                     "Comment": "Test"
+    //                 },
+    //                 "errors": {
+    //                     "Date ( DD/MM/YYYY )": "Invalid date format."
+    //                 }
+    //             },
+    //             {
+    //                 "row_number": 3,
+    //                 "data": {
+    //                     "Date ( DD/MM/YYYY )": 36840,
+    //                     " OpenEMIS ID": null,
+    //                     "Meal Programme Code": "Meal Programme",
+    //                     "Meal Received Code": null,
+    //                     "Meal Benefit Name": 1,
+    //                     "Comment": "Test"
+    //                 },
+    //                 "errors": {
+    //                     "Date ( DD/MM/YYYY )": "Invalid date format.",
+    //                     " OpenEMIS ID": "OpenEMIS Id is required.",
+    //                     "Meal Received Code": "Meal received code is required."
+    //                 }
+    //             }
+    //         ]
+    //     }
+    // }
+
       this.institution_name = localStorage.getItem("institutionName");
       this.pageheader.pageheaderText = `${this.institution_name} - Import Student Attendances`
       this.loginData();
@@ -270,12 +325,7 @@ export class StudentMealResultComponent implements OnInit {
   }
 
   generateExcel() {
-    let dataValidationHeadings = {
-      "OpenEMIS ID": "OpenEMIS ID",
-      "Meal Programme Code": "Meal Programmes",
-      "Meal Received Code": "Meal Received",
-      "Meal Benefit Name": "Meal Benefit"
-    };
+    let dataValidationHeadings = {};
 
     let dataColumnHeadings = [
       "Date ( DD/MM/YYYY )",
@@ -286,12 +336,128 @@ export class StudentMealResultComponent implements OnInit {
       "Comment",
       "Errors"
     ];
-    let referenceNames = Object.keys(this.meal_import_result.data.References)
+    let data = {
+      header: [],
+      References: {}
+    }
+    if (this.meal_report.records_failed.count > 0) {
+      for (var key in this.meal_report.records_failed.rows[0].data) {
+        data.header.push(key);
+        data.References[key] = {
+          data: [],
+          header: []
+        }
+      }
+      data.References["Errors"] = {
+        data: [],
+        header: []
+      }
+      console.log(this.meal_report.records_failed.rows,"Topa");
+      
+      this.meal_report.records_failed.rows.forEach((element: any, index: any) => {
+        console.log(element, "element 123");
+        if (element.data['Date ( DD/MM/YYYY )']) {
+          let obj = {
+            Name: element.data['Date ( DD/MM/YYYY )']
+          }
+          data.References['Date ( DD/MM/YYYY )'].data.push(obj);
+        } else {
+          let obj = {
+            Name: ''
+          }
+          data.References['Date ( DD/MM/YYYY )'].data.push(obj);
+        }
+
+        if (element.data['Meal Programme Code']) {
+          let obj = {
+            Name: element.data['Meal Programme Code']
+          }
+          data.References['Meal Programme Code'].data.push(obj);
+        } else {
+          let obj = {
+            Name: ''
+          }
+          data.References['Meal Programme Code'].data.push(obj);
+        }
+
+        if (element.data['Meal Received Code']) {
+          let obj = {
+            Name: element.data['Meal Received Code']
+          }
+          data.References['Meal Received Code'].data.push(obj);
+        } else {
+          let obj = {
+            Name: ''
+          }
+          data.References['Meal Received Code'].data.push(obj);
+        }
+
+        if (element.data['Meal Benefit Name']) {
+          let obj = {
+            Name: element.data['Meal Benefit Name']
+          }
+          data.References['Meal Benefit Name'].data.push(obj);
+        } else {
+          let obj = {
+            Name: ''
+          }
+          data.References['Meal Benefit Name'].data.push(obj);
+        }
+
+        if (element.data['Comment']) {
+          let obj = {
+            Name: element.data['Comment']
+          }
+          data.References['Comment'].data.push(obj);
+        } else {
+          let obj = {
+            Name: ''
+          }
+          data.References['Comment'].data.push(obj);
+        }
+
+        //For error code
+        let dateObj: any = {};
+        let programObj: any = {};
+        let receivedObj: any = {};
+        if (element.errors['Date ( DD/MM/YYYY )']) {
+          dateObj = {
+            error: element.errors['Date ( DD/MM/YYYY )']
+          }
+          // data.References['Errors'].data.push(obj);
+        }
+        if (element.errors['Meal Programme Code']) {
+          programObj = {
+            error: element.errors['Meal Programme Code']
+          }
+          // data.References['Errors'].data.push(obj);
+        }
+        if (element.errors['Meal Received Code']) {
+          receivedObj = {
+            error: element.errors['Meal Received Code']
+          }
+          // data.References['Errors'].data.push(obj);
+        }
+        if(dateObj?.error || programObj?.error || receivedObj?.error){
+          let dateData = dateObj?.error != undefined ? dateObj?.error : '';
+          let programData = programObj?.error != undefined ? programObj?.error : '';
+          let receivedData = receivedObj?.error != undefined ? receivedObj?.error : '';
+
+          let str = `${dateData} ${programData} ${receivedData}`;
+          console.log(str,"str");
+          data.References['Errors'].data.push(str)
+        }
+      });
+    }
+    console.log(data, "data 123");
+
+    let referenceNames = Object.keys(data.References);
     let temp2 = {}; let temp3 = {}; let temp4 = {}; let temp5 = {}; let temp6 = {}; let temp7 = {};
-    let assetsArr = this.meal_import_result.data.References["Meal Benefit"].data;
-    let statusArr = this.meal_import_result.data.References["Meal Programmes"].data;
-    let levelArr = this.meal_import_result.data.References["Meal Received"].data;
-    let parentArr = this.meal_import_result.data.References["OpenEMIS ID"].data;
+    let assetsArr = data.References["Comment"].data;
+    let statusArr = data.References["Date ( DD/MM/YYYY )"].data;
+    let levelArr = data.References["Meal Benefit Name"].data;
+    let parentArr = data.References["Meal Programme Code"].data;
+    let receivedArr = data.References["Meal Received Code"].data;
     let responseArr = [
       {
         key: 1,
@@ -307,20 +473,23 @@ export class StudentMealResultComponent implements OnInit {
       }
     ];
     for (let x in assetsArr) {
-      temp2[assetsArr[x].Name] = assetsArr[x].Id;
+      temp2[assetsArr[x].Name] = assetsArr[x].Name;
     }
     for (let x in statusArr) {
-      temp3[statusArr[x].Name] = statusArr[x]["Code"];
+      temp3[statusArr[x].Name] = statusArr[x].Name;
     }
     for (let x in levelArr) {
-      temp4[levelArr[x].Name] = levelArr[x]["Code"];
+      temp4[levelArr[x].Name] = levelArr[x].Name;
     }
     for (let x in parentArr) {
-      temp5[parentArr[x].Name] = parentArr[x]["OpenEMIS ID"];
+      temp5[parentArr[x].Name] = parentArr[x].Name;
     }
-    for (let x in responseArr) {
-      temp6[responseArr[x].value] = responseArr[x].key;
+    for (let x in receivedArr) {
+      temp5[receivedArr[x].Name] = receivedArr[x].Name;
     }
+    // for (let x in responseArr) {
+    //   temp6[responseArr[x].value] = responseArr[x].key;
+    // }
     if (!Object.keys(temp2).length) {
       temp2 = { '': '' }
     }
@@ -333,34 +502,39 @@ export class StudentMealResultComponent implements OnInit {
     if (!Object.keys(temp5).length) {
       temp5 = { '': '' }
     }
-    this.meal_import_result.data.References["Meal Benefit"].data = temp2;
-    this.meal_import_result.data.References["Meal Received"].data = temp4;
-    this.meal_import_result.data.References["Meal Programmes"].data = temp3;
-    this.meal_import_result.data.References["OpenEMIS ID"].data = temp5;
-    let referenceData = this.meal_import_result.data.References;
-    this.meal_report?.records_failed?.rows.forEach((element: any, index: any) => {
-      let arrData = [];
-      if (element.data['Date ( DD/MM/YYYY )']) {
-        arrData.push(element.data['Date ( DD/MM/YYYY )'])
-      } else {
-        arrData.push("")
-      }
-      if (element.data['OpenEMIS ID']) {
-        arrData.push(element.data['OpenEMIS ID']);
-      } else {
-        arrData.push("")
-      }
-      if (element.data['Meal Programme Code']) {
-        arrData.push(element.data['Meal Programme Code']);
-      } else {
-        arrData.push("")
-      }
-      console.log(arrData, "arrData");
+    // data.References["Comment"].data = temp2;
+    // data.References["Date ( DD/MM/YYYY )"].data = temp4;
+    // data.References["Meal Benefit Name"].data = temp3;
+    // data.References["Meal Programme Code"].data = temp5;
+    // data.References["Meal Received Code"].data = temp6;
+    let referenceData = data.References;
+    // this.meal_report?.records_failed?.rows.forEach((element: any, index: any) => {
+    //   let arrData = [];
+    //   if (element.data['Date ( DD/MM/YYYY )']) {
+    //     arrData.push(element.data['Date ( DD/MM/YYYY )'])
+    //   } else {
+    //     arrData.push("")
+    //   }
+    //   if (element.data['OpenEMIS ID']) {
+    //     arrData.push(element.data['OpenEMIS ID']);
+    //   } else {
+    //     arrData.push("")
+    //   }
+    //   if (element.data['Meal Programme Code']) {
+    //     arrData.push(element.data['Meal Programme Code']);
+    //   } else {
+    //     arrData.push("")
+    //   }
+    //   console.log(arrData, "arrData");
 
-    });
-    let dataSheetData: any = [
-      ["123", "2382817311"], ["2382817311"]]
-    this.excelSvc.init('OpenEMIS_Core_Import_Institution_Meal_Students_Template', 'Import Student Meals Data', dataColumnHeadings, referenceNames, referenceData, dataValidationHeadings, dataSheetData);
+    // });
+    console.log(referenceData,"referenceData Topa");
+    
+    this.excelSvc.init('OpenEMIS_Core_Import_Institution_Meal_Students_Template', 'Import Student Meals Data', dataColumnHeadings, referenceNames, data.References, dataValidationHeadings);
+  }
+
+  generateSuccessExcel(){
+
   }
 
   backToData() {
