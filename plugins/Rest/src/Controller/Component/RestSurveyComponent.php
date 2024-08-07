@@ -8,7 +8,7 @@ use Cake\Core\Configure;
 use Cake\Event\Event;
 use Cake\I18n\Time;
 use Cake\Log\Log;
-use Cake\Network\Exception\NotFoundException;
+use Cake\Http\Exception\NotFoundException;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Utility\Xml;
@@ -17,12 +17,18 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\ExpiredException;
 use Laminas\Diactoros\Stream;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
+use Cake\Http\Response;
+use Cake\Datasource\Exception\RecordNotFoundException;
+use Firebase\JWT\Key;
+use Cake\Utility\Exception\XmlException;
+use DOMDocument;
 
 define("NS_XHTML", "http://www.w3.org/1999/xhtml");
 define("NS_XF", "http://www.w3.org/2002/xforms");
 define("NS_EV", "http://www.w3.org/2001/xml-events");
 define("NS_XSD", "http://www.w3.org/2001/XMLSchema");
 define("NS_OE", "https://www.openemis.org");
+define('NS_OE', 'http://www.w3.org/1999/xhtml');
 
 class RestSurveyComponent extends Component
 {
@@ -38,6 +44,7 @@ class RestSurveyComponent extends Component
     {
         $this->controller = $this->_registry->getController();
         $this->action = $this->getController()->getRequest()->getParam('action');
+        $this->response = $this->getController()->getResponse();
 
         $models = $this->getConfig('models');
         foreach ($models as $key => $model) {
@@ -52,18 +59,25 @@ class RestSurveyComponent extends Component
             $base = count($modelInfo) == 1 ? $modelInfo[0] : $modelInfo[1];
             $this->controller->set('Custom_' . $key, $base);
         }
+        if($this->getController()->getRequest()->getParam('pass')[0] == 'upload'){
+            $this->upload();
+        }
     }
 
     public function downloadUrl()
     {
-        $url = '/' . $this->controller->getName() . '/survey/download/xform/';
-        $this->response->body(json_encode($url, JSON_UNESCAPED_UNICODE));
-        $this->response->type('json');
+        $url = '/' . $this->getController()->getName() . '/survey/download/xform/';
+
+        $this->response = $this->response
+            ->withType('application/json')
+            ->withStringBody(json_encode($url, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         return $this->response;
     }
 
+
+
     public function download($format = "xform", $id = 0, $output = true)
-    {
+    { 
         switch ($format) {
             case 'xform':
                 $result = $this->getXForms($format, $id);
@@ -71,18 +85,27 @@ class RestSurveyComponent extends Component
             default:
                 break;
         }
-        //echo "<pre>";print_r($result);die;
-        $this->response = $this->getController()->getResponse();
         if ($output) { // true = output to screen
-            if (is_object($result)) {
-                $this->response->withBody($result->asXML());
-            } else {
-                $this->response->withBody($result);
-            }
-            $this->response->withType('xml');
+        if (is_object($result)) {
+            // Convert object to XML string
+            $xmlString = $result->asXML();
+        } else {
+            // Handle non-object result
+            $xmlString = $result;
+        }
 
-            return $this->response;
-        } else { // download as file
+        // Create a stream from the XML string
+        $stream = new Stream('php://memory', 'rw');
+        $stream->write($xmlString);
+        $stream->rewind();
+
+        // Set the response body and type
+        $response = $this->response->withBody($stream)
+                             ->withType('xml');
+        // Return the modified response
+        return $response;
+
+    }else { // download as file
             $fileName = $format . '_' . date('Ymdhis');
 
             // $this->response->body($result->asXML());
@@ -112,7 +135,7 @@ class RestSurveyComponent extends Component
     public function getXXList($instanceId, $id, $insCode, $acamic)
     {
         $title = $this->Form->get($id)->name;
-        $institutionSurveysTbl = TableRegistry::get('institution_surveys');
+        $institutionSurveysTbl = TableRegistry::get('Institution.InstitutionSurveys');
         $institutionTbl = TableRegistry::get('Institution.Institutions');
         $insData = $institutionTbl->find('all', ['conditions' => ['code' => $insCode]])->first();
         $insId = $insData->id;
@@ -133,7 +156,7 @@ class RestSurveyComponent extends Component
         die;
     }//POCOR-8089
 
-	//POCOR-8089
+    //POCOR-8089
     public function checkIns($format = "xform", $id = 0, $insCode = 0, $academicPeriod = 0, $surveyQuesId = 0, $output = true)
     {
         switch ($format) {
@@ -148,6 +171,7 @@ class RestSurveyComponent extends Component
     //POCOR-7707
     public function studentlist($format = "xform", $id = 0, $insCode = 0, $academicPeriod = 0, $surveyQuesId = 0, $output = true)
     {
+        //$this->response = $this->getController()->getResponse();
         switch ($format) {
             case 'xform':
                 $result = $this->getXList($format, $id, $insCode, $academicPeriod, $surveyQuesId);
@@ -158,21 +182,31 @@ class RestSurveyComponent extends Component
 
         if ($output) { // true = output to screen
             if (is_object($result)) {
-                $this->response->body($result->asXML());
+                $xmlString = $result->asXML();
+                $stream = new Stream('php://memory', 'rw');
+                $stream->write($xmlString);
+                $stream->rewind();
+                $this->response = $this->response->withBody($stream);
             } else {
-                $this->response->body($result);
+                $stream = new Stream('php://memory', 'rw');
+                $stream->write($result);
+                $stream->rewind();
+                $this->response = $this->response->withBody($stream);
             }
-            $this->response->type('xml');
+            $this->response = $this->response->withType('xml');
 
             return $this->response;
         } else { // download as file
             $fileName = $format . '_' . date('Ymdhis');
 
-            $this->response->body($result->asXML());
-            $this->response->type('xml');
+            $stream = new Stream('php://memory', 'rw');
+            $stream->write($result->asXML());
+            $stream->rewind();
+            $this->response = $this->response->withBody($stream);
+            $this->response = $this->response->withType('xml');
 
             // Optionally force file download
-            $this->response->download($fileName . '.xml');
+            $this->response = $this->response->withDownload($fileName . '.xml');
 
             // Return response object to prevent controller from trying to render a view.
             return $this->response;
@@ -182,24 +216,29 @@ class RestSurveyComponent extends Component
 
     public function upload()
     {
-        $generateErrorResponse = function ($params = [], $code = 500) {
-            $this->response->statusCode($code);
-            $this->response->body(json_encode(($params), JSON_UNESCAPED_UNICODE));
-            $this->response->type('json');
-            return $this->response;
-        };
+        //$this->response = $this->getController()->getResponse();
 
-        if ($this->request->is(['post', 'put'])) {
+       /* $generateErrorResponse = function ($params = [], $code = 500) {
+            $this->response = $this->response->withStatus($code)
+                                             ->withType('application/json')
+                                             ->withStringBody(json_encode($params, JSON_UNESCAPED_UNICODE));
+            return $this->response;
+        };*/
+        if ($this->getController()->getRequest()->is(['post', 'put'])) {
+
             // check for valid authorization token to upload survey
-            $header = $this->request->header('authorization');
-            if ($header) {
-                $token = str_ireplace('bearer ', '', $header);
+            $header = $this->getController()->getRequest()->getData()['code'];
+            if (isset($header)) {
+                //$token = str_ireplace('Bearer ', '', $header);
+                $token = $header;
+                
+                $publicKey = Configure::read('Application.public.key');
                 try {
                     $payload = JWT::decode($token, Configure::read('Application.public.key'), ['RS256']);
+ 
                 } catch (ExpiredException $e) {
                     return $generateErrorResponse(['message' => __('Expired token')], 500);
                 }
-
                 // check userId in the token payload
                 if (empty($payload->sub)) {
                     return $generateErrorResponse(['message' => __('No userId found in token')], 500);
@@ -209,42 +248,60 @@ class RestSurveyComponent extends Component
                 return $generateErrorResponse(['message' => __('Do not have permission to access the server')], 500);
             }
 
-            $data = $this->request->getData();
+            $data = $this->getController()->getRequest()->getData(); 
             Log::write('debug', 'Data:');
-            Log::write('debug', $data);
-
-            if (isset($data['response'])) {
+            Log::write('debug', (string)$data);
+            
+            if (array_key_exists('response', $data)) {
                 $CustomRecords = TableRegistry::get('Institution.InstitutionSurveys');
                 $formAlias = $this->Form->getAlias();
                 $fieldAlias = $this->Field->getAlias();
 
                 $xmlResponse = $data['response'];
-
                 // lines below is for testing
-                // $xmlResponse = "<xf:instance id='xform'><oe:SurveyForms id='1'><oe:Institutions>1</oe:Institutions><oe:AcademicPeriods>10</oe:AcademicPeriods><oe:SurveyQuestions id='2'>some text</oe:SurveyQuestions><oe:SurveyQuestions id='3'>0</oe:SurveyQuestions><oe:SurveyQuestions id='4'>some long long text</oe:SurveyQuestions><oe:SurveyQuestions id='6'>3</oe:SurveyQuestions><oe:SurveyQuestions id='7'>5 6 7</oe:SurveyQuestions><oe:SurveyQuestions id='25'><oe:SurveyTableRows id='20'><oe:SurveyTableColumns0 id='0'>Male</oe:SurveyTableColumns0><oe:SurveyTableColumns1 id='37'>10</oe:SurveyTableColumns1><oe:SurveyTableColumns2 id='38'>20</oe:SurveyTableColumns2><oe:SurveyTableColumns3 id='39'>30</oe:SurveyTableColumns3></oe:SurveyTableRows><oe:SurveyTableRows id='21'><oe:SurveyTableColumns0 id='0'>Female</oe:SurveyTableColumns0><oe:SurveyTableColumns1 id='37'>15</oe:SurveyTableColumns1><oe:SurveyTableColumns2 id='38'>25</oe:SurveyTableColumns2><oe:SurveyTableColumns3 id='39'>35</oe:SurveyTableColumns3></oe:SurveyTableRows></oe:SurveyQuestions></oe:SurveyForms></xf:instance>";
+               /*  $xmlResponse = '<xf:instance id="xform"><oe:SurveyForms id="19"><oe:Institutions>P1002</oe:Institutions><oe:AcademicPeriods>33</oe:AcademicPeriods><oe:SurveyQuestions id="107" /><oe:SurveyQuestions id="106">-122.083922%2037.4220936</oe:SurveyQuestions><oe:SurveyQuestions id="7">6</oe:SurveyQuestions><oe:SurveyQuestions id="14">3</oe:SurveyQuestions><oe:SurveyQuestions id="9"><oe:SurveyTableRows id="95"><oe:SurveyTableColumns0 id="0">test row</oe:SurveyTableColumns0></oe:SurveyTableRows></oe:SurveyQuestions><oe:SurveyQuestions id="103">0.1</oe:SurveyQuestions><oe:SurveyQuestions id="112"><oe:RepeatBlock><oe:SurveyQuestions1 id="7">12</oe:SurveyQuestions1><oe:SurveyQuestions2 id="10">2024-07-27</oe:SurveyQuestions2><oe:SurveyQuestions3 id="17">test desc</oe:SurveyQuestions3><oe:SurveyQuestions4 id="22">13</oe:SurveyQuestions4><oe:SurveyQuestions5 id="109">divya akash</oe:SurveyQuestions5></oe:RepeatBlock></oe:SurveyQuestions><oe:SurveyQuestions id="110">96</oe:SurveyQuestions><oe:SurveyQuestions id="109">divya akash testing</oe:SurveyQuestions><oe:SurveyQuestions id="104">divya akashesting</oe:SurveyQuestions></oe:SurveyForms></xf:instance>'*/;
+
                 // $xmlResponse = '<xf:instance id="xform"><oe:SurveyForms id="16"><oe:Institutions>1059</oe:Institutions><oe:AcademicPeriods>10</oe:AcademicPeriods><oe:SurveyQuestions id="113" array-id="1">1.3641 123.9214</oe:SurveyQuestions><oe:SurveyQuestions id="114" array-id="2">1.74 100.243</oe:SurveyQuestions><oe:SurveyQuestions id="16" array-id="3">5</oe:SurveyQuestions></oe:SurveyForms></xf:instance>';
                 // end testing data //
 
                 // save response into database for debug purpose, always purge 3 days old response
                 $this->deleteExpiredResponse();
+                
                 $this->addResponse($xmlResponse);
-                // End
-
+               
+                 Log::write('debug', 'DataAkash:');
+                Log::write('debug', (string)$xmlResponse);
                 Log::write('debug', 'XML Response');
-                Log::write('debug', $xmlResponse);
+               // $xmlResponse = preg_replace('/(xf:|oe:)/', '', $xmlResponse);
+                //Log::write('debug', $xmlResponse);
+                //echo "<pre>"; print_r($xmlResponse); die;
                 $xmlResponse = str_replace("xf:", "", $xmlResponse);
                 $xmlResponse = str_replace("oe:", "", $xmlResponse);
+               // $xmlString = $this->arrayToXml($xmlResponse, 'xf:instance');
+                
+                //$xmlString = $xmlObject->saveXML();
 
                 $xmlstr = '<?xml version="1.0" encoding="UTF-8"?>' . $xmlResponse;
-                Log::write('debug', 'XML String:');
-                Log::write('debug', $xmlstr);
-                $xml = Xml::build($xmlstr);
+               /* $dom = new \DOMDocument();
+                $dom->loadXML($xmlstr);*/
+                /*Log::write('debug', 'XML String:');
+                Log::write('debug', $xmlstr);*/
+                /*$rawXml = file_get_contents('php://input');
+             $xmlResponse = preg_replace('/(xf:|oe:)/', '', $rawXml);*/
+             //Log::write('error', $xmlResponse);
+                try {
+                    $xml = Xml::build($xmlstr);
+
+                   // Log::write('debug', 'Parsed XML: ' . print_r($xml, true));
+                } catch (XmlException $e) {
+                    //Log::write('error', 'XML Exception: ' . $e->getMessage());
+                }
 
                 $periodId = $xml->{$formAlias}->AcademicPeriods->__toString();
                 $formId = $xml->{$formAlias}->attributes()->id->__toString();
                 $institutionCode = $xml->{$formAlias}->Institutions->__toString();
-
                 // checking institutionId
+
                 $Institutions = TableRegistry::get('Institution.Institutions');
                 $institutionResult = $Institutions
                     ->find()
@@ -259,6 +316,7 @@ class RestSurveyComponent extends Component
                 }
 
                 $institutionRecord = $institutionResult->first();
+
                 $institutionId = $institutionRecord->id;
                 // end of check for institutionId
 
@@ -318,14 +376,14 @@ class RestSurveyComponent extends Component
 
                 // update modified user id to the entitiy
                 $institutionSurveyEntity = $CustomRecords->patchEntity($institutionSurveyEntity, ['modified_user_id' => $userId], ['validate' => false]);
+
                 if ($CustomRecords->save($institutionSurveyEntity)) {
                     $message = 'Survey record has been submitted successfully.';
                     Log::write('debug', 'Message:');
                     Log::write('debug', $message);
                 } else {
-                    Log::write('debug', $institutionSurveyEntity->errors());
+                    Log::write('debug', $institutionSurveyEntity->getErrors());
                 }
-
                 // Delete relevance questions
                 $this->deleteQuestionWithRules($formId, $institutionSurveyId);
 
@@ -437,11 +495,13 @@ class RestSurveyComponent extends Component
 
     private function saveFieldValue($answerData, $extra)
     {
+
         $model = $extra['model'];
 
         $answerEntity = $model->newEntity($answerData);
+         Log::write('debug', $answerEntity);
         if (!$model->save($answerEntity)) {
-            Log::write('debug', $answerEntity->errors());
+            Log::write('debug', $answerEntity->getErrors());
         }
     }
 
@@ -463,12 +523,13 @@ class RestSurveyComponent extends Component
 
         $cellEntity = $cellModel->newEntity($cellData);
         if (!$cellModel->save($cellEntity)) {
-            Log::write('debug', $cellEntity->errors());
+            Log::write('debug', $cellEntity->getErrors());
         }
     }
 
     private function processUpload($key, $extra)
     {
+
         $data = $extra['data'];
         $value = $extra['value'];
         if (!empty($data)) {
@@ -509,8 +570,8 @@ class RestSurveyComponent extends Component
     {
         $thresholdDataaa = json_decode($extra['value'], true);
 
-        $InstitutionStudentSurveysTbl = TableRegistry::get('institution_student_surveys');
-        $InstitutionStudentSurveyAnswersTbl = TableRegistry::get('institution_student_survey_answers');
+        $InstitutionStudentSurveysTbl = TableRegistry::get('Institution.InstitutionStudentSurveys');
+        $InstitutionStudentSurveyAnswersTbl = TableRegistry::get('Institution.InstitutionStudentSurveyAnswers');
         $students = $thresholdDataaa;
         foreach ($students as $w => $stu) {
             $alreadyExistData = $InstitutionStudentSurveysTbl->find('all', ['conditions' => [
@@ -705,7 +766,7 @@ class RestSurveyComponent extends Component
     }
 
     private function uploadFile($field, $entity, $extra)
-    {
+    { 
         $data = $extra['data'];
         $value = $extra['value'];
 
@@ -790,7 +851,7 @@ class RestSurveyComponent extends Component
                         }
                     }
                 } else {
-                    Log::write('debug', $repeaterEntity->errors());
+                    Log::write('debug', $repeaterEntity->getErrors());
                 }
             }
         } else {
@@ -798,8 +859,8 @@ class RestSurveyComponent extends Component
         }
     }
 
-    public function getXForms($instanceId, $id)
-    {
+    public function getXFormsbkp($instanceId, $id)
+    { 
         $title = $this->Form->get($id)->name;
         $description = $this->Form->get($id)->description;
         $title = htmlspecialchars($title, ENT_QUOTES);
@@ -960,10 +1021,10 @@ class RestSurveyComponent extends Component
     {
 
         $title = $this->Form->get($id)->name;
-        $institutionClassStudentsTbl = TableRegistry::get('institution_class_students');
-        $SurveyFormsQuestionsTbl = TableRegistry::get('survey_forms_questions');
-        $institutionStudentSurveysTbl = TableRegistry::get('institution_student_surveys');
-        $surveyQuestionChoicesTbl = TableRegistry::get('survey_question_choices');
+        $institutionClassStudentsTbl = TableRegistry::get('Institution.InstitutionClassStudents');
+        $SurveyFormsQuestionsTbl = TableRegistry::get('Survey.SurveyFormsQuestions');
+        $institutionStudentSurveysTbl = TableRegistry::get('Institution.StudentSurveys');
+        $surveyQuestionChoicesTbl = TableRegistry::get('Survey.SurveyQuestionChoices');
         $institution_student_survey_answers_tbl = TableRegistry::get('institution_student_survey_answers');
 
         $institutionTbl = TableRegistry::get('Institution.Institutions');
@@ -2057,32 +2118,34 @@ class RestSurveyComponent extends Component
     }
 
     private function deleteExpiredResponse()
-    {
+    { 
         $SurveyResponses = TableRegistry::get('Survey.SurveyResponses');
         $expiryDate = new Time();
         $expiryDate->subDays(3);
         $SurveyResponses->deleteAll([
             $SurveyResponses->aliasField('created <') => $expiryDate
         ]);
+
     }
 
     private function addResponse($xmlResponse)
     {
+
         $SurveyResponses = TableRegistry::get('Survey.SurveyResponses');
         $responseData = [
             'id' => Text::uuid(),
             'response' => $xmlResponse
         ];
-
         $responseEntity = $SurveyResponses->newEntity($responseData);
+
         if (!$SurveyResponses->save($responseEntity)) {
-            Log::write('debug', $responseEntity->errors());
+            Log::write('debug', $responseEntity->getErrors());
         }
     }
     //POCOR-7857 start
     public function stafflist($format = "xform", $id = 0, $insCode = 0, $academicPeriod = 0, $surveyQuesId = 0, $output = true)
     {
-
+        $response = $this->getController()->getResponse();
         switch ($format) {
             case 'xform':
                 $result = $this->getYList($format, $id, $insCode, $academicPeriod, $surveyQuesId);
@@ -2093,21 +2156,31 @@ class RestSurveyComponent extends Component
 
         if ($output) { // true = output to screen
             if (is_object($result)) {
-                $this->response->body($result->asXML());
+                $xmlString = $result->asXML();
+                $stream = new Stream('php://memory', 'rw');
+                $stream->write($xmlString);
+                $stream->rewind();
+                $this->response = $this->response->withBody($stream);
             } else {
-                $this->response->body($result);
+                $stream = new Stream('php://memory', 'rw');
+                $stream->write($result);
+                $stream->rewind();
+                $this->response = $this->response->withBody($stream);
             }
-            $this->response->type('xml');
+            $this->response = $this->response->withType('xml');
 
             return $this->response;
         } else { // download as file
             $fileName = $format . '_' . date('Ymdhis');
 
-            $this->response->body($result->asXML());
-            $this->response->type('xml');
+            $stream = new Stream('php://memory', 'rw');
+            $stream->write($result->asXML());
+            $stream->rewind();
+            $this->response = $this->response->withBody($stream);
+            $this->response = $this->response->withType('xml');
 
             // Optionally force file download
-            $this->response->download($fileName . '.xml');
+            $this->response = $this->response->withDownload($fileName . '.xml');
 
             // Return response object to prevent controller from trying to render a view.
             return $this->response;
@@ -2117,7 +2190,7 @@ class RestSurveyComponent extends Component
     {
 
         $title = $this->Form->get($id)->name;
-        $institutionStaffTbl = TableRegistry::get('Institutions.StaffTable');
+        $institutionStaffTbl = TableRegistry::get('Institution.Staff');
         $SurveyFormsQuestionsTbl = TableRegistry::get('Survey.SurveyFormsQuestions');
         $institutionStaffSurveysTbl = TableRegistry::get('Staff.StaffSurveys');
         $surveyQuestionChoicesTbl = TableRegistry::get('Survey.SurveyQuestionChoices');
@@ -2534,5 +2607,164 @@ class RestSurveyComponent extends Component
 
         $this->processUpload('staff_list', ['sada']);
     }
-    //POCOR-7857 end
+    
+    public function getXForms($instanceId, $id)
+    {
+        
+        // Ensure Form object is properly initialized
+        if (is_null($this->Form) || !method_exists($this->Form, 'get')) {
+            throw new \RuntimeException('Form object is not properly initialized.');
+        }
+
+        // Fetch and sanitize form data
+        $form = $this->Form->get($id);
+
+        if (!$form) {
+            throw new \RuntimeException('Form not found.');
+        }
+        $title = htmlspecialchars($form->name, ENT_QUOTES);
+        $description = htmlspecialchars($form->description, ENT_QUOTES);
+
+        // Fetch fields
+        $fields = $this->getFields($id);
+        if (empty($fields)) {
+            throw new \RuntimeException('Fields are not initialized or empty.');
+        }
+
+        // Initialize XML structure
+        $xmlstr = '<?xml version="1.0" encoding="UTF-8"?>
+                   <html xmlns="' . NS_XHTML . '"
+                         xmlns:xf="' . NS_XF . '"
+                         xmlns:ev="' . NS_EV . '"
+                         xmlns:xsd="' . NS_XSD . '"
+                         xmlns:oe="' . NS_OE . '">
+                   </html>';
+Log::debug('XML String: ' . $xmlstr);
+        try {
+            $xml = Xml::build($xmlstr);
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Failed to build XML: ' . $e->getMessage());
+        }
+
+        // Build XML nodes
+        $headNode = $xml->addChild("head", null, NS_XHTML);
+        $bodyNode = $xml->addChild("body", null, NS_XHTML);
+        $headNode->addChild("title", $title, NS_XHTML);
+        $metaNode = $headNode->addChild("meta", null, NS_XHTML);
+        $metaNode->addAttribute("name", "description");
+        $metaNode->addAttribute("content", $description);
+        $modelNode = $headNode->addChild("model", null, NS_XF);
+        Log::debug('XML String: ' . $modelNode);
+        $instanceNode = $modelNode->addChild("instance", null, NS_XF);
+         Log::error('XML String: ' . $instanceNode);
+        
+        $instanceNode->addAttribute("id", $instanceId);
+        $formNode = $instanceNode->addChild($this->Form->getAlias(), null, NS_OE);
+        $formNode->addAttribute("id", $id);
+
+        // Set fixed Institutions Field
+        $references = [$this->Form->getAlias(), 'Institutions'];
+        $formNode->addChild('Institutions', null, NS_OE);
+        $fieldNode = $bodyNode->addChild("input", null, NS_XF);
+        $fieldNode->addAttribute("ref", $this->getRef($instanceId, $references));
+        $fieldNode->addAttribute("oe-type", "string");
+        $fieldNode->addChild("label", "Institution Code", NS_XF);
+
+        $this->setBindNode($modelNode, $instanceId, $references, ['type' => 'string', 'required' => true]);
+
+        // Set fixed Academic Periods Field
+        $references = [$this->Form->getAlias(), 'AcademicPeriods'];
+        $formNode->addChild('AcademicPeriods', null, NS_OE);
+        $fieldNode = $bodyNode->addChild("select1", null, NS_XF);
+        $fieldNode->addAttribute("ref", $this->getRef($instanceId, $references));
+        $fieldNode->addAttribute("oe-type", "integer");
+        $fieldNode->addAttribute("oe-dependency", $this->getRef($instanceId, [$this->Form->getAlias(), 'Institutions']));
+        $fieldNode->addChild("label", "Academic Period", NS_XF);
+
+        // Fetch Survey Forms and Statuses
+        $SurveyForms = TableRegistry::getTableLocator()->get('Survey.SurveyForms');
+        $SurveyStatuses = $SurveyForms->SurveyStatuses;
+        $todayDate = date("Y-m-d");
+
+        $periodListResults = $SurveyForms->find('list', [
+                'keyField' => 'academic_period_id',
+                'valueField' => 'academic_period_name'
+            ])
+            ->select([
+                'academic_period_id' => 'AcademicPeriods.id',
+                'academic_period_name' => 'AcademicPeriods.name'
+            ])
+            ->matching('SurveyStatuses.AcademicPeriods')
+            ->group(['AcademicPeriods.id'])
+            ->where([
+                'AND' => [
+                    [$SurveyForms->aliasField('id') => $id],
+                    [$SurveyStatuses->aliasField('date_disabled >= ') => $todayDate]
+                ]
+            ])
+            ->all();
+
+        if (!$periodListResults->isEmpty()) {
+            $periodOptions = $periodListResults->toArray();
+            foreach ($periodOptions as $periodId => $periodName) {
+                $itemNode = $fieldNode->addChild("item", null, NS_XF);
+                $itemNode->addChild("label", htmlspecialchars($periodName), NS_XF);
+                $itemNode->addChild("value", htmlspecialchars($periodId), NS_XF);
+            }
+        }
+
+        $this->setBindNode($modelNode, $instanceId, $references, ['type' => 'integer', 'required' => true]);
+
+        // Used to build validation rules
+        $schemaNode = $modelNode->addChild("schema", null, NS_XSD);
+
+        // Relevancy rules
+        $RulesTable = TableRegistry::getTableLocator()->get('Survey.SurveyRules');
+        $rules = $RulesTable->find('SurveyRulesList', [
+                'survey_form_id' => $id
+            ])->toArray();
+        $rules = new ArrayObject($rules);
+
+        $sectionName = null;
+        foreach ($fields as $key => $field) {
+            $extra = new ArrayObject([]);
+            $extra['index'] = $key + 1;
+            $extra['subIndex'] = 0;
+            $extra['head'] = $headNode;
+            $extra['body'] = $bodyNode;
+            $extra['model'] = $modelNode;
+            $extra['instance'] = $instanceNode;
+            $extra['schema'] = $schemaNode;
+            $extra['form'] = $formNode;
+            $extra['hint'] = null;
+            $extra['constraint'] = null;
+            $extra['references'] = [$this->Form->getAlias(), $this->Field->getAlias() . "[" . $extra['index'] . "]"];
+            $extra['default_value'] = null; // to handle default value for dropdown
+            $extra['field_id'] = $field->field_id;
+            $extra['rules'] = $rules;
+
+            if (is_null($sectionName)) {
+                $parentNode = $bodyNode;
+            }
+
+            if ($field->section_name != $sectionName) {
+                $sectionName = $field->section_name;
+                $sectionBreakNode = $bodyNode->addChild("group", null, NS_XF);
+                $sectionBreakNode->addAttribute("ref", $field->form_id . '_' . $field->field_id);
+                $sectionBreakNode->addChild("label", htmlspecialchars($sectionName, ENT_QUOTES), NS_XF);
+                $parentNode = $sectionBreakNode;
+            }
+
+            $fieldTypeFunction = strtolower($field->field_type);
+            if (method_exists($this, $fieldTypeFunction)) {
+                $this->$fieldTypeFunction($field, $parentNode, $instanceId, $extra);
+                if (!is_null($extra['form'])) {
+                    $this->setModelNode($field, $extra['form'], $instanceId, $extra);
+                }
+            }
+        }
+
+        return $xml;
+    }
+    
 }

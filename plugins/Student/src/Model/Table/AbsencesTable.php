@@ -37,7 +37,7 @@ class AbsencesTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['Absences' =>['id']
+            'appliedAction' => ['Absences' =>['student_id','institution_id','academic_period_id','institution_class_id','date','period','subject_id']
             ]
         ]);
         // $this->addBehavior('Student.StudentTab', [
@@ -70,7 +70,7 @@ class AbsencesTable extends ControllerActionTable
             $userId =  $userData['Institution']['StudentUser']['primaryKey']['id'];
             $date = date_format($userData['leave_date'], 'Y-m-d');
             $academicPeriod = !empty($this->request->getQuery()) ? $this->request->getQuery('academic_period') :  $AcademicPeriod->getCurrent();
-
+            $encodedQueryStringR = $this->paramsEncode(['id' =>  $queryString['id'],'student_id' =>  $queryString['student_id'],'type' =>  $queryString['type'],'institution_id' => $institutionId, 'user_id' =>  $queryString['user_id'],]);
             if ($userData) {
                 $event->stopPropagation();
                 $this->deleteAll([
@@ -81,7 +81,7 @@ class AbsencesTable extends ControllerActionTable
                 ]);
 
                 $this->Alert->success('StudentAbsence.deleteRecord', ['reset'=>true]);
-                return $this->controller->redirect(['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'Absences','index']);
+                return $this->controller->redirect(['plugin' => $this->controller->getPlugin(), 'controller' => $this->controller->getName(), 'action' => 'Absences','0'=>'index','1'=> $encodedQueryStringR]);
             }
         }
         $session = $this->request->getSession();
@@ -209,7 +209,7 @@ class AbsencesTable extends ControllerActionTable
 
     public function onGetSubjects(Event $event, Entity $entity)
     {
-        $InstitutionSubjects = TableRegistry::get('institution_subjects');
+        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
         $result = $InstitutionSubjects
             ->find()
             ->select(['name'])
@@ -312,8 +312,8 @@ class AbsencesTable extends ControllerActionTable
                 $weekEndDate = $dateFrom[$selectedDateTo][0];
                 $startDate = $weekStartDate;
                 $endDate = $weekEndDate;
-                $selectedFormatStartDate = date_format($startDate, 'Y-m-d');
-                $selectedFormatEndDate = date_format($endDate, 'Y-m-d');
+                $selectedFormatStartDate = !empty($startDate) ? date_format($startDate, 'Y-m-d') : '';
+                $selectedFormatEndDate = !empty($endDate) ? date_format($endDate, 'Y-m-d') : '';
 
                 if(empty($endDate) || !isset($endDate)){
                     $dateConditions = [
@@ -529,7 +529,7 @@ class AbsencesTable extends ControllerActionTable
                     'controller' => 'Institutions',
                     'action' => 'StudentUser',
                     'view',
-                    $this->paramsEncode(['id' => $entity->user->id])
+                    $this->paramsEncode(['id' => $entity->user->id, 'institution_id' => $entity->institution_id, 'student_id'=>$entity->user->id])
                 ]);
             } else {
                 return $entity->user->name_with_id;
