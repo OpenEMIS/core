@@ -17,6 +17,65 @@ class SurveyController extends Controller
     }
 
 
+
+    /**
+     * @OA\Get(
+     *     path="/api/v4/surveys",
+     *     summary="Get surveys list.",
+     *     description="Returns a list of surveys.",
+     *     tags={"Surveys"},
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         required=false,
+     *         description="Page number",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Number of items per page",
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *                 @OA\Property(property="data", type="object",
+     *                      @OA\Property(property="data", type="array",
+     *                          @OA\Items(
+     *                         type="object",
+     *                              @OA\Property(property="id", type="string", example="17"),
+     *                              @OA\Property(property="code", type="string", example="38ba70ef"),
+     *                              @OA\Property(property="name", type="string", example="Staff List Test"),
+     *                              @OA\Property(property="description", type="string", example=""),
+     *                              @OA\Property(property="custom_module_id", type="integer", example=1),
+     *                              @OA\Property(property="custom_module", type="string", example="Institution > Overview"),
+     *                              @OA\Property(property="modified_user_id", type="integer", nullable=true, example=null),
+     *                              @OA\Property(property="modified", type="string", format="date-time", nullable=true, example=null),
+     *                              @OA\Property(property="created_user_id", type="integer", example=2),
+     *                              @OA\Property(property="created", type="string", format="date-time", example="2018-05-30 07:29:11")
+     *                          )
+     *                      )
+     *                 )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getSurveys(Request $request)
     {
         try {
@@ -34,6 +93,97 @@ class SurveyController extends Controller
     }
 
 
+
+    /**
+     * @OA\Get(
+     *     path="/api/v4/survey/download/xform/{surveyFormId}",
+     *     summary="Get surveys list.",
+     *     description="Returns a xml content of survey form.",
+     *     tags={"Surveys"},
+     *     @OA\Parameter(
+     *         name="surveyFormId",
+     *         in="path",
+     *         required=true,
+     *         description="Survey Form Id",
+     *         @OA\Schema(type="integer", example="11")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\MediaType(
+     *             mediaType="application/xml",
+     *             @OA\Schema(
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="html",
+     *                     type="object",
+     *                     @OA\Property(property="head", type="object",
+     *                         @OA\Property(property="title", type="string", example="Staff List Test"),
+     *                         @OA\Property(property="meta", type="object",
+     *                             @OA\Property(property="name", type="string", example="description"),
+     *                             @OA\Property(property="content", type="string", example="")
+     *                         ),
+     *                         @OA\Property(property="xf:model", type="object",
+     *                             @OA\Property(property="xf:instance", type="object",
+     *                                 @OA\Property(property="id", type="string", example="xform"),
+     *                                 @OA\Property(property="oe:SurveyForms", type="object",
+     *                                     @OA\Property(property="id", type="integer", example=17),
+     *                                     @OA\Property(property="oe:Institutions", type="string", example=""),
+     *                                     @OA\Property(property="oe:AcademicPeriods", type="integer", example=""),
+     *                                     @OA\Property(property="oe:SurveyQuestions", type="object",
+     *                                         @OA\Property(property="id", type="integer", example=111)
+     *                                     )
+     *                                 )
+     *                             ),
+     *                             @OA\Property(property="xf:bind", type="object",
+     *                                 @OA\Property(property="ref", type="string", example="instance('xform')/SurveyForms/Institutions"),
+     *                                 @OA\Property(property="type", type="string", example="string"),
+     *                                 @OA\Property(property="required", type="boolean", example="true()")
+     *                             ),
+     *                             @OA\Property(property="xsd:schema", type="object"),
+     *                             @OA\Property(property="xf:bind[2]", type="object",
+     *                                 @OA\Property(property="ref", type="string", example="instance('xform')/SurveyForms/AcademicPeriods"),
+     *                                 @OA\Property(property="type", type="string", example="integer"),
+     *                                 @OA\Property(property="required", type="boolean", example="true()")
+     *                             ),
+     *                             @OA\Property(property="xf:bind[3]", type="object",
+     *                                 @OA\Property(property="ref", type="string", example="instance('xform')/SurveyForms/SurveyQuestions[1]"),
+     *                                 @OA\Property(property="type", type="string", example="string"),
+     *                                 @OA\Property(property="required", type="boolean", example="false()")
+     *                             )
+     *                         )
+     *                     ),
+     *                     @OA\Property(property="body", type="object",
+     *                         @OA\Property(property="xf:input", type="object",
+     *                             @OA\Property(property="ref", type="string", example="instance('xform')/SurveyForms/Institutions"),
+     *                             @OA\Property(property="oe-type", type="string", example="string"),
+     *                             @OA\Property(property="xf:label", type="string", example="Institution Code")
+     *                         ),
+     *                         @OA\Property(property="xf:select1", type="object",
+     *                             @OA\Property(property="ref", type="string", example="instance('xform')/SurveyForms/AcademicPeriods"),
+     *                             @OA\Property(property="oe-type", type="string", example="integer"),
+     *                             @OA\Property(property="oe-dependency", type="string", example="instance('xform')/SurveyForms/Institutions"),
+     *                             @OA\Property(property="xf:label", type="string", example="Academic Period"),
+     *                             @OA\Property(property="xf:item", type="object",
+     *                                 @OA\Property(property="xf:label", type="string", example="2024"),
+     *                                 @OA\Property(property="xf:value", type="integer", example=33)
+     *                             )
+     *                         ),
+     *                         @OA\Property(property="xf:staff_list", type="object",
+     *                             @OA\Property(property="ref", type="string", example="instance('xform')/SurveyForms/SurveyQuestions[1]"),
+     *                             @OA\Property(property="xf:label", type="string", example="Staff List")
+     *                         )
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function downloadXform(Request $request, $surveyFormId, $action=1)
     {
         try {
@@ -66,6 +216,67 @@ class SurveyController extends Controller
     }
 
 
+
+    /**
+     * @OA\Post(
+     *     path="/api/v4/survey/upload",
+     *     summary="Get surveys list.",
+     *     description="Returns a list of surveys.",
+     *     tags={"Surveys"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="application/xml",
+     *             @OA\Schema(
+     *                 type="object",
+     *                 example="<xf:instance id='xform'>
+     *                              <oe:SurveyForms id='19'>
+     *                                  <oe:Institutions>P1002</oe:Institutions>
+     *                                  <oe:AcademicPeriods>33</oe:AcademicPeriods>
+     *                                  <oe:SurveyQuestions id='107' />
+     *                                  <oe:SurveyQuestions id='106'>-122.083922 37.4220936</oe:SurveyQuestions>
+     *                                  <oe:SurveyQuestions id='7'>10</oe:SurveyQuestions>
+     *                                  <oe:SurveyQuestions id='14'>3</oe:SurveyQuestions>
+     *                                  <oe:SurveyQuestions id='9'>
+     *                                      <oe:SurveyTableRows id='95'>
+     *                                          <oe:SurveyTableColumns0 id='0'>test row</oe:SurveyTableColumns0>
+     *                                      </oe:SurveyTableRows>
+     *                                  </oe:SurveyQuestions>
+     *                                  <oe:SurveyQuestions id='103'>0.2</oe:SurveyQuestions>
+     *                                  <oe:SurveyQuestions id='112'>
+     *                                      <oe:RepeatBlock>
+     *                                          <oe:SurveyQuestions1 id='7'>5</oe:SurveyQuestions1>
+     *                                          <oe:SurveyQuestions2 id='10'>2024-07-27</oe:SurveyQuestions2>
+     *                                          <oe:SurveyQuestions3 id='17'>description</oe:SurveyQuestions3>
+     *                                          <oe:SurveyQuestions4 id='22'>15</oe:SurveyQuestions4>
+     *                                          <oe:SurveyQuestions5 id='109'>upload test</oe:SurveyQuestions5>
+     *                                      </oe:RepeatBlock>
+     *                                  </oe:SurveyQuestions>
+     *                                  <oe:SurveyQuestions id='110'>96 97</oe:SurveyQuestions>
+     *                                  <oe:SurveyQuestions id='109'>upload test text</oe:SurveyQuestions>
+     *                                  <oe:SurveyQuestions id='104'>upload test description</oe:SurveyQuestions>
+     *                              </oe:SurveyForms>
+     *                          </xf:instance>"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Successful.",
+     *          @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="array",
+     *                  @OA\Items()
+     *              )
+     *          )
+     *      ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function uploadXform(UploadXformRequest $request)
     {
         try {
