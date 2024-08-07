@@ -334,6 +334,13 @@ class TrainingController extends Controller
      *     summary="Get list of training sessions",
      *     description="Returns details of training sessions",
      *     @OA\Parameter(
+     *         name="training_course_id",
+     *         in="query",
+     *         required=false,
+     *         description="Filter by training course id.",
+     *         @OA\Schema(type="integer", example="1")
+     *     ),
+     *     @OA\Parameter(
      *         name="order",
      *         in="query",
      *         required=false,
