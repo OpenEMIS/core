@@ -12,6 +12,7 @@ use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 
 use Cake\Log\Log;
+use Cake\ORM\Locator\TableLocator;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
@@ -65,6 +66,7 @@ class StudentFeesTable extends ControllerActionTable
                     'reorder' => false
                 ],
             ]);
+            $this->addBehavior('Institution.InstitutionTab');
         }
 
         $this->addBehavior('User.AdvancedNameSearch');
@@ -221,16 +223,23 @@ class StudentFeesTable extends ControllerActionTable
         $this->_selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
         $this->advancedSelectOptions($gradeOptions, $this->_selectedEducationGradeId);
 
-        $this->InstitutionFeeEntity = $this->InstitutionFees
-            ->find()
-            ->contain(['InstitutionFeeTypes.FeeTypes'])
-            ->where([
-                 'InstitutionFees.education_grade_id' => $this->_selectedEducationGradeId,
-                'InstitutionFees.academic_period_id' => $this->_selectedAcademicPeriodId,
-                'InstitutionFees.institution_id' => $this->institutionId
-            ])
-            ->first()
-            ;
+        $query = $this->InstitutionFees->find()
+                ->contain(['InstitutionFeeTypes.FeeTypes']);
+
+        if ($this->_selectedEducationGradeId !== null) {
+            $query->where(['InstitutionFees.education_grade_id' => $this->_selectedEducationGradeId]);
+        }
+
+        if ($this->_selectedAcademicPeriodId !== null) {
+            $query->where(['InstitutionFees.academic_period_id' => $this->_selectedAcademicPeriodId]);
+        }
+
+        if ($this->institutionId !== null) {
+            $query->where(['InstitutionFees.institution_id' => $this->institutionId]);
+        }
+
+        $this->InstitutionFeeEntity = $query->first();
+
 
             $queryString = $this->getQueryString();
             $encodedQueryString = $this->paramsEncode($queryString);
@@ -248,13 +257,23 @@ class StudentFeesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query
-        ->where([
-            $this->aliasField('institution_id') => $this->institutionId,
-            $this->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId,
-            $this->aliasField('education_grade_id') => $this->_selectedEducationGradeId,
-        ])
-        ;
+        $conditions = [];
+
+        if ($this->institutionId !== null) {
+            $conditions[$this->aliasField('institution_id')] = $this->institutionId;
+        }
+
+        if ($this->_selectedAcademicPeriodId !== null) {
+            $conditions[$this->aliasField('academic_period_id')] = $this->_selectedAcademicPeriodId;
+        }
+
+        if ($this->_selectedEducationGradeId !== null) {
+            $conditions[$this->aliasField('education_grade_id')] = $this->_selectedEducationGradeId;
+        }
+
+        // Apply conditions to the query
+        $query->where($conditions);
+
 
         if (!$this->InstitutionFeeEntity) {
             $this->Alert->warning('InstitutionFees.noProgrammeGradeFees');
@@ -516,10 +535,10 @@ class StudentFeesTable extends ControllerActionTable
                 $error = false;
                 $totalPaid = 0.00;
                 foreach ($fees as $key=>$fee) {
-                    if ($fee->getErors()) {
-                        $error = $fee->getErors();
-                        $data['StudentFeesAbstract'][$key]['errors'] = $error;
-                    }
+                    // if ($fee->getErors()) {
+                    //     $error = $fee->getErors();
+                    //     $data['StudentFeesAbstract'][$key]['errors'] = $error;
+                    // }
                     $totalPaid = (float)$totalPaid + (float)$fee->amount;
                     //    $fees[$key]->amount = number_format($data['StudentFeesAbstract'][$key]['amount'], 2);
                  //    if ($error) {
@@ -766,8 +785,15 @@ class StudentFeesTable extends ControllerActionTable
             $this->request = $this->request->withQueryParams(['academic_period_id' => $this->AcademicPeriods->getCurrent()]);
         }
         //$institutionId = $this->Session->read('Institution.Institutions.id');
-        $institutionId  = $this->getInstitutionID();
-        $academicPeriod = $this->request->query['academic_period_id'];
+        //$institutionId  = $this->getInstitutionID();
+
+        $id = $this->request->getAttribute('params')['pass'][1];
+            $DecodedQueryString = $this->paramsDecode($id);
+            // print_r($DecodedQueryString);exit;
+            $institutionId = $DecodedQueryString['institution_id'];
+
+        //$institutionId = $this->request->getQuery('institution_id');
+        $academicPeriod = $this->request->getQuery('academic_period_id');
         $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($institutionId,  $academicPeriod);
         $educationGradeId = $this->queryString('education_grade_id', $gradeOptions);
         $this->advancedSelectOptions($gradeOptions, $this->_selectedEducationGradeId);
@@ -789,11 +815,13 @@ class StudentFeesTable extends ControllerActionTable
              'StudentFees.institution_id' =>  $institutionId,
              'StudentFees.education_grade_id' =>   $educationGradeId
         ]);
+        //echo"<pre>";print_r($query);exit;
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
 
                     $InstitutionFees= TableRegistry::get('Institution.InstitutionFees');
+                    
                     $InstitutionFeeEntity = $InstitutionFees
                                              ->find()
                                              ->contain('InstitutionFeeTypes.FeeTypes')
@@ -804,18 +832,21 @@ class StudentFeesTable extends ControllerActionTable
                                              ])
                                              ->first();
 
-                    $StudentFees= TableRegistry::get('student_fees');
-                    $StudentFeeEntity = $StudentFees
-                                            ->find()
-                                            ->select([
-                                                "amount"=> $StudentFees->find()->func()->sum('amount')
-                                            ])
-                                            ->where([
-                                                $StudentFees->aliasField('institution_fee_id') =>$InstitutionFeeEntity->id,
-                                                $StudentFees->aliasField('student_id') => $row['student_id']
+                    $tableLocator = new TableLocator();
+                    $StudentFees= $tableLocator->get('student_fees');
 
-                                             ])
-                                             ->toArray();
+                    //  $StudentFees= TableRegistry::getTableLocator()->get('Student.StudentFees');
+                    $StudentFeeEntity = $StudentFees
+                            ->find()
+                            ->select([
+                                "amount"=> $StudentFees->find()->func()->sum('amount')
+                            ])
+                            ->where([
+                                $StudentFees->aliasField('institution_fee_id') =>$InstitutionFeeEntity->id,
+                                $StudentFees->aliasField('student_id') => $row['student_id']
+
+                                ])
+                                ->toArray();
 
                     //total fee
                     $row->total_fee='00';
@@ -825,7 +856,8 @@ class StudentFeesTable extends ControllerActionTable
                     //amount paid
                     $row->amount_paid="00";
                     if(!empty($InstitutionFeeEntity)){
-                        $StudentFees= TableRegistry::getTableLocator()->get('Student.StudentFees');
+                        $tableLocator = new TableLocator();
+                        $StudentFees= $tableLocator->get('student_fees');
                         $StudentFeeEntity = $StudentFees
                                                 ->find()
                                                 ->select([

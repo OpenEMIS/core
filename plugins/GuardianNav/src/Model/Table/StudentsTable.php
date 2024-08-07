@@ -322,7 +322,8 @@ class StudentsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $toolbarButtons = $extra['toolbarButtons']; // POCOR-8415
+        // Convert ArrayObject to an array
+        $toolbarButtons = (array)$extra['toolbarButtons'];
         if (isset($toolbarButtons['add'])) { // POCOR-8415
             $extra['toolbarButtons']['add']['type'] = 'hidden';
         }
