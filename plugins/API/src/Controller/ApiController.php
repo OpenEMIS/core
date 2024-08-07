@@ -58,7 +58,7 @@ class ApiController extends AppController
 ** plugin gateway
 **
 ******************************************************************************************************************/
-	public function initialize() {
+	public function initialize(): void {
 		parent::initialize();
 
 		/**
@@ -77,8 +77,8 @@ class ApiController extends AppController
 		$message = 'Receives request from ' . $this->request->referer() . ' ( ' . $this->request->clientIp() . ' ) trying to access OpenEMIS system.';
 		Log::info($message, ['scope' => ['api']]);
 
-		$securityToken = $this->request->query('security_token');
-		if ($this->request->isGet() && !empty($this->request->query) && !empty($securityToken)) {
+		$securityToken = $this->request->getQuery('security_token');
+		if ($this->request->isGet() && !empty($this->request->getQuery()) && !empty($securityToken)) {
 			$this->ApiAuthorizations = TableRegistry::get('API.ApiAuthorizations');
 			$this->_externalApplication = $this->ApiAuthorizations->find()
 					->where([
@@ -130,8 +130,8 @@ class ApiController extends AppController
 
 		$format = 'json';
 		$debug = false;
-		if ($this->request->query) {
-			$params = $this->request->query;
+		if ($this->request->getQuery()) {
+			$params = $this->request->getQuery();
 
 			$versionFunction = $this->_versionFunctions[0];
 			if (isset($params['version']) && $params['version']!='') {
