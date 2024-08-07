@@ -67,6 +67,10 @@ class GuardianNavsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'GuardianNav.Students']);
     }
 
+    public function Students() {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'GuardianNav.Students']);
+    }
+
     public function StudentUser()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'GuardianNav.StudentUser']);
