@@ -209,7 +209,7 @@ class AssessmentsTable extends ControllerActionTable {
     {
         $class = __CLASS__;
         $line = __LINE__;
-        //$entity = $this->setIdEntityFromQueryString($class, $line, $entity);
+        //$entity = $this->setIdEntityFromQueryString($class, $line, $entity);//POCOR-8520
         $this->setupFields($event, $entity); // POCOR-8074-3 entity needed for dependant select field
         // POCOR-7999 refactured
         if ($this->action == 'edit') {

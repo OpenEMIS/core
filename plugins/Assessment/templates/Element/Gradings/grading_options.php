@@ -16,12 +16,16 @@
 
 	<div class="input clearfix">
 		<div class="clearfix">
-		<!-- <label><?php echo __('Grading Options'); ?></label>
-		<button type="button" class="btn btn-default" title="<?php echo __('Add New Option'); ?>" aria-expanded="true" onclick="$('#reload').val('reload').click();" >
-		    <i class="fa fa-plus"></i> <span><?php echo __('Add New Option'); ?></span>
-		</button> -->
 		<?php
-			echo $this->Form->input('<i class="fa fa-plus"></i> <span>'.__('Add New Option').'</span>', [
+			// echo $this->Form->input('<i class="fa fa-plus"></i> <span>'.__('Add New Option').'</span>', [
+			// 	'label' => __('Grading Options'),
+			// 	'type' => 'button',
+			// 	'class' => 'btn btn-default',
+			// 	'aria-expanded' => 'true',
+			// 	'onclick' => "$('#reload').val('reload').click();",
+			// 	'required' =>'required'
+			// ]);
+			echo $this->Form->input(__('Add New Option'), [ //POCOR-8520
 				'label' => __('Grading Options'),
 				'type' => 'button',
 				'class' => 'btn btn-default',

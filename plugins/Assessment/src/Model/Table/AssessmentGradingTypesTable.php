@@ -153,7 +153,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 	{
 		// $gradingOptions will contain the GradeOptionId and the association.(1 for true and 0 for false)
 		$AssessmentGradingOptions = TableRegistry::get('Assessment.AssessmentGradingOptions');
-		$gradingOptions = [];//dd($entity->grading_options);
+		$gradingOptions = [];
 		if (!is_null($entity->grading_options)) {
 			foreach ($entity->grading_options as $key => $gradingOption) {
 				$gradingOptionId = $gradingOption->id;
