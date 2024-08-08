@@ -809,11 +809,12 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function getList($params = [])
     {
+        if(is_array($params)){ // POCOR-8391-C4
         $withLevels = isset($params['withLevels']) ? $params['withLevels'] : true;
         $withSelect = isset($params['withSelect']) ? $params['withSelect'] : false;
         $isEditable = isset($params['isEditable']) ? $params['isEditable'] : null;
         $restrictLevel = isset($params['restrictLevel']) ? $params['restrictLevel'] : null;
-
+        } // POCOR-8391-C4
         if (!$withLevels) {
             $where = [
                 $this->aliasField('current') => 1,
