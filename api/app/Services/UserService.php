@@ -24,6 +24,28 @@ class UserService extends Controller
             //dd('data', $data);
             $resp = [];
             foreach($data['data'] as $k => $d){
+                //For POCOR-8536 Start...
+                $institutionStaffData = [];
+                $institutionStudentData = [];
+                //Staff Status = Assigned
+                if(isset($d['institution_staff'])){
+                    if($d['institution_staff']['staff_status_id'] == 1){
+                        $institutionStaffData['institution-id'] = $d['institution_staff']['institution']['id'];
+                        $institutionStaffData['institution-code'] = $d['institution_staff']['institution']['code'];
+                        $institutionStaffData['institution-name'] = $d['institution_staff']['institution']['name'];
+                    }
+                }
+                //For Student Status = Enrolled
+                if(isset($d['institution_student'])){
+                    if($d['institution_student']['student_status_id'] == 1){
+                        $institutionStudentData['institution-id'] = $d['institution_student']['institution']['id'];
+                        $institutionStudentData['institution-code'] = $d['institution_student']['institution']['code'];
+                        $institutionStudentData['institution-name'] = $d['institution_student']['institution']['name'];
+                    }
+                }
+                //For POCOR-8536 End...
+
+
                 $resp[$k]['id'] = $d['id'];
                 $resp[$k]['username'] = $d['username'];
                 $resp[$k]['password'] = $d['password'];
@@ -76,6 +98,12 @@ class UserService extends Controller
                 $resp[$k]['created'] = $d['created'];
                 $resp[$k]['nationalities'] = $d['nationalities'];
                 $resp[$k]['identities'] = $d['identities'];
+
+                //For POCOR-8536 Start...
+                $resp[$k]['institution-student'] = $institutionStudentData;
+                $resp[$k]['institution-staff'] = $institutionStaffData;
+                //For POCOR-8536 End...
+
             }
 
             $data['data'] = $resp;
@@ -103,6 +131,12 @@ class UserService extends Controller
                         $photo_content = Null;
                     }
 
+                    //For POCOR-8536 Start...
+                    $institutionStaffData = [];
+                    $institutionStudentData = [];
+                    //For POCOR-8536 End...
+
+
                     // For POCOR-8398 start...
                     $staff_position_grade_id = null;
                     $staff_position_grade_name = null;
@@ -110,9 +144,30 @@ class UserService extends Controller
                     if(isset($item['institutionStaff'])){
                         $staff_position_grade_id = $item['institutionStaff']['staffPositionGrade']['id'];
                         $staff_position_grade_name = $item['institutionStaff']['staffPositionGrade']['name'];
+
+                        //For POCOR-8536 Start...
+                        //Staff Status = Assigned
+                        if($item['institutionStaff']['staff_status_id'] == 1){
+                            $institutionStaffData['institution-id'] = $item['institutionStaff']['institution']['id'];
+                            $institutionStaffData['institution-code'] = $item['institutionStaff']['institution']['code'];
+                            $institutionStaffData['institution-name'] = $item['institutionStaff']['institution']['name'];
+                        }
+                        //For POCOR-8536 End...
+
                     }
                     // For POCOR-8398 end...
 
+
+                    //For POCOR-8536 Start...
+                    //For Student Status = Enrolled
+                    if(isset($item['institutionStudent'])){
+                        if($item['institutionStudent']['student_status_id'] == 1){
+                            $institutionStudentData['institution-id'] = $item['institutionStudent']['institution']['id'];
+                            $institutionStudentData['institution-code'] = $item['institutionStudent']['institution']['code'];
+                            $institutionStudentData['institution-name'] = $item['institutionStudent']['institution']['name'];
+                        }
+                    }
+                    //For POCOR-8536 End...
 
                     return [
                         "id" => $item['id'],
@@ -176,6 +231,8 @@ class UserService extends Controller
                         ],
                         "staff_position_grade_id" => $staff_position_grade_id,
                         "staff_position_grade_name" => $staff_position_grade_name,
+                        "institution-student" => $institutionStudentData,
+                        "institution-staff" => $institutionStaffData,
                     ];
                     
                 });
