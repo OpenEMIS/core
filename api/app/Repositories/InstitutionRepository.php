@@ -1804,14 +1804,18 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
+
+            //For POCOR-8491 Start...
             $staffs = InstitutionStaff::with('institution:id,code,name', 
                 'staffStatus:id,name as staff_status_name', 
                 'institutionPosition:id,staff_position_title_id', 
                 'institutionPosition.staffPositionTitle:id,name', 
                 'staffType:id,name as staff_type_name',
                 'classes:id,name,staff_id',
-                'staffPositionGrade:id,name');
-            
+                'staffPositionGrade:id,name',
+                'staffCustomFieldValue:id,text_value,number_value,decimal_value,textarea_value,date_value,time_value,file,staff_custom_field_id,staff_id',
+                'staffCustomFieldValue.staffCustomField:id,name');
+            //For POCOR-8491 End...
 
             //For POCOR-7772 Start
             if(isset($institution_Ids)){
@@ -1866,13 +1870,18 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
+
+            //For POCOR-8491 Start...
             $staffs = InstitutionStaff::with('institution:id,code,name', 
                     'staffStatus:id,name as staff_status_name', 
                     'institutionPosition:id,staff_position_title_id', 
                     'institutionPosition.staffPositionTitle:id,name', 
                     'staffType:id,name as staff_type_name',
                     'classes:id,name,staff_id',
-                    'staffPositionGrade:id,name');
+                    'staffPositionGrade:id,name',
+                    'staffCustomFieldValue:id,text_value,number_value,decimal_value,textarea_value,date_value,time_value,file,staff_custom_field_id,staff_id',
+                    'staffCustomFieldValue.staffCustomField:id,name');
+            //For POCOR-8491 End...
             
 
             //For POCOR-7772 Start
@@ -1928,15 +1937,18 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
+            //For POCOR-8491 Start...
             $staffs = InstitutionStaff::with('institution:id,code,name', 
                     'staffStatus:id,name as staff_status_name', 
                     'institutionPosition:id,staff_position_title_id', 
                     'institutionPosition.staffPositionTitle:id,name', 'staffType:id,name as staff_type_name',
                     'classes:id,name,staff_id',
-                    'staffPositionGrade:id,name')
+                    'staffPositionGrade:id,name',
+                    'staffCustomFieldValue:id,text_value,number_value,decimal_value,textarea_value,date_value,time_value,file,staff_custom_field_id,staff_id',
+                    'staffCustomFieldValue.staffCustomField:id,name')
                 ->where('institution_staff.institution_id', $institutionId)
                 ->where('institution_staff.staff_id', $staffId);
-
+            //For POCOR-8491 End...
 
             //For POCOR-7772 Start
             if(isset($institution_Ids)){
@@ -5241,7 +5253,6 @@ class InstitutionRepository extends Controller
                 'Failed in getStaffPositionGrade.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            dd($e);
             return false;
         }
     }

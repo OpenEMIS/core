@@ -15,8 +15,9 @@ interface TableColumns {
 const COLUMN_OPENEMISID: any = {
     headerName: "OpenEMIS ID",
     field: "user.openemis_no",
+    pinned: 'left',
     sortable: true,
-    filterable: true,
+    filterable: false,
     filterValue: [],
     class: "ag-school-column",
     canEdit: false
@@ -24,9 +25,9 @@ const COLUMN_OPENEMISID: any = {
 
 const COLUMN_PERSONNAME: any = {
     headerName: "Name",
-    field: "user.name",
+    field: "user.full_name",
     sortable: true,
-    filterable: true,
+    filterable: false,
     filterValue: [],
     class: "ag-school-column",
     canEdit: false,
@@ -36,7 +37,7 @@ const COLUMN_PERSONNAME: any = {
 
 const COLUMN_MEAL_RECEIVED: any = {
     headerName: 'Meal Received',
-    field: 'institution_student_meal.meal_benefit_id',
+    field: 'meal_benefit_id',
     menuTabs: [],
     suppressSorting: true,
     cellRenderer: (params) => {
@@ -47,12 +48,12 @@ const COLUMN_MEAL_RECEIVED: any = {
             let isSchoolClosed = params.context.schoolClosed;
             let mode = params.context.mode;
             let data = params.data;
-            console.log(mode,"mode mode");
-
+            // console.log(mode,"mode mode");
+            
             if (mode == 'view') {
                 return getViewMealElement(data, mealTypes, isMarked, isSchoolClosed);
             } else if (mode == 'edit') {
-                let api = params.api
+                let api = params.api                
                 return getEditMealElement(data, mealTypes, api, context);
             }
         }
@@ -62,7 +63,7 @@ const COLUMN_MEAL_RECEIVED: any = {
 
 const COLUMN_MEAL_BENEFIT: any = {
     headerName: 'Benefit Type',
-    field: 'institution_student_meal.meal_benefit',
+    field: 'meal_benefit_name',
     menuTabs: [],
     suppressSorting: true,
     cellRenderer: (params) => {
@@ -72,16 +73,26 @@ const COLUMN_MEAL_BENEFIT: any = {
             let mode = context.mode;
             let data = params.data;
             let mealBenefitTypeOptions = context.mealBenefitTypeOptions;
+            // console.log(mealBenefitTypeOptions,"mealBenefitTypeOptions");
 
-            if (params.data.hasOwnProperty('institution_student_meal')) {
-                let studentMealTypeId = (params.data.institution_student_meal.meal_received_id == null) ? null : params.data.institution_student_meal.meal_received_id;
+            if (params.data.hasOwnProperty('meal_benefit_name')) {
+                let studentMealTypeId = (params.data.meal_received_id == null) ? null : params.data.meal_received_id;
                 let mealTypeObj = mealTypes.find(obj => obj.id == studentMealTypeId);
 
                 if (mode == 'view') {
                     if (studentMealTypeId == 3 || studentMealTypeId == 2 || studentMealTypeId == null) {
                         return '<i style="color: #999999;" class="fa fa-minus"></i>';
-                    } else if (studentMealTypeId == 1 && params.data.institution_student_meal.meal_benefit == null) {
-                        return '<span>100%</span>'
+                    } else if (studentMealTypeId == 1 && params.data.meal_benefit_name == null) {
+                        let idName = params.context.mealBenefitTypeOptions.findIndex((data: any) => {
+                            if(params?.data?.meal_benefit_id){
+                                if(data.id == params.data.meal_benefit_id){
+                                    return data.id
+                                }
+                            } else {
+                                return 1
+                            }
+                        })
+                        return `<span>${params.context.mealBenefitTypeOptions[idName].name}</span>`
                     } else {
                         return '<i style="color: #999999;" class="fa fa-minus"></i>';
                     }
@@ -117,16 +128,16 @@ export const TABLE_COLUMN_LIST: TableColumns = {
 };
 
 function getViewMealElement(data: any, mealTypes: any, isMarked: any, isSchoolClosed: any) {
-    if (data.hasOwnProperty('institution_student_meal')) {
+    if (data.hasOwnProperty('meal_received_id')) {
         let html = ''
 
-        if (data.institution_student_meal.meal_received_id == 1) {
+        if (data.meal_received_id == 1) {
             // html = data.institution_student_meal.meal_received
             html = 'Received'
-        } else if (data.institution_student_meal.meal_received_id == 2) {
+        } else if (data.meal_received_id == 2) {
             // html = data.institution_student_meal.meal_received
             html = 'Not Received'
-        } else if (data.institution_student_meal.meal_received_id == null || data.institution_student_meal.meal_received_id == 3) {
+        } else if (data.meal_received_id == null || data.meal_received_id == 3) {
             html = '<i style="color: #999999;" class="fa fa-minus"></i>'
         }
         return html
@@ -142,8 +153,8 @@ function getEditMealBenefiteElement(data, mealBenefitTypeOptions, context, api) 
 
     let eSelect = document.createElement("select");
     eSelect.setAttribute('style', 'width: 190px;')
-    if (data.institution_student_meal[dataKey] == null) {
-        data.institution_student_meal[dataKey] = mealBenefitTypeOptions[0].id
+    if (data[dataKey] == null) {
+        data[dataKey] = mealBenefitTypeOptions[0].id
     }
 
     mealBenefitTypeOptions.forEach((obj, index) => {
@@ -153,10 +164,10 @@ function getEditMealBenefiteElement(data, mealBenefitTypeOptions, context, api) 
         eOption.innerHTML = labelText;
         eSelect.appendChild(eOption);
     })
-    eSelect.value = data.institution_student_meal[dataKey];
+    eSelect.value = data[dataKey];
     eSelect.addEventListener('change', () => {
-        let oldValue = data.institution_student_meal[dataKey];
-        data.institution_student_meal[dataKey] = eSelect.value;
+        let oldValue = data[dataKey];
+        data[dataKey] = eSelect.value;
     })
     eSelectWrapper.appendChild(eSelect);
     return eSelectWrapper;
@@ -167,24 +178,23 @@ function getEditMealElement(data, mealTypes, api, context) {
     let eCell = document.createElement('div');
     eCell.setAttribute("class", "oe-select-wrapper input-select-wrapper");
     eCell.setAttribute("id", dataKey);
-
-    if (data.institution_student_meal[dataKey] == null) {
-        data.institution_student_meal[dataKey] = 3;
+    if (data[dataKey] == null) {
+        data[dataKey] = 1;
     }
-
     let eSelect = document.createElement("select");
     eSelect.setAttribute('style', 'width: 190px;')
     mealTypes.forEach((obj) => {
         let eOption = document.createElement("option");
         let labelText = obj.name;
         eOption.setAttribute("value", obj.id);
+        eOption.setAttribute("selected", data[dataKey]);
         eOption.innerHTML = labelText;
         eSelect.appendChild(eOption);
     })
-
-    eSelect.value = data.institution_student_meal[dataKey];
+    
+    eSelect.value = data[dataKey];
     eSelect.addEventListener('change', () => {
-        let oldValue = data.institution_student_meal[dataKey];
+        let oldValue = data[dataKey];
         let newValue = eSelect.value;
 
         let mealTypeObj = mealTypes.find(obj => obj.id == newValue);
@@ -196,21 +206,21 @@ function getEditMealElement(data, mealTypes, api, context) {
 
             switch (mealTypeObj.name) {
                 case 'None':
-                    data.institution_student_meal.meal_received_id = 3;
+                    data.meal_received_id = 3;
                     break;
 
                 case 'Not Received':
-                    data.institution_student_meal.meal_received_id = 2;
+                    data.meal_received_id = 2;
                     break;
 
                 case 'Received':
-                    data.institution_student_meal.meal_received_id = newValue;
+                    data.meal_received_id = newValue;
                     break;
             }
             oldValue = newValue;
             // data.institution_student_meal.meal_received_id = newValue;
             let refreshParams = {
-                columns: ['institution_student_meal.meal_benefit'],
+                columns: ['meal_benefit_name'],
                 force: true
             }
 

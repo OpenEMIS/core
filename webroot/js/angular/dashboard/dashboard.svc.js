@@ -258,7 +258,7 @@ function DashboardSvc($q, $filter, KdDataSvc) {
         return title;
     };
 
-   
+
 
     function getWorkbenchColumnDefs(cols) {
         // var menuTabs = [];
@@ -277,7 +277,7 @@ function DashboardSvc($q, $filter, KdDataSvc) {
                 menuTabs: menuTabs,
                 suppressSizeToFit: true,
                 filter: 'text',
-                
+
             });
         }
 
@@ -289,7 +289,7 @@ function DashboardSvc($q, $filter, KdDataSvc) {
                 filterParams: filterParams,
                 filter: 'text',
                 cellRenderer: function(params) {
-                    console.log(params)
+                    // console.log(params)
                     if (typeof params.data !== 'undefined') {
                         var urlParams = params.data.url;
 
@@ -349,7 +349,7 @@ function DashboardSvc($q, $filter, KdDataSvc) {
                 floatingFilter: true,
                 // valueFormatter: dateFormatter,
                 // comparator: dateComparator,
-                // inRangeInclusive:true,	
+                // inRangeInclusive:true,
                 menuTabs: menuTabs,
                 field: "received_date",
                 filterParams: filterParams,

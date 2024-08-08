@@ -149,10 +149,13 @@ class CaseBehavior extends Behavior
             ->find()
             ->contain(['Statuses', 'Assignees'])
             ->matching('LinkedRecords', function ($q) use ($feature, $recordId) {
-                return $q->where([
+                $q = $q->where([
                     'feature' => $feature,
-                    'record_id' => $recordId
                 ]);
+                if(!empty($recordId)) {
+                    $q = $q->where(['record_id' => $recordId]);
+                }
+                return $q;
             });
 
         return $query;

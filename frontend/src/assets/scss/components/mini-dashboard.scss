@@ -54,10 +54,11 @@
             justify-content: flex-start;
             font-size: $textSizeM;
             width: 100%;
+            padding: 0px 30px;
 
             .kdx-item-content {
                 align-self: center;
-                padding-left: $padding10;
+                padding-left: $padding15;
                 text-align: center;
 
                 .item-label {
@@ -71,7 +72,7 @@
 
                 .item-value {
                     font-weight: bold;
-                    font-size: $textSizeXXXL; //28
+                    font-size: $textSizeXXL; //25
                     color: #000;
 
                     @media #{$mobileLandscape} {
