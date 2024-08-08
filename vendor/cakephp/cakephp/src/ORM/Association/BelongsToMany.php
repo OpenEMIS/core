@@ -813,9 +813,14 @@ class BelongsToMany extends Association
             // as new, we let save() sort out whether we have a new link
             // or if we are updating an existing link.
             if ($changedKeys) {
-                $joint->setNew(true);
-                $joint->unset($junction->getPrimaryKey())
-                    ->set(array_merge($sourceKeys, $targetKeys), ['guard' => false]);
+                if($belongsTo->getName() == 'EducationSubjects' && $junctionRegistryAlias == 'Assessment.AssessmentItemsGradingTypes') { //POCOR-8520 stop unset all primary key
+                    $joint->setNew(true);
+                    $joint->set(array_merge($sourceKeys, $targetKeys), ['guard' => false]); // end POCOR-8520
+                } else {
+                    $joint->setNew(true);dump($junction->getPrimaryKey());
+                    $joint->unset($junction->getPrimaryKey())
+                        ->set(array_merge($sourceKeys, $targetKeys), ['guard' => false]);
+                }
             }
             $saved = $junction->save($joint, $options);
 

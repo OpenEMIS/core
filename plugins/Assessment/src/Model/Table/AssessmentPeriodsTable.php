@@ -498,7 +498,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
                 if (!empty($educationSubjects)) {
                     foreach ($educationSubjects as $educationSubject) {
                         $query = $AssessmentItemsGradingTypes->find()->where([
-                            $AssessmentItemsGradingTypes->aliasField('education_subject_id') => $educationSubject->_joinData->assessment_item_id,
+                            $AssessmentItemsGradingTypes->aliasField('education_subject_id') => $educationSubject->_joinData->education_subject_id, //POCOR-8520
                             $AssessmentItemsGradingTypes->aliasField('assessment_id') => $educationSubject->_joinData->assessment_id,
                             $AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id') => $educationSubject->_joinData->assessment_grading_type_id,
                             $AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $id
