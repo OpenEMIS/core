@@ -577,6 +577,16 @@ class InstitutionSubjectsTable extends ControllerActionTable
      ******************************************************************************************************************/
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
+        //POCOR-8481 starts
+        $toolbarButtons = $extra['toolbarButtons'];
+        $toolbarButtons['back']['url'] = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'Subjects',
+            '0' => 'index',
+            '1' => $this->paramsEncode(['id' => $extra['institution_id'], 'institution_id' => $extra['institution_id']])
+        ];//POCOR-8481 ends
+
         if ($extra['selectedAcademicPeriodId'] == -1) {
             return $this->controller->redirect([
                 'plugin' => $this->controller->getPlugin(),
@@ -1278,7 +1288,21 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 $InstitutionSubjectStaffs->aliasField('institution_id') => $entity->institution_id
             ])
             ->count();
-
+        //POCOR-8481 starts        
+        // check student
+        $SubjectStudents  =  TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
+        $associatedExistingStudents = $SubjectStudents
+            ->find('all')
+            ->select([
+                'id', 'student_id', 'institution_class_id', 'education_grade_id', 'academic_period_id', 'institution_id',
+                'student_status_id', 'institution_subject_id', 'education_subject_id'
+            ])
+            ->where([
+                $SubjectStudents->aliasField('education_subject_id') => $entity->education_subject_id,
+                $SubjectStudents->aliasField('institution_subject_id') => $entity->id
+            ])
+            ->count();
+        //POCOR-8481 ends       
         $InstitutionTextbooks = TableRegistry::getTableLocator()->get('Institution.InstitutionTextbooks');//POCOR-8324
         $associatedTextbooksCount = $InstitutionTextbooks->find()
             ->where([
@@ -1287,7 +1311,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ])
             ->count();
 
-        $totalCount = $associatedInstitutionSubjectStaffCount + $associatedTextbooksCount;
+        $totalCount = $associatedInstitutionSubjectStaffCount + $associatedExistingStudents + $associatedTextbooksCount;//POCOR-8481
         return $totalCount;
     }//POCOR-8324 ends
 

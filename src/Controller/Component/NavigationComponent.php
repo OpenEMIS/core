@@ -154,7 +154,8 @@ class NavigationComponent extends Component
                 'StudentBehaviourAttachments',
                 'StaffBehaviourAttachments',
                 'Guardians',
-                'GuardianComments'
+                'GuardianComments',
+                'InstitutionStandards'
             ];
 
             $profileControllers = ['ProfileBodyMasses',
@@ -1273,7 +1274,7 @@ class NavigationComponent extends Component
             'Institutions.InstitutionStandards.index' => [
                 'title' => 'Standard',
                 'parent' => 'Institutions.Statistics',
-                'selected' => ['InstitutionStandards']
+                'selected' => ['Institutions.InstitutionStandards','Institutions.ViewReport']
             ],
             'Institutions.InstitutionStatistics.index' => [
                 'title' => 'Custom',
@@ -1290,6 +1291,9 @@ class NavigationComponent extends Component
         ];
 
         $institutionID = $this->controller->getQueryString('institution_id');
+        if(empty($institutionID) && $this->getController()->getRequest()->getParam('action') == 'ViewReport') {
+            $institutionID = $this->getController()->getRequest()->getQuery('institution_id');
+        } //POCOR-8485
         $encodedInstitutionID = $this->controller->paramsEncode([
             'id' => $institutionID,
             'institution_id' => $institutionID,]);
@@ -1381,6 +1385,7 @@ class NavigationComponent extends Component
                 'selected' => ['Students.Classes.index',
                     'Students.Subjects',
                     'Students.Absences.index',
+                    'Students.Absences.view',
                     'Students.ArchivedAbsences',
                     'Students.Behaviours.index',
                     //POCOR-7474-HINDOL TYPO FIX

@@ -32,7 +32,8 @@
               "src/styles.css"
             ],
             "scripts": [
-              "src/assets/libs/css_browser_selector/css_browser_selector.js"
+              "src/assets/libs/css_browser_selector/css_browser_selector.js",
+              "node_modules/exceljs/dist/exceljs.min.js"
             ]
           },
           "configurations": {
@@ -53,13 +54,13 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "10mb",
-                  "maximumError": "10mb"
+                  "maximumWarning": "20mb",
+                  "maximumError": "20mb"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "10mb",
-                  "maximumError": "10mb"
+                  "maximumWarning": "20mb",
+                  "maximumError": "20mb"
                 }
               ]
             }
@@ -99,7 +100,8 @@
               "src/styles.css"
             ],
             "scripts": [
-              "src/assets/libs/css_browser_selector/css_browser_selector.js"
+              "src/assets/libs/css_browser_selector/css_browser_selector.js",
+              "node_modules/exceljs/dist/exceljs.min.js"
             ]
           }
         },

@@ -24,6 +24,7 @@ use ControllerAction\Model\Traits\UtilityTrait;
 use Exception;
 use PHPExcel_IOFactory;
 use Cake\Event\EventInterface;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 //POCOR-5672
 
@@ -1494,9 +1495,24 @@ class InstitutionsController extends AppController
 
     public function StudentMeals($pass = '')
     {
+        $baseUrl = Router::fullBaseUrl();
+        $session = $this->request->getSession();
+        $institutionId = $this->getInstitutionId();
+        $institutionName = $this->Institutions->get($institutionId)->name;
+        $encodedParams = $this->ControllerAction->paramsEncode(['id' => $institutionId]);
+        $institutionDashborad = "{$this->plugin}/Institutions/{$encodedParams}/dashboard/{$encodedParams}";
+        $institutionIndex = "Institutions/Institutions/index/";
+
         if ($pass == 'excel') {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentMeals']);
         } else {
+             //POCOR-8051 start
+             $url = $_SERVER['REQUEST_URI'];
+             $startPos = strpos($url, '/Institution/Institutions/StudentMeals/index/') + strlen('/Institution/Institutions/StudentMeals/index/');
+             $encodedPart = substr($url, $startPos);
+
+             //POCOR-8051 end
+             
             $_edit = $this->AccessControl->check(['Institutions', 'StudentMeals', 'edit']);
             $_excel = $this->AccessControl->check(['Institutions', 'StudentMeals', 'excel']);
             $_import = $this->AccessControl->check(['Institutions', 'ImportStudentMeals', 'add']);
@@ -1531,6 +1547,11 @@ class InstitutionsController extends AppController
             $this->set('excelUrl', Router::url($excelUrl));
             $this->set('importUrl', Router::url($importUrl));
             $this->set('institution_id', $institutionId);
+            $this->set('meal_url', $encodedPart);
+            $this->set('institutionName', $institutionName);
+            $this->set('institutionDashborad', $institutionDashborad);
+            $this->set('institutionIndexUrl', $institutionIndex);
+            $this->set('baseUrl', $baseUrl);
             $this->set('ngController', 'InstitutionStudentMealsCtrl as $ctrl');
         }
 
@@ -2661,6 +2682,7 @@ class InstitutionsController extends AppController
 //            true));
         if ($action == 'checkUserAlreadyExistByIdentity'
            || $action == 'saveGuardianData'
+           || $furtherAction == 'removeReport'
         ) {
             return true;
         }
@@ -7016,7 +7038,7 @@ class InstitutionsController extends AppController
     }
 
     public
-    function ViewReport()
+    function ViewReport_old()
     {
         ini_set('memory_limit', '-1');
         $data = $_GET;
@@ -7068,6 +7090,73 @@ class InstitutionsController extends AppController
         $this->set('rowHeader', $rowHeader);
         $this->set('newArr2', $newArr2);
 
+        $this->set('contentHeader', $header);
+    }
+
+    public function ViewReport() //POCOR-8485
+    {
+        ini_set('memory_limit', '-1');
+        $data = $this->request->getQuery();
+        $file = $this->request->getData('file_path');
+        $data['file_path'] = $this->request->getQuery('file_path');
+
+        $replace_data = str_replace('\\', '/', $data['file_path']);
+        $institutionId = $this->getInstitutionID();
+
+        if ($data['module'] == NULL) {
+           $dataModule =  $data['amp;module'];
+        } else {
+            $dataModule = $data['module'];
+        }
+        $this->Navigation->addCrumb(__($data['module']), [
+            'plugin' => $this->getPlugin(),
+            'controller' => $this->getName(),
+            'action' => $dataModule,
+            '0' => 'index',
+            '1' => $this->paramsEncode(['institution_id'=> $institutionId])
+        ]);
+        
+        $header = __('Reports') . ' - ' . $data['module'];
+
+        $inputFileName = $replace_data;
+        // POCOR-8289 - for view report chagne in IOFactory logic
+        try {
+            $inputFileType = IOFactory::identify($inputFileName);
+            $objReader = IOFactory::createReader($inputFileType);
+            $spreadsheet = $objReader->load($inputFileName);
+        } catch (\Exception $e) {
+            throw new NotFoundException(__('Error loading file: ') . $e->getMessage());
+        }
+
+        $sheet = $spreadsheet->getSheet(0);
+        $highestRow = $sheet->getHighestRow();
+        if ($data['module'] == 'InstitutionStatistics') {
+            $highestRow = $sheet->getHighestRow() + 1;
+        }
+        $highestColumn = $sheet->getHighestColumn();
+
+        for ($row = 1; $row <= 1; $row++) {
+            $rowHeader = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
+        }
+
+        $rowHeaderNew = $this->array_flatten($rowHeader);
+        for ($row = 2; $row <= $highestRow - 1; $row++) {
+            $rowData[] = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
+            if ($this->isEmptyRow(reset($rowData))) {
+                continue;
+            }
+        }
+
+        foreach ($rowData as $newKey => $newDataVal) {
+            foreach ($newDataVal as $kay2 => $new_data_arr) {
+                if (isset($new_data_arr)) {
+                    $newArr2[] = array_combine($rowHeaderNew, $new_data_arr);
+                }
+            }
+        }
+
+        $this->set('rowHeader', $rowHeader);
+        $this->set('newArr2', $newArr2);
         $this->set('contentHeader', $header);
     }
 
