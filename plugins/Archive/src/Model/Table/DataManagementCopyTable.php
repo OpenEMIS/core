@@ -527,7 +527,7 @@ class DataManagementCopyTable extends ControllerActionTable
             $InstitutionRooms = TableRegistry::get('Institution.InstitutionRooms');
             $InstitutionLands = TableRegistry::get('Institution.InstitutionLands');
             $Institutions = TableRegistry::get('Institution.Institutions');
-            $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
+            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
             $InstitutionLandsData = $InstitutionLands
                 ->find('all')
@@ -722,7 +722,10 @@ class DataManagementCopyTable extends ControllerActionTable
                         
                         }
 
-                    };
+                    } elseif (!empty($newLand->getErrors())) { //POCOR-8523 Mange error handling if data not copied
+                        $this->Alert->error('general.add.failed', ['reset' => true]);
+                        return false;
+                    }
 
 
                 } else {

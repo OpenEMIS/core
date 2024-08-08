@@ -2127,7 +2127,7 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $valuePattern =  $ConfigItems->value($code);
-        if($field > $valuePattern){
+        if(!empty($valuePattern) && $field > $valuePattern){ //POCOR-8523
             return $model->getMessage('general.custom_validation_land_size');
         }
 

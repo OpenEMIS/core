@@ -166,7 +166,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         }
         if($entity['area'] >= $InstitutionLand['area']){
 
-            if(Router::getRequest()->params['action']=="CopyData"){}
+            if(Router::getRequest()->getParam('action') == "CopyData"){}
             else{//POCOR_7657
             $this->Alert->warning('InstitutionBuildings.sizeGreater', ['reset' => true]);
             return false;
