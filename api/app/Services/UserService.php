@@ -25,23 +25,15 @@ class UserService extends Controller
             $resp = [];
             foreach($data['data'] as $k => $d){
                 //For POCOR-8536 Start...
-                $institutionStaffData = [];
-                $institutionStudentData = [];
-                //Staff Status = Assigned
-                if(isset($d['institution_staff'])){
-                    if($d['institution_staff']['staff_status_id'] == 1){
-                        $institutionStaffData['institution-id'] = $d['institution_staff']['institution']['id'];
-                        $institutionStaffData['institution-code'] = $d['institution_staff']['institution']['code'];
-                        $institutionStaffData['institution-name'] = $d['institution_staff']['institution']['name'];
-                    }
+                $staffIntitutions = [];
+                $studIntitutions = [];
+
+                if(isset($d['is_staff']) && $d['is_staff'] == 1){
+                    $staffIntitutions = $this->userRepository->getStaffIntitutions($d['id']);
                 }
-                //For Student Status = Enrolled
-                if(isset($d['institution_student'])){
-                    if($d['institution_student']['student_status_id'] == 1){
-                        $institutionStudentData['institution-id'] = $d['institution_student']['institution']['id'];
-                        $institutionStudentData['institution-code'] = $d['institution_student']['institution']['code'];
-                        $institutionStudentData['institution-name'] = $d['institution_student']['institution']['name'];
-                    }
+
+                if(isset($d['is_student']) && $d['is_student'] == 1){
+                    $studIntitutions = $this->userRepository->getStudentIntitutions($d['id']);
                 }
                 //For POCOR-8536 End...
 
@@ -100,8 +92,8 @@ class UserService extends Controller
                 $resp[$k]['identities'] = $d['identities'];
 
                 //For POCOR-8536 Start...
-                $resp[$k]['institution-student'] = $institutionStudentData;
-                $resp[$k]['institution-staff'] = $institutionStaffData;
+                $resp[$k]['institution-student'] = $studIntitutions;
+                $resp[$k]['institution-staff'] = $staffIntitutions;
                 //For POCOR-8536 End...
 
             }
@@ -123,128 +115,100 @@ class UserService extends Controller
     public function getUsersData(int $userId)
     {
         try {
-            $data = $this->userRepository->getUsersData($userId)
-                ->map(function ($item, $key) {
-                    if($item['photo_content']){
-                        $photo_content = base64_encode($item['photo_content']);
-                    } else {
-                        $photo_content = Null;
-                    }
-
-                    //For POCOR-8536 Start...
-                    $institutionStaffData = [];
-                    $institutionStudentData = [];
-                    //For POCOR-8536 End...
+            $data = $this->userRepository->getUsersData($userId);
+            $resp = [];
 
 
-                    // For POCOR-8398 start...
-                    $staff_position_grade_id = null;
-                    $staff_position_grade_name = null;
+            if(isset($data)){
+                if($data['photo_content']){
+                    $photo_content = base64_encode($data['photo_content']);
+                } else {
+                    $photo_content = Null;
+                }
 
-                    if(isset($item['institutionStaff'])){
-                        $staff_position_grade_id = $item['institutionStaff']['staffPositionGrade']['id'];
-                        $staff_position_grade_name = $item['institutionStaff']['staffPositionGrade']['name'];
+                // For POCOR-8398 start...
+                $staff_position_grade_id = null;
+                $staff_position_grade_name = null;
 
-                        //For POCOR-8536 Start...
-                        //Staff Status = Assigned
-                        if($item['institutionStaff']['staff_status_id'] == 1){
-                            $institutionStaffData['institution-id'] = $item['institutionStaff']['institution']['id'];
-                            $institutionStaffData['institution-code'] = $item['institutionStaff']['institution']['code'];
-                            $institutionStaffData['institution-name'] = $item['institutionStaff']['institution']['name'];
-                        }
-                        //For POCOR-8536 End...
+                if(isset($item['institutionStaff'])){
+                    $staff_position_grade_id = $item['institutionStaff']['staffPositionGrade']['id'];
+                    $staff_position_grade_name = $item['institutionStaff']['staffPositionGrade']['name'];
+                }
 
-                    }
-                    // For POCOR-8398 end...
-
-
-                    //For POCOR-8536 Start...
-                    //For Student Status = Enrolled
-                    if(isset($item['institutionStudent'])){
-                        if($item['institutionStudent']['student_status_id'] == 1){
-                            $institutionStudentData['institution-id'] = $item['institutionStudent']['institution']['id'];
-                            $institutionStudentData['institution-code'] = $item['institutionStudent']['institution']['code'];
-                            $institutionStudentData['institution-name'] = $item['institutionStudent']['institution']['name'];
-                        }
-                    }
-                    //For POCOR-8536 End...
-
-                    return [
-                        "id" => $item['id'],
-                        "username" => $item['username'],
-                        "password" => $item['password'],
-                        "openemis_no" => $item['openemis_no'],
-                        "first_name" => $item['first_name'],
-                        "middle_name" => $item['middle_name'],
-                        "third_name" => $item['third_name'],
-                        "last_name" => $item['last_name'],
-                        "preferred_name" => $item['preferred_name'],
-                        "email" => $item['email'],
-                        "address" => $item['address'],
-                        "postal_code" => $item['postal_code'],
-                        "address_area_id" => $item['address_area_id'],
-                        "birthplace_area_id" => $item['birthplace_area_id'],
-                        "gender_id" => $item['gender_id'],
-                        "date_of_birth" => $item['date_of_birth'],
-                        "date_of_death" => $item['date_of_death'],
-                        "nationality_id" => $item['nationality_id'],
-                        "identity_type_id" => $item['identity_type_id'],
-                        "identity_type_name" => $item['identityType']['name']??null,
-                        "identity_number" => $item['identity_number'],
-                        "external_reference" => $item['external_reference'],
-                        "super_admin" => $item['super_admin'],
-                        "external_reference" => $item['external_reference'],
-                        "status" => $item['status'],
-                        "last_login" => $item['last_login'],
-                        "photo_name" => $item['photo_name'],
+                $resp = [
+                        "id" => $data['id'],
+                        "username" => $data['username'],
+                        "password" => $data['password'],
+                        "openemis_no" => $data['openemis_no'],
+                        "first_name" => $data['first_name'],
+                        "middle_name" => $data['middle_name'],
+                        "third_name" => $data['third_name'],
+                        "last_name" => $data['last_name'],
+                        "preferred_name" => $data['preferred_name'],
+                        "email" => $data['email'],
+                        "address" => $data['address'],
+                        "postal_code" => $data['postal_code'],
+                        "address_area_id" => $data['address_area_id'],
+                        "birthplace_area_id" => $data['birthplace_area_id'],
+                        "gender_id" => $data['gender_id'],
+                        "date_of_birth" => $data['date_of_birth'],
+                        "date_of_death" => $data['date_of_death'],
+                        "nationality_id" => $data['nationality_id'],
+                        "identity_type_id" => $data['identity_type_id'],
+                        "identity_type_name" => $data['identityType']['name']??null,
+                        "identity_number" => $data['identity_number'],
+                        "external_reference" => $data['external_reference'],
+                        "super_admin" => $data['super_admin'],
+                        "external_reference" => $data['external_reference'],
+                        "status" => $data['status'],
+                        "last_login" => $data['last_login'],
+                        "photo_name" => $data['photo_name'],
                         "photo_content" => $photo_content,
-                        "photo_name" => $item['photo_name'],
-                        "preferred_language" => $item['preferred_language'],
-                        "is_student" => $item['is_student'],
-                        "is_staff" => $item['is_staff'],
-                        "is_guardian" => $item['is_guardian'],
-                        "modified_user_id" => $item['modified_user_id'],
-                        "modified" => $item['modified'],
-                        "created_user_id" => $item['created_user_id'],
-                        "created" => $item['created'],
-                        "nationalities" => $item['nationalities'],
-                        "identities" => $item['identities'],
+                        "photo_name" => $data['photo_name'],
+                        "preferred_language" => $data['preferred_language'],
+                        "is_student" => $data['is_student'],
+                        "is_staff" => $data['is_staff'],
+                        "is_guardian" => $data['is_guardian'],
+                        "modified_user_id" => $data['modified_user_id'],
+                        "modified" => $data['modified'],
+                        "created_user_id" => $data['created_user_id'],
+                        "created" => $data['created'],
+                        "nationalities" => $data['nationalities'],
+                        "identities" => $data['identities'],
                         "genderData" => [
-                            "key" => $item["gender"]["id"],
-                            "value" => $item["gender"]["name"],
+                            "key" => $data["gender"]["id"],
+                            "value" => $data["gender"]["name"],
                         ],
                         "nationality_id" => [
-                            "key" => (!empty($item["nationality"]["id"]))?$item["nationality"]["id"]:'',
-                            "value" => (!empty($item["nationality"]["name"]))?$item["nationality"]["name"]:'',
+                            "key" => (!empty($data["nationality"]["id"]))?$data["nationality"]["id"]:'',
+                            "value" => (!empty($data["nationality"]["name"]))?$data["nationality"]["name"]:'',
                         ],
-                        "institution" => [
+                        /*"institution" => [
                             "key" => (!empty($item["institutionStudent"]["institution"]["id"]))?$item["institutionStudent"]["institution"]["id"]:'',
                             "value" => (!empty($item["institutionStudent"]["institution"]["name"]))?$item["institutionStudent"]["institution"]["name"]:'',
-                        ],
+                        ],*/
                         "educationGrade" => [
-                            "key" => (!empty($item["institutionStudent"]["educationGrade"]["id"]))?$item["institutionStudent"]["educationGrade"]["id"]:'',
-                            "value" => (!empty($item["institutionStudent"]["educationGrade"]["name"]))?$item["institutionStudent"]["educationGrade"]["name"]:'',
+                            "key" => (!empty($data["institutionStudent"]["educationGrade"]["id"]))?$data["institutionStudent"]["educationGrade"]["id"]:'',
+                            "value" => (!empty($data["institutionStudent"]["educationGrade"]["name"]))?$data["institutionStudent"]["educationGrade"]["name"]:'',
                         ],
                         "studentStatus" => [
-                            "key" => (!empty($item["institutionStudent"]["studentStatus"]["id"]))?$item["institutionStudent"]["studentStatus"]["id"]:'',
-                            "value" => (!empty($item["institutionStudent"]["studentStatus"]["name"]))?$item["institutionStudent"]["studentStatus"]["name"]:'',
+                            "key" => (!empty($data["institutionStudent"]["studentStatus"]["id"]))?$data["institutionStudent"]["studentStatus"]["id"]:'',
+                            "value" => (!empty($data["institutionStudent"]["studentStatus"]["name"]))?$data["institutionStudent"]["studentStatus"]["name"]:'',
                         ],
                         "staff_position_grade_id" => $staff_position_grade_id,
                         "staff_position_grade_name" => $staff_position_grade_name,
-                        "institution-student" => $institutionStudentData,
-                        "institution-staff" => $institutionStaffData,
+                        "institution-staff" => $data['institution_staff'],
+                        "institution-students" => $data['institution_students'],
                     ];
-                    
-                });
+            }
             
-            return $data;
+            return $resp;
             
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Users Data Not Found');
         }
     }

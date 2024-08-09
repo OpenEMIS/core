@@ -76,7 +76,7 @@ class UserRepository extends Controller
         try {
             $params = $request->all();
 
-            $users = SecurityUsers::with('identityType', 'nationalities', 'identities', 'institutionStaff', 'institutionStaff.institution', 'institutionStaff.staffPositionGrade', 'institutionStudent', 'institutionStudent.institution');
+            $users = SecurityUsers::with('identityType', 'nationalities', 'identities', 'institutionStaff', 'institutionStaff.staffPositionGrade', 'institutionStudent');
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
@@ -108,24 +108,37 @@ class UserRepository extends Controller
     {
         try {
             
-            $users = SecurityUsers::with(
+            $user = SecurityUsers::with(
                     'gender',
                     'nationalities',
                     'institutionStudent',
-                    'institutionStudent.institution',
                     'institutionStudent.educationGrade',
                     'institutionStudent.studentStatus',
                     'identities',
                     'nationality',
                     'identityType',
                     'institutionStaff',
-                    'institutionStaff.institution',
                     'institutionStaff.staffPositionGrade'
                 )
                     ->where('id', $userId)
-                    ->get();
+                    ->first();
+
+            //For POCOR-8536 Start...
+            $staffIns = [];
+            $studIns = [];
+            if (isset($user)) {
+                if($user->is_staff == 1){
+                    $staffIns = $this->getStaffIntitutions($user->id);
+                }
+                $user->institution_staff = $staffIns;
+                if($user->is_student == 1){
+                    $studIns = $this->getStudentIntitutions($user->id);
+                }
+                $user->institution_students = $studIns;
+            }
+            //For POCOR-8536 End...
             
-            return $users;
+            return $user;
             
         } catch (\Exception $e) {
             Log::error(
@@ -1954,4 +1967,74 @@ class UserRepository extends Controller
         }
     }
     //POCOR-8139 Ends
+
+
+    //For POCOR-8536 Starts
+    public function getStaffIntitutions($userId)
+    {
+        try {
+            $staffIns = [];
+            $institutionStaffs = Institutions::select(
+                            'institutions.id',
+                            'institutions.code',
+                            'institutions.name',
+                        )
+                        ->join('institution_staff', 'institution_staff.institution_id', '=', 'institutions.id')
+                        ->where('institution_staff.staff_id', $userId)
+                        ->where('institution_staff.staff_status_id', 1) //For Assigned.
+                        ->groupby('institution_staff.institution_id')
+                        ->get()
+                        ->toArray();
+                
+                foreach ($institutionStaffs as $i => $institution) {
+                    $staffIns[$i]['institution-id'] = $institution['id'];
+                    $staffIns[$i]['institution-code'] = $institution['code'];
+                    $staffIns[$i]['institution-name'] = $institution['name'];
+                }
+
+            return $staffIns;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in getStaffIntitutions.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return [];
+        }
+    }
+
+
+    public function getStudentIntitutions($userId)
+    {
+        try {
+            $studIns = [];
+            $institutionStudents = Institutions::select(
+                            'institutions.id',
+                            'institutions.code',
+                            'institutions.name',
+                        )
+                        ->join('institution_students', 'institution_students.institution_id', '=', 'institutions.id')
+                        ->where('institution_students.student_id', $userId)
+                        ->where('institution_students.student_status_id', 1) //For Enrolled.
+                        ->groupby('institution_students.institution_id')
+                        ->get()
+                        ->toArray();
+
+            foreach ($institutionStudents as $i => $institution) {
+                $studIns[$i]['institution-id'] = $institution['id'];
+                $studIns[$i]['institution-code'] = $institution['code'];
+                $studIns[$i]['institution-name'] = $institution['name'];
+            }
+            return $studIns;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in getStudentIntitutions.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return [];
+        }
+    }
+    //For POCOR-8536 Ends
 }
