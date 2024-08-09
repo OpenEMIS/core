@@ -426,7 +426,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                    ->where(['id' => $entity->institution_staff_id])
                    ->execute();
             $StaffChangeTypesData = $StaffChangeTypes->find()
-                            ->where([$StaffChangeTypes->aliasField('id') => $this->request->data['StaffPositionProfiles']['staff_change_type_id']])
+                            ->where([$StaffChangeTypes->aliasField('id') => $this->request->getData()['StaffPositionProfiles']['staff_change_type_id']])
                             ->first();
 
             if($StaffChangeTypesData['code'] != 'END_OF_ASSIGNMENT'){
@@ -544,7 +544,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                             );
 
                     $StaffChangeTypesData = $StaffChangeTypes->find()
-                        ->where([$StaffChangeTypes->aliasField('id') => $this->request->data['StaffPositionProfiles']['staff_change_type_id']])
+                        ->where([$StaffChangeTypes->aliasField('id') => $this->request->getData()['StaffPositionProfiles']['staff_change_type_id']])
                         ->first();
                     if($StaffChangeTypesData['code'] != 'END_OF_ASSIGNMENT'){
                         $event->stopPropagation();
@@ -554,6 +554,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     $url = $this->url('view');
                     $url['action'] = 'Staff';
                     $url[1] = $this->paramsEncode(['id' => $entity['institution_staff_id'], 'institution_id'=> $institutionId]);
+
                     return $this->controller->redirect($url);
                 }
                 //POCOR-6979[START]
@@ -615,7 +616,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
     public function addAfterSave(Event $event, $entity, $requestData, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
-       // echo "<pre>"; print_r($queryString);die;
         $encodedQueryString = $this->paramsEncode($queryString);
         if (!$entity->getErrors()) {
             $StaffTable = TableRegistry::get('Institution.Staff');
@@ -831,11 +831,14 @@ class StaffPositionProfilesTable extends ControllerActionTable
         if ($this->action == 'view') {
             $oldValue = $entity->institution_staff->end_date;
             $newValue = $entity->end_date;
-            if ($newValue->format('Y-m-d H:i:s') === '1969-12-31 00:00:00') {
-                $newValue = '';
+            if ($newValue !== null && $newValue instanceof \DateTimeInterface) {
+                if ($newValue->format('Y-m-d H:i:s') === '1969-12-31 00:00:00') {
+                    $newValue = '';
+                } 
             } else {
-                $newValue = $newValue;
+                $newValue = ''; // or handle null in a different way if needed
             }
+
             if ($newValue != $oldValue) {
                 if (!empty($oldValue) && !empty($newValue)) {
                     // START POCOR-7216
@@ -853,6 +856,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     //     return $this->getStyling(__('Not Specified'), $this->formatDate($newValue));
                     // }
                 } else if (!empty($oldValue)) {
+
                     return $this->getStyling($this->formatDate($oldValue), __('Not Specified'));
                     // if($StaffChangeTypesDataForShift['code'] == 'CHANGE_OF_START_DATE' || $StaffChangeTypesDataForShift['code'] == 'CHANGE_IN_STAFF_TYPE'){
                     //     return $this->getStyling(__('Not Specified'), __('Not Specified'));
@@ -877,6 +881,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 }
             }
         }
+
     }
 
     public function onGetStaffTypeId(Event $event, Entity $entity)
@@ -896,8 +901,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
         // Set the header of the page
         $institutionId = $this->getQueryString('institution_id');
-
-        //$institutionId = $this->Session->read('Institution.Institutions.id');
         //$this->Institutions = TableRegistry::get('Institution.Institutions');
         $institutionName = $this->Institutions->get($institutionId)->name;
         $this->controller->set('contentHeader', $institutionName. ' - ' .__('Pending Change in Assignment'));
@@ -914,8 +917,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
         if (isset($extra['toolbarButtons']['add'])) {
             unset($extra['toolbarButtons']['add']);
         }
-        $session = $this->Session;
-        //$institutionId = $session->read('Institution.Institutions.id');
         $institutionId = $this->getQueryString('institution_id');
 
         $this->fields['staff_id']['order'] = 5;
@@ -965,6 +966,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         $institutionId = $this->getQueryString('institution_id');
@@ -975,7 +977,6 @@ class StaffPositionProfilesTable extends ControllerActionTable
             'controller' => 'Institutions',
             'action' => 'Staff',
             '0' => 'view',
-            //'1' => $encodedQueryString,
             '1' => $this->paramsEncode(['id' => $entity->institution_staff_id, 'institution_id'=> $institutionId])
         ];
 
@@ -1264,8 +1265,18 @@ class StaffPositionProfilesTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event, $extra)
     {
-        if (isset($extra['toolbarButtons']['back']) && $this->Session->check('Institution.StaffPositionProfiles.viewBackUrl')) {
-            $url = $this->Session->read('Institution.StaffPositionProfiles.viewBackUrl');
+        $queryString = $this->getQueryString();
+        $institutionId = $queryString['institution_id'];
+        $encodedQueryString = $this->paramsEncode($queryString);
+        if (isset($extra['toolbarButtons']['back'])) {
+            $url = $this->url('view');
+            $url['action'] = 'Staff';
+            $url[0] = 'view';
+            //$url[1] = $encodedQueryString;
+            $url[1] = $this->paramsEncode(['institution_id' => $institutionId,'id' => $entity['institution_staff_id']]);
+            $url[2] = $this->paramsEncode(['id' => $entity['institution_staff_id']]);
+            unset($url[2]);
+           // echo "<pre>"; print_r($url); die;
             $extra['toolbarButtons']['back']['url'] = $url;
         }
 
@@ -1277,14 +1288,11 @@ class StaffPositionProfilesTable extends ControllerActionTable
             }
             $this->Session->delete('Institution.StaffPositionProfiles.errors');
         }
-        $queryString = $this->getQueryString();
-        $encodedQueryString = $this->paramsEncode($queryString);
-        
         $url = $this->url('view');
         $url['action'] = 'StaffPositionProfiles';
         $url[0] = $encodedQueryString;
         $url[1] = $this->paramsEncode(['id' => $entity['institution_staff_id']]);
-        return $this->controller->redirect($url);
+       // return $this->controller->redirect($url);
         
     }
     public function viewAfterAction(Event $event, Entity $entity, $extra)
@@ -1341,7 +1349,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         if (!isset($requestData['staff_change_type_id'])) {
             $requestData['staff_change_type_id'] = ''; // Set a default value if not present
         }
-
+        
         // Use the entity's set method to assign the request data
         $entity->set($requestData);
             return false;
@@ -1365,6 +1373,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
     {
 
         $queryString = $this->getQueryString();
+        $institutionId = $this->getQueryString('institution_id');
         $institution_staff_id = $queryString['id'];
         $encodedQueryString = $this->paramsEncode($queryString);
         $addOperation = $this->initialiseVariable($entity);
@@ -1374,28 +1383,16 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 $url = $this->url('index');
             } else {
                 $staffTableViewUrl = $this->url('view');
-/*echo "<pre>"; print_r($staffTableViewUrl);
-echo "<pre>"; print_r($staffTableViewUrl['?']);
-echo "<pre>"; print_r($this->paramsEncode(['id' => $queryString['id']]));die;*/
                 $staffTableViewUrl['action'] = 'StaffPositionProfiles';
                 $staffTableViewUrl[0] = 'view';
                 $staffTableViewUrl[1] = $encodedQueryString;
-              //  $staffTableViewUrl[1] = $institutionStaffId;
                 $this->Session->write('Institution.StaffPositionProfiles.viewBackUrl', $staffTableViewUrl);
-                //$url = $this->url('view');
-                
-                $url['plugin'] = 'Institution';
-                $url['controller'] = 'Institutions';
-                $url['action'] = 'StaffPositionProfiles';
-               
+                $url = $this->url('view');
                 $url[0] = 'view';
-                $url[1] = $encodedQueryString;
-                $url[2] = $this->paramsEncode(['id' => $addOperation->id,'institution_staff_id' => $institution_staff_id]);
-                // $url['?'] = $staffTableViewUrl['?'];
+                $url[1] = $this->paramsEncode(['institution_id' => $institutionId,'id' => $addOperation->id,'institution_staff_id' => $institution_staff_id]);
             }
-            //echo "<pre>"; print_r($url);die;
             $event->stopPropagation();
-            return $this->controller->redirect($staffTableViewUrl);
+            return $this->controller->redirect($url);
         }
     }
 
