@@ -1315,11 +1315,11 @@ class StaffTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
+        $institutionId = $this->getQueryString('institution_id');
         $encodedQueryString = $this->paramsEncode($queryString);
 
         if (isset($extra['toolbarButtons'])) {
             $toolbarButtons = $extra['toolbarButtons'];
-
             if (isset($toolbarButtons['edit'])) {
                 $url = $toolbarButtons['edit']['url'];
                 $staffId = $url[1];
