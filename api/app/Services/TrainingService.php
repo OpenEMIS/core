@@ -329,10 +329,10 @@ class TrainingService extends Controller
                     $evaluators[$e]['full_name'] = $evaluator['full_name'];
                     $evaluators[$e]['name_with_id'] = $evaluator['name_with_id'];
                     if($evaluator['is_staff'] == 0 && $evaluator['is_student'] == 0 && $evaluator['is_guardian'] == 0){
-                        $evaluators[$tr]['type'] = "Others";
+                        $evaluators[$e]['type'] = "Others";
                     }
                     if($evaluator['is_staff'] == 1){
-                        $evaluators[$tr]['type'] = "Staff";
+                        $evaluators[$e]['type'] = "Staff";
                     }
                 }
 
@@ -372,7 +372,6 @@ class TrainingService extends Controller
                 'Failed to fetch Training Session Data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            dd($e);
             return $this->sendErrorResponse('Training Session Data Not Found.');
         }
     }
