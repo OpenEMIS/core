@@ -317,7 +317,9 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $curricularId = $_SESSION['curricularId'];
+        // $curricularId = $_SESSION['curricularId'];
+        $queryString = $this->request->getData('primaryKey');
+        $curricularId = $this->paramsDecode($queryString)['id'];
         $curricularStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStaff');
         $curricularStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStudents');
         $checkStudent = $curricularStudent->find()->where([$curricularStudent->aliasField('institution_curricular_id') => $curricularId])->first();
