@@ -484,13 +484,50 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $curricularStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStudents');
-        $checkStudent =  $curricularStudent->find()->where([$curricularStudent->aliasField('student_id')=>$entity->student_id])->first();
+        $action = $this->request->getAttribute('params')['action'];
+        if($action != 'InstitutionCurricularStudents'){
+            $curricularStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStudents');
+            $checkStudent =  $curricularStudent->find()->where([$curricularStudent->aliasField('student_id')=>$entity->student_id])->first();
+            if(!empty($checkStudent)){
+                $message = __('Its Associated with Other Data');
+                $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+                $event->stopPropagation();
+            }
+        }else{
+            $curricularStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStudents');
+            $users = TableRegistry::getTableLocator()->get('User.Users');
+            $countMaleFemale = $curricularStudent->find()
+                        ->select(['male_students' => "
+                                    (COUNT(DISTINCT(CASE WHEN ".$users->aliasField('gender_id')." = 1 THEN ".$curricularStudent->aliasField('student_id')." END))) ",
+                                    'female_students' => "
+                                    (COUNT(DISTINCT(CASE WHEN ".$users->aliasField('gender_id')." = 2 THEN ".$curricularStudent->aliasField('student_id')." END))) "
 
-        if(!empty($checkStudent)){
-            $message = __('Its Associated with Other Data');
-            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-            $event->stopPropagation();
+                                    ])
+                        ->InnerJoin([$users->getAlias() => $users->getTable()],
+                        [$users->aliasField('id').' = ' . $curricularStudent->aliasField('student_id')])
+                        ->where([$curricularStudent->aliasField('institution_curricular_id') => $entity->institution_curricular_id])
+                        ->group([$curricularStudent->aliasField('institution_curricular_id')])->toArray();
+            foreach($countMaleFemale as $value){
+                $maleStudents  = $value->male_students;
+                $femaleStudents  = $value->female_students;
+            }
+            $usersInfo = $users->find()->where([$users->aliasField('id') => $entity->student_id])->first();
+            if(($maleStudents > 0 && $usersInfo->gender_id == 1)){
+                $InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
+                $updateCurricular =   $InstitutionCurriculars->updateAll(
+                                        ['total_male_students' => $maleStudents - 1,'total_female_students'=>$femaleStudents],    //field
+                                        [
+                                        'id' => $entity->institution_curricular_id,
+                                        ]);
+            }
+            if(($femaleStudents > 0  && $usersInfo->gender_id == 2)){
+                $InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
+                $updateCurricular =   $InstitutionCurriculars->updateAll(
+                                        ['total_male_students' => $maleStudents,'total_female_students'=>$femaleStudents-1],    //field
+                                        [
+                                        'id' => $entity->institution_curricular_id,
+                                        ]);
+            }
         }
     }
 
