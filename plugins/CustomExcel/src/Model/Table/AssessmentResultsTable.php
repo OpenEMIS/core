@@ -1055,7 +1055,10 @@ class AssessmentResultsTable extends AppTable
         $Table = TableRegistry::get($tableName);
         try {
             $related = $Table->find()->where($where)->first();
-            return $related->toArray();
+            //POCOR-8483[START]
+            // return $related->toArray();
+            return $related;
+            //POCOR-8483[END]
         } catch (RecordNotFoundException $e) {
             return null;
         }
