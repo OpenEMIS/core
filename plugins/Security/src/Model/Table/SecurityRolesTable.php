@@ -137,7 +137,8 @@ class SecurityRolesTable extends ControllerActionTable
         return $validator;
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    //POCOR-8464 Old Function
+    /*public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         foreach ($data as $key => $value) {
             if (is_string($value)) {
@@ -152,6 +153,38 @@ class SecurityRolesTable extends ControllerActionTable
                     if (is_null($var)) {
                         $var = 0;
                     }
+                }
+            }
+        }
+    }*/
+    
+    //POCOR-8464 New Function
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        // Trim all string values in the data array
+        array_walk($data, function (&$value) {
+            if (is_string($value)) {
+                $value = trim($value);
+            }
+        });
+
+        // Check if 'security_functions' exists and decode it
+        if ($data->offsetExists('security_functions')) {
+            $decoded = $this->urlsafeB64Decode($data['security_functions']);
+            
+            if ($decoded) {
+                $securityFunctions = json_decode($decoded, true);
+                
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    // Update '_joinData' in each security function
+                    foreach ($securityFunctions as &$function) {
+                        array_walk($function['_joinData'], function (&$var) {
+                            $var = $var ?? 0;  // Replace null values with 0
+                        });
+                    }
+
+                    // Set the updated security functions back to the data array
+                    $data['security_functions'] = $securityFunctions;
                 }
             }
         }
@@ -816,7 +849,9 @@ class SecurityRolesTable extends ControllerActionTable
     */
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-
+        set_time_limit(0);
+        ini_set('memory_limit', '-1');
+        ini_set('max_execution_time', '9600');
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
         if ($entity->isNew()) {
