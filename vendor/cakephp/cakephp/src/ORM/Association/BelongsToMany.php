@@ -817,7 +817,7 @@ class BelongsToMany extends Association
                     $joint->setNew(true);
                     $joint->set(array_merge($sourceKeys, $targetKeys), ['guard' => false]); // end POCOR-8520
                 } else {
-                    $joint->setNew(true);dump($junction->getPrimaryKey());
+                    $joint->setNew(true);
                     $joint->unset($junction->getPrimaryKey())
                         ->set(array_merge($sourceKeys, $targetKeys), ['guard' => false]);
                 }
