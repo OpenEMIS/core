@@ -113,7 +113,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                 ->where([$InstitutionGradesTable->aliasField('education_grade_id') => $educationGradeId])
                 ->select(['institution_id' => 'Institutions.id', 'institution_name' => 'Institutions.name', 'institution_code' => 'Institutions.code'])
                 ->group('institution_id')
-                ->hydrate(false)
+                ->disableHydration() // POCOR-8533
                 ->toArray();
             foreach ($institutionsData as $data) {
                 $institutions[$data['institution_id']] = $data['institution_code']. ' - ' . $data['institution_name'];

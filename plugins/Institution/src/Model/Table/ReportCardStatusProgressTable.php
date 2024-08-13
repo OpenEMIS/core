@@ -31,9 +31,9 @@ class ReportCardStatusProgressTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-       
+
         $this->hasMany('ClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'saveStrategy' => 'replace', 'cascadeCallbacks' => true]);
-        
+
 
         $this->belongsToMany('Students', [
             'className' => 'User.Users',
@@ -42,17 +42,17 @@ class ReportCardStatusProgressTable extends ControllerActionTable
             'targetForeignKey' => 'student_id',
         ]);
 
-       
+
         // this behavior restricts current user to see All Classes or My Classes
         $this->addBehavior('Security.SecurityAccess');
         $this->addBehavior('Security.InstitutionClass');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Restful.RestfulAccessControl', [
-            
+
             'Results'=> ['index']
         ]);
 
-        
+
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
@@ -73,19 +73,19 @@ class ReportCardStatusProgressTable extends ControllerActionTable
     ******************************************************************************************************************/
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-       
+
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {        
+    {
         // Academic Periods filter
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);        
-        
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
+
         $academicPeriodId = $this->request->query('academic_period_id');
         $reportCardId = $this->request->query('report_card_id');
-        
-        
+
+
         $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $reportCardTable = TableRegistry::get('ReportCard.ReportCards');
         $reportCardOptions = $reportCardTable
@@ -94,13 +94,13 @@ class ReportCardStatusProgressTable extends ControllerActionTable
                             'valueField' => 'name'
                             ])
                         ->where(['academic_period_id'=>$selectedAcademicPeriod])
-                        ->hydrate(false)
+                        ->disableHydration() // POCOR-8533
                         ->toArray();
-        
+
         $reportCardOptions = ['-1' => '-- '.__('Select Report Card').' --'] + $reportCardOptions;
         $selectedReportCard = !is_null($this->request->query('report_card_id')) ? $this->request->query('report_card_id') : -1;
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod', 'institutionId', 'reportCardOptions', 'selectedReportCard'));
-         
+
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
         $selectedClass = !is_null($this->request->query('class_id')) ? $this->request->query('class_id') : 'all';
         $classOptions = [];
@@ -122,21 +122,21 @@ class ReportCardStatusProgressTable extends ControllerActionTable
                 $selectedClass = 'all';
             }
         }
-        
+
         $classOptions['all']   = "All Classes" ;
-        
+
        // echo $selectedClass; die;
         $classOptions = ['-1' => '-- '.__('Select Class').' --'] + $classOptions;
         $this->controller->set(compact('classOptions', 'selectedClass'));
-       
-        
+
+
         $reportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
         $institutionStudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
         $classIds = 0;
         if(!empty($classLists)){
             $classIds = array_keys($classLists);
         }
-        
+
         $query
                 ->select([
                     'id','name','institution_id',
@@ -172,9 +172,9 @@ class ReportCardStatusProgressTable extends ControllerActionTable
                        //echo "<pre>"; print_r($row);echo "</pre>";
                         return $row;
                     });
-                
+
             });
-       
+
     }
 
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)
@@ -182,7 +182,7 @@ class ReportCardStatusProgressTable extends ControllerActionTable
         $searchableFields[] = 'student_id';
         $searchableFields[] = 'openemis_no';
     }
-    
+
     public function onGetReportCard(Event $event, Entity $entity)
     {
         $value = '';

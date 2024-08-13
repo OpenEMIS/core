@@ -82,7 +82,7 @@ class AreaAdministrativesTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('area_administrative_level_id');
-        
+
         $this->field('name');
         $count = $this->find()->where([
                 'OR' => [
@@ -139,7 +139,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                     $this->aliasField('order')
                 ])
                 ->where([$this->aliasField('id') => $selected])
-                ->hydrate(false)
+                ->disableHydration() // POCOR-8533
                 ->formatResults(function ($results) use ($selected) {
                     $results = $results->toArray();
                     foreach ($results as &$result) {
@@ -175,7 +175,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                     $this->aliasField('is_main_country') => true,
                     $this->aliasField('parent_id') => $worldId->id
                 ])
-                ->hydrate(false)
+                ->disableHydration() // POCOR-8533
                 ->toArray();
 
             foreach ($authorisedAreaIds as $area) {
@@ -192,7 +192,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                     $this->aliasField('is_main_country') => false,
                     $this->aliasField('parent_id') => $worldId->id
                 ])
-                ->hydrate(false)
+                ->disableHydration() // POCOR-8533
                 ->toArray();
             $removeAreas = array_column($removeAreas, 'id');
 
@@ -206,7 +206,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                 ->where([
                     $this->aliasField('parent_id') => $worldId->id
                 ])
-                ->hydrate(false)
+                ->disableHydration() // POCOR-8533
                 ->toArray();
         }
 
@@ -225,7 +225,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                 'AreaAdministrativeLevels.name',
                 $this->aliasField('order')
             ])
-            ->hydrate(false)
+            ->disableHydration() // POCOR-8533
             // Remove world record
             ->where($conditions)
             ->formatResults(function ($results) use ($authorisedAreaIds, $selected) {
@@ -556,7 +556,7 @@ class AreaAdministrativesTable extends ControllerActionTable
             TableRegistry::get('Directory.Directories')
         ];
 
-        $this->dispatchEventToModels('Model.AreaAdministrative.afterDelete', [$entity], $this, $listeners);    
+        $this->dispatchEventToModels('Model.AreaAdministrative.afterDelete', [$entity], $this, $listeners);
     }
 
 }

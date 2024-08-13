@@ -165,7 +165,7 @@ class AssessmentResultsTable extends AppTable
                         return $row;
                     });
                 })
-                ->hydrate(false)
+                ->disableHydration() // POCOR-8533
                 ->all();
 
             return $results->toArray();
@@ -462,7 +462,7 @@ class AssessmentResultsTable extends AppTable
                 $options['grade_id'] = $params['grade_id'];
             }
             $groupAssessmentItemResults = self::getGroupAssessmentItemResults($options, $archive);
-            
+
 //            $functionName = __FUNCTION__;
 //            $end_time = microtime(true);
 //            $executionTimeMs = ($end_time - $start_time) * 1000;
@@ -613,8 +613,8 @@ class AssessmentResultsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionStudentAbsences(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['class_id']) && 
-            isset($params['assessment_id']) && 
+        if (isset($params['class_id']) &&
+            isset($params['assessment_id']) &&
             isset($params['institution_id']) &&
             isset($params['institution_id'])) {
 //            $start_time = microtime(true);
