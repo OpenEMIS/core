@@ -29802,6 +29802,16 @@
                 "operationId": "e7ee640a015bcc4b789f3edc03843f40",
                 "parameters": [
                     {
+                        "name": "training_course_id",
+                        "in": "query",
+                        "description": "Filter by training course id.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
                         "name": "order",
                         "in": "query",
                         "description": "Order",
@@ -29895,7 +29905,7 @@
                                                                 "type": "integer",
                                                                 "example": 1
                                                             },
-                                                            "trainers": {
+                                                            "trainees": {
                                                                 "type": "array",
                                                                 "items": {
                                                                     "properties": {
@@ -29974,6 +29984,48 @@
                                                                         "name_with_id": {
                                                                             "type": "string",
                                                                             "example": "1522284820 - Amanda  Wells"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
+                                                            "trainers": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "integer",
+                                                                            "example": 680
+                                                                        },
+                                                                        "first_name": {
+                                                                            "type": "string",
+                                                                            "example": "Amanda"
+                                                                        },
+                                                                        "middle_name": {
+                                                                            "type": "string",
+                                                                            "example": null,
+                                                                            "nullable": true
+                                                                        },
+                                                                        "third_name": {
+                                                                            "type": "string",
+                                                                            "example": null,
+                                                                            "nullable": true
+                                                                        },
+                                                                        "last_name": {
+                                                                            "type": "string",
+                                                                            "example": "Foster"
+                                                                        },
+                                                                        "openemis_no": {
+                                                                            "type": "string",
+                                                                            "example": "1522277355"
+                                                                        },
+                                                                        "full_name": {
+                                                                            "type": "string",
+                                                                            "example": "Amanda  Foster"
+                                                                        },
+                                                                        "name_with_id": {
+                                                                            "type": "string",
+                                                                            "example": "1522277355 - Amanda  Foster"
                                                                         }
                                                                     },
                                                                     "type": "object"
@@ -30090,7 +30142,7 @@
                                                     "type": "integer",
                                                     "example": 1
                                                 },
-                                                "trainers": {
+                                                "trainees": {
                                                     "type": "array",
                                                     "items": {
                                                         "properties": {
@@ -30169,6 +30221,48 @@
                                                             "name_with_id": {
                                                                 "type": "string",
                                                                 "example": "1522284820 - Amanda  Wells"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "trainers": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 680
+                                                            },
+                                                            "first_name": {
+                                                                "type": "string",
+                                                                "example": "Amanda"
+                                                            },
+                                                            "middle_name": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "third_name": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "last_name": {
+                                                                "type": "string",
+                                                                "example": "Foster"
+                                                            },
+                                                            "openemis_no": {
+                                                                "type": "string",
+                                                                "example": "1522277355"
+                                                            },
+                                                            "full_name": {
+                                                                "type": "string",
+                                                                "example": "Amanda  Wells"
+                                                            },
+                                                            "name_with_id": {
+                                                                "type": "string",
+                                                                "example": "1522277355 - Amanda  Foster"
                                                             }
                                                         },
                                                         "type": "object"
