@@ -251,6 +251,14 @@ class SurveyRepository extends Controller
         $this->setCommonNode($field, $parentNode, $instanceId, $extra);
     }
 
+    private function student_list($field, $parentNode, $instanceId, $extra)
+    {
+        $extra['tagName'] = 'student_list';
+        $extra['is_student_list_field'] = 'yesss';
+        $extra['bindType'] = 'string';
+        $this->setCommonNode($field, $parentNode, $instanceId, $extra);
+    }
+
     private function note($field, $parentNode, $instanceId, $extra)
     {
         $noteBreakNode = $parentNode->addChild('group', null, NS_XF);
