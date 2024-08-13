@@ -337,7 +337,7 @@ class GuardianNavsController extends AppController
         ->where([
             'InstitutionStudents.student_id' => $userId
         ])
-        ->hydrate(false)
+        ->disableHydration() // POCOR-8533
         ->first();
 
         $institutionId = $InstitutionStudents['institution_id'];
@@ -352,7 +352,7 @@ class GuardianNavsController extends AppController
             'student_id' => $userId,
             'institution_id' => $institutionId
         ])
-        ->hydrate(false)
+        ->disableHydration() // POCOR-8533
         ->first();
 
         $institutionClassId = $InstitutionClassStudentsResult['institution_class_id'];
@@ -364,7 +364,7 @@ class GuardianNavsController extends AppController
             'institution_id' => $institutionId,
             'status' => 2
         ])
-        ->hydrate(false)
+        ->disableHydration() // POCOR-8533
         ->first();
 
         $this->set('userId', $userId);

@@ -130,7 +130,8 @@ class ImportInstitutionTextbooksTable extends AppTable
 
                     'ss.id' => 1
                 ])
-                ->hydrate(false);
+                ->disableHydration() // POCOR-8533
+        ;
 
         $result = $query->toArray();
 
@@ -141,7 +142,7 @@ class ImportInstitutionTextbooksTable extends AppTable
 
         return $assignedStaffIds;
         }
-    
+
         public function getEnrolledStudentId(){
 
             $staff = TableRegistry::get('Institution.InstitutionStudents');
@@ -162,18 +163,18 @@ class ImportInstitutionTextbooksTable extends AppTable
                         'conditions' => 'institution_students.student_status_id = ss.id'
                     ])
                     ->where([
-    
+
                         'ss.id' => 1
                     ])
                     ->enableHydration(false);
-    
+
             $result = $query->toArray();
-    
+
             foreach ($result as $key => $value) {
                 $user = $value['su'];
                 $enrolledStudentIds[] = $user['id'];
             }
-    
+
             return $enrolledStudentIds;
             }
      // POCOR-7362 ends
@@ -184,13 +185,13 @@ class ImportInstitutionTextbooksTable extends AppTable
         $tempRow['security_user_id'] = $tempRow['student_id'];
          // POCOR-7362 starts
 
-        // In institutionTextbooksTable staff is also added to studentoptions and hence in temprow['student_id'] staff Ids also populate, following methods checks if student or staff id are enrolled/assigned 
+        // In institutionTextbooksTable staff is also added to studentoptions and hence in temprow['student_id'] staff Ids also populate, following methods checks if student or staff id are enrolled/assigned
 
         $enrolledStudent = $this->getEnrolledStudentId();
         $assignedStaff = $this->getAssignedStaffId();
 
         $users = array_merge($enrolledStudent, $assignedStaff);
-        
+
         if(!in_array($tempRow['security_user_id'], $users)){
             $rowInvalidCodeCols['student_id'] = __('Not a enrolled/assigned user');
             return false;
@@ -250,7 +251,7 @@ class ImportInstitutionTextbooksTable extends AppTable
                 }
             }
         }
-        
+
         return true;
     }
 }

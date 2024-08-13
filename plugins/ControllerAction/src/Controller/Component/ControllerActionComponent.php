@@ -1953,7 +1953,7 @@ class ControllerActionComponent extends Component
                     ->select($orderField)
                     ->where(['OR' => $idKeys])
                     ->order([$model->aliasField($orderField)])
-                    ->hydrate(false)
+                    ->disableHydration() // POCOR-8533
                     ->toArray();
 
                 $originalOrder = array_reverse($originalOrder);

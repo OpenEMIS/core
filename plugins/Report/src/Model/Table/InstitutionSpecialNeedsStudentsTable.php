@@ -55,7 +55,7 @@ class InstitutionSpecialNeedsStudentsTable extends AppTable  {
             ->where([
                 'Users.is_student' => 1
             ])
-            ->hydrate(false)
+            ->disableHydration() // POCOR-8533
             ->toArray();
 
         $studentIdList = Hash::extract($SpecialNeedsStudents, '{n}.security_user_id');

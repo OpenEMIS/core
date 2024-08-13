@@ -18,7 +18,7 @@ class InstitutionSubjectsTable extends AppTable  {
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-        
+
     $this->addBehavior('Excel', [
             'autoFields' => false
         ]);
@@ -33,7 +33,7 @@ class InstitutionSubjectsTable extends AppTable  {
         $this->ControllerAction->field('format');
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
@@ -119,25 +119,25 @@ class InstitutionSubjectsTable extends AppTable  {
             ])
             ->where([
                 $conditions,
-                /**POCOR-6726 starts - added condition to fetch subjects which has students*/ 
+                /**POCOR-6726 starts - added condition to fetch subjects which has students*/
                 'OR' => [
                     $this->aliasField('total_male_students !=') => 0,
                     'AND' => [
                         $this->aliasField('total_female_students !=') => 0
-                    ]    
+                    ]
                 ],
-                /**POCOR-6726 ends*/ 
+                /**POCOR-6726 ends*/
             ]);
-            
+
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                
+
                 $areas1 = TableRegistry::get('areas');
                 $areasData = $areas1
                             ->find()
                             ->where([$areas1->alias('code')=>$row->area_code])
                             ->first();
-                $row['region_code'] = '';            
+                $row['region_code'] = '';
                 $row['region_name'] = '';
                 if(!empty($areasData)){
                     $areas = TableRegistry::get('areas');
@@ -160,29 +160,29 @@ class InstitutionSubjectsTable extends AppTable  {
                                     [
                                         $areas->aliasField('id  = ') . $institutions->aliasField('area_id')
                                     ]
-                                )    
+                                )
                                 ->where([
                                     $areaLevels->aliasField('level !=') => 1,
                                     $areas->aliasField('id') => $areasData->parent_id
                                 ])->first();
-                    
+
                     if (!empty($val->name) && !empty($val->code)) {
                         $row['region_code'] = $val->code;
                         $row['region_name'] = $val->name;
                     }
-                }            
-                
+                }
+
                 return $row;
             });
         });
-               
+
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
             $attr['options'] = $this->controller->getFeatureOptions('Institutions');
             return $attr;
     }
-     
+
     public function onExcelGetStaffName(Event $event, Entity $entity)
     {
         $InstitutionSubjects = TableRegistry::get('Report.InstitutionSubjects');
@@ -200,11 +200,11 @@ class InstitutionSubjectsTable extends AppTable  {
 
         $staffResult = $InstitutionSubjects
                 ->find()
-                ->select([                    
+                ->select([
                     'staff_id' => 'InstitutionSubjectStaff.staff_id',
                     'Users.openemis_no',
                     'Users.first_name',
-                    'Users.last_name'                    
+                    'Users.last_name'
                 ])
                 ->leftJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()], [
                     $this->aliasField('id =') . $InstitutionClassSubjects->aliasField('institution_subject_id')
@@ -219,21 +219,21 @@ class InstitutionSubjectsTable extends AppTable  {
                     $Staff->aliasField('id =') . $InstitutionSubjectStaff->aliasField('staff_id')
                 ])
                 ->where($conditions)
-                ->hydrate(false)
+                ->disableHydration() // POCOR-8533
                 ->toArray()
-                ;  
+                ;
         $staffName = [];
         foreach($staffResult as $result){
             if(!empty($result['Users']['openemis_no'])){
                 $staffName[] = $result['Users']['openemis_no'].' - '.$result['Users']['first_name'].' '.$result['Users']['last_name'];
             }
         }
-       
+
         return implode(',', $staffName);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
-    {   
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    {
         foreach ($fields as $key => $value) {
             if ($value['field'] == 'education_subject_id') {
                 $fields[$key] = array('key' => 'InstitutionClasses.name',
@@ -242,17 +242,17 @@ class InstitutionSubjectsTable extends AppTable  {
                     'label' => __('Institution Class'));
             }
         }
-        
+
         $cloneFields = $fields->getArrayCopy();
         $newFields = [];
-        
+
         foreach ($cloneFields as $key => $value) {
-            
+
             if (in_array($value['field'], ['academic_period_id'])) {
                     unset($cloneFields[$key]);
                     break;
             }
-            
+
             if ($value['field'] == 'class_name') {
                 $newFields[] = [
                     'key' => 'institution_code',
@@ -270,7 +270,7 @@ class InstitutionSubjectsTable extends AppTable  {
                 /**POCOR-6726 starts - uncommented area column*/
                 $AreaLevelTbl = TableRegistry::get('area_levels');
                 $AreaLevelArr = $AreaLevelTbl->find()->select(['id','name'])->order(['id'=>'DESC'])->limit(2)->enableHydration(false)->toArray();
-                
+
                 $newFields[] = [
                     'key' => '',
                     'field' => 'region_name',
@@ -291,7 +291,7 @@ class InstitutionSubjectsTable extends AppTable  {
                     'type' => 'string',
                     'label' => __('Institution Class')
                 ];
-                
+
                 $newFields[] = [
                     'key' => 'InstitutionSubjects.name',
                     'field' => 'name',
@@ -312,28 +312,28 @@ class InstitutionSubjectsTable extends AppTable  {
                     'type' => 'string',
                     'label' => __('Subject Teacher')
                 ];
-                
+
                 $newFields[] = [
                     'key' => 'InstitutionSubjects.no_of_seats',
                     'field' => 'no_of_seats',
                     'type' => 'integer',
                     'label' => __('Number of seats')
                 ];
-                
+
                 $newFields[] = [
                     'key' => 'InstitutionSubjects.total_male_students',
                     'field' => 'total_male_students',
                     'type' => 'integer',
                     'label' => __('Male students')
                 ];
-                
+
                 $newFields[] = [
                     'key' => 'InstitutionSubjects.total_female_students',
                     'field' => 'total_female_students',
                     'type' => 'integer',
                     'label' => __('Female students')
                 ];
-                
+
                 $newFields[] = [
                     'key' => 'total_students',
                     'field' => 'total_students',
@@ -341,9 +341,9 @@ class InstitutionSubjectsTable extends AppTable  {
                     'label' => __('Total students')
                 ];
 
-            }            
+            }
         }
-        
-        $fields->exchangeArray($newFields); 
+
+        $fields->exchangeArray($newFields);
     }
 }

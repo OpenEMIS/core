@@ -31,7 +31,7 @@ class DashboardController extends AppController
 
         //$this->triggerAutomatedStudentWithdrawalShell();
         //$this->triggerInstitutionClassSubjectsShell(); // By Anand Stop the InstitutionClassSubjects shell
-       // $this->callAlerts(); //POCOR-7558
+        $this->callAlerts(); //POCOR-7558
 
     }
 
@@ -562,6 +562,7 @@ class DashboardController extends AppController
         $AlertsData = $AlertsTable->find('all')
             ->where(['frequency !=' => 'Never']) // POCOR-8533-C3
             ->toArray();
+//        Log::debug(print_r($AlertsData, true));
         $lastRunDates = TableRegistry::getTableLocator()->get('Alert.AlertRules')->getLastRunDate();
         $mainAlerts = [];
         foreach ($AlertsData as $key => $value) {
