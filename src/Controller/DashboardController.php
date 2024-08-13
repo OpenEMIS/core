@@ -559,7 +559,9 @@ class DashboardController extends AppController
     private function callAlerts()
     {
         $AlertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
-        $AlertsData = $AlertsTable->find('all')->toArray();
+        $AlertsData = $AlertsTable->find('all')
+            ->where(['frequency !=' => 'Never']) // POCOR-8533-C3
+            ->toArray();
         $lastRunDates = TableRegistry::getTableLocator()->get('Alert.AlertRules')->getLastRunDate();
         $mainAlerts = [];
         foreach ($AlertsData as $key => $value) {
