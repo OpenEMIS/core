@@ -2393,6 +2393,23 @@ class NavigationComponent extends Component
                     '1' => $this->controller->paramsEncode(['id' => $studentId]), 'queryString' => $queryString],
                 'selected' => ['GuardianNavs.StudentUser']
             ],
+            //POCOR-8293
+            'GuardianNavs.Healths.index' => [
+                'title' => 'Student Health',
+                'parent' => 'GuardianNavs.GuardianNavs.index',
+                'params' => ['plugin' => 'GuardianNav',
+                    '1' => $this->controller->paramsEncode(['id' => $studentId,'security_user_id'=> $studentId]), 'queryString' => $queryString],
+                'selected' => ['GuardianNavs.Healths',
+                        'GuardianNavs.HealthAllergies',
+                        'GuardianNavs.HealthConsultations',
+                        'GuardianNavs.HealthFamilies',
+                        'GuardianNavs.HealthHistories',
+                        'GuardianNavs.HealthImmunizations',
+                        'GuardianNavs.HealthMedications',
+                        'GuardianNavs.HealthTests',
+                        'GuardianNavs.HealthBodyMasses',
+                        'GuardianNavs.HealthInsurances']
+            ],
             'GuardianNavs.StudentProgrammes.index' => [
                 'title' => 'Academic',
                 'parent' => 'GuardianNavs.GuardianNavs.index',
