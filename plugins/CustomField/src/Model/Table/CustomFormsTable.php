@@ -12,6 +12,7 @@ use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Log\Log;
 
 class CustomFormsTable extends ControllerActionTable
 {
@@ -186,16 +187,21 @@ class CustomFormsTable extends ControllerActionTable
         $fieldKey = $this->extra['fieldClass']['targetForeignKey'];
         $alias = $CustomFormsFields->getAlias();
 
+        $selectFields = [
+            'name' => $CustomFields->aliasField('name'),
+            'field_type' => $CustomFields->aliasField('field_type'),
+            $fieldKey => $CustomFormsFields->aliasField($fieldKey),
+            $formKey => $CustomFormsFields->aliasField($formKey),
+            'id' => $CustomFormsFields->aliasField('id')
+        ];
+        try{
+            $selectFields['section'] = $CustomFormsFields->aliasField('section'); //comment cakephp4 not found column // Again change for this POCOR-8419
+        }catch (\Exception $exception){
+            Log::debug('No Custom Field Section');
+        }
         return $CustomFormsFields
             ->find('all')
-            ->select([
-                'name' => $CustomFields->aliasField('name'),
-                'field_type' => $CustomFields->aliasField('field_type'),
-                $fieldKey => $CustomFormsFields->aliasField($fieldKey),
-                $formKey => $CustomFormsFields->aliasField($formKey),
-                //'section' => $CustomFormsFields->aliasField($alias.'.section'), //comment cakephp4 not found column // Again change for this POCOR-8419
-                'id' => $CustomFormsFields->aliasField('id')
-            ])
+            ->select($selectFields)
             ->innerJoin(
                 [$CustomFields->getAlias() => $CustomFields->getTable()],
                 [
@@ -204,6 +210,7 @@ class CustomFormsTable extends ControllerActionTable
             )
             ->order([$CustomFormsFields->aliasField('order')])
             ->where([$CustomFormsFields->aliasField($formKey) => $formId])
+            ->enableAutoFields()
             ->toArray();
     }
 
@@ -218,9 +225,10 @@ class CustomFormsTable extends ControllerActionTable
             $customFormId = $entity->id;
             $customFields = $this->getCustomFormsFields($customFormId);
 
-            $sectionName = "";
+            $sectionName = "section";
             $printSection = false;
             foreach ($customFields as $key => $obj) {
+                dd($obj);
                 if (!empty($obj['section']) && $obj['section'] != $sectionName) {
                     $sectionName = $obj['section'];
                     $printSection = true;
