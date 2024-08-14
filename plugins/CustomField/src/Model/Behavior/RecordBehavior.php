@@ -872,7 +872,7 @@ class RecordBehavior extends Behavior
                 $action = $ControllerAction->action();
             }
             $url = $ControllerAction->url($action);
-            $sectionName = null;
+            $sectionName = '__section';
             foreach ($customFields as $key => $obj) {
                 if (isset($obj->section)) {
                     if ($sectionName != $obj->section) {
@@ -893,7 +893,8 @@ class RecordBehavior extends Behavior
                         $moduleUrl['?']['tab_section'] = $tabName;
                         $tabElements[$tabName] = [
                             'url' => $moduleUrl,
-                            'text' => $sectionName,
+                            'text' => $sectionName != '' ? $sectionName :__('Questions'),
+                            'section' => $sectionName
                         ];
 
 
@@ -907,7 +908,7 @@ class RecordBehavior extends Behavior
                 $model->controller->set('selectedAction', $selectedAction);
 
                 $query->where([
-                    $this->CustomFormsFields->aliasField('section') => $tabElements[$selectedAction]['text']
+                    $this->CustomFormsFields->aliasField('section') => $tabElements[$selectedAction]['section']
                 ]);
             }
         }

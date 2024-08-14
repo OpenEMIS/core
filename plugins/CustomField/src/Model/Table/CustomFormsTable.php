@@ -12,7 +12,7 @@ use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
-use Cake\Log\Log;
+use Cake\Log\Log; // POCOR-8542
 
 class CustomFormsTable extends ControllerActionTable
 {
@@ -185,8 +185,7 @@ class CustomFormsTable extends ControllerActionTable
         $CustomFields = TableRegistry::get($this->extra['fieldClass']['className']);
         $formKey = $this->extra['fieldClass']['foreignKey'];
         $fieldKey = $this->extra['fieldClass']['targetForeignKey'];
-        $alias = $CustomFormsFields->getAlias();
-
+// POCOR-8542 Start
         $selectFields = [
             'name' => $CustomFields->aliasField('name'),
             'field_type' => $CustomFields->aliasField('field_type'),
@@ -213,6 +212,7 @@ class CustomFormsTable extends ControllerActionTable
             ->enableAutoFields()
             ->toArray();
     }
+    // POCOR-8542 End
 
     public function onGetCustomOrderFieldElement(Event $event, $action, $entity, $attr, $options = [])
     {
@@ -228,7 +228,7 @@ class CustomFormsTable extends ControllerActionTable
             $sectionName = "section";
             $printSection = false;
             foreach ($customFields as $key => $obj) {
-                dd($obj);
+
                 if (!empty($obj['section']) && $obj['section'] != $sectionName) {
                     $sectionName = $obj['section'];
                     $printSection = true;
