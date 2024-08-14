@@ -503,6 +503,8 @@ Route::group(
         //POCOR-7429 start...
         Route::get('surveys', 'SurveyController@getSurveys');
         Route::get('survey/download/xform/{surveyFormId}', 'SurveyController@downloadXform');
+        Route::get('survey/checkins/xform/{surveyFormId}/{insCode}/{academicPeriodCode}', 'SurveyController@checkInsXform');
+        Route::get('survey/studentlist/xform/{surveyFormId}/{insCode}/{academicPeriodCode}', 'SurveyController@getStudentListForSurvey');
         Route::post('survey/upload', 'SurveyController@uploadXform');
         //POCOR-7429 end...
     }

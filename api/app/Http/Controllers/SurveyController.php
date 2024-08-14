@@ -201,7 +201,7 @@ class SurveyController extends Controller
                         ->header('Content-Disposition', 'attachment; filename='.$fileWithExt);
                 }
             } else {
-                return $this->sendErrorResponse('Failed to download survey xformqqq.');
+                return $this->sendErrorResponse('Failed to download survey xform.');
             }
             
             
@@ -212,6 +212,53 @@ class SurveyController extends Controller
             );
 
             return $this->sendErrorResponse('Failed to download survey xform.');
+        }
+    }
+
+
+
+    public function checkInsXform(Request $request, $surveyFormId, $insCode, $academicPeriod)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->surveyService->checkInsXform($params, $surveyFormId, $insCode, $academicPeriod);
+            
+            if(!empty($data)){
+                return $this->sendSuccessResponse("Successful.", $data);
+            } else {
+                return $this->sendErrorResponse('Survey not exists for selected Institution.');
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to check survey form.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to check survey form.');
+        }
+    }
+
+
+    public function getStudentListForSurvey(Request $request, $surveyFormId, $insCode, $academicPeriod)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->surveyService->getStudentListForSurvey($params, $surveyFormId, $insCode, $academicPeriod);
+            
+            if(!empty($data)){
+                return $this->sendSuccessResponse("Successful.", $data);
+            } else {
+                return $this->sendErrorResponse('Student list not found.');
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to find student list.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to find student list.');
         }
     }
 
