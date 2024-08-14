@@ -225,7 +225,7 @@ class CustomFormsTable extends ControllerActionTable
             $customFormId = $entity->id;
             $customFields = $this->getCustomFormsFields($customFormId);
 
-            $sectionName = "section";
+            $sectionName = "__section"; // POCOR-8542
             $printSection = false;
             foreach ($customFields as $key => $obj) {
 
