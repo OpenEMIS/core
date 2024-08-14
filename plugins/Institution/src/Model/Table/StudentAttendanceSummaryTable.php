@@ -108,6 +108,7 @@ class StudentAttendanceSummaryTable extends AppTable
         $monthoption = ['01'=>"January",'02'=>"February",'03'=>"March",'04'=>"April",'05'=>"May",'06'=>"June",'07'=>"July",'08'=>"August",'09'=>"September",10=>"October",11=>"November",12=>"December"];
        
         //POCOR-7265::Start
+        //POCOR-8274::Added institution_id condition
         $subQuery = "(SELECT institution_class_students.academic_period_id 
         ,institution_class_students.institution_id
         ,institution_class_students.education_grade_id
@@ -124,6 +125,7 @@ class StudentAttendanceSummaryTable extends AppTable
 	INNER JOIN academic_periods
 	ON academic_periods.id = institution_class_students.academic_period_id
 	WHERE academic_periods.id = $academicPeriodId
+    AND institution_class_students.institution_id = $institutionId
 	AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_class_students.student_status_id = 1, institution_class_students.student_status_id IN (1, 7, 6, 8))
 	GROUP BY  institution_class_students.student_id)";
     
@@ -302,6 +304,7 @@ FROM
         INNER JOIN academic_periods
         ON academic_periods.id = institution_subject_students.academic_period_id
         WHERE institution_subject_students.academic_period_id = $academicPeriodId
+        AND institution_subject_students.institution_id = $institutionId
         AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_subject_students.student_status_id = 1, institution_subject_students.student_status_id IN (1, 7, 6, 8))
         GROUP BY institution_subject_students.academic_period_id
             ,institution_subject_students.institution_id
@@ -321,6 +324,7 @@ FROM
         WHERE config_items.code LIKE 'calculate_daily_attendance'
     ) attendance_type
     WHERE institution_student_absence_details.academic_period_id = $academicPeriodId
+    AND institution_student_absence_details.institution_id = $institutionId
     AND institution_student_absence_details.absence_type_id != 3
     GROUP BY institution_student_absence_details.academic_period_id
         ,institution_student_absence_details.institution_id

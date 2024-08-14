@@ -1,7 +1,0 @@
-@media only screen and (max-width: 1025px) {
-    .student-table-data {
-        position: unset !important;
-        height: 100vh !important;
-    }
-}
-

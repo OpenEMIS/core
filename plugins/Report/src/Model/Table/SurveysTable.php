@@ -418,10 +418,10 @@ class SurveysTable extends AppTable
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
     {
-        $surveyForms = TableRegistry::get('survey_forms');
-        $surveyFormsFilters = TableRegistry::get('survey_forms_filters');
-        $institutionTypes = TableRegistry::get('institution_types');
-        $institutions = TableRegistry::get('institutions');
+        $surveyForms = TableRegistry::get('Survey.SurveyForms');
+        $surveyFormsFilters = TableRegistry::get('Survey.SurveyFormsFilters');
+        $institutionTypes = TableRegistry::get('Institution.InstitutionTypes');
+        $institutions = TableRegistry::get('Institution.Institutions');
         $condition = [];
         // POCOR-6440 start
         $requestData = json_decode($settings['process']['params']);
@@ -429,6 +429,21 @@ class SurveysTable extends AppTable
         if($institutionID > 0){
             $condition['Institutions.id'] = $institutionID;
         }
+        //POCOR-8515 starts
+        $areaId = $requestData->area_id;
+        $selectedArea = $requestData->area_id;
+        if ($areaId != -1 && $areaId != '' && $areaId != 0) {
+            $areaIds = [];
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $allselectedAreas = $selectedArea1;
+            }
+            
+            $condition[$institutions->aliasField('area_id IN')] = $allselectedAreas;
+        }//POCOR-8515 ends
         //POCOR-7821 start(for filtering data based on status(completed, not completed))
         $status= $requestData->status;
         if(!empty($status) && $status != "all"){
@@ -492,8 +507,9 @@ class SurveysTable extends AppTable
                 'Institutions.Areas',
                 'Institutions.AreaAdministratives',
                 'Institutions.Statuses'
-            ])->where([$condition
-            ])->group(['Surveys.id']); //POCOR-8226 added group by to avoid duplicates
+            ])
+            ->where([$condition])
+            ->group(['Surveys.id']); //POCOR-8226 added group by to avoid duplicates
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
@@ -689,7 +705,21 @@ class SurveysTable extends AppTable
 
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     { 
-        $areaId = $request->getData($this->getAlias())['area_id'];
+        //POCOR-8515 Starts
+        $selectedArea = $request->getData($this->getAlias())['area_id'];
+        $areaIds = [];
+        $selectedArea1[]= $selectedArea;
+        if(!empty($selectedArea)){
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            if(!empty($allgetArea)){
+                $areaId = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $areaId = $selectedArea1;
+            }
+        }else{
+            $areaId = $selectedArea1;
+        }//POCOR-8515 ends
+
         $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -701,7 +731,7 @@ class SurveysTable extends AppTable
                         'valueField' => 'code_name'
                     ])
                     ->where([
-                        $InstitutionsTable->aliasField('area_id') => $areaId
+                        $InstitutionsTable->aliasField('area_id IN') => $areaId//POCOR-8515
                     ])
                     ->order([
                         $InstitutionsTable->aliasField('code') => 'ASC',
@@ -753,7 +783,7 @@ class SurveysTable extends AppTable
                             'valueField' => 'code_name'
                         ])
                         ->where([
-                            $InstitutionsTable->aliasField('area_id') => $areaId
+                            $InstitutionsTable->aliasField('area_id IN') => $areaId//POCOR-8515
                         ])
                         ->order([
                             $InstitutionsTable->aliasField('code') => 'ASC',
@@ -799,22 +829,48 @@ class SurveysTable extends AppTable
         }
         return $attr;
     }
+    //POCOR-8515 starts
+    public function getChildren($id, $idArray) {
+        $Areas = TableRegistry::get('Area.Areas');
+        $result = $Areas->find()
+                            ->where([
+                                $Areas->aliasField('parent_id') => $id
+                            ]) 
+                             ->toArray();
+        foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
+    }//POCOR-8515 ends
 
     public function onUpdateFieldAreaId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
+            $areaLevelId = $this->request->getData($this->getAlias())['area_level_id'];//POCOR-8515
             $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+            //POCOR-8515 starts
+            if ($areaLevelId != -1 && !empty($areaLevelId)) {
+                $where[$Areas->aliasField('area_level_id')] = $areaLevelId;
+            }//POCOR-8515 ends
             $entity = $attr['entity'];
             if ($action == 'add') {
-                $areaOptions = $Areas
+                $areas = $Areas
                     ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+                    ->where([$where])//POCOR-8515
                     ->order([$Areas->aliasField('order')]);
-
+                $areaOptions = $areas->toArray();//POCOR-8515
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
                 $attr['select'] = true;
-                $attr['options'] = ['' => '-- ' . __('Select') . ' --', '0' => __('All Areas')] + $areaOptions->toArray();
+                //POCOR-8515 starts
+                //$attr['options'] = ['' => '-- ' . __('Select') . ' --', '0' => __('All Areas')] + $areaOptions->toArray();
+                if (count($areaOptions) > 1) {
+                    $attr['options'] = ['' => '-- ' . __('Select') . ' --', '0' => __('All Areas')] + $areaOptions;
+                } else {
+                    $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $areaOptions;
+                }//POCOR-8515 ends
                 $attr['onChangeReload'] = true;
             } else {
                 $attr['type'] = 'hidden';

@@ -330,7 +330,7 @@ class SecurityRolesTable extends ControllerActionTable
                                     // show roles that are lower privileges than current user role in selected group
                                     [
                                         $this->aliasField('security_group_id') => $selectedGroup,
-                                        $this->aliasField('order').' > ' => $userRole['security_role']['order'],
+                                       // $this->aliasField('order').' > ' => $userRole['security_role']['order'], //POCOR-8528 Because $userRole['security_role']['order'] got null value
                                     ],
                                     // also show roles that are created by current user
                                     [
@@ -339,6 +339,9 @@ class SecurityRolesTable extends ControllerActionTable
                                     ]
                                 ]
                             ];
+                            if (isset($userRole['security_role']['order']) && !empty($userRole['security_role']['order'])) { //POCOR-8528 
+                                $conditions['OR'][0][$this->aliasField('order') . ' >'] = $userRole['security_role']['order'];
+                            }
                         }
                     }
                     }
