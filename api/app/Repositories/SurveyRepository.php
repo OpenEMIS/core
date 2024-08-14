@@ -29,6 +29,7 @@ use App\Models\SurveyQuestionChoices;
 use App\Models\CustomModules;
 use App\Models\InstitutionStudentSurvey;
 use App\Models\SurveyQuestion;
+use App\Models\AcademicPeriod;
 
 
 define("NS_XHTML", "http://www.w3.org/1999/xhtml");
@@ -1533,7 +1534,7 @@ class SurveyRepository extends Controller
             }
         }
 
-        //$this->processUpload('student_list', ['sada']);
+        $this->processUpload('student_list', ['sada']);
     }
 
 
@@ -1818,6 +1819,332 @@ class SurveyRepository extends Controller
         $deleteInstitutionSurveyAnswers = InstitutionSurveyAnswers::whereIn('survey_question_id', $questions)->where('institution_survey_id', $recordId)->delete();
 
         $delInstitutionSurveyTableCells = InstitutionSurveyTableCells::whereIn('survey_question_id', $questions)->where('institution_survey_id', $recordId)->delete();
+    }
+
+
+
+    public function checkInsXform($params, $surveyFormId, $insCode, $academicPeriod)
+    {
+        try {
+            $resp = [];
+            $institution = Institutions::where('code', $insCode)->first();          
+            $academicPeriod = AcademicPeriod::where('name', $academicPeriod)->first();
+
+            $checkSurvey = InstitutionSurveys::where('institution_id', $institution->id??0)
+                            ->where('academic_period_id', $academicPeriod->id??0)
+                            ->where('survey_form_id', $surveyFormId)
+                            ->first();
+            
+
+            if(!empty($checkSurvey)){
+                $resp['code'] = 200;
+                $resp['survey_exist_for_ins'] = "Yes";
+            }
+            
+            return $resp;                             
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to check survey form.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to check survey form.');
+        }
+    }
+
+
+
+    public function getStudentListForSurvey($params, $surveyFormId, $insCode, $academicPeriod)
+    {
+        try {
+            ini_set('max_execution_time', 3000);
+
+
+            $surveyForm = SurveyForms::where('id', $surveyFormId)->first();
+            if(empty($surveyForm)){
+                return 1; //Survey form don't exists.
+            }
+
+            $insData = Institutions::where('code', $insCode)->first();
+            if(empty($insData)){
+                return 2; //Institution don't exist.
+            }
+
+            $apData = AcademicPeriod::where('name', $academicPeriod)->first();
+            if(empty($apData)){
+                return 3; //Academic period don't exist.
+            }
+
+            $insId = $insData->id;
+            $apId = $apData->id;
+            $title = $surveyForm->name??"";
+
+
+            $main_query = "(SELECT institution_surveys.academic_period_id
+                    ,institution_surveys.institution_id
+                    ,institution_surveys.survey_form_id institution_survey_form_id
+                    ,institution_forms.name institution_survey_form_name
+                    ,survey_questions.id institution_survey_question_id
+                    ,survey_forms_questions.section
+                    ,student_list_survey_forms_questions.order
+                    ,survey_questions.name institution_survey_question_name
+                    ,student_list_survey_forms_questions.survey_form_id student_list_survey_form_id
+                    ,survey_list_forms.name student_list_survey_form_name
+                    ,student_list_survey_questions.id student_list_survey_question_id
+                    ,student_list_survey_questions.name student_list_survey_question_name
+                    ,student_list_survey_questions.field_type student_list_survey_question_type
+                FROM institution_surveys
+                INNER JOIN survey_forms institution_forms
+                ON institution_forms.id = institution_surveys.survey_form_id
+                INNER JOIN survey_forms_questions
+                ON survey_forms_questions.survey_form_id = institution_surveys.survey_form_id
+                INNER JOIN survey_questions
+                ON survey_questions.id = survey_forms_questions.survey_question_id
+                LEFT JOIN survey_forms_questions student_list_survey_forms_questions
+                ON student_list_survey_forms_questions.survey_form_id = JSON_EXTRACT(survey_questions.params, '$.survey_form_id')
+                LEFT JOIN survey_forms survey_list_forms
+                ON survey_list_forms.id = student_list_survey_forms_questions.survey_form_id
+                LEFT JOIN survey_questions student_list_survey_questions
+                ON student_list_survey_questions.id = student_list_survey_forms_questions.survey_question_id
+                WHERE institution_surveys.academic_period_id = ".$apId."
+                AND institution_surveys.institution_id = ".$insId."
+                AND institution_surveys.survey_form_id = ".$surveyFormId."
+                AND institution_surveys.status_id = 1
+                AND LENGTH(survey_questions.params) > 0
+                AND survey_questions.field_type = 'STUDENT_LIST') main_query";
+
+
+            $left_join1 = "(SELECT institution_classes.academic_period_id
+                    ,institution_classes.institution_id
+                    ,institution_classes.id institution_class_id
+                    ,institution_classes.name institution_class_name
+                    ,classes_student_info.student_id
+                    ,classes_student_info.openemis_no
+                    ,classes_student_info.student_name
+                FROM institution_classes
+                LEFT JOIN
+                    (
+                        SELECT institution_class_students.institution_class_id
+                            ,security_users.id student_id
+                            ,security_users.openemis_no
+                            ,REPLACE(CONCAT_WS(' ',security_users.first_name,security_users.middle_name,security_users.third_name,security_users.last_name), '  ', ' ') student_name
+                        FROM institution_class_students
+                        INNER JOIN
+                        (
+                            SELECT institution_class_students.student_id
+                                ,institution_class_students.education_grade_id
+                                ,institution_class_students.academic_period_id
+                                ,institution_class_students.institution_id
+                                ,MAX(institution_class_students.created) max_created
+                            FROM institution_class_students
+                            INNER JOIN academic_periods
+                            ON academic_periods.id = institution_class_students.academic_period_id
+                            WHERE institution_class_students.academic_period_id = ".$apId."
+                            AND institution_class_students.institution_id = ".$insId."
+                            AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_class_students.student_status_id = 1, institution_class_students.student_status_id IN (1, 7, 6, 8))
+                            GROUP BY institution_class_students.student_id
+                                ,institution_class_students.education_grade_id
+                                ,institution_class_students.academic_period_id
+                                ,institution_class_students.institution_id
+                        ) latest_class
+                        ON latest_class.student_id = institution_class_students.student_id
+                        AND latest_class.education_grade_id = institution_class_students.education_grade_id
+                        AND latest_class.academic_period_id = institution_class_students.academic_period_id
+                        AND latest_class.institution_id = institution_class_students.institution_id
+                        AND latest_class.max_created = institution_class_students.created
+                        INNER JOIN security_users
+                        ON security_users.id = institution_class_students.student_id
+                        INNER JOIN academic_periods
+                        ON academic_periods.id = institution_class_students.academic_period_id
+                        WHERE institution_class_students.academic_period_id = ".$apId."
+                        AND institution_class_students.institution_id = ".$insId."
+                        AND IF((CURRENT_DATE >= academic_periods.start_date AND CURRENT_DATE <= academic_periods.end_date), institution_class_students.student_status_id = 1, institution_class_students.student_status_id IN (1, 7, 6, 8))
+                    ) classes_student_info
+                    ON classes_student_info.institution_class_id = institution_classes.id
+                    WHERE institution_classes.academic_period_id = ".$apId."
+                    AND institution_classes.institution_id = ".$insId.") class_students_info ON class_students_info.academic_period_id = main_query.academic_period_id AND class_students_info.institution_id = main_query.institution_id";
+
+            $left_join2 = "(SELECT institution_student_surveys.academic_period_id
+                    ,institution_student_surveys.institution_id
+                    ,institution_student_surveys.student_id
+                    ,institution_student_surveys.survey_form_id
+                    ,institution_student_surveys.parent_form_id
+                    ,institution_student_survey_answers.survey_question_id
+                    ,institution_student_survey_answers.parent_survey_question_id
+                    ,survey_question_choices.id answer_choice_id_for_dropdown
+                    ,IF(institution_student_survey_answers.id IS NULL, '',
+                        IF(institution_student_survey_answers.text_value IS NOT NULL, institution_student_survey_answers.text_value,
+                            IF(institution_student_survey_answers.decimal_value IS NOT NULL, institution_student_survey_answers.decimal_value,
+                                IF(institution_student_survey_answers.textarea_value IS NOT NULL, institution_student_survey_answers.textarea_value,
+                                    IF(institution_student_survey_answers.date_value IS NOT NULL, institution_student_survey_answers.date_value,
+                                        IF(institution_student_survey_answers.time_value IS NOT NULL, institution_student_survey_answers.time_value,
+                                                IF(survey_question_choices.id IS NOT NULL, survey_question_choices.name, institution_student_survey_answers.number_value))))))) survey_answer_values
+                FROM institution_student_survey_answers
+                INNER JOIN institution_student_surveys
+                ON institution_student_surveys.id = institution_student_survey_answers.institution_student_survey_id
+                LEFT JOIN survey_question_choices
+                ON survey_question_choices.id = institution_student_survey_answers.number_value
+                WHERE institution_student_surveys.status_id = 1
+                AND institution_student_surveys.academic_period_id = ".$apId."
+                AND institution_student_surveys.institution_id = ".$insId."
+                AND institution_student_surveys.parent_form_id = ".$surveyFormId.") student_survey_answers_info ON student_survey_answers_info.academic_period_id = class_students_info.academic_period_id AND student_survey_answers_info.institution_id = class_students_info.institution_id AND student_survey_answers_info.student_id = class_students_info.student_id AND student_survey_answers_info.survey_form_id = main_query.student_list_survey_form_id AND student_survey_answers_info.parent_form_id = main_query.institution_survey_form_id AND student_survey_answers_info.survey_question_id = main_query.student_list_survey_question_id AND student_survey_answers_info.parent_survey_question_id = main_query.institution_survey_question_id";
+
+
+            $sql1 = "SELECT
+                main_query.academic_period_id as academic_period_id,
+                main_query.institution_id as institution_id,
+                main_query.institution_survey_form_id as institution_form_id,
+                main_query.institution_survey_form_name as institution_form_name,
+                main_query.institution_survey_question_id as institutiton_survey_question_id,
+                main_query.section as section,
+                main_query.institution_survey_question_name as name,
+                main_query.student_list_survey_form_id as student_list_form_id,
+                main_query.student_list_survey_form_name as student_list_form_name,
+                main_query.student_list_survey_question_id as student_list_survey_question_id,
+                main_query.student_list_survey_question_name as student_list_survey_question_name,
+                main_query.student_list_survey_question_type as student_list_survey_question_type,
+                class_students_info.institution_class_id as institution_class_id,
+                class_students_info.institution_class_name as class_name,
+                class_students_info.student_id as student_id,
+                class_students_info.openemis_no as openemis_no,
+                class_students_info.student_name as student_name,
+                student_survey_answers_info.answer_choice_id_for_dropdown,
+                student_survey_answers_info.survey_answer_values as survey_answer FROM " .$main_query. " LEFT JOIN ".$left_join1." LEFT JOIN ".$left_join2." GROUP BY main_query.section ORDER BY main_query.section DESC, main_query.institution_survey_question_id ASC";
+
+
+            $sql2 = "SELECT 
+                class_students_info.institution_class_id as institution_class_id,
+                class_students_info.institution_class_name as class_name FROM " .$main_query. " LEFT JOIN ".$left_join1." LEFT JOIN ".$left_join2."  GROUP BY institution_class_id ORDER BY main_query.section DESC";
+
+            $sql3 = "SELECT
+                main_query.institution_survey_form_id as institution_form_id,
+                main_query.institution_survey_form_name as institution_form_name,
+                main_query.student_list_survey_form_id as student_list_form_id,
+                main_query.student_list_survey_form_name as student_list_form_name,
+                main_query.institution_survey_question_name as name,
+                main_query.student_list_survey_question_id as student_list_survey_question_id,
+                main_query.student_list_survey_question_name as student_list_survey_question_name,
+                main_query.student_list_survey_question_type as student_list_survey_question_type,
+                main_query.institution_id as institution_id,
+                main_query.academic_period_id as academic_period_id,
+                class_students_info.institution_class_id as institution_class_id,
+                class_students_info.institution_class_name as class_name,
+                class_students_info.student_id as student_id,
+                class_students_info.openemis_no as openemis_no,
+                class_students_info.student_name as student_name FROM " .$main_query. " LEFT JOIN ".$left_join1." LEFT JOIN ".$left_join2."  GROUP BY student_id ORDER BY main_query.section DESC";
+
+
+
+            $sql4 = "SELECT
+                main_query.order as question_order,
+                main_query.student_list_survey_question_id as student_list_survey_question_id,
+                main_query.student_list_survey_question_name as student_list_survey_question_name,
+                main_query.student_list_survey_question_type as student_list_survey_question_type,
+                main_query.institution_id as institution_id FROM " .$main_query. " LEFT JOIN ".$left_join1." LEFT JOIN ".$left_join2." GROUP BY student_list_survey_question_id ORDER BY main_query.section DESC, question_order ASC";
+
+
+            $tabData = DB::select(DB::raw($sql1));
+            //Converting collection into array...
+            $tabData = array_map(function($item) {
+                return (array) $item;
+            }, $tabData);
+            
+
+            $class_list = DB::select(DB::raw($sql2));
+            //Converting collection into array...
+            $class_list = array_map(function($item) {
+                return (array) $item;
+            }, $class_list);
+
+            $students = DB::select(DB::raw($sql3));
+            //Converting collection into array...
+            $students = array_map(function($item) {
+                return (array) $item;
+            }, $students);
+            
+
+            $questions = DB::select(DB::raw($sql4));
+            //Converting collection into array...
+            $questions = array_map(function($item) {
+                return (array) $item;
+            }, $questions);
+            
+
+
+            $finalData = [];
+            $AnswerKeyArr = [];
+            $selectVAlue = Null;
+            foreach ($tabData as $p => $tbDta) {
+                $finalData[$tbDta['section']]['parent_question_tab_id'] = $tbDta['institutiton_survey_question_id'];
+                $finalData[$tbDta['section']]['class_list'] = $class_list;
+                $finalData[$tbDta['section']]['students'] = $students;
+
+                foreach ($finalData[$tbDta['section']]['students'] as $ke => $student) {
+                    $finalData[$tbDta['section']]['students'][$ke]['questions'] = $questions;
+                    $ins_stu_survey = InstitutionStudentSurvey::where([
+                            'status_id' => 1,
+                            'institution_id' => $student['institution_id'],
+                            'student_id' => $student['student_id'],
+                            'academic_period_id' => $student['academic_period_id'],
+                            'survey_form_id' => $student['student_list_form_id'],
+                            'parent_form_id' => $student['institution_form_id'],
+                        ])
+                        ->first();
+
+                    $finalData[$tbDta['section']]['students'][$ke]['institution_student_survey_id'] = $ins_stu_survey->id??null;
+
+                    foreach ($finalData[$tbDta['section']]['students'][$ke]['questions'] as $jk => $ques) {
+                        $options = SurveyQuestionChoices::where('survey_question_id', $ques['student_list_survey_question_id'])->get()->toArray();
+
+                        $finalData[$tbDta['section']]['students'][$ke]['questions'][$jk]['options'] = $options;
+
+                        if (!empty($ins_stu_survey)) {
+                            $dataExistAns = InstitutionStudentSurveyAnswer::where([
+                                    'survey_question_id' => $ques['student_list_survey_question_id'],
+                                    'parent_survey_question_id' => $tbDta['institutiton_survey_question_id'],
+                                    'institution_student_survey_id' => $student['institution_student_survey_id']
+                                ])
+                                ->first();
+
+                            if (!empty($dataExistAns)) {
+                                if (!empty($dataExistAns->number_value)) {
+                                    $selectVAlue = $dataExistAns->number_value;
+                                } elseif (!empty($dataExistAns->text_value)) {
+                                    $selectVAlue = $dataExistAns->text_value;
+                                } elseif (!empty($dataExistAns->decimal_value)) {
+                                    $selectVAlue = $dataExistAns->decimal_value;
+                                } elseif (!empty($dataExistAns->textarea_value)) {
+                                    $selectVAlue = $dataExistAns->textarea_value;
+                                } elseif (!empty($dataExistAns->date_value)) {
+                                    $selectVAlue = date('Y-m-d', strtotime($dataExistAns->date_value));
+                                } elseif (!empty($dataExistAns->time_value)) {
+                                    $selectVAlue = date('h:i:s', strtotime($dataExistAns->date_value));
+                                }
+                            } else {
+                                $selectVAlue = $options[0]['id'];
+                            }
+                        }
+
+                        $AnswerKeyArr['server_key'][$tbDta['section']][$ke][$jk]['answer'][] = $selectVAlue;
+
+                        $finalData[$tbDta['section']]['students'][$ke]['questions'][$jk]['survey_answer'] = $selectVAlue;
+
+                    }
+                }
+            }
+
+            $final = [];
+            $final['data'] = $finalData;
+            $final['survey_answer_arr'] = $AnswerKeyArr;
+
+            return $final;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to find student list.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to find student list.');
+        }
     }
 }
 

@@ -83,4 +83,40 @@ class SurveyService extends Controller
             return $this->sendErrorResponse('Failed to upload survey xform.');
         }
     }
+
+
+
+    public function checkInsXform($params, $surveyFormId, $insCode, $academicPeriod)
+    {
+        try {
+            $data = $this->surveyRepository->checkInsXform($params, $surveyFormId, $insCode, $academicPeriod);
+            
+            return $data;            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to check survey form.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to check survey form.');
+        }
+    }
+
+
+
+    public function getStudentListForSurvey($params, $surveyFormId, $insCode, $academicPeriod)
+    {
+        try {
+            $data = $this->surveyRepository->getStudentListForSurvey($params, $surveyFormId, $insCode, $academicPeriod);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to find student list.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to find student list.');
+        }
+    }
 }
