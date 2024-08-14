@@ -1512,7 +1512,7 @@ class InstitutionsController extends AppController
              $encodedPart = substr($url, $startPos);
 
              //POCOR-8051 end
-
+             
             $_edit = $this->AccessControl->check(['Institutions', 'StudentMeals', 'edit']);
             $_excel = $this->AccessControl->check(['Institutions', 'StudentMeals', 'excel']);
             $_import = $this->AccessControl->check(['Institutions', 'ImportStudentMeals', 'add']);
@@ -7115,7 +7115,7 @@ class InstitutionsController extends AppController
             '0' => 'index',
             '1' => $this->paramsEncode(['institution_id'=> $institutionId])
         ]);
-
+        
         $header = __('Reports') . ' - ' . $data['module'];
 
         $inputFileName = $replace_data;

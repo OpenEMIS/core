@@ -872,7 +872,7 @@ class RecordBehavior extends Behavior
                 $action = $ControllerAction->action();
             }
             $url = $ControllerAction->url($action);
-            $sectionName = '__section';
+            $sectionName = '__section'; // POCOR-8542
             foreach ($customFields as $key => $obj) {
                 if (isset($obj->section)) {
                     if ($sectionName != $obj->section) {
@@ -891,11 +891,13 @@ class RecordBehavior extends Behavior
                         $url['tab_section'] = $tabName;
                         $moduleUrl = $url;
                         $moduleUrl['?']['tab_section'] = $tabName;
+                        // POCOR-8542 Start
                         $tabElements[$tabName] = [
                             'url' => $moduleUrl,
                             'text' => $sectionName != '' ? $sectionName :__('Questions'),
                             'section' => $sectionName
                         ];
+                        // POCOR-8542 End
 
 
                     }
@@ -908,7 +910,7 @@ class RecordBehavior extends Behavior
                 $model->controller->set('selectedAction', $selectedAction);
 
                 $query->where([
-                    $this->CustomFormsFields->aliasField('section') => $tabElements[$selectedAction]['section']
+                    $this->CustomFormsFields->aliasField('section') => $tabElements[$selectedAction]['section'] // POCOR-8542
                 ]);
             }
         }
@@ -1331,7 +1333,7 @@ class RecordBehavior extends Behavior
             $fieldIds = $model->array_column($customFields, $fieldKey);
 
             $ignoreFields = ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
-            if (isset(requestData['custom_field_values'])) {
+            if (isset($requestData['custom_field_values'])) { // POCOR-8542
                 $newRequestData['custom_field_values'] = [];
                 foreach ($requestData['custom_field_values'] as $key => $fieldValue) {
                     if (in_array($fieldValue[$fieldKey], $fieldIds)) {
@@ -1344,7 +1346,7 @@ class RecordBehavior extends Behavior
                 }
             }
 
-            if (isset(requestData['custom_table_cells'])) {
+            if (isset($requestData['custom_table_cells'])) { // POCOR-8542
                 $newRequestData['custom_table_cells'] = [];
                 foreach ($requestData['custom_table_cells'] as $key => $fieldCell) {
                     if (in_array($fieldCell[$fieldKey], $fieldIds)) {
