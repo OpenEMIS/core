@@ -166,7 +166,11 @@ class InstitutionStatisticsTable extends AppTable
                         }
 
                         if (!isset($this->request->getData($this->getAlias())[$field])) {
-                            $this->request->getData($this->getAlias())[$field] = key($options);
+                           // $this->request->getData($this->getAlias())[$field] = key($options); //POCOR-8485
+                            $requestData = $this->request->getData($this->getAlias());
+                            $requestData[$field] = $options;
+                            $this->request = $this->request->withData($this->getAlias(), $requestData);
+                            
                         }
                     }
 
@@ -215,14 +219,17 @@ class InstitutionStatisticsTable extends AppTable
                 $reportOptions[$key] = __($customReport->name);
             }
 
-            $attr['options'] = ['-1' => __('Select Report')] + $reportOptions;
+            $attr['options'] =  $reportOptions;
             $attr['onChangeReload'] = true;
             $attr['type']           = 'select';
             if (!(isset($this->request->getData($this->getAlias())['feature']))) {
                 $option = $attr['options'];
                 reset($option);
                 $firstOptionKey = key($option);
-                $this->request->getData()[$this->getAlias()]['feature'] = $firstOptionKey;
+                //$this->request->getData()[$this->getAlias()]['feature'] = $firstOptionKey;
+                $requestData = $this->request->getData($this->getAlias());//POCOR-8485
+                $requestData = ['feature' => $firstOptionKey]; 
+                $this->request = $this->request->withData($this->getAlias(), $requestData);
 
             }
             return $attr;
@@ -376,7 +383,7 @@ class InstitutionStatisticsTable extends AppTable
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
-        $params = $this->ControllerAction->getQueryString();
+        $params = $this->getQueryString();
         $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
         switch ($action) {
             case 'add':

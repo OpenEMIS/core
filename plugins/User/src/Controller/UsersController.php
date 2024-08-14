@@ -22,6 +22,7 @@ use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\I18n\FrozenTime;
+use Firebase\JWT\Key;
 
 class UsersController extends AppController
 {
@@ -885,9 +886,21 @@ class UsersController extends AppController
 
     public function afterAuthenticate(EventInterface $event, ArrayObject $extra)
     {
-        if ($this->Cookie->check('Restful.Call')) {
+        //echo "<pre>"; print_r($_COOKIE['Restful']); die;
+        //if ($this->Cookie->check('Restful')) {
+        if (isset($_COOKIE['Restful'])) {
+            //echo "<pre>"; print_r($this->generateToken()); die;
             $event->stopPropagation();
-            return $this->redirect(['plugin' => null, 'controller' => 'Rest', 'action' => 'auth', 'payload' => $this->generateToken(), 'version' => '2.0']);
+            //return $this->redirect(['plugin' => null, 'controller' => 'Rest', 'action' => 'auth', 'payload' => $this->generateToken(), 'version' => '2.0']);
+            return $this->redirect([
+                'plugin' => null,
+                    'controller' => 'Rest',
+                    'action' => 'auth',
+                    '?' => [
+                        'payload' => $this->generateToken(),
+                        'version' => '2.0'
+                    ]
+                ]); 
         } else {
             $user = $this->Auth->user();
 
@@ -916,12 +929,20 @@ class UsersController extends AppController
     public function generateToken()
     {
         $user = $this->Auth->user();
+        $privateKey = Configure::read('Application.private.key');
 
-        // Expiry change to 24 hours
-        return JWT::encode([
-            'sub' => $user['id'],
-            'exp' => time() + 10800
-        ], Configure::read('Application.private.key'), 'RS256');
+        try {
+            $token = JWT::encode([
+                'sub' => $user['id'],
+                'exp' => time() + 86400 // 24 hours
+            ], $privateKey, 'RS256');
+
+            return $token;
+        } catch (\Exception $e) {
+            // Log the error or handle it accordingly
+            error_log('JWT Error: ' . $e->getMessage());
+            throw $e;
+        }
     }
 
     public function afterIdentify(EventInterface $event, $user)

@@ -1,0 +1,10 @@
+<kd-view 
+    displayType="form" 
+    [inputData]="_questionBase" 
+    [button]="_formButtons" 
+    [api]="api"
+    (detectFrom)="detectValue($event)" 
+    (submitEvent)="submitVal($event)" 
+    (detectFrom)="detectGrid($event)"
+    (resetEvent)="reset()">
+</kd-view>

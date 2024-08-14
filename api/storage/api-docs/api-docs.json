@@ -13964,6 +13964,69 @@
                                                                     "type": "object"
                                                                 }
                                                             },
+                                                            "custom_fields": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "string",
+                                                                            "example": "0d66a4f8-a274-48cc-9520-967a07731ae8"
+                                                                        },
+                                                                        "text_value": {
+                                                                            "type": "string",
+                                                                            "example": ""
+                                                                        },
+                                                                        "number_value": {
+                                                                            "type": "number",
+                                                                            "example": null
+                                                                        },
+                                                                        "decimal_value": {
+                                                                            "type": "string",
+                                                                            "example": ""
+                                                                        },
+                                                                        "textarea_value": {
+                                                                            "type": "string",
+                                                                            "example": ""
+                                                                        },
+                                                                        "date_value": {
+                                                                            "type": "string",
+                                                                            "format": "date",
+                                                                            "example": null
+                                                                        },
+                                                                        "time_value": {
+                                                                            "type": "string",
+                                                                            "format": "time",
+                                                                            "example": null
+                                                                        },
+                                                                        "file": {
+                                                                            "type": "string",
+                                                                            "example": ""
+                                                                        },
+                                                                        "staff_custom_field_id": {
+                                                                            "type": "integer",
+                                                                            "example": 1
+                                                                        },
+                                                                        "staff_id": {
+                                                                            "type": "integer",
+                                                                            "example": 573
+                                                                        },
+                                                                        "student_custom_field": {
+                                                                            "properties": {
+                                                                                "id": {
+                                                                                    "type": "integer",
+                                                                                    "example": 1
+                                                                                },
+                                                                                "name": {
+                                                                                    "type": "string",
+                                                                                    "example": "Father Living With Student"
+                                                                                }
+                                                                            },
+                                                                            "type": "object"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
                                                             "security_group_user_id": {
                                                                 "type": "string",
                                                                 "example": "7a37caf1-b411-4db4-9402-1c3163e158c0"
@@ -14231,6 +14294,69 @@
                                                                     "type": "object"
                                                                 }
                                                             },
+                                                            "custom_fields": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "string",
+                                                                            "example": "0d66a4f8-a274-48cc-9520-967a07731ae8"
+                                                                        },
+                                                                        "text_value": {
+                                                                            "type": "string",
+                                                                            "example": ""
+                                                                        },
+                                                                        "number_value": {
+                                                                            "type": "number",
+                                                                            "example": null
+                                                                        },
+                                                                        "decimal_value": {
+                                                                            "type": "string",
+                                                                            "example": ""
+                                                                        },
+                                                                        "textarea_value": {
+                                                                            "type": "string",
+                                                                            "example": ""
+                                                                        },
+                                                                        "date_value": {
+                                                                            "type": "string",
+                                                                            "format": "date",
+                                                                            "example": null
+                                                                        },
+                                                                        "time_value": {
+                                                                            "type": "string",
+                                                                            "format": "time",
+                                                                            "example": null
+                                                                        },
+                                                                        "file": {
+                                                                            "type": "string",
+                                                                            "example": ""
+                                                                        },
+                                                                        "staff_custom_field_id": {
+                                                                            "type": "integer",
+                                                                            "example": 1
+                                                                        },
+                                                                        "staff_id": {
+                                                                            "type": "integer",
+                                                                            "example": 573
+                                                                        },
+                                                                        "student_custom_field": {
+                                                                            "properties": {
+                                                                                "id": {
+                                                                                    "type": "integer",
+                                                                                    "example": 1
+                                                                                },
+                                                                                "name": {
+                                                                                    "type": "string",
+                                                                                    "example": "Father Living With Student"
+                                                                                }
+                                                                            },
+                                                                            "type": "object"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
                                                             "security_group_user_id": {
                                                                 "type": "string",
                                                                 "example": "7a37caf1-b411-4db4-9402-1c3163e158c0"
@@ -14404,6 +14530,69 @@
                                                                     },
                                                                     "type": "object"
                                                                 }
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "custom_fields": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string",
+                                                                "example": "0d66a4f8-a274-48cc-9520-967a07731ae8"
+                                                            },
+                                                            "text_value": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "number_value": {
+                                                                "type": "number",
+                                                                "example": null
+                                                            },
+                                                            "decimal_value": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "textarea_value": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "date_value": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": null
+                                                            },
+                                                            "time_value": {
+                                                                "type": "string",
+                                                                "format": "time",
+                                                                "example": null
+                                                            },
+                                                            "file": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "staff_custom_field_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "staff_id": {
+                                                                "type": "integer",
+                                                                "example": 573
+                                                            },
+                                                            "student_custom_field": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 1
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "example": "Father Living With Student"
+                                                                    }
+                                                                },
+                                                                "type": "object"
                                                             }
                                                         },
                                                         "type": "object"
@@ -19361,6 +19550,101 @@
                                                             "previous_institution_student_id": {
                                                                 "type": "string",
                                                                 "example": "6546009d-815f-42e6-8db5-76050a4f95d9"
+                                                            },
+                                                            "classes": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "integer",
+                                                                            "example": 593
+                                                                        },
+                                                                        "name": {
+                                                                            "type": "string",
+                                                                            "example": "Primary 1-C"
+                                                                        },
+                                                                        "subjects": {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "properties": {
+                                                                                    "id": {
+                                                                                        "type": "integer",
+                                                                                        "example": 4732
+                                                                                    },
+                                                                                    "name": {
+                                                                                        "type": "string",
+                                                                                        "example": "Expressive Arts"
+                                                                                    }
+                                                                                },
+                                                                                "type": "object"
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
+                                                            "custom_fields": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "string",
+                                                                            "example": "0d66a4f8-a274-48cc-9520-967a07731ae8"
+                                                                        },
+                                                                        "text_value": {
+                                                                            "type": "string",
+                                                                            "example": ""
+                                                                        },
+                                                                        "number_value": {
+                                                                            "type": "number",
+                                                                            "example": null
+                                                                        },
+                                                                        "decimal_value": {
+                                                                            "type": "string",
+                                                                            "example": ""
+                                                                        },
+                                                                        "textarea_value": {
+                                                                            "type": "string",
+                                                                            "example": ""
+                                                                        },
+                                                                        "date_value": {
+                                                                            "type": "string",
+                                                                            "format": "date",
+                                                                            "example": null
+                                                                        },
+                                                                        "time_value": {
+                                                                            "type": "string",
+                                                                            "format": "time",
+                                                                            "example": null
+                                                                        },
+                                                                        "file": {
+                                                                            "type": "string",
+                                                                            "example": ""
+                                                                        },
+                                                                        "student_custom_field_id": {
+                                                                            "type": "integer",
+                                                                            "example": 17
+                                                                        },
+                                                                        "student_id": {
+                                                                            "type": "integer",
+                                                                            "example": 14663
+                                                                        },
+                                                                        "student_custom_field": {
+                                                                            "properties": {
+                                                                                "id": {
+                                                                                    "type": "integer",
+                                                                                    "example": 17
+                                                                                },
+                                                                                "name": {
+                                                                                    "type": "string",
+                                                                                    "example": "Father Living With Student"
+                                                                                }
+                                                                            },
+                                                                            "type": "object"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
                                                             },
                                                             "modified_user_id": {
                                                                 "type": "integer",
@@ -26094,6 +26378,101 @@
                                                                 "type": "string",
                                                                 "example": "6546009d-815f-42e6-8db5-76050a4f95d9"
                                                             },
+                                                            "classes": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "integer",
+                                                                            "example": 593
+                                                                        },
+                                                                        "name": {
+                                                                            "type": "string",
+                                                                            "example": "Primary 1-C"
+                                                                        },
+                                                                        "subjects": {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "properties": {
+                                                                                    "id": {
+                                                                                        "type": "integer",
+                                                                                        "example": 4732
+                                                                                    },
+                                                                                    "name": {
+                                                                                        "type": "string",
+                                                                                        "example": "Expressive Arts"
+                                                                                    }
+                                                                                },
+                                                                                "type": "object"
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
+                                                            "custom_fields": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "string",
+                                                                            "example": "0d66a4f8-a274-48cc-9520-967a07731ae8"
+                                                                        },
+                                                                        "text_value": {
+                                                                            "type": "string",
+                                                                            "example": ""
+                                                                        },
+                                                                        "number_value": {
+                                                                            "type": "number",
+                                                                            "example": null
+                                                                        },
+                                                                        "decimal_value": {
+                                                                            "type": "string",
+                                                                            "example": ""
+                                                                        },
+                                                                        "textarea_value": {
+                                                                            "type": "string",
+                                                                            "example": ""
+                                                                        },
+                                                                        "date_value": {
+                                                                            "type": "string",
+                                                                            "format": "date",
+                                                                            "example": null
+                                                                        },
+                                                                        "time_value": {
+                                                                            "type": "string",
+                                                                            "format": "time",
+                                                                            "example": null
+                                                                        },
+                                                                        "file": {
+                                                                            "type": "string",
+                                                                            "example": ""
+                                                                        },
+                                                                        "student_custom_field_id": {
+                                                                            "type": "integer",
+                                                                            "example": 17
+                                                                        },
+                                                                        "student_id": {
+                                                                            "type": "integer",
+                                                                            "example": 14663
+                                                                        },
+                                                                        "student_custom_field": {
+                                                                            "properties": {
+                                                                                "id": {
+                                                                                    "type": "integer",
+                                                                                    "example": 17
+                                                                                },
+                                                                                "name": {
+                                                                                    "type": "string",
+                                                                                    "example": "Father Living With Student"
+                                                                                }
+                                                                            },
+                                                                            "type": "object"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
                                                             "modified_user_id": {
                                                                 "type": "integer",
                                                                 "example": null
@@ -26279,6 +26658,101 @@
                                                 "previous_institution_student_id": {
                                                     "type": "string",
                                                     "example": "6546009d-815f-42e6-8db5-76050a4f95d9"
+                                                },
+                                                "classes": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 593
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Primary 1-C"
+                                                            },
+                                                            "subjects": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "integer",
+                                                                            "example": 4732
+                                                                        },
+                                                                        "name": {
+                                                                            "type": "string",
+                                                                            "example": "Expressive Arts"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "custom_fields": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string",
+                                                                "example": "0d66a4f8-a274-48cc-9520-967a07731ae8"
+                                                            },
+                                                            "text_value": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "number_value": {
+                                                                "type": "number",
+                                                                "example": null
+                                                            },
+                                                            "decimal_value": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "textarea_value": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "date_value": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": null
+                                                            },
+                                                            "time_value": {
+                                                                "type": "string",
+                                                                "format": "time",
+                                                                "example": null
+                                                            },
+                                                            "file": {
+                                                                "type": "string",
+                                                                "example": ""
+                                                            },
+                                                            "student_custom_field_id": {
+                                                                "type": "integer",
+                                                                "example": 17
+                                                            },
+                                                            "student_id": {
+                                                                "type": "integer",
+                                                                "example": 14663
+                                                            },
+                                                            "student_custom_field": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 17
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "example": "Father Living With Student"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
                                                 },
                                                 "modified_user_id": {
                                                     "type": "integer",
@@ -29328,6 +29802,16 @@
                 "operationId": "e7ee640a015bcc4b789f3edc03843f40",
                 "parameters": [
                     {
+                        "name": "training_course_id",
+                        "in": "query",
+                        "description": "Filter by training course id.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": "1"
+                        }
+                    },
+                    {
                         "name": "order",
                         "in": "query",
                         "description": "Order",
@@ -29421,7 +29905,7 @@
                                                                 "type": "integer",
                                                                 "example": 1
                                                             },
-                                                            "trainers": {
+                                                            "trainees": {
                                                                 "type": "array",
                                                                 "items": {
                                                                     "properties": {
@@ -29500,6 +29984,48 @@
                                                                         "name_with_id": {
                                                                             "type": "string",
                                                                             "example": "1522284820 - Amanda  Wells"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
+                                                            "trainers": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "integer",
+                                                                            "example": 680
+                                                                        },
+                                                                        "first_name": {
+                                                                            "type": "string",
+                                                                            "example": "Amanda"
+                                                                        },
+                                                                        "middle_name": {
+                                                                            "type": "string",
+                                                                            "example": null,
+                                                                            "nullable": true
+                                                                        },
+                                                                        "third_name": {
+                                                                            "type": "string",
+                                                                            "example": null,
+                                                                            "nullable": true
+                                                                        },
+                                                                        "last_name": {
+                                                                            "type": "string",
+                                                                            "example": "Foster"
+                                                                        },
+                                                                        "openemis_no": {
+                                                                            "type": "string",
+                                                                            "example": "1522277355"
+                                                                        },
+                                                                        "full_name": {
+                                                                            "type": "string",
+                                                                            "example": "Amanda  Foster"
+                                                                        },
+                                                                        "name_with_id": {
+                                                                            "type": "string",
+                                                                            "example": "1522277355 - Amanda  Foster"
                                                                         }
                                                                     },
                                                                     "type": "object"
@@ -29616,7 +30142,7 @@
                                                     "type": "integer",
                                                     "example": 1
                                                 },
-                                                "trainers": {
+                                                "trainees": {
                                                     "type": "array",
                                                     "items": {
                                                         "properties": {
@@ -29695,6 +30221,48 @@
                                                             "name_with_id": {
                                                                 "type": "string",
                                                                 "example": "1522284820 - Amanda  Wells"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "trainers": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 680
+                                                            },
+                                                            "first_name": {
+                                                                "type": "string",
+                                                                "example": "Amanda"
+                                                            },
+                                                            "middle_name": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "third_name": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "last_name": {
+                                                                "type": "string",
+                                                                "example": "Foster"
+                                                            },
+                                                            "openemis_no": {
+                                                                "type": "string",
+                                                                "example": "1522277355"
+                                                            },
+                                                            "full_name": {
+                                                                "type": "string",
+                                                                "example": "Amanda  Wells"
+                                                            },
+                                                            "name_with_id": {
+                                                                "type": "string",
+                                                                "example": "1522277355 - Amanda  Foster"
                                                             }
                                                         },
                                                         "type": "object"

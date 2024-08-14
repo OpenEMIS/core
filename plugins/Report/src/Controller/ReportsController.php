@@ -13,6 +13,7 @@ use PHPExcel_IOFactory;
 use Cake\Http\Exception\NotFoundException;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use Cake\Event\EventInterface;
 
 class ReportsController extends AppController
 {
@@ -43,8 +44,8 @@ class ReportsController extends AppController
         $this->loadComponent('Navigation');
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
-    {
+    public function beforeFilter(EventInterface $event)
+    { 
         if ($this->getPlugin() == 'Report') {
             $this->Security->setConfig('validatePost', false);
         }
