@@ -350,13 +350,9 @@ class SecurityRolesTable extends ControllerActionTable
                 break;
 
             case 'system':
-                    $query
-                        ->where(function ($exp, $q) {
-                            return $exp->or_([
-                                $this->aliasField('security_group_id') => self::CUSTOM_SYSTEM_GROUP_ID,
-                                $this->aliasField('security_group_id') => self::FIXED_SYSTEM_GROUP_ID
-                            ]);
-                        });
+                $query->where([
+                    $this->aliasField('security_group_id') . ' IN' => [self::CUSTOM_SYSTEM_GROUP_ID, self::FIXED_SYSTEM_GROUP_ID]
+                ]); //POCOR-8544
 
                 if (!$isSuperAdmin) {
                     $userRole = $GroupRoles
