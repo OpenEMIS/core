@@ -20,10 +20,11 @@ class POCOR8147 extends AbstractMigration
    
     }
     
+    //For Rollback 
     public function down(): void
     {
         $this->execute('DROP TABLE IF EXISTS `field_options`');
-        $this->execute('RENAME TABLE `zz_7363_field_options` TO `field_options`');
+        $this->execute('RENAME TABLE `zz_8147_field_options` TO `field_options`');
     }
 
 }
