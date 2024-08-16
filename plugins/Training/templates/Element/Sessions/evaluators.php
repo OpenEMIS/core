@@ -4,11 +4,12 @@
 	$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
 	$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
 	$evaluatorTypeOptions = isset($attr['evaluatorTypeOptions']) ? $attr['evaluatorTypeOptions'] : [];
-	$this->Form->unlockField('evaluator_id');
+	//$this->Form->unlockField('evaluator_id');
 ?>
 
 <?php if ($ControllerAction['action'] == 'edit' || $ControllerAction['action'] == 'add') : ?>
 	<?php $tableClass = 'table-responsive'; ?>
+	<?php $this->Form->unlockField('evaluator_id'); ?>
 	<div class="clearfix"></div>
 	<hr>
 	<h3><?= __('Evaluators') ?></h3>

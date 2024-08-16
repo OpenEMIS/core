@@ -554,8 +554,12 @@ class InstitutionPositionsTable extends ControllerActionTable
             }
         }
         if (is_null($this->request->getQuery('sort'))) {
-            $this->request->getQuery['sort'] = 'created';
-            $this->request->getQuery['direction'] = 'desc';
+            //POCOR-8475 starts
+            //$this->request->getQuery['sort'] = 'created';
+            //$this->request->getQuery['direction'] = 'desc';
+            $this->request = $this->request->withQueryParams( array_merge( $this->request->getQueryParams(), ['sort' => 'created'] ));
+            $this->request = $this->request->withQueryParams( array_merge( $this->request->getQueryParams(), ['direction' => 'desc'] ));
+            //POCOR-8475 ends
         }
     }
 
@@ -710,8 +714,9 @@ class InstitutionPositionsTable extends ControllerActionTable
                 
             ])->leftJoin([$institutionStaff->getAlias() => $institutionStaff->getTable()],
                 [$institutionStaff->aliasField('institution_position_id = ') . $this->aliasField('id')])
-            ->distinct([$this->aliasField('position_no')]);
-            
+            ->distinct([$this->aliasField('position_no')])
+            ->order([$this->aliasField($this->request->getQuery('sort')) => $this->request->getQuery('direction')]); //POCOR-8475
+        
         $sortList = ['position_no', 'StaffPositionTitles.order'/*,POCOR-5069 'StaffPositionGrades.order'*/, 'created','Assignees.first_name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
