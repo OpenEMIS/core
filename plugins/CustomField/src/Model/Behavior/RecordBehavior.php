@@ -491,7 +491,8 @@ class RecordBehavior extends Behavior
                                     ])
                                     ->toArray();
                             }
-                            if (!empty($surveyIds) && array_key_exists('repeaterValues', $settings instanceof \ArrayObject ? $settings->getArrayCopy() : $settings)) {
+                            // POCOR-8231 simplified isset
+                            if (!empty($surveyIds) && isset($settings['repeaterValues'])) {
                                 // always deleted all existing answers before re-insert
                                 $RepeaterSurveyAnswers->deleteAll([
                                     $RepeaterSurveyAnswers->aliasField('institution_repeater_survey_id IN ') => $surveyIds
@@ -522,9 +523,15 @@ class RecordBehavior extends Behavior
                                 ]);
                             }
                         }
-
-                        if(array_key_exists('repeaterValues', $settings instanceof \ArrayObject ? $settings->getArrayCopy() : $settings)){
-                            foreach ($settings['repeaterValues'] as $key => $value) {
+                        // POCOR-8436 if settings is an array
+                        // POCOR-8231 simplified and cleancoded
+                        if(is_array($settings)){
+                            $settingsArray = $settings;
+                        }else{
+                            $settingsArray = $settings->getArrayCopy();
+                        }
+                        if(isset($settingsArray['repeaterValues'])){
+                            foreach ($settingsArray['repeaterValues'] as $key => $value) {
                                 $surveyEntity = $RepeaterSurveys->newEntity($value);
                                 $all[] = $surveyEntity;
                                 if ($RepeaterSurveys->save($surveyEntity)) {
@@ -554,7 +561,8 @@ class RecordBehavior extends Behavior
                 } else {
                     $indexedErrors = [];
                     $fields = ['text_value', 'number_value', 'decimal_value', 'textarea_value', 'date_value', 'time_value', 'file'];
-                    if (array_key_exists('custom_field_values', $errors instanceof \ArrayObject ? $errors->getArrayCopy() : $errors)) {
+                    // POCOR-8231 simplified isset
+                    if (isset($errors['custom_field_values'])) {
                         if ($entity->has('custom_field_values')) {
                             foreach ($entity->custom_field_values as $key => $obj) {
                                 $fieldId = $obj->{$this->getConfig('fieldKey')};
@@ -570,11 +578,11 @@ class RecordBehavior extends Behavior
                     }
 
                     $indexedErrors = $indexedErrors + $fileErrors;
-
+                    // POCOR-8231 simplified isset
                     if (!empty($indexedErrors)) {
-                        if (array_key_exists($model->getAlias(), $data instanceof \ArrayObject ? $data->getArrayCopy() : $data)) {
-                            if (array_key_exists('custom_field_values', $data[$model->getAlias()])) {
-                                foreach ($data[$model->getAlias()]['custom_field_values'] as $key => $obj) {
+                        if (isset($data[$alias])) {
+                            if (isset($data[$alias]['custom_field_values'])) {
+                                foreach ($data[$alias]['custom_field_values'] as $key => $obj) {
                                     $fieldId = $obj[$this->getConfig('fieldKey')];
 
                                     if (isset($indexedErrors[$fieldId])) {
@@ -910,7 +918,7 @@ class RecordBehavior extends Behavior
                 $model->controller->set('selectedAction', $selectedAction);
 
                 $query->where([
-                    $this->CustomFormsFields->aliasField('section') => $tabElements[$selectedAction]['section'] // POCOR-8542
+                    $this->CustomFormsFields->aliasField('section') => $tabElements[$selectedAction]['section']
                 ]);
             }
         }
