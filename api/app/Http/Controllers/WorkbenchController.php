@@ -2630,4 +2630,70 @@ class WorkbenchController extends Controller
             return $this->sendErrorResponse('Failed to fetch list from DB');
         }
     }
+
+
+    //For POCOR-8519 Start...
+    public function getAllWorkbenches(Request $request)
+    {
+        try {
+            $params = $request->all();
+            $resp = [];
+            $insSurvey = $this->workbenchService->getInstitutionStaffSurveys($request);
+            $insPositions = $this->workbenchService->getInstitutionPositions($request);
+            $studentTransferIn = $this->workbenchService->getInstitutionStudentTransferIn($request);
+            $studentTransferOut = $this->workbenchService->getInstitutionStudentTransferOut($request);
+            $insStaffLeave = $this->workbenchService->getInstitutionStaffLeave($request);
+            $insStudentWithdraw = $this->workbenchService->getInstitutionStudentWithdraw($request);
+            $insStudentAdmission = $this->workbenchService->getInstitutionStudentAdmission($request);
+            $insStudentBehaviour = $this->workbenchService->getInstitutionStudentBehaviour($request);
+            $insStaffBehaviour = $this->workbenchService->getInstitutionStaffBehaviour($request);
+            $staffAppraisals = $this->workbenchService->getStaffAppraisals($request);
+            $staffRelease = $this->workbenchService->getStaffRelease($request);
+            $staffTransferIn = $this->workbenchService->getStaffTransferIn($request);
+            $staffTransferOut = $this->workbenchService->getStaffTransferOut($request);
+            $changeInAssignment = $this->workbenchService->getChangeInAssignment($request);
+            $staffTrainingNeeds = $this->workbenchService->getStaffTrainingNeeds($request);
+            $staffLicenses = $this->workbenchService->getStaffLicenses($request);
+            $trainingCourses = $this->workbenchService->getTrainingCourses($request);
+            $trainingSessions = $this->workbenchService->getTrainingSessions($request);
+            $trainingResults = $this->workbenchService->getTrainingResults($request);
+            $visitRequests = $this->workbenchService->getVisitRequests($request);
+            $trainingApplications = $this->workbenchService->getTrainingApplications($request);
+            $scholarshipApplications = $this->workbenchService->getScholarshipApplications($request);
+
+            $resp['institutionSurvey'] = $insSurvey['data'];
+            $resp['institutionPositions'] = $insPositions['data'];
+            $resp['studentTransferIn'] = $studentTransferIn['data'];
+            $resp['studentTransferOut'] = $studentTransferOut['data'];
+            $resp['institutionStaffLeave'] = $insStaffLeave['data'];
+            $resp['institutionStudentWithdraw'] = $insStudentWithdraw['data'];
+            $resp['institutionStudentAdmission'] = $insStudentAdmission['data'];
+            $resp['institutionStudentBehaviour'] = $insStudentBehaviour['data'];
+            $resp['institutionStaffBehaviour'] = $insStaffBehaviour['data'];
+            $resp['staffAppraisals'] = $staffAppraisals['data'];
+            $resp['staffRelease'] = $staffRelease['data'];
+            $resp['staffTransferIn'] = $staffTransferIn['data'];
+            $resp['staffTransferOut'] = $staffTransferOut['data'];
+            $resp['changeInAssignment'] = $changeInAssignment['data'];
+            $resp['staffTrainingNeeds'] = $staffTrainingNeeds['data'];
+            $resp['staffLicenses'] = $staffLicenses['data'];
+            $resp['trainingCourses'] = $trainingCourses['data'];
+            $resp['trainingSessions'] = $trainingSessions['data'];
+            $resp['trainingResults'] = $trainingResults['data'];
+            $resp['visitRequests'] = $visitRequests['data'];
+            $resp['trainingApplications'] = $trainingApplications['data'];
+            $resp['scholarshipApplications'] = $scholarshipApplications['data'];
+            
+            
+            return $this->sendSuccessResponse("Workbenches list found.", $resp);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            dd($e);
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+    //For POCOR-8519 End...
 }
