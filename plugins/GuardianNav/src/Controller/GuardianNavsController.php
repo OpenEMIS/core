@@ -150,6 +150,17 @@ class GuardianNavsController extends AppController
 
             // header name
             $header = $studentName;
+        } else if($this->request->getParam('action') == 'StudentUser') { // POCOR-8293
+            $request = $this->request;
+            $studentId = $this->paramsDecode($request->getParam('pass')[1])['id'];
+            $StudentsTable = TableRegistry::getTableLocator()->get('GuardianNav.StudentUser');
+            $Student = $StudentsTable
+                ->find('all')
+                ->where([$StudentsTable->aliasField('id') => $studentId])
+                ->first();
+            $studentName = $Student->name;
+            $this->Navigation->addCrumb($studentName);
+            $header = $studentName;
         }
         $persona = false;
         if (is_object($persona) && get_class($persona)=='User\Model\Entity\User') {
