@@ -1,3 +1,20 @@
+### [4.1.2] - 2024-08-16
+- Bug Fixed: Institutions > Statistics > Standard > Student Attendance Summary Report: When generating report for Student Attendance Summary Report under Institutions Statistics, the report is showing other institutions
+- Bug Fixed: Administration>Training>Session>Evaluators: Evaluators not appearing when added
+- Bug Fixed: Administration>System Setup>Field options: Page is unable to load
+- Bug Fixed: Institutions>Appointment>Positions: Position is not arranged in order desc(based on position no)
+- Bug Fixed: Institutions>Students>List>Promote Button: Unable to save
+- Bug Fixed: Administrations > System Setup : Functions that breaks in Education Structure
+- Bug Fixed: API : Issues on student attendance page
+- Bug Fixed: Administrations > System Setup : Functions that breaks in Risks
+- Bug Fixed: API Changes from Jordan
+- Bug Fixed: Administrations > Security > Role: 404 error when Accessing Administrations > Security > Role page under his account
+- Bug Fixed: API-Changes to users api
+- Bug Fixed: Implement API Security by Role Part Two
+- Bug Fixed: Administrations > Survey > Forms > Edit: When adding section, it does not show the section even when system gives a successful message
+- Bug Fixed: Administrations > Security > Roles: When adding security roles, system shows successful message but newly added record is not showing
+- Bug Fixed: Administrations > Security > Roles> User Roles: User roles are showing the roles as system roles when logging in as non superadmin
+
 ### [4.1.1] - 2024-08-07
 - Bug Fixed: Guardian>Student>Academic(Automation): User is getting 404 error
 - Bug Fixed: Guardian>Student>Academic(Automation): Behaviour showing internal server error
