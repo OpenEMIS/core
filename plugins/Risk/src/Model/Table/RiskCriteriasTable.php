@@ -36,7 +36,8 @@ class RiskCriteriasTable extends ControllerActionTable
                 ]
             ])
             ->add('threshold', 'ruleCheckCriteriaThresholdRange', [
-                'rule' => ['checkCriteriaThresholdRange']
+                'rule' => [$this, 'checkCriteriaThresholdRange'],//POCOR-8516
+                'message' => __('Threshold is invalid.')
             ])
             ;
     }
