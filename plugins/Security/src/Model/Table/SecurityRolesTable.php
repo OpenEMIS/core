@@ -310,41 +310,37 @@ class SecurityRolesTable extends ControllerActionTable
         switch ($selectedAction) {
             case 'user':
                 $selectedGroup = $extra['selectedGroup'];
-                if (!empty($selectedGroup)) {
-                    if (!empty($selectedGroup)) {
-                        $conditions = [$this->aliasField('security_group_id') => $selectedGroup];
 
-                        if (!$isSuperAdmin) {
-                            $userRole = $GroupRoles
-                                ->find()
-                                ->contain('SecurityRoles')
-                                ->order(['SecurityRoles.order'])
-                                ->where([
-                                    $GroupRoles->aliasField('security_user_id') => $userId,
-                                    'SecurityRoles.security_group_id' => $selectedGroup
-                                ])
-                                ->first();
+                $conditions = [$this->aliasField('security_group_id IS') => $selectedGroup];
 
-                            $conditions = [
-                                'OR' => [
-                                    // show roles that are lower privileges than current user role in selected group
-                                    [
-                                        $this->aliasField('security_group_id') => $selectedGroup,
-                                       // $this->aliasField('order').' > ' => $userRole['security_role']['order'], //POCOR-8528 Because $userRole['security_role']['order'] got null value
-                                    ],
-                                    // also show roles that are created by current user
-                                    [
-                                        $this->aliasField('security_group_id') => $selectedGroup,
-                                        $this->aliasField('created_user_id') => $userId
-                                    ]
-                                ]
-                            ];
-                            if (isset($userRole['security_role']['order']) && !empty($userRole['security_role']['order'])) { //POCOR-8528 
-                                $conditions['OR'][0][$this->aliasField('order') . ' >'] = $userRole['security_role']['order'];
-                            }
-                        }
-                    }
-                    }
+                if (!$isSuperAdmin) {
+                    $userRole = $GroupRoles
+                        ->find()
+                        ->contain('SecurityRoles')
+                        ->order(['SecurityRoles.order'])
+                        ->where([
+                            $GroupRoles->aliasField('security_user_id') => $userId,
+                            'SecurityRoles.security_group_id IS' => $selectedGroup
+                        ])
+                        ->first();
+
+                    $conditions = [
+                        'OR' => [
+                            // Show roles that are lower privileges than the current user's role in the selected group
+                            //POCOR-8548 starts
+                            function (QueryExpression $exp, $query) use ($selectedGroup, $userRole) {
+                                return $exp
+                                    ->eq($this->aliasField('security_group_id'), $selectedGroup)
+                                    ->gt($this->aliasField('order'), $userRole['security_role']['order']);
+                            },//POCOR-8548 ends
+                            // also show roles that are created by current user
+                            [
+                                $this->aliasField('security_group_id IS') => $selectedGroup,
+                                $this->aliasField('created_user_id') => $userId
+                            ]
+                        ]
+                    ];
+                }
 
                 $query->where($conditions);
                 break;
