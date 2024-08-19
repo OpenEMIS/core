@@ -123,8 +123,10 @@ class InstitutionSubjectsTable extends AppTable  {
         if (!empty($educationSubjectId)) {
             $conditions[] = $this->aliasField('education_subject_id =') . $educationSubjectId;
         }
-
-        $areaList = $this->getAreaList($areaLevelId, $areaId);
+        $areaList = [];
+        if (empty($institutionId) || $institutionId < 0) {
+            $areaList = $this->getAreaList($areaLevelId, $areaId);
+        }
         if (!empty($areaList)) {
             $conditions['Institutions.area_id IN'] = $areaList;
         }
