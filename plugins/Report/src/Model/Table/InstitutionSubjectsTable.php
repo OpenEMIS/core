@@ -132,33 +132,6 @@ class InstitutionSubjectsTable extends AppTable  {
         return $conditions;
     }
 
-    private function getAreaList($areaLevelId, $areaId)
-    {
-        $areaList = [];
-        if ($areaLevelId > 1 && $areaId > 1) {
-            $areaList = $this->getAreaListByLevelAndId($areaLevelId, $areaId);
-        } elseif ($areaLevelId > 1) {
-            $areaList = $this->getAreaListByLevel($areaLevelId);
-        } elseif ($areaId > 1) {
-            $areaList = $this->getAreaListById($areaId);
-        }
-        return $areaList;
-    }
-
-    private function getAreaListByLevelAndId($areaLevelId, $areaId)
-    {
-        return $this->getAreaList($areaLevelId, $areaId);
-    }
-
-    private function getAreaListByLevel($areaLevelId)
-    {
-        return $this->getAreaList($areaLevelId, 0);
-    }
-
-    private function getAreaListById($areaId)
-    {
-        return $this->getAreaList(0, $areaId);
-    }
 
     private function getSelectFields()
     {
