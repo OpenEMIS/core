@@ -67,6 +67,7 @@ class ReportCardsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
 
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('code', 'ruleUniqueCode', [
                 'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
@@ -201,24 +202,52 @@ class ReportCardsTable extends ControllerActionTable
         $this->setupTabElements($entity);
     }
 
+    //POCOR-8521[START]
+
+    // public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    // {
+    //     //POCOR-7400 start
+    //     $query->contain(['ReportCardSubjects.EducationSubjects','ReportCardExcludedSecurityRoles']);
+       
+    //     $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+    //         return $results->map(function ($row) {
+    //             $arr =[];
+    //             foreach($row->report_card_excluded_security_roles as $key=> $role){
+    //                 $arr[$key] = ['id'=>$role['security_role_id']];
+    //             }
+    //             $row['excluded_security_roles'] = $arr;
+              
+    //             return $row;
+    //         });
+    //     });
+    //     //POCOR-7400 end
+    // }
+
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        //POCOR-7400 start
-        $query->contain(['ReportCardSubjects.EducationSubjects','ReportCardExcludedSecurityRoles']);
-       
-        $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+        $query = $this->find()
+        ->contain(['ReportCardSubjects.EducationSubjects', 'ReportCardSubjects.ReportCardExcludedSecurityRoles'])
+        ->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                $arr =[];
-                foreach($row->report_card_excluded_security_roles as $key=> $role){
-                    $arr[$key] = ['id'=>$role['security_role_id']];
+                $arr = [];
+                if (isset($row->report_card_subjects)) {
+                    foreach ($row->report_card_subjects as $subject) {
+                        if (isset($subject->report_card_excluded_security_roles)) {
+                            foreach ($subject->report_card_excluded_security_roles as $key => $role) {
+                                $arr[$key] = ['id' => $role['security_role_id']];
+                            }
+                        }
+                    }
                 }
                 $row['excluded_security_roles'] = $arr;
-              
+    
                 return $row;
             });
         });
-        //POCOR-7400 end
+    
+    return $query;
     }
+    //POCOR-8521[END]
 
     public function onGetSubjects(Event $event, Entity $entity)
     {
@@ -548,7 +577,7 @@ class ReportCardsTable extends ControllerActionTable
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (empty($entity->errors())) {
+        if (empty($entity->getErrors())) {
             // manually delete hasMany reportCardSubjects data
             $fieldKey = 'report_card_subjects';
             if (!array_key_exists($fieldKey, $data[$this->getAlias()])) {
@@ -611,13 +640,14 @@ class ReportCardsTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if (!empty($entity->generate_start_date)) {
+        if (empty($entity->generate_start_date)) {
             $entity->generate_start_date = (new Date($entity->generate_start_date))->format('Y-m-d H:i:s');
         }
 
-        if (!empty($entity->generate_end_date)) {
+        if (empty($entity->generate_end_date)) {
             $entity->generate_end_date = (new Date($entity->generate_end_date))->format('Y-m-d H:i:s');
-        }        
+        }   
+        // echo "<pre>";print_r($entity);die;     
     } 
 
     /**
