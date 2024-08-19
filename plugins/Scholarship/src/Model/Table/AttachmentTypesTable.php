@@ -31,39 +31,47 @@ class AttachmentTypesTable extends ControllerActionTable
     }
 
     public function findAvailableAttachmentTypes(Query $query, array $options)
-    {
-        $applicantId = isset($options['applicant_id']) ? $options['applicant_id'] : null;
-        $scholarshipId = isset($options['scholarship_id']) ? $options['scholarship_id'] : null;
+{
+    // Extract applicant_id and scholarship_id from options, if available
+    $applicantId = $options['applicant_id'] ?? null;
+    $scholarshipId = $options['scholarship_id'] ?? null;
 
-        $ApplicationAttachmentsTable = TableRegistry::get('Scholarship.ApplicationAttachments');
-        $existingAttachmentTypeIds = $ApplicationAttachmentsTable->find()
-            ->where([
-                $ApplicationAttachmentsTable->aliasField('applicant_id') => $applicantId,
-                $ApplicationAttachmentsTable->aliasField('scholarship_id') => $scholarshipId
-            ])
-            ->extract('scholarship_attachment_type_id')
-            ->toArray();
+    // Load ApplicationAttachments and fetch existing attachment type IDs
+    $ApplicationAttachmentsTable = TableRegistry::get('Scholarship.ApplicationAttachments');
+    $existingAttachmentTypeIds = $ApplicationAttachmentsTable->find()
+        ->where([
+            'applicant_id' => $applicantId,
+            'scholarship_id' => $scholarshipId
+        ])
+        ->extract('scholarship_attachment_type_id')
+        ->toArray();
 
-        $ScholarshipsScholarshipAttachmentTypesTable = TableRegistry::get('Scholarship.ScholarshipsScholarshipAttachmentTypes');
-        $query
-            ->select(['is_mandatory' => $ScholarshipsScholarshipAttachmentTypesTable->aliasField('is_mandatory')])
-            ->find('visible')
-            ->find('order')
-            ->innerJoin(
-                [$ScholarshipsScholarshipAttachmentTypesTable->alias() => $ScholarshipsScholarshipAttachmentTypesTable->table()],
-                [
-                    $ScholarshipsScholarshipAttachmentTypesTable->aliasField('scholarship_attachment_type_id = ') . $this->aliasField('id'),
-                    $ScholarshipsScholarshipAttachmentTypesTable->aliasField('scholarship_id') => $scholarshipId
-                ]
-            )
-            ->autoFields(true);
+    // Load ScholarshipsScholarshipAttachmentTypes and join with AttachmentTypes
+    $ScholarshipsScholarshipAttachmentTypesTable = TableRegistry::get('Scholarship.ScholarshipsScholarshipAttachmentTypes');
+    $query
+        ->select([
+            'id' => $this->aliasField('id'),
+            'name' => $this->aliasField('name'),
+            'is_mandatory' => $ScholarshipsScholarshipAttachmentTypesTable->aliasField('is_mandatory')
+        ])
+        ->innerJoin(
+            [$ScholarshipsScholarshipAttachmentTypesTable->getAlias() => $ScholarshipsScholarshipAttachmentTypesTable->getTable()],
+            [
+                $ScholarshipsScholarshipAttachmentTypesTable->aliasField('scholarship_attachment_type_id') . ' = ' . $this->aliasField('id'),
+                $ScholarshipsScholarshipAttachmentTypesTable->aliasField('scholarship_id') => $scholarshipId
+            ]
+        )
+        ->find('visible')  // Apply 'visible' finder method, ensure it works as expected
+        ->find('order');   // Apply 'order' finder method, ensure it works as expected
 
-        if ($existingAttachmentTypeIds) {
-            $query->where([$this->aliasField('id NOT IN') => $existingAttachmentTypeIds]);
-        }
-
-        return $query;
+    // Exclude already existing attachment types
+    if (!empty($existingAttachmentTypeIds)) {
+        $query->where([$this->aliasField('id NOT IN') => $existingAttachmentTypeIds]);
     }
+
+    return $query; // Ensure the query is returned
+}
+
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {

@@ -31,41 +31,45 @@ class ScholarshipTabsComponent extends Component
 
     public function getScholarshipApplicationTabs($options = [])
     {
+        $urlRequest = $this->queryString;
+        if(empty($urlRequest)){
+            $urlRequest = $this->getController()->getRequest()->getParam('pass')[1];
+        }
         $tabElements = [
             'Applications' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Applications', 'view', $this->queryString, 'queryString' => $this->queryString],
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Applications', 0 =>'view', 1=> $urlRequest, 'queryString' => $this->queryString],
                 'text' => __('Overview')
             ],
             'Identities' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Identities', 'index', 'queryString' => $this->queryString],
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Identities', 0 => 'index', 1 => $urlRequest],
                 'text' => __('Identities')
             ],
             'UserNationalities' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Nationalities', 'index', 'queryString' => $this->queryString],
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Nationalities', 0 => 'index', 1 => $urlRequest],
                 'text' => __('Nationalities')
             ],
             'Contacts' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Contacts', 'index', 'queryString' => $this->queryString],
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Contacts', 0 => 'index', 1 => $urlRequest],
                 'text' => __('Contacts')
             ],
             'Guardians' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Guardians', 'index', 'queryString' => $this->queryString],
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Guardians', 0 => 'index', 1 => $urlRequest],
                 'text' => __('Guardians')
             ],
             'Histories' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Histories',  'index', 'queryString' => $this->queryString],
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Histories',  'index', 0 => 'index', 1 => $urlRequest],
                 'text' => __('Scholarship History')
             ],
             'InstitutionChoices' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipApplicationInstitutionChoices', 'action' => 'index', 'queryString' => $this->queryString],
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'ScholarshipApplicationInstitutionChoices', 0 => 'index', 1 => $urlRequest],
                 'text' => __('Institution Choices')
             ],
-            'Attachments' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipApplicationAttachments', 'action' => 'index', 'queryString' => $this->queryString],
+            'InstitutionAttachment' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'ScholarshipApplicationAttachments', 0 => 'index', 1 => $urlRequest],
                 'text' => __('Attachments')
             ]
-        ];
 
+        ];
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
@@ -76,7 +80,7 @@ class ScholarshipTabsComponent extends Component
 
         $tabElements = [
             'Recipients' => [
-                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipients', 'action' => 'view', $encodedIds, 'queryString' => $this->queryString],
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'ScholarshipRecipients', 'action' => 'view', $this->queryString, 'queryString' => $this->queryString],
                 'text' => __('Overview')
             ],
             'InstitutionChoices' => [

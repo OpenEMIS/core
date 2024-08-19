@@ -77,9 +77,12 @@ class ApplicationsTable extends ControllerActionTable
         $this->interestRateOptions = $this->getSelectOptions('Scholarships.interest_rate');
         $this->currency = TableRegistry::get('Configuration.ConfigItems')->value('currency');
         $this->addBehavior('User.UserTab', [
+
             'appliedAction' => ['ScholarshipApplications' =>
                 ['applicant_id',
-                    'scholarship_id', 'assignee_id']
+                    'scholarship_id', 'assignee_id'],
+                'Applications' =>['applicant_id',
+                    'scholarship_id', 'assignee_id'],
             ]
         ]);
     }
@@ -193,13 +196,11 @@ class ApplicationsTable extends ControllerActionTable
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
-    {
+    { 
+        //echo "<pre>"; print_r($extra); die;
         if (in_array($this->action, ['view', 'edit'])) {
             // set header
-            $applicantId = $this->ControllerAction->getQueryString('applicant_id');
-            if($applicantId == null){
-                $applicantId  = 1;
-            }
+            $applicantId = $this->getQueryString('applicant_id');
             $applicantName = $this->Applicants->get($applicantId)->name;
             $this->controller->set('contentHeader', $applicantName . ' - ' . __('Overview'));
 
@@ -208,6 +209,7 @@ class ApplicationsTable extends ControllerActionTable
             $this->controller->set('tabElements', $tabElements);
             $this->controller->set('selectedAction', $this->getAlias());
         }
+
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -411,7 +413,7 @@ class ApplicationsTable extends ControllerActionTable
         if ($entity->isNew()) {
             $entity->unsetProperty('scholarship');
 
-            $applicantId = $this->ControllerAction->getQueryString('applicant_id');
+            $applicantId = $this->getQueryString('applicant_id');
             if(empty($applicantId)){
                 $applicantId = $this->getQueryString('applicant_id');
             }
@@ -990,7 +992,8 @@ class ApplicationsTable extends ControllerActionTable
 
         $params = [
             'applicant_id' => $entity->applicant_id,
-            'scholarship_id' => $entity->scholarship_id
+            'scholarship_id' => $entity->scholarship_id,
+            'security_user_id' => $entity->applicant_id,
         ];
 
         if (isset($buttons['view']['url'])) {
