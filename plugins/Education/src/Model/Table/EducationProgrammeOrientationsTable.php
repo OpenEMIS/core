@@ -1,8 +1,10 @@
 <?php
 namespace Education\Model\Table;
+use ArrayObject;
 
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 
 class EducationProgrammeOrientationsTable extends ControllerActionTable
 {
@@ -36,4 +38,18 @@ class EducationProgrammeOrientationsTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    //POCOR-8495 --start
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+    //POCOR-8495 --end
 }

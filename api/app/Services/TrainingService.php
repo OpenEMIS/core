@@ -191,7 +191,11 @@ class TrainingService extends Controller
                     $resp[$k]['assignee_id'] = $d['assignee_id'];
                     $resp[$k]['status_id'] = $d['status_id'];
                     $resp[$k]['area_id'] = $d['area_id'];
-                    $resp[$k]['trainers'] = [];
+
+                    //For POCOR-8491 Start...
+                    $resp[$k]['trainees'] = [];
+                    //For POCOR-8491 End...
+
                     $trainees = [];
                     foreach ($d['training_session_trainee'] as $t => $trainee) {
                         $trainees[$t]['id'] = $trainee['id'];
@@ -203,7 +207,9 @@ class TrainingService extends Controller
                         $trainees[$t]['full_name'] = $trainee['full_name'];
                         $trainees[$t]['name_with_id'] = $trainee['name_with_id'];
                     }
-                    $resp[$k]['trainers'] = $trainees;
+                    //For POCOR-8491 Start...
+                    $resp[$k]['trainees'] = $trainees;
+                    //For POCOR-8491 End...
 
                     $resp[$k]['evaluators'] = [];
                     $evaluators = [];
@@ -216,8 +222,37 @@ class TrainingService extends Controller
                         $evaluators[$e]['openemis_no'] = $evaluator['openemis_no'];
                         $evaluators[$e]['full_name'] = $evaluator['full_name'];
                         $evaluators[$e]['name_with_id'] = $evaluator['name_with_id'];
+                        if($evaluator['is_staff'] == 0 && $evaluator['is_student'] == 0 && $evaluator['is_guardian'] == 0){
+                            $evaluators[$e]['type'] = "Others";
+                        }
+                        if($evaluator['is_staff'] == 1){
+                            $evaluators[$e]['type'] = "Staff";
+                        }
                     }
                     $resp[$k]['evaluators'] = $evaluators;
+
+                    //For POCOR-8526 Start...
+                    $resp[$k]['trainers'] = [];
+                    $trainers = [];
+                    foreach ($d['training_session_trainers'] as $e => $trainer) {
+                        $trainers[$e]['id'] = $trainer['id'];
+                        $trainers[$e]['first_name'] = $trainer['first_name'];
+                        $trainers[$e]['middle_name'] = $trainer['middle_name'];
+                        $trainers[$e]['third_name'] = $trainer['third_name'];
+                        $trainers[$e]['last_name'] = $trainer['last_name'];
+                        $trainers[$e]['openemis_no'] = $trainer['openemis_no'];
+                        $trainers[$e]['full_name'] = $trainer['full_name'];
+                        $trainers[$e]['name_with_id'] = $trainer['name_with_id'];
+                        if($trainer['is_staff'] == 0 && $trainer['is_student'] == 0 && $trainer['is_guardian'] == 0){
+                            $trainers[$e]['type'] = "Others";
+                        }
+                        if($trainer['is_staff'] == 1){
+                            $trainers[$e]['type'] = "Staff";
+                        }
+                    }
+                    $resp[$k]['trainers'] = $trainers;
+                    //For POCOR-8526 End...
+
                     $resp[$k]['modified_user_id'] = $d['modified_user_id'];
                     $resp[$k]['modified'] = $d['modified'];
                     $resp[$k]['created_user_id'] = $d['created_user_id'];
@@ -260,7 +295,12 @@ class TrainingService extends Controller
                 $resp['assignee_id'] = $data['assignee_id'];
                 $resp['status_id'] = $data['status_id'];
                 $resp['area_id'] = $data['area_id'];
-                $resp['trainers'] = [];
+
+                //For POCOR-8491 Start...
+                $resp['trainees'] = [];
+                //For POCOR-8491 End...
+
+
                 $trainees = [];
                 foreach ($data['training_session_trainee'] as $t => $trainee) {
                     $trainees[$t]['id'] = $trainee['id'];
@@ -272,7 +312,10 @@ class TrainingService extends Controller
                     $trainees[$t]['full_name'] = $trainee['full_name'];
                     $trainees[$t]['name_with_id'] = $trainee['name_with_id'];
                 }
-                $resp['trainers'] = $trainees;
+
+                //For POCOR-8491 Start...
+                $resp['trainees'] = $trainees;
+                //For POCOR-8491 End...
 
                 $resp['evaluators'] = [];
                 $evaluators = [];
@@ -285,7 +328,36 @@ class TrainingService extends Controller
                     $evaluators[$e]['openemis_no'] = $evaluator['openemis_no'];
                     $evaluators[$e]['full_name'] = $evaluator['full_name'];
                     $evaluators[$e]['name_with_id'] = $evaluator['name_with_id'];
+                    if($evaluator['is_staff'] == 0 && $evaluator['is_student'] == 0 && $evaluator['is_guardian'] == 0){
+                        $evaluators[$e]['type'] = "Others";
+                    }
+                    if($evaluator['is_staff'] == 1){
+                        $evaluators[$e]['type'] = "Staff";
+                    }
                 }
+
+                //For POCOR-8526 Start...
+                $resp['trainers'] = [];
+                $trainers = [];
+                foreach ($data['training_session_trainers'] as $tr => $trainer) {
+                    $trainers[$tr]['id'] = $trainer['id'];
+                    $trainers[$tr]['first_name'] = $trainer['first_name'];
+                    $trainers[$tr]['middle_name'] = $trainer['middle_name'];
+                    $trainers[$tr]['third_name'] = $trainer['third_name'];
+                    $trainers[$tr]['last_name'] = $trainer['last_name'];
+                    $trainers[$tr]['openemis_no'] = $trainer['openemis_no'];
+                    $trainers[$tr]['full_name'] = $trainer['full_name'];
+                    $trainers[$tr]['name_with_id'] = $trainer['name_with_id'];
+                    if($trainer['is_staff'] == 0 && $trainer['is_student'] == 0 && $trainer['is_guardian'] == 0){
+                        $trainers[$tr]['type'] = "Others";
+                    }
+                    if($trainer['is_staff'] == 1){
+                        $trainers[$tr]['type'] = "Staff";
+                    }
+                }
+                $resp['trainers'] = $trainers;
+                //For POCOR-8526 End...
+
                 $resp['evaluators'] = $evaluators;
                 $resp['modified_user_id'] = $data['modified_user_id'];
                 $resp['modified'] = $data['modified'];

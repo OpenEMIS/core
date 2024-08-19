@@ -45,7 +45,7 @@ class CustomFieldListBehavior extends Behavior {
 		$this->CustomForms = $this->CustomFieldValues->CustomFields->CustomForms;
 		$model = $this->getConfig('model');
 		if (empty($model)) {
-			$this->getConfig('model', $this->_table->registryAlias());
+			$this->setConfig('model', $this->_table->getRegistryAlias());
 		}
 		$this->_condition = $this->getConfig('condition');
 	}
@@ -491,7 +491,7 @@ class CustomFieldListBehavior extends Behavior {
 				'groupField' => $customFieldValueTable->aliasField($customRecordsForeignKey),
 			])
 			->innerJoin(
-				[$customFieldValueTable->alias() => $customFieldValueTable->table()],
+				[$customFieldValueTable->getAlias() => $customFieldValueTable->getTable()],
 				[$customFieldValueTable->aliasField($customFieldsForeignKey).'='.$customFieldsTable->aliasField('id')]
 			)
 			->select($selectedColumns)
