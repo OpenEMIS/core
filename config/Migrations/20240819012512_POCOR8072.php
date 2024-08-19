@@ -1,50 +1,71 @@
 <?php
-use Migrations\AbstractMigration;
 use Cake\Utility\Text;
+use Phinx\Migration\AbstractMigration;
+use Cake\Datasource\ConnectionManager;
 
 class POCOR8072 extends AbstractMigration
 {
-    /**
-     * Change Method.
-     *
-     * More information on this method is available here:
-     * http://docs.phinx.org/en/latest/migrations.html#the-change-method
-     * @return void
-     */
-
     public function up()
     {
-
-        //backup
+        // Backup
         $this->execute('CREATE TABLE `z_8072_security_functions` LIKE `security_functions`');
-        $this->execute('INSERT INTO `z_8072_security_functions` SELECT * FROM `security_functions`'); 
+        $this->execute('INSERT INTO `z_8072_security_functions` SELECT * FROM `security_functions`');
 
-        // security_functions Set Permission
-        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 478');
-        //insert data in security function
-        $record = [
-            [
-                'name' => 'Institution Choices', 'controller' => 'Profiles', 'module' => 'Personal', 'category' => 'Scholarships', 'parent_id' => 9030,'_view' => 'InstitutionChoicesScholarship.index|InstitutionChoicesScholarship.view', '_edit' => 'InstitutionChoicesScholarship.edit', '_add' => 'InstitutionChoicesScholarship.add', '_delete' => 'InstitutionChoicesScholarship.remove', '_execute' => NULL, 'order' => 479, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
-            ]
-        ];
-        $this->insert('security_functions', $record);
+        // Update `order`
+        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` > 478');
 
-        // security_functions for student curricular
-        $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 480');
-        //insert 
-        $record = [
-            [
-                'name' => 'Scholarship Attachments', 'controller' => 'Profiles', 'module' => 'Personal', 'category' => 'Scholarships', 'parent_id' => 9030,'_view' => 'ScholarshipAttachments.index|ScholarshipAttachments.view', '_edit' => 'ScholarshipAttachments.edit', '_add' => 'ScholarshipAttachments.add', '_delete' => 'ScholarshipAttachments.remove', '_execute' => NULL, 'order' => 481, 'visible' => 1, 'description' => NULL, 'modified_user_id' => NULL, 'modified' => NULL, 'created_user_id' => 1, 'created' => date('Y-m-d H:i:s'),
-            ]
-        ];
-        $this->insert('security_functions', $record);
+        // Insert data using CakePHP ORM
+        $connection = ConnectionManager::get('default');
 
+        $connection->insert('security_functions', [
+            'name' => 'Institution Choices',
+            'controller' => 'Profiles',
+            'module' => 'Personal',
+            'category' => 'Scholarships',
+            'parent_id' => 9030,
+            '_view' => 'InstitutionChoices.index|InstitutionChoices.view',
+            '_edit' => 'InstitutionChoices.edit',
+            '_add' => 'InstitutionChoices.add',
+            '_delete' => 'InstitutionChoices.remove',
+            '_execute' => NULL,
+            '`order`' => '479',  // Escape the column name using backticks
+            'visible' => 1,
+            'description' => NULL,
+            'modified_user_id' => NULL,
+            'modified' => NULL,
+            'created_user_id' => 1,
+            'created' => date('Y-m-d H:i:s')
+        ]);
+
+        // Update `order` for student curricular
+        $this->execute('UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` > 480');
+
+        // Insert more data using CakePHP ORM
+        $connection->insert('security_functions', [
+            'name' => 'Attachments',
+            'controller' => 'Profiles',
+            'module' => 'Personal',
+            'category' => 'Scholarships',
+            'parent_id' => 9030,
+            '_view' => 'InstitutionApplicationAttachment.index|InstitutionApplicationAttachment.view',
+            '_edit' => 'InstitutionApplicationAttachment.edit',
+            '_add' => 'InstitutionApplicationAttachment.add',
+            '_delete' => 'InstitutionApplicationAttachment.remove',
+            '_execute' => NULL,
+            '`order`' => '481',  // Escape the column name using backticks
+            'visible' => 1,
+            'description' => NULL,
+            'modified_user_id' => NULL,
+            'modified' => NULL,
+            'created_user_id' => 1,
+            'created' => date('Y-m-d H:i:s')
+        ]);
     }
 
-    // rollback
+    // Rollback
     public function down()
     {
         $this->execute('RENAME TABLE `z_8072_security_functions` TO `security_functions`');
-        $this->execute('UPDATE security_functions SET `order` = `order` - 1 WHERE `order` > 478'); 
+        $this->execute('UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` > 478');
     }
 }

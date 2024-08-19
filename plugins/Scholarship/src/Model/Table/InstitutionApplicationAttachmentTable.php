@@ -355,21 +355,20 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
 
     public function onUpdateFieldScholarshipAttachmentTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $recordId = $this->getQueryString('id');
-$ScholarshipAttachmentType = TableRegistry::get('Scholarship.ScholarshipAttachmentType');
-
-$scholarshipAttachmentTypeRecord = $this->find()
-    ->select(['id' => $ScholarshipAttachmentType->aliasField('id'),'name' => $ScholarshipAttachmentType->aliasField('name')])
-    ->leftJoin(
-        [$ScholarshipAttachmentType->getAlias() => $ScholarshipAttachmentType->getTable()],
-        [
-            $ScholarshipAttachmentType->aliasField('id') . ' = ' . $this->aliasField('scholarship_attachment_type_id')
-        ]
-    )
-    ->where([$this->getAlias() . '.id' => $recordId])
-    ->first();
-
         if ($action == 'edit') {
+        $recordId = $this->getQueryString('id');
+        $ScholarshipAttachmentType = TableRegistry::get('Scholarship.ScholarshipAttachmentType');
+
+        $scholarshipAttachmentTypeRecord = $this->find()
+            ->select(['id' => $ScholarshipAttachmentType->aliasField('id'),'name' => $ScholarshipAttachmentType->aliasField('name')])
+            ->leftJoin(
+                [$ScholarshipAttachmentType->getAlias() => $ScholarshipAttachmentType->getTable()],
+                [
+                    $ScholarshipAttachmentType->aliasField('id') . ' = ' . $this->aliasField('scholarship_attachment_type_id')
+                ]
+            )
+            ->where([$this->getAlias() . '.id' => $recordId])
+            ->first();
             $entity = $attr['entity'];
             $attr['type'] = 'readonly';
             $attr['value'] = $scholarshipAttachmentTypeRecord->id;
