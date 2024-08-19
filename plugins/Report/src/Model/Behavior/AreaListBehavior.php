@@ -10,23 +10,26 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 
 /**
- * Get areas based on area_level and areaId for Reports>Institution 
+ * Get areas based on area_level and areaId for Reports>Institution
  * @author Megha Gupta <megha.gupta@mail.valuecoders.com>
  * POCOR-7794
  */
 class AreaListBehavior extends Behavior
 {
 
-    public function getAreaList($id, $idArray)
+    public function getAreaList($id, $idArray = [])
     {
         //POCOR-8189
+        if(!is_array($idArray)){
+            $idArray = [$idArray];
+        }
         $Areas = TableRegistry::get('Area.Areas');
         $result = $Areas->find()
                            ->where([
                                $Areas->aliasField('parent_id') => $id
-                            ]) 
+                            ])
                              ->toArray();
-        $idArray = [];
+
        foreach ($result as $key => $value) {
             $idArray[] = $value['id'];
            $idArray = $this->getAreaList($value['id'], $idArray);
