@@ -20,8 +20,9 @@ class AreaListBehavior extends Behavior
     public function getAreaList($id, $idArray = [])
     {
         //POCOR-8189
+        // POCOR-8157
         if(!is_array($idArray)){
-            $idArray = [$idArray];
+            $idArray = [];
         }
         $Areas = TableRegistry::get('Area.Areas');
         $result = $Areas->find()

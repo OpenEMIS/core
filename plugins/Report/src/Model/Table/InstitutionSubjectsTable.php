@@ -5,12 +5,10 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
-use Cake\ORM\Table;
-use Cake\Utility\Inflector;
-use Cake\Log\Log;
+use Cake\ORM\Table; // POCOR-8157
+use Cake\Utility\Inflector; // POCOR-8157
 
 class InstitutionSubjectsTable extends AppTable  {
     public function initialize(array $config): void {
@@ -36,7 +34,7 @@ class InstitutionSubjectsTable extends AppTable  {
         $this->ControllerAction->field('format');
     }
 
-    //POCOR-8391 refactored
+    //POCOR-8157 refactored
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
@@ -53,10 +51,77 @@ class InstitutionSubjectsTable extends AppTable  {
         $InstitutionClassSubjects = $this->getDynamicTableInstance('Institution.InstitutionClassSubjects');
         $InstitutionClasses = $this->getDynamicTableInstance('Institution.InstitutionClasses');
         $EducationGrades = $this->getDynamicTableInstance('Education.EducationGrades');
+        $Users = $this->getDynamicTableInstance('security_users');
+        $InstitutionSubjectStudents = $this->getDynamicTableInstance('institution_subject_students');
+
+        $total_condition = [
+            $InstitutionSubjectStudents->aliasField('student_status_id = 1'),
+            $InstitutionSubjectStudents->aliasField('academic_period_id = ') . $academicPeriodId,
+        ];
+        if($institutionId > 0){
+            $total_condition[] = $InstitutionSubjectStudents->aliasField('institution_id = ') . $institutionId;
+        }
+        $totalStudentsSubquery = $InstitutionSubjectStudents->find()
+            ->select([
+                'institution_subject_id' =>  $InstitutionSubjectStudents->aliasField('institution_subject_id'),
+                'total_students' => $InstitutionSubjectStudents->find()->func()->count('DISTINCT student_id')
+            ])
+            ->where($total_condition)
+            ->group(['institution_subject_id']);
+
+        // Subquery to count male students
+        $maleStudentsSubquery = $InstitutionSubjectStudents->find()
+            ->select([
+                'institution_subject_id' =>  $InstitutionSubjectStudents->aliasField('institution_subject_id'),
+                'total_male_students' => $InstitutionSubjectStudents->find()->func()->count('DISTINCT student_id')
+            ])
+            ->innerJoin(
+                [$Users->getAlias() => $Users->getTable()],
+                [$Users->aliasField('id') . ' = ' . $InstitutionSubjectStudents->aliasField('student_id')]
+            )
+            ->where([
+                $total_condition,
+                $Users->aliasField('gender_id = 1') // Male
+            ])
+            ->group(['institution_subject_id']);
+
+        // Subquery to count female students
+        $femaleStudentsSubquery = $InstitutionSubjectStudents->find()
+            ->select([
+                'institution_subject_id' =>  $InstitutionSubjectStudents->aliasField('institution_subject_id'),
+                'total_female_students' => $InstitutionSubjectStudents->find()->func()->count('DISTINCT student_id')
+            ])
+            ->innerJoin(
+                [$Users->getAlias() => $Users->getTable()],
+                [$Users->aliasField('id') . ' = ' . $InstitutionSubjectStudents->aliasField('student_id')]
+            )
+            ->where([
+                $total_condition,
+                $Users->aliasField('gender_id = 2') // Female
+            ])
+            ->group(['institution_subject_id']);
 
         $query
-            ->select($this->getSelectFields())
+            ->select(array_merge(
+                $this->getSelectFields(),
+                [
+                    'x_students' => 'TotalStudents.total_students',
+                    'x_male_students' => 'MaleStudents.total_male_students',
+                    'x_female_students' => 'FemaleStudents.total_female_students'
+                ]))
             ->contain($this->getContainModels())
+                ->leftJoin(
+                    ['TotalStudents' => $totalStudentsSubquery],
+                    ['TotalStudents.institution_subject_id = ' . $this->aliasField('id')]
+                )
+                ->leftJoin(
+                    ['MaleStudents' => $maleStudentsSubquery],
+                    ['MaleStudents.institution_subject_id = ' . $this->aliasField('id')]
+                )
+                ->leftJoin(
+                    ['FemaleStudents' => $femaleStudentsSubquery],
+                    ['FemaleStudents.institution_subject_id = ' . $this->aliasField('id')]
+                )
             ->innerJoin(
                 [$InstitutionClassSubjects->getAlias() => $InstitutionClassSubjects->getTable()],
                 [$this->aliasField('id') . ' = ' . $InstitutionClassSubjects->aliasField('institution_subject_id')]
@@ -100,15 +165,59 @@ class InstitutionSubjectsTable extends AppTable  {
             )
             ->where([
                 $conditions,
-                'OR' => [
-                    $this->aliasField('total_male_students != 0'),
-                    'AND' => [
-                        $this->aliasField('total_female_students != 0')
-                    ]
-                ]
+                    'TotalStudents.total_students > 0'
             ]);
-        Log::debug($query->sql());
-        $query->formatResults([$this, 'formatQueryResults']);
+//        Log::debug($query->sql());
+//        $query->formatResults([$this, 'formatQueryResults']);
+    }
+
+    /**
+     * POCOR-8391 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
     }
 
     private function buildConditions($academicPeriodId, $institutionId, $educationSubjectId, $areaLevelId, $areaId)
@@ -119,16 +228,17 @@ class InstitutionSubjectsTable extends AppTable  {
         }
         if (!empty($institutionId) && $institutionId > 0) {
             $conditions[] = 'Institutions.id = ' . $institutionId;
+        } else {
+            if (!empty($areaId) && $areaId > 0) {
+
+                $areaList = $this->getAreaList($areaId);
+                if (!empty($areaList)) {
+                    $conditions['Institutions.area_id IN'] = $areaList;
+                }
+            }
         }
         if (!empty($educationSubjectId)) {
             $conditions[] = $this->aliasField('education_subject_id =') . $educationSubjectId;
-        }
-        $areaList = [];
-        if (empty($institutionId) || $institutionId < 0) {
-            $areaList = $this->getAreaList($areaLevelId, $areaId);
-        }
-        if (!empty($areaList)) {
-            $conditions['Institutions.area_id IN'] = $areaList;
         }
 
         return $conditions;
@@ -138,6 +248,13 @@ class InstitutionSubjectsTable extends AppTable  {
     private function getSelectFields()
     {
         return [
+            'id' => $this->aliasField('id'),
+            $this->aliasField('institution_id'),
+            $this->aliasField('education_grade_id'),
+            $this->aliasField('education_subject_id'),
+            $this->aliasField('academic_period_id'),
+            $this->aliasField('name'),
+            $this->aliasField('no_of_seats'),
             'institution_code' => 'Institutions.code',
             'institution_name' => 'Institutions.name',
             'area_code' => 'Areas.code',
@@ -150,16 +267,6 @@ class InstitutionSubjectsTable extends AppTable  {
             'class_name' => 'InstitutionClasses.name',
             'institution_class_id' => 'InstitutionClasses.id',
             'AcademicPeriods.name',
-            $this->aliasField('total_male_students'),
-            $this->aliasField('total_female_students'),
-            $this->aliasField('name'),
-            $this->aliasField('no_of_seats'),
-            $this->aliasField('total_male_students'),
-            $this->aliasField('total_female_students'),
-            $this->aliasField('institution_id'),
-            $this->aliasField('education_grade_id'),
-            $this->aliasField('education_subject_id'),
-            $this->aliasField('academic_period_id'),
             'Institutions.area_id',
             'region_code' => 'ParentAreas.code',
             'region_name' => 'ParentAreas.name'
@@ -175,15 +282,8 @@ class InstitutionSubjectsTable extends AppTable  {
         ];
     }
 
-    public function formatQueryResults(\Cake\Collection\CollectionInterface $results)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, $request)
     {
-        return $results->map(function ($row) {
-            $row['total_students'] = $row->total_male_students + $row->total_female_students;
-            return $row;
-        });
-    }
-
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
             $attr['options'] = $this->controller->getFeatureOptions('Institutions');
             return $attr;
     }
@@ -339,22 +439,22 @@ class InstitutionSubjectsTable extends AppTable  {
                 ];
 
                 $newFields[] = [
-                    'key' => 'InstitutionSubjects.total_male_students',
-                    'field' => 'total_male_students',
+                    'key' => 'x_male_students',
+                    'field' => 'x_male_students',
                     'type' => 'integer',
                     'label' => __('Male students')
                 ];
 
                 $newFields[] = [
-                    'key' => 'InstitutionSubjects.total_female_students',
-                    'field' => 'total_female_students',
+                    'key' => 'x_female_students',
+                    'field' => 'x_female_students',
                     'type' => 'integer',
                     'label' => __('Female students')
                 ];
 
                 $newFields[] = [
-                    'key' => 'total_students',
-                    'field' => 'total_students',
+                    'key' => 'x_students',
+                    'field' => 'x_students',
                     'type' => 'integer',
                     'label' => __('Total students')
                 ];
@@ -363,55 +463,6 @@ class InstitutionSubjectsTable extends AppTable  {
         }
 
         $fields->exchangeArray($newFields);
-    }
-
-    /**
-     * POCOR-8391 added
-     * Get a dynamic table instance with all associations.
-     *
-     * @param string $tableName
-     * @return \Cake\ORM\Table
-     */
-    private static function getDynamicTableInstance(string $tableName): Table
-    {
-        // Parse plugin and table names if dot notation is used
-        $locator = TableRegistry::getTableLocator();
-        try {
-            return $locator->get($tableName);
-        } catch (\Exception $exception) {
-
-        }
-        $parts = explode('.', $tableName);
-        $plugin = count($parts) > 1 ? $parts[0] : null;
-        $table = count($parts) > 1 ? $parts[1] : $parts[0];
-
-        // Convert the table name to camel case as expected by CakePHP conventions
-        $tableFullAlias = Inflector::camelize($tableName);
-        $tableAlias = Inflector::camelize($table);
-
-        // Create the fully qualified class name if a plugin is specified
-        if ($plugin) {
-            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
-        } else {
-            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
-        }
-        // Check if the table instance already exists
-        if (!$locator->exists($tableFullAlias)) {
-            // Check if the specific table class exists
-            if (!class_exists($className)) {
-                $className = Table::class; // Fallback to generic Table class
-            }
-
-            // Configure a new table instance
-            $locator->setConfig($tableAlias, [
-                'className' => $className,
-                'table' => $table,
-                'alias' => $tableAlias,
-            ]);
-        }
-
-        // Return the table instance
-        return $locator->get($tableFullAlias);
     }
 
 }
