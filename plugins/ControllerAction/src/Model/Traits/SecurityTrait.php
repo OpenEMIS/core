@@ -44,21 +44,28 @@ trait SecurityTrait
             $request = null;
             if (!property_exists($this, 'request')) {
                 try {
+                    $request = null;
+
                     if (property_exists($this, '_table')) {
-                        $request = $this->_table->request;
+                        if (method_exists($this->_table, 'getRequest')) {
+                            if (!property_exists($this->_table, 'request')) {
+                                $request = $this->_table->getRequest();
+                            } else {
+                                $request = $this->_table->request;
+                            }
+                        } else {
+                            $request = $this->_table->request;
+                        }
                     } else {
-                        // echo "<pre>";print_r($this->request);die;
-                        // $request = $this->getController()->getRequest();
-                        $request = $this->request;
+                        $request = $this->getController()->getRequest();
                     }
                 } catch (\Exception $exception) {
-                    $class = __CLASS__;
-                    $line = __LINE__;
-                    if ($queryString == null) {
-                        $queryString = "";
-                    }
-                    Log::debug('Could not process query {query} in {class}, {line}', ['query' => $queryString, 'class' => $class, 'line' => $line]);
-                    Log::debug($exception->getMessage());
+//                    $class = __CLASS__;
+//                    $line = __LINE__;
+//                    $queryString = $queryString ?? "";
+
+//                    Log::debug("Could not process query {query} in {class}, {line}", ['query' => $queryString, 'class' => $class, 'line' => $line]);
+//                    Log::debug($exception->getMessage());
                 }
             }
             if (property_exists($this, 'request')) {
@@ -85,12 +92,12 @@ trait SecurityTrait
                     }
                 }
             } else {
-                $class = __CLASS__;
-                $line = __LINE__;
-                if ($queryString == null) {
-                    $queryString = "";
-                }
-                Log::debug('Could not process query {query} in {class}, {line}', ['query' => $queryString, 'class' => $class, 'line' => $line]);
+//                $class = __CLASS__;
+//                $line = __LINE__;
+//                if ($queryString == null) {
+//                    $queryString = "";
+//                }
+//                Log::debug('Could not process query {query} in {class}, {line}', ['query' => $queryString, 'class' => $class, 'line' => $line]);
                 return null;
             }
         }
