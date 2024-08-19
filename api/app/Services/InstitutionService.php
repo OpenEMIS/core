@@ -696,6 +696,10 @@ class InstitutionService extends Controller
                     $list[$k]['classes'] = $classData;
                     // For POCOR-8251 end...
 
+                    //For POCOR-8491 Start...
+                    $list[$k]['custom_fields'] = $d['staff_custom_field_value'];
+                    //For POCOR-8491 End...
+
 
                     // For POCOR-8398 start...
                     $list[$k]['staff_position_grade_id'] = $d['staff_position_grade']['id'];
@@ -724,7 +728,6 @@ class InstitutionService extends Controller
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Institution Staff List Not Found');
         }
     }
@@ -774,6 +777,10 @@ class InstitutionService extends Controller
                     $list[$k]['classes'] = $classData;
                     // For POCOR-8251 end...
 
+                    //For POCOR-8491 Start...
+                    $list[$k]['custom_fields'] = $d['staff_custom_field_value'];
+                    //For POCOR-8491 End...
+
                     // For POCOR-8398 start...
                     $list[$k]['staff_position_grade_id'] = $d['staff_position_grade']['id'];
                     $list[$k]['staff_position_grade_name'] = $d['staff_position_grade']['name'];
@@ -814,7 +821,7 @@ class InstitutionService extends Controller
             
             $list = [];
             if($data){
-
+                
                 // For POCOR-8251 start...
                 $classData = [];
                 foreach ($data['classes'] as $c => $class) {
@@ -850,6 +857,10 @@ class InstitutionService extends Controller
                 // For POCOR-8251 start...
                 $list['classes'] = $classData;
                 // For POCOR-8251 end...
+
+                //For POCOR-8491 Start...
+                    $list['custom_fields'] = $data['staffCustomFieldValue'];
+                    //For POCOR-8491 End...
 
                 // For POCOR-8398 start...
                 $list['staff_position_grade_id'] = $data['staffPositionGrade']['id'];
