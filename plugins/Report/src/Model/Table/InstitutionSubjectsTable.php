@@ -41,12 +41,12 @@ class InstitutionSubjectsTable extends AppTable  {
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
-        $areaLevelId = $requestData->area_level_id;
+//        $areaLevelId = $requestData->area_level_id;
         $AreaAdministratives = $this->getDynamicTableInstance('area_administratives');
         $Institutions = $this->getDynamicTableInstance('institutions');
         $Areas = $this->getDynamicTableInstance('areas');
         $AreaLevels = $this->getDynamicTableInstance('area_levels');
-        $conditions = $this->buildConditions($academicPeriodId, $institutionId, $requestData->education_subject_id, $areaLevelId, $areaId);
+        $conditions = $this->buildConditions($academicPeriodId, $institutionId, $requestData->education_subject_id, $areaId);
 
         $InstitutionClassSubjects = $this->getDynamicTableInstance('Institution.InstitutionClassSubjects');
         $InstitutionClasses = $this->getDynamicTableInstance('Institution.InstitutionClasses');
@@ -220,7 +220,7 @@ class InstitutionSubjectsTable extends AppTable  {
         return $locator->get($tableFullAlias);
     }
 
-    private function buildConditions($academicPeriodId, $institutionId, $educationSubjectId, $areaLevelId, $areaId)
+    private function buildConditions($academicPeriodId, $institutionId, $educationSubjectId, $areaId)
     {
         $conditions = [];
         if (!empty($academicPeriodId)) {
@@ -230,7 +230,6 @@ class InstitutionSubjectsTable extends AppTable  {
             $conditions[] = 'Institutions.id = ' . $institutionId;
         } else {
             if (!empty($areaId) && $areaId > 0) {
-
                 $areaList = $this->getAreaList($areaId);
                 if (!empty($areaList)) {
                     $conditions['Institutions.area_id IN'] = $areaList;
