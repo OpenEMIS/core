@@ -28,7 +28,7 @@ class POCOR8072 extends AbstractMigration
             '_add' => 'InstitutionChoices.add',
             '_delete' => 'InstitutionChoices.remove',
             '_execute' => NULL,
-            '`order`' => '479',  // Escape the column name using backticks
+            '`order`' => 479,  // Escape the column name using backticks
             'visible' => 1,
             'description' => NULL,
             'modified_user_id' => NULL,
@@ -52,7 +52,7 @@ class POCOR8072 extends AbstractMigration
             '_add' => 'InstitutionApplicationAttachment.add',
             '_delete' => 'InstitutionApplicationAttachment.remove',
             '_execute' => NULL,
-            '`order`' => '481',  // Escape the column name using backticks
+            '`order`' => 481,  // Escape the column name using backticks
             'visible' => 1,
             'description' => NULL,
             'modified_user_id' => NULL,
