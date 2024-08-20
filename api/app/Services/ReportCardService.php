@@ -115,4 +115,22 @@ class ReportCardService extends Controller
     }
     //For pocor-8270 end...
 
+
+    //For POCOR-8252 Start...
+    public function studentReportCardGenerate($params, $institutionId, $classId, $studentId)
+    {
+        try {
+            $data = $this->reportCardRepository->studentReportCardGenerate($params, $institutionId, $classId, $studentId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to generate student report card.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to generate student report card.');
+        }
+    }
+    //For POCOR-8252 End...
+
 }
