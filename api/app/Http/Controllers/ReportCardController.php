@@ -7,6 +7,7 @@ use App\Services\ReportCardService;
 use Illuminate\Support\Facades\Log;
 use Exception;
 use JWTAuth;
+use App\Http\Requests\ReportCardGenerateRequest;
 
 class ReportCardController extends Controller
 {
@@ -458,4 +459,29 @@ class ReportCardController extends Controller
         }
     }
     //For pocor-8270 end...
+
+
+
+    //For POCOR-8252 Start...
+    public function studentReportCardGenerate(ReportCardGenerateRequest $request, $institutionId, $classId, $studentId)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->reportCardService->studentReportCardGenerate($params, $institutionId, $classId, $studentId);
+
+            if(isset($data) && $data == 1){
+                return $this->sendErrorResponse('There is no template for this Report Card. Please contact the administrator for assistance.');
+            }
+
+            return response()->download($data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to generate student report card.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to generate student report card.');
+        }
+    }
+    //For POCOR-8252 End...
 }
