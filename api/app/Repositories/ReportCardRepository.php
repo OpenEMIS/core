@@ -668,10 +668,17 @@ class ReportCardRepository extends Controller
             
             for ($i = 0; $i < $sheetCount; $i++) {
                 $sheet = $spreadsheet->getSheet($i);
-                dd("sheet: ", $sheet->getTitle());
+                $sheetTitle = $sheet->getTitle();
                 foreach ($sheet->getRowIterator() as $r => $row) {
                     $cellIterator = $row->getCellIterator();
                     $cellIterator->setIterateOnlyExistingCells(false);
+
+                    foreach ($cellIterator as $c => $cell) {
+                        dd($cell->getValue());
+                        if(Str::contains($cell->getValue(),'ClassStudents.user.i')){
+                            $this->setSerialNumber($cell, $sheet, $classStudents);
+                        }
+                    }
                 }
             }
             
