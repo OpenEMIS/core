@@ -38185,6 +38185,182 @@
                     }
                 }
             }
+        },
+        "/api/v4/workbenches": {
+            "get": {
+                "tags": [
+                    "Workbench"
+                ],
+                "summary": "Get workbench data",
+                "description": "Retrieve workbench data for various workbench types.",
+                "operationId": "b3cc144b4ad1b8448d7eb7cbe70f9d95",
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "institutionSurvey": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 75
+                                                            },
+                                                            "institution_id": {
+                                                                "type": "integer",
+                                                                "example": 6
+                                                            },
+                                                            "institution": {
+                                                                "type": "string",
+                                                                "example": "Avory Primary School"
+                                                            },
+                                                            "request_title": {
+                                                                "type": "string",
+                                                                "example": "Repeater List of 2024"
+                                                            },
+                                                            "received_date": {
+                                                                "type": "string",
+                                                                "example": "Aug 19, 2024"
+                                                            },
+                                                            "requester": {
+                                                                "type": "string",
+                                                                "example": "admin - System  Admin"
+                                                            },
+                                                            "status_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "Open"
+                                                            },
+                                                            "workflow_name": {
+                                                                "type": "string",
+                                                                "example": "Institutions - Survey - General"
+                                                            },
+                                                            "survey_form": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 18
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "example": "Repeater List"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "academic_period": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 33
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "example": "2024"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "url": {
+                                                                "properties": {
+                                                                    "plugin": {
+                                                                        "type": "string",
+                                                                        "example": "Institution"
+                                                                    },
+                                                                    "controller": {
+                                                                        "type": "string",
+                                                                        "example": "Institutions"
+                                                                    },
+                                                                    "action": {
+                                                                        "type": "string",
+                                                                        "example": "Surveys"
+                                                                    },
+                                                                    "0": {
+                                                                        "type": "string",
+                                                                        "example": "view"
+                                                                    },
+                                                                    "1": {
+                                                                        "type": "integer",
+                                                                        "example": 75
+                                                                    },
+                                                                    "institution_id": {
+                                                                        "type": "integer",
+                                                                        "example": 6
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "created_user": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 2
+                                                                    },
+                                                                    "openemis_no": {
+                                                                        "type": "string",
+                                                                        "example": "admin"
+                                                                    },
+                                                                    "first_name": {
+                                                                        "type": "string",
+                                                                        "example": "System"
+                                                                    },
+                                                                    "middle_name": {
+                                                                        "type": "string",
+                                                                        "example": ""
+                                                                    },
+                                                                    "third_name": {
+                                                                        "type": "string",
+                                                                        "example": ""
+                                                                    },
+                                                                    "last_name": {
+                                                                        "type": "string",
+                                                                        "example": "Admin"
+                                                                    },
+                                                                    "preferred_name": {
+                                                                        "type": "string",
+                                                                        "example": ""
+                                                                    },
+                                                                    "full_name": {
+                                                                        "type": "string",
+                                                                        "example": "System  Admin"
+                                                                    },
+                                                                    "name_with_id": {
+                                                                        "type": "string",
+                                                                        "example": "admin - System  Admin"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
         }
     }
 }
