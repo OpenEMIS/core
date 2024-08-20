@@ -565,7 +565,7 @@ class DataManagementCopyTable extends ControllerActionTable
                         'end_year' => $AcademicPeriod->end_year,
                         'year_acquired'=> $oldLand->year_acquired,
                         'year_disposed' => $oldLand->year_disposed,
-                        'area' => $oldLand->area,
+                        'area' => isset($oldLand->area) ? $oldLand->area : NULL,
                         'accessibility'=> $oldLand->accessibility,
                         'comment'=> $oldLand->comment,
                         'institution_id'=> $oldLand->institution_id,
