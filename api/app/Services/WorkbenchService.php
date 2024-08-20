@@ -1306,6 +1306,7 @@ class WorkbenchService extends Controller
                 
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
 

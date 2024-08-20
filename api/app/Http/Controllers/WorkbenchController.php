@@ -2660,6 +2660,7 @@ class WorkbenchController extends Controller
             $visitRequests = $this->workbenchService->getVisitRequests($request);
             $trainingApplications = $this->workbenchService->getTrainingApplications($request);
             $scholarshipApplications = $this->workbenchService->getScholarshipApplications($request);
+            $institutionCases = $this->workbenchService->getInstitutionCases($request);
 
             $resp['institutionSurvey'] = $insSurvey['data'];
             $resp['institutionPositions'] = $insPositions['data'];
@@ -2683,6 +2684,7 @@ class WorkbenchController extends Controller
             $resp['visitRequests'] = $visitRequests['data'];
             $resp['trainingApplications'] = $trainingApplications['data'];
             $resp['scholarshipApplications'] = $scholarshipApplications['data'];
+            $resp['institutionCases'] = $institutionCases['data'];
             
             
             return $this->sendSuccessResponse("Workbenches list found.", $resp);
@@ -2691,7 +2693,6 @@ class WorkbenchController extends Controller
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            dd($e);
             return $this->sendErrorResponse('Failed to fetch list from DB');
         }
     }

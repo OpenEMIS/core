@@ -1200,6 +1200,7 @@ class WorkbenchRepository extends Controller
                         'assignee:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
                         'securityUser:id,openemis_no,first_name,middle_name,third_name,last_name,preferred_name',
                         'status:id,name,workflow_id',
+                        'status.workflows:id,code,name'
                     )
                     ->whereHas(
                         'status', function ($q) {
