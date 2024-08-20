@@ -537,4 +537,13 @@ class EducationProgrammesTable extends ControllerActionTable {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    // POCOR-8507
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra) {
+        if ($this->hasAssociatedRecords($this, $entity, $extra)) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        } 
+    }
 }
