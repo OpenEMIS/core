@@ -164,34 +164,34 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-{
-    // Extract query parameters
-    $queryString = $this->getQueryString();
-    $entity->applicant_id = $queryString['applicant_id']; 
-    $entity->scholarship_id = $queryString['scholarship_id']; 
+    {
+        // Extract query parameters
+        $queryString = $this->getQueryString();
+        $entity->applicant_id = $queryString['applicant_id']; 
+        $entity->scholarship_id = $queryString['scholarship_id']; 
 
-    // Handle file upload
-   
-        // Check if file_content is an instance of UploadedFile
-        if ($entity->file_content instanceof \Laminas\Diactoros\UploadedFile) {
-            $uploadedFile = $entity->file_content;
+        // Handle file upload
+       
+            // Check if file_content is an instance of UploadedFile
+            if ($entity->file_content instanceof \Laminas\Diactoros\UploadedFile) {
+                $uploadedFile = $entity->file_content;
 
-            // Extract the file name
-            $filename = $uploadedFile->getClientFilename();
+                // Extract the file name
+                $filename = $uploadedFile->getClientFilename();
 
-            // Read the file content (as a string)
-            $fileStream = $uploadedFile->getStream();
-            $fileContent = $fileStream->getContents();
+                // Read the file content (as a string)
+                $fileStream = $uploadedFile->getStream();
+                $fileContent = $fileStream->getContents();
 
-            // Optionally, you can move the uploaded file to a specific directory
-            // $uploadedFile->moveTo('/path/to/directory/' . $filename);
+                // Optionally, you can move the uploaded file to a specific directory
+                // $uploadedFile->moveTo('/path/to/directory/' . $filename);
 
-            // Set the extracted values into the entity
-            $entity->file_name = $filename; // Adjust according to your field name
-            $entity->file_content = $fileContent;
-        
+                // Set the extracted values into the entity
+                $entity->file_name = $filename; // Adjust according to your field name
+                $entity->file_content = $fileContent;
+            
+        }
     }
-}
 
 
 
