@@ -9,7 +9,7 @@ use App\Model\Table\AppTable;
 use Cake\Network\Request;
 use Cake\ORM\Behavior;
 use Cake\Network\Session;
-
+use App\Model\Table\ControllerActionTable;
 class StudentBehavioursTable extends ControllerActionTable
 {
 	protected $_defaultConfig = [ //POCOR-8507
