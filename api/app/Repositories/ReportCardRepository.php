@@ -675,8 +675,8 @@ class ReportCardRepository extends Controller
 
                     foreach ($cellIterator as $c => $cell) {
                         dd($cell->getValue());
-                        if(Str::contains($cell->getValue(),'ClassStudents.user.i')){
-                            $this->setSerialNumber($cell, $sheet, $classStudents);
+                        if(Str::contains($cell->getValue(),'Institutions.logo_content')){
+                            $this->setOpenEMISLogo($cell, $sheet, $logoPath, $cell->getValue());
                         }
                     }
                 }
