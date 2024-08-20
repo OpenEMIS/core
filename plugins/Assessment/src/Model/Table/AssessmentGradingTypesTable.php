@@ -350,4 +350,27 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    //POCOR-8554
+	public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+	{
+	    $checkRecord = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemsGradingTypes');
+	    $data = $checkRecord->find()
+	        ->where(['assessment_grading_type_id' => $entity->id])
+	        ->toArray();
+
+	    $associatedRecordsExist = 
+	        $this->GradingOptions->exists(['assessment_grading_type_id' => $entity->id]);
+
+	    if ($associatedRecordsExist || !empty($data)) {
+	        $message = __('Delete operation is not allowed as there are other information linked to this record.');
+	        $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+	        
+	        // Redirect to the referring URL
+	        $url = $this->request->referer();
+	        $event->stopPropagation();
+	        return $this->controller->redirect($url);
+	    }
+
+	}
 }
