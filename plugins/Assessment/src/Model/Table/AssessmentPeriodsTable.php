@@ -51,9 +51,10 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    /*public function validationDefault(Validator $validator): Validator
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
 
         return $validator
             ->requirePresence('academic_period_id')
@@ -67,15 +68,16 @@ class AssessmentPeriodsTable extends ControllerActionTable
             ])
             ->add('code', [
                 'ruleUniqueCodeByForeignKeyAcademicPeriod' => [
-                    'rule' => ['uniqueCodeByForeignKeyAcademicPeriod', 'Assessments', 'assessment_id', 'academic_period_id'], //($foreignKeyModel, $foreignKeyField, $academicFieldName)
+                    'rule' => ['uniqueCodeByForeignKeyAcademicPeriod', 'Assessments', 'assessment_id', 'academic_period_id'],
                     'on' => function ($context) {
-                        if ($this->action == 'edit') { //trigger this only during edit
+                        if ($this->action == 'edit') {
                             $oldCode = $this->get($context['data']['id'])->code;
                             $newCode = $context['data']['code'];
-                            return $oldCode != $newCode; //only trigger validation if there is any changes on the code value.
-                        } else if ($this->action == 'add') { //during add, then validation always needed.
+                            return $oldCode != $newCode;
+                        } else if ($this->action == 'add') {
                             return true;
                         }
+                        return false; // Ensure the callback always returns a boolean
                     }
                 ]
             ])
@@ -93,10 +95,11 @@ class AssessmentPeriodsTable extends ControllerActionTable
                             $this->aliasField('assessment_id') => $context['data']['assessment_id'],
                             $this->aliasField('academic_term IS NOT NULL')
                         ]);
-                    return $query->count() == 0;
+                    return $query->count() == 0; // This will return true or false
                 }
+                return true; // Default to true if 'assessment_id' is not in context['data']
             });
-    }*/
+    }
 
     public function findUniqueAssessmentTerms(Query $query, array $options)
     {
@@ -416,7 +419,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
     {
         $getAssessment_id = $this->request->getAttribute('params')['pass'][1];
         $entityId = $this->ControllerAction->paramsDecode($getAssessment_id)['id'];
-        $checNewSubjecAdded = $this->gradingSubjectAdd($entity);//POCOR-7322
+        $checNewSubjecAdded = $this->gradingSubjectAdd($entity, $entityId);//POCOR-7322
         $this->field('education_subjects', [
             'type' => 'element',
             'element' => 'Assessment.assessment_periods',
@@ -464,10 +467,12 @@ class AssessmentPeriodsTable extends ControllerActionTable
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         //patch data to handle fail save because of validation error. this one to complete necessary field needed.
-        if (array_key_exists($this->getAlias(), $requestData)) {
-            if (array_key_exists('education_subjects', $requestData[$this->getAlias()])) {
-                foreach ($requestData[$this->getAlias()]['education_subjects'] as $key => $item) {
-                    $requestData[$this->getAlias()]['education_subjects'][$key]['_joinData']['assessment_id'] = $requestData[$this->getAlias()]['assessment_id'];
+        if ($requestData->offsetExists($this->getAlias())) {
+            $aliasData = $requestData[$this->getAlias()];
+
+            if (isset($aliasData['education_subjects'])) {
+                foreach ($aliasData['education_subjects'] as $key => $item) {
+                    $requestData[$this->getAlias()]['education_subjects'][$key]['_joinData']['assessment_id'] = $aliasData['assessment_id'];
                 }
             }
         }
@@ -482,7 +487,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
     {
         $getAssessment_id = $this->request->getAttribute('params')['pass'][1];
         $entityId = $this->ControllerAction->paramsDecode($getAssessment_id)['id'];
-        $checNewSubjecAdded = $this->gradingSubjectAdd($entity); //POCOR-7322
+        $checNewSubjecAdded = $this->gradingSubjectAdd($entity,$entityId); //POCOR-7322
         if (!$entity->isNew()) { //for edit
             $id = $entityId;
             $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
@@ -806,7 +811,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
         $assessmentItems = TableRegistry::get('Assessment.AssessmentItems');
         $checkAssessment = $assessmentItems->find()->where([$assessmentItems->aliasField('assessment_id') => $assessmentId])->count();
-        $checkGrading = $AssessmentItemsGradingTypes->find()->where([$AssessmentItemsGradingTypes->aliasField('assessment_id') => $assessmentId, $AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $assesmentPeriod])->count();
+        $checkGrading = $AssessmentItemsGradingTypes->find()->where([$AssessmentItemsGradingTypes->aliasField('assessment_id IS') => $assessmentId, $AssessmentItemsGradingTypes->aliasField('assessment_period_id IS') => $assesmentPeriod])->count();
         if ($checkAssessment != $checkGrading && $checkAssessment > $checkGrading) {
             $getRecord = $checkAssessment - $checkGrading;
             $assessment_grading_type_id = $AssessmentItemsGradingTypes->find()->where([$AssessmentItemsGradingTypes->aliasField('assessment_id') => $assessmentId, $AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $assesmentPeriod])->first()->assessment_grading_type_id;
@@ -931,55 +936,29 @@ class AssessmentPeriodsTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
-      {
-          if ($field == 'academic_period_id') {
-              return __('Academic Period');
-          } elseif ($field == 'description') {
-              return __('Description');
-          }elseif ($field == 'assessment_id') {
-              return __('Assessment');
-          } elseif ($field == 'excel_template') {
-              return __('Excel Template');
-          } elseif ($field == 'education_programme_id') {
-              return __('Education Programme');
-          } elseif ($field == 'education_grade_id') {
-              return __('Education Grade');
-          } elseif ($field == 'code') {
-              return __('Code');
-          } elseif ($field == 'name') {
-              return __('Name');
-          } elseif ($field == 'academic_term') {
-            return __('Academic Term');
-          } elseif ($field == 'start_date') {
-            return __('Start Date');
-          } elseif ($field == 'end_date') {
-            return __('End Date');
-          } elseif ($field == 'date_enabled') {
-            return __('Date Enabled');
-          } elseif ($field == 'date_disabled') {
-            return __('Date Disabled');
-          } elseif ($field == 'editable_student_statuses') {
-            return __('Editable Student Statuses');
-          } elseif ($field == 'modified_user_id') {
-              return __('Modified By');
-          } elseif ($field == 'modified') {
-              return __('Modified On');
-          } elseif ($field == 'created_user_id') {
-              return __('Created By');
-          } elseif ($field == 'created') {
-              return __('Created On');
-          }elseif ($field == 'excluded_security_roles') {
-              return __('Excluded Security Roles');
-          } else {
-              return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-          }
-    }
-
-    public function beforeDelete(Event $event, Entity $entity)
+    //POCOR-8554
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
+        $associatedModels = [
+            'AssessmentItemResults',
+            'AssessmentItemsGradingTypes',
+            'AssessmentPeriodExcludedSecurityRoles'
+        ];
+
+        foreach ($associatedModels as $model) {
+            if ($this->{$model}->exists(['assessment_period_id' => $entity->id])) {
+                $message = __('Delete operation is not allowed as there are other information linked to this record.');
+                $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+                
+                $url = $this->request->referer();
+                $event->stopPropagation();
+                return $this->controller->redirect($url);
+            }
+        }
     }
+
+
     
 }
