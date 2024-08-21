@@ -267,6 +267,13 @@ class AcademicPeriodsTable extends ControllerActionTable
             $this->Alert->warning('general.currentNotDeletable');
             $this->controller->redirect($this->url('index'));
         }
+        //  do not allow for deleting if have associate record. //POCOR-8507
+        if ($this->hasAssociatedRecords($this, $entity, $extra)) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        } 
+
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
