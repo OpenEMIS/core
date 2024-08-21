@@ -311,11 +311,21 @@ class InstitutionsTable extends ControllerActionTable
                     'rule' => ['range', 1, 2],
                 ]
             ])
-            // ->add('address', 'ruleMaximum255', [
-            //      'rule' => ['maxLength', 255],
-            //      'message' => 'Maximum allowable character is 255',
-            //      'last' => true
-            //  ])
+            ->notEmpty('address')
+            ->add('address', 'ruleMaximum255', [
+                 'rule' => ['maxLength', 255],
+                 'message' => 'Maximum allowable character is 255',
+                 'last' => true
+             ])
+             ->add('address', [
+                'custom' => [
+                    'rule' => function ($value, $context) {
+                        // Regular expression to allow letters, numbers, spaces, commas, periods, hyphens, and apostrophes
+                        return (bool)preg_match('/^[a-zA-Z0-9\s,.\'-]+$/', $value);
+                    },
+                    'message' => __('The institution address cannot contain special characters.'),
+                ]
+            ])
 
             ->add('code', 'ruleCustomCode', [
                 'rule' => ['validateCustomPattern', 'institution_code'],
