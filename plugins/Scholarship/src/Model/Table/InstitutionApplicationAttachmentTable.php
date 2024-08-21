@@ -45,7 +45,7 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
     public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
-        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+      //  $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
         $events['ControllerAction.Model.download'] = 'download';
         return $events;
     }
@@ -67,13 +67,20 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
         $tabElements = $this->ScholarshipTabs->getScholarshipApplicationTabs();
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->getAlias());
-            $extra['toolbarButtons']['back']['url'] = [
-                'plugin' => 'Scholarship',
-                'controller' => 'Scholarships',
-                'action' => 'ScholarshipApplicationAttachments',
-                0 => 'index',
-                1 => $encodedQueryString
-            ];
+        $extra['toolbarButtons']['back']['url'] = [
+            'plugin' => 'Scholarship',
+            'controller' => 'Scholarships',
+            'action' => 'ScholarshipApplicationAttachments',
+            0 => 'index',
+            1 => $encodedQueryString
+        ];
+        $extra['toolbarButtons']['list']['url'] = [
+            'plugin' => 'Scholarship',
+            'controller' => 'Scholarships',
+            'action' => 'ScholarshipApplicationAttachments',
+            0 => 'index',
+            1 => $encodedQueryString
+        ];
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -99,21 +106,6 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
     {
         return $entity->scholarship->academic_period->name;
     }
-
-    /*public function viewBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $queryString = $this->getQueryString();
-        $encodedQueryString = $this->paramsEncode($queryString);
-        if (isset($extra['toolbarButtons']['back']['url'])) {
-            $extra['toolbarButtons']['back']['url'] = [
-                'plugin' => 'Scholarship',
-                'controller' => 'Scholarships',
-                'action' => 'InstitutionChoices',
-                0 => 'index',
-                1 => $encodedQueryString
-            ];
-        }
-    }*/
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
@@ -162,38 +154,6 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
         return $this->controller->redirect($url);            
 
     }
-
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        // Extract query parameters
-        $queryString = $this->getQueryString();
-        $entity->applicant_id = $queryString['applicant_id']; 
-        $entity->scholarship_id = $queryString['scholarship_id']; 
-
-        // Handle file upload
-       
-            // Check if file_content is an instance of UploadedFile
-            if ($entity->file_content instanceof \Laminas\Diactoros\UploadedFile) {
-                $uploadedFile = $entity->file_content;
-
-                // Extract the file name
-                $filename = $uploadedFile->getClientFilename();
-
-                // Read the file content (as a string)
-                $fileStream = $uploadedFile->getStream();
-                $fileContent = $fileStream->getContents();
-
-                // Optionally, you can move the uploaded file to a specific directory
-                // $uploadedFile->moveTo('/path/to/directory/' . $filename);
-
-                // Set the extracted values into the entity
-                $entity->file_name = $filename; // Adjust according to your field name
-                $entity->file_content = $fileContent;
-            
-        }
-    }
-
-
 
     public function beforeDelete(Event $event, Entity $entity)
     {
@@ -378,5 +338,31 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
         return $attr;
     }
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $queryString = $this->getQueryString();
+        $entity->applicant_id = $queryString['applicant_id']; 
+        $entity->scholarship_id = $queryString['scholarship_id']; 
+        // Check if file_content is an instance of UploadedFile
+        if ($entity->file_content instanceof \Laminas\Diactoros\UploadedFile) {
+            $uploadedFile = $entity->file_content;
+            if ($uploadedFile->getError() === 4) {
+            // No new file was uploaded, retain original values
+            $entity->file_name = $entity->getOriginal('file_name');
+            $entity->file_content = $entity->getOriginal('file_content');
+            }else{
+                $uploadedFile = $entity->file_content;
+                $filename = $uploadedFile->getClientFilename();
+
+                // Read the file content (as a string)
+                $fileStream = $uploadedFile->getStream();
+                $fileContent = $fileStream->getContents();
+                $entity->file_name = $filename; // Adjust according to your field name
+                $entity->file_content = $fileContent;
+                
+            }
+        }
+
+    }
 
 }

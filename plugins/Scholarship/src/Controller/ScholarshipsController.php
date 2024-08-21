@@ -141,7 +141,7 @@ class ScholarshipsController extends AppController
         $header .= ' - ' . $model->getHeader($alias);
         $this->set('contentHeader', $header);
 
-        $persona = false;
+        $persona = true;
         $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
         $event = $model->getEventManager()->dispatch($event);
     }

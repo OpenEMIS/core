@@ -18,12 +18,6 @@ class ScholarshipTabsComponent extends Component
     {
         $this->controller = $this->_registry->getController();
         $this->queryString = $this->getController()->getRequest()->getQuery('queryString');
-        //$serverData = explode("/",$_SERVER['REQUEST_URI']);
-        /*$this->queryString = $this->request->getQuery('queryString');
-        if($this->queryString == null){
-            $this->queryString = 'eyJhcHBsaWNhbnRfaWQiOjYsInNjaG9sYXJzaGlwX2lkIjoyfQ.ZjdjMzJiMDIxY2E4MjVlZTNlMTY5MzM2OGM3MjE5M2ZhNDQwZjhlNjE2NzhkOTRhMzU2OWNkNGRiYzdkNDYyMg';
-        }*/
-        //$this->queryString = $serverData[7];
 
         $this->controller->loadModel('Scholarship.Scholarships');
         $this->controller->loadModel('Scholarship.FinancialAssistanceTypes');
@@ -135,11 +129,11 @@ class ScholarshipTabsComponent extends Component
                 'text' => __('Overview')
             ],
             'InstitutionChoices' => [
-                'url' => ['plugin' => 'Profile', 'controller' => 'ProfileApplicationInstitutionChoices', 'action' => 'index', 'queryString' => $this->queryString],
+               'url' => ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'ScholarshipApplicationInstitutionChoices', 'view', $this->queryString, 'queryString' => $this->queryString],
                 'text' => __('Institution Choices')
             ],
             'Attachments' => [
-                'url' => ['plugin' => 'Profile', 'controller' => 'ProfileApplicationAttachments', 'action' => 'index', 'queryString' => $this->queryString],
+                'url' => ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'ScholarshipApplicationAttachments', 'view', $this->queryString, 'queryString' => $this->queryString],
                 'text' => __('Attachments')
             ]
         ];
