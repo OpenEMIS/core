@@ -18,6 +18,26 @@ class POCOR8072 extends AbstractMigration
         $connection = ConnectionManager::get('default');
 
         $connection->insert('security_functions', [
+            'name' => 'Overview',
+            'controller' => 'Profiles',
+            'module' => 'Personal',
+            'category' => 'Scholarships',
+            'parent_id' => 9030,
+            '_view' => 'Applications.index|Applications.view',
+            '_edit' => NULL,
+            '_add' => NULL,
+            '_delete' => NULL,
+            '_execute' => NULL,
+            '`order`' => 479,  // Escape the column name using backticks
+            'visible' => 1,
+            'description' => NULL,
+            'modified_user_id' => NULL,
+            'modified' => NULL,
+            'created_user_id' => 1,
+            'created' => date('Y-m-d H:i:s')
+        ]);
+
+        $connection->insert('security_functions', [
             'name' => 'Institution Choices',
             'controller' => 'Profiles',
             'module' => 'Personal',

@@ -69,6 +69,14 @@ class InstitutionChoicesTable extends ControllerActionTable
                 0 => 'index',
                 1 => $encodedQueryString
             ];
+
+            $extra['toolbarButtons']['list']['url'] = [
+                'plugin' => 'Scholarship',
+                'controller' => 'Scholarships',
+                'action' => 'ScholarshipApplicationInstitutionChoices',
+                0 => 'index',
+                1 => $encodedQueryString
+            ];
         
     }
 
@@ -284,7 +292,6 @@ class InstitutionChoicesTable extends ControllerActionTable
         ];
 
     } else {
-        // Handle the case where entity is null (optional: log an error or take other action)
         Log::error('Entity is null when setting up action buttons.');
     }
         return $buttons;
