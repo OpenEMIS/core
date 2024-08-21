@@ -648,6 +648,13 @@ class ReportCardRepository extends Controller
     public function studentReportCardGenerate($params, $institutionId, $classId, $studentId)
     {
         try {
+            ini_set('memory_limit', '-1');
+            ini_set('max_execution_time', 3600);
+
+            $logoPath = public_path('openemis_logo.png');
+            $generalData = $this->getGeneralData($params, $institutionId, $classId, $studentId);
+            dd($generalData);
+
             $reportCard = ReportCard::where('id', $params['report_card_id'])->first();
 
             if(!$reportCard){
@@ -658,6 +665,7 @@ class ReportCardRepository extends Controller
             $template_name = $reportCard->excel_template_name;
 
             $filepathexcel = base_path('public/storage/templates/').$template_name;
+
             file_put_contents($filepathexcel, $template);
 
 
@@ -668,20 +676,37 @@ class ReportCardRepository extends Controller
             
             for ($i = 0; $i < $sheetCount; $i++) {
                 $sheet = $spreadsheet->getSheet($i);
+                
                 $sheetTitle = $sheet->getTitle();
+                echo " | ".$sheetTitle." | ";
                 foreach ($sheet->getRowIterator() as $r => $row) {
+                    if($r == 100){
+                        break;
+                    }
+
                     $cellIterator = $row->getCellIterator();
-                    $cellIterator->setIterateOnlyExistingCells(false);
+                    $cellIterator->setIterateOnlyExistingCells(TRUE);
 
                     foreach ($cellIterator as $c => $cell) {
-                        dd($cell->getValue());
-                        if(Str::contains($cell->getValue(),'Institutions.logo_content')){
+                        echo " | ".$cell->getCoordinate()." | ";
+                        if(Str::contains($cell->getValue(),'Institutions.logo_content'))
+                        {
                             $this->setOpenEMISLogo($cell, $sheet, $logoPath, $cell->getValue());
                         }
+
+                        
                     }
                 }
             }
-            
+
+            $writer = new Xlsx($spreadsheet);
+            $file_name = "ReportCard_".time().'.xlsx';
+            $newFilePath = base_path('public/storage/templates/'.$file_name);
+            $writer->save($newFilePath);
+
+            unlink($filepathexcel);
+            dd("done");
+            return $newFilePath;
             
         } catch (\Exception $e) {
             Log::error(
@@ -691,6 +716,42 @@ class ReportCardRepository extends Controller
             dd($e);
             return $this->sendErrorResponse('Failed to generate student report card.');
         }
+    }
+
+
+    public function setOpenEMISLogo($cell, $sheet, $logoPath, $cellValue)
+    {   
+        $string = str_replace("$", "", $cellValue);
+        $imageDimension = json_decode($string, true);
+
+        $imageMarginLeft = $imageDimension['image']['imageMarginLeft']??"";
+        $imageMarginTop = $imageDimension['image']['imageMarginTop']??"";
+        $imageWidth = $imageDimension['image']['imageWidth']??"";
+        $cordinate = $cell->getCoordinate();
+
+        $sheet->setCellValue($cordinate, ""); //Removing the placeholder text from image cell...
+
+        $drawing = new Drawing();
+        $drawing->setName('OpenEMIS Logo');
+        $drawing->setDescription('OpenEMIS Logo');
+        $drawing->setPath($logoPath);
+        $drawing->setCoordinates($cordinate);
+        $drawing->setWidth($imageWidth); // Adjust the height as needed
+        $drawing->setOffsetX($imageMarginLeft);
+        $drawing->setOffsetY($imageMarginTop);
+        $drawing->setWorksheet($sheet);
+        return true;
+    }
+
+
+    public function getGeneralData($params, $institutionId, $classId, $studentId)
+    {
+        $institution = Institutions::where('id', $institutionId)
+                    ->with([
+                        'areaAdministratives:id,code,name',
+                        'area:id,code,name',
+                        'institutionProviders:id,name'
+                    ])
     }
     //For POCOR-8252 End...
 
