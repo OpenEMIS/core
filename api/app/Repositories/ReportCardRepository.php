@@ -751,7 +751,7 @@ class ReportCardRepository extends Controller
                         'areaAdministratives:id,code,name',
                         'area:id,code,name',
                         'institutionProviders:id,name'
-                    ])
+                    ])->first()
     }
     //For POCOR-8252 End...
 
