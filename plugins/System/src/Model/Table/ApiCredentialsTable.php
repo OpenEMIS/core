@@ -27,6 +27,7 @@ class ApiCredentialsTable extends ControllerActionTable
         $this->field('name', ['required' => true]);  //  POCOR-7312 V4
         $this->field('message', ['visible' => false]);
         $this->field('public_key', ['visible' => false]);
+        $this->field('client_id', ['visible' => false]);  //  POCOR-7312 V4
         $this->field('created', ['after' => 'modified', 'visible' => ['add' => false, 'view' => true, 'edit' => false]]);
         $header = __(Inflector::humanize(Inflector::underscore($this->getAlias())));
         $this->controller->set('contentHeader', $header);
