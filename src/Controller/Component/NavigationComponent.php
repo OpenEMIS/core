@@ -3711,6 +3711,14 @@ class NavigationComponent extends Component
                     'ReportCards.ReportCardEmail',
                     'ReportCards.Processes']
             ],
+            'Gpa.GpaSystem' => [
+                'title' => 'GPA',
+                'parent' => 'Administration.Performance',
+                'params' => ['plugin' => 'Gpa'],
+                'selected' => ['Gpa.GpaSystem',
+                                'Gpa.Cumulative',
+                                'Gpa.GpaGradingType']
+            ],
 
         ];
         return $fullPerformanceNavigation;
