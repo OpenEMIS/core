@@ -128,6 +128,7 @@ class InstitutionRoomsTable extends ControllerActionTable
 
                 return false;
             })
+            ->allowEmpty('area') //POCOR-8523
             ->add('area', 'ruleValidateCustomLandSize', [
                 'rule' => ['validateCustomLandSize', 'Maximum_institution_infrastructure_room_size'],
                 'provider' => 'table'

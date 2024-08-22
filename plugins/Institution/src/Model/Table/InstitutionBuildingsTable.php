@@ -107,6 +107,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
                     'rule' => ['compareDateReverse', 'start_date', false]
                 ]
             ])
+            ->allowEmpty('area') //POCOR-8523
             ->add('area', 'ruleValidateCustomLandSize', [
                 'rule' => ['validateCustomLandSize', 'Maximum_institution_infrastructure_building_size'],
                 'provider' => 'table'

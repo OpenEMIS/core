@@ -254,7 +254,10 @@ class InstitutionLandsTable extends ControllerActionTable
             '1' => $encodedQueryString,
             'institutionId' => $institutionId
         ];
+        $paramsArr = $this->request->getParam('?'); //POCOR-8523
+        
         $url = array_merge($url, $this->request->getQuery());
+        $url = is_array($paramsArr) ? array_merge($url, $paramsArr) : $url; //POCOR-8523
         //$url = $this->setQueryString($url, ['institution_land_id' => $entity->id, 'institution_land_name' => $entity->code]);
 
         return $event->getSubject()->HtmlField->link($entity->code, $url);
