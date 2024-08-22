@@ -450,11 +450,25 @@ class SurveysReportTable extends AppTable
     {
         $requestData = json_decode($settings['process']['params']);
         //POCOR-8525 starts find record is exist in `institution_repeater_surveys` table for Repeater case
+        $institutionID = $requestData->institution_id;
+        if($institutionID <= 0){
+            $Institutions = TableRegistry::get('Institution.Institutions');
+            $InstitutionsData = $Institutions->find()->toArray();
+            if(!empty($InstitutionsData)){
+                $instArr = [];
+                foreach($InstitutionsData AS $inst_key => $inst_val){
+                    $instArr[] = $inst_val['id'];
+                }
+            }
+        }else{
+            $instArr[] = $institutionID;
+        }
+        
         $InstitutionRepeaterSurveys = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
         $InstitutionRepeaterSurveysRes = $InstitutionRepeaterSurveys
                             ->find()
                             ->where([
-                                $InstitutionRepeaterSurveys->aliasField('institution_id') => $requestData->institution_id,
+                                $InstitutionRepeaterSurveys->aliasField('institution_id IN') => $instArr,
                                 $InstitutionRepeaterSurveys->aliasField('academic_period_id') => $requestData->academic_period_id,
                                 $InstitutionRepeaterSurveys->aliasField('parent_form_id') => $requestData->survey_form,
                             ])->toArray();
