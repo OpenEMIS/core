@@ -173,8 +173,12 @@ class SurveysReportTable extends AppTable
                 ])
                 ->where([$condition])
                 ->group([$this->aliasField('id'), 'InstitutionRepeaterSurveys.id']);
-                $query->formatResults(function (ResultSetInterface $results) {
-                    return $results->map(function ($row) {
+                $query->formatResults(function (ResultSetInterface $results) use ($surveySection) {
+                    return $results->map(function ($row) use ($surveySection) {
+                        //first get the section value from `survey_for_questions` table
+                        $surveySectionId = "$surveySection";
+                        $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
+                        $surveySectionData = $surveySection->find()->where([ $surveySection->aliasField('id') => $surveySectionId ])->first();
                         
                         $InstitutionRepeaterSurveysId = $row->InstitutionRepeaterSurveysId;
                         $InstitutionRepeaterSurveys_survey_form_id = $row->InstitutionRepeaterSurveys_survey_form_id;
@@ -187,6 +191,7 @@ class SurveysReportTable extends AppTable
                                 'survey_form_id' => $SurveyFormsQuestions->aliasField('survey_form_id'),
                             ])->where([
                                 $SurveyFormsQuestions->aliasField('survey_form_id IS') => $InstitutionRepeaterSurveys_survey_form_id,
+                                $SurveyFormsQuestions->aliasField('section IS') => $surveySectionData->section,
                             ])
                             ->order([$SurveyFormsQuestions->aliasField('survey_question_id') => 'ASC'])
                             ->toArray();
@@ -531,6 +536,10 @@ class SurveysReportTable extends AppTable
             //     'type' => 'string',
             //     'label' => __('InstitutionRepeaterSurveysId')
             // ];
+            $surveySectionId = "$requestData->survey_section";
+            $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
+            $surveySectionData = $surveySection->find()->where([ $surveySection->aliasField('id') => $surveySectionId ])->first();
+            
             $InstitutionRepeaterSurveysId = $requestData->survey_form;
             $SurveyFormId = $InstitutionRepeaterSurveysRes[0]->survey_form_id;
             $SurveyFormsQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
@@ -540,6 +549,7 @@ class SurveysReportTable extends AppTable
                     'survey_question_id' => $SurveyFormsQuestions->aliasField('survey_question_id'),
                     'survey_form_id' => $SurveyFormsQuestions->aliasField('survey_form_id'),
                     'name' => $SurveyFormsQuestions->aliasField('name'),
+                    'section' => $SurveyFormsQuestions->aliasField('section'),
                 ])->where([
                     $SurveyFormsQuestions->aliasField('survey_form_id') => $SurveyFormId,
                 ])
