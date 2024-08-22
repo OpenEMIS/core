@@ -123,21 +123,23 @@ class ScholarshipTabsComponent extends Component
 
     public function getScholarshipProfileTabs($options = [])
     {
+        
         $tabElements = [
             'ScholarshipApplications' => [
                 'url' => ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'ScholarshipApplications', 'view', $this->queryString, 'queryString' => $this->queryString],
                 'text' => __('Overview')
             ],
             'InstitutionChoices' => [
-               'url' => ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'ScholarshipApplicationInstitutionChoices', 'view', $this->queryString, 'queryString' => $this->queryString],
+               'url' => ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'ScholarshipApplicationInstitutionChoices', 'index', $this->queryString, 'queryString' => $this->queryString],
                 'text' => __('Institution Choices')
             ],
             'Attachments' => [
-                'url' => ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'ScholarshipApplicationAttachments', 'view', $this->queryString, 'queryString' => $this->queryString],
+                'url' => ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'ScholarshipApplicationAttachments', 'index', $this->queryString, 'queryString' => $this->queryString],
                 'text' => __('Attachments')
             ]
         ];
 
-        return $this->TabPermission->checkTabPermission($tabElements);
+       // return $this->TabPermission->checkTabPermission($tabElements);
+        return $tabElements;
     }
 }

@@ -2236,7 +2236,10 @@ class NavigationComponent extends Component
                 'title' => 'Scholarships',
                 'parent' => 'Profiles.Personal',
                 'params' => ['plugin' => 'Profile'],
-                'selected' => ['Profiles.ScholarshipsDirectory']
+                'selected' => ['Profiles.ScholarshipApplications',
+                                'Profiles.ScholarshipsDirectory',
+                                'Profiles.ScholarshipApplicationInstitutionChoices',
+                                'Profiles.ScholarshipApplicationAttachments']
             ],
 
             // 'Scholarships.Scholarships' => [
