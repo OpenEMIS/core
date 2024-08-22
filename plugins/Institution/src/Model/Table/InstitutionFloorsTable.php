@@ -871,6 +871,8 @@ class InstitutionFloorsTable extends ControllerActionTable
             'institutionId' => $institutionId
         ];
         $url = array_merge($url, $this->request->getQuery());
+        $paramsArr = $this->request->getParam('?'); //POCOR-8523
+        $url = is_array($paramsArr) ? array_merge($url, $paramsArr) : $url; //POCOR-8523
         //$url = $this->setQueryString($url, ['institution_floor_id' => $entity->id, 'institution_floor_name' => $entity->name]);
         return $event->getSubject()->HtmlField->link($entity->code, $url);
     }
