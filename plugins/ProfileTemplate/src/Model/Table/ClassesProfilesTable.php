@@ -794,9 +794,9 @@ class ClassesProfilesTable extends ControllerActionTable
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['class_profile_template_id']);
          
         if ($hasTemplate) {
-            $InstitutionReportCardProcesses = TableRegistry::get('ReportCard.ClassProfileProcesses');
+            $InstitutionReportCardProcesses = TableRegistry::get('ReportCard.ClassProfileProcesses'); 
             //POCOR-8393 start
-            $query = $InstitutionReportCardProcesses->find()
+            $query = $InstitutionReportCardProcesses->find() 
                 ->where([
                     $InstitutionReportCardProcesses->aliasField('class_profile_template_id') => $params['class_profile_template_id'],
                     // $InstitutionReportCardProcesses->aliasField('institution_id') => $params['institution_id'],
