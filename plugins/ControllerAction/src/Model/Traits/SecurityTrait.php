@@ -44,6 +44,7 @@ trait SecurityTrait
             $request = null;
             if (!property_exists($this, 'request')) {
                 try {
+                    // POCOR-8157 start: for different type of objects with requests
                     $request = null;
 
                     if (property_exists($this, '_table')) {
@@ -70,6 +71,7 @@ trait SecurityTrait
                 }
             }
             if (!$request && property_exists($this, 'request')) {
+                // POCOR-8157 end
                 $request = $this->request;
             }
             if ($request) {
