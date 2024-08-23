@@ -115,10 +115,13 @@ class InstitutionCurricularsTable extends ControllerActionTable
             'name',
             'category',
             'curricular_type_id']);
-        $entity->institution_curricular_id = $_SESSION['curricularId'];
+        // $entity->institution_curricular_id = $_SESSION['curricularId'];
+        $paramPass = $this->request->getParam('pass');
+        $ids = !is_null($paramPass[1]) ? $this->paramsDecode($paramPass[1]) : 0;
+        $curricularId = $ids['id'];
         $curricularStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStaff');
         $getStaff = $curricularStaff->find()->select(['staff_id'])
-            ->where([$curricularStaff->aliasField('institution_curricular_id') => $entity->institution_curricular_id]);
+            ->where([$curricularStaff->aliasField('institution_curricular_id') => $curricularId]);
         $staff = [];
         if (!empty($getStaff)) {
             foreach ($getStaff as $value) {
@@ -191,10 +194,6 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     public function onUpdateFieldCurricularTypeId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $paramPass = $this->request->getParam('pass');
-        $ids = !is_null($paramPass[1]) ? $this->paramsDecode($paramPass[1]) : 0;
-        $curricularId = $ids['id'];
-        $entity->institution_curricular_id =  $curricularId;
         $categoryId = $this->request->getData()[$this->getAlias()]['category'];
         if($categoryId == null){
             $categoryId = $categoryData ? 0 : 1;
@@ -209,7 +208,12 @@ class InstitutionCurricularsTable extends ControllerActionTable
             $attr['options'] = ['id' => '-- ' . __('Select Type') . ' --'] + $getCurricularsType;
             $attr['onChangeReload'] = false;
         } elseif($action == 'edit'){
-            $curriculardecode = $entity->institution_curricular_id;
+            $paramPass = $this->request->getParam('pass');
+            $ids = !is_null($paramPass[1]) ? $this->paramsDecode($paramPass[1]) : 0;
+            $curricularId = $ids['id'];
+            // $entity->institution_curricular_id =  $curricularId;
+            // $curriculardecode = $entity->institution_curricular_id;
+            $curriculardecode = $curricularId;
             $tyepId = $this->InstitutionCurriculars->get($curriculardecode)->curricular_type_id;
             $CurricularTypesName = $CurricularTypes->find('list')->where(['id'=>$tyepId])->first();
             $attr['type'] = 'readonly';
@@ -313,7 +317,9 @@ class InstitutionCurricularsTable extends ControllerActionTable
 
     public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $curricularId = $_SESSION['curricularId'];
+        // $curricularId = $_SESSION['curricularId'];
+        $queryString = $this->request->getData('primaryKey');
+        $curricularId = $this->paramsDecode($queryString)['id'];
         $curricularStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStaff');
         $curricularStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStudents');
         $checkStudent = $curricularStudent->find()->where([$curricularStudent->aliasField('institution_curricular_id') => $curricularId])->first();

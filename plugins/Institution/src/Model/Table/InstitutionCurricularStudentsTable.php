@@ -144,11 +144,17 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     }
 
+    //POCOR-8482[START]
+    // public function onGetCurricularCategory(Event $event, Entity $entity)
+    // {
+    //     return $entity['institution_curricular']['category'] ? __('Co-Curricular') : $entity->category ? __('Co-Curricular') : __('Extracurricular');
+
+    // }
     public function onGetCurricularCategory(Event $event, Entity $entity)
     {
-        return $entity['institution_curricular']['category'] ? __('Co-Curricular') : $entity->category ? __('Co-Curricular') : __('Extracurricular');
-
+        return $entity['institution_curricular']['category'] ? __('Co-Curricular') : ($entity->category ? __('Co-Curricular') : __('Extracurricular'));
     }
+    //POCOR-8482[END]   
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -169,12 +175,19 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
                             ])
                             ->where([$curriculars->aliasField('id') => $curricularIdGet])->first();
 
-        $entity->name = $curricularData->name;
-        $entity->category = $curricularData->category ? __('Co-Curricular') : __('Extracurricular');
-        $entity->curricularType = $curricularData->curricularType;
-        $this->field('name', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $entity->name, 'required' => true]]);
-        $this->field('curricular_type_id', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $entity->curricularType, 'required' => true]]);
-        $this->field('category', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $entity->category, 'required' => true]]);
+        //POCOR-8482[START]                   
+        // $entity->name = $curricularData->name;
+        // $entity->category = $curricularData->category ? __('Co-Curricular') : __('Extracurricular');
+        // $entity->curricularType = $curricularData->curricularType;
+
+        $name = $curricularData->name;
+        $category = $curricularData->category ? __('Co-Curricular') : __('Extracurricular');
+        $curricularType = $curricularData->curricularType;
+        //POCOR-8482[END]
+
+        $this->field('name', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $name, 'required' => true]]);
+        $this->field('curricular_type_id', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $curricularType, 'required' => true]]);
+        $this->field('category', ['visible' => true, 'type' => 'disabled', 'attr' => ['value' => $category, 'required' => true]]);
         $this->field('student_id', ['type' => 'select','visible' => true]);
         $this->field('institution_curricular_id', ['visible' => false]);
         $this->field('start_date',['attr' => ['label' => __('Start Date')]]);
@@ -471,13 +484,50 @@ class InstitutionCurricularStudentsTable extends ControllerActionTable
 
     public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $curricularStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStudents');
-        $checkStudent =  $curricularStudent->find()->where([$curricularStudent->aliasField('student_id')=>$entity->student_id])->first();
+        $action = $this->request->getAttribute('params')['action'];
+        if($action != 'InstitutionCurricularStudents'){
+            $curricularStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStudents');
+            $checkStudent =  $curricularStudent->find()->where([$curricularStudent->aliasField('student_id')=>$entity->student_id])->first();
+            if(!empty($checkStudent)){
+                $message = __('Its Associated with Other Data');
+                $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+                $event->stopPropagation();
+            }
+        }else{
+            $curricularStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStudents');
+            $users = TableRegistry::getTableLocator()->get('User.Users');
+            $countMaleFemale = $curricularStudent->find()
+                        ->select(['male_students' => "
+                                    (COUNT(DISTINCT(CASE WHEN ".$users->aliasField('gender_id')." = 1 THEN ".$curricularStudent->aliasField('student_id')." END))) ",
+                                    'female_students' => "
+                                    (COUNT(DISTINCT(CASE WHEN ".$users->aliasField('gender_id')." = 2 THEN ".$curricularStudent->aliasField('student_id')." END))) "
 
-        if(!empty($checkStudent)){
-            $message = __('Its Associated with Other Data');
-            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-            $event->stopPropagation();
+                                    ])
+                        ->InnerJoin([$users->getAlias() => $users->getTable()],
+                        [$users->aliasField('id').' = ' . $curricularStudent->aliasField('student_id')])
+                        ->where([$curricularStudent->aliasField('institution_curricular_id') => $entity->institution_curricular_id])
+                        ->group([$curricularStudent->aliasField('institution_curricular_id')])->toArray();
+            foreach($countMaleFemale as $value){
+                $maleStudents  = $value->male_students;
+                $femaleStudents  = $value->female_students;
+            }
+            $usersInfo = $users->find()->where([$users->aliasField('id') => $entity->student_id])->first();
+            if(($maleStudents > 0 && $usersInfo->gender_id == 1)){
+                $InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
+                $updateCurricular =   $InstitutionCurriculars->updateAll(
+                                        ['total_male_students' => $maleStudents - 1,'total_female_students'=>$femaleStudents],    //field
+                                        [
+                                        'id' => $entity->institution_curricular_id,
+                                        ]);
+            }
+            if(($femaleStudents > 0  && $usersInfo->gender_id == 2)){
+                $InstitutionCurriculars = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
+                $updateCurricular =   $InstitutionCurriculars->updateAll(
+                                        ['total_male_students' => $maleStudents,'total_female_students'=>$femaleStudents-1],    //field
+                                        [
+                                        'id' => $entity->institution_curricular_id,
+                                        ]);
+            }
         }
     }
 
