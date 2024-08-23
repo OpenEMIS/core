@@ -28,49 +28,51 @@ class GpaSystemTable extends ControllerActionTable {
         $this->setDeleteStrategy('restrict');
     }
 
-    /*public function validationDefault(Validator $validator): Validator {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
         return $validator
-            ->requirePresence('academic_period_id')
-            ->requirePresence('gpa_education_grade_id')
-            ->requirePresence('gpa_education_programme_id')
-            ->requirePresence('gpa_assessment_grading_type_id');
-    }*/
+            ->notEmpty('academic_period_id')
+            ->notEmpty('gpa_education_grade_id')
+            ->notEmpty('gpa_education_programme_id')
+            ->notEmpty('gpa_grading_type_id');
+    }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($this->request->getAttribute('query')['academic_period_id']) ? $this->request->getAttribute('query')['academic_period_id'] : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
+        $where = [];
+        $nullVal = 0;
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+        $where[$this->aliasField('education_grade_id =')] = $nullVal;
         $extra['elements']['controls'] = ['name' => 'Gpa.controls', 'data' => [], 'options' => [], 'order' => 1];
         $query->where($where);
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        $this->controller->getGpaTab();
-        
+        $this->controller->getGpaTab(); 
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('gpa_education_programme_id', ['type' => 'hidden']);
-        $this->field('education_grade_id', ['type' => 'select']);
-        $this->field('gpa_education_grade_id', ['type' => 'hidden']);
+        $this->field('education_grade_id', ['type' => 'hidden']);
+        $this->field('gpa_education_grade_id', ['type' => 'select']);
         $this->field('gpa_grading_type_id', ['type' => 'select']);
 
-        $this->setFieldOrder(['academic_period_id', 'education_grade_id', 'gpa_grading_type_id']);
+        $this->setFieldOrder(['academic_period_id', 'gpa_education_grade_id', 'gpa_grading_type_id']);
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('academic_period_id', ['type' => 'select']);
-        $this->field('gpa_education_programme_id', ['type' => 'select']);
-        $this->field('education_grade_id', ['type' => 'select']);
-        $this->field('gpa_education_grade_id', ['type' => 'hidden']);
+        $this->field('academic_period_id', ['type' => 'select','entity' => $entity]);
+        $this->field('gpa_education_programme_id', ['type' => 'select', 'entity' => $entity]);
+        $this->field('education_grade_id', ['type' => 'hidden']);
+        $this->field('gpa_education_grade_id', ['type' => 'select']);
         $this->field('gpa_grading_type_id', ['type' => 'select']);
         
     }
@@ -132,21 +134,21 @@ class GpaSystemTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldGpaEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if ($action == 'add' || $action == 'edit') {
+        if ($action == 'add') {
 
             if ($action == 'add') {
 
                 $selectedProgramme =  $request->getData()[$this->getAlias()]['gpa_education_programme_id'];
                 $gradeOptions = [];
                 if (!is_null($selectedProgramme)) {
-                    $gradeOptions = $this->EducationGrades
+                    $gradeOptions = $this->GpaEducationGrades
                         ->find('list')
                         ->find('visible')
                         ->contain(['EducationProgrammes'])
-                        ->where([$this->EducationGrades->aliasField('education_programme_id') => $selectedProgramme])
-                        ->order(['EducationProgrammes.order' => 'ASC', $this->EducationGrades->aliasField('order') => 'ASC'])
+                        ->where([$this->GpaEducationGrades->aliasField('education_programme_id') => $selectedProgramme])
+                        ->order(['EducationProgrammes.order' => 'ASC', $this->GpaEducationGrades->aliasField('order') => 'ASC'])
                         ->toArray();
                 }
                 $attr['options'] = $gradeOptions;
@@ -154,10 +156,9 @@ class GpaSystemTable extends ControllerActionTable {
 
             } else {
                 $recordId = $this->getQueryString('id');
-                $EducationGradesId = $this->find()->where(['id' => $recordId])->first()->education_grade_id;
+                $EducationGradesId = $this->find()->where(['id' => $recordId])->first()->gpa_education_grade_id;
 
-                $EducationGrades = $this->EducationGrades->find()->select(['id','name'])->where(['id' => $EducationGradesId])->first();
-                //echo "<pre>"; print_r($params); die;
+                $EducationGrades = $this->GpaEducationGrades->find()->select(['id','name'])->where(['id' => $EducationGradesId])->first();
                 $attr['type'] = 'select';
                 $attr['value'] = $EducationGrades->id;
                 $attr['attr']['value'] = $EducationGrades->name;

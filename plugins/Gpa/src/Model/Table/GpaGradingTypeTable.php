@@ -24,15 +24,18 @@ class GpaGradingTypeTable extends ControllerActionTable {
         $this->setDeleteStrategy('restrict');
     }
 
-    /*public function validationDefault(Validator $validator): Validator {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
         return $validator
-            ->requirePresence('academic_period_id')
-            ->requirePresence('gpa_education_grade_id')
-            ->requirePresence('gpa_education_programme_id')
-            ->requirePresence('gpa_assessment_grading_type_id');
-    }*/
+            ->add('code', 'ruleUniqueCode', [
+                'rule' => ['checkUniqueCode', null]
+             ])
+            ->notEmpty('name')
+            ->notEmpty('result_type')
+            ->notEmpty('pass_mark')
+            ->notEmpty('max');
+    }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {

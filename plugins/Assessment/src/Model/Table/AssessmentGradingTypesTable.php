@@ -8,7 +8,6 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Collection\Collection;
-
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 use App\Model\Traits\OptionsTrait;
@@ -210,6 +209,8 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
             $event->stopPropagation();
             return $this->controller->redirect($this->url('remove'));
         }
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
     }
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
@@ -318,36 +319,56 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 		return $this->getList($query);
 	}
 
-	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+	/**
+	 * POCOR-8222 
+	 * save data in grade option for GPA
+	 **/ 
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if ($field == 'academic_period_id') {
-            return __('Academic Period');
-        } elseif ($field == 'outcome_template_id') {
-            return __('Outcome Template');
-        } elseif ($field == 'code') {
-            return __('Code');
-        } elseif ($field == 'name') {
-            return __('Name');
-        } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
-        } elseif ($field == 'modified') {
-            return __('Modified On');
-        } elseif ($field == 'created_user_id') {
-            return __('Created By');
-        } elseif ($field == 'created') {
-            return __('Created On');
-        }elseif ($field == 'pass_mark') {
-            return __('Pass Mark');
-        }elseif ($field == 'max') {
-            return __('Max');
-        }elseif ($field == 'result_type') {
-            return __('Result');
-        }elseif ($field == 'grading_options') {
-            return __('Grading Options');
-        }elseif ($field == 'visible') {
-            return __('visible');
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
+    	$gradingOptionTable = TableRegistry::getTableLocator()->get('Assessment.GpaGradingOptions');
+    	$recordId = $entity['id'];
+	    if ($entity->isNew()) {
+	        $this->saveGradingOptions($gradingOptionTable, $entity['grading_options'], $recordId);
+	    } else {
+	        $existingRecords = $gradingOptionTable->find()->where(['gpa_grading_type_id' => $recordId])->all();
+
+	        if ($existingRecords->isEmpty()) {
+	            $this->saveGradingOptions($gradingOptionTable, $entity['grading_options'], $recordId);
+	        } else {
+	            $gradingOptionTable->deleteAll(['gpa_grading_type_id' => $recordId]);
+	            // Add the new records
+	            $this->saveGradingOptions($gradingOptionTable, $entity['grading_options'], $recordId);
+	        }
+	    }
+	}
+
+	/**
+	 * function to save grading options.
+	 * POCOR-8222 
+	 */
+	private function saveGradingOptions($gradingOptionTable, $gradingOptions, $recordId)
+	{
+	    foreach ($gradingOptions as $val) {
+	        // Prepare the data to be saved
+	        $data = [
+	            'code' => $val['code'],
+	            'name' => $val['name'],
+	            'description' => $val['description'],
+	            'min' => $val['min'],
+	            'max' => $val['max'],
+	            'point' => $val['point'],
+	            'gpa_grading_type_id' => $recordId
+	        ];
+	        $gradingOptionEntity = $gradingOptionTable->newEntity($data);
+	        $gradingOptionTable->save($gradingOptionEntity);
+	    }
+	}
+
+	//POCOR-8222 
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
     }
+
 }
