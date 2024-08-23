@@ -37,17 +37,11 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         formatDateForSaving: formatDateForSaving,
         getUserRecord: getUserRecord,
         getGenderRecord: getGenderRecord,
-        getInternalIdentityTypes: getInternalIdentityTypes,
-        addIdentityType: addIdentityType,
         setExternalSourceUrl: setExternalSourceUrl,
         resetExternalVariable: resetExternalVariable,
-        getGenders: getGenders,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
         getConfigItemValue: getConfigItemValue,
-        getContactTypes: getContactTypes,
-        getIdentityTypes: getIdentityTypes,
         getIdentityTypesExternalSave: getIdentityTypesExternalSave,
-        getNationalities: getNationalities,
         getNationalitiesExternalSave: getNationalitiesExternalSave,
         getSpecialNeedTypes: getSpecialNeedTypes,
         getExternalSourceAttributes: getExternalSourceAttributes,
@@ -883,19 +877,6 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         return deferred.promise;
     };
 
-    function getGenders()
-    {
-        var deferred = $q.defer();
-        var url = angular.baseUrl + '/Directories/getGenders/';
-        $http.get(url)
-            .then(function(response){
-                deferred.resolve(response);
-            }, function(error) {
-                deferred.reject(error);
-            });
-        return deferred.promise;
-    };
-
     function postEnrolledStudent(data) {
         var institutionId = this.getInstitutionId();
         data['start_date'] = this.formatDateForSaving(data['start_date']);
@@ -1096,36 +1077,6 @@ function InstitutionsStudentsSvc($http, $q, $window, KdOrmSvc, KdDataSvc) {
         return deferred.promise;
     }
     //POCOR-7716 end
-
-    function getContactTypes() {
-        var deferred = $q.defer();
-        var url = angular.baseUrl + '/Directories/getContactType/';
-        $http.get(url)
-            .then(function(response){
-                deferred.resolve(response);
-            }, function(error) {
-                deferred.reject(error);
-            });
-        return deferred.promise;
-    }
-
-    function getIdentityTypes() {
-        return IdentityTypes
-            .select()
-            .ajax({defer: true});
-    }
-
-    function getNationalities() {
-        var deferred = $q.defer();
-        var url = angular.baseUrl + '/Directories/getNationalities/';
-        $http.get(url)
-            .then(function(response){
-                deferred.resolve(response);
-            }, function(error) {
-                deferred.reject(error);
-            });
-        return deferred.promise;
-    }
 
     function getSpecialNeedTypes() {
         return SpecialNeedTypes
