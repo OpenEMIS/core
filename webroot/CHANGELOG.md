@@ -1,3 +1,15 @@
+### [4.1.3] - 2024-08-23
+- Bug Fixed: Institutions>Students/Staff>Add: Confirmation should validate credentials
+- Bug Fixed: Administration>System Setup>Academic Periods: Academic period code and name can be a duplicate
+- Bug Fixed: Institutions>Academic>Houses(Automation): Page is not loading
+- Bug Fixed: Directory>Students>Academic: Page is not loading
+- Bug Fixed: Institutions > Staff: The gender filter on the staff page dashboard is displaying incorrect numbers
+- Bug Fixed: Administration>Performance>Assessment(Bahamas): Getting 404 error when adding, viewing, editing and deleting
+- Bug Fixed: Institutions>Performance>Report Cards(Bahamas): Getting 404 error and gpa not generated
+- Bug Fixed: Administration > Workflow > Action Tab > Selecting workflow route filters: There is an issue when selecting filters for workflow actions
+- Bug Fixed: API showing invalid date format
+- Bug Fixed: Institutions>Students>Edit: User is unable to edit
+
 ### [4.1.2] - 2024-08-16
 - Bug Fixed: Institutions > Statistics > Standard > Student Attendance Summary Report: When generating report for Student Attendance Summary Report under Institutions Statistics, the report is showing other institutions
 - Bug Fixed: Administration>Training>Session>Evaluators: Evaluators not appearing when added
