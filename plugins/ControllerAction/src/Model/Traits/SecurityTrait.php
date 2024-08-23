@@ -57,18 +57,19 @@ trait SecurityTrait
                             $request = $this->_table->request;
                         }
                     } else {
-                        $request = $this->getController()->getRequest();
+                        try {
+                            $controller = $this->getController();
+                                if($controller){
+                                    $request = $controller->getRequest();
+                                }
+                        } catch (\Exception $exception) {
+
+                        }
                     }
                 } catch (\Exception $exception) {
-//                    $class = __CLASS__;
-//                    $line = __LINE__;
-//                    $queryString = $queryString ?? "";
-
-//                    Log::debug("Could not process query {query} in {class}, {line}", ['query' => $queryString, 'class' => $class, 'line' => $line]);
-//                    Log::debug($exception->getMessage());
                 }
             }
-            if (property_exists($this, 'request')) {
+            if (!$request && property_exists($this, 'request')) {
                 $request = $this->request;
             }
             if ($request) {
