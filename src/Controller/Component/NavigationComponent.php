@@ -936,6 +936,12 @@ class NavigationComponent extends Component
                 'selected' => ['Institutions.ReportCardStatuses',
                     'Institutions.ReportCardStatusProgress'],
             ],
+            'Institutions.ReportCardGpa.index' => [
+                'title' => 'GPA',
+                'parent' => 'Institution.Performance',
+                'selected' => ['Institutions.ReportCardGpa',
+                    'Institutions.ReportCardCumulativeGpa'],
+            ],
             //POCOR-7458 start
             'Institutions.Messaging.index' => [
                 'title' => 'Messaging',

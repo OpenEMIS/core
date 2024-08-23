@@ -26,7 +26,7 @@
 				                $checkboxOptions['disabled'] = 'disabled';
 				                $checkboxOptions['checked'] = 'checked';
 				            }
-				            echo $this->Form->checkbox("gpa_education_grade_id.$i", $checkboxOptions);
+				            echo $this->Form->checkbox("education_grade_id.$i", $checkboxOptions);
 				            ?>
 				        </td>
 				        <td><?= h($obj->code ?? 'N/A') ?></td>

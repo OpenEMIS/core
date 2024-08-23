@@ -28,15 +28,16 @@ class CumulativeTable extends ControllerActionTable {
         $this->setDeleteStrategy('restrict');
     }
 
-    /*public function validationDefault(Validator $validator): Validator {
+    public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
         return $validator
-            ->requirePresence('academic_period_id')
-            ->requirePresence('gpa_education_grade_id')
-            ->requirePresence('gpa_education_programme_id')
-            ->requirePresence('gpa_assessment_grading_type_id');
-    }*/
+            ->notEmpty('academic_period_id')
+            ->notEmpty('gpa_education_grade_id')
+            ->notEmpty('gpa_education_programme_id')
+            ->notEmpty('gpa_grading_type_id');
+            //->notEmpty('education_grade_id');
+    }
 
    /* public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
@@ -69,21 +70,21 @@ class CumulativeTable extends ControllerActionTable {
     {
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('gpa_education_programme_id', ['type' => 'hidden']);
-        $this->field('education_grade_id', ['type' => 'select']);
-        $this->field('gpa_education_grade_id', ['type' => 'hidden']);
+       // $this->field('education_grade_id', ['type' => 'select']);
+        $this->field('gpa_education_grade_id', ['type' => 'select']);
         $this->field('gpa_grading_type_id', ['type' => 'select']);
 
-        $this->setFieldOrder(['academic_period_id', 'education_grade_id', 'gpa_grading_type_id']);
+        $this->setFieldOrder(['academic_period_id', 'gpa_education_grade_id', 'gpa_grading_type_id']);
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('gpa_education_programme_id', ['type' => 'select']);
-        $this->field('education_grade_id', ['type' => 'select']);
-        $this->field('gpa_education_grade_id');
+        $this->field('education_grade_id');
+        $this->field('gpa_education_grade_id',['type' => 'select']);
         $this->field('gpa_grading_type_id', ['type' => 'select']);
-        $this->setFieldOrder(['academic_period_id', 'gpa_education_programme_id','education_grade_id', 'gpa_grading_type_id']);
+        $this->setFieldOrder(['academic_period_id', 'gpa_education_programme_id','gpa_education_grade_id', 'gpa_grading_type_id']);
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
@@ -143,7 +144,7 @@ class CumulativeTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldGpaEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
@@ -152,12 +153,12 @@ class CumulativeTable extends ControllerActionTable {
                 $selectedProgramme =  $request->getData()[$this->getAlias()]['gpa_education_programme_id'];
                 $gradeOptions = [];
                 if (!is_null($selectedProgramme)) {
-                    $gradeOptions = $this->EducationGrades
+                    $gradeOptions = $this->GpaEducationGrades
                         ->find('list')
                         ->find('visible')
                         ->contain(['EducationProgrammes'])
-                        ->where([$this->EducationGrades->aliasField('education_programme_id') => $selectedProgramme])
-                        ->order(['EducationProgrammes.order' => 'ASC', $this->EducationGrades->aliasField('order') => 'ASC'])
+                        ->where([$this->GpaEducationGrades->aliasField('education_programme_id') => $selectedProgramme])
+                        ->order(['EducationProgrammes.order' => 'ASC', $this->GpaEducationGrades->aliasField('order') => 'ASC'])
                         ->toArray();
                 }
                 $attr['options'] = $gradeOptions;
@@ -167,7 +168,7 @@ class CumulativeTable extends ControllerActionTable {
                 $recordId = $this->getQueryString('id');
                 $EducationGradesId = $this->find()->where(['id' => $recordId])->first()->education_grade_id;
 
-                $EducationGrades = $this->EducationGrades->find()->select(['id','name'])->where(['id' => $EducationGradesId])->first();
+                $EducationGrades = $this->GpaEducationGrades->find()->select(['id','name'])->where(['id' => $EducationGradesId])->first();
                 //echo "<pre>"; print_r($params); die;
                 $attr['type'] = 'select';
                 $attr['value'] = $EducationGrades->id;
@@ -191,7 +192,7 @@ class CumulativeTable extends ControllerActionTable {
         return compact('periodOptions', 'selectedPeriod');
     }
 
-    public function onUpdateFieldGpaEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['type'] = 'element';
@@ -205,7 +206,7 @@ class CumulativeTable extends ControllerActionTable {
                     $query = $this->EducationGrades->
                                 find('all')
                             ->select([
-                                'gpa_education_grade_id' => 'EducationGrades.id',
+                                'education_grade_id' => 'EducationGrades.id',
                                 'id' => 'EducationGrades.id',
                                 'name' => 'EducationGrades.name',
                                 'code' => 'EducationGrades.code',
@@ -335,18 +336,18 @@ class CumulativeTable extends ControllerActionTable {
             $cumulativeData = $data['Cumulative'];
             $academicPeriodId = $cumulativeData['academic_period_id'];
             $gpaEducationProgrammeId = $cumulativeData['gpa_education_programme_id'];
-            $educationGradeId = $cumulativeData['education_grade_id'];
+            $educationGradeId = $cumulativeData['gpa_education_grade_id'];
             $gpaGradingTypeId = $cumulativeData['gpa_grading_type_id'];
 
-            $gpaGrades = $data['gpa_education_grade_id'];
+            $gpaGrades = $data['education_grade_id'];
             foreach ($gpaGrade as $key => $gradeId) {
                  if ($gradeId != '0' && $gradeId != 0) { 
                     echo "<pre>"; print_r($gradeId); die;
                     $dataToSave = [
                         'academic_period_id' => $academicPeriodId,
-                        'education_grade_id' => $educationGradeId,
+                        'gpa_education_grade_id' => $educationGradeId,
                         'gpa_grading_type_id' => $gpaGradingTypeId,
-                        'gpa_education_grade_id' => $gradeId,
+                        'education_grade_id' => $gradeId,
                     ];
                     $this->save($dataToSave);
                 }

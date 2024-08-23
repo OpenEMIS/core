@@ -2642,7 +2642,14 @@ trait MessagesTrait
         ],
         'Messaging'=>[//POCOR-7458
             'email'=>'Message has been send successfully'
-        ]
+        ],
+        'Gpa' => [ //POCOR-8222
+            'GpaGradingType' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique',
+                ]
+            ]
+        ],
 
     ];
 
