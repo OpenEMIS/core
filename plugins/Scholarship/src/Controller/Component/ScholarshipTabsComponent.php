@@ -123,18 +123,21 @@ class ScholarshipTabsComponent extends Component
 
     public function getScholarshipProfileTabs($options = [])
     {
-        
+        $urlRequest = $this->queryString;
+        if(empty($urlRequest)){
+            $urlRequest = $this->getController()->getRequest()->getParam('pass')[1];
+        }
         $tabElements = [
             'ScholarshipApplications' => [
-                'url' => ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'ScholarshipApplications', 'view', $this->queryString, 'queryString' => $this->queryString],
+                'url' => ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'ScholarshipApplications', 0 => 'view', 1 => $urlRequest, 'queryString' => $urlRequest],
                 'text' => __('Overview')
             ],
             'InstitutionChoices' => [
-               'url' => ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'ScholarshipApplicationInstitutionChoices', 'index', $this->queryString, 'queryString' => $this->queryString],
+               'url' => ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'ScholarshipApplicationInstitutionChoices', 0=> 'index', 1 => $urlRequest],
                 'text' => __('Institution Choices')
             ],
             'Attachments' => [
-                'url' => ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'ScholarshipApplicationAttachments', 'index', $this->queryString, 'queryString' => $this->queryString],
+                'url' => ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'ScholarshipApplicationAttachments', 0=> 'index', 1 => $urlRequest],
                 'text' => __('Attachments')
             ]
         ];

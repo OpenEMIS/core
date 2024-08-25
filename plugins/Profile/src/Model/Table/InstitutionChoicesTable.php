@@ -64,16 +64,16 @@ class InstitutionChoicesTable extends ControllerActionTable
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->getAlias());
             $extra['toolbarButtons']['back']['url'] = [
-                'plugin' => 'Scholarship',
-                'controller' => 'Scholarships',
+                'plugin' => 'Profile',
+                'controller' => 'Profiles',
                 'action' => 'ScholarshipApplicationInstitutionChoices',
                 0 => 'index',
                 1 => $encodedQueryString
             ];
 
             $extra['toolbarButtons']['list']['url'] = [
-                'plugin' => 'Scholarship',
-                'controller' => 'Scholarships',
+                'plugin' => 'Profile',
+                'controller' => 'Profiles',
                 'action' => 'ScholarshipApplicationInstitutionChoices',
                 0 => 'index',
                 1 => $encodedQueryString
@@ -117,8 +117,8 @@ class InstitutionChoicesTable extends ControllerActionTable
         $encodedQueryString = $this->paramsEncode($queryString);
         if (isset($extra['toolbarButtons']['back']['url'])) {
             $extra['toolbarButtons']['back']['url'] = [
-                'plugin' => 'Scholarship',
-                'controller' => 'Scholarships',
+                'plugin' => 'Profile',
+                'controller' => 'Profiles',
                 'action' => 'ScholarshipApplicationInstitutionChoices',
                 0 => 'index',
                 1 => $encodedQueryString
@@ -214,8 +214,8 @@ class InstitutionChoicesTable extends ControllerActionTable
         }
         $encodedQueryString = $this->request->getParam('pass')[1];
         $url = [
-                'plugin' => 'Scholarship',
-                'controller' => 'Scholarships',
+                'plugin' => 'Profile',
+                'controller' => 'Profiles',
                 'action' => 'ScholarshipApplicationInstitutionChoices',
                 '0' => 'index',
                  $encodedQueryString,
@@ -247,8 +247,8 @@ class InstitutionChoicesTable extends ControllerActionTable
         $applicantId = $this->getQueryString('applicant_id');
         $scholarshipId = $this->getQueryString('scholarship_id');
         $encodedQueryString = $this->paramsEncode(['id' => $entity->id,'applicant_id' => $applicantId,'scholarship_id' => $scholarshipId]);
-        $url['plugin'] = 'Scholarship';
-        $url['controller'] = 'Scholarships';
+        $url['plugin'] = 'Profile';
+        $url['controller'] = 'Profiles';
         $url['action'] = 'ScholarshipApplicationInstitutionChoices';
         $url[0] = 'view';
         $url[1] = $encodedQueryString; 
@@ -257,8 +257,8 @@ class InstitutionChoicesTable extends ControllerActionTable
             $buttons['edit'] = [];
         }
         $buttons['edit']['url'] = [
-            'plugin' => 'Scholarship',
-            'controller' => 'Scholarships',
+            'plugin' => 'Profile',
+            'controller' => 'Profiles',
             'action' => 'ScholarshipApplicationInstitutionChoices',  // Specify the action
             0 => 'edit',  // Specify the action
             1 => $encodedQueryString          
@@ -275,8 +275,8 @@ class InstitutionChoicesTable extends ControllerActionTable
 
         // Setup the remove button
         $buttons['remove']['url'] = [
-            'plugin' => 'Scholarship',
-            'controller' => 'Scholarships',
+            'plugin' => 'Profile',
+            'controller' => 'Profiles',
             'action' => 'ScholarshipApplicationInstitutionChoices',
             0 => 'remove',
             1 => $encodedQueryStrings
