@@ -832,7 +832,8 @@ trait MessagesTrait
             'emailAll' => 'All Report Cards will be sent in the background',
             'emailInProgress' => 'There is already a email process sending in the background',
 			'date_closed' => 'Generate date for report card has been closed',
-            'timezone'=>'Timezone is not configured. Please contact the administrator for assistance.'
+            'timezone'=>'Timezone is not configured. Please contact the administrator for assistance.',
+            'gpa' => 'The Gpa has been Generated successfully',
         ],
         'StaffProfiles' => [
             'noProgrammes' => 'There is no programme set for this institution',

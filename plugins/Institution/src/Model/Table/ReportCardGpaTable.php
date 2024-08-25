@@ -626,7 +626,7 @@ class ReportCardGpaTable extends ControllerActionTable
 
         if ($hasTemplate) {
             $this->addGpaReportCards($params['student_id'], $params['report_card_id'], $params['academic_period_id'],$params['institution_id'],$params['education_grade_id']);
-            $this->Alert->warning('ReportCardStatuses.generate');
+            $this->Alert->success('ReportCardStatuses.gpa');
         } else {
             $url = $this->url('index');
             $this->Alert->warning('ReportCardStatuses.noTemplate');
@@ -692,6 +692,7 @@ class ReportCardGpaTable extends ControllerActionTable
     private function addGpaReportCards($checkgpaStudent, $reportCardId,$selectedAcademicPeriodId, $institutionId,$educationGradeId)
     {
         $selectedAcademicPeriodId = $selectedAcademicPeriodId;
+       // echo "<pre>"; print_r($selectedAcademicPeriodId); die;
         $reportCardId = $reportCardId;
         $institutionId = $institutionId;
         $educationGradeId = $educationGradeId;
@@ -843,7 +844,7 @@ class ReportCardGpaTable extends ControllerActionTable
                 $gpa = $val['gpa_per_student'];
 
             }
-            $this->saveGpaForStudent($gpa, $studentId, $selectedAcademicPeriod, $educationGradeId, $institutionId);
+            $this->saveGpaForStudent($gpa, $studentId, $selectedAcademicPeriodId, $educationGradeId, $institutionId);
         }
         return $gpa;
     }
@@ -884,21 +885,51 @@ class ReportCardGpaTable extends ControllerActionTable
         $this->controller->getInstitutionGpaTab(); 
     }
 
-    private function saveGpaForStudent($gpa, $studentId, $selectedAcademicPeriod, $educationGradeId,$institutionId)
+    private function saveGpaForStudent($gpa, $studentId, $selectedAcademicPeriodId, $educationGradeId, $institutionId)
     {
         $InstitutionStudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
-        $data = [
+
+        $checkGpa = $InstitutionStudentsGpa->find()
+            ->where([
+                'academic_period_id' => $selectedAcademicPeriodId,
                 'student_id' => $studentId,
-                'academic_period_id' => $selectedAcademicPeriod,
+                'education_grade_id' => $educationGradeId,
+                'institution_id' => $institutionId
+            ])
+            ->first();
+
+        if (empty($checkGpa)) {
+            $data = [
+                'student_id' => $studentId,
+                'academic_period_id' => $selectedAcademicPeriodId,
                 'education_grade_id' => $educationGradeId,
                 'gpa' => $gpa,
                 'institution_id' => $institutionId,
                 'created_user_id' => 2,
-                'created' => date('Y-m-d H:i:s'),
-                
+                'created' => Time::now(), // Use CakePHP's Time class
             ];
             $gradingOptionEntity = $InstitutionStudentsGpa->newEntity($data);
-            $InstitutionStudentsGpa->save($gradingOptionEntity);
+
+            if ($InstitutionStudentsGpa->save($gradingOptionEntity)) {
+                return $gradingOptionEntity;
+            } else {
+                // Handle validation errors or other issues
+                return false;
+            }
+        } else {
+            $updateResult = $InstitutionStudentsGpa->updateAll(
+                ['gpa' => 2.10],
+                [
+                    'student_id' => $studentId,
+                    'academic_period_id' => $selectedAcademicPeriodId,
+                    'education_grade_id' => $educationGradeId,
+                    'institution_id' => $institutionId,
+                ]
+            );
+
+            return $updateResult;
+        }
     }
+
 
 }
