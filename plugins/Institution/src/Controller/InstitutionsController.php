@@ -1893,7 +1893,10 @@ class InstitutionsController extends AppController
                     return $this->redirect($url);
                 }
             }
-            $queryString = $this->ControllerAction->getQueryString();
+            //POCOR-8566[START]
+            // $queryString = $this->ControllerAction->getQueryString();
+            $queryString = $this->getQueryString();
+            //POCOR-8566[END]
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'StudentOutcomes';
             $viewUrl[0] = 'view';

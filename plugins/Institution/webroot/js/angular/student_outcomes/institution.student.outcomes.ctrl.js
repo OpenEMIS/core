@@ -162,7 +162,10 @@ function InstitutionStudentOutcomesController($scope, $q, $window, $http, UtilsS
 
                 InstitutionStudentOutcomesSvc.translate(textToTranslate)
                 .then(function(res){
-                    var commentTranslation = res.pop();
+                    //POCOR-8566[START]
+                    // var commentTranslation = res.pop();
+                    var commentTranslation = res;
+                    //POCOR-8566[END]
                     angular.forEach(res, function(value, key) {
                         response.data[key]['headerName'] = value;
                     });
