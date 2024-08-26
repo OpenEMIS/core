@@ -213,7 +213,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 'ruleCheckProgrammeEndDate' => [
                     'rule' => ['checkProgrammeEndDate', 'education_grade_id']
                 ]
-            ])
+            ]);
             ->allowEmpty('institution_class_id')
             ->add('institution_class_id', [
                 'ruleCheckValidClassId' => [
@@ -700,7 +700,7 @@ class StudentAdmissionTable extends ControllerActionTable
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         //this is meant to force gender_id validation
-        if ($data->offsetExists('student_id')) {
+        if ($data->offsetExists('student_id') && !empty($data['student_id'])) {
             if ($this->Users->exists([$this->Users->getPrimaryKey() => $data['student_id']])) {
                 $studentId = $data['student_id'];
 
