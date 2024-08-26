@@ -213,7 +213,7 @@ class StudentAdmissionTable extends ControllerActionTable
                 'ruleCheckProgrammeEndDate' => [
                     'rule' => ['checkProgrammeEndDate', 'education_grade_id']
                 ]
-            ]);
+            ])
             ->allowEmpty('institution_class_id')
             ->add('institution_class_id', [
                 'ruleCheckValidClassId' => [
