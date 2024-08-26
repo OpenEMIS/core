@@ -659,6 +659,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     function goToInternalSearch() {
         userCtrl.selectedUserData.userType = 'Staff';
         userCtrl.selectedUserData.user_type_id = 2;
+        userCtrl.selectedUserData.institution_id = userCtrl.institutionId;
+        // console.log(userCtrl.selectedUserData);
         directorySvc.goToInternalSearch(userCtrl);
     };
 
@@ -989,6 +991,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
                     // POCOR-5672 : fixed showing wrong institution name
                     userCtrl.staffData.currentlyAssignedTo = value.current_enrol_institution_code + ' - ' + value.current_enrol_institution_name;
+
                     userCtrl.staffData.requestedBy = value.institution_code + ' - ' + value.institution_name;
 
                     userCtrl.setUserData(value);
@@ -1017,6 +1020,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         userCtrl.selectedUserData.middle_name = selectedData.middle_name;
         userCtrl.selectedUserData.third_name = selectedData.third_name;
         userCtrl.selectedUserData.last_name = selectedData.last_name;
+        userCtrl.selectedUserData.name = selectedData.name;
         userCtrl.selectedUserData.preferred_name = selectedData.preferred_name;
         userCtrl.selectedUserData.date_of_birth = selectedData.date_of_birth;
         userCtrl.selectedUserData.email = selectedData.email;
@@ -1874,18 +1878,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         userCtrl.getStaffData();
     }
 
-    function setStaffName() {
-        var staffData = userCtrl.selectedUserData;
-        staffData.name = '';
-
-        if (staffData.hasOwnProperty('first_name')) {
-            staffData.name = staffData.first_name.trim();
-        }
-        userCtrl.appendName(staffData, 'middle_name', true);
-        userCtrl.appendName(staffData, 'third_name', true);
-        userCtrl.appendName(staffData, 'last_name', true);
-        userCtrl.selectedUserData = staffData;
-    }
 
     function appendName(studentObj, variableName, trim) {
         if (studentObj.hasOwnProperty(variableName)) {

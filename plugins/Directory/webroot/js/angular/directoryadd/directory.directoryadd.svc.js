@@ -970,6 +970,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         nationality_name = scope.selectedUserData.nationality_name;
         identity_type_name = scope.selectedUserData.identity_type_name;
         identity_type_id = scope.selectedUserData.identity_type_id;
+        institution_id = scope.selectedUserData.institution_id;
         var dataSource = {
             pageSize: scope.pageSize,
             getRows: function (params) {
@@ -982,7 +983,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                     openemis_no: openemis_no,
                     date_of_birth: date_of_birth,
                     identity_number: identity_number,
-                    institution_id: null,
+                    institution_id: institution_id,
                     user_type_id: scope.selectedUserData.user_type_id,
                     nationality_id: nationality_id,
                     nationality_name: nationality_name,

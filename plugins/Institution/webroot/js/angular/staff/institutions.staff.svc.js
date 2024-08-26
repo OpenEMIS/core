@@ -687,6 +687,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc, $window) {
 
     function addStaffTransferRequest(data)
     {
+        console.log(data);
         return StaffTransferIn.save(data);
     };
 
