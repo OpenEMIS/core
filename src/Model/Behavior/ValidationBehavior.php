@@ -346,6 +346,7 @@ class ValidationBehavior extends Behavior
      */
     public static function compareDate($field, $compareField, $equals, array $globalData)
     {
+
         $type = self::_getFieldType($compareField);
         $startDate = new DateTime($field);
         if ($compareField) {
