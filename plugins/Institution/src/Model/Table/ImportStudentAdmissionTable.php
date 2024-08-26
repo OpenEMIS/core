@@ -152,8 +152,21 @@ class ImportStudentAdmissionTable extends AppTable
         } else {
             $this->institutionId = false;
             $academicPeriodId = $this->AcademicPeriods->getCurrent();
+            $this->academicPeriodId = $academicPeriodId;
             $this->gradesInInstitution = [];
         }
+        //POCOR-8343 Start
+        
+        if(empty($this->institutionId) && $this->request->getParam('pass')[0] != 'downloadFailed' && $this->request->getParam('pass')[0] != 'downloadPassed' && isset($this->request->getParam('pass')[1])) {
+            $queryString = $this->paramsDecode($this->request->getParam('pass')[1]);
+            $this->institutionId = isset($queryString['institution_id']) ? $queryString['institution_id'] : $this->institutionId ;
+            if(empty( $this->academicPeriodId )) {
+                $academicPeriodId = $this->AcademicPeriods->getCurrent();
+                $this->academicPeriodId = $academicPeriodId;
+            }
+            $this->gradesInInstitution = $this->getCustomInstitudeGradeIds($academicPeriodId);
+        }
+        //POCOR-8343 End
     }
 
     public function implementedEvents(): array
@@ -189,7 +202,7 @@ class ImportStudentAdmissionTable extends AppTable
             return false;
         }
 
-        $tempRow['entity'] = $this->StudentAdmission->newEntity();
+        $tempRow['entity'] = $this->StudentAdmission->newEntity([]);//dd( $tempRow['entity']);
         $tempRow['end_date'] = false;
         $tempRow['assignee_id'] = $this->Auth->user('id'); //POCOR-7282
         $tempRow['institution_id'] = $this->institutionId;
@@ -207,7 +220,7 @@ class ImportStudentAdmissionTable extends AppTable
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $academicPeriodId = $this->AcademicPeriods->getCurrent();
         $requestQuery = $this->request->getQuery();
-        if (isset($requestQuery'period']) && !empty($requestQuery['period'])) {
+        if (isset($requestQuery['period']) && !empty($requestQuery['period'])) {
             $academicPeriodId = $requestQuery['period'];
         }
         $modelData = $lookedUpTable->getAvailableAcademicPeriodsById($academicPeriodId, false);
@@ -466,7 +479,7 @@ class ImportStudentAdmissionTable extends AppTable
 
         $academicPeriodId = $this->academicPeriodId;
         $academicPeriodLevel = $this->getAcademicPeriodLevel($academicPeriodId);
-        if (count($academicPeriodLevel) > 0) {
+        if (is_array( $academicPeriodLevel) && count($academicPeriodLevel) > 0) {
             if ($academicPeriodLevel[0]['academic_period_level_id'] != 1) { //if the level is not year
                 $rowInvalidCodeCols['academic_period_id'] = __('Academic period must be in year level');
                 return false;
@@ -578,8 +591,8 @@ class ImportStudentAdmissionTable extends AppTable
             return false;
         }
 
-//        $periodStartDay = $period->start_date->format('d/m/Y');
-//        $periodStartDate = DateTime::createFromFormat('d/m/Y', $periodStartDay, $dateTimeZone);
+        //$periodStartDay = $period->start_date->format('d/m/Y');
+        // $periodStartDate = DateTime::createFromFormat('d/m/Y', $periodStartDay, $dateTimeZone);
 
         $periodEndDay = $period->end_date->format('d/m/Y');
         $periodEndDate = DateTime::createFromFormat('d/m/Y', $periodEndDay, $dateTimeZone);
@@ -687,8 +700,8 @@ class ImportStudentAdmissionTable extends AppTable
                 ->where([$this->Institutions->aliasField('id') => $institutionId])
                 ->select(['Genders.code', 'Genders.name'])
                 ->first();
-            $institutionGender = $query->Genders->name;
-            $institutionGenderCode = $query->Genders->code;
+            $institutionGender = $query->gender->name;
+            $institutionGenderCode = $query->gender->code;
 
             if ($institutionGenderCode == 'X') { //if mixed then always true
                 return true;
