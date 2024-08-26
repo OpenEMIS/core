@@ -56,6 +56,7 @@ class UserTabBehavior extends Behavior
         $extra['redirect'] = $redirectURL;
     }
 
+    // POCOR-8527
     public function addNoRecordsAlert()
     {
         $model = $this->_table;
@@ -72,7 +73,7 @@ class UserTabBehavior extends Behavior
         }
         $count = $query->count();
         if($count == 0){
-            $model->controller->Alert->warning('general.noData');
+            $model->controller->Alert->info('general.noData');
         }
     }
 
