@@ -1046,9 +1046,9 @@ class StudentController extends Controller
             $data = $this->studentService->addStudentAbsences($request);
             
             if($data == 1){
-                return $this->sendSuccessResponse("Student absences data added.", $data);
+                return $this->sendSuccessResponse("Student absences data added.");
             } elseif($data == 2) {
-                return $this->sendSuccessResponse("Student absences data updated.", $data);
+                return $this->sendSuccessResponse("Student absences data updated.");
             } elseif($data == 3) {
                 return $this->sendErrorResponse("Student is not assigned to the class, grade and academic period for which attendance/absence is marked");
             } else {
