@@ -7,6 +7,7 @@ use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\Entity;
 use App\Model\Table\ControllerActionTable;
 
 class EducationFieldOfStudiesTable extends ControllerActionTable
@@ -52,6 +53,8 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
 
     public function addEditBeforeAction(Event $event) {
         $this->fields['education_programme_orientation_id']['type'] = 'select';
+        $connection = $this->getConnection(); //POCOR-8495
+        $connection->getDriver()->enableAutoQuoting();
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -112,4 +115,18 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    //POCOR-8495 --start
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+    //POCOR-8495 --end
 }
