@@ -278,6 +278,19 @@ class SurveyFormsTable extends CustomFormsTable
         ];
     }
 
+    //POCOR-8549 START
+    public function deleteBeforeAction(Event $event, ArrayObject $extra)
+    {
+        unset($extra['toolbarButtons']['back']['url']['?']);
+        unset($extra['toolbarButtons']['back']['url']['page']);
+        unset($extra['toolbarButtons']['list']['url']['?']);
+        unset($extra['toolbarButtons']['list']['url']['page']);
+        unset($extra['redirect']['?']);
+        unset($extra['redirect']['page']);
+       
+    }
+    //POCOR-8549 END
+
 
     public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
