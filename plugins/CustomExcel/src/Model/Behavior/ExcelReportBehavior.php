@@ -94,7 +94,8 @@ class ExcelReportBehavior extends Behavior
         $this->renderExcelTemplate($extra, $event);
     }
 
-    public function renderExcelTemplate(ArrayObject $extra)
+    //POCOR-8568[Here added  Event $event]
+    public function renderExcelTemplate(ArrayObject $extra, Event $event)
     {
         $model = $this->_table;
         $format = $this->getConfig('format');
@@ -182,7 +183,8 @@ class ExcelReportBehavior extends Behavior
         gc_collect_cycles();
     }
 
-    public function loadExcelTemplate(ArrayObject $extra)
+    //POCOR-8568[Here added  Event $event]
+    public function loadExcelTemplate(ArrayObject $extra, Event $event)
     {
         $model = $this->_table;
         if (isset($extra['requestQuery']) && isset($extra['requestQuery'][$this->getConfig('templateTableKey')])) {
