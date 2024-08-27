@@ -25,6 +25,14 @@ class AddBehavior extends Behavior {
             $model->setEntityClass(\Cake\ORM\Entity::class);
         }// end
         $request = $this->_table->request;
+        // POCOR-8534 Start
+        $addAccess = $this->getAddAccess($request, $model);
+        if (!$addAccess) {
+//            $logoutUrl = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'logout'], true);
+            return $this->redirectToDashboard($mainEvent, $model);
+        }
+        // POCOR-8534 End
+
         $extra['config']['form'] = true;
         $extra['patchEntity'] = true;
         $extra['redirect'] = $model->url('index', 'QUERY');
@@ -178,6 +186,44 @@ class AddBehavior extends Behavior {
         $model->controller->set('data', $entity);
         return $entity;
     }
-    
+
+    /**
+     * // POCOR-8534
+     * @param Event $mainEvent
+     * @param Table $model
+     * @return mixed
+     */
+    private function redirectToDashboard(Event $mainEvent, Table $model)
+    {
+        $mainEvent->stopPropagation();
+        $model->Alert->warning('general.notAccess');
+        Log::debug('Undefined Edit Access');
+        return $model->controller->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
+    }
+
+    /**
+     * // POCOR-8534
+     * @return mixed
+     */
+    private function getAddAccess($request, Table $model)
+    {
+        $controllerName = $request->getParam('controller');
+        $plugin = $request->getParam('plugin');
+        $action = $request->getParam('action');
+        $toCheck = [
+            'controller' => $controllerName,
+            'plugin' => $plugin,
+            'action' => $action,
+            'add'];
+        if ($action == 'add') {
+            unset($toCheck['add']);
+        }
+        if (!$action) {
+            unset($toCheck['action']);
+        }
+        $editAccess = $model->AccessControl->check($toCheck);
+        return $editAccess;
+    }
+
 }
 
