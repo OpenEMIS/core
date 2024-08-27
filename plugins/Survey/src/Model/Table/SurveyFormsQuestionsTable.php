@@ -75,7 +75,7 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 				'dependent_question' => 'SurveyRules.dependent_question_id',
 				'show_options' => 'SurveyRules.show_options',
 			])
-			->enableAutoFields(true)
+			->enableAutoFields(true) // POCOR-8465
 			;
 		return $query;
 	}
