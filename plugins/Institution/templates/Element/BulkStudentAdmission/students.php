@@ -22,7 +22,7 @@
 							<th><?= __('Comment') ?></th>
 						</tr>
 					</thead>
-					<?php if (isset($attr['data'])) : $selectedStudents = array_key_exists('selectedStudents', $attr) ? $attr['selectedStudents']: [];
+					<?php if (isset($attr['data'])) : $selectedStudents = isset($attr['selectedStudents']) ? $attr['selectedStudents']: [];
 						$onlySelectedStudents = [];
 						foreach ($selectedStudents as $sskey => $ssvalue) {
 							if (!empty($ssvalue['selected'])) {

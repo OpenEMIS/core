@@ -6,7 +6,7 @@ use Profile\Controller\CommentsController as BaseController;
 
 class DirectoryCommentsController extends BaseController
 {
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
         $requestQuery = $this->request->getQuery();
@@ -32,11 +32,11 @@ class DirectoryCommentsController extends BaseController
 
         parent::add();
     }
-    
+
     public function setupTabElements($options)
     {
         $page = $this->Page;
-        
+
         $session = $this->request->getSession();
         $guardianId = $session->read('Guardian.Guardians.id');
         $studentId = $session->read('Student.Students.id');
@@ -45,7 +45,7 @@ class DirectoryCommentsController extends BaseController
         $studentToGuardian = $session->read('Directory.Directories.studentToGuardian');
         $guardianToStudent = $session->read('Directory.Directories.guardianToStudent');
 
-        $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
+        $userId = isset($options['userId']) ? $options['userId'] : 0;
         $encodedUserId = $this->paramsEncode(['security_user_id' => $userId]);
         $nationalityId = $this->Users->get($userId)->nationality_id;
         $encodedUserAndNationalityId = $this->paramsEncode(['security_user_id' => $userId,'nationality_id' => $nationalityId]);

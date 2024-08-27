@@ -92,4 +92,26 @@ class StaffAccountTable extends AppTable {
             Log::write('error', $e->getMessage());
         }
     }
+
+    //POCOR-8451
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        $errors = $entity->getErrors();
+        if (empty($errors)) {
+            $this->Alert->success('general.edit.success', ['reset' => true]);
+            $session = $this->request->getSession();
+            $session->write('successAlert', 'yes');
+            $action = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffAccount','view',$this->request->getParam('pass.1')];
+            return $this->controller->redirect($action);
+        } 
+    }
+
+    //POCOR-8451
+    public function viewBeforeAction() {    
+        $session = $this->request->getSession();
+        if($session->read('successAlert') === 'yes' && empty($session->read('_alert'))){
+            $session->delete('successAlert');
+            $this->Alert->success('general.edit.success', ['reset' => true]);
+        }
+    }
 }

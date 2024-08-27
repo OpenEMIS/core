@@ -209,7 +209,7 @@ class AssessmentsTable extends ControllerActionTable {
     {
         $class = __CLASS__;
         $line = __LINE__;
-        $entity = $this->setIdEntityFromQueryString($class, $line, $entity);
+        //$entity = $this->setIdEntityFromQueryString($class, $line, $entity);//POCOR-8520
         $this->setupFields($event, $entity); // POCOR-8074-3 entity needed for dependant select field
         // POCOR-7999 refactured
         if ($this->action == 'edit') {
@@ -322,7 +322,7 @@ class AssessmentsTable extends ControllerActionTable {
                         ] //condition
                     );
                 }
-                
+
                 if ($is_new) { //new assessment assessment_item
                     $assessmenItemId = Text::uuid();
                     $assessment_data = [
@@ -335,7 +335,7 @@ class AssessmentsTable extends ControllerActionTable {
                         'created' => $currentTimeZone,
                     ];
                     $assesmentEntity = $assessmentItems->newEntity($assessment_data);
-                    $assesmentItem = $assessmentItems->save($assesmentEntity); // comment cakephp4 
+                    $assesmentItem = $assessmentItems->save($assesmentEntity); // comment cakephp4
                 }
                 $data[$this->getAlias()]['assessment_items'] = $assessmentItems;
             }
@@ -348,8 +348,8 @@ class AssessmentsTable extends ControllerActionTable {
     function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         //patch data to handle fail save because of validation error.
-        if (array_key_exists($this->getAlias(), $requestData)) {
-            if (array_key_exists('assessment_items', $requestData[$this->getAlias()])) {
+        if (isset($requestData[$this->getAlias()])) {
+            if (isset($requestData[$this->getAlias()]['assessment_items'])) {
                 $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
                 foreach ($requestData[$this->getAlias()]['assessment_items'] as $key => $item) {
                     $subjectId = $item['education_subject_id'];
@@ -538,7 +538,7 @@ class AssessmentsTable extends ControllerActionTable {
             'value' => 2,
             'attr' => ['value' => 2]
         ]);
-        
+
         $this->field('academic_period_id', [
             'type' => 'select',
             'select' => false,
@@ -598,7 +598,7 @@ class AssessmentsTable extends ControllerActionTable {
     public
     function findByClass(Query $query, array $options)
     {
-        if (array_key_exists('institution_class_id', $options) && !empty($options['institution_class_id'])) {
+        if (isset($options['institution_class_id']) && !empty($options['institution_class_id'])) {
             $classId = $options['institution_class_id'];
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
             $classResults = $InstitutionClasses

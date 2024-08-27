@@ -76,12 +76,12 @@ class StudentClassesTable extends ControllerActionTable
         $this->setFieldOrder('education_grade', $order++);
         $this->setFieldOrder('institution_class_id', $order++);
         $this->setFieldOrder('homeroom_teacher_name', $order++);
-        
+
         if (!empty($this->request->getQuery('institution_class_id'))) {
             $action = 'view';
             $hasAllClassesPermission = $this->AccessControl->check(['Institutions', 'AllClasses', $action]);
             $hasMyClassesPermission = $this->AccessControl->check(['Institutions', 'Classes', $action]);
-            
+
             $url = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -93,21 +93,21 @@ class StudentClassesTable extends ControllerActionTable
 
             if ($hasAllClassesPermission) {
                 return $this->controller->redirect($url);
-            } 
-            
+            }
+
             if ($hasMyClassesPermission) {
                 $userId = $this->Auth->user('id');
                 if ($userId == $this->request->getQuery('staff_id') || $userId == $this->request->getQuery('secondary_staff_id')) {
                     return $this->controller->redirect($url);
                 }
             }
-            
+
             $this->Alert->error('security.noAccess');
         }
 
 		// Start POCOR-5188
 		if($this->request->getParam('controller') == 'Students'){
-			$is_manual_exist = $this->getManualUrl('Institutions','Classes','Students - Academic');       
+			$is_manual_exist = $this->getManualUrl('Institutions','Classes','Students - Academic');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -116,7 +116,7 @@ class StudentClassesTable extends ControllerActionTable
 					'escape' => false,
 					'target'=>'_blank'
 				];
-		
+
 				$helpBtn['url'] = $is_manual_exist['url'];
 				$helpBtn['type'] = 'button';
 				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -124,8 +124,8 @@ class StudentClassesTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->getParam('controller') == 'Directories'){ 
-			$is_manual_exist = $this->getManualUrl('Directory','Classes','Students - Academic');       
+		}elseif($this->request->getParam('controller') == 'Directories'){
+			$is_manual_exist = $this->getManualUrl('Directory','Classes','Students - Academic');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -148,11 +148,46 @@ class StudentClassesTable extends ControllerActionTable
 
     }
 
+    //POCOR-8490
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $userData = $this->Session->read();
+        $session = $this->request->getSession(); //POCOR-6267
+
+        if ($userData['Auth']['User']['is_guardian'] == 1) {
+            /*POCOR-6267 starts*/
+            if ($this->request->getParam('controller') == 'GuardianNavs') {
+                $studentId = $this->getStudentID();
+            }/*POCOR-6267 ends*/ else {
+                $sId = $userData['Student']['ExaminationResults']['student_id'];
+                $studentId = $sId ? $this->ControllerAction->paramsDecode($sId)['id'] : $this->getUserID();
+            }
+        } else {
+            $studentId = $userData['Auth']['User']['id'];
+        }
+
+        $conditions = [];
+        /*POCOR-6267 starts*/
+        if ($this->request->getParam('controller') == 'GuardianNavs' || 
+            (empty($userData['System']['User']['roles']) && !empty($studentId))) {
+            // Set the condition for student_id if applicable
+            $conditions[$this->aliasField('student_id')] = $studentId;
+        }
+        /*POCOR-6267 ends*/
+
+        $query->contain([
+            'InstitutionClasses',
+            'StudentStatuses'
+        ])
+        ->where($conditions)
+        ->toArray();
+    }
+
+    public function indexBeforeQueryOld(Event $event, Query $query, ArrayObject $extra)
     {
 		$userData = $this->Session->read();
         $session = $this->request->getSession();//POCOR-6267
-        if ($userData['Auth']['User']['is_guardian'] == 1) { 
+        if ($userData['Auth']['User']['is_guardian'] == 1) {
             /*POCOR-6267 starts*/
             if ($this->request->getParam('controller') == 'GuardianNavs') {
                 $studentId = $this->getStudentID();
@@ -180,7 +215,7 @@ class StudentClassesTable extends ControllerActionTable
                 }
             }
         }
-		
+
         $query->contain([
             'InstitutionClasses',
             'StudentStatuses'
@@ -195,7 +230,7 @@ class StudentClassesTable extends ControllerActionTable
         $queryString = $this->getQueryString();
         $institutionId = $queryString['institution_id'];
         $encodedQueryString = $this->paramsEncode($queryString);
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             $url = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -204,7 +239,7 @@ class StudentClassesTable extends ControllerActionTable
                 1 =>$encodedQueryString,
                 2 =>$this->paramsEncode(['id' => $entity->id]),
                 3 =>$this->paramsEncode(['id' => $entity->institution_class]),
-                
+
             ];
 
             if ($this->controller->getName() == 'Directories') {

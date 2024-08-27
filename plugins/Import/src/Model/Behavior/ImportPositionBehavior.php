@@ -382,7 +382,7 @@ class ImportPositionBehavior extends Behavior
                     continue;
                 }
                 if ($row == $highestRow) { // if $row == $highestRow, check if the row cells are really empty, if yes then end the loop
-                    
+
                     if ($this->checkRowCells($sheet, $totalColumns, $row) === false) {
                         break;
                     }
@@ -448,7 +448,7 @@ class ImportPositionBehavior extends Behavior
                     $arr = array(); //simple array
                     foreach($shiftArr as $d)
                     {
-                          $arr[]=$d['shift_option_id'];   
+                          $arr[]=$d['shift_option_id'];
                     }
                      //echo "<pre>";print_r($activeModel);die;
                     try {
@@ -462,7 +462,7 @@ class ImportPositionBehavior extends Behavior
                                 }
                             }
                         }
-                        
+
                     } catch (Exception $e) {
                         $newEntity = false;
                         $message = $e->getMessage();
@@ -671,7 +671,7 @@ class ImportPositionBehavior extends Behavior
         } else {//5695 starts
             if ($title == 'Import Training Session Trainee Results Data') {
                 $title = 'Import Training Results Data';
-            }//5695 ends   
+            }//5695 ends
         }
         $activeSheet = $objPHPExcel->getActiveSheet();
         $activeSheet->setTitle($dataSheetName);
@@ -837,7 +837,7 @@ class ImportPositionBehavior extends Behavior
                 }
             }
 
-            if (count($modelData) > 1 && !array_key_exists('noDropDownList', $modelArr)) {
+            if (count($modelData) > 1 && !isset($modelArr['noDropDownList'])) {
                 $lookupColumn = $firstColumn + intval($modelArr['lookupColumn']) - 1;
                 $alpha = $this->getExcelColumnAlpha($columnOrder - 1);
                 $lookupColumnAlpha = $this->getExcelColumnAlpha($lookupColumn);
@@ -1066,13 +1066,13 @@ class ImportPositionBehavior extends Behavior
                 // end POCOR-3916
 
                 if (!empty($value->description)) {
-                    //POCOR-5913 starts 
+                    //POCOR-5913 starts
                     if ($value->model == 'Student.StudentGuardians') {
                         $label = __($value->description);
                     } else {
                         $label .= ' ' . __($value->description);
                     }
-                    //POCOR-5913 ends 
+                    //POCOR-5913 ends
                 }
             }
 
@@ -1646,7 +1646,7 @@ class ImportPositionBehavior extends Behavior
                     $rowInvalidCodeCols[$columnName] = __($event->getResult());
                     $rowPass = false;
                 } else {
-                    if (!array_key_exists('customColumns', $tempRow)) {
+                    if (!isset($tempRow['customColumns'])) {
                         $tempRow['customColumns'] = [];
                     }
                     $tempRow['customColumns'][$columnName] = $val;

@@ -1,6 +1,6 @@
 <?php
 $params = $this->Paginator->params();
-$totalRecords = array_key_exists('count', $params) ? $params['count'] : 0;
+$totalRecords = isset($params['count']) ? $params['count'] : 0;
 ?>
 
 <?php if ($totalRecords > 0) : ?>

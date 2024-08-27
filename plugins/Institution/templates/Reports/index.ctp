@@ -6,7 +6,7 @@ echo $this->Html->script('Report.report.list', ['block' => true]);
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
 	foreach ($toolbarButtons as $key => $btn) {
-		if (!array_key_exists('type', $btn) || $btn['type'] == 'button') {
+		if (!isset($btn['type']) || $btn['type'] == 'button') {
 			echo $this->Html->link($btn['label'], $btn['url'], $btn['attr']);
 		} else if ($btn['type'] == 'element') {
 			echo $this->element($btn['element'], $btn['data'], $btn['options']);
@@ -30,7 +30,7 @@ $this->start('panelBody');
 	$url = $this->Url->build($url);
 	$table = $ControllerAction['table'];
 	$downloadText = __('Downloading...');
-	
+
 ?>
 
 <style type="text/css">
@@ -41,8 +41,8 @@ $this->start('panelBody');
 		<table class="table table-curved" id="ReportList" url="<?= $url ?>" data-downloadtext="<?= $downloadText ?>">
 			<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
 			<tbody>
-			
-				<?php foreach ($data as $obj) : 
+
+				<?php foreach ($data as $obj) :
 					 $fileFormat = json_decode($obj->params);
 				 ?>
 				<tr row-id="<?= $obj->id ?>">
@@ -66,11 +66,11 @@ $this->start('panelBody');
 							if ($current > 0 && $total > 0) {
 								$progress = intval($current / $total * 100);
 							}
-						
+
 							if ($params['action'] == 'CustomReports') {
 								echo __('In Progress');
 							} else {
-								echo __('In Progress');						
+								echo __('In Progress');
 								// echo '<div class="progress progress-striped active" style="margin-bottom:0">';
 								// echo '<div class="progress-bar progress-bar-striped" role="progressbar" data-transitiongoal="' . $progress . '" data-status="' . $status . '"></div>';
 								// echo '</div>';
@@ -79,7 +79,7 @@ $this->start('panelBody');
 							$downloadClass = 'none';
 							$errorClass = '';
 						}	else if ($status == 0 && !empty($obj->file_path)) {
-							echo __('Completed');	
+							echo __('Completed');
 						}
 						// $downloadOptions = ($fileFormat->format == 'zip')?'zipArchievePhoto':'download';
 						// echo $this->Html->link(__('Download'), ['action' => $ControllerAction['table']->alias(), $downloadOptions, $obj->id, $ControllerAction['table']->alias()], ['class' => $downloadClass, 'target' => '_self'], []);
@@ -87,7 +87,7 @@ $this->start('panelBody');
 						<a href="#" data-toggle="tooltip" title="<?= __('Please contact the administrator for assistance.') ?>" class="<?php echo $errorClass ?>"><?php echo __('Error') ?></a>
 					</td>
 					 <td class="rowlink-skip">
-					 <?php if ($status == 0 && !empty($obj->file_path)) {?>	
+					 <?php if ($status == 0 && !empty($obj->file_path)) {?>
 						<div class="dropdown">
 							<button class="btn btn-dropdown action-toggle" type="button" id="action-menu" data-toggle="dropdown" aria-expanded="false">
 							Select<span class="caret-down"></span>
@@ -121,27 +121,27 @@ $this->start('panelBody');
 								'action' =>  $ControllerAction['table']->alias(),
 								'removeReport',$obj->id
 							];
-						?>	
-											
+						?>
+
 						<ul class="dropdown-menu action-dropdown" role="menu" aria-labelledby="action-menu">
 							<div class="dropdown-arrow"><i class="fa fa-caret-up"></i></div>
 								<li role="presentation">
-									<a href="<?php echo $this->Url->build($viewUrl); ?>" role="menuitem" tabindex="-1"><i class="fa fa-eye"></i>View</a>			
+									<a href="<?php echo $this->Url->build($viewUrl); ?>" role="menuitem" tabindex="-1"><i class="fa fa-eye"></i>View</a>
 								</li>
 								<li role="presentation">
 									<a href="<?php echo $this->Url->build($downloadUrl); ?>" role="menuitem" tabindex="-1" target ="_self"><i class="fa fa-download"></i>Download</a>
 								</li>
 								<?php if ($UsersCheck['super_admin'] == 1) { ?>
 									<li role="presentation">
-										<a href="<?php echo $this->Url->build($deleteUrl); ?>" role="menuitem" tabindex="-1" target ="_self"><i class="fa fa-trash"></i>Delete</a>	
+										<a href="<?php echo $this->Url->build($deleteUrl); ?>" role="menuitem" tabindex="-1" target ="_self"><i class="fa fa-trash"></i>Delete</a>
 								    </li>
 								<?php }?>
 								<?php if (!empty($AccessCheck) && $AccessCheck == 1) {?>
 									<li role="presentation">
-										<a href="<?php echo $this->Url->build($deleteUrl); ?>" role="menuitem" tabindex="-1" target ="_self"><i class="fa fa-trash"></i>Delete</a>	
+										<a href="<?php echo $this->Url->build($deleteUrl); ?>" role="menuitem" tabindex="-1" target ="_self"><i class="fa fa-trash"></i>Delete</a>
 								    </li>
-								<?php }?>		
-						    </ul>						
+								<?php }?>
+						    </ul>
 						</div>
 						<?php } else if (!empty($AccessCheck) && $AccessCheck == 1 || $UsersCheck['super_admin'] == 1) {?>
 							<div class="dropdown">

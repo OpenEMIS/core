@@ -1151,11 +1151,11 @@ class WorkflowBehavior extends Behavior
                         $isDeletable = $workflowStep->is_removable == 1 ? true : false;
                     }
 
-                    if (array_key_exists('edit', $buttons) && !$isEditable) {
+                    if (isset($buttons['edit']) && !$isEditable) {
                         unset($buttons['edit']);
                     }
 
-                    if (array_key_exists('remove', $buttons) && !$isDeletable) {
+                    if (isset($buttons['remove']) && !$isDeletable) {
                         unset($buttons['remove']);
                     }
 
@@ -2034,7 +2034,7 @@ class WorkflowBehavior extends Behavior
                             $buttonAttr = array_merge($attr, $buttonAttr);
 
                             if (is_null($actionType)) {
-                                if (array_key_exists('class', $buttonAttr)) {
+                                if (isset($buttonAttr['class'])) {
                                     unset($buttonAttr['class']);
                                 }
 

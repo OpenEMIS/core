@@ -13,6 +13,7 @@ use PHPExcel_IOFactory;
 use Cake\Http\Exception\NotFoundException;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use Cake\Event\EventInterface;
 
 class ReportsController extends AppController
 {
@@ -43,7 +44,7 @@ class ReportsController extends AppController
         $this->loadComponent('Navigation');
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     { 
         if ($this->getPlugin() == 'Report') {
             $this->Security->setConfig('validatePost', false);
@@ -227,7 +228,7 @@ class ReportsController extends AppController
             ];
         } elseif ($module == 'Examinations') {
             $options = [
-                
+
                 'Report.NotRegisteredStudents' => __('Not Registered Students'),
                 'Report.RegisteredStudentsExaminationCentre' => __('Registered Students by Examination Centre'),
                 'Report.ExaminationResults' => __('Examination Results'),
@@ -359,7 +360,7 @@ class ReportsController extends AppController
         $header = __('Reports') . ' - ' . $moduleTitle;
 
         $inputFileName = $replace_data;
-        // POCOR-8289 - for view report chagne in IOFactory logic 
+        // POCOR-8289 - for view report chagne in IOFactory logic
         try {
             $inputFileType = IOFactory::identify($inputFileName);
             $objReader = IOFactory::createReader($inputFileType);

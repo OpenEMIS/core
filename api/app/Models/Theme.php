@@ -13,7 +13,7 @@ class Theme extends Model
     public function getdefaultContentAttribute($value)
     {
         if(isset($this->default_value)){
-            $value = json_encode($value, true);
+            $value = base64_encode($value, true);
         }
 
         return $value;

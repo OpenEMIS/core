@@ -279,7 +279,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'institution_id' =>$institutionId,
                 'status !=' =>'-1'
         ]])->where([$ReportCardProcessesTable->aliasField('modified IS NOT NULL')])->toArray();
-        
+
         foreach ($entitydata as $keyy => $entity) {
             //POCOR-7067 Starts
             $now = new DateTime();
@@ -301,7 +301,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 //     $entity->status = 1;
                 //     $ReportCardProcessesTable->save($entity);
                 // }
-                //POCOR-7535 end 
+                //POCOR-7535 end
                 if ($diff_mins > 30) {
                     $entity->status = self::ERROR; //(-1)
                     $entity->modified = $currentTimeZone;//POCOR-6841
@@ -1271,8 +1271,8 @@ class ReportCardStatusesTable extends ControllerActionTable
     }
 
     public function onGetOpenemisNo(Event $event, Entity $entity)
-    { 
-        
+    {
+
         $value = '';
         if ($entity->has('user')) {
             $value = $entity->user->openemis_no;
@@ -1380,7 +1380,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     ])
                     ->count();
             }
-            //POCOR-6692 end     
+            //POCOR-6692 end
 
 
             if (!$inProgress) {
@@ -1715,7 +1715,8 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'report_card_id' => $reportCardId,
                 'student_id' => $student->student_id,
                 'academic_period_id' => $student->academic_period_id,
-                'education_grade_id' => $student->education_grade_id
+                'education_grade_id' => $student->education_grade_id,
+                'institution_id' => $student->institution_id //POCOR-8522
             ];
             if ($this->StudentsReportCards->exists($recordIdKeys)) {
                 $studentsReportCardEntity = $this->StudentsReportCards->find()
@@ -1746,6 +1747,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $recordIdKeys['status'] = $StudentsReportCards::IN_PROGRESS;
                     $recordIdKeys['started_on'] = date('Y-m-d H:i:s');
                     $recordIdKeys['gpa'] = $getGpa;
+                    $recordIdKeys['institution_class_id'] = $student->institution_class_id;// POCOR-8522
                     $newEntity = $StudentsReportCards->newEntity($recordIdKeys);
                     $StudentsReportCards->save($newEntity);
                 } else {
@@ -1800,7 +1802,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllReportCards ' . $args;
             $logs = ROOT . DS . 'logs' . DS . 'GenerateAllReportCards.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
-            // print_r($shellCmd);die();
+             //print_r($shellCmd);die();
             try {
                 $pid = exec($shellCmd);
                 Log::write('debug', $shellCmd);
@@ -1960,9 +1962,9 @@ class ReportCardStatusesTable extends ControllerActionTable
         $condition['report_card_start_date'] = $entityReportCards->start_date;
         $condition['report_card_end_date'] = $entityReportCards->end_date;
 
-        if (array_key_exists('assessment_id', $condition)
-            && array_key_exists('report_card_start_date', $condition)
-            && array_key_exists('report_card_end_date', $condition)
+        if (isset($condition['assessment_id'])
+            && isset($condition['report_card_start_date'])
+            && isset($condition['report_card_end_date'])
         ) {
             $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
             $entityAssessmentPeriods = $AssessmentPeriods->find()
@@ -2136,7 +2138,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             ,subq.institution_id
             ,subq.student_id
             ,ROUND(AVG(IFNULL(assessment_grading_options.point, 0)), 2) gpa_per_student
-        FROM 
+        FROM
         (
             SELECT institution_subject_students.academic_period_id
                 ,institution_subject_students.institution_id
@@ -2149,7 +2151,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ,term_info.assessment_grading_type_id
                 ,IFNULL(subq2.total_mark, 0) total_mark
             FROM institution_subject_students
-            INNER JOIN 
+            INNER JOIN
             (
                 SELECT assessments.academic_period_id
                     ,assessments.education_grade_id
@@ -2167,7 +2169,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             ) term_info
             ON term_info.academic_period_id = institution_subject_students.academic_period_id
             AND term_info.education_grade_id = institution_subject_students.education_grade_id
-            LEFT JOIN 
+            LEFT JOIN
             (
                 SELECT assessment_item_results.academic_period_id
                         ,assessment_item_results.institution_id
@@ -2177,7 +2179,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                         ,IFNULL(assessment_periods.academic_term, 1) academic_term
                         ,IFNULL(ROUND(SUM(assessment_item_results.marks * assessment_periods.weight) / IFNULL(assessment_grading_types.max, CEILING(MAX(assessment_item_results.marks) / 10) * 10) * 100, 2), '') total_mark
                 FROM assessment_item_results
-                    INNER JOIN 
+                    INNER JOIN
                     (
                         SELECT assessment_item_results.academic_period_id
                             ,assessment_item_results.institution_id
@@ -2239,7 +2241,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ,term_info.academic_term
         ) subq
         LEFT JOIN assessment_grading_options
-        ON subq.total_mark >= assessment_grading_options.min 
+        ON subq.total_mark >= assessment_grading_options.min
         AND subq.total_mark <= assessment_grading_options.max
         AND subq.assessment_grading_type_id = assessment_grading_options.assessment_grading_type_id
         GROUP BY subq.academic_period_id
