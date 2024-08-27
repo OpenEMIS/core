@@ -87,6 +87,8 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
                     'rule' => ['range', 0, 9999.99]
                 ]
             ])
+			->requirePresence('name')
+			->requirePresence('result_type')
 			->requirePresence('grading_options');
 	}
 
@@ -108,7 +110,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 		$this->setFieldOrder(['visible', 'code', 'name', 'result_type', 'max', 'pass_mark']);
 
 		// Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Grading Types','Assessments');       
+		$is_manual_exist = $this->getManualUrl('Administration','Grading Types','Assessments');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -135,6 +137,8 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 **
 ******************************************************************************************************************/
 	public function addEditBeforeAction(Event $event, ArrayObject $extra) {
+		$connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
 		if ($this->action=='edit') {
 			$this->fields['visible']['visible'] = false;
 		}
@@ -154,7 +158,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 			foreach ($entity->grading_options as $key => $gradingOption) {
 				$gradingOptionId = $gradingOption->id;
 				$gradingOptions[$gradingOptionId] = 0;
-				if ($this->hasAssociatedRecords($AssessmentGradingOptions, $gradingOption, $extra)) {
+				if (!empty($gradingOptionId) && $this->hasAssociatedRecords($AssessmentGradingOptions, $gradingOption, $extra)) {
 					$gradingOptions[$gradingOptionId] = 1;
 				}
 			}
@@ -304,12 +308,12 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 **
 ******************************************************************************************************************/
 	public function getCustomList($params = []) {
-		if (array_key_exists('keyField', $params)) {
+		if (isset($params['keyField'])) {
 			$keyField = $params['keyField'];
 		} else {
 			$keyField = 'id';
 		}
-		if (array_key_exists('valueField', $params)) {
+		if (isset($params['valueField'])) {
 			$valueField = $params['valueField'];
 		} else {
 			$valueField = 'name';
@@ -341,7 +345,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
         }elseif ($field == 'max') {
             return __('Max');
         }elseif ($field == 'result_type') {
-            return __('Result');
+            return __('Result Type');
         }elseif ($field == 'grading_options') {
             return __('Grading Options');
         }elseif ($field == 'visible') {

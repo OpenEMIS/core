@@ -160,6 +160,9 @@ class AreasTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+
         $this->field('area_level_id');
         $count = $this->find()->where([
                 'OR' => [
@@ -184,7 +187,7 @@ class AreasTable extends ControllerActionTable
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Areas','Administrative Boundaries');       
+		$is_manual_exist = $this->getManualUrl('Administration','Areas','Administrative Boundaries');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -216,7 +219,7 @@ class AreasTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options){
         // Webhook Education Area create -- start
-        if ($this->associations()->has('usergroups') != '1') {            
+        if ($this->associations()->has('usergroups') != '1') {
             if($entity->isNew()){
                 $body = array();
                 $body = [
@@ -396,7 +399,7 @@ class AreasTable extends ControllerActionTable
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         if (!empty($this->onGetUrl())) {
             // If permission on add is not granted, the Sync button will not shown.
-            if (array_key_exists('add', $toolbarButtonsArray)) {
+            if (isset($toolbarButtonsArray['add'])) {
                 $toolbarButtonsArray['sync'] = $toolbarButtonsArray['add'];
                 $toolbarButtonsArray['sync']['label'] = '<i class="fa fa-refresh"></i>';
                 $toolbarButtonsArray['sync']['attr']['title'] = __('Synchronize');
@@ -547,6 +550,8 @@ class AreasTable extends ControllerActionTable
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
         //Setup fields
         $this->fieldsOrder = ['area_level_id', 'code', 'name'];
 

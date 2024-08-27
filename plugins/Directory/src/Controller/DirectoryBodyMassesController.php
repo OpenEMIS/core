@@ -6,7 +6,7 @@ use Profile\Controller\BodyMassesController as BaseController;
 
 class DirectoryBodyMassesController extends BaseController
 {
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
         $session = $this->request->getSession();
@@ -20,7 +20,7 @@ class DirectoryBodyMassesController extends BaseController
 
         // set queryString
         $page->setQueryString('security_user_id', $userId);
-        
+
         $this->setBreadCrumb(['userId' => $userId, 'userName' => $userName]);
 
         // set Tabs

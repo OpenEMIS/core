@@ -39,7 +39,7 @@ class InstitutionChoicesController extends PageController
         return $event;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
 
@@ -73,16 +73,16 @@ class InstitutionChoicesController extends PageController
         $page->setQueryOption('order', [$this->ApplicationInstitutionChoices->aliasField('order') => 'ASC']);
 
         parent::index();
-        
+
         $page->exclude(['estimated_cost', 'start_date', 'end_date', 'applicant_id', 'scholarship_id']);
-        
+
         $this->reorderFields();
     }
 
     public function view($id)
     {
         parent::view($id);
-        
+
         $page = $this->Page;
         $page->get('scholarship_institution_choice_type_id')
                 ->setLabel('Institution');;
@@ -115,7 +115,7 @@ class InstitutionChoicesController extends PageController
         $page->get('country_id')
             ->setControlType('select')
             ->setParams('Countries');
-        
+
         $page->get('scholarship_institution_choice_type_id')
                 ->setControlType('select')
                 ->setOptions($this->institutionChoiceOptions)
@@ -148,8 +148,8 @@ class InstitutionChoicesController extends PageController
         $plugin = $this->getPlugin();
         $name = $this->getName();
 
-        $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
-        $userId = array_key_exists('userId', $options) ? $options['userId'] : '';
+        $userName = isset($options['userName']) ? $options['userName'] : '';
+        $userId = isset($options['userId']) ? $options['userId'] : '';
 
         if ($plugin == 'Scholarship') {
             $page->addCrumb('Scholarships', [

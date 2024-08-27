@@ -54,7 +54,7 @@ class ValidationBehavior extends Behavior
         $columns = $schema->columns();
         foreach ($columns as $column) {
             $columnAttr = $schema->getColumn($column);
-            if (array_key_exists('type', $columnAttr) && $columnAttr['type'] == 'date') {
+            if (isset($columnAttr['type']) && $columnAttr['type'] == 'date') {
                 // taking existing rules from behavior's parent and storing them
                 $rules = $validator->field($column)->rules();
                 $rulesStore = [];
@@ -134,7 +134,7 @@ class ValidationBehavior extends Behavior
         $data = $globalData['data'];
         $isValid = false;
 
-        if (array_key_exists('superAdmin', $data) && array_key_exists('userId', $data)) {
+        if (isset($data['superAdmin']) && isset($data['userId'])) {
             $superAdmin = $globalData['data']['superAdmin'];
             $userId = $globalData['data']['userId'];
 
@@ -143,7 +143,7 @@ class ValidationBehavior extends Behavior
             } else {
                 $isSystemGroup = false;
                 if (!$globalData['newRecord']) { // only applicable for edit mode
-                    if (array_key_exists('isSystemGroup', $data) && $data['isSystemGroup'] == true) {
+                    if (isset($data['isSystemGroup']) && $data['isSystemGroup'] == true) {
                         $isSystemGroup = true;
                     }
                 }
@@ -346,6 +346,7 @@ class ValidationBehavior extends Behavior
      */
     public static function compareDate($field, $compareField, $equals, array $globalData)
     {
+
         $type = self::_getFieldType($compareField);
         $startDate = new DateTime($field);
         if ($compareField) {
@@ -632,7 +633,8 @@ class ValidationBehavior extends Behavior
                                             ->where([$fieldName => 1]);
 
                 if (!$globalData['newRecord']) { //for edit, need to ensure that there is other record which is set as default, or else this one must be set as default.
-                    $recordWithField ->andWhere([$modelClass->aliasField('id').' IS NOT ' => $globalData['data']['id']]);
+                    //$recordWithField ->andWhere([$modelClass->aliasField('id').' IS NOT ' => $globalData['data']['id']]);
+                    $recordWithField ->andWhere([$newEntity->aliasField('id').' IS NOT ' => $globalData['data']['id']]);
                 }
 
                 if (!empty($additionalParameters)) {
@@ -741,7 +743,7 @@ class ValidationBehavior extends Behavior
         $data = $globalData['data'];
 
         // excluding data by field name
-        $excludeInstitutionsOptions = array_key_exists('excludeInstitutions', $options)? $options['excludeInstitutions']: null;
+        $excludeInstitutionsOptions = isset($options['excludeInstitutions'])? $options['excludeInstitutions']: null;
         $excludeInstitutions = [];
         if (!empty($excludeInstitutionsOptions)) {
             foreach ($excludeInstitutionsOptions as $key => $value) {
@@ -753,7 +755,7 @@ class ValidationBehavior extends Behavior
 
         $Students = TableRegistry::getTableLocator()->get('Institution.Students');
 
-        $educationGradeId = (array_key_exists('education_grade_id', $data))? $data['education_grade_id']: null;
+        $educationGradeId = (isset($data['education_grade_id']))? $data['education_grade_id']: null;
         if (empty($educationGradeId)) {
             // insufficient params to perform search - return true as a default
             return true;
@@ -795,7 +797,7 @@ class ValidationBehavior extends Behavior
         $institutionId = null;
         if (!empty($globalData)) {
             $fieldType = $globalData['field']; //enable many models field use this same function
-            if (array_key_exists('data', $globalData) && array_key_exists('institution_id', $globalData['data'])) {
+            if (isset($globalData['data']) && array_key_exists('institution_id', $globalData['data'])) {
                 $institutionId = $globalData['data']['institution_id'];
             }
         }
@@ -894,7 +896,7 @@ class ValidationBehavior extends Behavior
     public static function checkInstitutionLocation($field, array $globalData)
     {
         $data = $globalData['data'];
-        if (array_key_exists('location_institution_id', $data)) {
+        if (isset($data['location_institution_id'])) {
             if (empty($data['location_institution_id'])) {
                 return false;
             }
@@ -990,13 +992,13 @@ class ValidationBehavior extends Behavior
         $data = $globalData['data'];
         $validationErrorMsg = $model->getMessage('Institution.Students.student_name.ruleCheckAdmissionAgeWithEducationCycleGrade');
 
-        $educationGradeId = (array_key_exists('education_grade_id', $data))? $data['education_grade_id']: null;
+        $educationGradeId = (isset($data['education_grade_id']))? $data['education_grade_id']: null;
         // if no education grade. fail it
         if (empty($educationGradeId)) {
             return $validationErrorMsg;
         }
 
-        if (array_key_exists('student_id', $data)) {
+        if (isset($data['student_id'])) {
             // saving for existing students
             $Students = TableRegistry::getTableLocator()->get('Institution.StudentUser');
             $studentQuery = $Students->find()
@@ -1027,7 +1029,7 @@ class ValidationBehavior extends Behavior
             ;
         $admissionAge = $gradeEntity->education_programme->education_cycle->admission_age;
 
-        if (array_key_exists('academic_period_id', $data) && !empty($data['academic_period_id'])) {
+        if (isset($data['academic_period_id']) && !empty($data['academic_period_id'])) {
             $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             $academicPeriodData = $AcademicPeriods->get($data['academic_period_id']);
             if (!empty($academicPeriodData)) {
@@ -1097,8 +1099,8 @@ class ValidationBehavior extends Behavior
                     ->first();
 
             if (!empty($periodObj)) {
-                $excludeFirstDay = array_key_exists('excludeFirstDay', $options) ? $options['excludeFirstDay'] : null;
-                $excludeLastDay = array_key_exists('excludeLastDay', $options) ? $options['excludeLastDay'] : null;
+                $excludeFirstDay = isset($options['excludeFirstDay']) ? $options['excludeFirstDay'] : null;
+                $excludeLastDay = isset($options['excludeLastDay']) ? $options['excludeLastDay'] : null;
 
                 if ($excludeFirstDay) {
                     $withFirstDay = Time::parse($periodObj->start_date);
@@ -1604,7 +1606,7 @@ class ValidationBehavior extends Behavior
                     return $model->getMessage('CustomField.text.maxLength', ['sprintf' => $value]);
                 }
                 if ($key == 'range' && is_array($value)) {
-                    if (array_key_exists('lower', $value) && array_key_exists('upper', $value)) {
+                    if (isset($value['lower']) && isset($value['upper'])) {
                         if (strlen($field) < $value['lower'] || strlen($field) > $value['upper']) {
                             return $model->getMessage('CustomField.text.range', ['sprintf' => [$value['lower'], $value['upper']]]);
                         }
@@ -1641,7 +1643,7 @@ class ValidationBehavior extends Behavior
                         return $model->getMessage('CustomField.number.maxValue', ['sprintf' => $value]);
                     }
                     if ($numberValidation == 'range' && is_array($value)) {
-                        if (array_key_exists('lower', $value) && array_key_exists('upper', $value)) {
+                        if (isset($value['lower']) && isset($value['upper'])) {
                             if ($field < $value['lower'] || $field > $value['upper']) {
                                 return $model->getMessage('CustomField.number.range', ['sprintf' => [$value['lower'], $value['upper']]]);
                             }
@@ -1660,7 +1662,7 @@ class ValidationBehavior extends Behavior
             $model = $globalData['providers']['table'];
             $params = json_decode($globalData['data']['params'], true);
 
-            if (array_key_exists('decimal', $params)) {
+            if (isset($params['decimal'])) {
                 // table type
                 $length = $params['decimal']['length'];
                 $precision = $params['decimal']['precision'];
@@ -1712,11 +1714,11 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $params = (!empty($globalData['data']['params']))? json_decode($globalData['data']['params'], true): [];
 
-        if (array_key_exists('start_date', $params) && array_key_exists('end_date', $params)) {
+        if (isset($params['start_date']) && isset($params['end_date'])) {
             return (strtotime($field) < strtotime($params['start_date']) || strtotime($field) > strtotime($params['end_date']))? $model->getMessage('CustomField.date.between', ['sprintf' => [date($systemDateFormat, strtotime($params['start_date'])), date($systemDateFormat, strtotime($params['end_date']))]]): true;
-        } else if (array_key_exists('start_date', $params)) {
+        } else if (isset($params['start_date'])) {
             return (strtotime($field) < strtotime($params['start_date']))? $model->getMessage('CustomField.date.later', ['sprintf' => date($systemDateFormat, strtotime($params['start_date']))]): true;
-        } else if (array_key_exists('end_date', $params)) {
+        } else if (isset($params['end_date'])) {
             return (strtotime($field) > strtotime($params['end_date']))? $model->getMessage('CustomField.date.earlier', ['sprintf' => date($systemDateFormat, strtotime($params['end_date']))]): true;
         } else {
             return true;
@@ -1729,11 +1731,11 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $params = (!empty($globalData['data']['params']))? json_decode($globalData['data']['params'], true): [];
 
-        if (array_key_exists('start_time', $params) && array_key_exists('end_time', $params)) {
+        if (isset($params['start_time']) && isset($params['end_time'])) {
             return (strtotime($field) < strtotime($params['start_time']) || strtotime($field) > strtotime($params['end_time']))? $model->getMessage('CustomField.time.between', ['sprintf' => [date($systemTimeFormat, strtotime($params['start_time'])), date($systemTimeFormat, strtotime($params['end_time']))]]): true;
-        } else if (array_key_exists('start_time', $params)) {
+        } else if (isset($params['start_time'])) {
             return (strtotime($field) < strtotime($params['start_time']))? $model->getMessage('CustomField.time.later', ['sprintf' => [date($systemTimeFormat, strtotime($params['start_time']))]]): true;
-        } else if (array_key_exists('end_time', $params)) {
+        } else if (isset($params['end_time'])) {
             return (strtotime($field) > strtotime($params['end_time']))? $model->getMessage('CustomField.time.earlier', ['sprintf' => [date($systemTimeFormat, strtotime($params['end_time']))]]): true;
         } else {
             return true;
@@ -1884,9 +1886,9 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $data = $globalData['data'];
 
-        $studentId = (array_key_exists('student_id', $data))? $data['student_id']: null;
-        $educationGradeId = (array_key_exists('previous_education_grade_id', $data))? $data['previous_education_grade_id']: null;
-        $previousInstitutionId = (array_key_exists('previous_institution_id', $data))? $data['previous_institution_id']: null;
+        $studentId = (isset($data['student_id']))? $data['student_id']: null;
+        $educationGradeId = (isset($data['previous_education_grade_id']))? $data['previous_education_grade_id']: null;
+        $previousInstitutionId = (isset($data['previous_institution_id']))? $data['previous_institution_id']: null;
 
         if (empty($studentId) || empty($educationGradeId) || empty($previousInstitutionId)) {
             // insufficient params to perform search - return true as a default
@@ -2024,7 +2026,7 @@ class ValidationBehavior extends Behavior
         if (!empty($globalData['data']['id'])) {
             $conditions[$UserIdentities->aliasField('id'). ' NOT IN']=  $globalData['data']['id'];
         }
-        
+
         if (!(array_key_exists('security_user_id', $globalData['data']))) {
             return true;
         } else if (array_key_exists('identity_type_id', $globalData['data']) && !empty($globalData['data']['identity_type_id'])) {
@@ -2619,9 +2621,9 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $registryAlias = $model->getRegistryAlias();
         $data = $globalData['data'];
-        $institutionId = (array_key_exists('institution_id', $data))? $data['institution_id']: null;
+        $institutionId = (isset($data['institution_id']))? $data['institution_id']: null;
 
-        if (array_key_exists('education_grade_id', $data) && !empty($data['education_grade_id'])) {
+        if (isset($data['education_grade_id']) && !empty($data['education_grade_id'])) {
             $query = $InstitutionGrades
                 ->find()
                 ->where([
@@ -2652,7 +2654,7 @@ class ValidationBehavior extends Behavior
         $model = $globalData['providers']['table'];
         $data = $globalData['data'];
 
-        if (array_key_exists('education_grade_id', $data) && !empty($data['education_grade_id'])) {
+        if (isset($data['education_grade_id']) && !empty($data['education_grade_id'])) {
             $query = $InstitutionGrades
                 ->find()
                 ->where([
@@ -2838,13 +2840,13 @@ class ValidationBehavior extends Behavior
         if ($homeRoomTeacher != 0 && isset($globalData['data'][$secondaryHomeRoomTeacher])) {
             $secondaryHomeroomData = $globalData['data'][$secondaryHomeRoomTeacher];
 
-            if (array_key_exists('_ids', $secondaryHomeroomData) && !empty($secondaryHomeroomData['_ids'])) { // For Classes add action
+            if (isset($secondaryHomeroomData['_ids']) && !empty($secondaryHomeroomData['_ids'])) { // For Classes add action
                 foreach ($secondaryHomeroomData['_ids'] as $secondaryStaffId) {
                     if ($homeRoomTeacher == $secondaryStaffId) {
                         return false;
                     }
                 }
-            } elseif (!array_key_exists('_ids', $secondaryHomeroomData) &&is_array($secondaryHomeroomData)) { // For Classes edit action
+            } elseif (!isset($secondaryHomeroomData['_ids']) &&is_array($secondaryHomeroomData)) { // For Classes edit action
                 foreach ($secondaryHomeroomData as $teacherObj) {
                     if ($homeRoomTeacher == $teacherObj['secondary_staff_id']) {
                         return false;
@@ -3445,7 +3447,7 @@ class ValidationBehavior extends Behavior
     public static function noStaffLeaveOverlapping($field, array $globalData)
     {
         $data = $globalData['data'];
-        
+
         $InstitutionStaffLeave = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
         $staffId = $data['staff_id'];
         $institutionId = $data['institution_id'];

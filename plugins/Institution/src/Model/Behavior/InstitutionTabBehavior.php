@@ -8,6 +8,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
 use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
 
 class InstitutionTabBehavior extends Behavior
 {
@@ -98,12 +99,18 @@ class InstitutionTabBehavior extends Behavior
         }else{
             $params['institution_id'] = $institutionID;
         }
-//        $params['id'] = $institutionID;
-        
+
         $queryString = $model->paramsEncode($params);
         if ($toolbarButtons->offsetExists('back')) {
-            $toolbarButtons['back']['url'][0] = 'index';
-            $toolbarButtons['back']['url'][1] = $queryString;
+            // POCOR-8496 Start Back to Dashboard from Dashboard
+            $referrer = $model->controller->referer();
+            if ($referrer == "/Dashboard") {
+                $toolbarButtons['back']['url'] = $referrer;
+            } else {
+                $toolbarButtons['back']['url'][0] = 'index';
+                $toolbarButtons['back']['url'][1] = $queryString;
+            }
+            // POCOR-8496 End
         }
         return $toolbarButtons;
     }
@@ -186,7 +193,7 @@ class InstitutionTabBehavior extends Behavior
         $institutionID = $this->getInstitutionID();
 
         $actions = ['view', 'edit'];
-        
+
         foreach ($actions as $action) {
             if (isset($buttons[$action])) {
                 $url = $buttons[$action]['url'];
@@ -364,7 +371,7 @@ class InstitutionTabBehavior extends Behavior
                     '1' => $queryStingWithoutID];
             }
         }
-        
+
         $tabElements = $maincontroller->TabPermission->checkTabPermission($tabElements);
         //die('<pre>' . print_r($tabElements, true));
 
@@ -397,14 +404,14 @@ class InstitutionTabBehavior extends Behavior
 
     public function getAcademicTabElements($options = [], $modelName = null)
     {
-        //$id = (array_key_exists('id', $options)) ? $options['id'] : 0;
+        //$id = (isset($options['id'])) ? $options['id'] : 0;
         $model = $this->_table;
-        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
+        $type = (isset($options['type'])) ? $options['type'] : null;
         //PCOOR-8388 starts
         if(!empty($modelName)){
             $pluginName = $modelName->getPlugin();
             $controllerName = $modelName->getName();
-            $studentID = $modelName->getStudentID('student_id'); 
+            $studentID = $modelName->getStudentID('student_id');
             $institutionID = $modelName->getQueryString('institution_id');
         } else {
             $maincontroller = $model->controller;
@@ -429,7 +436,7 @@ class InstitutionTabBehavior extends Behavior
         if(empty($curricular_label_Data->name)){
             $curricular_label_Data->name = "Institution Curriculars";
         }
-        
+
         $tabElements = [];
         $studentTabElements = [
             'Programmes' => ['text' => __('Programmes')],
@@ -468,7 +475,7 @@ class InstitutionTabBehavior extends Behavior
                         $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', '0' => 'index',
                     '1' => $queryString];
                     }
-                    
+
                     $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'type' => $type]);
                 } else {
                     if($controllerName == 'Profiles'){

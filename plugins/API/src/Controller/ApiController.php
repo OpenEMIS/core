@@ -11,16 +11,16 @@ use Cake\Utility\Exception\XmlException;
  * Previous API url: 'http://<CORE_WEBSITE_BASE_URL>/api/<APP_ID>/<APP_KEY>?<QUERIES_NAME_VALUE_PAIR_STRING>';
  * example: 'http://phpoev3.dev/api/1234/acd87adcas9d8cad?user_id=4536&ss_id=S286812264P';
  *
- * 
+ *
  * ===================================
  * Quandl.com API url implementations
  * ===================================
  * Version 1 API: 'https://www.quandl.com/api/v1/datasets/<DATA_SOURCE>/<DATA_CODE>.<DATA_OUTPUT_FORMAT>?<QUERIES_NAME_VALUE_PAIR_STRING>&auth_token=<YOUR_TOKEN_KEY>';
  * example: 'https://www.quandl.com/api/v1/datasets/WORLDBANK/WLD_TEA_MOMBASA.json?rows=1&auth_token=asf8asd76asdf7asdfasdc89a8sd';
- *  
+ *
  * Version 2 API: 'https://www.quandl.com/api/v2/datasets/<DATA_SOURCE>/<DATA_CODE>.<DATA_OUTPUT_FORMAT>?<QUERIES_NAME_VALUE_PAIR_STRING>&auth_token=<YOUR_TOKEN_KEY>';
  * example: 'https://www.quandl.com/api/v2/datasets/WORLDBANK/WLD_TEA_MOMBASA.json?rows=1&auth_token=asf8asd76asdf7asdfasdc89a8sd';
- *  
+ *
  *
  * =======================================================================================
  * Decided API url: 'http://<CORE_WEBSITE_BASE_URL>/api?<QUERIES_NAME_VALUE_PAIR_STRING>';
@@ -28,18 +28,18 @@ use Cake\Utility\Exception\XmlException;
  * External application access will be defined by a get NVP (name-value-pair) string:
  * 	@name: 	security_token
  * 	@value: as assigned in the api_authorizations table (security_token column)
- * 
+ *
  * API version will be defined by a get NVP string:
  * 	@name: 	version
  * 	@value: numerical value
  * If not defined, default version will be SISB.
  * If version does not exists, default version will be used instead.
- * 
+ *
  * Output format will be defined by a get NVP string:
  * 	@name: 	format
  * 	@value: one of these array values ['json', 'soap']
  * If not defined, default output format will be json string
- * 
+ *
  * example: 'http://phpoev3.dev/api?security_token=acd87adcas9d8cad&version=1&format=soap&user_id=4536&ss_id=S286812264P';
  *
  */
@@ -58,7 +58,7 @@ class ApiController extends AppController
 ** plugin gateway
 **
 ******************************************************************************************************************/
-	public function initialize() {
+	public function initialize(): void {
 		parent::initialize();
 
 		/**
@@ -73,12 +73,12 @@ class ApiController extends AppController
 		    'scopes' => ['api'],
 		    'file' => 'api_authorizations.log',
 		]);
-		
+
 		$message = 'Receives request from ' . $this->request->referer() . ' ( ' . $this->request->clientIp() . ' ) trying to access OpenEMIS system.';
 		Log::info($message, ['scope' => ['api']]);
 
-		$securityToken = $this->request->query('security_token');
-		if ($this->request->isGet() && !empty($this->request->query) && !empty($securityToken)) {
+		$securityToken = $this->request->getQuery('security_token');
+		if ($this->request->isGet() && !empty($this->request->getQuery()) && !empty($securityToken)) {
 			$this->ApiAuthorizations = TableRegistry::get('API.ApiAuthorizations');
 			$this->_externalApplication = $this->ApiAuthorizations->find()
 					->where([
@@ -130,21 +130,21 @@ class ApiController extends AppController
 
 		$format = 'json';
 		$debug = false;
-		if ($this->request->query) {
-			$params = $this->request->query;
+		if ($this->request->getQuery()) {
+			$params = $this->request->getQuery();
 
 			$versionFunction = $this->_versionFunctions[0];
-			if (array_key_exists('version', $params) && $params['version']!='') {
+			if (isset($params['version']) && $params['version']!='') {
 				if (array_key_exists($params['version'], $this->_versionFunctions)) {
 					$versionFunction = $this->_versionFunctions[$params['version']];
 				}
 			}
-			if (array_key_exists('format', $params) && $params['format']!='') {
+			if (isset($params['format']) && $params['format']!='') {
 				if (in_array($params['format'], $this->_allowableFormats)) {
 					$format = $params['format'];
 				}
 			}
-			if (array_key_exists('debug', $params) && $params['debug']!='' && $params['debug']) {
+			if (isset($params['debug']) && $params['debug']!='' && $params['debug']) {
 				$debug = true;
 			}
 
@@ -178,7 +178,7 @@ class ApiController extends AppController
 		}
 		return $this->response;
 	}
-	
+
 	private function buildXML($result) {
 		if (is_null($result['error']['code'])) {
 
@@ -221,7 +221,7 @@ class ApiController extends AppController
 									</soap:Text>
 								</soap:Reason>
 								<soap:Role>https://' . $this->request->host() . '/api</soap:Role>
-								
+
 							</soap:Fault>
 						</soap:Body>
 					</soap:Envelope>';

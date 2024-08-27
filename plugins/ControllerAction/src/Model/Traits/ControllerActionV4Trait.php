@@ -65,12 +65,12 @@ trait ControllerActionV4Trait {
 			if ($key == $this->orderField) {
 				$model->fields[$this->orderField]['visible'] = ['view' => false];
 			}
-			if (array_key_exists('options', $attr)) {
+			if (isset($attr['options'])) {
 				if (in_array($attr['type'], ['string', 'integer'])) {
 					$model->fields[$key]['type'] = 'select';
 				}
 				if (empty($attr['options']) && empty($attr['attr']['empty'])) {
-					if (!array_key_exists('empty', $attr)) {
+					if (!isset($attr['empty'])) {
 						$model->fields[$key]['attr']['empty'] = $this->Alert->getMessage('general.select.noOptions');
 					}
 				}
@@ -81,7 +81,7 @@ trait ControllerActionV4Trait {
                     $addSelect = false;
                 }
 
-				if (array_key_exists('select', $attr)) {
+				if (isset($attr['select'])) {
 					if ($attr['select'] === false) {
 						$addSelect = false;
 					} else {
@@ -105,14 +105,14 @@ trait ControllerActionV4Trait {
 			}
 
 			// make field sortable by default if it is a string data-type
-			if (!array_key_exists('type', $attr)) {
+			if (!isset($attr['type'])) {
 				pr('Please set a data type for ' . $key);
 			}
 
 			$sortableTypes = ['string', 'date', 'time', 'datetime'];
-			if (in_array($attr['type'], $sortableTypes) && !array_key_exists('sort', $attr) && $model->hasField($key)) {
+			if (in_array($attr['type'], $sortableTypes) && !isset($attr['sort']) && $model->hasField($key)) {
 				$model->fields[$key]['sort'] = true;
-			} else if ($attr['type'] == 'select' && !array_key_exists('options', $attr)) {
+			} else if ($attr['type'] == 'select' && !isset($attr['options'])) {
 				if ($model->isForeignKey($key)) {
 					$associatedObject = $model->getAssociatedModel($key);
 
@@ -160,7 +160,7 @@ trait ControllerActionV4Trait {
 				}
 			}
 
-			if (array_key_exists('onChangeReload', $attr)) {
+			if (isset($attr['onChangeReload'])) {
 
 				if (!array_key_exists('attr', $model->fields[$key])) {
 					$model->fields[$key]['attr'] = [];
@@ -184,16 +184,21 @@ trait ControllerActionV4Trait {
  		} else if (isset($a['order']) && !isset($b['order'])) {
  			return false;
  		} else {
- 			return $a["order"] - $b["order"];
- 		}
+			//POCOR-8488 starts
+ 			//return $a["order"] - $b["order"];
+			$aOrder = isset($a['order']) ? (int)$a['order'] : PHP_INT_MAX;
+			$bOrder = isset($b['order']) ? (int)$b['order'] : PHP_INT_MAX;
+			return $aOrder - $bOrder;
+			//POCOR-8488 ends
+		}
 	}
 
 	private function _validateOptions($options) {
-		if (!array_key_exists('alias', $options)) {
+		if (!isset($options['alias'])) {
 			pr('There is no alias set for ' . $this->request->getAttribute('action'));
 			die;
 		}
-		if (!array_key_exists('className', $options)) {
+		if (!isset($options['className'])) {
 			pr('There is no className set for ' . $this->request->getAttribute('action'));
 			die;
 		}

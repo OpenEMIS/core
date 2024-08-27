@@ -12,10 +12,10 @@ use DateTime;//POCOR-6328
 use Cake\I18n\Time;//POCOR-6328
 use Cake\Datasource\ConnectionManager;
 /**
- * 
+ *
  * This class is used to generate data from placeholders from from template
  * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
- * 
+ *
  */
 class ClassProfilesTable extends AppTable
 {
@@ -44,7 +44,7 @@ class ClassProfilesTable extends AppTable
                 'InstitutionCommittees',
                 'ReportStudentAssessmentSummary',//POCOR-6519
                 'InfrastructureRoomCustomFields',//POCOR-6519
-                'StudentDetails',//POCOR-7382 
+                'StudentDetails',//POCOR-7382
             ]
         ]);
     }
@@ -170,7 +170,7 @@ class ClassProfilesTable extends AppTable
 
     public function onExcelTemplateInitialiseProfiles(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('class_profile_template_id', $params)) {
+        if (isset($params['class_profile_template_id'])) {
             //$ProfileTemplates = TableRegistry::get('ProfileTemplate.ProfileTemplates');
             $ProfileTemplates = TableRegistry::get('ProfileTemplate.ClassTemplates');
             $entity = $ProfileTemplates->get($params['class_profile_template_id'], ['contain' => ['AcademicPeriods']]);
@@ -181,12 +181,12 @@ class ClassProfilesTable extends AppTable
             return $entity->toArray();
         }
     }
-    
+
     public function onExcelTemplateInitialiseInstitutions(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params)) {
+        if (isset($params['institution_id'])) {
             $Institutions = TableRegistry::get('Institution.Institutions');
-            $entity = $Institutions->get($params['institution_id'], ['contain' => ['AreaAdministratives', 'Types', 'Genders', 'Sectors', 'Providers','Ownerships','Areas','InstitutionLands']]); //POCOR-6328 
+            $entity = $Institutions->get($params['institution_id'], ['contain' => ['AreaAdministratives', 'Types', 'Genders', 'Sectors', 'Providers','Ownerships','Areas','InstitutionLands']]); //POCOR-6328
             $shift_types = [1=>'Single Shift Owner',
                             2=>'Single Shift Occupier',
                             3=>'Multiple Shift Owner',
@@ -199,7 +199,7 @@ class ClassProfilesTable extends AppTable
                     $entity->shift_type_name = $shift_types[$entity->shift_type];
                 }
             }//POCOR-6519 ends
-            $entity->date_opened = $entity->date_opened->format('Y-m-d');//POCOR-6328 
+            $entity->date_opened = $entity->date_opened->format('Y-m-d');//POCOR-6328
             return $entity;
         }
     }
@@ -235,10 +235,10 @@ class ClassProfilesTable extends AppTable
             return $staff;
         }
     }
-    
+
     public function onExcelTemplateInitialiseStaffPositions(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params)) {
+        if (isset($params['institution_id'])) {
             $StaffPositionTitles = TableRegistry::get('staff_position_titles');
             $entity = $StaffPositionTitles
                 ->find()
@@ -285,10 +285,10 @@ class ClassProfilesTable extends AppTable
             return $result;
         }
     }
-    
+
     public function onExcelTemplateInitialiseInstitutionCommittees(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $InstitutionCommittees = TableRegistry::get('institution_committees');
             $entity = $InstitutionCommittees
                 ->find()
@@ -299,8 +299,8 @@ class ClassProfilesTable extends AppTable
             ;
             return $entity;
         }
-    }   
-    
+    }
+
     /**
      * Create a placeholder to display institution data from this table report_student_assessment_summary
      * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
@@ -308,7 +308,7 @@ class ClassProfilesTable extends AppTable
      */
     public function onExcelTemplateInitialiseReportStudentAssessmentSummary(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $ReportStudentAssessmentSummary = TableRegistry::get('report_student_assessment_summary');
             $AssessmentSummaryData = $ReportStudentAssessmentSummary->find()
                 ->select([
@@ -331,10 +331,10 @@ class ClassProfilesTable extends AppTable
                 'period_weight' => $ReportStudentAssessmentSummary->aliasField('period_weight'),
                 'average_marks' => $ReportStudentAssessmentSummary->aliasField('average_mark')//POCOR-6708-alter column name as per table column average_mark
                 ])
-                ->where([$ReportStudentAssessmentSummary->aliasField('institution_id') => $params['institution_id']])    
-                ->where([$ReportStudentAssessmentSummary->aliasField('academic_period_id') => $params['academic_period_id']])    
+                ->where([$ReportStudentAssessmentSummary->aliasField('institution_id') => $params['institution_id']])
+                ->where([$ReportStudentAssessmentSummary->aliasField('academic_period_id') => $params['academic_period_id']])
                 ->enableHydration(false)
-                ->toArray(); 
+                ->toArray();
             $entity = [];
             if(empty($AssessmentSummaryData)){
                 return $entity;
@@ -373,7 +373,7 @@ class ClassProfilesTable extends AppTable
      */
     public function onExcelTemplateInitialiseInfrastructureRoomCustomFields(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+        if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $InstitutionRooms = TableRegistry::get('institution_rooms');
             $RoomTypes = TableRegistry::get('room_types');
             $RoomCustomFieldValues = TableRegistry::get('room_custom_field_values');
@@ -389,12 +389,12 @@ class ClassProfilesTable extends AppTable
                 ->LeftJoin([$RoomTypes->getAlias() => $RoomTypes->getTable()], [
                     $InstitutionRooms->aliasField('room_type_id') . '= ' . $RoomTypes->aliasField('id')
                 ])
-                ->where([$InstitutionRooms->aliasField('institution_id') => $params['institution_id']])    
-                ->where([$InstitutionRooms->aliasField('academic_period_id') => $params['academic_period_id']])  
+                ->where([$InstitutionRooms->aliasField('institution_id') => $params['institution_id']])
+                ->where([$InstitutionRooms->aliasField('academic_period_id') => $params['academic_period_id']])
                 ->enableHydration(false)
                 ->toArray()
                 ;
-            
+
             $entity = [];
             if(empty($InstitutionRoomsData)){
                 return $entity;
@@ -411,13 +411,13 @@ class ClassProfilesTable extends AppTable
                             $RoomCustomFieldValues->aliasField('infrastructure_custom_field_id') . '= ' . $InfrastructureCustomFields->aliasField('id')
                         ])
                         ->where([$RoomCustomFieldValues->aliasField('institution_room_id') => $e_val['id']])
-                        ->group([$RoomCustomFieldValues->aliasField('infrastructure_custom_field_id')]) 
+                        ->group([$RoomCustomFieldValues->aliasField('infrastructure_custom_field_id')])
                         ->enableHydration(false)
-                        ->toArray(); 
+                        ->toArray();
                 if(!empty($RoomCustomFieldValuesData)){
                     foreach ($RoomCustomFieldValuesData as $r_key => $r_val) {
-                        //get Custom fields Values by room _id and infrastructure_custom_field_id 
-                        $val_result = $this->getInfrastructureRoomCustomFieldValues($e_val['id'], $r_val['infrastructure_custom_field_id']);    
+                        //get Custom fields Values by room _id and infrastructure_custom_field_id
+                        $val_result = $this->getInfrastructureRoomCustomFieldValues($e_val['id'], $r_val['infrastructure_custom_field_id']);
                         $entity[$i] = [
                             'id' => $r_val['id'],
                             'code' => (!empty($e_val['code']) ? $e_val['code'] : ''),
@@ -429,7 +429,7 @@ class ClassProfilesTable extends AppTable
                             'custom_field_value' => $val_result
                         ];
                         $i++;
-                    }                     
+                    }
                 }else{
                     $entity[$i] = [
                         'id' => $e_val['id'],
@@ -444,7 +444,7 @@ class ClassProfilesTable extends AppTable
                     $i++;
                 }
             }
-            return $entity; 
+            return $entity;
         }
     }
     /**
@@ -493,7 +493,7 @@ class ClassProfilesTable extends AppTable
                                     ->toArray();
                         $check_num[] = $check_data[0]['name'];
                     }
-                    $checkbox = implode(',', $check_num);                    
+                    $checkbox = implode(',', $check_num);
                     $result['name'] = !empty($checkbox) ? $checkbox : '';
                 }else if($field_val[0]['field_type'] == 'TEXT'){
                     $result['name'] = !empty($field_val[0]['text_value']) ? $field_val[0]['text_value'] : ' ';
@@ -524,9 +524,9 @@ class ClassProfilesTable extends AppTable
                     }else{
                         $result['name'] = '';
                     }
-                } 
+                }
             }
-        }  
+        }
         return $result['name'];
     }//POCOR-6519 ends
 
@@ -538,8 +538,8 @@ class ClassProfilesTable extends AppTable
      */
     public function onExcelTemplateInitialiseStudentDetails(Event $event, array $params, ArrayObject $extra)
     {
-        ini_set("memory_limit", "1G"); 
-        if (array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('institution_class_id', $params)) {
+        ini_set("memory_limit", "1G");
+        if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['institution_class_id'])) {
             $connection = ConnectionManager::get('default');
             $StudentDetailData = $connection->execute("SELECT  education_grades.name AS 'Education Grade', institution_classes.name AS 'Class Name', IFNULL(CONCAT_WS(' ', homeroom_teacher.first_name, homeroom_teacher.middle_name, homeroom_teacher.third_name, homeroom_teacher.last_name), '') AS 'Homeroom Teacher', students.openemis_no AS 'OpenEMIS No', IFNULL(student_identities.identity_number, '') AS 'Default Identity Number', CONCAT_WS(' ', students.first_name, students.middle_name, students.third_name, students.last_name) AS 'Student Name', education_subjects.name AS 'Education Subject Name', get_avg_student_mark.average_mark AS 'Average Result', ROUND(AVG(institution_subject_students.total_mark),2) AS 'Individual Results', IFNULL(absence_info.days_absent, 0) AS 'Number of Days Absence'
                 FROM institution_subject_students
@@ -548,7 +548,7 @@ class ClassProfilesTable extends AppTable
                 INNER JOIN education_grades
                     ON education_grades.id = institution_subject_students.education_grade_id
                 INNER JOIN institution_classes
-                    ON institution_classes.id = institution_subject_students.institution_class_id 
+                    ON institution_classes.id = institution_subject_students.institution_class_id
                     AND institution_classes.institution_id = institutions.id
                 INNER JOIN education_subjects
                     ON education_subjects.id = institution_subject_students.education_subject_id
@@ -578,7 +578,7 @@ class ClassProfilesTable extends AppTable
                     GROUP BY  institution_subject_students.academic_period_id, institution_subject_students.institution_id, institution_subject_students.institution_class_id, institution_subject_students.education_grade_id, institution_subject_students.student_id
                 ) get_avg_student_mark
                 ON get_avg_student_mark.academic_period_id = institution_subject_students.academic_period_id AND get_avg_student_mark.institution_id = institution_subject_students.institution_id AND get_avg_student_mark.institution_class_id = institution_subject_students.institution_class_id AND get_avg_student_mark.education_grade_id = institution_subject_students.education_grade_id AND get_avg_student_mark.student_id = institution_subject_students.student_id
-                LEFT JOIN 
+                LEFT JOIN
                 (
                     SELECT academic_periods.id academic_period_id, institution_student_absence_days.institution_id, institution_student_absence_days.student_id
                         , SUM(institution_student_absence_days.absent_days) days_absent
@@ -597,7 +597,7 @@ class ClassProfilesTable extends AppTable
                     $result = [
                         'id' => $key,
                         'grade_name' => !empty($data['Education Grade']) ? $data['Education Grade'] : '',
-                        'openemis_no' => !empty($data['OpenEMIS No']) ? $data['OpenEMIS No'] : '',                    
+                        'openemis_no' => !empty($data['OpenEMIS No']) ? $data['OpenEMIS No'] : '',
                         'identity_number' => !empty($data['Default Identity Number']) ? $data['Default Identity Number'] : '',
                         'student_name' => $data['Student Name'],
                         'class_name' => !empty($data['Class Name']) ? $data['Class Name'] : '',

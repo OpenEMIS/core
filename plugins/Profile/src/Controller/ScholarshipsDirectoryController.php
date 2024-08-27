@@ -22,7 +22,7 @@ class ScholarshipsDirectoryController extends PageController
         $this->loadModel('Education.EducationFieldOfStudies');
         $this->loadModel('Configuration.ConfigItems');
         $this->loadComponent('Page.Page');//POCOR-7485
-        
+
         if ($this->Page !== null && $this->ScholarshipsDirectory !== null) {
             $this->Page->loadElementsFromTable($this->ScholarshipsDirectory);
         }
@@ -43,7 +43,7 @@ class ScholarshipsDirectoryController extends PageController
         return $event;
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
         parent::beforeFilter($event);
@@ -217,7 +217,7 @@ class ScholarshipsDirectoryController extends PageController
         }
     }
 
-    public function beforeRender(Event $event)
+    public function beforeRender(Event|\Cake\Event\EventInterface $event)
     {
 
         $this->viewBuilder()->addHelpers(['Html', 'Form', 'Paginator', 'Label', 'Url']);

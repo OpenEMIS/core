@@ -519,7 +519,7 @@ class InstitutionCasesTable extends ControllerActionTable
         if (!$workflowRuleResults->isEmpty()) {
             foreach ($workflowRuleResults as $workflowRuleEntity) {
                 $ruleArray = json_decode($workflowRuleEntity->rule, true);
-                if (array_key_exists('where', $ruleArray)) {
+                if (isset($ruleArray['where'])) {
                     $where = $ruleArray['where'];
                     $where['id'] = $recordId;
 

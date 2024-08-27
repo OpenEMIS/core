@@ -38,7 +38,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
         $this->belongsTo('AppraisalCriterias', [
             'className' => 'StaffAppraisal.AppraisalCriterias',
             'foreignKey' => [
-                'appraisal_form_id', 
+                'appraisal_form_id',
                 'appraisal_criteria_id'
             ]
         ]);
@@ -150,7 +150,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
     }
 
     private function evaluateScore($currentCriteria, ArrayObject $proccessedCriteriaScore)
-    {   
+    {
         $criteriaCountLink = count($currentCriteria->appraisal_forms_criterias_scores_links);
 
         if ($criteriaCountLink > 0) {
@@ -164,14 +164,14 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
                     //take the id and check with processed
                     if (isset($proccessedCriteriaScore[$childCriteriaLink->appraisal_criteria_id])) {
                         $totalScore += $proccessedCriteriaScore[$childCriteriaLink->appraisal_criteria_id];
-                    } 
+                    }
                 }
             }
 
             // Calculate score based on the criteria params.
-            if ($currentCriteria->has('params') && !empty($currentCriteria->params)) {                             
+            if ($currentCriteria->has('params') && !empty($currentCriteria->params)) {
                 $scoreEntityParams = json_decode($currentCriteria->params, true);
-                if (!is_null($scoreEntityParams) && array_key_exists('formula', $scoreEntityParams)) {
+                if (!is_null($scoreEntityParams) && isset($scoreEntityParams['formula'])) {
                     $formula = $scoreEntityParams['formula'];
                     switch ($formula) {
                         case self::FORMULA_AVG:
@@ -195,7 +195,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
     {
         $AppraisalScoreAnswers = TableRegistry::get('StaffAppraisal.AppraisalScoreAnswers');
         $data = [];
-        
+
         // Calculated all the score fields, time to save to DB
         foreach ($proccessedCriteriaScore as $criteriaScoreId => $answer) {
             $data[] = [
@@ -217,7 +217,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
 
     }
 
-    private function createAppraisalFormsCriteriasScoresRecord($requestData) 
+    private function createAppraisalFormsCriteriasScoresRecord($requestData)
     {
         $appraisalFormsCriteriasScores = TableRegistry::get('StaffAppraisal.AppraisalFormsCriteriasScores');
 
@@ -229,7 +229,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
             $actualDataToBeSave = [];
             foreach ($requestData['AppraisalForms']['appraisal_criterias'] as $appraisalFormCriteriasEntity) {
 
-                $criteriasFieldType = strtoupper($appraisalFormCriteriasEntity['_joinData']['field_type']);                
+                $criteriasFieldType = strtoupper($appraisalFormCriteriasEntity['_joinData']['field_type']);
 
                 switch ($criteriasFieldType) {
                     case self::FIELD_TYPE_SCORE:
@@ -284,7 +284,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
         $appraisalFormCriteriasFromRequestData = $requestData['AppraisalForms']['appraisal_criterias'];
         foreach ($appraisalFormCriteriasFromRequestData as $obj) {
             $criteriaIdFromRequestData[] = $obj['id'];
-        }        
+        }
 
         $result = array_diff($criteriaIdFromTable,$criteriaIdFromRequestData);
 

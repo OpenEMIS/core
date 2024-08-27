@@ -722,7 +722,7 @@ class StaffUserTable extends ControllerActionTable
             $staffCustomFormsFields = TableRegistry::get('StaffCustomField.StaffCustomFormsFields');
             //POCOR-8364
             //POCOR-6805 start
-            
+
             $guardianData = $Guardians->find()
                 ->select([
                     'id' => $Guardians->aliasField('id'),
@@ -1063,15 +1063,15 @@ class StaffUserTable extends ControllerActionTable
     {
         $query->where([$this->aliasField('super_admin') . ' <> ' => 1]);
 
-        $limit = (array_key_exists('limit', $options)) ? $options['limit'] : null;
-        $page = (array_key_exists('page', $options)) ? $options['page'] : null;
+        $limit = (isset($options['limit'])) ? $options['limit'] : null;
+        $page = (isset($options['page'])) ? $options['page'] : null;
 
         // conditions
-        $firstName = (array_key_exists('first_name', $options)) ? $options['first_name'] : null;
-        $lastName = (array_key_exists('last_name', $options)) ? $options['last_name'] : null;
-        $openemisNo = (array_key_exists('openemis_no', $options)) ? $options['openemis_no'] : null;
-        $identityNumber = (array_key_exists('identity_number', $options)) ? $options['identity_number'] : null;
-        $dateOfBirth = (array_key_exists('date_of_birth', $options)) ? $options['date_of_birth'] : null;
+        $firstName = (isset($options['first_name'])) ? $options['first_name'] : null;
+        $lastName = (isset($options['last_name'])) ? $options['last_name'] : null;
+        $openemisNo = (isset($options['openemis_no'])) ? $options['openemis_no'] : null;
+        $identityNumber = (isset($options['identity_number'])) ? $options['identity_number'] : null;
+        $dateOfBirth = (isset($options['date_of_birth'])) ? $options['date_of_birth'] : null;
 
         if (is_null($firstName) && is_null($lastName) && is_null($openemisNo) && is_null($identityNumber) && is_null($dateOfBirth)) {
             return $query->where(['1 = 0']);
@@ -1158,7 +1158,7 @@ class StaffUserTable extends ControllerActionTable
                 ->where([$users->aliasField('id') => $staffId ])->first();
         $StaffName = $data->first_name.' '.$data->middle_name.' '.$data->third_name.' '.$data->last_name;
         try {
-            
+
             $this->controller->set('contentHeader', $StaffName . ' - ' . 'Overview');
         } catch (RecordNotFoundException $e) {
             Log::write('error', $e->getMessage());

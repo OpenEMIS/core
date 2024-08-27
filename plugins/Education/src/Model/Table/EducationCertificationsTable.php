@@ -1,8 +1,9 @@
 <?php
 namespace Education\Model\Table;
-
+use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 
 class EducationCertificationsTable extends ControllerActionTable
 {
@@ -33,4 +34,33 @@ class EducationCertificationsTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    //POCOR-8495 --start
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        $errors = $entity->getErrors();
+        if (empty($errors)) {
+            $action = ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Certifications','view',$this->request->getParam('pass.1')];
+            return $this->controller->redirect($action);
+        } 
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+    //POCOR-8495 --start
 }

@@ -32,11 +32,11 @@ class AttachmentTypesTable extends ControllerActionTable
 
     public function findAvailableAttachmentTypes(Query $query, array $options)
     {
-        $applicantId = array_key_exists('applicant_id', $options) ? $options['applicant_id'] : null;
-        $scholarshipId = array_key_exists('scholarship_id', $options) ? $options['scholarship_id'] : null;
+        $applicantId = isset($options['applicant_id']) ? $options['applicant_id'] : null;
+        $scholarshipId = isset($options['scholarship_id']) ? $options['scholarship_id'] : null;
 
         $ApplicationAttachmentsTable = TableRegistry::get('Scholarship.ApplicationAttachments');
-        $existingAttachmentTypeIds = $ApplicationAttachmentsTable->find()      
+        $existingAttachmentTypeIds = $ApplicationAttachmentsTable->find()
             ->where([
                 $ApplicationAttachmentsTable->aliasField('applicant_id') => $applicantId,
                 $ApplicationAttachmentsTable->aliasField('scholarship_id') => $scholarshipId

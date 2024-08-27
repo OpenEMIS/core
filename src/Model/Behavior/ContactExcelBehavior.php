@@ -1,7 +1,7 @@
 <?php
 namespace App\Model\Behavior;
 
-use Cake\ORM\TableRegistry; 
+use Cake\ORM\TableRegistry;
 use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
@@ -36,7 +36,7 @@ class ContactExcelBehavior extends Behavior
     public function initialize(array $config): void
     {
         $this->getConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
-        if (!array_key_exists('filename', $config)) {
+        if (!isset($config['filename'])) {
             $this->setConfig('filename', $this->_table->getAlias());
         }
         $folder = WWW_ROOT . $this->getConfig('folder');
@@ -46,7 +46,7 @@ class ContactExcelBehavior extends Behavior
             mkdir($folder, 0777);
         } else {
             // $delete = true;
-            // if (array_key_exists('delete', $settings) &&  $settings['delete'] == false) {
+            // if (isset($settings['delete']) &&  $settings['delete'] == false) {
             //  $delete = false;
             // }
             // if ($delete) {
@@ -82,7 +82,7 @@ class ContactExcelBehavior extends Behavior
         $break = false;
         $action = $this->_table->action;
         $pass = $this->_table->request->getParam('pass');
-       
+
         if (in_array($action, $pass)) {
             unset($pass[array_search($action, $pass)]);
             $pass = array_values($pass);
@@ -114,7 +114,7 @@ class ContactExcelBehavior extends Behavior
 
         $writer = new XLSXWriter();
         $excel = $this;
-        
+
         $generate = function ($settings) {
             $this->generate($settings);
         };
@@ -172,7 +172,7 @@ class ContactExcelBehavior extends Behavior
 
             $footer = $this->getFooter();
             $query = $sheet['query'];
-            
+
             $this->dispatchEvent($table, $this->eventKey('onExcelBeforeQuery'), 'onExcelBeforeQuery', [$settings, $query], true);
             $sheetName = $sheet['name'];
 
@@ -196,9 +196,9 @@ class ContactExcelBehavior extends Behavior
             }
             $sheetNameArr[] = $sheetName;
             $baseSheetName = $sheetName;
-            
+
             // if the primary key of the record is given, only generate that record
-            if (array_key_exists('id', $settings)) {
+            if (isset($settings['id'])) {
                 $id = $settings['id'];
                 if ($id != 0) {
                     $primaryKey = $table->getPrimaryKey();
@@ -225,7 +225,7 @@ class ContactExcelBehavior extends Behavior
             $percentCount = intval($count / 100);
             $pages = ceil($count / $this->getConfig('limit'));
 
-            // Debugging 
+            // Debugging
             $pages = 1;
 
             if (isset($sheet['orientation'])) {
@@ -237,7 +237,7 @@ class ContactExcelBehavior extends Behavior
             } elseif ($count == 1) {
                 $this->getConfig('orientation', 'portrait');
             }
-            
+
             $this->dispatchEvent($table, $this->eventKey('onExcelStartSheet'), 'onExcelStartSheet', [$settings, $count], true);
             $this->onEvent($table, $this->eventKey('onExcelBeforeWrite'), 'onExcelBeforeWrite');
             if ($this->getConfig('orientation') == 'landscape') {
@@ -259,7 +259,7 @@ class ContactExcelBehavior extends Behavior
                     foreach ($fields as $index => $attr) {
                         $subjectsHeaderRow[$index] = "";
 
-                        if (array_key_exists('group', $attr)) {
+                        if (isset($attr['group'])) {
                             if ($groupName !== $attr['group']) {
                                 $groupStartingIndex = $index;
                                 $groupName = $attr['group'];
@@ -378,7 +378,7 @@ class ContactExcelBehavior extends Behavior
                 }
                 $rowCount++;
             }
-            
+
             $writer->writeSheetRow($sheetName, ['']);
             $writer->writeSheetRow($sheetName, $footer);
             $this->dispatchEvent($table, $this->eventKey('onExcelEndSheet'), 'onExcelEndSheet', [$settings, $rowCount], true);
@@ -447,7 +447,7 @@ class ContactExcelBehavior extends Behavior
     }
 
     private function getFooter()
-    {   
+    {
         $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
         $ConfigItem =   $ConfigItemTable
                             ->find()
@@ -458,14 +458,14 @@ class ContactExcelBehavior extends Behavior
                             //->first();
         foreach ($ConfigItem->toArray() as $value) {
             if (!empty($value['zonevalue'])) {
-                $timezone =  $value['zonevalue']; 
+                $timezone =  $value['zonevalue'];
                 date_default_timezone_set($timezone);
             }
             else{
-                date_default_timezone_set('Europe/London');  
+                date_default_timezone_set('Europe/London');
             }
-        }      
-                    
+        }
+
         $footer = [__("Report Generated") . ": "  . date("Y-m-d H:i:s")];
         return $footer;
     }
