@@ -12,6 +12,7 @@
         <label><?= __('Middle Name') ?></label>
         <input ng-model="selectedUserData.middle_name" ng-change="setName()" type="string">
     </div>
+
     <div class="input string">
         <label><?= __('Third Name') ?></label>
         <input ng-model="selectedUserData.third_name" ng-change="setName()" type="string">
@@ -30,7 +31,8 @@
     <div class="input select error required">
         <label><?= __('Gender') ?></label>
         <div class="input-select-wrapper">
-            <select name="Staff[gender_id]" id="staff-gender_id"
+            <select name="{{ addNewStudentConfig ? 'Student[gender_id]' : (addNewStaffConfig ? 'Staff[gender_id]' : 'User[gender_id]') }}"
+                    ng-attr-id="{{ addNewStudentConfig ? 'student-gender_id' : (addNewStaffConfig ? 'staff-gender_id' : 'User_gender_id') }}"
                     ng-options="option.id as option.name for option in genderOptions"
                     ng-model="selectedUserData.gender_id"
                     ng-change="changeGender()">
@@ -42,8 +44,10 @@
         </div>
     </div>
     <div class="input date required">
-        <label for="User_date_of_birth"><?= __('Date Of Birth') ?></label>
-        <div class="input-group date " id="User_date_of_birth" style="">
+        <label ng-attr-for="{{ addNewStudentConfig ? 'Student_date_of_birth' : (addNewStaffConfig ? 'Staff_date_of_birth' : 'User_date_of_birth') }}"><?= __('Date Of Birth') ?></label>
+        <div class="input-group date "
+             ng-attr-id="{{ addNewStudentConfig ? 'Student_date_of_birth' : (addNewStaffConfig ? 'Staff_date_of_birth' : 'User_date_of_birth') }}"
+             style="">
             <input type="text" class="form-control "
                    name="User[date_of_birth]"
                    ng-model="selectedUserData.date_of_birth"
