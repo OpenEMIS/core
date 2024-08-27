@@ -9,6 +9,7 @@ use Cake\Event\EventInterface;
 use Cake\Log\Log;
 use Cake\Http\ServerRequest;
 use ControllerAction\Model\Traits\EventTrait;
+use Cake\Utility\Text;
 
 class AddBehavior extends Behavior {
     use EventTrait;
@@ -86,32 +87,59 @@ class AddBehavior extends Behavior {
                         return $event->getResult();
                     }
                 }
-                $process = function ($model, $entity) {
-                    return $model->save($entity);
-                };
-                $event = $model->dispatchEvent('ControllerAction.Model.add.beforeSave', [$entity, $requestData, $extra], $this);
-                if ($event->isStopped()) {
-                    $mainEvent->stopPropagation();
-                    return $event->getResult();
+                //POCOR-8483[START] // major change for this ticket 
+                if($request->getAttribute('params')['action'] == 'reportCardGenerate'){
+                    if(isset($entity->assessment_id)){
+                        $process = function ($model, $entity) {
+                            return $model->save($entity);
+                        };
+                    }
+                    $event = $model->dispatchEvent('ControllerAction.Model.add.beforeSave', [$entity, $requestData, $extra], $this);
+                    if ($event->isStopped()) {
+                        $mainEvent->stopPropagation();
+                        return $event->getResult();
+                    }
+                    if (is_callable($event->getResult())) {
+                        $process = $event->getResult();
+                    }
+                    $event = $model->dispatchEvent('ControllerAction.Model.add.afterSave', [$entity, $requestData, $extra], $this);
+                    if ($event->isStopped()) {
+                        $mainEvent->stopPropagation();
+                        return $event->getResult();
+                    }
+                    if ($result && $extra['redirect'] !== false) {
+                        $mainEvent->stopPropagation();
+                        return $model->controller->redirect($extra['redirect']);
+                    }
+                }else{
+                    $process = function ($model, $entity) {
+                        return $model->save($entity);
+                    };
+                    $event = $model->dispatchEvent('ControllerAction.Model.add.beforeSave', [$entity, $requestData, $extra], $this);
+                    if ($event->isStopped()) {
+                        $mainEvent->stopPropagation();
+                        return $event->getResult();
+                    }
+                    if (is_callable($event->getResult())) {
+                        $process = $event->getResult();
+                    }
+                    $result = $process($model, $entity);
+                    if (!$result) {
+                        $errors = $entity->getErrors();
+                        $errorString = json_encode($errors);
+                        Log::write('debug', $errorString);
+                    }
+                    $event = $model->dispatchEvent('ControllerAction.Model.add.afterSave', [$entity, $requestData, $extra], $this);
+                    if ($event->isStopped()) {
+                        $mainEvent->stopPropagation();
+                        return $event->getResult();
+                    }
+                    if ($result && $extra['redirect'] !== false) {
+                        $mainEvent->stopPropagation();
+                        return $model->controller->redirect($extra['redirect']);
+                    }
                 }
-                if (is_callable($event->getResult())) {
-                    $process = $event->getResult();
-                }
-                $result = $process($model, $entity);
-                if (!$result) {
-                    $errors = $entity->getErrors();
-                    $errorString = json_encode($errors);
-                    Log::write('debug', $errorString);
-                }
-                $event = $model->dispatchEvent('ControllerAction.Model.add.afterSave', [$entity, $requestData, $extra], $this);
-                if ($event->isStopped()) {
-                    $mainEvent->stopPropagation();
-                    return $event->getResult();
-                }
-                if ($result && $extra['redirect'] !== false) {
-                    $mainEvent->stopPropagation();
-                    return $model->controller->redirect($extra['redirect']);
-                }
+                 //POCOR-8483[END]
             } else {
                 $patchOptions['validate'] = false;
                 $methodKey = 'on' . ucfirst($submit);
