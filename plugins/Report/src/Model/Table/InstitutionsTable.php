@@ -968,8 +968,10 @@ class InstitutionsTable extends AppTable
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
 
-        if (isset($this->request->getData($this->getAlias())['feature'])) {
-            $feature = $this->request->getData($this->getAlias())['feature'];
+        $alias = $this->getAlias();
+        $data = $request->getData($alias);
+        if (isset($data['feature'])) {
+            $feature = $data['feature'];
 
             if ((in_array($feature,
                     ['Report.InstitutionStudents',
@@ -1015,7 +1017,7 @@ class InstitutionsTable extends AppTable
 
 
                     ]
-                )) || (((in_array($feature, ['Report.Institutions']) || in_array($feature, ['Report.StaffBehaviours'])) && !empty($this->request->getData($this->getAlias())['institution_filter']) && $this->request->getData($this->getAlias())['institution_filter'] == self::NO_STUDENT))) {
+                )) || (((in_array($feature, ['Report.Institutions']) || in_array($feature, ['Report.StaffBehaviours'])) && !empty($data['institution_filter']) && $data['institution_filter'] == self::NO_STUDENT))) {
 
                 $AcademicPeriodTable = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
@@ -1028,8 +1030,10 @@ class InstitutionsTable extends AppTable
                 }
                 $attr['select'] = false;
                 $attr['onChangeReload'] = true;
-                if (empty($this->request->getData($this->getAlias())['academic_period_id'])) {
-                    $this->request->getData($this->getAlias())['academic_period_id'] = $currentPeriod;
+                if (empty($data['academic_period_id'])) {
+                    $request = $request->withData('academic_period_id', $currentPeriod);
+                    $request = $request->withData('institution_id', -1);
+                    $request = $request->withData('education_level_id', -1);
                 }
                 return $attr;
             }
@@ -1039,8 +1043,11 @@ class InstitutionsTable extends AppTable
 
     public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($this->request->getData($this->getAlias())['feature'])) {
-            $feature = $this->request->getData($this->getAlias())['feature'];
+        $alias = $this->getAlias();
+        $data = $request->getData($alias);
+
+        if (isset($data['feature'])) {
+            $feature = $data['feature'];
 
             if ((in_array($feature, ['Report.Institutions',
                 'Report.InstitutionAssociations',
@@ -1104,9 +1111,11 @@ class InstitutionsTable extends AppTable
 
     public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($this->request->getData($this->getAlias())['feature'])) {
-            $feature = $this->request->getData($this->getAlias())['feature'];
-            $areaLevelId = $this->request->getData($this->getAlias())['area_level_id'];//POCOR-6333
+        $alias = $this->getAlias();
+        $data = $request->getData($alias);
+        if (isset($data['feature'])) {
+            $feature = $data['feature'];
+            $areaLevelId = $data['area_level_id'];//POCOR-6333
             if ((in_array($feature,
                 [
                     'Report.Institutions',
@@ -1176,37 +1185,39 @@ class InstitutionsTable extends AppTable
 
     public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($this->request->getData($this->getAlias())['feature'])) {
-            $feature = $this->request->getData($this->getAlias())['feature'];
-            $institutionId = $this->request->getData($this->getAlias())['institution_id'];
-            $educationlevelId = $this->request->getData($this->getAlias())['education_level_id'];
+        $alias = $this->getAlias();
+        $data = $request->getData($alias);
+        $feature = $data['feature'];
+        if (isset($feature)) {
             if (in_array($feature,
                 [
                     'Report.InstitutionStudents',
                     'Report.InstitutionSubjects'
                 ])
             ) {
+                $AcademicPeriodTable = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
+                $currentAcademicPeriodID = $AcademicPeriodTable->getCurrent();
 
-                $academicPeriodId = $this->request->getData($this->getAlias())['academic_period_id'];
+                $institutionId = $data['institution_id'] > 0 ? $data['institution_id'] : -1;
+                $educationLevelId = $data['education_level_id'] > 0 ? $data['education_level_id'] : -1;
+                $academicPeriodId = $data['academic_period_id'] > 0 ? $data['academic_period_id'] : $currentAcademicPeriodID;
                 $EducationProgrammes = self::getDynamicTableInstance('Education.EducationProgrammes');
                 /*POCOR-6337 starts*/
                 $EducationGrades = self::getDynamicTableInstance('Education.EducationGrades');
-                $EducationCycles = self::getDynamicTableInstance('Education.EducationCycles');
-                $EducationLevel = self::getDynamicTableInstance('Education.EducationLevels');
                 $InstitutionGrades = self::getDynamicTableInstance('Institution.InstitutionGrades');
                 $condition = [];
                 if ($feature == 'Report.InstitutionSubjects') {
-                    if ($institutionId != 0) {
+                    if ( $institutionId > 0) {
                         $condition[$InstitutionGrades->aliasField('institution_id')] = $institutionId;
                     }
                 }
                 if ($feature == 'Report.InstitutionStudents') {
-                    if ($educationlevelId != 0) {
-                        $condition['EducationCycles.education_level_id'] = $educationlevelId;
+                    if ($educationLevelId > 0) {
+                        $condition['EducationCycles.education_level_id'] = $educationLevelId;
                     }
                 }
                 /*POCOR-6337 ends*/
-                $programmeOptions = $EducationProgrammes
+                $programmeOptionsQuery = $EducationProgrammes
                     ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
                     ->find('visible')
                     ->contain(['EducationCycles.EducationLevels.EducationSystems'])
@@ -1219,25 +1230,30 @@ class InstitutionsTable extends AppTable
                     ])
                     /*POCOR-6337 ends*/
                     ->where([
-                        'EducationSystems.academic_period_id' => $academicPeriodId,
+                        'EducationSystems.academic_period_id = ' . $academicPeriodId,
                         $condition //POCOR-6337
                     ])
                     ->order([
                         'EducationCycles.order' => 'ASC',
                         $EducationProgrammes->aliasField('order') => 'ASC'
-                    ])
-                    ->toArray();
+                    ]);
 
+                $programmeOptions = $programmeOptionsQuery->toArray();
                 $attr['type'] = 'select';
                 $attr['select'] = false;
                 /*POCOR-6337 starts*/
-                if (count($programmeOptions) > 1) {
+                if (!empty ($programmeOptions) && count($programmeOptions) > 1) {
                     $attr['options'] = ['' => '-- ' . __('Select') . ' --', 0 => __('All Programmes')] + $programmeOptions;
+                    if (!isset($data['education_programme_id'])) {
+                        $attr['attr']['value'] = 0;
+                    }
                 } else {
                     $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $programmeOptions;
+                    $attr['default'] = 1;
                 }
                 /*POCOR-6337 starts*/
                 $attr['onChangeReload'] = true;
+
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
@@ -2199,7 +2215,7 @@ class InstitutionsTable extends AppTable
                 if ($feature == 'Report.InstitutionSubjects') {
                     $educationProgrammeid =  $data['education_programme_id'];
 
-                    if ($educationProgrammeid == 0) {
+                    if (!$educationProgrammeid || $educationProgrammeid == 0) {
                         $attr['options'] = ['' => __('All Subjects')] + $subjectOptions;
                     } else {
                         $where = [];
@@ -2248,7 +2264,7 @@ class InstitutionsTable extends AppTable
                         $attr['options'] = $filteredSubjectOptions;
                     }
                 } else {
-                    $attr['options'] = $typeOptions;
+                    $attr['options'] = $subjectOptions;
                 }
             } else {
                 $attr['value'] = self::NO_FILTER;
