@@ -196,7 +196,8 @@ class InstitutionsTable extends ControllerActionTable
         // POCOR-8219 added
         $advancedSearchFieldOrder = [
             'code', 'name', 'classification', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id',
-            'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'education_programmes', 'alternative_name', 'shift_type'
+            'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id',
+            'education_systems', 'education_levels', 'education_programmes', 'alternative_name', 'shift_type'
         ];
 
         $this->addBehavior('AdvanceSearch', [
