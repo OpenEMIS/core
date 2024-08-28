@@ -590,7 +590,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                 // using institution_staff entity
                 $conditions = [];
                 $conditions[$this->NewInstitutions->aliasField('id <>')] = $entity->institution_id;
-                
+
                 $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
                 $Institutions = TableRegistry::get('Institution.Institutions');
 
@@ -601,7 +601,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                         $institutionId = $entity->institution_id;
 
                         $institutionTypeId = $Institutions->get($institutionId)->institution_type_id;
-                        
+
                         $conditions['institution_type_id'] = $institutionTypeId;
                     }
                 }
@@ -613,7 +613,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                     if ($entity->has('institution_id')) {
                         $institutionId = $entity->institution_id;
                         $institutionProviderId = $Institutions->get($institutionId)->institution_provider_id;
-                        
+
                         $conditions['institution_provider_id'] = $institutionProviderId;
                     }
                 }
@@ -782,7 +782,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     //POCOR-6925
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if ($action == 'add' || $action == 'edit') {
+        if ($action == 'add' || $action == 'edit' || $action == 'approve') {
             $workflowModel = 'Institutions > Staff Transfer > Sending';
             $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
             $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
@@ -821,7 +821,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                     $Areas = TableRegistry::get('Area.Areas');
                     $Institutions = TableRegistry::get('Institution.Institutions');
                     if ($isSchoolBased) {
-                        if (is_null($institutionId)) {                        
+                        if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
                         } else {
                             $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
@@ -837,12 +837,12 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
                                     ->find('userList', ['where' => $where])
                                     ->leftJoinWith('SecurityGroups.Institutions');
                             $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
-                            
+
                             // Region based assignee
                             $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                             $regionBasedAssigneeQuery = $SecurityGroupUsers
                                         ->find('UserList', ['where' => $where, 'area' => $areaObj]);
-                            
+
                             $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
                             // End
                             $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
