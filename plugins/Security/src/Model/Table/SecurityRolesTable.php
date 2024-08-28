@@ -27,11 +27,12 @@ class SecurityRolesTable extends ControllerActionTable
         parent::initialize($config);
         $this->belongsTo('SecurityGroups', ['className' => 'Security.UserGroups']);
 
-        $this->belongsToMany('SecurityFunctions', [
-            'className' => 'Security.SecurityFunctions',
-            'through' => 'Security.SecurityRoleFunctions',
-            'saveStrategy' => 'append'
-        ]);
+        // POCOR-8464 when we edit permission and save then its loading very long
+        // $this->belongsToMany('SecurityFunctions', [
+        //     'className' => 'Security.SecurityFunctions',
+        //     'through' => 'Security.SecurityRoleFunctions',
+        //     'saveStrategy' => 'append'
+        // ]);
 
         $this->belongsToMany('GroupUsers', [
             'className' => 'Security.UserGroups',
@@ -65,7 +66,33 @@ class SecurityRolesTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
+        //POCOR-8464 start
+        $securityFunctionData = $entity['security_functions'];
+        $securityRoleId = $entity['id'];
+        $securityRoleFunctionsTable = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        $values = [];
+        
+        foreach ($securityFunctionData as $function) {
+            $data = [
+                'security_role_id' => $securityRoleId,
+                'security_function_id' => $function['id'],
+                '_view' => $function['_joinData']['_view'],
+                '_add' => $function['_joinData']['_add'],
+                '_edit' => $function['_joinData']['_edit'],
+                '_delete' =>$function['_joinData']['_delete'],
+                '_execute' => $function['_joinData']['_execute'],
+            ];
+        
+            // Create a new entity and add it to the list
+            $newEntity = $securityRoleFunctionsTable->newEntity($data);
+            $entitiesToSave[] = $newEntity;
+        }
 
+        // Save all new entities at once
+        if (!empty($entitiesToSave)) {
+            $securityRoleFunctionsTable->saveMany($entitiesToSave);
+        }
+        //POCOR-8464 end
         // webhook create role starts
          if($entity->isNew()) {
 
@@ -100,9 +127,6 @@ class SecurityRolesTable extends ControllerActionTable
         }
 
         // webhook update role ends
-
-
-
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
@@ -137,8 +161,7 @@ class SecurityRolesTable extends ControllerActionTable
         return $validator;
     }
 
-    //POCOR-8464 Old Function
-    /*public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         foreach ($data as $key => $value) {
             if (is_string($value)) {
@@ -156,39 +179,8 @@ class SecurityRolesTable extends ControllerActionTable
                 }
             }
         }
-    }*/
-    
-    //POCOR-8464 New Function
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
-    {
-        // Trim all string values in the data array
-        array_walk($data, function (&$value) {
-            if (is_string($value)) {
-                $value = trim($value);
-            }
-        });
-
-        // Check if 'security_functions' exists and decode it
-        if ($data->offsetExists('security_functions')) {
-            $decoded = $this->urlsafeB64Decode($data['security_functions']);
-            
-            if ($decoded) {
-                $securityFunctions = json_decode($decoded, true);
-                
-                if (json_last_error() === JSON_ERROR_NONE) {
-                    // Update '_joinData' in each security function
-                    foreach ($securityFunctions as &$function) {
-                        array_walk($function['_joinData'], function (&$var) {
-                            $var = $var ?? 0;  // Replace null values with 0
-                        });
-                    }
-
-                    // Set the updated security functions back to the data array
-                    $data['security_functions'] = $securityFunctions;
-                }
-            }
-        }
     }
+    
 
     public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel, ArrayObject $extra)
     {
