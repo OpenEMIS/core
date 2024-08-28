@@ -782,7 +782,7 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
     //POCOR-6925
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if ($action == 'add' || $action == 'edit' || $action == 'approve') {
+        if ($action == 'add' || $action == 'edit' || $action == 'approve') { // POCOR-8532
             $workflowModel = 'Institutions > Staff Transfer > Sending';
             $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
             $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
