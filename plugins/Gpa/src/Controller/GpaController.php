@@ -60,7 +60,7 @@ class GpaController extends AppController
         $tabElements = [
             'Gpa' => [
                 'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'GpaSystem'],
-                'text' => __('Gpa')
+                'text' => __('GPA')
             ],
             'Cumulative' => [
                 'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Cumulative'],

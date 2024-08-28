@@ -8166,11 +8166,11 @@ class InstitutionsController extends AppController
         $tabElements = [
             'ReportCardGpa' => [
                 'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'ReportCardGpa', 0 => 'index', 1 => $encodedQueryString],
-                'text' => __('Gpa')
+                'text' => __('GPA')
             ],
             'ReportCardCumulativeGpa' => [
                 'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'ReportCardCumulativeGpa', 0 => 'index', 1 => $encodedQueryString],
-                'text' => __('Cumulative Gpa')
+                'text' => __('Cumulative GPA')
             ],
             
         ];

@@ -1396,6 +1396,7 @@ class NavigationComponent extends Component
                     'Students.Behaviours.index',
                     //POCOR-7474-HINDOL TYPO FIX
                     'Students.Assessments.index',
+                    'Students.StudentGpa.index',
                     'Students.AssessmentsArchived.index',
                     'Students.ExaminationResults.index',
                     'Students.ReportCards.index',

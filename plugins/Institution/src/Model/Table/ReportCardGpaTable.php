@@ -12,10 +12,10 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\ResultSet;
 use Cake\Event\Event;
 use Cake\I18n\Time;
-use Cake\I18n\Date;//POCOR-6841
+use Cake\I18n\Date;
 use Cake\Log\Log;
 use Cake\I18n\FrozenTime;
-use Cake\Datasource\ConnectionManager; //POCOR-6785
+use Cake\Datasource\ConnectionManager; 
 use App\Model\Table\ControllerActionTable;
 
 class ReportCardGpaTable extends ControllerActionTable
@@ -28,6 +28,9 @@ class ReportCardGpaTable extends ControllerActionTable
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('Institutions', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
+        
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
@@ -54,6 +57,18 @@ class ReportCardGpaTable extends ControllerActionTable
         if (is_null($reportCardId)) {
             return $buttons;
         }
+        $queryString = $this->getQueryString();
+        if (isset($buttons['view'])) {
+            $institutionId = $entity->institution_class->institution_id;
+            $url = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'ReportCardGpa',
+                'view',
+                $this->paramsEncode(['id' => $entity->id,'institution_id' => $queryString['institution_id'],'student_id'=> $entity->student_id]),
+            ];
+        }
+        
         $reportExists = $this->ReportCards->exists([$this->ReportCards->getPrimaryKey() => $reportCardId]);
         if (!$reportExists) {
             return $buttons;
@@ -68,10 +83,9 @@ class ReportCardGpaTable extends ControllerActionTable
         ];
         
         $params['institution_class_id'] = $entity->institution_class_id;
-
+        $buttons['view']['url'] = $url;
         // Generate button, all statuses
         $buttons = $this->addGenerateButton($buttons, $params);
-
         return $buttons;
     }
 
@@ -128,7 +142,7 @@ class ReportCardGpaTable extends ControllerActionTable
         // Class filter
         $classOptions = [];
         $selectedClass = !is_null($this->request->getQuery('class_id')) ? $this->request->getQuery('class_id') : -1;
-        $educationGradeByReportCardId = '';//POCOR-7212
+        $educationGradeByReportCardId = '';
         if ($selectedReportCard != -1) {
             $reportCardEntity = $this->ReportCards->find()->where(['id' => $selectedReportCard])->first();
             if (!empty($reportCardEntity)) {
@@ -141,9 +155,9 @@ class ReportCardGpaTable extends ControllerActionTable
                     ])
                     ->order([$Classes->aliasField('name')])
                     ->toArray();
-                $educationGradeByReportCardId = $reportCardEntity->education_grade_id;//POCOR-7212
+                $educationGradeByReportCardId = $reportCardEntity->education_grade_id;
             } else {
-                // if selected report card is not valid, do not show any students
+                
                 $selectedClass = -1;
             }
         }
@@ -155,32 +169,32 @@ class ReportCardGpaTable extends ControllerActionTable
         $classOptions = ['-1' => '-- ' . __('Select Class') . ' --'] + $classOptions;
         $this->controller->set(compact('classOptions', 'selectedClass'));
         $where[$this->aliasField('institution_class_id')] = $selectedClass;
-        $where[$this->aliasField('institution_id')] = $institutionId; //POCOR-6817
-        $where[$this->aliasField('student_status_id NOT IN')] = 3; //POCOR-6817
-        //POCOR-7212 starts
+        $where[$this->aliasField('institution_id')] = $institutionId; 
+        $where[$this->aliasField('student_status_id NOT IN')] = 3; 
         if (!empty($educationGradeByReportCardId)) {
             $where[$this->aliasField('education_grade_id')] = $educationGradeByReportCardId;
-        }//POCOR-7212 ends
+        }
         //End
         $UsersTable = TableRegistry::get('Security.Users');
         $query
             ->select([
+                'id' => $this->aliasField('id'),
                 'institution_class_id' => $this->aliasField('institution_class_id'),
                 'education_grade_id' => $this->aliasField('education_grade_id'),
                 'academic_period_id' => $this->aliasField('academic_period_id'),
                 'student_id' => $UsersTable->aliasField('id'),
                 'student_name' => $UsersTable->find()->func()->concat([
-                    $UsersTable->aliasfield('first_name') => 'literal',
-                    "  ",
-                    $UsersTable->aliasfield('last_name') => 'literal']),
+                    $UsersTable->aliasField('first_name') => 'literal',
+                    ' ',
+                    $UsersTable->aliasField('last_name') => 'literal'
+                ]),
                 'openemis_no' => $UsersTable->aliasField('openemis_no'),
-                
             ])
-            ->innerJoin([$UsersTable->getAlias() => $UsersTable->getTable()], [
-                        $UsersTable->aliasField('id = ') . $this->aliasField('student_id')])
-            
-            ->where($where)
-            ->all();
+            ->innerJoin(
+                [$UsersTable->getAlias() => $UsersTable->getTable()],
+                [$UsersTable->aliasField('id') . ' = ' . $this->aliasField('student_id')]
+            )
+            ->where($where);
 
         if (is_null($this->request->getQuery('sort'))) {
             $query
@@ -233,8 +247,6 @@ class ReportCardGpaTable extends ControllerActionTable
                         if ($student->has('report_card_status')) {
                             if ($student->report_card_status == self::GENERATED) {
                                 $generatedCount += 1;
-                            } else if ($student->report_card_status == self::PUBLISHED) {
-                                $publishedCount += 1;
                             }
                         }
                     }
@@ -258,94 +270,7 @@ class ReportCardGpaTable extends ControllerActionTable
                         ->where([
                             $SecurityFunctions->aliasField('name') => 'Generate All'])
                         ->first();
-
-                    $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
-                    $SecurityRoleFunctionsTableGenerateAllData = $SecurityRoleFunctionsTable
-                        ->find()
-                        ->where([
-                            $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsGenerateAllData->id,
-                            //$SecurityRoleFunctionsTable->aliasField('_execute') => 1,/
-                        ])
-                        ->count();
-                    // Start POCOR-7320
-                    $SecurityFunctionsMergeGenerateAllData = $SecurityFunctions
-                        ->find()
-                        ->where([
-                            $SecurityFunctions->aliasField('name') => 'Merge and Download PDF'])
-                        ->first();
-
-                    $SecurityRoleFunctionsTableMergeGenerateAllData = $SecurityRoleFunctionsTable
-                        ->find()
-                        ->where([
-                            $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsMergeGenerateAllData->id,
-                            //$SecurityRoleFunctionsTable->aliasField('_execute') => 1,/
-                        ])
-                        ->count();
-
-                        if (($dataCount == $generatedCount) && ($generatedCount > 0 || $publishedCount > 0)) { //POCOR-8300
-                        if ($this->AccessControl->isAdmin()) {
-                            $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
-                            $downloadButtonPdf['type'] = 'button';
-                            $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
-                            $downloadButtonPdf['attr'] = $toolbarAttr;
-                            $downloadButtonPdf['attr']['title'] = __('Merge and Download PDF');
-                            $downloadButtonPdf['attr']['target'] = '_blank';
-                            $extra['toolbarButtons']['mergeAnddownloadAllPdf'] = $downloadButtonPdf;
-                        } else {
-                            if ($SecurityRoleFunctionsTableMergeGenerateAllData >= 1) {
-                                $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
-                                $downloadButtonPdf['type'] = 'button';
-                                $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
-                                $downloadButtonPdf['attr'] = $toolbarAttr;
-                                $downloadButtonPdf['attr']['title'] = __('Merge and Download PDF');
-                                $downloadButtonPdf['attr']['target'] = '_blank';
-                                $extra['toolbarButtons']['mergeAnddownloadAllPdf'] = $downloadButtonPdf;
-                            }
-                        }
-                    }
-                    // End POCOR-7320
-                    // Download all button
-                    if ($generatedCount > 0 || $publishedCount > 0) {
-                        if ($this->AccessControl->isAdmin()) {
-                            $downloadButtonPdf['url'] = $this->setQueryString($this->url('downloadAllPdf'), $params);
-                            $downloadButtonPdf['type'] = 'button';
-                            $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
-                            $downloadButtonPdf['attr'] = $toolbarAttr;
-                            $downloadButtonPdf['attr']['title'] = __('Download All PDF');
-                            $extra['toolbarButtons']['downloadAllPdf'] = $downloadButtonPdf;
-                        } else {
-                            if ($SecurityRoleFunctionsTableAllPdfData >= 1) {
-                                $downloadButtonPdf['url'] = $this->setQueryString($this->url('downloadAllPdf'), $params);
-                                $downloadButtonPdf['type'] = 'button';
-                                $downloadButtonPdf['label'] = '<i class="fa kd-download"></i>';
-                                $downloadButtonPdf['attr'] = $toolbarAttr;
-                                $downloadButtonPdf['attr']['title'] = __('Download All PDF');
-                                $extra['toolbarButtons']['downloadAllPdf'] = $downloadButtonPdf;
-                            }
-                        }
-                    }
-                    if ($generatedCount > 0 || $publishedCount > 0) {
-                        if ($this->AccessControl->isAdmin()) {
-                            $downloadButton['url'] = $this->setQueryString($this->url('downloadAll'), $params);
-                            $downloadButton['type'] = 'button';
-                            $downloadButton['label'] = '<i class="fa kd-download"></i>';
-                            $downloadButton['attr'] = $toolbarAttr;
-                            $downloadButton['attr']['title'] = __('Download All Excel');
-                            $extra['toolbarButtons']['downloadAll'] = $downloadButton;
-                        } else {
-                            //POCOR-7656 start
-                            $ExcludedSecurityRoleEntity = $this->canGenerateAnyDate($reportCardId);  //POCOR-7551
-                            //POCOR-7656 end
-                            if (($SecurityRoleFunctionsTableAllExcelData >= 1) || ($ExcludedSecurityRoleEntity == 1)) {
-                                $downloadButton['url'] = $this->setQueryString($this->url('downloadAll'), $params);
-                                $downloadButton['type'] = 'button';
-                                $downloadButton['label'] = '<i class="fa kd-download"></i>';
-                                $downloadButton['attr'] = $toolbarAttr;
-                                $downloadButton['attr']['title'] = __('Download All Excel');
-                                $extra['toolbarButtons']['downloadAll'] = $downloadButton;
-                            }
-                        }
-                    }
+                    
                     // Generate all button
                     $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
                     $generateButton['type'] = 'button';
@@ -357,25 +282,9 @@ class ReportCardGpaTable extends ControllerActionTable
                         $reportCardId = $this->request->getQuery('report_card_id');
                     }
 
-                    $ReportCardsData = $this->ReportCards
-                        ->find()
-                        ->where([
-                            $this->ReportCards->aliasField('id') => $reportCardId])
-                        ->first();
-
-                    if (!empty($ReportCardsData->generate_start_date)) {
-                        $generateStartDate = $ReportCardsData->generate_start_date->format('Y-m-d');
-                    }
-
-                    if (!empty($ReportCardsData->generate_end_date)) {
-                        $generateEndDate = $ReportCardsData->generate_end_date->format('Y-m-d');
-                    }
-                    $date = Time::now()->format('Y-m-d');
 
                     if ($this->AccessControl->isAdmin()) {
-                        // if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {
-                        // This condition is removed for allowing admin to generate report cards even if it is not within generate start and end date
-                        if (!empty($generateStartDate) && !empty($generateEndDate)) {//POCOR-7761
+                        if (!empty($generateStartDate) && !empty($generateEndDate)) {
                             $extra['toolbarButtons']['generateAll'] = $generateButton;
                         } else {
                             $generateButton['attr']['data-html'] = true;
@@ -396,202 +305,13 @@ class ReportCardGpaTable extends ControllerActionTable
                         }
                     }
 
-                    // Publish all button
-                    if ($generatedCount > 0) {
-                        $publishButton['url'] = $this->setQueryString($this->url('publishAll'), $params);
-                        $publishButton['type'] = 'button';
-                        $publishButton['label'] = '<i class="fa kd-publish"></i>';
-                        $publishButton['attr'] = $toolbarAttr;
-                        $publishButton['attr']['title'] = __('Publish All');
-                        $extra['toolbarButtons']['publishAll'] = $publishButton;
-                    }
-                    // Unpublish all button
-                    if ($publishedCount > 0) {
-                        $unpublishButton['url'] = $this->setQueryString($this->url('unpublishAll'), $params);
-                        $unpublishButton['type'] = 'button';
-                        $unpublishButton['label'] = '<i class="fa kd-unpublish"></i>';
-                        $unpublishButton['attr'] = $toolbarAttr;
-                        $unpublishButton['attr']['title'] = __('Unpublish All');
-                        $extra['toolbarButtons']['unpublishAll'] = $unpublishButton;
-                    }
-                    // Email all pdf button is published
-                    if ($publishedCount > 0) {
-                        $emailButton['url'] = $this->setQueryString($this->url('emailAllPdf'), $params);
-                        $emailButton['type'] = 'button';
-                        $emailButton['label'] = '<i class="fa fa-envelope"></i>';
-                        $emailButton['attr'] = $toolbarAttr;
-                        $emailButton['attr']['title'] = __('Email All PDF');
-                        $extra['toolbarButtons']['emailAllPdf'] = $emailButton;
-                    }
-                    // Email all excel button is published
-                    if ($publishedCount > 0) {
-                        $emailExcelButton['url'] = $this->setQueryString($this->url('emailAllExcel'), $params);
-                        $emailExcelButton['type'] = 'button';
-                        $emailExcelButton['label'] = '<i class="fa fa-envelope"></i>';
-                        $emailExcelButton['attr'] = $toolbarAttr;
-                        $emailExcelButton['attr']['title'] = __('Email All Excel');
-                        $extra['toolbarButtons']['emailAllExcel'] = $emailExcelButton;
-                    }
-                }
-            }
-        } else { //POCOR-7163 :: End here and condition same for other users
-            if (!is_null($reportCardId) && !is_null($classId) && !empty($securityRoleIds)) { //POCOR-7148 check empty condition for securityRoleIds
-                $existingReportCard = $this->ReportCards->exists([$this->ReportCards->getPrimaryKey() => $reportCardId]);
-                $existingClass = $this->InstitutionClasses->exists([$this->InstitutionClasses->getPrimaryKey() => $classId]);
-                // only show toolbar buttons if request for report card and class is valid
-                if ($existingReportCard && $existingClass) {
-                    $generatedCount = 0;
-                    $publishedCount = 0;
-                    $dataCount = count($data);//POCOR-8300
-                    // count statuses to determine which buttons are shown
-                    foreach ($data as $student) {
-                        if ($student->has('report_card_status')) {
-                            if ($student->report_card_status == self::GENERATED) {
-                                $generatedCount += 1;
-                            } else if ($student->report_card_status == self::PUBLISHED) {
-                                $publishedCount += 1;
-                            }
-                        }
-                    }
-
-                    $toolbarAttr = [
-                        'class' => 'btn btn-xs btn-default',
-                        'data-toggle' => 'tooltip',
-                        'data-placement' => 'bottom',
-                        'escape' => false
-                    ];
-
-                    $params = [
-                        'institution_id' => $this->getInstitutionID(),
-                        'institution_class_id' => $classId,
-                        'report_card_id' => $reportCardId
-                    ];
-
-                    //POCOR-6838: Start
-                    $SecurityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
-                    $SecurityFunctionsAllExcelData = $SecurityFunctions
-                        ->find()
-                        ->where([
-                            $SecurityFunctions->aliasField('name') => 'Download All Excel'])
-                        ->first();
-
-                    $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
-                    $SecurityRoleFunctionsTableAllExcelData = $SecurityRoleFunctionsTable
-                        ->find()
-                        ->where([
-                            $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsAllExcelData->id,
-                            $SecurityRoleFunctionsTable->aliasField('_execute') => 1,//POCOR-7131
-                            $SecurityRoleFunctionsTable->aliasField('security_role_id IN') => $securityRoleIds//POCOR-7131
-                        ])
-                        ->count();//POCOR-7131
-
-                    $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
-                    $SecurityFunctionsAllPdfData = $SecurityFunctions
-                        ->find()
-                        ->where([
-                            $SecurityFunctions->aliasField('name') => 'Download All Pdf'])
-                        ->first();
-
-                    $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
-                    $SecurityRoleFunctionsTableAllPdfData = $SecurityRoleFunctionsTable
-                        ->find()
-                        ->where([
-                            $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsAllPdfData->id,
-                            $SecurityRoleFunctionsTable->aliasField('_execute') => 1,//POCOR-7131
-                            $SecurityRoleFunctionsTable->aliasField('security_role_id IN') => $securityRoleIds])//POCOR-7131
-                        ->count();//POCOR-7131
-
-                    $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
-                    $SecurityFunctionsGenerateAllData = $SecurityFunctions
-                        ->find()
-                        ->where([
-                            $SecurityFunctions->aliasField('name') => 'Generate All'])
-                        ->first();
-
-                    $SecurityRoleFunctionsTable = TableRegistry::get('Security.SecurityRoleFunctions');
-                    $SecurityRoleFunctionsTableGenerateAllData = $SecurityRoleFunctionsTable
-                        ->find()
-                        ->where([
-                            $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsGenerateAllData->id,
-                            $SecurityRoleFunctionsTable->aliasField('_execute') => 1,//POCOR-7131
-                            $SecurityRoleFunctionsTable->aliasField('security_role_id IN') => $securityRoleIds])//POCOR-7131
-                        ->count();//POCOR-7131
-                    //POCOR-6838: End
-                    // Start POCOR-7320
-                    $SecurityFunctionsMergeGenerateAllData = $SecurityFunctions
-                        ->find()
-                        ->where([
-                            $SecurityFunctions->aliasField('name') => 'Merge and Download PDF'])
-                        ->first();
-
-                    $SecurityRoleFunctionsTableMergeGenerateAllData = $SecurityRoleFunctionsTable
-                        ->find()
-                        ->where([
-                            $SecurityRoleFunctionsTable->aliasField('security_function_id') => $SecurityFunctionsMergeGenerateAllData->id,
-                            //$SecurityRoleFunctionsTable->aliasField('_execute') => 1,/
-                        ])
-                        ->count();
-
-                    // Generate all button
-                    $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
-                    $generateButton['type'] = 'button';
-                    $generateButton['label'] = '<i class="fa fa-refresh"></i>';
-                    $generateButton['attr'] = $toolbarAttr;
-                    $generateButton['attr']['title'] = __('Generate All');
-                    //$ReportCards = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
-                    if (!is_null($this->request->getQuery('report_card_id'))) {
-                        $reportCardId = $this->request->getQuery('report_card_id');
-                    }
-
-                    $ReportCardsData = $this->ReportCards
-                        ->find()
-                        ->where([
-                            $this->ReportCards->aliasField('id') => $reportCardId])
-                        ->first();
-                    if (!empty($ReportCardsData->generate_start_date)) {
-                        $generateStartDate = $ReportCardsData->generate_start_date->format('Y-m-d');
-                    }
-
-                    if (!empty($ReportCardsData->generate_end_date)) {
-                        $generateEndDate = $ReportCardsData->generate_end_date->format('Y-m-d');
-                    }
-                    $date = Time::now()->format('Y-m-d');
-
-                    if ($this->AccessControl->isAdmin()) {
-                        if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {
-                            $extra['toolbarButtons']['generateAll'] = $generateButton;
-                        } else {
-                            $generateButton['attr']['data-html'] = true;
-                            $generateButton['attr']['title'] .= __('<br>' . $this->getMessage('ReportCardStatuses.date_closed'));
-                            $generateButton['url'] = 'javascript:void(0)';
-                            $extra['toolbarButtons']['generateAll'] = $generateButton;
-                        }
-                    } else {
-                        //POCOR-7656 start
-                        $ExcludedSecurityRoleEntity = $this->canGenerateAnyDate($reportCardId);  //POCOR-7551
-                        //POCOR-7656 end
-                        if ($SecurityRoleFunctionsTableGenerateAllData >= 1) {//POCOR-7131 change in if condition
-                            if ((!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) || ($ExcludedSecurityRoleEntity == 1)) {
-                                $extra['toolbarButtons']['generateAll'] = $generateButton;
-                            } else {
-                                $generateButton['attr']['data-html'] = true;
-                                $generateButton['attr']['title'] .= __('<br>' . $this->getMessage('ReportCardStatuses.date_closed'));
-                                $generateButton['url'] = 'javascript:void(0)';
-                                $extra['toolbarButtons']['generateAll'] = $generateButton;
-                            }
-                        }
-                    }
+                    
                     
                 }
             }
-        }
+        } 
     }
 
-    
-
-
-    
-    // End POCOR-7320
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'student_id';
@@ -601,8 +321,10 @@ class ReportCardGpaTable extends ControllerActionTable
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('academic_period_id');
-        $this->field('institution_class_id', ['visible' => true]);
+        //$this->field('institution_class_id', ['visible' => true]);
         $this->field('institution_class', ['visible' => true]);
+        $this->field('student_status_id', ['visible' => false]);
+        $this->field('next_institution_class_id', ['visible' => false]);
         $this->field('gpa', ['visible' => true]);
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
         $this->field('student_name');
@@ -638,48 +360,27 @@ class ReportCardGpaTable extends ControllerActionTable
 
     public function generateAll(Event $event, ArrayObject $extra)
     {
+
         $params = $this->getQueryString();
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
-        $institutionId = $this->getInstitutionID();//POCOR-6692
+        $institutionId = $this->getInstitutionID();
         $params['academic_period_id'] = $this->request->getQuery('academic_period_id');
+        $params['institution_class_id'] = $this->request->getQuery('class_id');
+        $params['report_card_id'] = $this->request->getQuery('report_card_id');
+        $reportCardId = $params['report_card_id'];
+        $selectedAcademicPeriodId = $params['academic_period_id'];
+
         if ($hasTemplate) {
-            $checkReportCard = $this->checkReportCardsToBeProcess($params['institution_class_id'], $params['report_card_id'], $params['academic_period_id']);
-
-            if ($checkReportCard) {
-                $this->Alert->warning('ReportCardStatuses.checkReportCardTemplatePeriod');
-                return $this->controller->redirect($this->url('index'));
-                die;
-            }
-
-            $ReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.ReportCardProcesses');
-            //POCOR-6692 start
-            if ($params['class_id'] == 'all') {
-                $inProgress = $ReportCardProcesses->find()
-                    ->where([
-                        $ReportCardProcesses->aliasField('report_card_id') => $params['report_card_id'],
-                        $ReportCardProcesses->aliasField('institution_class_id') => $params['institution_class_id'],
-                        $ReportCardProcesses->aliasField('institution_id') => $institutionId
-                    ])
-                    ->count();
-            } else {
-                $inProgress = $ReportCardProcesses->find()
-                    ->where([
-                        //  $ReportCardProcesses->aliasField('report_card_id') => $params['report_card_id'],
-                        $ReportCardProcesses->aliasField('institution_class_id') => $params['institution_class_id'],
-                        $ReportCardProcesses->aliasField('institution_id') => $institutionId,
-                        $ReportCardProcesses->aliasField('status  IN') => [1, 2]//POCOR-7455
-                    ])
-                    ->count();
-            }
-            //POCOR-6692 end
-
-
-            if (!$inProgress) {
-                $this->addReportCardsToProcesses($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
-                $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
-                $this->Alert->warning('ReportCardStatuses.generateAll');
-            } else {
-                $this->Alert->warning('ReportCardStatuses.inProgress');
+            $fetchAllRecord = $this->find()
+            ->select([
+                'student_id' => $this->aliasField('student_id'),
+                'education_grade_id' => $this->aliasField('education_grade_id'),
+            ])
+            ->where(['institution_id' => $institutionId , 'institution_class_id IS' => $params['institution_class_id'], 'academic_period_id' => $params['academic_period_id']])->toArray();
+            foreach($fetchAllRecord as $value){
+                $studentId = $value['student_id'];
+                $educationGradeId = $value['education_grade_id'];
+                $this->addGpaReportCards($studentId, $reportCardId,$selectedAcademicPeriodId, $institutionId,$educationGradeId);
             }
         } else {
             $this->Alert->warning('ReportCardStatuses.noTemplate');
@@ -692,7 +393,6 @@ class ReportCardGpaTable extends ControllerActionTable
     private function addGpaReportCards($checkgpaStudent, $reportCardId,$selectedAcademicPeriodId, $institutionId,$educationGradeId)
     {
         $selectedAcademicPeriodId = $selectedAcademicPeriodId;
-       // echo "<pre>"; print_r($selectedAcademicPeriodId); die;
         $reportCardId = $reportCardId;
         $institutionId = $institutionId;
         $educationGradeId = $educationGradeId;
@@ -844,9 +544,9 @@ class ReportCardGpaTable extends ControllerActionTable
                 $gpa = $val['gpa_per_student'];
 
             }
-            $this->saveGpaForStudent($gpa, $studentId, $selectedAcademicPeriodId, $educationGradeId, $institutionId);
         }
-        return $gpa;
+        $this->saveGpaForStudent($gpa, $studentId, $selectedAcademicPeriodId, $educationGradeId, $institutionId);
+        return true;
     }
     
     /**
@@ -906,30 +606,76 @@ class ReportCardGpaTable extends ControllerActionTable
                 'gpa' => $gpa,
                 'institution_id' => $institutionId,
                 'created_user_id' => 2,
-                'created' => Time::now(), // Use CakePHP's Time class
+                'created' => FrozenTime::now(),
             ];
             $gradingOptionEntity = $InstitutionStudentsGpa->newEntity($data);
 
             if ($InstitutionStudentsGpa->save($gradingOptionEntity)) {
-                return $gradingOptionEntity;
+                return true;
             } else {
                 // Handle validation errors or other issues
                 return false;
             }
         } else {
+            
             $updateResult = $InstitutionStudentsGpa->updateAll(
-                ['gpa' => 2.10],
+                ['gpa' => $gpa],
                 [
                     'student_id' => $studentId,
                     'academic_period_id' => $selectedAcademicPeriodId,
                     'education_grade_id' => $educationGradeId,
                     'institution_id' => $institutionId,
+                    'modified_user_id' => 2,
+                    'modified' =>  FrozenTime::now(),
                 ]
             );
-
-            return $updateResult;
+            if($updateResult == 1){
+                return true;
+            }else{
+                return false;
+            }
         }
     }
 
+    public function onGetGpa(Event $event, Entity $entity)
+    {
+        $studentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
+        $institutionId = $entity['institution']['id'];
+        $findGpa = $studentsGpa->find()->where(['student_id'=>$entity->student_id,
+                        'education_grade_id'=>$entity->education_grade_id,'institution_id'=>$institutionId,'academic_period_id'=>$entity->academic_period_id])->first()->gpa;
+        return $findGpa;
+    }
+    public function onGetCreated(Event $event, Entity $entity)
+    {
+        $studentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
+        $institutionId = $entity['institution']['id'];
+        $createdDate = $studentsGpa->find()->where(['student_id'=>$entity->student_id,
+                        'education_grade_id'=>$entity->education_grade_id,'institution_id'=>$institutionId,'academic_period_id'=>$entity->academic_period_id])->first()->created;
+        return $createdDate;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    {
+        if ($field == 'created' || $field == 'modified') {
+            return 'Updated';
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public function onGetStudentName(Event $event, Entity $entity)
+    {
+        return $entity->user->name;   
+    }
+
+    public function onGetInstitutionClass(Event $event, Entity $entity)
+    {
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $getName = $InstitutionClasses->find()
+                    ->where([$InstitutionClasses->aliasField('id') => $entity->institution_class_id])
+                    ->first()
+                    ->name;
+        return $getName ;
+    }
 
 }
