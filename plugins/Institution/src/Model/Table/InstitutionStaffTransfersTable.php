@@ -7,7 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
-use Cake\Log\Log;
+use Cake\Log\Log; // POCOR-8532
 
 // This file serves as an abstract class for StaffTransferIn and StaffTransferOut
 
@@ -102,8 +102,8 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
             ['conditions'=>
                 ['staff_id'=>$entity->staff_id]
             ])->first(); //POCOR-7311
-        Log::debug(print_r(['entity' => $entity], true));
-        Log::debug(print_r(['institutionStaffEntity' => $institutionStaffEntity], true));
+//        Log::debug(print_r(['entity' => $entity], true));
+//        Log::debug(print_r(['institutionStaffEntity' => $institutionStaffEntity], true));
 
         // add new institution staff record in new institution
         $incomingStaff = [
@@ -122,34 +122,37 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
             $incomingStaff['end_date'] = $entity->new_end_date;
             $incomingStaff['end_year'] = $entity->new_end_date->year;
         }
-        Log::debug(print_r(['incomingStaff' => $incomingStaff], true));
+//        Log::debug(print_r(['incomingStaff' => $incomingStaff], true));
 
         $newEntity = $StaffTable->newEntity($incomingStaff, ['validate' => 'AllowPositionType']);
-        Log::debug(print_r(['new Entity' => $newEntity], true));
-        $savedEntity = $StaffTable->save($newEntity);
-        Log::debug(print_r(['saved Entity' => $savedEntity], true));
+//        Log::debug(print_r(['new Entity' => $newEntity], true));
+        $savedEntity = $StaffTable->save($newEntity); // POCOR-8532
+//        Log::debug(print_r(['saved Entity' => $savedEntity], true));
 
         if ($savedEntity) {
-            Log::debug(print_r($savedEntity, true));
+//            Log::debug(print_r($savedEntity, true));
             if (!empty($entity->previous_institution_staff_id)) {
                 $transferType = $entity->transfer_type;
-                $oldRecord = $StaffTable->get($entity->previous_institution_staff_id);
-                Log::debug(print_r(['oldRecord' => $oldRecord], true));
+                $previous_institution_staff_id = $entity->previous_institution_staff_id; // POCOR-8532
+                $oldRecord = $StaffTable->get($previous_institution_staff_id);
+                $oldRecord->unset('newFTE'); // POCOR-8532
+//                Log::debug(print_r(['oldRecord' => $oldRecord], true));
 
                 if ($transferType == self::FULL_TRANSFER) {
                      // end previous institution staff record
                      $oldRecord->end_date = $entity->previous_end_date;
-                     $oldRecord = $StaffTable->save($oldRecord);
-                     $this->removeStaffFromSecurityGroups($oldRecord);
+
+                     $oldRecord = $StaffTable->save($oldRecord); // POCOR-8532
+                     $this->removeStaffFromSecurityGroups($previous_institution_staff_id); // POCOR-8532
 
                 } else if ($transferType == self::PARTIAL_TRANSFER) {
                     // end previous institution staff record
                     $oldRecord->end_date = $entity->previous_end_date;
-                    $savedOlderEntity = $StaffTable->save($oldRecord);
-                    Log::debug(print_r(['savedOlderEntity' => $savedOlderEntity], true));
+                    $savedOlderEntity = $StaffTable->save($oldRecord); // POCOR-8532
+//                    Log::debug(print_r(['savedOlderEntity' => $savedOlderEntity], true)); // POCOR-8532
 
                     // add new institution staff record in previous institution
-                    $newerRecord = [
+                    $newerRecord = [ // POCOR-8532
                         'FTE' => $entity->previous_FTE,
                         'start_date' => $entity->previous_effective_date,
                         'start_year' => $entity->previous_effective_date->year,
@@ -160,12 +163,12 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
                         'institution_position_id' => $oldRecord->institution_position_id,
                         'staff_position_grade_id' => $institutionStaffEntity->staff_position_grade_id //POCOR-7311
                     ];
-                    Log::debug(print_r(['newerRecord' => $newerRecord], true));
+//                    Log::debug(print_r(['newerRecord' => $newerRecord], true));
                     $newerEntity = $StaffTable->newEntity($newerRecord, ['validate' => 'AllowPositionType']);
-                    Log::debug(print_r(['newerEntity' => $newerEntity], true));
+//                    Log::debug(print_r(['newerEntity' => $newerEntity], true));
 
-                    $savedNewerEntity =  $StaffTable->save($newerEntity);
-                    Log::debug(print_r(['savedNewerEntity' => $savedNewerEntity], true));
+                    $savedNewerEntity =  $StaffTable->save($newerEntity); // POCOR-8532
+//                    Log::debug(print_r(['savedNewerEntity' => $savedNewerEntity], true));
                 }
             }
         }
@@ -300,7 +303,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        Log::debug(print_r([__FUNCTION__ => $entity], true));
+//        Log::debug(print_r([__FUNCTION__ => $entity], true));
         foreach($entity->shifts_id['_ids'] as $shiftId)
         {
             $shiftData = array( 'staff_id'=> $entity->staff_id ,'shift_id'=> $shiftId);
@@ -369,20 +372,21 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         return $query;
     }
 
-    /**
-     * @param \Cake\Datasource\EntityInterface $oldRecord
-     */
-    private function removeStaffFromSecurityGroups(\Cake\Datasource\EntityInterface $oldRecord)
+    // POCOR-8532: refactor
+    private function removeStaffFromSecurityGroups($previous_institution_staff_id)
     {
+        $StaffTable = TableRegistry::get('Institution.Staff'); // POCOR-8532
+        $oldRecord = $StaffTable->get($previous_institution_staff_id); // POCOR-8532
         $security_group_user_id = $oldRecord->security_group_user_id;
-        $StaffTable = TableRegistry::get('Institution.Staff');
         $oldRecord->security_group_user_id = null;
-        Log::debug(print_r($oldRecord, true));
+        $oldRecord->unset('newFTE'); // POCOR-8532
         $StaffTable->save($oldRecord);
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-        $SecurityGroupUsers->deleteAll([
-            $SecurityGroupUsers->aliasField($SecurityGroupUsers->primaryKey()) => $security_group_user_id
-        ]);
+        if ($security_group_user_id) { // POCOR-8532
+            $SecurityGroupUsers->deleteAll([
+                $SecurityGroupUsers->aliasField($SecurityGroupUsers->getPrimaryKey()) => $security_group_user_id
+            ]);
+        }
     }
 
 }

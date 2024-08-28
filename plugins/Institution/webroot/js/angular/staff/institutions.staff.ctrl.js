@@ -659,7 +659,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     function goToInternalSearch() {
         userCtrl.selectedUserData.userType = 'Staff';
         userCtrl.selectedUserData.user_type_id = 2;
-        userCtrl.selectedUserData.institution_id = userCtrl.institutionId;
+        userCtrl.selectedUserData.institution_id = userCtrl.institutionId; // POCOR-8532
         // console.log(userCtrl.selectedUserData);
         directorySvc.goToInternalSearch(userCtrl);
     };
@@ -1020,7 +1020,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         userCtrl.selectedUserData.middle_name = selectedData.middle_name;
         userCtrl.selectedUserData.third_name = selectedData.third_name;
         userCtrl.selectedUserData.last_name = selectedData.last_name;
-        userCtrl.selectedUserData.name = selectedData.name;
+        userCtrl.selectedUserData.name = selectedData.name; // POCOR-8532
         userCtrl.selectedUserData.preferred_name = selectedData.preferred_name;
         userCtrl.selectedUserData.date_of_birth = selectedData.date_of_birth;
         userCtrl.selectedUserData.email = selectedData.email;
