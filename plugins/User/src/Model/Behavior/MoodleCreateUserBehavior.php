@@ -41,7 +41,8 @@ class MoodleCreateUserBehavior extends Behavior
 
                 }
                 if (!$response || !$response->getStatusCode() != 200) {  // Use getStatusCode() instead of accessing $code directly
-                    throw new Exception("Network Error");
+//                    throw new Exception("Network Error");
+                    Log::debug('Network Error in Moodle');
                 }
             }
         }

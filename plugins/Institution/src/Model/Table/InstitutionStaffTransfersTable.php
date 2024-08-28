@@ -125,9 +125,9 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         Log::debug(print_r(['incomingStaff' => $incomingStaff], true));
 
         $newEntity = $StaffTable->newEntity($incomingStaff, ['validate' => 'AllowPositionType']);
-        Log::debug(print_r(['newEntity' => $newEntity], true));
+        Log::debug(print_r(['new Entity' => $newEntity], true));
         $savedEntity = $StaffTable->save($newEntity);
-        Log::debug(print_r(['savedEntity' => $savedEntity], true));
+        Log::debug(print_r(['saved Entity' => $savedEntity], true));
 
         if ($savedEntity) {
             Log::debug(print_r($savedEntity, true));
@@ -139,7 +139,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
                 if ($transferType == self::FULL_TRANSFER) {
                      // end previous institution staff record
                      $oldRecord->end_date = $entity->previous_end_date;
-                     $StaffTable->save($oldRecord);
+                     $oldRecord = $StaffTable->save($oldRecord);
                      $this->removeStaffFromSecurityGroups($oldRecord);
 
                 } else if ($transferType == self::PARTIAL_TRANSFER) {
@@ -377,6 +377,7 @@ class InstitutionStaffTransfersTable extends ControllerActionTable
         $security_group_user_id = $oldRecord->security_group_user_id;
         $StaffTable = TableRegistry::get('Institution.Staff');
         $oldRecord->security_group_user_id = null;
+        Log::debug(print_r($oldRecord, true));
         $StaffTable->save($oldRecord);
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $SecurityGroupUsers->deleteAll([
