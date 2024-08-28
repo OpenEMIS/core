@@ -404,7 +404,6 @@ class InstitutionTabBehavior extends Behavior
 
     public function getAcademicTabElements($options = [], $modelName = null)
     {
-        //$id = (isset($options['id'])) ? $options['id'] : 0;
         $model = $this->_table;
         $type = (isset($options['type'])) ? $options['type'] : null;
         //PCOOR-8388 starts
@@ -448,6 +447,7 @@ class InstitutionTabBehavior extends Behavior
             'Competencies' => ['text' => __('Competencies')],
             //POCOR-7474-HINDOL TYPO FIX
             'Assessments' => ['text' => __('Assessments')], //POCOR-5786
+            'StudentGpa' => ['text' => __('GPA')], //POCOR-5786
             'ExaminationResults' => ['text' => __('Examinations')],
             'ReportCards' => ['text' => __('Report Cards')],
             'Awards' => ['text' => __('Awards')],
