@@ -1,3 +1,13 @@
+### [4.1.4] - 2024-08-28
+- Implemented: Changes to the Administration > System Setup > APIs > Credentials page
+- Implemented: Develop additional advanced search filters
+- Implemented: Develop changes to all new v4 APIs to include Swagger annotations in API file headers
+- Bug Fixed: Institutions>Staff>General>Comments: Unable to load page
+- Bug Fixed: Institutions>Performance>Assessments(Bahamas): Page is not loading
+- Bug Fixed: Administration>Security>Roles: Confirmed that user do not have edit permission for both roles
+- Bug Fixed: Institutions>Performance>Outcomes: Page kept loading
+- Bug Fixed: Institutions>Report Card>Comments: Getting error and comments are not loaded
+
 ### [4.1.3] - 2024-08-23
 - Bug Fixed: Institutions>Students/Staff>Add: Confirmation should validate credentials
 - Bug Fixed: Administration>System Setup>Academic Periods: Academic period code and name can be a duplicate
