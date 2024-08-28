@@ -980,6 +980,97 @@ class MealController extends Controller
     //For POCOR-8078 End...
 
     //For POCOR-8348 Start...
+
+    /**
+     * @OA\Post(
+     *     path="/api/v4/institutions/students/meals/import",
+     *     summary="Import student meal data",
+     *     description="Import meal data for students from an Excel file for a specific institution and class.",
+     *     tags={"Meals"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 type="object",
+     *                 required={"file", "institution_class_id", "institution_id"},
+     *                 @OA\Property(
+     *                     property="file",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="The Excel file containing meal data",
+     *                     example="(binary)"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="institution_class_id",
+     *                     type="integer",
+     *                     description="The ID of the institution class",
+     *                     example="591"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="institution_id",
+     *                     type="integer",
+     *                     description="The ID of the institution",
+     *                     example="6"
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="total_count", type="integer", example=2),
+     *                 @OA\Property(
+     *                     property="records_added",
+     *                     type="object",
+     *                     @OA\Property(property="count", type="integer", example=2),
+     *                     @OA\Property(
+     *                         property="rows",
+     *                         type="array",
+     *                         @OA\Items(
+     *                             type="object",
+     *                             @OA\Property(property="row_number", type="integer", example=2),
+     *                             @OA\Property(
+     *                                 property="data",
+     *                                 type="object",
+     *                                 @OA\Property(property="Date ( DD/MM/YYYY )", type="string", example="25/06/2024"),
+     *                                 @OA\Property(property="OpenEMIS ID", type="integer", example=2382817279),
+     *                                 @OA\Property(property="Meal Programme Code", type="string", example="Meal Programme"),
+     *                                 @OA\Property(property="Meal Received Code", type="string", example="None"),
+     *                                 @OA\Property(property="Meal Benefit Name", type="string", example=null),
+     *                                 @OA\Property(property="Comment", type="string", example="test")
+     *                             ),
+     *                             @OA\Property(property="errors", type="array", @OA\Items(type="string"))
+     *                         )
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="records_updated",
+     *                     type="object",
+     *                     @OA\Property(property="count", type="integer", example=0),
+     *                     @OA\Property(property="rows", type="array", @OA\Items(type="object"))
+     *                 ),
+     *                 @OA\Property(
+     *                     property="records_failed",
+     *                     type="object",
+     *                     @OA\Property(property="count", type="integer", example=0),
+     *                     @OA\Property(property="rows", type="array", @OA\Items(type="object"))
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getStudentMealImport(StudentMealImportRequest $request)
     {
         try {
@@ -1018,6 +1109,83 @@ class MealController extends Controller
     }
 
 
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/students/meals/export",
+     *     summary="Export student meal data",
+     *     description="Export student meal data for a specified academic period, day, week, class, and meal program.",
+     *     tags={"Meals"},
+     *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=true,
+     *         @OA\Schema(type="integer", example="33"),
+     *         description="The ID of the academic period"
+     *     ),
+     *     @OA\Parameter(
+     *         name="day_id",
+     *         in="query",
+     *         required=true,
+     *         @OA\Schema(type="string", format="date", example="2024-06-18"),
+     *         description="The specific day for which meal data is being exported"
+     *     ),
+     *     @OA\Parameter(
+     *         name="week_id",
+     *         in="query",
+     *         required=true,
+     *         @OA\Schema(type="integer", example="25"),
+     *         description="The ID of the week"
+     *     ),
+     *     @OA\Parameter(
+     *         name="week_start_day",
+     *         in="query",
+     *         required=true,
+     *         @OA\Schema(type="string", format="date", example="2024-06-17"),
+     *         description="The start day of the week"
+     *     ),
+     *     @OA\Parameter(
+     *         name="week_end_day",
+     *         in="query",
+     *         required=true,
+     *         @OA\Schema(type="string", format="date", example="2024-06-23"),
+     *         description="The end day of the week"
+     *     ),
+     *     @OA\Parameter(
+     *         name="institution_class_id",
+     *         in="query",
+     *         required=true,
+     *         @OA\Schema(type="integer", example="591"),
+     *         description="The ID of the institution class"
+     *     ),
+     *     @OA\Parameter(
+     *         name="meal_program_id",
+     *         in="query",
+     *         required=true,
+     *         @OA\Schema(type="integer", example="3"),
+     *         description="The ID of the meal program"
+     *     ),
+     *     @OA\Parameter(
+     *         name="institution_id",
+     *         in="query",
+     *         required=true,
+     *         @OA\Schema(type="integer", example="6"),
+     *         description="The ID of the institution"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="string", format="binary")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getStudentMealExport(StudentMealExportRequest $request)
     {
         try {
@@ -1037,6 +1205,42 @@ class MealController extends Controller
     }
 
 
+
+    /**
+     * @OA\Get(
+     *     path="/api/v4/institutions/students/meals/import/template",
+     *     summary="Get meal import template",
+     *     description="Retrieve the meal import template for a specific institution and class.",
+     *     tags={"Meals"},
+     *     @OA\Parameter(
+     *         name="institution_id",
+     *         in="query",
+     *         required=true,
+     *         @OA\Schema(type="integer", example="6"),
+     *         description="The ID of the institution"
+     *     ),
+     *     @OA\Parameter(
+     *         name="institution_class_id",
+     *         in="query",
+     *         required=true,
+     *         @OA\Schema(type="integer", example="591"),
+     *         description="The ID of the institution class"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="string", format="binary")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
     public function getStudentMealImportTemplate(StudentMealImportTemplateRequest $request)
     {
         try {
