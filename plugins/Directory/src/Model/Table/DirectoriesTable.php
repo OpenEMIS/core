@@ -1497,14 +1497,6 @@ class DirectoriesTable extends ControllerActionTable
                 'showOnLoad' => 0,
             ]);
         }
-        // if ($isAdvancedSearchEnabled == 1) {
-        //     $event->stopPropagation();
-        //     return [];
-        // } else {
-        //     $this->behaviors()->get('AdvanceSearch')->setConfig([
-        //         'showOnLoad' => 1,
-        //     ]);
-        // }
         //POCOR-8558 ends
 
         $conditions = [];
