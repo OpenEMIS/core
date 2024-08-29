@@ -1,3 +1,42 @@
+### [4.1.4] - 2024-08-28
+- Implemented: Changes to the Administration > System Setup > APIs > Credentials page
+- Implemented: Develop additional advanced search filters
+- Implemented: Develop changes to all new v4 APIs to include Swagger annotations in API file headers
+- Bug Fixed: Institutions>Staff>General>Comments: Unable to load page
+- Bug Fixed: Institutions>Performance>Assessments(Bahamas): Page is not loading
+- Bug Fixed: Administration>Security>Roles: Confirmed that user do not have edit permission for both roles
+- Bug Fixed: Institutions>Performance>Outcomes: Page kept loading
+- Bug Fixed: Institutions>Report Card>Comments: Getting error and comments are not loaded
+
+### [4.1.3] - 2024-08-23
+- Bug Fixed: Institutions>Students/Staff>Add: Confirmation should validate credentials
+- Bug Fixed: Administration>System Setup>Academic Periods: Academic period code and name can be a duplicate
+- Bug Fixed: Institutions>Academic>Houses(Automation): Page is not loading
+- Bug Fixed: Directory>Students>Academic: Page is not loading
+- Bug Fixed: Institutions > Staff: The gender filter on the staff page dashboard is displaying incorrect numbers
+- Bug Fixed: Administration>Performance>Assessment(Bahamas): Getting 404 error when adding, viewing, editing and deleting
+- Bug Fixed: Institutions>Performance>Report Cards(Bahamas): Getting 404 error and gpa not generated
+- Bug Fixed: Administration > Workflow > Action Tab > Selecting workflow route filters: There is an issue when selecting filters for workflow actions
+- Bug Fixed: API showing invalid date format
+- Bug Fixed: Institutions>Students>Edit: User is unable to edit
+
+### [4.1.2] - 2024-08-16
+- Bug Fixed: Institutions > Statistics > Standard > Student Attendance Summary Report: When generating report for Student Attendance Summary Report under Institutions Statistics, the report is showing other institutions
+- Bug Fixed: Administration>Training>Session>Evaluators: Evaluators not appearing when added
+- Bug Fixed: Administration>System Setup>Field options: Page is unable to load
+- Bug Fixed: Institutions>Appointment>Positions: Position is not arranged in order desc(based on position no)
+- Bug Fixed: Institutions>Students>List>Promote Button: Unable to save
+- Bug Fixed: Administrations > System Setup : Functions that breaks in Education Structure
+- Bug Fixed: API : Issues on student attendance page
+- Bug Fixed: Administrations > System Setup : Functions that breaks in Risks
+- Bug Fixed: API Changes from Jordan
+- Bug Fixed: Administrations > Security > Role: 404 error when Accessing Administrations > Security > Role page under his account
+- Bug Fixed: API-Changes to users api
+- Bug Fixed: Implement API Security by Role Part Two
+- Bug Fixed: Administrations > Survey > Forms > Edit: When adding section, it does not show the section even when system gives a successful message
+- Bug Fixed: Administrations > Security > Roles: When adding security roles, system shows successful message but newly added record is not showing
+- Bug Fixed: Administrations > Security > Roles> User Roles: User roles are showing the roles as system roles when logging in as non superadmin
+
 ### [4.1.1] - 2024-08-07
 - Bug Fixed: Guardian>Student>Academic(Automation): User is getting 404 error
 - Bug Fixed: Guardian>Student>Academic(Automation): Behaviour showing internal server error

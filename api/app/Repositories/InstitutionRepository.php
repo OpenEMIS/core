@@ -424,7 +424,13 @@ class InstitutionRepository extends Controller
     {
         try {
             $params = $request->all();
+
             //$classes = new InstitutionClasses();
+
+            //For POCOR-8540 Start
+            $loggedInUser = JWTAuth::user();
+            //For POCOR-8540 End
+
 
             //For POCOR-7772 Start
             $permissions = checkAccess();
@@ -441,18 +447,29 @@ class InstitutionRepository extends Controller
             //For POCOR-7772 End
 
 
-            $classes = InstitutionClasses::with(
+            $classes = InstitutionClasses::select('institution_classes.*')
+                ->with(
                 'grades:institution_class_id,education_grade_id as grade_id', 
                 'subjects:institution_class_id,institution_subject_id as subject_id',
                 'students:institution_class_id,student_id',
                 'secondary_teachers:institution_class_id,secondary_staff_id as staff_id'
             );
 
+            //For POCOR-8540 Start
+            if($loggedInUser->is_student == 1 && $loggedInUser->super_admin == 0){
+                $classes = $classes->join('institution_class_students', 'institution_class_students.institution_class_id', '=', 'institution_classes.id')
+                    ->where('institution_class_students.student_id', $loggedInUser->id);
+            } 
+
+            if($loggedInUser->is_staff == 1 && $loggedInUser->super_admin == 0){
+                $classes = $classes->where('staff_id', $loggedInUser->id);
+            } 
+            //For POCOR-8540 End
+
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
-                $classes = $classes->where('academic_period_id', $academic_period_id);
+                $classes = $classes->where('institution_classes.academic_period_id', $academic_period_id);
             }
-
 
             //For POCOR-7772 Start
             if(isset($institution_Ids)){
@@ -465,7 +482,6 @@ class InstitutionRepository extends Controller
                 $col = $params['order'];
                 $classes = $classes->orderBy($col, $orderBy);
             }
-
 
 
             //For POCOR-8215/8216 start...
@@ -484,7 +500,6 @@ class InstitutionRepository extends Controller
                 'Failed to fetch data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Classes List Not Found');
         }
     }
@@ -493,6 +508,10 @@ class InstitutionRepository extends Controller
     {
         try {
             $params = $request->all();
+
+            //For POCOR-8540 Start
+            $loggedInUser = JWTAuth::user();
+            //For POCOR-8540 End
 
             //For POCOR-7772 Start
             $permissions = checkAccess();
@@ -514,6 +533,20 @@ class InstitutionRepository extends Controller
                 'students:institution_class_id,student_id',
                 'secondary_teachers:institution_class_id,secondary_staff_id as staff_id'
             );
+
+
+            //For POCOR-8540 Start
+            if($loggedInUser->is_student == 1 && $loggedInUser->super_admin == 0){
+                $institutionClasses = $institutionClasses->join('institution_class_students', 'institution_class_students.institution_class_id', '=', 'institution_classes.id')
+                    ->where('institution_class_students.student_id', $loggedInUser->id);
+            } 
+
+            if($loggedInUser->is_staff == 1 && $loggedInUser->super_admin == 0){
+                $institutionClasses = $institutionClasses->where('staff_id', $loggedInUser->id);
+            } 
+            //For POCOR-8540 End
+
+
 
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
@@ -551,7 +584,6 @@ class InstitutionRepository extends Controller
                 'Failed to fetch data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Classes List Not Found');
         }
     }
@@ -612,6 +644,10 @@ class InstitutionRepository extends Controller
 
             //For POCOR-7772 Start
             $permissions = checkAccess();
+
+            //For POCOR-8540 Start...
+            $loggedInUser = JWTAuth::user();
+            //For POCOR-8540 End...
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
@@ -624,7 +660,8 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
-            $subjects = InstitutionSubjects::with(
+            $subjects = InstitutionSubjects::select('institution_subjects.*')
+                ->with(
                     'educationGrades:id,name', 'educationSubjects:id,name', 
                     'classes:institution_subject_id,institution_class_id as class_id', 
                     'rooms:institution_subject_id,institution_room_id as room_id',
@@ -632,9 +669,24 @@ class InstitutionRepository extends Controller
                     'students:institution_subject_id,student_id as user_id'
                 );
 
+
+            //For POCOR-8540 Start...
+            if($loggedInUser->is_staff == 1 && $loggedInUser->super_admin == 0){
+                $subjects = $subjects->join('institution_class_subjects', 'institution_class_subjects.institution_subject_id', '=', 'institution_subjects.id')
+                ->join('institution_classes', 'institution_classes.id', '=', 'institution_class_subjects.institution_class_id')
+                ->where('institution_classes.staff_id', $loggedInUser->id);
+            }
+
+            if($loggedInUser->is_student == 1 && $loggedInUser->super_admin == 0){
+                $subjects = $subjects->join('institution_subject_students', 'institution_subject_students.institution_subject_id', '=', 'institution_subjects.id')
+                ->where('institution_subject_students.student_id', $loggedInUser->id);
+            }
+            //For POCOR-8540 End...
+
+
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
-                $subjects = $subjects->where('academic_period_id', $academic_period_id);
+                $subjects = $subjects->where('institution_subjects.academic_period_id', $academic_period_id);
             }
 
             //For POCOR-7772 Start
@@ -666,7 +718,6 @@ class InstitutionRepository extends Controller
                 'Failed to fetch data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Subjects List Not Found');
         }
     }
@@ -680,6 +731,10 @@ class InstitutionRepository extends Controller
 
             //For POCOR-7772 Start
             $permissions = checkAccess();
+
+            //For POCOR-8540 Start...
+            $loggedInUser = JWTAuth::user();
+            //For POCOR-8540 End...
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
@@ -700,9 +755,25 @@ class InstitutionRepository extends Controller
                     'students:institution_subject_id,student_id as user_id'
                 );
 
+
+            //For POCOR-8540 Start...
+            if($loggedInUser->is_staff == 1 && $loggedInUser->super_admin == 0){
+                $subjects = $subjects->join('institution_class_subjects', 'institution_class_subjects.institution_subject_id', '=', 'institution_subjects.id')
+                ->join('institution_classes', 'institution_classes.id', '=', 'institution_class_subjects.institution_class_id')
+                ->where('institution_classes.staff_id', $loggedInUser->id);
+            }
+
+            if($loggedInUser->is_student == 1 && $loggedInUser->super_admin == 0){
+                $subjects = $subjects->join('institution_subject_students', 'institution_subject_students.institution_subject_id', '=', 'institution_subjects.id')
+                ->where('institution_subject_students.student_id', $loggedInUser->id);
+            }
+            //For POCOR-8540 End...
+
+
+
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
-                $subjects = $subjects->where('academic_period_id', $academic_period_id);
+                $subjects = $subjects->where('institution_subjects.academic_period_id', $academic_period_id);
             }
 
             //For POCOR-7772 Start
@@ -714,10 +785,10 @@ class InstitutionRepository extends Controller
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $subjects = $subjects->orderBy($col, $orderBy);
+                $subjects = $subjects->orderBy('institution_subjects.'.$col, $orderBy);
             }
 
-            $subjects = $subjects->where('institution_id', $institutionId);
+            $subjects = $subjects->where('institution_subjects.institution_id', $institutionId);
 
             //For POCOR-8215/8216 start...
             if(isset($params['limit'])){
@@ -735,7 +806,6 @@ class InstitutionRepository extends Controller
                 'Failed to fetch data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Subjects List Not Found');
         }
     }
