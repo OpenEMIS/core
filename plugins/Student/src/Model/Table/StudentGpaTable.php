@@ -47,12 +47,14 @@ class StudentGpaTable extends ControllerActionTable
                         ->toArray();
             $programmeOptions = array(-1 => __('-- Select Education Programme --')) + $programmeOptions;
 
-                if ($request->getQuery('education_programme_id')) {
+                /*if ($request->getQuery('education_programme_id')) {
                     $selectedProgramme = $request->getQuery('education_programme_id');
                 } else {
                     $selectedProgramme = -1;
-                }
+                }*/
+                $selectedProgramme = -1;
                 $extra['selectedProgramme'] = $selectedProgramme;
+
                     if ($selectedProgramme != -1) {
                         $gradeOptions = $this->EducationGrades
                             ->find('list')
@@ -62,27 +64,31 @@ class StudentGpaTable extends ControllerActionTable
                             ->order(['EducationProgrammes.order' => 'ASC', $this->EducationGrades->aliasField('order') => 'ASC'])
                             ->toArray();
                     }
-            $gradeOptions = array(-1 => __('-- Select Education Grade --')) + $gradeOptions;
-
-                if ($request->getQuery('education_grade_id')) {
+                    $gradeOptions = $gradeOptions ?? []; // Initialize $gradeOptions as an empty array if it's null
+                    $gradeOptions = array(-1 => __('-- Select Education Grade --')) + $gradeOptions;
+                /*if ($request->getQuery('education_grade_id')) {
                     $selectedGrade = $request->getQuery('education_programme_id');
                 } else {
                     $selectedGrade = -1;
-                }
+                }*/
+                $selectedGrade = -1;
                 $extra['selectedGrade'] = $selectedGrade;
 
             $extra['elements']['control'] = [
                 'name' => 'Student.Gpa/controls',
                 'data' => [
                     'academicPeriodOptions'=>$academicPeriodOptions,
-                    'encodedQueryString' => $encodedQueryString,
-                    'selectedAcademicPeriod'=>$selectedAcademicPeriodId,
+                    //'encodedQueryString' => $encodedQueryString,
+                  //  'selectedAcademicPeriod'=>$selectedAcademicPeriodId,
                     'educationProgrammes'=>$programmeOptions,
-                    'selectedGrade'=>$gradeOptions,
+                  //  'selectedEducationProgrammes'=>$selectedProgramme,
+                    'educationGrade'=>$gradeOptions,
+                 //   'selectedGrade'=>$selectedGrade,
                 ],
                 'options' => [],
                 'order' => 3
             ];
+           // echo "<pre>"; print_r($extra); die;
         }
     }
 
@@ -94,12 +100,12 @@ class StudentGpaTable extends ControllerActionTable
         $this->controller->set('selectedAction', 'StudentGpa');
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    /*public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         
         $userId = $this->Auth->user()['id'];
         $query->where([$this->aliasField('student_id') => $userId]);
-    }
+    }*/
 
     
 }
