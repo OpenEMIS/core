@@ -294,6 +294,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionStudentsReportCards(Event $event, array $params, ArrayObject $extra)
     {
+        $StudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa')
         if (isset($params['report_card_id'], $params['student_id'], $params['institution_id'], $params['academic_period_id'], $extra['report_card_education_grade_id'])) {
             $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
             $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
@@ -312,7 +313,7 @@ class ReportCardsTable extends AppTable
                     $StudentsReportCards->aliasField('academic_period_id'),
                     $StudentsReportCards->aliasField('education_grade_id'),
                     $StudentsReportCards->aliasField('institution_class_id'),
-                    $StudentsReportCards->aliasField('gpa'),
+                    $StudentsGpa->aliasField('gpa'),
                 ])
                 ->contain([
                     'Students' => [
@@ -368,6 +369,12 @@ class ReportCardsTable extends AppTable
                         ]
                     ]
                 ])
+                ->leftJoin(
+                        [$StudentsGpa->getAlias() => $StudentsGpa->getTable()],
+                        [
+                            $StudentsGpa->aliasField('student_id') . ' = ' . $StudentsReportCards->aliasField('student_id')
+                        ]
+                    )
                 ->where([
                     $StudentsReportCards->aliasField('report_card_id') => $params['report_card_id'],
                     $StudentsReportCards->aliasField('student_id') => $params['student_id'],
