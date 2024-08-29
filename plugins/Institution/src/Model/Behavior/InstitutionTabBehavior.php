@@ -479,6 +479,7 @@ class InstitutionTabBehavior extends Behavior
                     $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'type' => $type]);
                 } else {
                     if($controllerName == 'Profiles'){
+
                         $studentUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
                         $urlParams = ['action' => 'Student' . $key, '0' => 'index', 'type' => $type];
                     }else{
@@ -489,7 +490,6 @@ class InstitutionTabBehavior extends Behavior
                     $tabElements[$key]['url'] = array_merge($studentUrl, $urlParams);
                 }
             }
-
         if (Configure::read('schoolMode')) {
             if (isset($tabElements['ExaminationResults'])) {
                 unset($tabElements['ExaminationResults']);
@@ -505,6 +505,7 @@ class InstitutionTabBehavior extends Behavior
         }else{
             $tabElements = $maincontroller->TabPermission->checkTabPermission($tabElements);
         }
+         
         return $tabElements;
     }
 }

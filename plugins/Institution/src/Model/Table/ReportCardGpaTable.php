@@ -425,7 +425,7 @@ class ReportCardGpaTable extends ControllerActionTable
                 ,term_info.academic_term
                 ,term_info.assessment_period_start_date
                 ,term_info.assessment_period_end_date
-                ,term_info.assessment_grading_type_id
+               
                 ,IFNULL(subq2.total_mark, 0) total_mark
             FROM institution_subject_students
             INNER JOIN
@@ -435,7 +435,6 @@ class ReportCardGpaTable extends ControllerActionTable
                     ,IFNULL(assessment_periods.academic_term, 1) academic_term
                     ,MIN(assessment_periods.start_date) assessment_period_start_date
                     ,MAX(assessment_periods.end_date) assessment_period_end_date
-                    ,MAX(assessments.assessment_grading_type_id) assessment_grading_type_id
                 FROM assessment_periods
                 INNER JOIN assessments
                 ON assessments.id = assessment_periods.assessment_id
@@ -448,13 +447,21 @@ class ReportCardGpaTable extends ControllerActionTable
             AND term_info.education_grade_id = institution_subject_students.education_grade_id
             LEFT JOIN
             (
-                SELECT assessment_item_results.academic_period_id
-                        ,assessment_item_results.institution_id
-                        ,assessment_item_results.education_grade_id
-                        ,assessment_item_results.education_subject_id
-                        ,assessment_item_results.student_id
-                        ,IFNULL(assessment_periods.academic_term, 1) academic_term
-                        ,IFNULL(ROUND(SUM(assessment_item_results.marks * assessment_periods.weight) / IFNULL(assessment_grading_types.max, CEILING(MAX(assessment_item_results.marks) / 10) * 10) * 100, 2), '') total_mark
+                SELECT 
+                    assessment_item_results.academic_period_id,
+                    assessment_item_results.institution_id,
+                    assessment_item_results.education_grade_id,
+                    assessment_item_results.education_subject_id,
+                    assessment_item_results.student_id,
+                    IFNULL(assessment_periods.academic_term, 1) AS academic_term,  -- Add the missing comma here
+                    IFNULL(
+                        ROUND(
+                            SUM(assessment_item_results.marks * assessment_periods.weight) / 
+                            IFNULL(CEILING(MAX(assessment_item_results.marks) / 10) * 10, 1) * 100, 
+                            2
+                        ), 
+                        ''
+                    ) AS total_mark
                 FROM assessment_item_results
                     INNER JOIN
                     (
@@ -487,8 +494,6 @@ class ReportCardGpaTable extends ControllerActionTable
                     AND latest_grades.latest_created = assessment_item_results.created
                     LEFT JOIN assessment_grading_options
                     ON assessment_grading_options.id = assessment_item_results.assessment_grading_option_id
-                    LEFT JOIN assessment_grading_types
-                    ON assessment_grading_types.id = assessment_grading_options.assessment_grading_type_id
                     INNER JOIN assessment_periods
                     ON assessment_periods.id = assessment_item_results.assessment_period_id
                     INNER JOIN education_subjects
@@ -520,7 +525,6 @@ class ReportCardGpaTable extends ControllerActionTable
         LEFT JOIN assessment_grading_options
         ON subq.total_mark >= assessment_grading_options.min
         AND subq.total_mark <= assessment_grading_options.max
-        AND subq.assessment_grading_type_id = assessment_grading_options.assessment_grading_type_id
         GROUP BY subq.academic_period_id
             ,subq.institution_id
             ,subq.education_grade_id
