@@ -1236,10 +1236,6 @@ class StudentReportCardsTable extends AppTable
         'StudentStatuses.id IN' => [1, 6, 7, 8]
     ])
     ->toArray();
-
-
-
-
             $assessment_ids=[];
             $institution_subject_student=[];
             if(!empty($subjectObj)) {
