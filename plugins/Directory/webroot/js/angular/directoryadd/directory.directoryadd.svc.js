@@ -875,7 +875,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
 
     async function checkUserAlreadyExistByIdentity(scope) {
         const userData = scope.selectedUserData;
-        console.log(scope);
+        // console.log(scope);
         const result = await checkUserExistByIdentity({
             'identity_type_id': userData.identity_type_id,
             'identity_number': userData.identity_number,
@@ -970,6 +970,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         nationality_name = scope.selectedUserData.nationality_name;
         identity_type_name = scope.selectedUserData.identity_type_name;
         identity_type_id = scope.selectedUserData.identity_type_id;
+        let student_openemis_no = scope.studentOpenEmisId ?? null; // POCOR-8063
         var dataSource = {
             pageSize: scope.pageSize,
             getRows: function (params) {
@@ -987,8 +988,10 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                     nationality_id: nationality_id,
                     nationality_name: nationality_name,
                     identity_type_name: identity_type_name,
-                    identity_type_id: identity_type_id
+                    identity_type_id: identity_type_id,
+                    student_openemis_no: student_openemis_no
     };
+
                 // console.log(param);
                 getInternalSearchData(param)
                     .then(function (response) {
