@@ -52,6 +52,7 @@ class DirectoriesTable extends ControllerActionTable
         $identityTypeId = $requestDataParams['identity_type_id'] ?? null;
         $nationalityId = $requestDataParams['nationality_id'] ?? null;
         $studentOpenemisNo = $requestDataParams['student_openemis_no'] ?? null; // POCOR-8063
+        $guardianTypeId = $requestDataParams['guardian_type_id'] ?? null; // POCOR-8063
         $limit = $requestDataParams['limit'] ?? 10;
         $page = $requestDataParams['page'] ?? 1;
         $userId = $requestDataParams['id'] ?? null;
@@ -86,8 +87,8 @@ class DirectoriesTable extends ControllerActionTable
         }
         // POCOR-8063: start
         $base_conditions = [];
-        if($studentOpenemisNo){
-        $base_conditions = [$securityUsersTable->aliasField('openemis_no !=') => $studentOpenemisNo];
+        if ($studentOpenemisNo && $guardianTypeId) {
+            $base_conditions = [$securityUsersTable->aliasField('openemis_no !=') => $studentOpenemisNo];
         }
         if (!$identityNumber) {
             $new_conditions = self::buildUserSearchConditions($securityUsersTable, $userId, $openemisNo, $firstName, $lastName, $dateOfBirth);

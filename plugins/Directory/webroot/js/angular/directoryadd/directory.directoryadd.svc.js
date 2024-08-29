@@ -970,7 +970,10 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         nationality_name = scope.selectedUserData.nationality_name;
         identity_type_name = scope.selectedUserData.identity_type_name;
         identity_type_id = scope.selectedUserData.identity_type_id;
+        let user_type_id =  scope.selectedUserData.user_type_id ?? null; // POCOR-8063
+        let guardian_type_id = scope.selectedUserData.relation_type_id ?? null; // POCOR-8063
         let student_openemis_no = scope.studentOpenEmisId ?? null; // POCOR-8063
+        let institution_id = scope.institutionId ?? null; // POCOR-8063
         var dataSource = {
             pageSize: scope.pageSize,
             getRows: function (params) {
@@ -983,8 +986,9 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                     openemis_no: openemis_no,
                     date_of_birth: date_of_birth,
                     identity_number: identity_number,
-                    institution_id: null,
-                    user_type_id: scope.selectedUserData.user_type_id,
+                    institution_id: institution_id,
+                    user_type_id: user_type_id,
+                    guardian_type_id: guardian_type_id,
                     nationality_id: nationality_id,
                     nationality_name: nationality_name,
                     identity_type_name: identity_type_name,
