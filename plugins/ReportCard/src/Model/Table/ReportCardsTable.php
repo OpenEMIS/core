@@ -29,7 +29,7 @@ class ReportCardsTable extends ControllerActionTable
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->hasMany('ReportCardSubjects', ['className' => 'ReportCard.ReportCardSubjects', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']);
         $this->hasMany('StudentReportCards', ['className' => 'Institution.InstitutionStudentsReportCards', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('ReportCardExcludedSecurityRoles', ['className' => 'ReportsCard.ReportCardExcludedSecurityRoles', 'foreignKey' => 'report_card_id']); //POCOR-7400
+        $this->hasMany('ReportCardExcludedSecurityRoles', ['className' => 'ReportCard.ReportCardExcludedSecurityRoles', 'foreignKey' => 'report_card_id']); //POCOR-8529 
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'excel_template_name',
             'content' => 'excel_template',
@@ -66,7 +66,7 @@ class ReportCardsTable extends ControllerActionTable
 
     public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);//POCOR-8529 
         return $validator
             ->add('code', 'ruleUniqueCode', [
                 'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
@@ -548,7 +548,7 @@ class ReportCardsTable extends ControllerActionTable
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (empty($entity->errors())) {
+        if (empty($entity->getErrors())) {//POCOR-8529 
             // manually delete hasMany reportCardSubjects data
             $fieldKey = 'report_card_subjects';
             if (!array_key_exists($fieldKey, $data[$this->getAlias()])) {
