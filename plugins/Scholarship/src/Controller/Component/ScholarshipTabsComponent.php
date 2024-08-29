@@ -142,7 +142,7 @@ class ScholarshipTabsComponent extends Component
             ]
         ];
 
-       // return $this->TabPermission->checkTabPermission($tabElements);
-        return $tabElements;
+       return $this->TabPermission->checkTabPermission($tabElements);
+       // return $tabElements;
     }
 }
