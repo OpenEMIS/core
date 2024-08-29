@@ -1006,7 +1006,9 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     }
                 }
                 foreach ($newStudents as $key => $student) {
-                    $student->student_status_id = 1;
+                    if (!is_array($student)) { // POCOR-8391
+                        $student->student_status_id = 1;
+                    }
                     $student['student_status_id'] = 1;
 //                    Log::debug(print_r($student, true));
                     $subjectStudentEntity = $this->SubjectStudents->newEntity($student);
@@ -1288,7 +1290,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 $InstitutionSubjectStaffs->aliasField('institution_id') => $entity->institution_id
             ])
             ->count();
-        //POCOR-8481 starts        
+        //POCOR-8481 starts
         // check student
         $SubjectStudents  =  TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
         $associatedExistingStudents = $SubjectStudents
@@ -1302,7 +1304,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 $SubjectStudents->aliasField('institution_subject_id') => $entity->id
             ])
             ->count();
-        //POCOR-8481 ends       
+        //POCOR-8481 ends
         $InstitutionTextbooks = TableRegistry::getTableLocator()->get('Institution.InstitutionTextbooks');//POCOR-8324
         $associatedTextbooksCount = $InstitutionTextbooks->find()
             ->where([
