@@ -449,7 +449,7 @@ class ImportBehavior extends Behavior
                     // added for POCOR-4577 import staff leave for workflow related record to save the transition record
                     $tempRow['action_type'] = 'imported';
                     $tempRow['student_id'] = (int) $tempRow['student_id'];
-                    $activeModel->patchEntity($tableEntity, $tempRow);
+                    //$activeModel->patchEntity($tableEntity, $tempRow);
                     $tableEntity = $activeModel->patchEntity($tableEntity, $tempRow);
                 }
 
@@ -492,6 +492,7 @@ class ImportBehavior extends Behavior
                     $rowCodeErrorForExcel = [];
                     if (!empty($errors)) {
                         foreach ($errors as $field => $arr) {
+                            $arr = array_reverse($arr, true);
                             if (in_array($field, $columns)) {
                                 $fieldName = $this->getExcelLabel($activeModel->getRegistryAlias(), $field);
                                 $rowCodeError .= '<li>' . $fieldName . ' => ' . $arr[key($arr)] . '</li>';
@@ -828,9 +829,9 @@ class ImportBehavior extends Behavior
         $currentRowHeight = $objPHPExcel->getActiveSheet()->getRowDimension(2)->getRowHeight();
         foreach ($codesData as $columnOrder => $modelArr) {
             $modelData = $modelArr['data'];
-            $firstColumn =   1; //POCOR-8343 
+            $firstColumn = $lastColumn == -1 ? 1 : 1 + $lastColumn ;  //POCOR-8343 
             $modelDataCount = is_array($modelArr['data'][0]) ?  count($modelArr['data'][0])  : 0; //POCOR-8343
-            $lastColumn = $firstColumn + $modelDataCount;//POCOR-8343
+            $lastColumn = $firstColumn + $modelDataCount - 1;
             $objPHPExcel->getActiveSheet()->mergeCells($this->getExcelColumnAlpha($firstColumn) . "2:" . $this->getExcelColumnAlpha($lastColumn) . "2");
             $objPHPExcel->getActiveSheet()->setCellValue($this->getExcelColumnAlpha($firstColumn) . "2", $modelArr['sheetName']);
             if (strlen($modelArr['sheetName']) < 50) {
