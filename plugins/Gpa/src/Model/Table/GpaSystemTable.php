@@ -9,6 +9,8 @@ use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
+use Cake\I18n\FrozenTime;
+use Cake\I18n\FrozenDate;
 
 
 /**
@@ -70,6 +72,8 @@ class GpaSystemTable extends ControllerActionTable {
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['type' => 'select','entity' => $entity]);
+        $this->field('start_date', ['visible' => true]);
+        $this->field('end_date', ['visible' => true]);
         $this->field('gpa_education_programme_id', ['type' => 'select', 'entity' => $entity]);
         $this->field('education_grade_id', ['type' => 'hidden']);
         $this->field('gpa_education_grade_id', ['type' => 'select']);
@@ -104,9 +108,7 @@ class GpaSystemTable extends ControllerActionTable {
     {
         if ($action == 'view') {
             $attr['visible'] = false;
-
         } else if ($action == 'add' || $action == 'edit') {
-
             $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
 			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
@@ -181,5 +183,65 @@ class GpaSystemTable extends ControllerActionTable {
         return compact('periodOptions', 'selectedPeriod');
     }
 
+    public function onUpdateFieldStartDate(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add' ) {
+            return $this->updateDateRangeField('start_date', $attr, $request);
+        }elseif ($action == 'edit') {
+            $queryString = $this->request->getParam('pass')[1];
+            $DecodedQueryString = $this->paramsDecode($queryString);
+            $id = $DecodedQueryString['id'];
+            $selectDate = $this->find()->where([$this->aliasField('id') => $id])->first()->start_date;
+            $entity = $attr['entity'];
+            $attr['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
+            $attr['attr']['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add') {
+            return $this->updateDateRangeField('end_date', $attr, $request);
+        }elseif ($action == 'edit') {
+           $queryString = $this->request->getParam('pass')[1];
+            $DecodedQueryString = $this->paramsDecode($queryString);
+            $id = $DecodedQueryString['id'];
+            $selectDate = $this->find()->where([$this->aliasField('id') => $id])->first()->end_date;
+            $entity = $attr['entity'];
+            $attr['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
+            $attr['attr']['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
+            return $attr;
+        }
+    }
+
+    // Misc
+    private function updateDateRangeField($key, $attr, ServerRequest $request)
+    {
+        $requestData = $request->getData();
+        if (array_key_exists($this->getAlias(), $requestData) && array_key_exists('academic_period_id', $requestData[$this->getAlias()])) {
+            $selectedPeriodId = $requestData[$this->getAlias()]['academic_period_id'];
+        } else {
+            $selectedPeriodId = $this->AcademicPeriods->getCurrent();
+        }
+
+        $selectedPeriod = $this->AcademicPeriods->get($selectedPeriodId);
+        $attr['type'] = 'date';
+        $attr['date_options']['startDate'] = $selectedPeriod->start_date->format('d-m-Y');
+        $attr['date_options']['endDate'] = $selectedPeriod->end_date->format('d-m-Y');
+
+        if (!array_key_exists($this->getAlias(), $requestData) || !array_key_exists($key, $requestData[$this->getAlias()])) {
+            if ($selectedPeriodId != $this->AcademicPeriods->getCurrent()) {
+                $attr['value'] = $selectedPeriod->start_date;
+            } else {
+                $attr['value'] = FrozenTime::now();
+            }
+        }
+//echo "<pre>"; print_r($attr); die;
+        return $attr;
+    }
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $data) {
+        //echo "<pre>"; print_r($this->request); die;
+    }
     
 }
