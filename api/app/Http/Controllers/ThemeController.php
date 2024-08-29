@@ -15,7 +15,7 @@ class ThemeController extends Controller
         $this->themeService = $themeService;
     }
 
-     /**
+    /**
      * @OA\Get(
      *     path="/api/v4/themes",
      *     summary="Get all the themes available",
