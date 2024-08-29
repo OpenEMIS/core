@@ -22,8 +22,17 @@ class CumulativeTable extends ControllerActionTable {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods','foreignKey' => 'academic_period_id']);
         $this->belongsTo('GpaEducationGrades', ['className' => 'Education.EducationGrades','foreignKey' => 'gpa_education_grade_id']);
-        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades','foreignKey' => 'education_grade_id']);
+        /*$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades','foreignKey' => 'education_grade_id']);*/
         $this->belongsTo('AssessmentGradingTypes', ['className' => 'Assessment.AssessmentGradingTypes' ,'foreignKey' => 'gpa_grading_type_id']);
+          $this->belongsToMany('EducationGrades', [
+            'className' => 'Education.EducationGrades',
+            'joinTable' => 'cumulative_gpa_grades',
+            'foreignKey' => 'education_grade_id',
+            'targetForeignKey' => 'education_grade_gpa_id',
+            'through' => 'Gpa.CumulativeGpaGrades',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
         $this->setDeleteStrategy('restrict');
     }
