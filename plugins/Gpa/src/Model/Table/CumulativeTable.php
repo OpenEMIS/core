@@ -9,7 +9,8 @@ use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
-
+use Cake\I18n\FrozenTime;
+use Cake\I18n\FrozenDate;
 
 /**
  * POCOR-8222
@@ -79,9 +80,9 @@ class CumulativeTable extends ControllerActionTable {
     {
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('gpa_education_programme_id', ['type' => 'hidden']);
-       // $this->field('education_grade_id', ['type' => 'select']);
+        $this->field('education_grade_id', ['type' => 'hidden']);
         $this->field('gpa_education_grade_id', ['type' => 'select']);
-        $this->field('gpa_grading_type_id', ['type' => 'select']);
+        $this->field('gpa_grading_type_id', ['type' => 'hidden']);
 
         $this->setFieldOrder(['academic_period_id', 'gpa_education_grade_id', 'gpa_grading_type_id']);
     }
@@ -90,9 +91,11 @@ class CumulativeTable extends ControllerActionTable {
     {
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('gpa_education_programme_id', ['type' => 'select']);
+        $this->field('start_date', ['visible' => true]);
+        $this->field('end_date', ['visible' => true]);
         $this->field('education_grade_id');
         $this->field('gpa_education_grade_id',['type' => 'select']);
-        $this->field('gpa_grading_type_id', ['type' => 'select']);
+        $this->field('gpa_grading_type_id', ['type' => 'hidden']);
         $this->setFieldOrder(['academic_period_id', 'gpa_education_programme_id','gpa_education_grade_id', 'gpa_grading_type_id']);
     }
 
@@ -121,16 +124,14 @@ class CumulativeTable extends ControllerActionTable {
 
     public function onUpdateFieldGpaEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
     {
+        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
+        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
         if ($action == 'view') {
             $attr['visible'] = false;
 
-        } else if ($action == 'add' || $action == 'edit') {
-
-            $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
-			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			$academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
-
-            if ($action == 'add' || $action == 'edit') {
+        } else if ($action == 'add') {
+            if ($action == 'add') {
                 $programmeOptions = $EducationProgrammes
                     ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
                     ->find('visible')
@@ -142,25 +143,34 @@ class CumulativeTable extends ControllerActionTable {
                 $attr['options'] = $programmeOptions;
                 $attr['onChangeReload'] = 'changeEducationProgrammeId';
 
-            } /*else {
+            }
+        }else if ($action == 'edit'){
                 //since programme_id is not stored, then during edit need to get from grade
-                $programmeId = $this->EducationGrades->get($attr['entity']->education_grade_id)->education_programme_id;
-                $attr['type'] = 'readonly';
-                $attr['value'] = $programmeId;
-                $attr['attr']['value'] = $EducationProgrammes->get($programmeId)->name;
-            }*/
-        }
+            $programmeOptions = $EducationProgrammes
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
+                    ->find('visible')
+                    ->contain(['EducationCycles.EducationLevels.EducationSystems'])
+                    ->order(['EducationCycles.order' => 'ASC', $EducationProgrammes->aliasField('order') => 'ASC'])
+                    ->where(['EducationSystems.academic_period_id IS' => $academicPeriodId])
+                    ->toArray();
+                $recordId = $this->getQueryString('id');
+                
+                $gradeId = $this->find()->where([$this->aliasField('id') => $recordId])->first()->gpa_education_grade_id;
+                $programmeId = $this->EducationGrades->find()->where([$this->EducationGrades->aliasField('id IS') => $gradeId])->first()->education_programme_id;
+                $EducationProgrammes = $EducationProgrammes->find()->select(['id','name'])->where([$EducationProgrammes->aliasField('id IS') => $programmeId])->first();
+                $attr['type'] = 'select';
+                $attr['options'] = $programmeOptions;
+                $attr['default'] = $EducationProgrammes->id;
+                $attr['onChangeReload'] = 'changeEducationProgrammeId';
+            }
         return $attr;
     }
 
     public function onUpdateFieldGpaEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if ($action == 'add' || $action == 'edit') {
-
+        if ($action == 'add') {
+            $selectedProgramme =  $request->getData()[$this->getAlias()]['gpa_education_programme_id'];
             if ($action == 'add') {
-
-                $selectedProgramme =  $request->getData()[$this->getAlias()]['gpa_education_programme_id'];
-                $gradeOptions = [];
                 if (!is_null($selectedProgramme)) {
                     $gradeOptions = $this->GpaEducationGrades
                         ->find('list')
@@ -174,14 +184,21 @@ class CumulativeTable extends ControllerActionTable {
                 $attr['onChangeReload'] = 'changeEducationGrade';
 
             } else {
+                $gradeOptions = $this->GpaEducationGrades
+                        ->find('list')
+                        ->find('visible')
+                        ->contain(['EducationProgrammes'])
+                        ->where([$this->GpaEducationGrades->aliasField('education_programme_id IS') => $selectedProgramme])
+                        ->order(['EducationProgrammes.order' => 'ASC', $this->GpaEducationGrades->aliasField('order') => 'ASC'])
+                        ->toArray();
                 $recordId = $this->getQueryString('id');
-                $EducationGradesId = $this->find()->where(['id' => $recordId])->first()->education_grade_id;
-
+                $EducationGradesId = $this->find()->where(['id' => $recordId])->first()->gpa_education_grade_id;
                 $EducationGrades = $this->GpaEducationGrades->find()->select(['id','name'])->where(['id' => $EducationGradesId])->first();
-                //echo "<pre>"; print_r($params); die;
                 $attr['type'] = 'select';
-                $attr['value'] = $EducationGrades->id;
-                $attr['attr']['value'] = $EducationGrades->name;
+                $attr['options'] = $gradeOptions;
+                $attr['default'] = $EducationGradesId;
+                $attr['onChangeReload'] = 'changeEducationGradeId';
+
             }
         }
 
@@ -298,7 +315,6 @@ class CumulativeTable extends ControllerActionTable {
                 $attr['exists'] = $institutionProgramGradeSubjects;
             }
         } else if ($action == 'view') {
-            echo "<pre>"; print_r($request); die;
             $attr['type'] = 'element';
             $attr['element'] = 'cumulative';
             $recordId = $this->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
@@ -315,8 +331,8 @@ class CumulativeTable extends ControllerActionTable {
                         'valueField' => 'education_grade_subject_id'
                     ])
                     ->where([
-                        'InstitutionProgramGradeSubjects.education_grade_id' => $institutionGrade->education_grade_id,
-                        'InstitutionProgramGradeSubjects.institution_grade_id' => $programmeId
+                        'InstitutionProgramGradeSubjects.education_grade_id IS' => $institutionGrade->education_grade_id,
+                        'InstitutionProgramGradeSubjects.institution_grade_id IS' => $programmeId
                     ])
                     ->enableHydration(false)
                     ->toArray();
@@ -364,6 +380,77 @@ class CumulativeTable extends ControllerActionTable {
         }
     }
 
+    public function onUpdateFieldStartDate(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add' ) {
+            return $this->updateDateRangeField('start_date', $attr, $request);
+        }elseif ($action == 'edit') {
+            $queryString = $this->request->getParam('pass')[1];
+            $DecodedQueryString = $this->paramsDecode($queryString);
+            $id = $DecodedQueryString['id'];
+            $selectDate = $this->find()->where([$this->aliasField('id') => $id])->first()->start_date;
+            $entity = $attr['entity'];
+            $attr['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
+            $attr['attr']['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add') {
+            return $this->updateDateRangeField('end_date', $attr, $request);
+        }elseif ($action == 'edit') {
+           $queryString = $this->request->getParam('pass')[1];
+            $DecodedQueryString = $this->paramsDecode($queryString);
+            $id = $DecodedQueryString['id'];
+            $selectDate = $this->find()->where([$this->aliasField('id') => $id])->first()->end_date;
+            $entity = $attr['entity'];
+            $attr['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
+            $attr['attr']['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
+            return $attr;
+        }
+    }
+
+    // Misc
+    private function updateDateRangeField($key, $attr, ServerRequest $request)
+    {
+        $requestData = $request->getData();
+        if (array_key_exists($this->getAlias(), $requestData) && array_key_exists('academic_period_id', $requestData[$this->getAlias()])) {
+            $selectedPeriodId = $requestData[$this->getAlias()]['academic_period_id'];
+        } else {
+            $selectedPeriodId = $this->AcademicPeriods->getCurrent();
+        }
+
+        $selectedPeriod = $this->AcademicPeriods->get($selectedPeriodId);
+        $attr['type'] = 'date';
+        $attr['date_options']['startDate'] = $selectedPeriod->start_date->format('d-m-Y');
+        $attr['date_options']['endDate'] = $selectedPeriod->end_date->format('d-m-Y');
+
+        if (!array_key_exists($this->getAlias(), $requestData) || !array_key_exists($key, $requestData[$this->getAlias()])) {
+            if ($selectedPeriodId != $this->AcademicPeriods->getCurrent()) {
+                $attr['value'] = $selectedPeriod->start_date;
+            } else {
+                $attr['value'] = FrozenTime::now();
+            }
+        }
+        return $attr;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'gpa_education_grade_id') {
+            return __('Education Grade');
+        }else if ($field == 'gpa_grading_type_id') {
+            return  __('Grading Type');
+        }else if ($field == 'gpa_education_programme_id') {
+            return  __('Education programme');
+        }else if ($field == 'gpa_education_programme_id') {
+            return  __('Education programme');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 
     
 }
