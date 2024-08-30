@@ -423,6 +423,7 @@ class CalendarsTable extends ControllerActionTable
         }
     }
 
+    //POCOR-7696
     public function onGetInstitutionShiftId(Event $event, Entity $entity)
     {
         $ShiftOptionTable = TableRegistry::getTableLocator()->get('Institution.ShiftOptions');
