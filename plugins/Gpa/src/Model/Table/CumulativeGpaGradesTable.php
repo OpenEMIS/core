@@ -18,6 +18,18 @@ class CumulativeGpaGradesTable extends ControllerActionTable {
     public function initialize(array $config): void
     {
         parent::initialize($config);
+
+        $this->belongsTo('EducationGrades', [
+            'foreignKey' => 'education_grade_id',
+            'joinType' => 'INNER',
+            'className' => 'Education.EducationGrades',
+        ]);
+
+        $this->belongsTo('EducationGradesGpa', [
+            'foreignKey' => 'education_grade_gpa_id',
+            'joinType' => 'INNER',
+            'className' => 'Gpa.Cumulative',
+        ]);
     }
 
     

@@ -43,7 +43,7 @@ class GpaSystemTable extends ControllerActionTable {
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->getAttribute('query')['academic_period_id']) ? $this->request->getAttribute('query')['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where = [];
         $nullVal = 0;
@@ -121,7 +121,7 @@ class GpaSystemTable extends ControllerActionTable {
 			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
 
-            if ($action == 'add' || $action == 'edit') {
+            if ($action == 'add') {
                 $programmeOptions = $EducationProgrammes
                     ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
                     ->find('visible')
@@ -133,13 +133,25 @@ class GpaSystemTable extends ControllerActionTable {
                 $attr['options'] = $programmeOptions;
                 $attr['onChangeReload'] = 'changeEducationProgrammeId';
 
-            } /*else {
+            }else {
                 //since programme_id is not stored, then during edit need to get from grade
-                $programmeId = $this->EducationGrades->get($attr['entity']->education_grade_id)->education_programme_id;
-                $attr['type'] = 'readonly';
-                $attr['value'] = $programmeId;
-                $attr['attr']['value'] = $EducationProgrammes->get($programmeId)->name;
-            }*/
+                $programmeOptions = $EducationProgrammes
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
+                    ->find('visible')
+                    ->contain(['EducationCycles.EducationLevels.EducationSystems'])
+                    ->order(['EducationCycles.order' => 'ASC', $EducationProgrammes->aliasField('order') => 'ASC'])
+                    ->where(['EducationSystems.academic_period_id IS' => $academicPeriodId])
+                    ->toArray();
+                $recordId = $this->getQueryString('id');
+                
+                $gradeId = $this->find()->where([$this->aliasField('id') => $recordId])->first()->gpa_education_grade_id;
+                $programmeId = $this->EducationGrades->find()->where([$this->EducationGrades->aliasField('id IS') => $gradeId])->first()->education_programme_id;
+                $EducationProgrammes = $EducationProgrammes->find()->select(['id','name'])->where([$EducationProgrammes->aliasField('id IS') => $programmeId])->first();
+                $attr['type'] = 'select';
+                $attr['options'] = $programmeOptions;
+                $attr['default'] = $EducationProgrammes->id;
+                $attr['onChangeReload'] = 'changeEducationProgrammeId';
+            }
         }
         return $attr;
     }

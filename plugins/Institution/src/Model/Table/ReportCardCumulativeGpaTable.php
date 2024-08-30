@@ -27,8 +27,10 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('Institutions', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
+        
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
@@ -38,6 +40,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             'appliedAction' => ['ReportCardStatuses' =>['student_id','institution_class_id','class_id','education_grade_id','academic_period_id']
             ]
         ]);
+        $this->addBehavior('User.AdvancedNameSearch');
     }
 
     public function implementedEvents(): array
@@ -61,7 +64,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             $url = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
-                'action' => 'ReportCardCumulativeGpa',
+                'action' => 'ReportCardGpa',
                 'view',
                 $this->paramsEncode(['id' => $entity->id,'institution_id' => $queryString['institution_id'],'student_id'=> $entity->student_id]),
             ];
@@ -96,7 +99,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         $this->field('next_institution_class_id', ['type' => 'hidden']);
         $this->field('student_status_id', ['type' => 'hidden']);
         $this->field('cumulative_gpa');
-        $this->field('created',['visible' => true, 'sort' => false]);
+        $this->field('created',['visible' => true, 'sort' => false,'label' => 'Updated']);
 
         $this->fields['academic_period_id']['visible'] = false;
         
@@ -282,25 +285,8 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
 
 
                     if ($this->AccessControl->isAdmin()) {
-                        if (!empty($generateStartDate) && !empty($generateEndDate)) {
-                            $extra['toolbarButtons']['generateAll'] = $generateButton;
-                        } else {
-                            $generateButton['attr']['data-html'] = true;
-                            $generateButton['attr']['title'] .= __('<br>' . $this->getMessage('ReportCardStatuses.date_closed'));
-                            $generateButton['url'] = 'javascript:void(0)';
-                            $extra['toolbarButtons']['generateAll'] = $generateButton;
-                        }
-                    } else {
-                        if ($SecurityRoleFunctionsTableGenerateAllData >= 1) {
-                            if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {
-                                $extra['toolbarButtons']['generateAll'] = $generateButton;
-                            } else {
-                                $generateButton['attr']['data-html'] = true;
-                                $generateButton['attr']['title'] .= __('<br>' . $this->getMessage('ReportCardStatuses.date_closed'));
-                                $generateButton['url'] = 'javascript:void(0)';
-                                $extra['toolbarButtons']['generateAll'] = $generateButton;
-                            }
-                        }
+                        
+                        $extra['toolbarButtons']['generateAll'] = $generateButton;
                     }
 
                     
@@ -319,7 +305,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('academic_period_id');
-        $this->field('institution_class_id', ['visible' => true]);
+        //$this->field('institution_class_id', ['visible' => true]);
         $this->field('institution_class', ['visible' => true]);
         $this->field('student_status_id', ['visible' => false]);
         $this->field('next_institution_class_id', ['visible' => false]);
@@ -423,7 +409,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                 ,term_info.academic_term
                 ,term_info.assessment_period_start_date
                 ,term_info.assessment_period_end_date
-                ,term_info.assessment_grading_type_id
+               
                 ,IFNULL(subq2.total_mark, 0) total_mark
             FROM institution_subject_students
             INNER JOIN
@@ -433,7 +419,6 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                     ,IFNULL(assessment_periods.academic_term, 1) academic_term
                     ,MIN(assessment_periods.start_date) assessment_period_start_date
                     ,MAX(assessment_periods.end_date) assessment_period_end_date
-                    ,MAX(assessments.assessment_grading_type_id) assessment_grading_type_id
                 FROM assessment_periods
                 INNER JOIN assessments
                 ON assessments.id = assessment_periods.assessment_id
@@ -446,13 +431,21 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             AND term_info.education_grade_id = institution_subject_students.education_grade_id
             LEFT JOIN
             (
-                SELECT assessment_item_results.academic_period_id
-                        ,assessment_item_results.institution_id
-                        ,assessment_item_results.education_grade_id
-                        ,assessment_item_results.education_subject_id
-                        ,assessment_item_results.student_id
-                        ,IFNULL(assessment_periods.academic_term, 1) academic_term
-                        ,IFNULL(ROUND(SUM(assessment_item_results.marks * assessment_periods.weight) / IFNULL(assessment_grading_types.max, CEILING(MAX(assessment_item_results.marks) / 10) * 10) * 100, 2), '') total_mark
+                SELECT 
+                    assessment_item_results.academic_period_id,
+                    assessment_item_results.institution_id,
+                    assessment_item_results.education_grade_id,
+                    assessment_item_results.education_subject_id,
+                    assessment_item_results.student_id,
+                    IFNULL(assessment_periods.academic_term, 1) AS academic_term,  -- Add the missing comma here
+                    IFNULL(
+                        ROUND(
+                            SUM(assessment_item_results.marks * assessment_periods.weight) / 
+                            IFNULL(CEILING(MAX(assessment_item_results.marks) / 10) * 10, 1) * 100, 
+                            2
+                        ), 
+                        ''
+                    ) AS total_mark
                 FROM assessment_item_results
                     INNER JOIN
                     (
@@ -485,8 +478,6 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                     AND latest_grades.latest_created = assessment_item_results.created
                     LEFT JOIN assessment_grading_options
                     ON assessment_grading_options.id = assessment_item_results.assessment_grading_option_id
-                    LEFT JOIN assessment_grading_types
-                    ON assessment_grading_types.id = assessment_grading_options.assessment_grading_type_id
                     INNER JOIN assessment_periods
                     ON assessment_periods.id = assessment_item_results.assessment_period_id
                     INNER JOIN education_subjects
@@ -518,7 +509,6 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         LEFT JOIN assessment_grading_options
         ON subq.total_mark >= assessment_grading_options.min
         AND subq.total_mark <= assessment_grading_options.max
-        AND subq.assessment_grading_type_id = assessment_grading_options.assessment_grading_type_id
         GROUP BY subq.academic_period_id
             ,subq.institution_id
             ,subq.education_grade_id
@@ -536,13 +526,14 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         ,subq3.education_grade_id");
         $statement->execute();
         $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
-
+//echo "<pre>"; print_r($result); die;
         if (!empty($result)) {
             foreach ($result as $val) {
                 $gpa = $val['gpa_per_student'];
 
             }
         }
+
         $this->saveGpaForStudent($gpa, $studentId, $selectedAcademicPeriodId, $educationGradeId, $institutionId);
         return true;
     }
@@ -587,7 +578,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
     {
         $InstitutionStudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
 
-        $checkCumulativeGpa = $InstitutionStudentsGpa->find()
+        $checkGpa = $InstitutionStudentsGpa->find()
             ->where([
                 'academic_period_id' => $selectedAcademicPeriodId,
                 'student_id' => $studentId,
@@ -596,15 +587,16 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             ])
             ->first();
 
-        if (empty($checkCumulativeGpa)) {
+//echo "<pre>"; print_r([$selectedAcademicPeriodId,$studentId, $educationGradeId,$institutionId]); die;
+        if (empty($checkGpa)) {
             $data = [
                 'student_id' => $studentId,
                 'academic_period_id' => $selectedAcademicPeriodId,
                 'education_grade_id' => $educationGradeId,
-                'cumulative_gpa' => $gpa,
+                'gpa' => $gpa,
                 'institution_id' => $institutionId,
                 'created_user_id' => 2,
-                'created' => Time::now(), // Use CakePHP's Time class
+                'created' => FrozenTime::now(),
             ];
             $gradingOptionEntity = $InstitutionStudentsGpa->newEntity($data);
 
@@ -615,21 +607,25 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                 return false;
             }
         } else {
-            
             $updateResult = $InstitutionStudentsGpa->updateAll(
-                ['cumulative_gpa' => $gpa],
+                [
+                    'gpa' => $gpa,
+                    'modified_user_id' => 2,
+                    'modified' => FrozenTime::now(),
+                ],
                 [
                     'student_id' => $studentId,
                     'academic_period_id' => $selectedAcademicPeriodId,
                     'education_grade_id' => $educationGradeId,
                     'institution_id' => $institutionId,
-                ]
-            );
-            if($updateResult == 1){
-                return true;
-            }else{
-                return false;
+                ]);
+
+            if ($updateResult > 0) {
+                debug('Update successful');
+            } else {
+                debug('No rows updated');
             }
+
         }
     }
 
@@ -645,19 +641,29 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
     {
         $studentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
         $institutionId = $entity['institution']['id'];
-        $createdDate = $studentsGpa->find()->where(['student_id'=>$entity->student_id,
-                        'education_grade_id'=>$entity->education_grade_id,'institution_id'=>$institutionId,'academic_period_id'=>$entity->academic_period_id])->first()->created;
-        return $createdDate;
+        $record = $studentsGpa->find()
+            ->where([
+                'student_id' => $entity->student_id,
+                'education_grade_id' => $entity->education_grade_id,
+                'institution_id' => $institutionId,
+                'academic_period_id' => $entity->academic_period_id
+            ])
+            ->first();
+        if ($record) {
+            // Return the modified date if it's not null, otherwise return the created date
+            return !empty($record->modified) ? $record->modified : $record->created;
+        }
+        return null;
     }
+
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
-            if ($field == 'created') {
-                return 'Updated';
-            } else {
-                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-            }
-        
+        if ($field == 'created' || $field == 'modified') {
+            return 'Updated';
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
     public function onGetStudentName(Event $event, Entity $entity)
