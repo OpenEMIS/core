@@ -8,6 +8,11 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Authentication\IdentityInterface;
 use Cake\ORM\Query;
+
+/**
+ * POCOR-8222
+ * GPA's and Cummulative GPA develop
+**/
 class StudentGpaTable extends ControllerActionTable
 {
     public function initialize(array $config): void
@@ -30,8 +35,26 @@ class StudentGpaTable extends ControllerActionTable
     {
         $this->field('institution_id', ['type' => 'hidden']);
         $this->setupTabElements();
-        if($this->request->getParam('controller') == 'Students'){
+    }
+
+    private function setupTabElements()
+    {
+        $options['type'] = 'student';
+        $tabElements = $this->getAcademicTabElements($options);
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', 'StudentGpa');
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        
+        if($this->request->getParam('controller') == 'Profiles'){
+            $userId = $this->Auth->user()['id'];
+            $query->where([$this->aliasField('student_id') => $userId]);
+        }
+         if($this->request->getParam('controller') == 'Students'){
             $queryString = $this->getQueryString();
+            $studentId = $this->getQueryString('student_id');
             $encodedQueryString = $this->paramsEncode($queryString);
             $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
             $academicPeriodOptions = $this->AcademicPeriods->getYearList();
@@ -43,69 +66,51 @@ class StudentGpaTable extends ControllerActionTable
                         ->find('visible')
                         ->contain(['EducationCycles.EducationLevels.EducationSystems'])
                         ->order(['EducationCycles.order' => 'ASC', $EducationProgrammes->aliasField('order') => 'ASC'])
-                        ->where(['EducationSystems.academic_period_id IS' => $academicPeriodId])
+                        ->where(['EducationSystems.academic_period_id IS' => $selectedAcademicPeriodId])
                         ->toArray();
-            $programmeOptions = array(-1 => __('-- Select Education Programme --')) + $programmeOptions;
 
-                /*if ($request->getQuery('education_programme_id')) {
-                    $selectedProgramme = $request->getQuery('education_programme_id');
+            $programmeOptions = array(-1 => __('-- Select Education Programme --')) + $programmeOptions;
+            
+                if (!empty($this->request->getQuery()['education_programme_id'])) {
+                    $selectedProgramme = $this->request->getQuery()['education_programme_id'];
                 } else {
                     $selectedProgramme = -1;
-                }*/
-                $selectedProgramme = -1;
-                $extra['selectedProgramme'] = $selectedProgramme;
+                }
 
-                    if ($selectedProgramme != -1) {
-                        $gradeOptions = $this->EducationGrades
-                            ->find('list')
-                            ->find('visible')
-                            ->contain(['EducationProgrammes'])
-                            ->where([$this->EducationGrades->aliasField('education_programme_id IS') => $selectedProgramme])
-                            ->order(['EducationProgrammes.order' => 'ASC', $this->EducationGrades->aliasField('order') => 'ASC'])
-                            ->toArray();
-                    }
-                    $gradeOptions = $gradeOptions ?? []; // Initialize $gradeOptions as an empty array if it's null
+                $extra['selectedProgramme'] = $selectedProgramme;
+              //  echo "<pre>"; print_r(extra); die;
+                $gradeOptions = $this->EducationGrades
+                    ->find('list')
+                    ->find('visible')
+                    ->contain(['EducationProgrammes'])
+                    ->where([$this->EducationGrades->aliasField('education_programme_id IS') => $selectedProgramme])
+                    ->order(['EducationProgrammes.order' => 'ASC', $this->EducationGrades->aliasField('order') => 'ASC'])
+                    ->toArray();
+
                     $gradeOptions = array(-1 => __('-- Select Education Grade --')) + $gradeOptions;
-                /*if ($request->getQuery('education_grade_id')) {
-                    $selectedGrade = $request->getQuery('education_programme_id');
+                if ($this->request->getQuery()['education_grade_id']) {
+                    $selectedGrade = $this->request->getQuery()['education_grade_id'];
                 } else {
                     $selectedGrade = -1;
-                }*/
-                $selectedGrade = -1;
+                }
                 $extra['selectedGrade'] = $selectedGrade;
 
             $extra['elements']['control'] = [
                 'name' => 'Student.Gpa/controls',
                 'data' => [
                     'academicPeriodOptions'=>$academicPeriodOptions,
-                    //'encodedQueryString' => $encodedQueryString,
-                  //  'selectedAcademicPeriod'=>$selectedAcademicPeriodId,
-                    'educationProgrammes'=>$programmeOptions,
-                  //  'selectedEducationProgrammes'=>$selectedProgramme,
-                    'educationGrade'=>$gradeOptions,
-                 //   'selectedGrade'=>$selectedGrade,
+                    'encodedQueryString' => $encodedQueryString,
+                    'selectedAcademicPeriod'=>$selectedAcademicPeriodId,
+                    'programmeOptions'=>$programmeOptions,
+                    'selectedProgramme'=>$selectedProgramme,
+                    'gradeOptions'=>$gradeOptions,
+                    'selectedGrade'=>$selectedGrade,
                 ],
                 'options' => [],
                 'order' => 3
             ];
-           // echo "<pre>"; print_r($extra); die;
+           $query->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriodId,$this->aliasField('education_grade_id') => $selectedGrade,$this->aliasField('student_id') => $studentId]);
         }
     }
-
-    private function setupTabElements()
-    {
-        $options['type'] = 'student';
-        $tabElements = $this->getAcademicTabElements($options);
-        $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'StudentGpa');
-    }
-
-    /*public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-        
-        $userId = $this->Auth->user()['id'];
-        $query->where([$this->aliasField('student_id') => $userId]);
-    }*/
-
     
 }

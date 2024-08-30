@@ -10,9 +10,14 @@ class POCOR8222 extends AbstractMigration
         // Backup the existing table
         $this->execute('CREATE TABLE `z_8222_institution_students_report_cards` LIKE `institution_students_report_cards`');
         $this->execute('INSERT INTO `z_8222_institution_students_report_cards` SELECT * FROM `institution_students_report_cards`');
+
         //backup
         $this->execute('CREATE TABLE `z_8222_security_functions` LIKE `security_functions`');
-        $this->execute('INSERT INTO `z_8222_security_functions` SELECT * FROM `security_functions`'); 
+        $this->execute('INSERT INTO `z_8222_security_functions` SELECT * FROM `security_functions`');
+
+        //backup
+        $this->execute('CREATE TABLE `z_8222_assessments` LIKE `assessments`');
+        $this->execute('INSERT INTO `z_8222_assessments` SELECT * FROM `assessments`'); 
 
         // security_functions Set Permission
         $this->execute('UPDATE security_functions SET `order` = `order` + 1 WHERE `order` > 482');
@@ -72,11 +77,11 @@ class POCOR8222 extends AbstractMigration
         // Create new tables
         $this->execute("CREATE TABLE `education_grades_gpa`
                       (`id` int(11) NOT NULL AUTO_INCREMENT,
+                      `academic_period_id` int(11) NOT NULL,
                       `start_date` datetime DEFAULT NULL,
                       `end_date` datetime DEFAULT NULL,
-                      `academic_period_id` int(11) NOT NULL,
-                      `education_grade_id` int(11) NOT NULL,
                       `gpa_education_grade_id` int(11) NOT NULL,
+                      `education_grade_id` int(11) NOT NULL,
                       `gpa_grading_type_id` int(11) NOT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
@@ -93,6 +98,8 @@ class POCOR8222 extends AbstractMigration
                       `education_grade_id` int(11) NOT NULL,
                       `gpa` decimal(10,2) NOT NULL,
                       `cumulative_gpa` decimal(10,2) DEFAULT NULL,
+                      `modified_user_id` int(11) DEFAULT NULL,
+                      `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) NOT NULL,
                       `created` datetime NOT NULL,
                        PRIMARY KEY (`id`)
@@ -126,7 +133,7 @@ class POCOR8222 extends AbstractMigration
                       `gpa_grading_type_id` int(11) NOT NULL,
                        PRIMARY KEY (`id`)
                     ) ENGINE=InnoDB DEFAULT CHARSET=latin1");
-
+        
         $this->execute("CREATE TABLE `cumulative_gpa_grade`
                       (`id` char(36) NOT NULL,
                       `education_grade_gpa_id` int(11) NOT NULL,
@@ -175,14 +182,6 @@ class POCOR8222 extends AbstractMigration
         // Rollback changes
         $this->execute('RENAME TABLE `z_8222_institution_students_report_cards` TO `institution_students_report_cards`');
         $this->execute('RENAME TABLE `z_8222_security_functions` TO `security_functions`');
-        // Drop table if exist
-        $this->execute('DROP TABLE IF EXISTS `education_grades_gpa`');
-        $this->execute('RENAME TABLE `z_8222_education_grades_gpa` TO `education_grades_gpa`');
-        $this->execute('DROP TABLE IF EXISTS `institution_students_gpa`');
-        $this->execute('RENAME TABLE `z_8222_institution_students_gpa` TO `institution_students_gpa`');
-        $this->execute('DROP TABLE IF EXISTS `gpa_grading_options`');
-        $this->execute('RENAME TABLE `z_8222_gpa_grading_options` TO `gpa_grading_options`');
-        $this->execute('DROP TABLE IF EXISTS `gpa_grading_types`');
-        $this->execute('RENAME TABLE `z_8222_gpa_grading_types` TO `gpa_grading_types`');
+        $this->execute('RENAME TABLE `z_8222_assessments` TO `assessments`');
     }
 }

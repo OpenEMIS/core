@@ -48,7 +48,13 @@ class GpaSystemTable extends ControllerActionTable {
         $where = [];
         $nullVal = 0;
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
-        $where[$this->aliasField('education_grade_id =')] = $nullVal;
+
+        // Use 'IS NOT' for checking if the value is not null
+        if ($selectedAcademicPeriod !== NULL) {
+            $where[$this->aliasField('gpa_grading_type_id IS NOT')] = NULL;
+        } else {
+            $where[$this->aliasField('gpa_grading_type_id IS')] = NULL;
+        }
         $extra['elements']['controls'] = ['name' => 'Gpa.controls', 'data' => [], 'options' => [], 'order' => 1];
         $query->where($where);
     }
@@ -62,6 +68,8 @@ class GpaSystemTable extends ControllerActionTable {
     {
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('gpa_education_programme_id', ['type' => 'hidden']);
+        $this->field('start_date', ['type' => 'hidden']);
+        $this->field('end_date', ['type' => 'hidden']);
         $this->field('education_grade_id', ['type' => 'hidden']);
         $this->field('gpa_education_grade_id', ['type' => 'select']);
         $this->field('gpa_grading_type_id', ['type' => 'select']);
@@ -72,9 +80,9 @@ class GpaSystemTable extends ControllerActionTable {
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['type' => 'select','entity' => $entity]);
-        $this->field('start_date', ['visible' => true]);
-        $this->field('end_date', ['visible' => true]);
         $this->field('gpa_education_programme_id', ['type' => 'select', 'entity' => $entity]);
+        $this->field('start_date', ['type' => 'hidden']);
+        $this->field('end_date', ['type' => 'hidden']);
         $this->field('education_grade_id', ['type' => 'hidden']);
         $this->field('gpa_education_grade_id', ['type' => 'select']);
         $this->field('gpa_grading_type_id', ['type' => 'select']);
@@ -183,65 +191,19 @@ class GpaSystemTable extends ControllerActionTable {
         return compact('periodOptions', 'selectedPeriod');
     }
 
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-        if ($action == 'add' ) {
-            return $this->updateDateRangeField('start_date', $attr, $request);
-        }elseif ($action == 'edit') {
-            $queryString = $this->request->getParam('pass')[1];
-            $DecodedQueryString = $this->paramsDecode($queryString);
-            $id = $DecodedQueryString['id'];
-            $selectDate = $this->find()->where([$this->aliasField('id') => $id])->first()->start_date;
-            $entity = $attr['entity'];
-            $attr['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
-            $attr['attr']['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
-            return $attr;
-        }
-    }
-
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
-    {
-        if ($action == 'add') {
-            return $this->updateDateRangeField('end_date', $attr, $request);
-        }elseif ($action == 'edit') {
-           $queryString = $this->request->getParam('pass')[1];
-            $DecodedQueryString = $this->paramsDecode($queryString);
-            $id = $DecodedQueryString['id'];
-            $selectDate = $this->find()->where([$this->aliasField('id') => $id])->first()->end_date;
-            $entity = $attr['entity'];
-            $attr['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
-            $attr['attr']['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
-            return $attr;
-        }
-    }
-
-    // Misc
-    private function updateDateRangeField($key, $attr, ServerRequest $request)
-    {
-        $requestData = $request->getData();
-        if (array_key_exists($this->getAlias(), $requestData) && array_key_exists('academic_period_id', $requestData[$this->getAlias()])) {
-            $selectedPeriodId = $requestData[$this->getAlias()]['academic_period_id'];
+        if ($field == 'gpa_education_grade_id') {
+            return __('Education Grade');
+        } else if ($field == 'gpa_grading_type_id') {
+            return  __('Grading Type');
+        }else if ($field == 'gpa_education_programme_id') {
+            return  __('Education programme');
         } else {
-            $selectedPeriodId = $this->AcademicPeriods->getCurrent();
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
-
-        $selectedPeriod = $this->AcademicPeriods->get($selectedPeriodId);
-        $attr['type'] = 'date';
-        $attr['date_options']['startDate'] = $selectedPeriod->start_date->format('d-m-Y');
-        $attr['date_options']['endDate'] = $selectedPeriod->end_date->format('d-m-Y');
-
-        if (!array_key_exists($this->getAlias(), $requestData) || !array_key_exists($key, $requestData[$this->getAlias()])) {
-            if ($selectedPeriodId != $this->AcademicPeriods->getCurrent()) {
-                $attr['value'] = $selectedPeriod->start_date;
-            } else {
-                $attr['value'] = FrozenTime::now();
-            }
-        }
-//echo "<pre>"; print_r($attr); die;
-        return $attr;
     }
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $data) {
-        //echo "<pre>"; print_r($this->request); die;
-    }
+
+    
     
 }

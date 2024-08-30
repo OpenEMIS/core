@@ -1,4 +1,3 @@
-<?php echo 'dfd'; die;?>
 <?php if (!empty($academicPeriodOptions)) : ?>
     <div class="toolbar-responsive panel-toolbar">
         <div class="toolbar-wrapper">
@@ -7,7 +6,8 @@
                     'plugin' => $this->request->getParam('plugin'),
                     'controller' => $this->request->getParam('controller'),
                     'action' => $this->request->getParam('action'),
-                    'index'
+                    0 => 'index',
+                    1 => $encodedQueryString,
                 ]);
                 $template = $this->ControllerAction->getFormTemplate();
                 $this->Form->templates($template);
@@ -22,7 +22,7 @@
                         'data-named-key' => 'academic_period_id'
                     ));
                 }
-                if (!empty($academicPeriodOptions) || !empty($programmeOptions) ) {
+                if (!empty($academicPeriodOptions)) {
                     echo $this->Form->input('education_programme_id', array(
                     'type' => 'select',
                     'class' => 'form-control',
@@ -35,7 +35,7 @@
                 ));
                 }
 
-                if (!empty($educationGradeOptions)) {
+                if (!empty($academicPeriodOptions)) {
                     echo $this->Form->input('education_grade_id', array(
                         'type' => 'select',
                         'class' => 'form-control',
