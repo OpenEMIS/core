@@ -40,6 +40,7 @@ class ReportCardGpaTable extends ControllerActionTable
             'appliedAction' => ['ReportCardStatuses' =>['student_id','institution_class_id','class_id','education_grade_id','academic_period_id']
             ]
         ]);
+        $this->addBehavior('User.AdvancedNameSearch');
     }
 
     public function implementedEvents(): array
@@ -284,25 +285,8 @@ class ReportCardGpaTable extends ControllerActionTable
 
 
                     if ($this->AccessControl->isAdmin()) {
-                        if (!empty($generateStartDate) && !empty($generateEndDate)) {
-                            $extra['toolbarButtons']['generateAll'] = $generateButton;
-                        } else {
-                            $generateButton['attr']['data-html'] = true;
-                            $generateButton['attr']['title'] .= __('<br>' . $this->getMessage('ReportCardStatuses.date_closed'));
-                            $generateButton['url'] = 'javascript:void(0)';
-                            $extra['toolbarButtons']['generateAll'] = $generateButton;
-                        }
-                    } else {
-                        if ($SecurityRoleFunctionsTableGenerateAllData >= 1) {
-                            if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {
-                                $extra['toolbarButtons']['generateAll'] = $generateButton;
-                            } else {
-                                $generateButton['attr']['data-html'] = true;
-                                $generateButton['attr']['title'] .= __('<br>' . $this->getMessage('ReportCardStatuses.date_closed'));
-                                $generateButton['url'] = 'javascript:void(0)';
-                                $extra['toolbarButtons']['generateAll'] = $generateButton;
-                            }
-                        }
+                        
+                        $extra['toolbarButtons']['generateAll'] = $generateButton;
                     }
 
                     
@@ -542,13 +526,14 @@ class ReportCardGpaTable extends ControllerActionTable
         ,subq3.education_grade_id");
         $statement->execute();
         $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
-
+//echo "<pre>"; print_r($result); die;
         if (!empty($result)) {
             foreach ($result as $val) {
                 $gpa = $val['gpa_per_student'];
 
             }
         }
+
         $this->saveGpaForStudent($gpa, $studentId, $selectedAcademicPeriodId, $educationGradeId, $institutionId);
         return true;
     }
@@ -591,6 +576,7 @@ class ReportCardGpaTable extends ControllerActionTable
 
     private function saveGpaForStudent($gpa, $studentId, $selectedAcademicPeriodId, $educationGradeId, $institutionId)
     {
+        //echo "<pre>"; print_r($gpa); die;
         $InstitutionStudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
 
         $checkGpa = $InstitutionStudentsGpa->find()
@@ -602,6 +588,7 @@ class ReportCardGpaTable extends ControllerActionTable
             ])
             ->first();
 
+//echo "<pre>"; print_r([$selectedAcademicPeriodId,$studentId, $educationGradeId,$institutionId]); die;
         if (empty($checkGpa)) {
             $data = [
                 'student_id' => $studentId,
@@ -621,23 +608,25 @@ class ReportCardGpaTable extends ControllerActionTable
                 return false;
             }
         } else {
-            
             $updateResult = $InstitutionStudentsGpa->updateAll(
-                ['gpa' => $gpa],
+                [
+                    'gpa' => $gpa,
+                    'modified_user_id' => 2,
+                    'modified' => FrozenTime::now(),
+                ],
                 [
                     'student_id' => $studentId,
                     'academic_period_id' => $selectedAcademicPeriodId,
                     'education_grade_id' => $educationGradeId,
                     'institution_id' => $institutionId,
-                    'modified_user_id' => 2,
-                    'modified' =>  FrozenTime::now(),
-                ]
-            );
-            if($updateResult == 1){
-                return true;
-            }else{
-                return false;
+                ]);
+
+            if ($updateResult > 0) {
+                debug('Update successful');
+            } else {
+                debug('No rows updated');
             }
+
         }
     }
 
@@ -653,10 +642,21 @@ class ReportCardGpaTable extends ControllerActionTable
     {
         $studentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
         $institutionId = $entity['institution']['id'];
-        $createdDate = $studentsGpa->find()->where(['student_id'=>$entity->student_id,
-                        'education_grade_id'=>$entity->education_grade_id,'institution_id'=>$institutionId,'academic_period_id'=>$entity->academic_period_id])->first()->created;
-        return $createdDate;
+        $record = $studentsGpa->find()
+            ->where([
+                'student_id' => $entity->student_id,
+                'education_grade_id' => $entity->education_grade_id,
+                'institution_id' => $institutionId,
+                'academic_period_id' => $entity->academic_period_id
+            ])
+            ->first();
+        if ($record) {
+            // Return the modified date if it's not null, otherwise return the created date
+            return !empty($record->modified) ? $record->modified : $record->created;
+        }
+        return null;
     }
+
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {

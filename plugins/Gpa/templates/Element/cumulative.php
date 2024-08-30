@@ -1,7 +1,11 @@
 <?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
 
 <?php if ($action == 'add' || $action == 'edit') : ?>
-
+    <?php
+        $alias = $ControllerAction['table']->getAlias();
+        $this->Form->create();
+        $this->Form->unlockField('Gpa.cumulative_gpa_grades');
+    ?>
 <div class="input clearfix">
     <label><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
     <div class="table-wrapper">
@@ -15,27 +19,31 @@
                     </tr>
                 </thead>
                 <?php if(!is_null($attr['data'])) { ?>
-                <tbody>
-				    <?php foreach ($attr['data'] as $i => $obj) : ?>
-				    <tr>
-				        <td class="checkbox-column">
-				            <?php
-				            $checkboxOptions = ['class' => 'no-selection-label', 'kd-checkbox-radio' => ''];
-				            $checkboxOptions['value'] = $obj->id ?? '';
-				            if (!empty($attr['exists']) && in_array($obj->id, $attr['exists'])) {
-				                $checkboxOptions['disabled'] = 'disabled';
-				                $checkboxOptions['checked'] = 'checked';
-				            }
-				            echo $this->Form->checkbox("education_grade_id.$i", $checkboxOptions);
-				            ?>
-				        </td>
-				        <td><?= h($obj->code ?? 'N/A') ?></td>
-				        <td><?= h($obj->name ?? 'N/A') ?></td>
-				    </tr>
-				    <?php endforeach ?>
-				</tbody>
+                    <tbody>
+                        <?php foreach ($attr['data'] as $i => $obj) : ?>
+                        <tr>
+                            <td class="checkbox-column">
+                                <?php
+                                $fieldPrefix = "$alias.cumulative_gpa_grades.$i";
+                                $joinDataPrefix = $fieldPrefix ;
+                                $checkboxOptions = ['class' => 'no-selection-label', 'kd-checkbox-radio' => ''];
+                                $checkboxOptions['value'] = $obj->id ?? '';
+                                if (!empty($attr['exists']) && in_array($obj->id, $attr['exists'])) {
+                                    $checkboxOptions['disabled'] = 'disabled';
+                                    $checkboxOptions['checked'] = 'checked';
+                                }
+                                echo $this->Form->checkbox("$joinDataPrefix.education_grade_id", $checkboxOptions);
+                                
+                                ?>
+                            </td>
+                            <td><?= h($obj->code ?? 'N/A') ?></td>
+                            <td><?= h($obj->name ?? 'N/A') ?></td>
+                        </tr>
+                        <?php endforeach ?>
+                    </tbody>
 
-            <?php } ?>
+                <?php } ?>
+                
             </table>
         </div>
     </div>
@@ -53,15 +61,18 @@
                         <th><?= __('Name') ?></th>
                     </tr>
                 </thead>
-
-                <tbody>
-                    <?php foreach ($attr['data'] as $i => $obj) : ?>
-                    <tr>
-                        <td><?= $obj->code ?></td>
-                        <td><?= $obj->name ?></td>
-                    </tr>
-                    <?php endforeach ?>
-                </tbody>
+                <?php if (isset($data['education_grades'])) : ?>
+                    <tbody>
+                        
+                        <?php foreach ($data['education_grades'] as $i => $obj) : ?>
+                        <tr>
+                            
+                            <td><?= $obj->code ?></td>
+                            <td><?= $obj->name ?></td>
+                        </tr>
+                        <?php endforeach ?>
+                    </tbody>
+                <?php endif ?>
             </table>
         </div>
     </div>
