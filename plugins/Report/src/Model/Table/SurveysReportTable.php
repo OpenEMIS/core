@@ -98,7 +98,7 @@ class SurveysReportTable extends AppTable
             if (!empty($academicPeriodId)) {
                 $condition[$this->aliasField('academic_period_id')] = $academicPeriodId;
             }
-            if (!empty($academicPeriodId)) {
+            if (!empty($surveyFormId)) {
                 $condition[$surveyForms->aliasField('id')] = $surveyFormId;
             }
             
@@ -156,16 +156,6 @@ class SurveysReportTable extends AppTable
                         'type' => 'INNER',
                         'conditions' => 'AcademicPeriods.id = '. $this->aliasField('academic_period_id')
                     ],
-                    // 'subq' => [
-                    //     'table' => "(SELECT institution_repeater_survey_answers.institution_repeater_survey_id, institution_repeater_surveys.status_id, institution_repeater_surveys.academic_period_id, institution_repeater_surveys.parent_form_id, institution_repeater_surveys.institution_id ,IFNULL(MAX(CASE WHEN survey_questions.id = 7 THEN IF(institution_repeater_survey_answers.time_value IS NOT NULL, institution_repeater_survey_answers.time_value, IF(institution_repeater_survey_answers.date_value IS NOT NULL, institution_repeater_survey_answers.date_value, IF(institution_repeater_survey_answers.textarea_value IS NOT NULL, institution_repeater_survey_answers.textarea_value, IF(institution_repeater_survey_answers.decimal_value IS NOT NULL, institution_repeater_survey_answers.decimal_value, IF(institution_repeater_survey_answers.text_value IS NOT NULL, institution_repeater_survey_answers.text_value, IF(survey_question_choices.id IS NOT NULL, survey_question_choices.name, institution_repeater_survey_answers.number_value)))))) END), '') question_1, IFNULL(MAX(CASE WHEN survey_questions.id = 10 THEN IF(institution_repeater_survey_answers.time_value IS NOT NULL, institution_repeater_survey_answers.time_value, IF(institution_repeater_survey_answers.date_value IS NOT NULL, institution_repeater_survey_answers.date_value, IF(institution_repeater_survey_answers.textarea_value IS NOT NULL, institution_repeater_survey_answers.textarea_value, IF(institution_repeater_survey_answers.decimal_value IS NOT NULL, institution_repeater_survey_answers.decimal_value, IF(institution_repeater_survey_answers.text_value IS NOT NULL, institution_repeater_survey_answers.text_value, IF(survey_question_choices.id IS NOT NULL, survey_question_choices.name, institution_repeater_survey_answers.number_value)))))) END), '') question_2 ,IFNULL(MAX(CASE WHEN survey_questions.id = 17 THEN IF(institution_repeater_survey_answers.time_value IS NOT NULL, institution_repeater_survey_answers.time_value, IF(institution_repeater_survey_answers.date_value IS NOT NULL, institution_repeater_survey_answers.date_value, IF(institution_repeater_survey_answers.textarea_value IS NOT NULL, institution_repeater_survey_answers.textarea_value, IF(institution_repeater_survey_answers.decimal_value IS NOT NULL, institution_repeater_survey_answers.decimal_value, IF(institution_repeater_survey_answers.text_value IS NOT NULL, institution_repeater_survey_answers.text_value, IF(survey_question_choices.id IS NOT NULL, survey_question_choices.name, institution_repeater_survey_answers.number_value)))))) END), '') question_3, IFNULL(MAX(CASE WHEN survey_questions.id = 22 THEN IF(institution_repeater_survey_answers.time_value IS NOT NULL, institution_repeater_survey_answers.time_value, IF(institution_repeater_survey_answers.date_value IS NOT NULL, institution_repeater_survey_answers.date_value, IF(institution_repeater_survey_answers.textarea_value IS NOT NULL, institution_repeater_survey_answers.textarea_value, IF(institution_repeater_survey_answers.decimal_value IS NOT NULL, institution_repeater_survey_answers.decimal_value, IF(institution_repeater_survey_answers.text_value IS NOT NULL, institution_repeater_survey_answers.text_value, IF(survey_question_choices.id IS NOT NULL, survey_question_choices.name, institution_repeater_survey_answers.number_value)))))) END), '') question_4 FROM institution_repeater_survey_answers INNER JOIN survey_questions ON survey_questions.id = institution_repeater_survey_answers.survey_question_id INNER JOIN institution_repeater_surveys ON institution_repeater_surveys.id = institution_repeater_survey_answers.institution_repeater_survey_id LEFT JOIN survey_question_choices ON survey_question_choices.survey_question_id = institution_repeater_survey_answers.survey_question_id AND survey_question_choices.id = institution_repeater_survey_answers.number_value WHERE institution_repeater_surveys.academic_period_id = 33 GROUP BY institution_repeater_survey_answers.institution_repeater_survey_id)",
-                    //     'type' => 'LEFT',
-                    //     'conditions' => [
-                    //         'subq.status_id = ' . $this->aliasField('status_id'),
-                    //         'subq.academic_period_id = ' . $this->aliasField('academic_period_id'),
-                    //         'subq.parent_form_id = ' . $this->aliasField('survey_form_id'),
-                    //         'subq.institution_id = ' . $this->aliasField('institution_id')
-                    //     ]
-                    // ]
                     'InstitutionRepeaterSurveys' => [
                         'table' => 'institution_repeater_surveys',
                         'type' => 'INNER',
@@ -188,42 +178,31 @@ class SurveysReportTable extends AppTable
                         //get survey_form_id from the parent_form_id
                         $SurveyFormsQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
                         $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
-                        $InstitutionRepeaterSurveys = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
                         $SurveyFormsQuestionsData = $SurveyFormsQuestions->find()
-                                ->select([
-                                    'id' => $SurveyFormsQuestions->aliasField('id'),
-                                    'survey_question_id' => $SurveyFormsQuestions->aliasField('survey_question_id'),
-                                    'survey_form_id' => $SurveyFormsQuestions->aliasField('survey_form_id'),
-                                    'surveyQuestion_id' => $surveyQuestion->aliasField('id'),
-                                    'surveyQuestion_name' => $surveyQuestion->aliasField('name'),
-                                    'surveyQuestion_field_type' => $surveyQuestion->aliasField('field_type'),
-                                    'surveyQuestion_parmas' => $surveyQuestion->aliasField('params'),
-                                    'InstitutionRepeaterSurveys_id' => $InstitutionRepeaterSurveys->aliasField('id'),
-                                    'InstitutionRepeaterSurveys_institution_id' => $InstitutionRepeaterSurveys->aliasField('institution_id'),
-                                    'InstitutionRepeaterSurveys_academic_period_id' => $InstitutionRepeaterSurveys->aliasField('academic_period_id'),
-                                    'InstitutionRepeaterSurveys_survey_form_id' => $InstitutionRepeaterSurveys->aliasField('survey_form_id'),
-                                    'InstitutionRepeaterSurveys_parent_form_id' => $InstitutionRepeaterSurveys->aliasField('parent_form_id'),
-                                ])
-                                ->innerJoin([$surveyQuestion->getAlias() => $surveyQuestion->getTable()],
-                                [
-                                    $surveyQuestion->aliasField('id') . ' = '. $SurveyFormsQuestions->aliasField('survey_question_id')
-                                ])
-                                ->innerJoin([$InstitutionRepeaterSurveys->getAlias() => $InstitutionRepeaterSurveys->getTable()],
-                                [
-                                    $InstitutionRepeaterSurveys->aliasField('survey_form_id') . ' = JSON_UNQUOTE(JSON_EXTRACT(' . $surveyQuestion->aliasField('params') . ", '$.survey_form_id'))"
-                                ])
-                                ->where([
-                                    $SurveyFormsQuestions->aliasField('survey_form_id') => $surveyFormId,
-                                    $SurveyFormsQuestions->aliasField('section IS') => $surveySectionData->section,
-                                    $surveyQuestion->aliasField('field_type') => 'REPEATER',
-                                    $InstitutionRepeaterSurveys->aliasField('id') => $row->InstitutionRepeaterSurveysId,
-                                ])
-                                ->order([$SurveyFormsQuestions->aliasField('survey_question_id') => 'ASC'])
-                                ->first();
-                        $InstitutionRepeaterSurveysId = $InstitutionRepeaterSurveys_survey_form_id = '';            
+                            ->select([
+                                'id' => $SurveyFormsQuestions->aliasField('id'),
+                                'survey_question_id' => $SurveyFormsQuestions->aliasField('survey_question_id'),
+                                'survey_form_id' => $SurveyFormsQuestions->aliasField('survey_form_id'),
+                                'surveyQuestion_id' => $surveyQuestion->aliasField('id'),
+                                'surveyQuestion_name' => $surveyQuestion->aliasField('name'),
+                                'surveyQuestion_field_type' => $surveyQuestion->aliasField('field_type'),
+                                'surveyQuestion_parmas' => $surveyQuestion->aliasField('params'),
+                                'surveyQuestion_survey_form_id' => 'JSON_UNQUOTE(JSON_EXTRACT(' . $surveyQuestion->aliasField('params') . ", '$.survey_form_id'))",
+                            ])
+                            ->innerJoin([$surveyQuestion->getAlias() => $surveyQuestion->getTable()],
+                            [
+                                $surveyQuestion->aliasField('id') . ' = '. $SurveyFormsQuestions->aliasField('survey_question_id')
+                            ])
+                            ->where([
+                                $SurveyFormsQuestions->aliasField('survey_form_id') => $surveyFormId,
+                                $SurveyFormsQuestions->aliasField('section IS') => $surveySectionData->section,
+                                $surveyQuestion->aliasField('field_type') => 'REPEATER',
+                                $surveyQuestion->aliasField('id') => $tableQuestion,
+                            ])->first();
+                        $InstitutionRepeaterSurveysId = $InstitutionRepeaterSurveys_survey_form_id = '';
                         if(!empty($SurveyFormsQuestionsData)){
-                            $InstitutionRepeaterSurveysId = $SurveyFormsQuestionsData->InstitutionRepeaterSurveys_id;
-                            $InstitutionRepeaterSurveys_survey_form_id = $SurveyFormsQuestionsData->InstitutionRepeaterSurveys_survey_form_id;
+                            $InstitutionRepeaterSurveysId = $row->InstitutionRepeaterSurveysId;
+                            $InstitutionRepeaterSurveys_survey_form_id = $SurveyFormsQuestionsData->surveyQuestion_survey_form_id;
                         }
                         //get all questions list
                         $SurveyFormsQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
@@ -490,6 +469,7 @@ class SurveysReportTable extends AppTable
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
         $requestData = json_decode($settings['process']['params']);
+        $tableQuestion = $requestData->table_question;
         //POCOR-8525 starts find record is exist in `institution_repeater_surveys` table for Repeater case
         $institutionID = $requestData->institution_id;
         if($institutionID <= 0){
@@ -599,32 +579,62 @@ class SurveysReportTable extends AppTable
 
             $SurveyFormId = 0;
             if((count($repeaterListCountResult) > 0)){
-                $SurveyFormId = $repeaterListCountResult[0]->survey_form_id;
+                $SurveyFormId = $repeaterListCountResult[0]->parent_form_id;
             }
+
+            $surveySectionId = "$requestData->survey_section";
+            $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
+            $surveySectionData = $surveySection->find()->where([ $surveySection->aliasField('id') => $surveySectionId ])->first();
             
             $SurveyFormsQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
-            $SurveyFormsQuestionsRes = $SurveyFormsQuestions->find()
+            $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
+            $SurveyFormsQuestionsData = $SurveyFormsQuestions->find()
                 ->select([
                     'id' => $SurveyFormsQuestions->aliasField('id'),
                     'survey_question_id' => $SurveyFormsQuestions->aliasField('survey_question_id'),
                     'survey_form_id' => $SurveyFormsQuestions->aliasField('survey_form_id'),
-                    'name' => $SurveyFormsQuestions->aliasField('name'),
-                    'section' => $SurveyFormsQuestions->aliasField('section'),
-                ])->where([
-                    $SurveyFormsQuestions->aliasField('survey_form_id') => $SurveyFormId,
+                    'surveyQuestion_id' => $surveyQuestion->aliasField('id'),
+                    'surveyQuestion_name' => $surveyQuestion->aliasField('name'),
+                    'surveyQuestion_field_type' => $surveyQuestion->aliasField('field_type'),
+                    'surveyQuestion_parmas' => $surveyQuestion->aliasField('params'),
+                    'surveyQuestion_survey_form_id' => 'JSON_UNQUOTE(JSON_EXTRACT(' . $surveyQuestion->aliasField('params') . ", '$.survey_form_id'))",
                 ])
-                ->order([$SurveyFormsQuestions->aliasField('survey_question_id') => 'ASC'])
-                ->toArray();
-            if(!empty($SurveyFormsQuestionsRes)){
-                foreach ($SurveyFormsQuestionsRes as $ins_key => $ins_val) {
-                    $fields[] = [
-                        'key' => '',
-                        'field' => $this->_dynamicFieldName.'_'.$ins_key,
-                        'type' => 'string',
-                        'label' => __($ins_val->name)
-                    ];
+                ->innerJoin([$surveyQuestion->getAlias() => $surveyQuestion->getTable()],
+                [
+                    $surveyQuestion->aliasField('id') . ' = '. $SurveyFormsQuestions->aliasField('survey_question_id')
+                ])
+                ->where([
+                    $SurveyFormsQuestions->aliasField('survey_form_id') => $SurveyFormId,
+                    $SurveyFormsQuestions->aliasField('section IS') => $surveySectionData->section,
+                    $surveyQuestion->aliasField('field_type') => 'REPEATER',
+                    $surveyQuestion->aliasField('id') => $tableQuestion,
+                ])->first();  
+            if($SurveyFormsQuestionsData){
+                $SurveyFormsQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
+                $SurveyFormsQuestionsRes = $SurveyFormsQuestions->find()
+                    ->select([
+                        'id' => $SurveyFormsQuestions->aliasField('id'),
+                        'survey_question_id' => $SurveyFormsQuestions->aliasField('survey_question_id'),
+                        'survey_form_id' => $SurveyFormsQuestions->aliasField('survey_form_id'),
+                        'name' => $SurveyFormsQuestions->aliasField('name'),
+                        'section' => $SurveyFormsQuestions->aliasField('section'),
+                    ])->where([
+                        $SurveyFormsQuestions->aliasField('survey_form_id') => $SurveyFormsQuestionsData->surveyQuestion_survey_form_id,
+                    ])
+                    ->order([$SurveyFormsQuestions->aliasField('survey_question_id') => 'ASC'])
+                    ->toArray();
+
+                if(!empty($SurveyFormsQuestionsRes)){
+                    foreach ($SurveyFormsQuestionsRes as $ins_key => $ins_val) {
+                        $fields[] = [
+                            'key' => '',
+                            'field' => $this->_dynamicFieldName.'_'.$ins_key,
+                            'type' => 'string',
+                            'label' => __($ins_val->name)
+                        ];
+                    }
                 }
-            }
+            }            
         }else{ //POCOR-8525 Ends
             $tableQuestionId = $requestData->table_question;
             foreach ($fields as $key => $field) {
