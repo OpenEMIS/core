@@ -870,7 +870,13 @@ class StudentsTable extends ControllerActionTable
         $institution_id = !empty($entity->institution_id) ? $entity->institution_id : 0;
         $result = $this->checkStudentRecords($entity);
         if ($result) {
-            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            // POCOR-8411 start
+            try {
+                $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            } catch (\Exception $exception) {
+                Log::debug(__FUNCTION__ . ':' . $exception->getMessage());
+            }
+            // POCOR-8411 end
             $event->stopPropagation();
             return $this->controller->redirect($this->url('remove'));
         } else {
