@@ -1,3 +1,12 @@
+### [4.1.5] - 2024-09-02
+- Implemented: Develop changes to add Education Subject column to the existing Institution Subjects report
+- Bug Fixed: Personal > Cases > View page : Missing Add comment button
+- Bug Fixed: Administration>Survey>Forms>Rules: Rule page should be showing and can create rules and sections
+- Bug Fixed: Administration>Performance>Report Cards(Bahamas): Getting 404 error when adding, viewing, editing and deleting
+- Bug Fixed: Reports>Survey>Institution: Survey should not include repeater, student list and staff list
+- Bug Fixed: Institutions>Students>Add(Automation): Unable to detect element in automation
+- Bug Fixed: Institutions>Performance>Assessments(Bahamas): PDF and Report getting 404 error
+
 ### [4.1.4] - 2024-08-28
 - Implemented: Changes to the Administration > System Setup > APIs > Credentials page
 - Implemented: Develop additional advanced search filters
