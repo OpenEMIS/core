@@ -2725,7 +2725,7 @@ class InstitutionsController extends AppController
             return true;
         }
         if (($furtherAction == 'view'
-                || $furtherAction == 'edit')
+                || $furtherAction == 'edit' || $furtherAction =='remove')
             && $action == 'Institutions'
             && $plugin == 'Institution'
             && $controller == 'Institutions') {
