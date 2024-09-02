@@ -68,8 +68,8 @@ class GpaSystemTable extends ControllerActionTable {
     {
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('gpa_education_programme_id', ['type' => 'hidden']);
-        $this->field('start_date', ['type' => 'hidden']);
-        $this->field('end_date', ['type' => 'hidden']);
+        $this->field('start_date');
+        $this->field('end_date');
         $this->field('education_grade_id', ['type' => 'hidden']);
         $this->field('gpa_education_grade_id', ['type' => 'select']);
         $this->field('gpa_grading_type_id', ['type' => 'select']);
@@ -81,8 +81,8 @@ class GpaSystemTable extends ControllerActionTable {
     {
         $this->field('academic_period_id', ['type' => 'select','entity' => $entity]);
         $this->field('gpa_education_programme_id', ['type' => 'select', 'entity' => $entity]);
-        $this->field('start_date', ['type' => 'hidden']);
-        $this->field('end_date', ['type' => 'hidden']);
+        $this->field('start_date');
+        $this->field('end_date');
         $this->field('education_grade_id', ['type' => 'hidden']);
         $this->field('gpa_education_grade_id', ['type' => 'select']);
         $this->field('gpa_grading_type_id', ['type' => 'select']);
