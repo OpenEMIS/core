@@ -78,8 +78,6 @@ class CumulativeTable extends ControllerActionTable {
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {  
-        $this->field('start_date', ['visible' => true]);
-        $this->field('end_date', ['visible' => true]);
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('gpa_education_programme_id', ['type' => 'select']);
         $this->field('education_grade_id',['visible' => false]);
@@ -216,62 +214,6 @@ class CumulativeTable extends ControllerActionTable {
         return compact('periodOptions', 'selectedPeriod');
     }
 
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, ServerRequest $request)
-    {
-        if ($action == 'add' ) {
-            return $this->updateDateRangeField('start_date', $attr, $request);
-        }elseif ($action == 'edit') {
-            $queryString = $this->request->getParam('pass')[1];
-            $DecodedQueryString = $this->paramsDecode($queryString);
-            $id = $DecodedQueryString['id'];
-            $selectDate = $this->find()->where([$this->aliasField('id') => $id])->first()->start_date;
-            $entity = $attr['entity'];
-            $attr['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
-            $attr['attr']['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
-            return $attr;
-        }
-    }
-
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
-    {
-        if ($action == 'add') {
-            return $this->updateDateRangeField('end_date', $attr, $request);
-        }elseif ($action == 'edit') {
-           $queryString = $this->request->getParam('pass')[1];
-            $DecodedQueryString = $this->paramsDecode($queryString);
-            $id = $DecodedQueryString['id'];
-            $selectDate = $this->find()->where([$this->aliasField('id') => $id])->first()->end_date;
-            $entity = $attr['entity'];
-            $attr['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
-            $attr['attr']['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
-            return $attr;
-        }
-    }
-
-    // Misc
-    private function updateDateRangeField($key, $attr, ServerRequest $request)
-    {
-        $requestData = $request->getData();
-        if (array_key_exists($this->getAlias(), $requestData) && array_key_exists('academic_period_id', $requestData[$this->getAlias()])) {
-            $selectedPeriodId = $requestData[$this->getAlias()]['academic_period_id'];
-        } else {
-            $selectedPeriodId = $this->AcademicPeriods->getCurrent();
-        }
-
-        $selectedPeriod = $this->AcademicPeriods->get($selectedPeriodId);
-        $attr['type'] = 'date';
-        $attr['date_options']['startDate'] = $selectedPeriod->start_date->format('d-m-Y');
-        $attr['date_options']['endDate'] = $selectedPeriod->end_date->format('d-m-Y');
-
-        if (!array_key_exists($this->getAlias(), $requestData) || !array_key_exists($key, $requestData[$this->getAlias()])) {
-            if ($selectedPeriodId != $this->AcademicPeriods->getCurrent()) {
-                $attr['value'] = $selectedPeriod->start_date;
-            } else {
-                $attr['value'] = FrozenTime::now();
-            }
-        }
-        return $attr;
-    }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
@@ -386,7 +328,7 @@ class CumulativeTable extends ControllerActionTable {
             ]
         ]);
         $this->setFieldOrder([
-            'academic_period_id', 'gpa_education_programme_id','gpa_education_grade_id', 'start_date','end_date','cumulative_gpa_grades'
+            'academic_period_id', 'gpa_education_programme_id','gpa_education_grade_id','cumulative_gpa_grades'
         ]);
     }
 

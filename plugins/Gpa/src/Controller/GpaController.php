@@ -64,14 +64,14 @@ class GpaController extends AppController
             ],
             'Cumulative' => [
                 'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'Cumulative'],
-                'text' => __('Cumulative')
+                'text' => __('Cumulative GPA')
             ],
             'GpaGradingType' => [
                 'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'GpaGradingType'],
                 'text' => __('Grading Types')
             ]
         ];
-        //$tabElements = $this->TabPermission->checkTabPermission($tabElements);
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         
         $this->set('tabElements', $tabElements);
         $action = !is_null($action) ? $action : $this->request->getParam('action');

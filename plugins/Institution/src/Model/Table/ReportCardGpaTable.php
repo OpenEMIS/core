@@ -58,15 +58,17 @@ class ReportCardGpaTable extends ControllerActionTable
         if (is_null($reportCardId)) {
             return $buttons;
         }
+        
         $queryString = $this->getQueryString();
+       // echo "<pre>"; print_r($entity->student_id);
         if (isset($buttons['view'])) {
             $institutionId = $entity->institution_class->institution_id;
             $url = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'ReportCardGpa',
-                'view',
-                $this->paramsEncode(['id' => $entity->id,'institution_id' => $queryString['institution_id'],'student_id'=> $entity->student_id]),
+                0 =>  'view',
+                1 => $this->paramsEncode(['id' => $entity->id,'institution_id' => $queryString['institution_id'],'student_id'=> $entity->student_id]),
             ];
         }
         
@@ -183,7 +185,7 @@ class ReportCardGpaTable extends ControllerActionTable
                 'institution_class_id' => $this->aliasField('institution_class_id'),
                 'education_grade_id' => $this->aliasField('education_grade_id'),
                 'academic_period_id' => $this->aliasField('academic_period_id'),
-                'student_id' => $UsersTable->aliasField('id'),
+                'student_id' => $this->aliasField('student_id'),
                 'student_name' => $UsersTable->find()->func()->concat([
                     $UsersTable->aliasField('first_name') => 'literal',
                     ' ',
@@ -195,7 +197,7 @@ class ReportCardGpaTable extends ControllerActionTable
                 [$UsersTable->getAlias() => $UsersTable->getTable()],
                 [$UsersTable->aliasField('id') . ' = ' . $this->aliasField('student_id')]
             )
-            ->where($where);
+            ->where($where)->group([$this->aliasField('student_id')]);
 
         if (is_null($this->request->getQuery('sort'))) {
             $query
@@ -576,7 +578,6 @@ class ReportCardGpaTable extends ControllerActionTable
 
     private function saveGpaForStudent($gpa, $studentId, $selectedAcademicPeriodId, $educationGradeId, $institutionId)
     {
-        //echo "<pre>"; print_r($gpa); die;
         $InstitutionStudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
 
         $checkGpa = $InstitutionStudentsGpa->find()
@@ -632,10 +633,14 @@ class ReportCardGpaTable extends ControllerActionTable
 
     public function onGetGpa(Event $event, Entity $entity)
     {
+        $findGpa =  0.00;
         $studentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
         $institutionId = $entity['institution']['id'];
         $findGpa = $studentsGpa->find()->where(['student_id'=>$entity->student_id,
-                        'education_grade_id'=>$entity->education_grade_id,'institution_id'=>$institutionId,'academic_period_id'=>$entity->academic_period_id])->first()->gpa;
+                        'education_grade_id'=>$entity->education_grade_id,'institution_id'=>$institutionId,'academic_period_id'=>$entity->academic_period_id])->first();
+        if($findGpa != null){
+            return $findGpa->gpa;
+        }
         return $findGpa;
     }
     public function onGetCreated(Event $event, Entity $entity)
@@ -680,6 +685,11 @@ class ReportCardGpaTable extends ControllerActionTable
                     ->first()
                     ->name;
         return $getName ;
+    }
+
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->where([$this->aliasField('student_id IS') => $entity->student_id]);
     }
 
 }

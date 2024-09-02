@@ -112,5 +112,16 @@ class StudentGpaTable extends ControllerActionTable
            $query->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriodId,$this->aliasField('education_grade_id') => $selectedGrade,$this->aliasField('student_id') => $studentId]);
         }
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'gpa') {
+            return __('GPA');
+        } else if ($field == 'cumulative_gpa') {
+            return  __('Cumulative GPA');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
     
 }
