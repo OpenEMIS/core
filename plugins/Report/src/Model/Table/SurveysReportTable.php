@@ -169,8 +169,8 @@ class SurveysReportTable extends AppTable
                 ])
                 ->where([$condition])
                 ->group([$this->aliasField('id'), 'InstitutionRepeaterSurveys.id']);
-                $query->formatResults(function (ResultSetInterface $results) use ($surveySection, $surveyFormId) {
-                    return $results->map(function ($row) use ($surveySection, $surveyFormId) {
+                $query->formatResults(function (ResultSetInterface $results) use ($surveySection, $surveyFormId, $tableQuestion) {
+                    return $results->map(function ($row) use ($surveySection, $surveyFormId, $tableQuestion) {
                         //get data related to survey section
                         $surveySectionId = "$surveySection";
                         $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
