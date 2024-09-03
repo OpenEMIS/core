@@ -245,14 +245,22 @@ class ReportCardGenerateTable extends ControllerActionTable
     public function onUpdateFieldListOfStudents(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
+
             $class_id = $this->getQueryString('class_id');
             $assessmentId = $this->getQueryString('assessment_id');
             $institutionId = $this->getQueryString('institution_id');
             $academic_period_id = $this->getQueryString('academic_period_id');
+            // POCOR-8578: start
             $Users = self::getDynamicTableInstance('security_users');
             $session = $request->getSession();
             $alias = $this->getAlias();
             $data = $request->getData($alias);
+            if ($data['students'] == 0) {
+                $attr['visible'] = false;
+                return $attr;
+            }else{
+                $attr['visible'] = true;
+            }
             if (!$academic_period_id) {
                 $academic_period_id = $data['academic_period_id'];
             }
@@ -320,6 +328,7 @@ class ReportCardGenerateTable extends ControllerActionTable
             if ($data['students'] == 0) {
                 $attr['visible'] = false;
             }
+            // POCOR-8578: end
             $attr['options'] = $options;
         }
 

@@ -4,7 +4,7 @@ namespace API\Model\Entity;
 use Cake\ORM\Entity;
 use App\Model\Traits\UserTrait;
 
-// POCOR-8330
+// POCOR-8578
 class Student extends Entity {
     use UserTrait;
 

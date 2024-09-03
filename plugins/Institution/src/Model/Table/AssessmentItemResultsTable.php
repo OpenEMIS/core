@@ -12,8 +12,8 @@ use Cake\Event\Event;
 use Cake\Utility\Text;
 use Cake\Core\Configure;
 use App\Model\Traits\MessagesTrait;
-use Cake\ORM\Table;
-use Cake\Utility\Inflector;
+use Cake\ORM\Table; // POCOR-8578
+use Cake\Utility\Inflector; // POCOR-8578
 
 class AssessmentItemResultsTable extends AppTable
 {
@@ -87,7 +87,7 @@ class AssessmentItemResultsTable extends AppTable
         }
 
         $listeners = [
-            self::getDynamicTableInstance('Institution.InstitutionSubjectStudents')
+            self::getDynamicTableInstance('Institution.InstitutionSubjectStudents') // POCOR-8578
         ];
 
         $this->dispatchEventToModels('Model.AssessmentResults.afterSave', [$entity], $this, $listeners);
@@ -150,7 +150,7 @@ class AssessmentItemResultsTable extends AppTable
      */
     public function getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId, $studentId)
     {
-        $SubjectStudents = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents');
+        $SubjectStudents = self::getDynamicTableInstance('Institution.InstitutionSubjectStudents'); // POCOR-8578
 
         $query = $this
             ->find()
@@ -258,7 +258,7 @@ class AssessmentItemResultsTable extends AppTable
             $assessmentId = $entity->assessment_id;
             $assessmentPeriodId = $entity->assessment_period_id;
 
-            $AssessmentItemsGradingTypes = self::getDynamicTableInstance('Assessment.AssessmentItemsGradingTypes');
+            $AssessmentItemsGradingTypes = self::getDynamicTableInstance('Assessment.AssessmentItemsGradingTypes'); // POCOR-8578
             $assessmentItemsGradingTypeEntity = $AssessmentItemsGradingTypes
                 ->find()
                 ->contain('AssessmentGradingTypes.GradingOptions')

@@ -9,6 +9,7 @@ use Exception;
 use DateTime;
 
 class StudentsTable extends AppTable {
+    // POCOR-8578: start
 	public function initialize(array $config): void
     {
 		$this->setTable('security_users');
@@ -25,4 +26,5 @@ class StudentsTable extends AppTable {
 
 		$this->addBehavior('API.API');
 	}
+    // POCOR-8578: end
 }
