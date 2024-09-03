@@ -214,7 +214,10 @@ class InstitutionPositionsTable extends ControllerActionTable
         if ($associatedRecordsExist) {
             $message = __('Delete operation is not allowed as there are other information linked to this record.');
             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-            $url = $this->controller->request->referer();
+            //POCOR-8457 starts
+            if (isset($this->controller) && $this->controller->getRequest()) {
+                $url = $this->controller->getRequest()->referer();
+            }//POCOR-8457 ends
             $event->stopPropagation();
             return $this->controller->redirect($url);
         }
@@ -551,8 +554,12 @@ class InstitutionPositionsTable extends ControllerActionTable
             }
         }
         if (is_null($this->request->getQuery('sort'))) {
-            $this->request->getQuery['sort'] = 'created';
-            $this->request->getQuery['direction'] = 'desc';
+            //POCOR-8475 starts
+            //$this->request->getQuery['sort'] = 'created';
+            //$this->request->getQuery['direction'] = 'desc';
+            $this->request = $this->request->withQueryParams( array_merge( $this->request->getQueryParams(), ['sort' => 'created'] ));
+            $this->request = $this->request->withQueryParams( array_merge( $this->request->getQueryParams(), ['direction' => 'desc'] ));
+            //POCOR-8475 ends
         }
     }
 
@@ -707,8 +714,9 @@ class InstitutionPositionsTable extends ControllerActionTable
                 
             ])->leftJoin([$institutionStaff->getAlias() => $institutionStaff->getTable()],
                 [$institutionStaff->aliasField('institution_position_id = ') . $this->aliasField('id')])
-            ->distinct([$this->aliasField('position_no')]);
-            
+            ->distinct([$this->aliasField('position_no')])
+            ->order([$this->aliasField($this->request->getQuery('sort')) => $this->request->getQuery('direction')]); //POCOR-8475
+        
         $sortList = ['position_no', 'StaffPositionTitles.order'/*,POCOR-5069 'StaffPositionGrades.order'*/, 'created','Assignees.first_name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
@@ -793,7 +801,7 @@ class InstitutionPositionsTable extends ControllerActionTable
 
         $this->fields['current_staff_list']['data'] = $currentStaff;
         $totalCurrentFTE = '0.00';
-        if (count($currentStaff) > 0) {
+        if (count($currentStaff->toArray()) > 0) {//POCOR-8457
             foreach ($currentStaff as $cs) {
                 $totalCurrentFTE = number_format((floatVal($totalCurrentFTE) + floatVal($cs->FTE)), 2);
             }

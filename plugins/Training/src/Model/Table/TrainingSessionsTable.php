@@ -99,7 +99,15 @@ class TrainingSessionsTable extends ControllerActionTable
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
-        $data = $this->clearTrainerSaveData($data);
+        if (isset($data['trainees']) && is_array($data['trainees'])) {
+            foreach ($data['trainees'] as &$trainee) {
+                $t = $this->paramsDecode($trainee);
+                $trainee = [
+                    'id' => $t['trainee_id'],
+                    '_joinData' => $t
+                ];
+            }
+        }
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -174,17 +182,17 @@ class TrainingSessionsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        // $class = __CLASS__;
-        // $line = __LINE__;
-        // $entity = $this->setIdEntityFromQueryString($class, $line, $entity);
+        $class = __CLASS__;
+        $line = __LINE__;
+        $entity = $this->setIdEntityFromQueryString($class, $line, $entity);
         $this->setupFields($event, $entity);
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        // $class = __CLASS__;
-        // $line = __LINE__;
-        // $entity = $this->setIdEntityFromQueryString($class, $line, $entity);
+        $class = __CLASS__;
+        $line = __LINE__;
+        $entity = $this->setIdEntityFromQueryString($class, $line, $entity);
         $this->setupFields($event, $entity); // POCOR-8074-3 entity needed for dependant select field
     }
 
@@ -263,19 +271,22 @@ class TrainingSessionsTable extends ControllerActionTable
     {
         $model = $this;
         $process = function ($model, $entity) use ($data) {
-        $errors = $entity->errors();
-
-            if (empty($errors) && !empty($entity['trainers'])) {
-                // always manual delete all trainers and re-insert
-                $trainerRecords = $this->Trainers
+            $errors = $entity->getErrors();
+            if (empty($errors)) {
+               
+                //if(!empty($entity['trainers'])) { //POCOR-8347 
+                    // always manual delete all trainers and re-insert
+                    $trainerRecords = $this->Trainers
                     ->find()
                     ->where([$this->Trainers->aliasField('training_session_id') => $entity->id])
                     ->all();
 
-                foreach ($trainerRecords as $key => $obj) {
-                    $this->Trainers->delete($obj);
-                }
-                if (empty($errors) && !empty($entity['evaluators'])) { //POCOR-8256
+                    foreach ($trainerRecords as $key => $obj) {
+                        $this->Trainers->delete($obj);
+                    }
+                //}
+                
+                //if (empty($errors) && !empty($entity['evaluators'])) { //POCOR-8256 //POCOR-8347
                     // always manual delete all Evaluators and re-insert
                     $evaluatorsRecords = $this->Evaluators
                         ->find()
@@ -285,14 +296,13 @@ class TrainingSessionsTable extends ControllerActionTable
                         $this->Evaluators->delete($obj);
                     }
 
-                }
+                //}
 
-                 $model->save($entity);
+                return $model->save($entity);
             }else {
                 return false;
             }
         };
-
         return $process;
     }
 
@@ -1020,7 +1030,7 @@ class TrainingSessionsTable extends ControllerActionTable
             $Form = $event->getSubject()->Form;
             $Form->unlockField('TrainingSessions.evaluators');
 
-            if ($this->request->is(['get'])) {
+            /*if ($this->request->is(['get'])) {
                 if (!array_key_exists($alias, $this->request->getData())) {
                    // $this->request->data[$alias] = [$fieldKey => []];
                     $this->request = $this->request->withData($alias, [$fieldKey => []]);
@@ -1030,7 +1040,7 @@ class TrainingSessionsTable extends ControllerActionTable
                 }
 
                 $associated = $entity->extractOriginal([$fieldKey]);
-                
+
                 if (!empty($associated[$fieldKey])) {
                     foreach ($associated[$fieldKey] as $key => $obj) {
                         $evaluatorType = $this->getEvaluatorTypes($obj);
@@ -1055,15 +1065,20 @@ class TrainingSessionsTable extends ControllerActionTable
                             'evaluator_name' => $evaluatorName
                         ];
 
-                        $this->request = $this->request->withData($requestData);
+                        $this->request = $this->request->withParsedBody($requestData);
                     }
                 }
+            }*/
+
+            // refer to addEditOnAddEvaluator for http post  
+            if ($this->request->is(['get'])) { //POCOR-8347
+                $this->clearEvaluatorsData($alias, $fieldKey);
+                $this->getEvaluatorsToData($entity, $fieldKey, $alias);
             }
 
-            // refer to addEditOnAddEvaluator for http post
-            if ($this->request->getData("$alias.$fieldKey")) {
-                $associated = $this->request->getData("$alias.$fieldKey");
-
+            $requestData = $this->request->getData()[$alias];
+            if ( isset($requestData[$fieldKey]) && !empty($requestData[$fieldKey])) {
+                $associated = $this->request->getData()[$alias][$fieldKey];
                 foreach ($associated as $key => $obj) {
                     $evaluatorType = $obj['types'];
                     $evaluatorId = $obj['evaluator_id'];
@@ -1104,14 +1119,14 @@ class TrainingSessionsTable extends ControllerActionTable
         } else {
             $evaluatorType = self::OTHERS;
         }
-        
+
         return $evaluatorType;
     }
 
     //POCOR-8256
     public function addEditOnAddEvaluator(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $alias = $this->getAlias();
+       /* $alias = $this->getAlias();
         $fieldKey = 'evaluators';
        // echo "<pre>"; print_r($data);die;
         if (empty($data[$this->getAlias()][$fieldKey])) {
@@ -1143,7 +1158,10 @@ class TrainingSessionsTable extends ControllerActionTable
         //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
         $options['associated'] = [
             'Evaluators' => ['validate' => false]
-        ];
+        ];*/
+        //POCOR-8347
+        $this->addEvaluatorsToDataEvaluatorsArray($data, $options);
+        
     }
 
     //POCOR-8256
@@ -1153,8 +1171,8 @@ class TrainingSessionsTable extends ControllerActionTable
         $this->autoRender = false;
 
         if ($this->request->is(['ajax'])) {
-            $term = $this->request->query['term'];
-            $extra = $this->request->query['extra'];
+            $term = $this->request->getQuery('term');
+            $extra = $this->request->getQuery('extra');
             $data = $this->Evaluators->Users->autocomplete($term, ['finder' => [$extra['types']], 'OR' => ['Identities.number LIKE' => $term.'%']]);
             echo json_encode($data);
             die;
@@ -1196,7 +1214,7 @@ class TrainingSessionsTable extends ControllerActionTable
             $this->request = $this->request->withParsedBody($requestData);
         }
     }
- 
+
      /**
       * @param $entity
       * @param string $fieldKey
@@ -1217,7 +1235,7 @@ class TrainingSessionsTable extends ControllerActionTable
                  $name = $trainer->name;
                  $trainer_name = $trainer->user->name_with_id;
                  $trainer_data = [
-                     'id' => $trainer->id,
+                    // 'id' => $trainer->id,
                      'type' => $trainer_type,
                      'trainer_id' => $trainer_id,
                      'name' => $name,
@@ -1227,7 +1245,7 @@ class TrainingSessionsTable extends ControllerActionTable
              }
          }
          $data[$alias][$fieldKey] = $trainers;
- 
+
         // else{
         //     $data[$alias][$fieldKey] = [];
         // }
@@ -1341,7 +1359,7 @@ class TrainingSessionsTable extends ControllerActionTable
                 $trainee_id = $trainee->id;
                 $trainee = [
                     'openemis_no' => $trainee->openemis_no,
-                    'id' => $trainee_id,
+                    //'id' => $trainee_id,
                     'trainee_id' => $trainee_id,
                     'name' => $trainee->name,
                     'training_session_id' => $trainee->_joinData->training_session_id,
@@ -1415,7 +1433,7 @@ class TrainingSessionsTable extends ControllerActionTable
      * @return ArrayObject
      */
 
-    private function clearTrainerSaveData(ArrayObject $data)
+    /*private function clearTrainerSaveData(ArrayObject $data)
     {
         $trainer = [];
         if (isset($data['trainers']) && is_array($data['trainers'])) {
@@ -1426,5 +1444,219 @@ class TrainingSessionsTable extends ControllerActionTable
             }
         }
         return $data;
+    }*/
+    //POCOR-8347 Strat
+    /**
+     * @param ArrayObject $extra
+    */
+    private function addExportImportButtons(ArrayObject $extra): void
+    {
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+
+        $downloadUrl = $toolbarButtonsArray['back']['url'];
+        $downloadUrl[0] = 'template';
+        $this->controller->set('downloadOnClick', "javascript:window.location.href='" . Router::url($downloadUrl) . "'");
+        $this->controller->set('importOnClick', "$('#reload').val('massAddTrainees').click();$('#file-input-wrapper').trigger('clear.bs.fileinput');");
+
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
+
+    /**
+     * @param $entity
+     * @param string $fieldKey
+     * @param $trainerTypeOptions
+     * @param array $tableCells
+     * @return array
+    */
+
+    private function populateViewTrainerTableCells($entity, string $fieldKey, $trainerTypeOptions, array $tableCells): array
+    {
+        $associated = $entity->extractOriginal([$fieldKey]);
+        if (!empty($associated[$fieldKey])) {
+            foreach ($associated[$fieldKey] as $i => $User) {
+                $trainer_name = $User->user->name_with_id;
+                $rowData = [];
+                $trainer_type = $trainerTypeOptions[$this->getTrainerType($User)];
+                $rowData[] = $trainer_type;
+                $rowData[] = $trainer_name;
+                $tableCells[] = $rowData;
+            }
+        }
+        return $tableCells;
+    }
+
+    /**
+     * @param ArrayObject $data
+     * @param ArrayObject $options
+     */
+
+    private function addTrainerToDataTrainerArray(ArrayObject $data, ArrayObject $options): void
+    {
+        $alias = $this->getAlias();
+        $fieldKey = 'trainers';
+
+        if (empty($data[$alias][$fieldKey])) {
+            $data[$alias][$fieldKey] = [];
+        }
+
+        if (isset($data[$alias]) && isset($data[$alias]['trainer_id']) && !empty($data[$alias]['trainer_id'])) {
+            $id = $data[$alias]['trainer_id'];
+            $trainerType = $data[$alias]['type'];
+            try {
+                $trainerUser = $this->Trainers->Users->get($id);
+                $data[$alias][$fieldKey][$id] = [
+                    'type' => $trainerType,
+                    'trainer_id' => $trainerUser->id,
+                    'name' => $trainerUser->name,
+                    'trainer_name' => $trainerUser->name_with_id
+                ];
+
+                unset($data[$alias]['trainer_id']);
+                $this->request = $this->request->withParsedBody($data);
+            } catch (RecordNotFoundException $ex) {
+                Log::write('debug', __METHOD__ . ': Trainer not found for id: ' . $id);
+            }
+        }
+        $options['associated'] = [
+            'Trainers' => ['validate' => false]
+        ];
+    }
+
+    /**
+     * @param ArrayObject $data
+     * @param ArrayObject $options
+     */
+
+    private function addEvaluatorsToDataEvaluatorsArray(ArrayObject $data, ArrayObject $options): void
+    {
+        $alias = $this->getAlias();
+        $fieldKey = 'evaluators';
+
+        if (empty($data[$alias][$fieldKey])) {
+            $data[$alias][$fieldKey] = [];
+        }
+        
+        if (isset($data[$alias]) && isset($data[$alias]['evaluator_id']) && !empty($data[$alias]['evaluator_id'])) {
+            $id = $data[$alias]['evaluator_id'];
+            $evaluatorType = $data[$alias]['types'];
+
+            try {
+                $obj = $this->Evaluators->Users->get($id);
+                $data[$alias][$fieldKey][$id] = [
+                    'types' => $evaluatorType,
+                    'evaluator_id' => $obj->id,
+                    'name' => $obj->name,
+                    'evaluator_name' => $obj->name_with_id
+                ];
+
+                unset($data[$alias]['evaluator_id']);
+                $this->request = $this->request->withParsedBody($data);
+            } catch (RecordNotFoundException $ex) {
+                Log::write('debug', __METHOD__ . ': Trainer not found for id: ' . $id);
+            }
+        }
+        //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
+        $options['associated'] = [
+            'Evaluators' => ['validate' => false]
+        ];
+    }
+
+    /**
+     * @param Entity $entity
+     * @param ArrayObject $data
+     * @param ArrayObject $options
+     */
+    private function addTraineeToDataTraineeArray(Entity $entity, ArrayObject $data, ArrayObject $options): void
+    {
+        $alias = $this->getAlias();
+        $fieldKey = 'trainees';
+
+        if (empty($data[$alias][$fieldKey])) {
+            $data[$alias][$fieldKey] = [];
+        }
+        if (isset($data[$alias]) && isset($data[$alias]['trainee_id']) && !empty($data[$alias]['trainee_id'])) {
+            $id = $data[$alias]['trainee_id'];
+            try {
+                $trainee = $this->Trainees->get($id);
+                unset($data[$alias]['trainee_id']);
+                $data[$alias][$fieldKey][$trainee->id] = $this->paramsEncode([
+                    'openemis_no' => $trainee->openemis_no,
+                    'trainee_id' => $trainee->id,
+                    'name' => $trainee->name,
+                    'training_session_id' => $entity->id]);
+                
+                $this->request = $this->request->withParsedBody($data);
+            } catch (RecordNotFoundException $ex) {
+                Log::write('debug', __METHOD__ . ': Trainee not found for id: ' . $id);
+            }
+
+        }
+        //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
+        $options['associated'] = [
+            'Trainees' => ['validate' => false]
+        ];
+    }
+
+    private function setIdEntityFromQueryString(string $class, int $line, Entity $entity): Entity
+    {
+        $queryString = $this->getQueryString();
+        // Log::debug('Query String {query} in {class}, {line}', ['query' => $queryString, 'class' => $class, 'line' => $line]);
+        $id = $queryString['id'];
+        if (isset($id)) {
+            $this->id = $id;
+            $entity = $this->get($id);
+            $this->entity = $entity;
+            // Log::debug('Entity {entity} in {class}, {line}', ['entity' => $entity, 'class' => $class, 'line' => $line]);
+        }
+        return $entity;
+    }
+
+    /**
+     * @param string $alias
+     * @param string $fieldKey
+    */
+    private function clearEvaluatorsData(string $alias, string $fieldKey): void
+    {
+        $requestData = $this->request->getData();
+        if (!empty($requestData) && !isset($requestData[$alias])) {
+            $this->request = $this->request->withData($alias, [$fieldKey => []]);
+        } else {
+            $requestData[$alias][$fieldKey] = [];
+            $this->request = $this->request->withParsedBody($requestData);
+        }
+    }
+
+    /**
+      * @param $entity
+      * @param string $fieldKey
+      * @param string $alias
+    */
+    private function getEvaluatorsToData($entity, string $fieldKey, string $alias): void
+    {
+        $data = $this->request->getData();
+        $associated = $entity->extractOriginal([$fieldKey]);
+        $evaluators = [];
+        if (!empty($associated[$fieldKey])) {
+            $data = $this->request->getData();
+            foreach ($associated[$fieldKey] as $key => $obj) {
+                $evaluatorType = $this->getEvaluatorTypes($obj);
+                $evaluatorId = $obj->evaluator_id;
+                $name = $obj->name;
+                $evaluatorName = $obj->user->name_with_id;
+
+                $evaluator_data = [
+                    'id' => $obj->id,
+                    'types' => $evaluatorType,
+                    'evaluator_id' => $evaluatorId,
+                    'name' => $name,
+                    'evaluator_name' => $evaluatorName
+                ];
+                $evaluators[$evaluatorId] = $evaluator_data;
+            }
+        }
+        $data[$alias][$fieldKey] = $evaluators;
+
+        $this->request = $this->request->withParsedBody($data);
+    }
+    //POCOR-8347 End
 }

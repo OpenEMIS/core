@@ -10,6 +10,7 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use Cake\Utility\Inflector;
+use Cake\Event\EventInterface;//POCOR-8456
 
 class StaffController extends AppController
 {
@@ -246,7 +247,7 @@ class StaffController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Payslips']);
     }
 
-    
+
     public function StaffLeave()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffLeave']);
@@ -293,7 +294,7 @@ class StaffController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Medications']);
     }
-    
+
 
     public function HealthTests()
     {
@@ -453,7 +454,7 @@ class StaffController extends AppController
      */
     private function getStaffId()
     {
-        $userId = $this->getQueryString('staff_id'); 
+        $userId = $this->getQueryString('staff_id');
         if(empty($userId)) {
             $userId = $this->request->getQuery('user_id');
         }
@@ -490,9 +491,9 @@ class StaffController extends AppController
         // if ($institutionId) {
         //     $options['institution_id'] = $institutionId;
         // }
-        
+
         // $tabElements = TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
-        
+
         // return $this->TabPermission->checkTabPermission($tabElements);
     }
     // Special Needs - End
@@ -581,7 +582,7 @@ class StaffController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsPlans']);
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)//POCOR-8456
     {
         $isInstitutionIndex = $this->isInstitutionIDSkipped();
         if ($isInstitutionIndex) {
@@ -614,8 +615,8 @@ class StaffController extends AppController
                 $encodedInstitutionId]);
         $action = $this->request->getAttribute('params')['action'];
         $header = __('Staff');
- 
-        if ($action == 'index') {   
+
+        if ($action == 'index') {
         } else if ($this->getStaffId() || $action == 'view' || $action == 'edit') {
             // add the staff name to the header
             $id = $this->getQueryString('id');
@@ -666,7 +667,7 @@ class StaffController extends AppController
             //POCOR-5890 ends
             $this->Navigation->addCrumb($model->getHeader($alias));
             $header = $header . ' - ' . $model->getHeader($alias);
-            
+
             // $params = $this->request->params;
             $this->set('contentHeader', $header);
 
@@ -674,7 +675,7 @@ class StaffController extends AppController
             $this->getStatusPermission($model);
             $pass = $this->request->getParam('pass');
             $subaction = isset($pass[0]) ? $pass[0] : null;
-            
+
             if($model->alias = 'StaffAppraisals'){
                 return true;
             }
@@ -709,7 +710,7 @@ class StaffController extends AppController
                         $ids = $this->ControllerAction->paramsDecode($modelId);
                         $idKey = $this->ControllerAction->getIdKeys($model, $ids);
                         $idKey[$model->aliasField('staff_id')] = $userId;
-                 
+
                         $exists = $model->exists($idKey);
 
                         /**
@@ -870,13 +871,13 @@ class StaffController extends AppController
         if (!empty($institutionId)) {
             if ($this->request->getParam('action') == 'StaffCurriculars') {
                 $labels_tbl = TableRegistry::get('Labels');
-                $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();  
+                $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();
                 if(empty($curricular_label_Data->name)){
                     $curricular_label_Data->name = "Institution Curriculars";
-                }   
+                }
                 $getStaffId = $this->getStaffID();
                 $nameTable = TableRegistry::getTableLocator()->get('User.Users');
-                $staff = $nameTable->find()->where(['id' => $getStaffId])->first(); 
+                $staff = $nameTable->find()->where(['id' => $getStaffId])->first();
                 $staffName = $staff->first_name; // Accessing the first_name property of the retrieved staff record
 
                 $header = $staffName . ' - ' .$curricular_label_Data->name;
@@ -1066,17 +1067,17 @@ class StaffController extends AppController
     function isInstitutionIDSkipped(): bool
     {
         $request = $this->request;
-          
+
         $pass = $request->getParam('pass');
         $action = $request->getParam('action');
         $controller = $request->getParam('controller');
         $plugin = $request->getParam('plugin');
         $furtherAction = $pass[0];
-        
+
         if ($pass[0] == 'download' && ($action == 'Qualifications' || $action == 'EmploymentStatuses' || $action == 'Payslips' || 'Healths') && ($plugin == 'Staff') && ($controller == 'Staff')) {
             return true;
         }
-        
+
         return false;
     }
 

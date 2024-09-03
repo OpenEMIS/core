@@ -6,6 +6,7 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
+use Cake\Event\EventInterface;
 
 class MapController extends AppController
 {
@@ -16,7 +17,7 @@ class MapController extends AppController
 		$this->attachAngularModules();
 	}
 
-	public function beforeFilter(Event $event)
+	public function beforeFilter(EventInterface $event)
 	{
 		parent::beforeFilter($event);
 
@@ -60,7 +61,7 @@ class MapController extends AppController
 		}
 	}
 
-	public function beforeRender(Event $event)
+	public function beforeRender(EventInterface $event)
     {
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');

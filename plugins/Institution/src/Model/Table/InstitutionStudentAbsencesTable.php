@@ -33,21 +33,21 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             'description' => 'Triggering this rule will assign the case to the respective Home Room Teacher',
             'method' => 'onAssignToHomeRoomTeacher',
             'roleCode' => 'HOMEROOM_TEACHER'
-        ],        
+        ],
         [
             'value' => 'Workflow.onAssignToSecondaryTeacher',
             'text' => 'Assign to Secondary Teacher',
             'description' => 'Triggering this rule will assign the case to the respective Secondary Teacher',
             'method' => 'onAssignToSecondaryTeacher',
             'roleCode' => 'HOMEROOM_TEACHER'
-        ],        
+        ],
         [
             'value' => 'Workflow.onAssignToPrincipal',
             'text' => 'Assign to Principal',
             'description' => 'Triggering this rule will assign the case to Principal',
             'method' => 'onAssignToPrincipal',
             'roleCode' => 'PRINCIPAL'
-        ],        
+        ],
         [
             'value' => 'Workflow.onAssignToMoeadmin',
             'text' => 'Assign to MOE ADMIN',
@@ -253,7 +253,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             }
         }
     }
-    
+
     public function onAssignToMoeadmin(Event $event, Entity $caseEntity, Entity $linkedRecordEntity, ArrayObject $extra)
     {
         $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
@@ -344,7 +344,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             ])
             ->order([$InstitutionStudentAbsenceDays->aliasField('start_date')]);
         $count = $consecutiveRecords->count();
-        
+
         switch ($count) {
             // There is no record, we will add the entry
             case 0:
@@ -406,7 +406,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 // ]);
                 // $dayEntity = $InstitutionStudentAbsenceDays->save($dayEntity);
                 $InstitutionStudentAbsenceDays->updateAll(['absence_type_id' => $entity->absence_type_id], ['student_id' => $entity->student_id, 'institution_id'=>$entity->institution_id, 'start_date'=>$startDate, 'end_date'=>$endDate]);
-                
+
                 //POCOR-7035[END]
                 $this->updateAll(['institution_student_absence_day_id' => $dayEntity->id], ['id' => $entity->id]);
                 break;
@@ -450,7 +450,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 break;
         }
     }
-    
+
     //POCOR-7205
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
@@ -466,7 +466,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         // $InstitutionStudentAbsenceDays = $this->InstitutionStudentAbsenceDays;
         $startDate = $entity->date;
         $endDate = $entity->date;
-        
+
         //POCOR-7035[START]
         // if ($entity->isNew()) {
         //     $this->addInstitutionStudentAbsenceDayRecord($entity, $startDate, $endDate);
@@ -488,7 +488,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
 
     public function onSetFilterToolbarElement(Event $event, ArrayObject $params, $institutionId)
     {
-       
+
         $requestQuery = $params['query'];
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
@@ -499,7 +499,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         }
         $selectedAcademicPeriod = $requestQuery['academic_period_id'];
         $academicPeriodOptions = $AcademicPeriods->getYearList();
-        
+
         // education_grade_id
         if (empty($requestQuery['education_grade_id'])) {
             $firstInstitutionEducationGradesResult = $InstitutionEducationGrades
@@ -513,7 +513,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 ->group('education_grade_id')
                 ->order(['education_grade_id'])
                 ->first();
-           
+
             if (!empty($firstInstitutionEducationGradesResult)) {
                 //$requestQuery['education_grade_id'] = $firstInstitutionEducationGradesResult->id;
                   $requestQuery['education_grade_id'] = 'all';
@@ -541,14 +541,14 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             $gradeList    = $result->toArray();
             $allGradeList = ["0" => 'All'];
             $educationGradesOptions = $allGradeList + $gradeList;
-            
+
         } else {
             $educationGradesOptions = ['-1' => __('No Grades')];
         }
 
         // institution_class_id
         if (empty($requestQuery['institution_class_id'])) {
-           
+
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
             $firstInstitutionClassIdResult = $InstitutionClasses
                 ->find('byGrades', ['education_grade_id' => $selectedEducationGrades])
@@ -562,7 +562,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 ])
                 ->order([$InstitutionClasses->aliasField('id')])
                 ->first();
-          
+
             if (!empty($firstInstitutionClassIdResult)) {
                 // $requestQuery['institution_class_id'] = $firstInstitutionClassIdResult->id;
                 $requestQuery['institution_class_id'] = 'all';
@@ -572,10 +572,10 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         }
 
         if ($selectedEducationGrades != -1) {
-            
+
             $selectedClassId = $requestQuery['institution_class_id'];
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-            
+
             $result = $InstitutionClasses
                 ->find('list', [
                     'keyField' => 'id',
@@ -591,7 +591,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                     [$InstitutionClasses->aliasField('institution_id') => $institutionId]
                 ])
                 ->all();
-           
+
             if (!$result->isEmpty()) {
                 $classList = $result->toArray();
 
@@ -606,7 +606,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         }
 
         $params['element'] = ['filter' => ['name' => 'Cases.StudentAbsences/controls', 'order' => 2]];
-      
+
         $params['options'] = [
             'selectedAcademicPeriod' => $selectedAcademicPeriod,
             'academicPeriodOptions' => $academicPeriodOptions,
@@ -619,20 +619,20 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
 
     public function onCaseIndexBeforeQuery(Event $event, $requestQuery, Query $query)
     {
-        // if (array_key_exists('institution_class_id', $requestQuery) && $requestQuery['institution_class_id'] != -1) {
+        // if (isset($requestQuery['institution_class_id']) && $requestQuery['institution_class_id'] != -1) {
             if (!empty($requestQuery)) {
             $institutionClassId = $requestQuery['institution_class_id'];
             $educationGradeId = $requestQuery['education_grade_id'];
-            
+
             $academicPeriodId = $requestQuery['academic_period_id'];
 
             $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
             $academicPeriodId = !is_null($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $AcademicPeriods->getCurrent();
-            if (array_key_exists('institution_class_id', $requestQuery) && $requestQuery['institution_class_id'] != 0) {
+            if (isset($requestQuery['institution_class_id']) && $requestQuery['institution_class_id'] != 0) {
                 $conditions[] = [$InstitutionClassStudents->aliasField('institution_class_id') => $institutionClassId];
             }
-            if (array_key_exists('education_grade_id', $requestQuery) && $requestQuery['education_grade_id'] != 0) {
+            if (isset($requestQuery['education_grade_id']) && $requestQuery['education_grade_id'] != 0) {
                 $conditions[] = [$InstitutionClassStudents->aliasField('education_grade_id') => $educationGradeId];
             }
             $periodEntity = $AcademicPeriods
@@ -690,7 +690,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             //POCOR-4864 start
             $StudentAbsenceTable=TableRegistry::get('institution_student_absence_details');
             $StudentAbsenceReason=TableRegistry::get('student_absence_reasons');
-           
+
             $StudentAbsenceTableRecord= $StudentAbsenceTable->find()
                     ->select([$StudentAbsenceTable->aliasField('comment'),
                          $StudentAbsenceTable->aliasField('student_absence_reason_id'),
@@ -746,7 +746,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             //     $s->addDay(1);
             // } while ($s->lte($recordEntity->end_date));
 
-            //POCOR-4864 start   
+            //POCOR-4864 start
             $title = '';
             $title .=  __($recordEntity->absence_type->name) . ' - ('. $date .')  ' ;//POCOR-4864
             $data=[];
@@ -833,7 +833,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             ->innerJoinWith('InstitutionCaseRecords.StudentAttendances.AbsenceTypes')
             ->innerJoinWith('InstitutionCaseRecords.StudentAttendances.InstitutionStudentAbsenceDays')
             ->group(['WorkflowTransitions.id','InstitutionCaseRecords.institution_case_id']);
-        
+
         return $query;
     }
 
@@ -852,7 +852,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             'type' => 'string',
             'label' => ''
         ];
-  
+
         $newFields[] = [
             'key' => 'InstitutionStudentAbsenceDays.absent_days',
             'field' => 'absent_days',
@@ -877,7 +877,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
 
     // public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     // {
-    //     if (array_key_exists('absence_type_id', $data) && !empty($data['absence_type_id'])) {
+    //     if (isset($data['absence_type_id']) && !empty($data['absence_type_id'])) {
     //         $absenceTypeId = $data['absence_type_id'];
     //         $absenceTypeCode = $this->absenceCodeList[$absenceTypeId];
     //         switch ($absenceTypeCode) {
@@ -891,7 +891,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
     //         }
     //     }
 
-    //     if (array_key_exists('full_day', $data) && !empty($data['full_day'])) {
+    //     if (isset($data['full_day']) && !empty($data['full_day'])) {
     //         $fullDay = $data['full_day'];
     //         if ($fullDay == 1) {
     //             $data['start_time'] = null;

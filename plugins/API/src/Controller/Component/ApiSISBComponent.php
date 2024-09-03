@@ -12,7 +12,7 @@ class ApiSISBComponent extends Component {
 
 	public function process($externalApplication) {
 
-		$params = $this->request->query;
+		$params = $this->request->getQuery();
 		$data = false;
 
 		// for extracting error codes
@@ -20,7 +20,7 @@ class ApiSISBComponent extends Component {
 		$ApiAuthorizations = TableRegistry::get('API.ApiAuthorizations');
 		// for extracting error codes
 
-		if (!array_key_exists('user_id', $params) || empty($params['user_id'])) {
+		if (!isset($params['user_id']) || empty($params['user_id'])) {
 			$error = $ApiAuthorizations->getErrorMessage(3, ['organisation_administrator'=>'MOEYS PPRE']);
 			$message = 'external user_id is missing, shown "' . $error['description'] . '( ' .$error['code'] . ' )" error message to requestor';
 			Log::info($message, ['scope' => ['api']]);
@@ -37,18 +37,18 @@ class ApiSISBComponent extends Component {
 			];
 		};
 		$identity_types = $IdentityTypes->getList($IdentityTypes->find())->combine('id', $combineClosure);
-		$paramIdentityType = (array_key_exists('identity_type', $params) && $params['identity_type']!='') ? strtolower($params['identity_type']) : 'openemis_no';
+		$paramIdentityType = (isset($params['identity_type']) && $params['identity_type']!='') ? strtolower($params['identity_type']) : 'openemis_no';
 		$identity_type = $identity_types->reject(function ($record, $key) use ($paramIdentityType) {
 		    return $record['national_code'] !== $paramIdentityType;
 		})->toArray();
 
-		if (array_key_exists('id', $params) && $params['id']!='') {
+		if (isset($params['id']) && $params['id']!='') {
 			$Students = TableRegistry::get('API.Students');
 
 			$message = 'User ' . $params['user_id'] . ' from ' . $externalApplication->name . ' queries for ' . $params['id'];
 			Log::info($message, ['scope' => ['api']]);
 
-			if (array_key_exists('persona', $params) && $params['persona']!='') {
+			if (isset($params['persona']) && $params['persona']!='') {
 				$persona = ucwords(strtolower($params['persona']));
 				$PersonaIdentities = TableRegistry::get('API.'.$persona.'Identities');
 				if (!method_exists($PersonaIdentities, 'search')) {
@@ -59,7 +59,7 @@ class ApiSISBComponent extends Component {
 			} else {
 				$PersonaIdentities = TableRegistry::get('API.StudentIdentities');
 			}
-			
+
 			if (isset($result)) { return $result; }
 
 			$conditions = [];
@@ -120,7 +120,7 @@ class ApiSISBComponent extends Component {
 					$academicEntity = $InstitutionStudents
 						->find()
 						->select([
-							'EducationGrades.name', 'Institutions.name', 
+							'EducationGrades.name', 'Institutions.name',
 							'Institutions.code', 'Statuses.name',
 							'InstitutionStudents.start_date', 'InstitutionStudents.end_date'
 						])

@@ -50,7 +50,7 @@ class ProgrammesTable extends ControllerActionTable
 
 	//POCOR-5742 starts
 	public function onGetEndDate(Event $event, Entity $entity)
-	{ 
+	{
 		$studentId = $entity->student_id;
 		$gradeId = $entity->education_grade->id;
 		$periodId = $entity->academic_period_id;
@@ -101,7 +101,7 @@ class ProgrammesTable extends ControllerActionTable
 
 		// Start POCOR-5188
 		if($this->request->getParam('controller') == 'Institutions'){
-			$is_manual_exist = $this->getManualUrl('Institutions','Programmes','Students - Academic');       
+			$is_manual_exist = $this->getManualUrl('Institutions','Programmes','Students - Academic');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -110,7 +110,7 @@ class ProgrammesTable extends ControllerActionTable
 					'escape' => false,
 					'target'=>'_blank'
 				];
-		
+
 				$helpBtn['url'] = $is_manual_exist['url'];
 				$helpBtn['type'] = 'button';
 				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -119,7 +119,7 @@ class ProgrammesTable extends ControllerActionTable
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
 		}else if($this->request->getParam('controller') == 'Students'){
-			$is_manual_exist = $this->getManualUrl('Institutions','Programmes','Students - Academic');       
+			$is_manual_exist = $this->getManualUrl('Institutions','Programmes','Students - Academic');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -128,7 +128,7 @@ class ProgrammesTable extends ControllerActionTable
 					'escape' => false,
 					'target'=>'_blank'
 				];
-		
+
 				$helpBtn['url'] = $is_manual_exist['url'];
 				$helpBtn['type'] = 'button';
 				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -136,8 +136,8 @@ class ProgrammesTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->getParam('controller') == 'Directories'){ 
-			$is_manual_exist = $this->getManualUrl('Directory','Programmes','Students - Academic');       
+		}elseif($this->request->getParam('controller') == 'Directories'){
+			$is_manual_exist = $this->getManualUrl('Directory','Programmes','Students - Academic');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -160,9 +160,9 @@ class ProgrammesTable extends ControllerActionTable
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-	{	
+	{
 		$session = $this->request->getSession();
-		
+
 		if ($this->controller->getName() == 'Profiles') {
 			if ($session->read('Auth.User.is_guardian') == 1) {
 				$sId = $session->read('Student.ExaminationResults.student_id');
@@ -170,7 +170,7 @@ class ProgrammesTable extends ControllerActionTable
 				$sId = $this->getStudentID();
 			}
 			if (!empty($sId)) {
-				if ($studentId['id']) {					
+				if ($studentId['id']) {
 					$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
 				}
 			} else {
@@ -186,7 +186,7 @@ class ProgrammesTable extends ControllerActionTable
 				if(empty($studentId)){
 					$encodeStudentId = $this->request->getQueryParams()['studentId'];
 					$studentId = $this->paramsDecode($encodeStudentId);
-				}//POCOR-8379 ends				
+				}//POCOR-8379 ends
 			}
 		}
 		if(empty($studentId)){ //POCOR-8316
@@ -194,7 +194,7 @@ class ProgrammesTable extends ControllerActionTable
         }
 		// end POCOR-1893
 		$sortList = ['AcademicPeriods.name'];
-		
+
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
@@ -212,18 +212,18 @@ class ProgrammesTable extends ControllerActionTable
 			]);
 		}
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
-        
+
 	}
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {  	
+    {
         $this->field('photo_content', ['type' => 'image', 'before' => 'openemis_no']);
         $this->field('openemis_no',['before' => 'student_id']);
         $this->field('student_status_id',['after' => 'student_id']);
         $this->field('start_year', ['visible' => 'false']);
         $this->field('end_year', ['visible' => 'false']);
         $this->setupTabElements();
-        //POCOR-5671 
+        //POCOR-5671
         $statuses = $this->StudentStatuses->findCodeList();
 		$studentStatusId = $entity->student_status_id;
 		if ($studentStatusId == $statuses['CURRENT']) {
@@ -238,7 +238,7 @@ class ProgrammesTable extends ControllerActionTable
 	            'data-placement' => 'bottom',
 	            'escape' => false
 	        ];
-	 
+
 	        $extraButtons = [
 	            'process' => [
 	                'Institution' => ['Institution', 'Institutions'],
@@ -274,7 +274,7 @@ class ProgrammesTable extends ControllerActionTable
 		$entity->institution->id = $institutionId;
 		$encodedQueryString = $this->paramsEncode($queryString);
 
-		if (array_key_exists('view', $buttons)) {
+		if (isset($buttons['view'])) {
 			$url = [
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',
@@ -288,7 +288,7 @@ class ProgrammesTable extends ControllerActionTable
 		$statuses = $this->StudentStatuses->findCodeList();
 		$studentStatusId = $entity->student_status_id;
 
-		if (array_key_exists('edit', $buttons) && $studentStatusId == $statuses['CURRENT']) {
+		if (isset($buttons['edit']) && $studentStatusId == $statuses['CURRENT']) {
 			$url = [
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',
@@ -298,7 +298,7 @@ class ProgrammesTable extends ControllerActionTable
 			];
 			$buttons['edit']['url'] = $url;
 		} else {
-			if (array_key_exists('edit', $buttons)) {
+			if (isset($buttons['edit'])) {
 				unset($buttons['edit']);
 			}
 		}
@@ -318,10 +318,10 @@ class ProgrammesTable extends ControllerActionTable
             $buttons['transition']['url'] = $url;
         }
 		//POCOR-5671
-		
+
 		return parent::onUpdateActionButtons($event, $entity, $buttons);
 	}
-	
+
     public function onGetOpenemisNo(Event $event, Entity $entity)
     {
         $value = '';
@@ -343,7 +343,7 @@ class ProgrammesTable extends ControllerActionTable
 	}
 
 	public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
-	{		
+	{
 		$this->setupTabElements();
 	}
 
@@ -396,25 +396,31 @@ class ProgrammesTable extends ControllerActionTable
         $plugin = __($this->controller->getPlugin());
 		if($plugin != 'Profile' && $plugin != 'GuardianNav'){
 			$id = $this->request->getAttribute('params')['pass'][1];
-			$DecodedQueryString = $this->paramsDecode($id);
-			$userId = $DecodedQueryString['user_id'];
+			//POCOR-8489 --Start
+			if(isset($id)) {
+				$DecodedQueryString = $this->paramsDecode($id);
+				$userId = $DecodedQueryString['user_id'] ?? $DecodedQueryString['student_id'];
+			}else {
+				$queryString = $this->getQueryString();
+				$userId = $queryString['student_id'];
+			}
+			//POCOR-8489 --End
 			$Users = TableRegistry::get('User.Users');
 			$result = $Users
 				->find()
 				->select(['first_name','last_name'])
 				->where(['id' =>  $userId])
 				->first();
-
 			$fullName = $result->first_name.' '.$result->last_name;
 			try {
-				
+
 				$gettabName = 'Student Programmes';
 				$this->controller->set('contentHeader', $fullName . ' - ' . $gettabName);
 				//$this->controller->set('contentHeader', $plugin);
 			} catch (RecordNotFoundException $e) {
 				Log::write('error', $e->getMessage());
 			}
-		}		
+		}
     }
-	
+
 }

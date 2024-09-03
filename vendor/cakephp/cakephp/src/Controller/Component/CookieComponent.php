@@ -16,7 +16,7 @@ namespace Cake\Controller\Component;
 
 use Cake\Controller\Component;
 use Cake\I18n\Time;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Http\Response;
 use Cake\Utility\CookieCryptTrait;
 use Cake\Utility\Hash;
@@ -118,7 +118,7 @@ class CookieComponent extends Component
     public function initialize(array $config): void
     {
         if (!$this->_config['key']) {
-            $this->getConfig('key', Security::getSalt());
+            $this->setConfig('key', Security::getSalt());
         }
 
         $controller = $this->_registry->getController();
@@ -133,7 +133,7 @@ class CookieComponent extends Component
         }
 
         if (empty($this->_config['path'])) {
-            $this->getConfig('path', $this->request->webroot);
+            $this->setConfig('path', $this->request->webroot);
         }
     }
 

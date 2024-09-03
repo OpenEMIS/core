@@ -12,7 +12,7 @@ class RenderCoordinatesBehavior extends RenderBehavior {
     // assign values for validation
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
         $dataArray = $data->getArrayCopy();
-        if (array_key_exists('custom_field_values', $dataArray)) {
+        if (isset($dataArray['custom_field_values'])) {
             foreach ($dataArray['custom_field_values'] as $key => $value) {
                 if (array_key_exists('field_type', $dataArray['custom_field_values'][$key])) {
                     if ($dataArray['custom_field_values'][$key]['field_type'] == 'COORDINATES') {

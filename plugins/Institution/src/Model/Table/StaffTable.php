@@ -28,6 +28,7 @@ use Cake\Http\ServerRequest;
 use Cake\Utility\Text;
 use Cake\ORM\Locator\TableLocator;
 
+
 class StaffTable extends ControllerActionTable
 {
 
@@ -2279,32 +2280,81 @@ class StaffTable extends ControllerActionTable
 
     public function getNumberOfStaffsByGender($params = [])
     {
+        //POCOR-8501 start
         $query = $params['query'];
         $InstitutionRecords = clone $query;
-        $InstitutionStaffCount = $InstitutionRecords
-            ->matching('Users.Genders')
-            ->select([
-                // 'count' => $InstitutionRecords->func()->count('DISTINCT staff_id'),
-                'count' => $InstitutionRecords->func()->count('DISTINCT ' . $this->aliasField('staff_id')), //POCOR-6971
-                'gender' => 'Genders.name',
-                'gender_code' => 'Genders.code'
-            ])
-            ->group('Users.gender_id');
+        $valueBinder = $query->getValueBinder();
+        $institutionId = $valueBinder->bindings()[':c0']['value'];
+        $date1 = $valueBinder->bindings()[':c1']['value'];
+        $date2 = $valueBinder->bindings()[':c2']['value'];
+        $date3 = $valueBinder->bindings()[':c3']['value'];
+        $date4 = $valueBinder->bindings()[':c4']['value'];
+        $date5 = $valueBinder->bindings()[':c5']['value'];
+        $date6 = $valueBinder->bindings()[':c6']['value'];
+        $date7 = $valueBinder->bindings()[':c7']['value'];
+        $staffStatusId1 = $valueBinder->bindings()[':c8']['value'];
+        $staffStatusId2 = $valueBinder->bindings()[':c9']['value'];
+        
+        $InstitutionStaffCount = $this
+        ->find()
+        ->select([
+            'gender' => 'Genders.name',
+            'gender_code' => 'Genders.code',
+            'count' =>  $this->find()->func()->count('DISTINCT ' . $this->aliasField('staff_id'))
+        
+        ])
+        ->innerJoinWith('Users')
+        ->matching('Users.Genders')
+        ->leftJoinWith('Positions')
+        ->leftJoinWith('Institutions')
+        ->leftJoinWith('StaffTypes')
+        ->leftJoinWith('StaffStatuses')
+        ->leftJoinWith('SecurityGroupUsers')
+        ->leftJoinWith('InstitutionStaffShifts')
+        ->where([
+            $this->aliasField('institution_id') => $institutionId,
+            'OR' => [
+                [
+                    $this->aliasField('end_date IS NOT') => null,
+                    $this->aliasField('start_date <=') => $date1,
+                    $this->aliasField('end_date >=') => $date2
+                ],
+                [
+                    $this->aliasField('end_date IS NOT') => null,
+                    $this->aliasField('start_date <=') => $date3,
+                    $this->aliasField('end_date >=') => $date4
+                ],
+                [
+                    $this->aliasField('end_date IS NOT') => null,
+                    $this->aliasField('start_date >=') => $date5,
+                    $this->aliasField('end_date <=') => $date6
+                ],
+                [
+                    $this->aliasField('end_date IS') => null,
+                    $this->aliasField('start_date <=') => $date7
+                ]
+            ],
+            $this->aliasField('staff_status_id IN') => [$staffStatusId1, $staffStatusId2]
+        ])
+        ->group(['Users.gender_id']);
 
-        // Creating the data set
         $dataSet = [
-            'M' => [],
-            'F' => [],
+            'M' => [__('Male'), 0],
+            'F' => [__('Female'), 0],
         ];
         foreach ($InstitutionStaffCount->toArray() as $value) {
-            //Compile the dataset
-            $dataSet[$value['gender_code']] = [__($value['gender']), $value['count']];
-        }
+            $genderCode = $value['gender_code'];
+            if (isset($dataSet[$genderCode])) {
+                $dataSet[$genderCode][1] += $value['count'];
+            } else {
+                $dataSet[$genderCode] = [__($value['gender']), $value['count']];
+            }
+        } //POCOR-8501 end
         $params['dataSet'] = array_values($dataSet);
         unset($InstitutionRecords);
         return $params;
     }
-    /**POCOR-6800 ends*/
+    
     /*
      * Function to check whether Principal role view permission
     * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
@@ -2731,7 +2781,7 @@ class StaffTable extends ControllerActionTable
      */
     public function findByPositions(Query $query, array $options)
     {
-        if (array_key_exists('Institutions.id', $options) && array_key_exists('type', $options)) {
+        if (array_key_exists('Institutions.id', $options) && isset($options['type'])) {
             $positions = $this->Positions->find('list')
                 ->select([
                     $this->Positions->aliasField('id'),
@@ -2774,7 +2824,7 @@ class StaffTable extends ControllerActionTable
      */
     public function findByType(Query $query, array $options)
     {
-        if (array_key_exists('type', $options)) {
+        if (isset($options['type'])) {
             $types = $this->StaffTypes->getList()->toArray();
             if (is_array($types) && in_array($options['type'], $types)) {
                 $typeId = array_search($options['type'], $types);
@@ -2799,7 +2849,7 @@ class StaffTable extends ControllerActionTable
      */
     public function findByStatus(Query $query, array $options)
     {
-        if (array_key_exists('status', $options)) {
+        if (isset($options['status'])) {
             $statuses = $this->StaffStatuses->getList()->toArray();
             if (is_array($statuses) && in_array($options['status'], $statuses)) {
                 $statusId = array_search($options['status'], $statuses);
@@ -2814,11 +2864,11 @@ class StaffTable extends ControllerActionTable
 
     public function findStaffRecords(Query $query, array $options)
     {
-        $academicPeriodId = (array_key_exists('academicPeriodId', $options)) ? $options['academicPeriodId'] : null;
-        $positionType = (array_key_exists('positionType', $options)) ? $options['positionType'] : null;
-        $staffId = (array_key_exists('staffId', $options)) ? $options['staffId'] : null;
-        $institutionId = (array_key_exists('institutionId', $options)) ? $options['institutionId'] : null;
-        $isHomeroom = (array_key_exists('isHomeroom', $options)) ? $options['isHomeroom'] : null;
+        $academicPeriodId = (isset($options['academicPeriodId'])) ? $options['academicPeriodId'] : null;
+        $positionType = (isset($options['positionType'])) ? $options['positionType'] : null;
+        $staffId = (isset($options['staffId'])) ? $options['staffId'] : null;
+        $institutionId = (isset($options['institutionId'])) ? $options['institutionId'] : null;
+        $isHomeroom = (isset($options['isHomeroom'])) ? $options['isHomeroom'] : null;
 
         if (!is_null($academicPeriodId)) {
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');

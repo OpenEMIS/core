@@ -331,7 +331,7 @@ class StudentsTable extends AppTable
 
 
                 $institutionList = [];
-                if (array_key_exists('institution_type_id', $request->getData($this->getAlias())) && !empty($request->getData($this->getAlias())['institution_type_id'])) {
+                if (array_key_exists('institution_type_id', (array)$request->getData($this->getAlias())) && !empty($request->getData($this->getAlias())['institution_type_id'])) {
                     $institutionTypeId = $request->getData($this->getAlias())['institution_type_id'];
                     $institutionQuery = $InstitutionsTable
                         ->find('list', [
@@ -354,7 +354,7 @@ class StudentsTable extends AppTable
                     }
 
                     $institutionList = $institutionQuery->toArray();
-                } elseif (!$institutionTypeId && array_key_exists('area_education_id', $request->getData($this->getAlias())) && !empty($request->getData($this->getAlias())['area_education_id']) && $areaId != -1) {
+                } elseif (!$institutionTypeId && array_key_exists('area_education_id', (array)$request->getData($this->getAlias())) && !empty($request->getData($this->getAlias())['area_education_id']) && $areaId != -1) {
                     //Start:POCOR-6818 Modified this for POCOR-6859
                     $AreaT = TableRegistry::getTableLocator()->get('Area.Areas');                    
                     //Level-1

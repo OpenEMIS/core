@@ -18,6 +18,14 @@ class LocalesTable extends ControllerActionTable
        $this->toggle('edit', true);
        $this->toggle('delete', false);
        $this->toggle('remove', false);
+       $this->belongsToMany('System.LocaleContentsLanguage', [
+            'through' => 'LocaleContentTranslations',
+            'foreignKey' => 'locale_id',
+            'targetForeignKey' => 'locale_content_id',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+
     }
 
     public function implementedEvents(): array
@@ -42,7 +50,7 @@ class LocalesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $queryParams = $this->request->getQuery();
-        if (!array_key_exists('sort', $queryParams)) {
+        if (!isset($queryParams['sort'])) {
             $query->order(
                 [$this->aliasField('created') => 'DESC',
                     $this->aliasField('modified') => 'DESC']);

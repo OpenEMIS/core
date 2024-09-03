@@ -25,7 +25,7 @@ class AreasController extends AppController
     public function Areas() 				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Area.Areas']); }
     public function Administratives() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Area.AreaAdministratives']); }
 
-	public function beforeFilter(Event $event) {
+	public function beforeFilter(Event|\Cake\Event\EventInterface $event) {
 		parent::beforeFilter($event);
 		$tabElements = [
 			'Levels' => [

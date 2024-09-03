@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace Institution\Model\Behavior;
 
 use Cake\ORM\Behavior;
@@ -12,14 +12,14 @@ class ClassStudentsBehavior extends Behavior {
 		$model = $this->_table;
 		$query
 			->leftJoin(['InstitutionClassStudents' => 'institution_class_students'],
-				[	
+				[
 					'InstitutionClassStudents.education_grade_id = '.$model->aliasField('education_grade_id'),
 					'InstitutionClassStudents.student_id = '.$model->aliasField('student_id'),
 					'InstitutionClassStudents.institution_id = '.$model->aliasField('institution_id'),
 					'InstitutionClassStudents.academic_period_id = '.$model->aliasField('academic_period_id'),
 				]);
 
-		if (array_key_exists('institution_class_id', $options)) {
+		if (isset($options['institution_class_id'])) {
 			if (!empty($options['institution_class_id'])) {
 				if ($options['institution_class_id'] != -1) {
 					$query->where(['InstitutionClassStudents.institution_class_id' => $options['institution_class_id']]);

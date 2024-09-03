@@ -71,7 +71,7 @@ class RisksTable extends ControllerActionTable
         // end element control
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Risks','Students');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Risks','Students');
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',
@@ -80,7 +80,7 @@ class RisksTable extends ControllerActionTable
                 'escape' => false,
                 'target'=>'_blank'
             ];
-    
+
             $helpBtn['url'] = $is_manual_exist['url'];
             $helpBtn['type'] = 'button';
             $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -93,7 +93,7 @@ class RisksTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        
+
         $query->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']]);
     }
 
@@ -230,7 +230,7 @@ class RisksTable extends ControllerActionTable
         $userId = $session->read('Auth.User.id');
         $riskId = $entity->id;
 
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             $url = [
                 'plugin' => $this->controller->getPlugin(),
                 'controller' => $this->controller->getName(),
@@ -270,25 +270,25 @@ class RisksTable extends ControllerActionTable
         return $buttons;
     }
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
-    { 
-    
+    {
+
         $institutionId = $this->getInstitutionID();
         $academicPeriod = ($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
-    
+
         $User = TableRegistry::getTableLocator()->get('User.Users');
 		$query
-		->select(['name' => 'Risks.name', 
+		->select(['name' => 'Risks.name',
         'generated_by' => $User->find()->func()->concat([
             'first_name' => 'literal',
             " ",
             'last_name' => 'literal'
-        ]), 
+        ]),
         'generated_on' => 'InstitutionRisks.generated_on',
         'risk_index' => "(SELECT SUM(risk_value) FROM ".$this->RiskCriterias->getTable()." WHERE risk_id = Risks.id)",
         'status' => "(SELECT CASE WHEN status = 1 THEN 'Not Generated'
-        WHEN status = 2 THEN 'Processing' 
-        WHEN status = 3 THEN 'Generated'  
-        ELSE 'Not Generated' END AS status 
+        WHEN status = 2 THEN 'Processing'
+        WHEN status = 3 THEN 'Generated'
+        ELSE 'Not Generated' END AS status
         FROM ".$this->InstitutionRisks->getTable()." where risk_id = Risks.id AND institution_id = ".$institutionId.")"
         ])
 		->LeftJoin([$this->RiskCriterias->getAlias() => $this->RiskCriterias->getTable()],[
@@ -305,20 +305,20 @@ class RisksTable extends ControllerActionTable
         ])
         ->group([
             $this->RiskCriterias->aliasField('risk_id')
-            
+
         ]);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-     
+
         $extraField[] = [
             'key' =>  'Risks.name',
             'field' => 'name',
             'type' => 'string',
             'label' => __('Name')
         ];
-        
+
         $extraField[] = [
             'key' =>  "",
             'field' => 'risk_index',
