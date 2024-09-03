@@ -12,8 +12,8 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\Utility\Text;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
-use Cake\ORM\Table;
-use Cake\Utility\Inflector;
+use Cake\ORM\Table; // POCOR-8578
+use Cake\Utility\Inflector; // POCOR-8578
 
 class AssessmentResultsTable extends AppTable
 {
@@ -26,7 +26,7 @@ class AssessmentResultsTable extends AppTable
         $this->setTable('institution_class_students');
         parent::initialize($config);
 
-        $this->belongsTo('Users', ['className' => 'API.Students', 'foreignKey' => 'student_id']);
+        $this->belongsTo('Users', ['className' => 'API.Students', 'foreignKey' => 'student_id']); // POCOR-8578
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
@@ -57,11 +57,11 @@ class AssessmentResultsTable extends AppTable
 //                // 'AssessmentItemsGradingTypes',
 //                // 'AssessmentPeriods',
 //                // 'AssessmentItemResults',
-//                'GroupAssessmentPeriods',
-//                'GroupAssessmentPeriodsWithTerms',
-//                'GroupAssessmentItems',
-//                'GroupAssessmentItemsGradingTypes',
-//                'GroupAssessmentItemResults',
+                'GroupAssessmentPeriods',
+                'GroupAssessmentPeriodsWithTerms',
+                'GroupAssessmentItems',
+                'GroupAssessmentItemsGradingTypes',
+                'GroupAssessmentItemResults',
                 'ClassStudents',
                 'Institutions',
                 'InstitutionClasses',
@@ -121,7 +121,7 @@ class AssessmentResultsTable extends AppTable
             && isset($params['assessment_id'])
             && isset($params['institution_id'])) {
 
-            $AssessmentItemResults = self::getDynamicTableInstance('Assessment.AssessmentItemResults');
+            $AssessmentItemResults = self::getDynamicTableInstance('Assessment.AssessmentItemResults'); // POCOR-8578
             $institution_class_id = $params['class_id'];
             $assessment_id = $params['assessment_id'];
             $institution_id = $params['institution_id'];
@@ -167,7 +167,7 @@ class AssessmentResultsTable extends AppTable
                         return $row;
                     });
                 })
-                ->disableHydration()
+                ->disableHydration() // POCOR-8578
                 ->all();
 
             return $results->toArray();
@@ -178,10 +178,10 @@ class AssessmentResultsTable extends AppTable
     {
         if (isset($params['assessment_id']) && isset($params['class_id'])) {
 //            $start_time = microtime(true);
-            $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems');
-            $EducationSubjects = self::getDynamicTableInstance('Education.EducationSubjects');
-            $ClassSubjects = self::getDynamicTableInstance('Institution.InstitutionClassSubjects');
-            $InstitutionSubjects = self::getDynamicTableInstance('Institution.InstitutionSubjects');
+            $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems'); // POCOR-8578
+            $EducationSubjects = self::getDynamicTableInstance('Education.EducationSubjects'); // POCOR-8578
+            $ClassSubjects = self::getDynamicTableInstance('Institution.InstitutionClassSubjects'); // POCOR-8578
+            $InstitutionSubjects = self::getDynamicTableInstance('Institution.InstitutionSubjects'); // POCOR-8578
 
             $query = $AssessmentItems->find();
             $selectedColumns = [
@@ -208,7 +208,7 @@ class AssessmentResultsTable extends AppTable
                 ->where([$AssessmentItems->aliasField('assessment_id') => $params['assessment_id']])
                 ->order(['subject_order', 'subject_classification', $EducationSubjects->aliasField('code'), $EducationSubjects->aliasField('name')])
                 ->group(['subject_classification'])
-                ->disableHydration()
+                ->disableHydration() // POCOR-8578
                 ->all();
 //            $functionName = __FUNCTION__;
 //            $end_time = microtime(true);
@@ -224,11 +224,11 @@ class AssessmentResultsTable extends AppTable
     {
         if (isset($params['assessment_id'])) {
 //            $start_time = microtime(true);
-            $AssessmentItemsGradingTypes = self::getDynamicTableInstance('Assessment.AssessmentItemsGradingTypes');
-            $AssessmentGradingTypes = self::getDynamicTableInstance('Assessment.AssessmentGradingTypes');
-            $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods');
-            $EducationSubjects = self::getDynamicTableInstance('Education.EducationSubjects');
-            $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems');
+            $AssessmentItemsGradingTypes = self::getDynamicTableInstance('Assessment.AssessmentItemsGradingTypes'); // POCOR-8578
+            $AssessmentGradingTypes = self::getDynamicTableInstance('Assessment.AssessmentGradingTypes'); // POCOR-8578
+            $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods'); // POCOR-8578
+            $EducationSubjects = self::getDynamicTableInstance('Education.EducationSubjects'); // POCOR-8578
+            $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems'); // POCOR-8578
 
             $query = $AssessmentItemsGradingTypes->find();
 
@@ -330,7 +330,7 @@ class AssessmentResultsTable extends AppTable
     {
         if (isset($params['assessment_id'])) {
 //            $start_time = microtime(true);
-            $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods');
+            $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods'); // POCOR-8578
             $query = $AssessmentPeriods->find();
             $selectedColumns = [
                 'academic_term_value' => '(
@@ -383,7 +383,7 @@ class AssessmentResultsTable extends AppTable
     {
         if (isset($params['assessment_id'])) {
 //            $start_time = microtime(true);
-            $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods');
+            $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods'); // POCOR-8578
             $query = $AssessmentPeriods->find();
 
             $withoutTerm = $query
@@ -569,9 +569,9 @@ class AssessmentResultsTable extends AppTable
                     $this->aliasField('institution_class_id') => $params['class_id'],
                     $where
                 ])
-                ->enableAutoFields()
+                ->enableAutoFields() // POCOR-8578
                 ->order(['Users.first_name', 'Users.last_name'])
-                ->disableHydration()
+//                ->disableHydration() // POCOR-8578
                 ->all();
 //            dd($entity);
 //            $functionName = __FUNCTION__;
@@ -587,7 +587,7 @@ class AssessmentResultsTable extends AppTable
     {
         if (isset($params['institution_id'])) {
 //            $start_time = microtime(true);
-            $Institutions = self::getDynamicTableInstance('Institution.Institutions');
+            $Institutions = self::getDynamicTableInstance('Institution.Institutions'); // POCOR-8578
             $entity = $Institutions->get($params['institution_id'], [
                 'contain' => ['Areas', 'AreaAdministratives']
             ]);
@@ -604,7 +604,7 @@ class AssessmentResultsTable extends AppTable
     {
         if (isset($params['class_id'])) {
 //            $start_time = microtime(true);
-            $InstitutionClasses = self::getDynamicTableInstance('Institution.InstitutionClasses');
+            $InstitutionClasses = self::getDynamicTableInstance('Institution.InstitutionClasses'); // POCOR-8578
             $entity = $InstitutionClasses->get($params['class_id']);
 //            $functionName = __FUNCTION__;
 //            $end_time = microtime(true);
@@ -623,7 +623,7 @@ class AssessmentResultsTable extends AppTable
             isset($params['institution_id']) &&
             isset($params['institution_id'])) {
 //            $start_time = microtime(true);
-            $InstitutionStudentAbsences = self::getDynamicTableInstance('Institution.InstitutionStudentAbsences');
+            $InstitutionStudentAbsences = self::getDynamicTableInstance('Institution.InstitutionStudentAbsences'); // POCOR-8578
             $studentAbsenceResults = $InstitutionStudentAbsences
                 ->find()
                 ->innerJoin(
@@ -670,7 +670,7 @@ class AssessmentResultsTable extends AppTable
     {
         if (isset($params['grade_id'])) {
 //            $start_time = microtime(true);
-            $EducationGrades = self::getDynamicTableInstance('Education.EducationGrades');
+            $EducationGrades = self::getDynamicTableInstance('Education.EducationGrades'); // POCOR-8578
             $entity = $EducationGrades->get($params['grade_id']);
 //            $functionName = __FUNCTION__;
 //            $end_time = microtime(true);
@@ -709,7 +709,7 @@ class AssessmentResultsTable extends AppTable
         $education_grade_id = self::getFromArray($params, 'grade_id');
         $student_id = self::getFromArray($params, 'student_id');
 //        $student_ids = self::getDistinctStudents($institution_class_id);
-        $Results = self::getDynamicTableInstance('Assessment.AssessmentItemResults');
+        $Results = self::getDynamicTableInstance('Assessment.AssessmentItemResults'); // POCOR-8578
         $marks = [];
 //        foreach ($student_ids as $student_id) {
         $education_subject_id = -1;
@@ -760,6 +760,10 @@ class AssessmentResultsTable extends AppTable
     private static function getMarksWithSubjectClassificationWeight(array $marks)
     {
 //        $start_time = microtime(true);
+//        dd($marks);
+        $assessment_items = []; // POCOR-8578
+        $education_subjects = []; // POCOR-8578
+        $assessment_periods = []; // POCOR-8578
         $new_marks = [];
         foreach ($marks as $mark) {
             $assessment_id = $mark['assessment_id'];
@@ -767,9 +771,33 @@ class AssessmentResultsTable extends AppTable
             $assessment_period_id = $mark['assessment_period_id'];
             $where = ['education_subject_id' => $education_subject_id,
                 'assessment_id' => $assessment_id];
-            $assessment_item = self::getRecordByOptions('Assessment.AssessmentItems', $where);
-            $education_subject = self::getRelatedRecord('Education.EducationSubjects', $education_subject_id);
-            $assessment_period = self::getRelatedRecord('Assessment.AssessmentPeriods', $assessment_period_id);
+            // POCOR-8578: start
+            if(isset($assessment_items[$education_subject_id])
+                && isset($assessment_items[$education_subject_id][$assessment_id])){
+                $assessment_item = $assessment_items[$education_subject_id][$assessment_id];
+            }
+            if(!isset($assessment_items[$education_subject_id])){
+                $assessment_items[$education_subject_id] = [];
+            }
+            if(!isset($assessment_items[$education_subject_id][$assessment_id])){
+                $assessment_item = self::getRecordByOptions('Assessment.AssessmentItems', $where);
+                $assessment_items[$education_subject_id][$assessment_id] = $assessment_item;
+            }
+            if(isset($education_subjects[$education_subject_id])){
+                $education_subject = $education_subjects[$education_subject_id];
+            }
+            if(!isset($education_subjects[$education_subject_id])){
+                $education_subject = self::getRelatedRecord('Education.EducationSubjects', $education_subject_id);
+                $education_subjects[$education_subject_id] = $education_subject;
+            }
+            if(isset($assessment_periods[$assessment_period_id])){
+                $assessment_period = $assessment_periods[$assessment_period_id];
+            }
+            if(!isset($assessment_periods[$assessment_period_id])){
+                $assessment_period = self::getRelatedRecord('Assessment.AssessmentPeriods', $assessment_period_id);
+                $assessment_periods[$assessment_period_id] = $assessment_period;
+            }
+            // POCOR-8578: end
             $weight = floatval($assessment_period['weight']);
             $simple_mark = floatval($mark['marks']);
             $weighted_mark = $simple_mark * $weight;
@@ -888,7 +916,7 @@ class AssessmentResultsTable extends AppTable
     {
 //        $start_time = microtime(true);
         $assessment_ids = array_unique(array_column($marks, 'assessment_id'));
-        $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods');
+        $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods'); // POCOR-8578
         $query = $AssessmentPeriods->find();
         $selectedColumns = [
             'academic_term_value' => '(
@@ -1023,6 +1051,7 @@ class AssessmentResultsTable extends AppTable
 //        Log::write('debug', "{$functionName}\n
 //            Function execution time: {$executionTimeMs} ms");
         return $studentsSubjectResults;
+
     }
 
     /**
@@ -1036,7 +1065,7 @@ class AssessmentResultsTable extends AppTable
         if (!$relatedField) {
             return null;
         }
-        $Table = TableRegistry::get($tableName);
+        $Table = self::getDynamicTableInstance($tableName); // POCOR-8578
         try {
             $related = $Table->get($relatedField);
             return $related->toArray();
@@ -1092,7 +1121,7 @@ class AssessmentResultsTable extends AppTable
     private function initialiseAssessments(array $params)
     {
         if (isset($params['assessment_id'])) {
-            $Assessments = self::getDynamicTableInstance('Assessment.Assessments');
+            $Assessments = self::getDynamicTableInstance('Assessment.Assessments'); // POCOR-8578
             $assessment_id = $params['assessment_id'];
             $entity = $Assessments->get($assessment_id, [
                 'contain' => ['AcademicPeriods', 'EducationGrades']
@@ -1110,7 +1139,7 @@ class AssessmentResultsTable extends AppTable
     private function initialiseAssessmentItems(array $params)
     {
         if (isset($params['assessment_id'])) {
-            $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems');
+            $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems'); // POCOR-8578
             $assessment_id = $params['assessment_id'];
             $results = $AssessmentItems->find()
                 ->contain(['EducationSubjects'])
@@ -1130,7 +1159,7 @@ class AssessmentResultsTable extends AppTable
     {
         if (isset($params['assessment_id'])) {
 //            $start_time = microtime(true);
-            $AssessmentItemsGradingTypes = self::getDynamicTableInstance('Assessment.AssessmentItemsGradingTypes');
+            $AssessmentItemsGradingTypes = self::getDynamicTableInstance('Assessment.AssessmentItemsGradingTypes'); // POCOR-8578
             $assessment_id = $params['assessment_id'];
             $results = $AssessmentItemsGradingTypes->find()
                 ->contain(['AssessmentGradingTypes', 'AssessmentPeriods', 'EducationSubjects'])
@@ -1179,7 +1208,7 @@ class AssessmentResultsTable extends AppTable
     private function initialiseAssessmentPeriods(array $params)
     {
         if (isset($params['assessment_id'])) {
-            $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods');
+            $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods'); // POCOR-8578
             $assessment_id = $params['assessment_id'];
             $results = $AssessmentPeriods->find()
                 ->where([$AssessmentPeriods->aliasField('assessment_id') => $assessment_id])

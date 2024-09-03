@@ -4,7 +4,7 @@ namespace API\Model\Behavior;
 use Cake\ORM\Behavior;
 
 class APIBehavior extends Behavior {
-	public function initialize(array $config): void
+	public function initialize(array $config): void // POCOR-8578
     {
 		parent::initialize($config);
 	}
@@ -14,7 +14,7 @@ class APIBehavior extends Behavior {
 * other methods
 *
 ****************************************************************************************/
-    public function getErrorMessage($code, $params = []): array|string
+    public function getErrorMessage($code, $params = []): array|string // POCOR-8578
     {
         if (array_key_exists($code, $this->_errorCodes)) {
             if (!empty($params) && isset($params['identity_type'])) {
