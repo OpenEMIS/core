@@ -13,7 +13,7 @@ class PeriodBehavior extends Behavior
     {
         $table = $this->_table;
 
-        if (array_key_exists('academic_period_id', $options)) {
+        if (isset($options['academic_period_id'])) {
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
             $periodObj = $AcademicPeriods
                 ->findById($options['academic_period_id'])
@@ -31,7 +31,7 @@ class PeriodBehavior extends Behavior
                     $endDate = date('Y-m-d', strtotime($periodObj->end_date));
                 }
 
-                if (array_key_exists('beforeEndDate', $options)) {
+                if (isset($options['beforeEndDate'])) {
                     $conditions = [];
                     $conditions['OR'] = [
                         [
@@ -55,10 +55,10 @@ class PeriodBehavior extends Behavior
         $table = $this->_table;
 
         // allow start_date_field and end_date_field to be defined
-        $startDateField = array_key_exists('start_date_field', $options) ? $options['start_date_field'] : 'start_date';
-        $endDateField = array_key_exists('end_date_field', $options) ? $options['end_date_field'] : 'end_date';
+        $startDateField = isset($options['start_date_field']) ? $options['start_date_field'] : 'start_date';
+        $endDateField = isset($options['end_date_field']) ? $options['end_date_field'] : 'end_date';
 
-        if (array_key_exists('start_date', $options) && array_key_exists('end_date', $options)) {
+        if (isset($options['start_date']) && isset($options['end_date'])) {
             $startDate = $options['start_date'];
             $endDate = $options['end_date'];
 

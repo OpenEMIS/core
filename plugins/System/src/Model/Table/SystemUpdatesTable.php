@@ -162,7 +162,7 @@ class SystemUpdatesTable extends ControllerActionTable
         $extra['toolbarButtons']['changelog'] = $changelogBtn;
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Updates','Updates');       
+		$is_manual_exist = $this->getManualUrl('Administration','Updates','Updates');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -185,7 +185,7 @@ class SystemUpdatesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $queryParams = $this->request->getQuery();
-        if (!array_key_exists('sort', $queryParams)) {
+        if (!isset($queryParams['sort'])) {
             $query->order([$this->aliasField('date_released') => 'DESC', $this->aliasField('version') => 'DESC']);
         }
 

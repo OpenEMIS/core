@@ -126,7 +126,7 @@ class LeaveTable extends ControllerActionTable
         $this->field('full_day', ['visible' => ['index' => false, 'view' => true, 'edit' => true]]);
 
         // Start pocor-5188
-        $is_manual_exist = $this->getManualUrl('Directory','Leave','Staff - Career');       
+        $is_manual_exist = $this->getManualUrl('Directory','Leave','Staff - Career');
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',
@@ -193,7 +193,7 @@ class LeaveTable extends ControllerActionTable
         } elseif ($this->controller->getName() === 'Staff') {
             $userId = $this->getStaffID();
         }
-        
+
         $extra['auto_contain'] = false;
 
         $select = [
@@ -696,7 +696,7 @@ class LeaveTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         //echo "<pre>"; print_r($entity);die;
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             if ($entity->is_historical) {
                 $rowEntityId = $this->getFieldEntity($entity->is_historical, $entity->id, 'id');
                 $buttons = $this->getHistoricalActionButtons($buttons, $rowEntityId);
@@ -751,7 +751,7 @@ class LeaveTable extends ControllerActionTable
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
-    { 
+    {
         if ($field == 'institution_id') {
             return __('Institution');
         } else if ($field == 'status_id') {

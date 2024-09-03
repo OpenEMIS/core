@@ -31,6 +31,8 @@ use Cake\Filesystem\Folder;
 use Cake\ORM\Table;
 use Cake\Http\ServerRequest;
 use Cake\Event\EventInterface;
+use Cake\Log\Log;
+
 
 /**
  * Application Controller
@@ -204,7 +206,7 @@ class AppController extends Controller
             date_default_timezone_set($timezone);
         }
         $this->checkAccessControl();
-        // END: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>    
+        // END: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
     }
 
     private function darkenColour($rgb, $darker = 2)
@@ -297,7 +299,7 @@ class AppController extends Controller
         $this->viewBuilder()->addHelper('OpenEmis.Navigation');
         $this->viewBuilder()->addHelper('OpenEmis.Resource');
         $this->viewBuilder()->addHelpers(['Html', 'Form', 'Paginator', 'Label', 'Url']);
-        
+
     }
 
     // Triggered from LocalizationComponent
@@ -338,37 +340,24 @@ class AppController extends Controller
         $session = $this->request->getSession();
         $superAdmin = $session->read('Auth.User.super_admin');
         if ($superAdmin == 0) {
-
-
             $UserData = $session->read('Auth.User')['id'];
-            $UserData = '';
-            $GroupRoles = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
-            $userRole = $GroupRoles->find()
-                ->contain('SecurityRoles')
-                ->order(['SecurityRoles.order'])
-                ->where([
-                    $GroupRoles->aliasField('security_user_id') => $UserData
-                ])
-                ->group([$GroupRoles->aliasField('security_role_id')])
-                ->toArray();
-
-            if (!empty($this->request->getParam('controller')) && !empty($userRole)) {
-                $RoleIds = [];
-                foreach ($userRole as $Role_key => $Role_val) {
-                    $RoleIds[] = $Role_val->security_role_id;
-                }
-                $SecurityFunctionIds = $this->getIdBySecurityFunctionName($this->request->getParam('action'),
-                    $this->request->getParam('controller'));
-                if (!empty($SecurityFunctionIds)) {
-                    $result = $this->checkAuthrizationForRoles($SecurityFunctionIds, $RoleIds);
-                    if ($result == 0) {
-                        $event->stopPropagation();
-                        $this->Alert->warning('general.notAccess');
-                        $this->redirect($this->referer());
-                    }
-                }
+            // POCOR-8534 start
+            if(!$UserData){
+                return;
             }
-        }
+            $hasPermission = $this->oldSecurityCheck($session, $event);
+            if($hasPermission == 0){
+                $event->stopPropagation();
+                $this->Alert->warning('general.notAccess');
+                $this->redirect($this->referer());
+            }
+            $hasPermission = $this->newSecurityCheck($event);
+            if($hasPermission == 0){
+                $event->stopPropagation();
+                $this->Alert->warning('general.notAccess');
+                $this->redirect($this->referer());
+            }}
+        // POCOR-8534 End
 
     }
 
@@ -717,7 +706,7 @@ class AppController extends Controller
         return $SecurityFunctionIds;
     }
 
-    public function checkAuthrizationForRoles($securityFunctionsId, $roleId)
+    public function checkAuthorizationForRoles($securityFunctionsId, $roleId) // POCOR-8534
     {
         $SecurityRoleFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $SecurityRoleFunctionsTblData = $SecurityRoleFunctionsTbl->find()->where([
@@ -754,7 +743,7 @@ class AppController extends Controller
             return $skip;
         }
         //POCOR-7910 end
-        
+
 // POCOR-7841 BIT CLEANER CODE
         if ($params['controller'] == 'Users' &&
             in_array($params['action'], [
@@ -900,7 +889,7 @@ class AppController extends Controller
     private function checkAccessControl()
     {
 
-        $params = $this->request->getParam('params');
+        $params = $this->request->getAttribute('params');
         // POCOR-7833 MOVE ALL SKIP ACCESS TO ONE FUNCTION
         if ($this->skipCheckAccessControl($params)) {
             return;
@@ -930,10 +919,128 @@ class AppController extends Controller
         if (!$check) {
             $this->log(__FUNCTION__, 'debug');
             if ($params !== null) {
-                $this->log($params, 'debug');
+                $this->log((string)$params, 'debug');
             }
             $this->Alert->warning('general.notAccess');
             return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
         }
     }
+
+    /**
+     * // POCOR-8534
+     * @param \Cake\Http\Session $session
+     * @param EventInterface $event
+     */
+    private function oldSecurityCheck(\Cake\Http\Session $session, EventInterface $event)
+    {
+        $UserData = $session->read('Auth.User')['id'];
+        if(!$UserData){
+            return 0;
+        }
+        $GroupRoles = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $userRole = $GroupRoles->find()
+            ->contain('SecurityRoles')
+            ->order(['SecurityRoles.order'])
+            ->where([
+                $GroupRoles->aliasField('security_user_id') => $UserData
+            ])
+            ->group([$GroupRoles->aliasField('security_role_id')])
+            ->toArray();
+
+        if (!empty($this->request->getParam('controller')) && !empty($userRole)) {
+            $RoleIds = [];
+            foreach ($userRole as $Role_key => $Role_val) {
+                $RoleIds[] = $Role_val->security_role_id;
+            }
+            $SecurityFunctionIds = $this->getIdBySecurityFunctionName($this->request->getParam('action'),
+                $this->request->getParam('controller'));
+            if (!empty($SecurityFunctionIds)) {
+                $request = $this->request;
+                $controllerName = $request->getParam('controller');
+                $plugin = $request->getParam('plugin');
+                $action = $request->getParam('action');
+                $subAction = 'view';
+                $crudActions = ['add','delete','edit','view'];
+                if(in_array($action,$crudActions)){
+                    $subAction = $action;
+                }
+                $passes = $request->getParam('pass');
+                if(isset($passes) && isset($passes[0])) {
+                    $pass = $passes[0];
+                    if(in_array($pass,$crudActions)){
+                        $subAction = $action;
+                    }
+                }
+                $result = $this->checkAuthorizationForRoles($SecurityFunctionIds, $RoleIds, $subAction);
+                if ($result == 0) {
+                    return 0;
+                }
+            }
+        }
+        return 1;
+    }
+
+    /**
+     * POCOR=8534
+     * @param $event
+     * @return \Cake\Http\Response|int|null
+     */
+    private function newSecurityCheck($event){
+
+        $request = $this->request;
+        $extra['patchEntity'] = true;
+        // POCOR-8543 START
+        $editAccess = $this->getEditAccess($request);
+        if (!$editAccess) {
+            $this->Alert->warning('general.notAccess');
+            return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
+        }
+
+        return 1;
+    }
+
+    /**
+     * POCOR=8534
+     * @param $request
+     * @return int
+     */
+    private function getEditAccess($request)
+    {
+        $controllerName = $request->getParam('controller');
+        $plugin = $request->getParam('plugin');
+        $action = $request->getParam('action');
+        $passes = $request->getParam('pass');
+        $subAction = 'view';
+        $crudActions = ['add','delete','edit','view'];
+        if(in_array($action,$crudActions)){
+            $subAction = $action;
+        }
+        if(isset($passes) && isset($passes[0])) {
+            $pass = $passes[0];
+            if(in_array($pass,$crudActions)){
+                $subAction = $pass;
+            }
+        }
+
+        if(!in_array($subAction, ['add', 'edit'])){
+            return 1;
+        }
+        $toCheck = [
+            'controller' => $controllerName,
+            'plugin' => $plugin,
+            'action' => $action,
+            $subAction];
+        if ($action == $subAction) {
+            unset($toCheck[$subAction]);
+        }
+        if (!$action) {
+            unset($toCheck['action']);
+        }
+        $editAccess = $this->AccessControl->check($toCheck);
+//        die(print_r([$toCheck, $editAccess], true));
+        return $editAccess;
+    }
+
+
+
 }

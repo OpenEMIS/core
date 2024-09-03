@@ -44,7 +44,7 @@ class ExcelBehavior extends Behavior
     public function initialize(array $config): void
     {
         $this->setConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
-        if (!array_key_exists('filename', $config)) {
+        if (!isset($config['filename'])) {
             $this->setConfig('filename', $this->_table->getAlias());
         }
         $folder = WWW_ROOT . $this->getConfig('folder');
@@ -54,7 +54,7 @@ class ExcelBehavior extends Behavior
             mkdir($folder, 0777);
         } else {
             // $delete = true;
-            // if (array_key_exists('delete', $settings) &&  $settings['delete'] == false) {
+            // if (isset($settings['delete']) &&  $settings['delete'] == false) {
             //  $delete = false;
             // }
             // if ($delete) {
@@ -210,14 +210,29 @@ class ExcelBehavior extends Behavior
             $baseSheetName = $sheetName;
 
             // if the primary key of the record is given, only generate that record
-            if (isset($settings['id'])) {
-                $id = $settings['id'];
-                if ($id != 0) {
-                    $primaryKey = $table->getPrimaryKey();
-                    $query->where([$table->aliasField($primaryKey) => $id]);
+            //POCOR-8484 starts
+            if(isset($this->_table->action) && !empty($this->_table->action)){
+                $action = $this->_table->action;
+                if($action != 'excel') {
+                    if (isset($settings['id'])) {
+                        $id = $settings['id'];
+                        if ($id != 0) {
+                            $primaryKey = $table->getPrimaryKey();
+                            $query->where([$table->aliasField($primaryKey) => $id]);
+                        }
+                    }
+                }//POCOR-8484 ends
+            //POCOR-8515 starts    
+            }else{
+                if (isset($settings['id'])) {
+                    $id = $settings['id'];
+                    if ($id != 0) {
+                        $primaryKey = $table->getPrimaryKey();
+                        $query->where([$table->aliasField($primaryKey) => $id]);
+                    }
                 }
-            }
-
+            }//POCOR-8515 ends
+            
             if ($this->getConfig('auto_contain')) {
                 $this->contain($query, $fields, $table);
             }
@@ -530,13 +545,15 @@ class ExcelBehavior extends Behavior
         }
 
         $specialCharacters = ['=', '@'];
-        $firstCharacter = substr($value, 0, 1);
-        if (in_array($firstCharacter, $specialCharacters)) {
-            // append single quote to escape special characters
-            $value = "'" . $value;
-        }
+        //POCOR-8515 commented this code because of getting error to generate report starts 
+        //$firstCharacter = substr($value, 0, 1);
+        // if (in_array($firstCharacter, $specialCharacters)) {
+        //     // append single quote to escape special characters
+        //     $value = "'" . $value;
+        // }//POCOR-8515 ends
 
-        return ['rowData' => __($value), 'style' => $style];
+        //return ['rowData' => __($value), 'style' => $style];
+        return ['rowData' => $value, 'style' => $style];//POCOR-8515 
     }
 
     private function isForeignKey($table, $field)

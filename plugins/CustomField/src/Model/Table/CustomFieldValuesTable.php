@@ -68,7 +68,7 @@ class CustomFieldValuesTable extends AppTable
 				'on' => function ($context) {
 					if (array_key_exists('params', $context['data']) && !empty($context['data']['params'])) {
 						$params = json_decode($context['data']['params'], true);
-						return array_key_exists('url', $params);
+						return isset($params['url']);
 					}
 				}
 			])

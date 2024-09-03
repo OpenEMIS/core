@@ -60,4 +60,12 @@ class TrainingSession extends Model
     {
         return $this->belongsToMany(SecurityUsers::class, 'training_session_evaluators', 'training_session_id', 'evaluator_id');
     }
+
+
+    //For POCOR-8526 Start...
+    public function trainingSessionTrainers()
+    {
+        return $this->belongsToMany(SecurityUsers::class, 'training_session_trainers', 'training_session_id', 'trainer_id');
+    }
+    //For POCOR-8526 End...
 }

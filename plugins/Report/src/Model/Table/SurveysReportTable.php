@@ -66,7 +66,7 @@ class SurveysReportTable extends AppTable
         $groupBy[] = $institutions->aliasField('id');
         $groupBy[] = $areas->aliasField('id');
         if($institutionID > 0){
-            $condition['institutions.id'] = $institutionID;
+            $condition[$institutions->aliasField('id')] = $institutionID;
         }
         if ($areaId != -1 && $areaId != '' && $areaId != 0) {
             $areaIds = [];
@@ -77,7 +77,7 @@ class SurveysReportTable extends AppTable
             }else{
                 $allselectedAreas = $selectedArea1;
             }
-            $condition['institutions.area_id IN'] = $allselectedAreas;
+            $condition[$institutions->aliasField('area_id IN')] = $allselectedAreas;
         }
         if (!empty($institutionStatus)) {
             $condition[$institutionStatuses->aliasField('name')] = $institutionStatus;

@@ -14,7 +14,7 @@ class CachesController extends AppController
         parent::initialize();
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         parent::beforeFilter($event);
         $this->Auth->allow(['clear', 'server', 'pull']);

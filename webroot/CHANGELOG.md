@@ -1,3 +1,95 @@
+### [4.1.5] - 2024-09-02
+- Implemented: Develop changes to add Education Subject column to the existing Institution Subjects report
+- Bug Fixed: Personal > Cases > View page : Missing Add comment button
+- Bug Fixed: Administration>Survey>Forms>Rules: Rule page should be showing and can create rules and sections
+- Bug Fixed: Administration>Performance>Report Cards(Bahamas): Getting 404 error when adding, viewing, editing and deleting
+- Bug Fixed: Reports>Survey>Institution: Survey should not include repeater, student list and staff list
+- Bug Fixed: Institutions>Students>Add(Automation): Unable to detect element in automation
+- Bug Fixed: Institutions>Performance>Assessments(Bahamas): PDF and Report getting 404 error
+
+### [4.1.4] - 2024-08-28
+- Implemented: Changes to the Administration > System Setup > APIs > Credentials page
+- Implemented: Develop additional advanced search filters
+- Implemented: Develop changes to all new v4 APIs to include Swagger annotations in API file headers
+- Bug Fixed: Institutions>Staff>General>Comments: Unable to load page
+- Bug Fixed: Institutions>Performance>Assessments(Bahamas): Page is not loading
+- Bug Fixed: Administration>Security>Roles: Confirmed that user do not have edit permission for both roles
+- Bug Fixed: Institutions>Performance>Outcomes: Page kept loading
+- Bug Fixed: Institutions>Report Card>Comments: Getting error and comments are not loaded
+
+### [4.1.3] - 2024-08-23
+- Bug Fixed: Institutions>Students/Staff>Add: Confirmation should validate credentials
+- Bug Fixed: Administration>System Setup>Academic Periods: Academic period code and name can be a duplicate
+- Bug Fixed: Institutions>Academic>Houses(Automation): Page is not loading
+- Bug Fixed: Directory>Students>Academic: Page is not loading
+- Bug Fixed: Institutions > Staff: The gender filter on the staff page dashboard is displaying incorrect numbers
+- Bug Fixed: Administration>Performance>Assessment(Bahamas): Getting 404 error when adding, viewing, editing and deleting
+- Bug Fixed: Institutions>Performance>Report Cards(Bahamas): Getting 404 error and gpa not generated
+- Bug Fixed: Administration > Workflow > Action Tab > Selecting workflow route filters: There is an issue when selecting filters for workflow actions
+- Bug Fixed: API showing invalid date format
+- Bug Fixed: Institutions>Students>Edit: User is unable to edit
+
+### [4.1.2] - 2024-08-16
+- Bug Fixed: Institutions > Statistics > Standard > Student Attendance Summary Report: When generating report for Student Attendance Summary Report under Institutions Statistics, the report is showing other institutions
+- Bug Fixed: Administration>Training>Session>Evaluators: Evaluators not appearing when added
+- Bug Fixed: Administration>System Setup>Field options: Page is unable to load
+- Bug Fixed: Institutions>Appointment>Positions: Position is not arranged in order desc(based on position no)
+- Bug Fixed: Institutions>Students>List>Promote Button: Unable to save
+- Bug Fixed: Administrations > System Setup : Functions that breaks in Education Structure
+- Bug Fixed: API : Issues on student attendance page
+- Bug Fixed: Administrations > System Setup : Functions that breaks in Risks
+- Bug Fixed: API Changes from Jordan
+- Bug Fixed: Administrations > Security > Role: 404 error when Accessing Administrations > Security > Role page under his account
+- Bug Fixed: API-Changes to users api
+- Bug Fixed: Implement API Security by Role Part Two
+- Bug Fixed: Administrations > Survey > Forms > Edit: When adding section, it does not show the section even when system gives a successful message
+- Bug Fixed: Administrations > Security > Roles: When adding security roles, system shows successful message but newly added record is not showing
+- Bug Fixed: Administrations > Security > Roles> User Roles: User roles are showing the roles as system roles when logging in as non superadmin
+
+### [4.1.1] - 2024-08-07
+- Bug Fixed: Guardian>Student>Academic(Automation): User is getting 404 error
+- Bug Fixed: Guardian>Student>Academic(Automation): Behaviour showing internal server error
+- Bug Fixed: API : Issue in Themes API
+- Bug Fixed: Institutions>Staff>General: Tab should be showing and able to view,edit and delete and export
+- Bug Fixed: Reports(Automation): Page is unable to load
+- Bug Fixed: Administration>Attendance>Status(Automation): Page is not loading
+- Bug Fixed: Institutions>Academic>Classes(Automation): Page is not loading
+- Bug Fixed: Institutions>Academic>Subject(Automation): Page is not loading
+- Bug Fixed: Institutions>Examinations>Results(Automation): Page is not loading
+- Bug Fixed: Institutions>Statistics>Standard(Automation): Page is not loading
+- Bug Fixed: Institutions>Students>Academic>Behaviours(Automation): Page is not loading
+- Bug Fixed: Personal>Student>Academic>Tabs(Automation): Tabs all not showing
+- Bug Fixed: API: Jordan changes
+- Bug Fixed: Survey App: Unable to login to dmo tst core v4
+- Bug Fixed: Reports>Surveys: Report is getting error status
+- Bug Fixed: Survey App: Unable to download and upload survey
+- Bug Fixed: Institutions>Students>Academic>Absences(Automation): Page is not loading
+- Bug Fixed: Survey App: Unable to create survey
+- Bug Fixed: Reports>Surveys: Area name should be filtered by area level and report should work when generated by region,district and country
+
+### [4.1.0] - 2024-07-24
+- Implemented: Develop Meals feature in Angular v11
+- Implemented: Develop authentication function from Angular v11 to v4 APIs
+- Implemented: Apply OpenEMIS StyleGuide v11 to OpenEMIS Core
+- Bug Fixed: Integrate existing API to use the base URL that is provided in Login API
+- Bug Fixed: Reports(Automation) Part Two: Page is unable to load
+- Bug Fixed: Administration>System Setup(Automation): Page is unable to load
+- Bug Fixed: Workbench(Libya): Workbench is empty even though there are pending survey issues
+
+### [4.0.13] - 2024-07-18
+- Bug Fixed: Fix for PHP 8.3 changes
+
+### [4.0.12] - 2024-07-17
+- Bug Fixed: Administration>Survey>Forms>Rules: Internal server error
+- Bug Fixed: Institutions > Staff > Add Page: Dropdown for Nationality and gender is not populated
+- Bug Fixed: Institutions > Attendances > Students: Filters are not populated. Students are not showing
+- Bug Fixed: Institutions>Staff>General>Contact: Unable to load page
+- Bug Fixed: Institutions > Appointments > Positions : Upon clicking view Positions, system returns 404 error
+- Bug Fixed: Administration>Survey>Forms: Number validation is not working
+- Bug Fixed: Directory: Unable to load page
+- Bug Fixed: Institutions>General>Map>Export: User is unable to export
+- Bug Fixed: Administration>System Setup>Custom Fields: Page is not loading
+
 ### [4.0.11] - 2024-07-16
 - Bug Fixed: Administration>System Setup>System Configuration: Display records is jumbled up
 - Bug Fixed: PHP 8.0(Administration>Security>Users)-Cannot search for student and staff

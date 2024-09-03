@@ -4,11 +4,12 @@
 	$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
 	$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
 	$evaluatorTypeOptions = isset($attr['evaluatorTypeOptions']) ? $attr['evaluatorTypeOptions'] : [];
-	$this->Form->unlockField('evaluator_id');
+	//$this->Form->unlockField('evaluator_id');
 ?>
 
 <?php if ($ControllerAction['action'] == 'edit' || $ControllerAction['action'] == 'add') : ?>
 	<?php $tableClass = 'table-responsive'; ?>
+	<?php $this->Form->unlockField('evaluator_id'); ?>
 	<div class="clearfix"></div>
 	<hr>
 	<h3><?= __('Evaluators') ?></h3>
@@ -21,7 +22,7 @@
 		]);
 		$alias = $ControllerAction['table']->getAlias();
 
-		
+
 		echo $this->Form->input("$alias.types", [
 			'label' => __('Type'),
 			'type' => 'select',
@@ -30,7 +31,7 @@
 		]);
 
 		$requestData = $this->request->getData($alias);
-		$evaluatorType = (array_key_exists('types', $requestData)) ? $requestData['types']: 'Staff';
+		$evaluatorType = (isset($requestData['types'])) ? $requestData['types']: 'Staff';
 		echo $this->Form->input("$alias.evaluator_search", [
 			'label' => __('Add Evaluator'),
 			'type' => 'text',

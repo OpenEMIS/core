@@ -102,11 +102,11 @@
 							$sortField = '';
 							$sortDirection = '';
 							$nextDirection = 'asc';
-							if (!empty($params) && array_key_exists('sort', $params) && !empty($params['sort'])) {
+							if (!empty($params) && isset($params['sort']) && !empty($params['sort'])) {
 								$sortField = $params['sort'];
 							}
 
-							if (!empty($params) && array_key_exists('direction', $params) && !empty($params['direction'])) {
+							if (!empty($params) && isset($params['direction']) && !empty($params['direction'])) {
 								$sortDirection = $params['direction'];
 								if ($params['direction'] == 'asc') {
 									$nextDirection = 'desc';
@@ -205,7 +205,7 @@
 							?>
 							<?= $this->html->link($obj->user->openemis_no, $newUrl) ?>
 						</td>
-						<td><?php 
+						<td><?php
 							if (!empty($obj->user->identity_number)) {
 								if ($configureStudentName) {
 									echo $obj->user->identity_number.' - '.$obj->user->name;
