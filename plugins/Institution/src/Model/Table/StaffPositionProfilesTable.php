@@ -239,7 +239,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $this->belongsTo('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
         $this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes', 'foreignKey' => 'staff_type_id']);
 
-        $this->staffChangeTypesList = $this->StaffChangeTypes->findCodeList();
+        //$this->staffChangeTypesList = $this->StaffChangeTypes->findCodeList();
 //        $this->addBehavior('Institution.StaffValidation');
         $this->addBehavior('Workflow.Workflow');
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -420,7 +420,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 }
             } 
              //Both case
-            $query=$InstitutionStaff->getQuery();
+            //$query=$InstitutionStaff->getQuery();
+            $query = $InstitutionStaff->find();//POCOR-8447
             $query->update()
                    ->set(['is_homeroom' => $entity->homeroom_teacher])
                    ->where(['id' => $entity->institution_staff_id])
@@ -439,7 +440,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
             $url['action'] = 'Staff';
             $url[1] = $this->paramsEncode(['id' => $institutionId, 'institution_id' =>$institutionId, 'institution_staff_id' => $entity['institution_staff_id']]);
             //echo "<pre>"; print_r($url);die;
-            return $this->controller->redirect($url);
+            //return $this->controller->redirect($url);
+            return false;
         }
         //POCOR-7289 ends
 
@@ -554,8 +556,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     $url = $this->url('view');
                     $url['action'] = 'Staff';
                     $url[1] = $this->paramsEncode(['id' => $entity['institution_staff_id'], 'institution_id'=> $institutionId]);
-
-                    return $this->controller->redirect($url);
+                    return false;
+                    //return $this->controller->redirect($url);
                 }
                 //POCOR-6979[START]
             }
@@ -635,6 +637,28 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }
 
     }
+
+    //POCOR-8447 Start
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if(isset($entity->staff_change_type_id) && !empty($entity->staff_change_type_id)) {
+            $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
+
+            $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
+                    ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
+                    ->first();
+            if($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT' || $StaffChangeTypesDataForShift->code == 'HOMEROOM_TEACHER'){
+                $institutionId = $this->getQueryString('institution_id');
+                $url = $this->url('view');
+                $url['action'] = 'Staff';
+                $url[1] = $this->paramsEncode(['id' => $entity['institution_staff_id'], 'institution_id' =>$institutionId, 'staff_id' => $entity['staff_id'], 'user_id' => $entity['staff_id']]);
+                $this->Alert->success('general.edit.success', ['reset' => true]);
+                return $this->controller->redirect($url);
+            }
+        }
+    }
+    //POCOR-8447 End
+
     public function workflowBeforeTransition(Event $event, $requestData)
     {
         $errors = true;
@@ -977,7 +1001,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
             'controller' => 'Institutions',
             'action' => 'Staff',
             '0' => 'view',
-            '1' => $this->paramsEncode(['id' => $entity->institution_staff_id, 'institution_id'=> $institutionId])
+            '1' => $this->paramsEncode(['id' => $entity->institution_staff_id, 'institution_id'=> $institutionId, 'staff_id' => $entity->staff_id,'user_id' => $entity->staff_id])
         ];
 
         // To investigate
@@ -1303,6 +1327,17 @@ class StaffPositionProfilesTable extends ControllerActionTable
             ->where([$StaffTable->aliasField('id') => $entity->institution_staff_id])
             ->first();
         $entity->institution_staff = $staffEntity;
+        $queryString = $this->getQueryString();
+        $institutionId = $queryString['institution_id'];
+        if (isset($extra['toolbarButtons']['back'])) {
+            $url = $this->url('view');
+            $url['action'] = 'Staff';
+            $url[0] = 'view';
+            $url[1] = $this->paramsEncode(['institution_id' => $institutionId,'id' => $entity['institution_staff_id'], 'staff_id' => $entity['staff_id'],'user_id' => $entity['staff_id']]);
+            $url[2] = $this->paramsEncode(['id' => $entity['institution_staff_id']]);
+            unset($url[2]);
+            $extra['toolbarButtons']['back']['url'] = $url;
+        }
     }
 
     private function initialiseVariable($entity)
