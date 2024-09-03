@@ -134,7 +134,7 @@ class POCOR8222 extends AbstractMigration
                        PRIMARY KEY (`id`)
                     ) ENGINE=InnoDB DEFAULT CHARSET=latin1");
         
-        $this->execute("CREATE TABLE `cumulative_gpa_grade`
+        $this->execute("CREATE TABLE `education_grades_cumulative_gpa`
                       (`id` char(36) NOT NULL,
                       `education_grade_gpa_id` int(11) NOT NULL,
                       `education_grade_id` int(11) NOT NULL,
