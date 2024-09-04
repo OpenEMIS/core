@@ -134,25 +134,25 @@ class SetupTextBehavior extends SetupBehavior
             if (!$entity->isNew()) {
                 if ($entity->has('params') && !empty($entity->params)) {
                     $params = json_decode($entity->params, true);
-                    if (array_key_exists('min_length', $params)) {
+                    if (isset($params['min_length'])) {
                         $entity->text_validation_rule = 'length';
                         $entity->text_length_validation = 'min_length';
 
                         $entity->text_minimum_length = $params['min_length'];
-                    } else if (array_key_exists('max_length', $params)) {
+                    } else if (isset($params['max_length'])) {
                         $entity->text_validation_rule = 'length';
                         $entity->text_length_validation = 'max_length';
 
                         $entity->text_maximum_length = $params['max_length'];
-                    } else if (array_key_exists('range', $params)) {
+                    } else if (isset($params['range'])) {
                         $entity->text_validation_rule = 'length';
                         $entity->text_length_validation = 'range';
 
                         $entity->text_lower_limit = $params['range']['lower'];
                         $entity->text_upper_limit = $params['range']['upper'];
-                    } else if (array_key_exists('url', $params)) {
+                    } else if (isset($params['url'])) {
                         $entity->text_validation_rule = 'url';
-                    } else if (array_key_exists('input_mask', $params)) {
+                    } else if (isset($params['input_mask'])) {
                         $entity->text_validation_rule = 'input_mask';
                         $entity->validation_format = $params['input_mask'];
                     } else {
@@ -333,7 +333,7 @@ class SetupTextBehavior extends SetupBehavior
                                             ];
                                         }
                                         break;
-                                    
+
                                     default:
                                         break;
                                 }

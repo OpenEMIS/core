@@ -349,23 +349,37 @@ class AuthComponent extends Component implements EventDispatcherInterface
         if (empty($this->_authenticateObjects)) {
             $this->constructAuthenticate();
         }
-        $response = $controller->getResponse();
         $auth = end($this->_authenticateObjects);
-        if ($auth === false) {
-            throw new CakeException('At least one authenticate object must be available.');
-        }
-        $result = $auth->unauthenticated($controller->getRequest(), $response);
-        if ($result !== null) {
-            return $result instanceof Response ? $result : null;
-        }
-
-        if (!$controller->getRequest()->is('ajax')) {
+        // echo "<pre>";print_r($this->getController()->getResponse()->getUri()->getPath());die;
+        // echo "<pre>";print_r($result);die();
+        if (!$this->getController()->getRequest()->is('ajax')) {
             $this->flash($this->_config['authError']);
+            $this->storage()->redirectUrl($this->getController()->getRequest()->getRequestTarget());
 
-            return $controller->redirect($this->_loginActionRedirectUrl());
+            return $controller->redirect($this->_config['loginAction']);
+        }
+        $result = $auth->unauthenticated($this->getController()->getRequest(), $this->getController()->getResponse());
+        if ($result !== null) {
+            return $result;
         }
 
-        return $response->withStatus(403);
+        if (!$this->storage()->redirectUrl()) {
+            $this->storage()->redirectUrl($this->getController()->getRequest()->getRequestTarget());
+        }
+
+        if (!empty($this->_config['ajaxLogin'])) {
+            $controller->viewBuilder()->templatePath('Element');
+            $response = $controller->render(
+                $this->_config['ajaxLogin'],
+                $this->RequestHandler->ajaxLayout
+            );
+            $response->statusCode(403);
+
+            return $response;
+        }
+        $this->response->statusCode(403);
+
+        return $this->response;
     }
 
     /**

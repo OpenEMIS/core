@@ -20,7 +20,7 @@ class CommentsController extends PageController
         $this->Page->loadElementsFromTable($this->Comments);
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
         parent::beforeFilter($event);
@@ -90,15 +90,15 @@ class CommentsController extends PageController
         $page = $this->Page;
         $plugin = $this->getPlugin();
 
-        $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
-        $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
+        $userId = isset($options['userId']) ? $options['userId'] : 0;
+        $userName = isset($options['userName']) ? $options['userName'] : '';
         $encodedUserId = $this->paramsEncode(['id' => $userId]);
 
         // for Institution Staff and Institution Students
         if ($plugin == 'Institution') {
-            $userRole = array_key_exists('userRole', $options) ? $options['userRole'] : '';
-            $encodedInstitutionId = array_key_exists('institutionId', $options) ? $options['institutionId'] : 0;
-            $institutionName = array_key_exists('institutionName', $options) ? $options['institutionName'] : '';
+            $userRole = isset($options['userRole']) ? $options['userRole'] : '';
+            $encodedInstitutionId = isset($options['institutionId']) ? $options['institutionId'] : 0;
+            $institutionName = isset($options['institutionName']) ? $options['institutionName'] : '';
             $pluralUserRole = Inflector::pluralize($userRole);
 
             $page->addCrumb('Institutions', [
@@ -227,8 +227,8 @@ class CommentsController extends PageController
     {
         $page = $this->Page;
         $plugin = $this->getPlugin();
-        $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
-        $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
+        $userId = isset($options['userId']) ? $options['userId'] : 0;
+        $userName = isset($options['userName']) ? $options['userName'] : '';
 
         $nationalityId = $this->Users->get($userId)->nationality_id;
         $encodedUserId = $this->paramsEncode(['security_user_id' => $userId]);
@@ -305,10 +305,10 @@ class CommentsController extends PageController
     {
         $page = $this->Page;
         $plugin = $this->getPlugin();
-        $userId = array_key_exists('userId', $options) ? $options['userId'] : 0;
-        $userName = array_key_exists('userName', $options) ? $options['userName'] : '';
-        $userRole = array_key_exists('userRole', $options) ? $options['userRole'] : '';
-        $encodedInstitutionId = array_key_exists('institutionId', $options) ? $options['institutionId'] : 0;
+        $userId = isset($options['userId']) ? $options['userId'] : 0;
+        $userName = isset($options['userName']) ? $options['userName'] : '';
+        $userRole = isset($options['userRole']) ? $options['userRole'] : '';
+        $encodedInstitutionId = isset($options['institutionId']) ? $options['institutionId'] : 0;
 
         $nationalityId = $this->Users->get($userId)->nationality_id;
         $encodedUserId = $this->paramsEncode(['security_user_id' => $userId]);

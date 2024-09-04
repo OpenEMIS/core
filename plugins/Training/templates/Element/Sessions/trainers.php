@@ -31,7 +31,7 @@ $trainerTypeOptions = isset($attr['trainerTypeOptions']) ? $attr['trainerTypeOpt
     ]);
 
 
-    $trainerType = (array_key_exists('type', $requestData)) ? $requestData['type'] : 'Staff';
+    $trainerType = (isset($requestData['type'])) ? $requestData['type'] : 'Staff';
     // End POCOR-3556
 
     echo $this->Form->input("$alias.trainer_search", [

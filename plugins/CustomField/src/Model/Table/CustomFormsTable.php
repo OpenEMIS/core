@@ -12,6 +12,7 @@ use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Log\Log; // POCOR-8542
 
 class CustomFormsTable extends ControllerActionTable
 {
@@ -39,7 +40,7 @@ class CustomFormsTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
-        if (array_key_exists('extra', $config)) {
+        if (isset($config['extra'])) {
             $this->extra = array_merge($this->extra, $config['extra']);
         }
         parent::initialize($config);
@@ -166,7 +167,7 @@ class CustomFormsTable extends ControllerActionTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-        if (array_key_exists('remove', $buttons) && !$entity->is_deletable) {
+        if (isset($buttons['remove']) && !$entity->is_deletable) {
             unset($buttons['remove']);    // remove delete action from the action button
         }
 
@@ -184,18 +185,22 @@ class CustomFormsTable extends ControllerActionTable
         $CustomFields = TableRegistry::get($this->extra['fieldClass']['className']);
         $formKey = $this->extra['fieldClass']['foreignKey'];
         $fieldKey = $this->extra['fieldClass']['targetForeignKey'];
-        $alias = $CustomFormsFields->getAlias();
-
+// POCOR-8542 Start
+        $selectFields = [
+            'name' => $CustomFields->aliasField('name'),
+            'field_type' => $CustomFields->aliasField('field_type'),
+            $fieldKey => $CustomFormsFields->aliasField($fieldKey),
+            $formKey => $CustomFormsFields->aliasField($formKey),
+            'id' => $CustomFormsFields->aliasField('id')
+        ];
+        try{
+            $selectFields['section'] = $CustomFormsFields->aliasField('section'); //comment cakephp4 not found column // Again change for this POCOR-8419
+        }catch (\Exception $exception){
+            Log::debug('No Custom Field Section');
+        }
         return $CustomFormsFields
             ->find('all')
-            ->select([
-                'name' => $CustomFields->aliasField('name'),
-                'field_type' => $CustomFields->aliasField('field_type'),
-                $fieldKey => $CustomFormsFields->aliasField($fieldKey),
-                $formKey => $CustomFormsFields->aliasField($formKey),
-                //'section' => $CustomFormsFields->aliasField($alias.'.section'), //comment cakephp4 not found column // Again change for this POCOR-8419
-                'id' => $CustomFormsFields->aliasField('id')
-            ])
+            ->select($selectFields)
             ->innerJoin(
                 [$CustomFields->getAlias() => $CustomFields->getTable()],
                 [
@@ -204,8 +209,10 @@ class CustomFormsTable extends ControllerActionTable
             )
             ->order([$CustomFormsFields->aliasField('order')])
             ->where([$CustomFormsFields->aliasField($formKey) => $formId])
+            ->enableAutoFields()
             ->toArray();
     }
+    // POCOR-8542 End
 
     public function onGetCustomOrderFieldElement(Event $event, $action, $entity, $attr, $options = [])
     {
@@ -218,9 +225,10 @@ class CustomFormsTable extends ControllerActionTable
             $customFormId = $entity->id;
             $customFields = $this->getCustomFormsFields($customFormId);
 
-            $sectionName = "";
+            $sectionName = "__section"; // POCOR-8542
             $printSection = false;
             foreach ($customFields as $key => $obj) {
+
                 if (!empty($obj['section']) && $obj['section'] != $sectionName) {
                     $sectionName = $obj['section'];
                     $printSection = true;

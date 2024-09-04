@@ -104,7 +104,7 @@ class EmailTemplateBehavior extends Behavior
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        if (array_key_exists('list', $toolbarButtonsArray)) {
+        if (isset($toolbarButtonsArray['list'])) {
             unset($toolbarButtonsArray['list']);
         }
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
@@ -117,7 +117,7 @@ class EmailTemplateBehavior extends Behavior
         $process = function ($model, $entity) use ($data) {
             $errors = $entity->getErrors();
             if (empty($errors)) {
-                
+
                 $EmailTemplatesTable = TableRegistry::get('Email.EmailTemplates');
                 $requestData = $data[$model->getAlias()];
                 $emailTemplateData = [

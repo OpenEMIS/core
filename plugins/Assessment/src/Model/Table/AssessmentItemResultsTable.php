@@ -126,8 +126,8 @@ class AssessmentItemResultsTable extends AppTable
                         $modified_user_id = $entity->created_user_id;
                         $modified = date('Y-m-d H:i:s');
                         $connection = ConnectionManager::get('default');
-                        $sql = "UPDATE assessment_item_results SET 
-                                   marks=$marks, 
+                        $sql = "UPDATE assessment_item_results SET
+                                   marks=$marks,
                                    institution_classes_id=$institution_classes_id,
                                    institution_id=$institution_id,
                                    modified_user_id = $modified_user_id,
@@ -177,10 +177,13 @@ class AssessmentItemResultsTable extends AppTable
     {
         $academicPeriodId = $options['academic_period_id'];
         $controller = $options['_controller'];
-        $session = $controller->request->session();
-        $institutionId = $session->read('Institution.Institutions.id'); //POCOR-6823
-
-
+        // Ensure $controller and $controller->request are set
+        if (isset($controller) && isset($controller->request)) {
+            $session = $controller->request->session();
+            $institutionId = $session->read('Institution.Institutions.id'); // POCOR-6823
+        }
+        //$session = $controller->request->session();
+        //$institutionId = $session->read('Institution.Institutions.id'); //POCOR-6823
         $studentId = -1;
         if ($session->check('Student.Results.student_id')) {
             $studentId = $session->read('Student.Results.student_id');
@@ -245,13 +248,13 @@ class AssessmentItemResultsTable extends AppTable
                 $this->aliasField('student_id') => $studentId,
                 // $this->aliasField('institution_classes_id ') => $className,  // POCOR-6823
                 // $this->aliasField('institution_id') => $institutionId    //POCOR-6823
-                // $this->aliasField('institution_id') => $institutionId    //POCOR-6989 : Commented to show data for all instituion 
+                // $this->aliasField('institution_id') => $institutionId    //POCOR-6989 : Commented to show data for all instituion
             ])
             ->order([
                 $this->aliasField('created') => 'DESC', //POCOR-6823
                 $this->aliasField('modified') => 'DESC', //POCOR-6823
                 $this->Assessments->aliasField('code'), $this->Assessments->aliasField('name')
-            ])->all(); //->first(); //POCOR-6948 Comment Reason: taking one record of assessment instead of all records for student. 
+            ])->all(); //->first(); //POCOR-6948 Comment Reason: taking one record of assessment instead of all records for student.
     }
 
     /**
@@ -274,10 +277,10 @@ class AssessmentItemResultsTable extends AppTable
                 $this->aliasField('student_id'),
                 $this->aliasField('assessment_period_id'),
 //                $this->aliasField('marks'),
-                $this->aliasField('academic_period_id'),//POCOR-6479 
+                $this->aliasField('academic_period_id'),//POCOR-6479
                 $this->aliasField('education_subject_id'),//POCOR-6479
                 $this->aliasField('education_grade_id'),//POCOR-6479
-                $this->aliasField('assessment_id'),//POCOR-6479 
+                $this->aliasField('assessment_id'),//POCOR-6479
             ])
             ->contain(['AssessmentGradingOptions'])
             ->innerJoin([$SubjectStudents->getAlias() => $SubjectStudents->getTable()], [
@@ -465,7 +468,7 @@ class AssessmentItemResultsTable extends AppTable
             ->group([
                 // $this->aliasField('student_id'),//POCOR-6479 comment code
                 // $this->aliasField('assessment_id'),//POCOR-6479 comment code
-                $this->aliasField('assessment_period_id')//POCOR-6479 
+                $this->aliasField('assessment_period_id')//POCOR-6479
             ])->toArray();
         //POCOR-6479 starts
         $sumMarks = [];
@@ -641,7 +644,7 @@ class AssessmentItemResultsTable extends AppTable
             $url = $_SERVER['REQUEST_URI'];
             $url_components = parse_url($url);
             parse_str($url_components['query'], $params);
-            $action = array_key_exists('_finder', $params);
+            $action = isset($params['_finder']);
             $actionName = strtok($params['_finder'], '[');//POCOR-6921- updated exact action name condition
             if ($primary && $actionName == 'AssessmentGradesOptions') {
                 $param = preg_match_all('/\\[(.*?)\\]/', $params['_finder'], $matches);
@@ -868,8 +871,8 @@ class AssessmentItemResultsTable extends AppTable
             $last_mark_where = $last_mark_where . " AND latest_grades.assessment_grading_option_id = $assessment_grading_option_id ";
         }
         if ($institution_id > 0 and $academic_period_id > 0) {
-            $last_mark_where = $last_mark_where . " AND latest_grades.student_id IN 
-            (select student_id FROM institution_class_students ics 
+            $last_mark_where = $last_mark_where . " AND latest_grades.student_id IN
+            (select student_id FROM institution_class_students ics
             where ics.academic_period_id = $academic_period_id and ics.institution_id = $institution_id)";
             $institution_class_students_where = $institution_class_students_where . " AND institution_class_students.institution_id = $institution_id ";
         }
@@ -898,7 +901,7 @@ INNER JOIN
         ,latest_grades.assessment_period_id
         ,MAX(latest_grades.created) latest_created
     FROM $assessment_item_results_table_name latest_grades
-    $last_mark_where    
+    $last_mark_where
     GROUP BY latest_grades.student_id
         ,latest_grades.assessment_id
         ,latest_grades.education_subject_id
@@ -909,7 +912,7 @@ AND latest_grades.assessment_id = all_results.assessment_id
 AND latest_grades.education_subject_id = all_results.education_subject_id
 AND latest_grades.assessment_period_id = all_results.assessment_period_id
 AND latest_grades.latest_created = all_results.created
-$institution_class_students_where 
+$institution_class_students_where
 GROUP BY all_results.student_id
     ,all_results.assessment_id
     ,all_results.education_subject_id
@@ -951,7 +954,7 @@ INNER JOIN
     WHERE assessment_item_results.academic_period_id = $academic_period_id
     AND assessment_item_results.education_grade_id = $education_grade_id
     AND assessment_item_results.education_subject_id = $education_subject_id
-    AND assessment_item_results.student_id = $student_id    
+    AND assessment_item_results.student_id = $student_id
     GROUP BY assessment_item_results.student_id
         ,assessment_item_results.assessment_id
         ,assessment_item_results.education_subject_id

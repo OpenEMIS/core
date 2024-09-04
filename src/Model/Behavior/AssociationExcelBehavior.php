@@ -45,7 +45,7 @@ class AssociationExcelBehavior extends Behavior
     public function initialize(array $config): void
     {
         $this->setConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
-        if (!array_key_exists('filename', $config)) {
+        if (!isset($config['filename'])) {
             $this->setConfig('filename', $this->_table->getAlias());
         }
 
@@ -56,7 +56,7 @@ class AssociationExcelBehavior extends Behavior
             mkdir($folder, 0777);
         } else {
             // $delete = true;
-            // if (array_key_exists('delete', $settings) &&  $settings['delete'] == false) {
+            // if (isset($settings['delete']) &&  $settings['delete'] == false) {
             //  $delete = false;
             // }
             // if ($delete) {
@@ -92,7 +92,7 @@ class AssociationExcelBehavior extends Behavior
         $break = false;
         $action = $this->_table->action;
         $pass = $this->_table->request->pass;
-        if (in_array($action, $pass)) {
+        if (in_array($action, (array)$pass)) {
             unset($pass[array_search($action, $pass)]);
             $pass = array_values($pass);
         }
@@ -179,8 +179,9 @@ class AssociationExcelBehavior extends Behavior
         $paramsDecodedArray = $this->_table->paramsDecode($params);
         $institution_id = !empty($paramsDecodedArray) ? $paramsDecodedArray['institution_id'] : 0;
         $condition = [];
-        if(!is_null($this->_table->request->getQuery('academic_period_id'))){
-            $academic_period_id = $this->_table->request->getQuery('academic_period_id');
+        $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
+        $academic_period_id = !is_null($this->_table->request->getQuery('academic_period_id')) ? $this->_table->request->getQuery('academic_period_id') : $currentAcademicPeriod;
+        if(!is_null($academic_period_id)){
             $InstitutionAssociations = TableRegistry::getTableLocator()->get('Institution.InstitutionAssociations');
                 //option for all grades
                 $conditions = [
@@ -198,7 +199,7 @@ class AssociationExcelBehavior extends Behavior
 
             $footer = $this->getFooter();
             $Query = $sheet['query'];
-			
+
 			$EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
 			$InstitutionAssociations = TableRegistry::getTableLocator()->get('Institution.InstitutionAssociations');
 			$Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
@@ -250,13 +251,13 @@ class AssociationExcelBehavior extends Behavior
 				[
 					'InstitutionAssociationStudent.institution_association_id = '. $InstitutionAssociations->aliasField('id')
 				]
-				) 
+				)
                 ->leftJoin(
 				['EducationGrades' => 'education_grades'],
 				[
 					'InstitutionAssociationStudent.education_grade_id = '. $EducationGrades->aliasField('id')
 				]
-				) 
+				)
 				->leftJoin(
 				['StudentStatuses' => 'student_statuses'],
 				[
@@ -318,7 +319,7 @@ class AssociationExcelBehavior extends Behavior
                             ];
                         }
                         $data = $UserIdentities
-                                    ->find()    
+                                    ->find()
                                     ->select([
                                         // 'identity_type' => $IdentityTypes->getAlias().'.name',//POCOR-5852 starts
                                         // 'identity_number' => $UserIdentities->getAlias().'.number',
@@ -335,16 +336,16 @@ class AssociationExcelBehavior extends Behavior
                                         ]
                                     )
                                     ->where($conditions)->toArray();
-                        $row['identity_type'] = '';            
-                        $row['identity_number'] = '';            
+                        $row['identity_type'] = '';
+                        $row['identity_number'] = '';
                         if(!empty($data)){
                             $identity_type_name = '';
                             $identity_type_number = '';
                             foreach ($data as $key => $value) {
                                 if($value->identity_default == 1){
-                                   $identity_type_name =  $value->identity_type;    
-                                   $identity_type_number =  $value->identity_number;   
-                                   break; 
+                                   $identity_type_name =  $value->identity_type;
+                                   $identity_type_number =  $value->identity_number;
+                                   break;
                                 }
                             }
                             if(!empty($identity_type_name) && !empty($identity_type_number)){
@@ -355,7 +356,7 @@ class AssociationExcelBehavior extends Behavior
                                 $row['identity_number'] = $data[0]->identity_number;
                             }
                         }
-                        return $row;           
+                        return $row;
                     });
                 });
                 //POCOR-5852 ends
@@ -384,7 +385,7 @@ class AssociationExcelBehavior extends Behavior
             $baseSheetName = $sheetName;
 
             // if the primary key of the record is given, only generate that record
-            if (array_key_exists('id', $settings)) {
+            if (isset($settings['id'])) {
                 $id = $settings['id'];
                 if ($id != 0) {
                     $primaryKey = $table->getPrimaryKey();
@@ -412,7 +413,7 @@ class AssociationExcelBehavior extends Behavior
             $percentCount = intval($count / 100);
             $pages = ceil($count / $this->getConfig('limit'));
 
-            // Debugging 
+            // Debugging
             $pages = 1;
 
             if (isset($sheet['orientation'])) {
@@ -446,7 +447,7 @@ class AssociationExcelBehavior extends Behavior
                     foreach ($fields as $index => $attr) {
                         $subjectsHeaderRow[$index] = "";
 
-                        if (array_key_exists('group', $attr)) {
+                        if (isset($attr['group'])) {
                             if ($groupName !== $attr['group']) {
                                 $groupStartingIndex = $index;
                                 $groupName = $attr['group'];
@@ -580,7 +581,7 @@ class AssociationExcelBehavior extends Behavior
 					'association_name','education_grade','association_staff',
 					'openEMIS_ID','student_name','gender','student_status',
 					];
-        //POCOR-5852 ends                  
+        //POCOR-5852 ends
         $excludes = $this->getConfig('excludes');
 
         if (!is_array($table->getPrimaryKey())) { //if not composite key

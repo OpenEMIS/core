@@ -9,7 +9,7 @@ use Cake\ORM\Table;
 class MoodleApiLogController extends AppController
 {
 	public function initialize(): void {
-        //echo "asffs";die;   
+        //echo "asffs";die;
 		parent::initialize();
 
     }
@@ -18,7 +18,7 @@ class MoodleApiLogController extends AppController
     public function AlertRules() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.AlertRules']); }
     public function mlog() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'MoodleApi.MoodleApiLog']); }
 
-    public function beforeFilter(Event $event) {
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event) {
         if ($this->getPlugin() == $this->getPlugin()) {
             $this->Security->setConfig('validatePost', false);
         }

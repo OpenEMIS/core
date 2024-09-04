@@ -628,7 +628,7 @@ class UsersTable extends ControllerActionTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             $buttons['view']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
         }
 

@@ -85,7 +85,7 @@ class StudentsTable extends ControllerActionTable
             'action' => 'ProfileStudentUser'
         ];
 
-        if (array_key_exists('view', $buttons) && $entity->has('_matchingData')) {
+        if (isset($buttons['view']) && $entity->has('_matchingData')) {
             $buttons['view']['url'] = $urlButtons;
             $buttons['view']['url'][0] = 'view';
             $buttons['view']['url'][1] = $this->paramsEncode(['id' =>  $entity->_matchingData['Users']->id, 'ProfileGuardians.id' => $entity->id]);

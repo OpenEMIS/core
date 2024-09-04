@@ -23,12 +23,13 @@ const COLUMN_OPENEMISID: any = {
     "Last Primary School",
   ],
   class: "ag-school-column",
+  pinned: 'left',
   canEdit: false
 }
 
 const COLUMN_PERSONNAME: any = {
   headerName: "Name",
-  field: "user.name",
+  field: "user.full_name",
   sortable: true,
   filterable: true,
   filterValue: [
@@ -165,7 +166,6 @@ const COLUMN_INPUT_REASON_OR_COMMENT_NEW: any = {
       let studentAbsenceReasonList = context.studentAbsenceReasons;
       let absenceTypeList = context.absenceTypes;
       let mode = context.mode;
-
       if (data.hasOwnProperty('institution_student_absences')) {
         let studentAbsenceTypeId = data.institution_student_absences.absence_type_id == null ? 0 : data.institution_student_absences.absence_type_id;
         let absenceTypeObj = absenceTypeList?.find(obj => obj.id == studentAbsenceTypeId);
@@ -311,7 +311,7 @@ function getViewAttendanceElement(data, absenceTypeList, isMarked, isSchoolClose
     let html = '';
     if (isMarked) {
       let absenceTypeObj: any = {}
-      let id = (data.institution_student_absences.absence_type_id == 0) ? 0 : data.institution_student_absences.absence_type_id;
+      let id = (data.institution_student_absences.absence_type_id == 0 || data.institution_student_absences.absence_type_id == null) ? 0 : data.institution_student_absences.absence_type_id;
       if (noScheduledClicked) {
         absenceTypeObj = {
           id: null,
@@ -321,7 +321,6 @@ function getViewAttendanceElement(data, absenceTypeList, isMarked, isSchoolClose
       } else {
         absenceTypeObj = absenceTypeList?.find(obj => obj.id == id);
       }
-
       switch (absenceTypeObj.code) {
         case attendanceType.PRESENT.code:
           html = '<div style="color: ' + attendanceType.PRESENT.color + ';"><i class="' + attendanceType.PRESENT.icon + '"></i> <span> ' + absenceTypeObj.name + ' </span></div>';

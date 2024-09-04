@@ -31,7 +31,7 @@
         $inputField = implode('.', [$ControllerAction['table']->getAlias(), $attr['field']]);
         $inputEvent = 'Select' . str_replace(' ', '', $label);
 
-        if (!array_key_exists('options', $attr)) {
+        if (!isset($attr['options'])) {
             $attr['options'] = [];
         }
 
@@ -39,7 +39,7 @@
         if (!empty($attr['options'])) {
             $selectOptions[] = '-- ' . __('Select ' . $label) . ' --';
 
-            if (array_key_exists('addAll', $attr) && $attr['addAll'] && !empty($attr['options'])) {
+            if (isset($attr['addAll']) && $attr['addAll'] && !empty($attr['options'])) {
                 $selectOptions['-1'] = '-- ' . __('Add all ' . $label) . ' --';
             }
 
