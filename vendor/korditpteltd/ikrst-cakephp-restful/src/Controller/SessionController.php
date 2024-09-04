@@ -4,6 +4,7 @@ namespace Restful\Controller;
 use Cake\Event\Event;
 use Cake\Log\Log;
 use Restful\Controller\AppController;
+use Cake\Event\EventInterface;
 
 class SessionController extends AppController
 {
@@ -15,7 +16,7 @@ class SessionController extends AppController
         parent::initialize();
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
         if (empty($this->request->getAttribute('params')['_ext'])) {

@@ -57,6 +57,10 @@
                                             if (isset($item->id)) {
                                                 echo $this->Form->hidden("$joinDataPrefix.id", ['value' => $item['_joinData']['id']]);
                                                 echo $this->Form->hidden("$joinDataPrefix.assessment_period_id", ['value' => $data['id']]);
+                                                if($ControllerAction['action'] == 'edit') { //POCOR-8520
+                                                    echo $this->Form->hidden("$joinDataPrefix.education_subject_id", ['value' => $item['_joinData']['education_subject_id']]);
+                                                    echo $this->Form->hidden("$joinDataPrefix.assessment_grading_type_id", ['value' => $item['_joinData']['assessment_grading_type_id']]);
+                                                }
                                             }
                                         ?>
                                     </td>
@@ -73,10 +77,11 @@
                                         }
                                         if($ControllerAction['action'] == 'edit'){
                                             echo $this->Form->input("$joinDataPrefix.assessment_grading_type_id", [
-                                                'type' => 'text',
+                                                'type' => 'select',
                                                 'label' => false,
-                                                'value' => $assessmentGradingTypeOptions,
-                                                'disabled' => 'disabled' //POCOR-7431
+                                                'options' => $assessmentGradingTypeOptions, //POCOR-8520
+                                                'value' => $assessmentGradingTypeOptions[$item['_joinData']['assessment_grading_type_id']],//POCOR-8520
+                                                //'disabled' => 'disabled' //POCOR-7431
                                             ]);
                                         }
                                          //POCOR-7409 end
