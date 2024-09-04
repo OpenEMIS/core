@@ -62,6 +62,12 @@ class UserTabBehavior extends Behavior
         $model = $this->_table;
         $query = $model->find('all');
         $userId = $this->getUserID();
+
+        $controller = $model->controller;
+        $controllerName = $controller->getName();
+        if(!$userId && $controllerName == 'Profiles'){
+            $userId = $this->_table->Auth->user('id');
+        }
         if ($model->hasField('security_user_id')) {
             $query->where([$model->aliasField('security_user_id') => $userId]);
         } else if ($model->hasField('student_id')) {
