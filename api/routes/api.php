@@ -506,5 +506,9 @@ Route::group(
         Route::get('/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance/archive', 'AttendanceController@getStudentAttendanceArchiveList');
         Route::get('/institutions/students/attendances/export/archive', 'AttendanceController@getStudentAttendanceArchiveExport');
         //POCOR-8397 end...
+        
+        //POCOR-8519 start...
+        Route::get('workbenches', 'WorkbenchController@getAllWorkbenches');
+        //POCOR-8519 end...
     }
 );
