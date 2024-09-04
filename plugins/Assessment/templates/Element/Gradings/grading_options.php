@@ -58,7 +58,7 @@
 					<tbody id='table_grading_options'>
 
 						<?php
-						if (!empty($data->grading_options) && count($data->grading_options)>0) :
+						if (!empty($data->grading_options) && is_countable($data->grading_options) && count($data->grading_options) > 0) :
 							// iterate each row
 							foreach ($data->grading_options as $key => $record) :
 								$rowErrors = $record->getErrors();
