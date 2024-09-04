@@ -72,7 +72,7 @@ class AlertRulesTable extends ControllerActionTable
                 if (!empty($thresholdConfig)) {
                     $thresholdArray = [];
                     foreach ($thresholdConfig as $field => $attr) {
-                        if (array_key_exists('type', $attr) && $attr['type'] == 'chosenSelect') {
+                        if (isset($attr['type']) && $attr['type'] == 'chosenSelect') {
                             $thresholdArray[$field] = $data[$field]['_ids'];
                         } else {
                             $thresholdArray[$field] = $data[$field];
@@ -84,7 +84,7 @@ class AlertRulesTable extends ControllerActionTable
         }
     }
 
-    public function afterSaveCommit(Event $event, Entity $entity) 
+    public function afterSaveCommit(Event $event, Entity $entity)
     {
         if ($entity->isNew()) {
             $feature = $entity->feature;
@@ -139,7 +139,7 @@ class AlertRulesTable extends ControllerActionTable
         // end element control
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','AlertRules','Communications');       
+		$is_manual_exist = $this->getManualUrl('Administration','AlertRules','Communications');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -449,12 +449,12 @@ class AlertRulesTable extends ControllerActionTable
             foreach ($thresholdArray as $field => $value) {
                 $entity->{$field} = $value;
 
-                if (array_key_exists($field, $thresholdConfig) && array_key_exists('type', $thresholdConfig[$field])) {
+                if (array_key_exists($field, $thresholdConfig) && isset($thresholdConfig[$field]['type'])) {
                     $fieldType = $thresholdConfig[$field]['type'];
                     // for threshold with type chosenSelect type
                     if ($fieldType == 'chosenSelect') {
                         $lookupModel = $thresholdConfig[$field]['lookupModel'];
-                        if(isset($lookupModel)){//POCOR-7462 
+                        if(isset($lookupModel)){//POCOR-7462
                         $Model = TableRegistry::get($lookupModel);
                         if (is_array($value)) {
                             $entity->{$field} = [];
@@ -474,13 +474,13 @@ class AlertRulesTable extends ControllerActionTable
                             }
                         }
                         //POCOR-7462 end
-                        
-                    
+
+
                     }
                 }
             }
         }
-       
+
     }
      //POCOR-7558 start
     public function getLastRunDate(){
@@ -491,7 +491,7 @@ class AlertRulesTable extends ControllerActionTable
         ])->group([$systemProcess->aliasField('name')])
           ->order([$systemProcess->aliasField('end_date') => 'DESC'])
           ->toArray();
-        
+
         $result=[];
         foreach($data as $key=>$value){
             $result[$value['name']]= $value['end_date'];

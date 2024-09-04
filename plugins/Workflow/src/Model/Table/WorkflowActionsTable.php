@@ -15,7 +15,7 @@ class WorkflowActionsTable extends AppTable
     // Workflow Actions - action
     const APPROVE = 0;
     const REJECT = 1;
-    
+
 
     public function initialize(array $config): void
     {
@@ -77,18 +77,18 @@ class WorkflowActionsTable extends AppTable
         $where[$this->aliasField('workflow_step_id')] = -1;
 
         $modelOptions = $this->getWorkflowModelOptions();
-        $selectedModel = $this->setQueryString('model', $modelOptions);
+        $selectedModel = $this->queryString('model', $modelOptions);
         $this->advancedSelectOptions($modelOptions, $selectedModel);
 
         $workflowOptions = $this->getWorkflowOptions($selectedModel);
         if (!empty($workflowOptions)) {
-            $selectedWorkflow = $this->setQueryString('workflow', $workflowOptions);
+            $selectedWorkflow = $this->queryString('workflow', $workflowOptions);
             $this->advancedSelectOptions($workflowOptions, $selectedWorkflow);
 
             $workflowStepOptions = $this->getWorkflowStepOptions($selectedWorkflow);
 
             if (!empty($workflowStepOptions)) {
-                $selectedWorkflowStep = $this->setQueryString('workflow_step', $workflowStepOptions);
+                $selectedWorkflowStep = $this->queryString('workflow_step', $workflowStepOptions);
                 $this->advancedSelectOptions($workflowStepOptions, $selectedWorkflowStep);
 
                 $where[$this->aliasField('workflow_step_id')] = $selectedWorkflowStep;
@@ -474,11 +474,11 @@ class WorkflowActionsTable extends AppTable
                     return $q->where(['WorkflowModels.model' => $selectedModel]);
                 })
                 ->matching('WorkflowSteps.NextWorkflowSteps', function ($q) use ($eventKey) {
-                    return $q->where(['NextWorkflowSteps.event_key LIKE' => '%'.$eventKey.'%']);  
+                    return $q->where(['NextWorkflowSteps.event_key LIKE' => '%'.$eventKey.'%']);
                 })
                 ->first();
-        
-            return $workflowResult->next_workflow_step_id;    
+
+            return $workflowResult->next_workflow_step_id;
         }
     }
 
@@ -497,7 +497,7 @@ class WorkflowActionsTable extends AppTable
         if (is_null($selectedModel)) {
             return [];
         } else {
-          
+
             $Workflows = TableRegistry::get('Workflow.Workflows');
             $workflowOptions = $Workflows
                 ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
@@ -567,7 +567,7 @@ class WorkflowActionsTable extends AppTable
                     $Workflows->aliasField('id') => $selectedWorkflow
                 ])
                 ->first();
-             
+
             $registryAlias = $workflow->_matchingData['WorkflowModels']->model;
             $subject = TableRegistry::get($registryAlias);
             $eventsObject = new ArrayObject();
@@ -599,7 +599,7 @@ class WorkflowActionsTable extends AppTable
                         0 => __('-- Select Event --')
                     ];
                     foreach ($events as $event) {
-                        if ($filterUniqueEvents && array_key_exists('unique', $event) && $event['unique']) {
+                        if ($filterUniqueEvents && isset($event['unique']) && $event['unique']) {
                             if ($this->checkEventNotAddedBefore($selectedWorkflow, $event)) {
                                 $eventOptions[$event['value']] = $event['text'];
                             }
@@ -615,7 +615,7 @@ class WorkflowActionsTable extends AppTable
                         ]
                     ];
                     foreach ($events as $event) {
-                        if ($filterUniqueEvents && array_key_exists('unique', $event) && $event['unique']) {
+                        if ($filterUniqueEvents && isset($event['unique']) && $event['unique']) {
                             if ($this->checkEventNotAddedBefore($selectedWorkflow, $event)) {
                                 $eventOptions[] = $event;
                             }
@@ -672,5 +672,5 @@ class WorkflowActionsTable extends AppTable
         return ($existingEventCount == 0);
     }
 
-    
+
 }

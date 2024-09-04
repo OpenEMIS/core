@@ -34,7 +34,7 @@ class AcademicPeriodsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'AcademicPeriod.AcademicPeriods']);
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         if ($this->getPlugin() == 'AcademicPeriod') {
             $this->Security->setConfig('validatePost', false);

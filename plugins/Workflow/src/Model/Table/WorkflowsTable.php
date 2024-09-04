@@ -195,7 +195,7 @@ class WorkflowsTable extends AppTable {
             $selectedModel = $this->get($workflowId)->workflow_model_id;
             $this->addAssociation($selectedModel);
 
-        
+
 
             $query->matching('WorkflowModels');
 
@@ -222,7 +222,7 @@ class WorkflowsTable extends AppTable {
     }
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-        if (array_key_exists($this->getAlias(), $data)) {
+        if (isset($data[$this->getAlias()])) {
             if (array_key_exists('workflow_model_id', $data[$this->getAlias()])) {
                 $selectedModel = $data[$this->getAlias()]['workflow_model_id'];
                 $this->addAssociation($selectedModel);
@@ -418,7 +418,7 @@ class WorkflowsTable extends AppTable {
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        if (array_key_exists('remove', $buttons)) {
+        if (isset($buttons['remove'])) {
             // Check by model if filter applied, disabled delete button if the workflow is apply to all.
             $filter = $entity->_matchingData['WorkflowModels']->filter;
             if (!is_null($filter)) {
@@ -527,7 +527,7 @@ class WorkflowsTable extends AppTable {
             } else {
                 $filterOptions = TableRegistry::get($filter)->getList()->toArray();
             }
-            
+
             /*POCOR-5833 ends*/
             // Trigger event to get the correct wofkflow filter options
             $subject = TableRegistry::get($model);

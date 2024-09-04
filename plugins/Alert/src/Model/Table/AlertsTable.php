@@ -28,7 +28,7 @@ class AlertsTable extends ControllerActionTable
         $this->statusTypes = $this->getSelectOptions('Alert.status_types');
 
         $this->toggle('add', false);
-        $this->toggle('edit', true); //POCOR-7558 
+        $this->toggle('edit', true); //POCOR-7558
         $this->toggle('remove', false);
     }
 
@@ -44,11 +44,11 @@ class AlertsTable extends ControllerActionTable
         $this->field('name', ['sort' => false]);
         $this->field('process_name', ['visible' => false]);
         $this->field('process_id', ['visible' => false]);
-        $this->field('frequency',['sort'=>false,'after'=>'process_name']); //POCOR-7558 
-        $this->field('last_run_date'); //POCOR-7558 
-        // // $this->field('status', ['after' => 'name']); //POCOR-7558 
+        $this->field('frequency',['sort'=>false,'after'=>'process_name']); //POCOR-7558
+        $this->field('last_run_date'); //POCOR-7558
+        // // $this->field('status', ['after' => 'name']); //POCOR-7558
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Alerts','Communications');       
+		$is_manual_exist = $this->getManualUrl('Administration','Alerts','Communications');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -82,7 +82,7 @@ class AlertsTable extends ControllerActionTable
             $this->aliasField('modified'),
             $this->aliasField('created_user_id'),
             $this->aliasField('created'),
-            "last_run_date"=>$systemProcess->aliasField('end_date'),]) 
+            "last_run_date"=>$systemProcess->aliasField('end_date'),])
         ->leftJoin(
             [ $systemProcess->getAlias() => $systemProcess->getTable()],
             [
@@ -134,7 +134,7 @@ class AlertsTable extends ControllerActionTable
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $shellName = $entity->process_name;
          //POCOR-7558 start
-        // if (array_key_exists('view', $buttons)) {
+        // if (isset($buttons['view'])) {
         //     if ($this->AccessControl->check(['Alerts', 'Alerts', 'process'])) { // to check execute permission
         //         // if ($this->isShellStopExist($shellName)) {
         //         //     $icon = '<i class="fa fa-play"></i>';
@@ -167,7 +167,7 @@ class AlertsTable extends ControllerActionTable
     {
         $requestQuery = $this->request->getQuery();
         $params = [];
-        if (array_key_exists('queryString', $requestQuery)) {
+        if (isset($requestQuery['queryString'])) {
             $params = $this->paramsDecode($requestQuery['queryString']);
         }
 
@@ -230,7 +230,7 @@ class AlertsTable extends ControllerActionTable
         exec($shellCmd);
         Log::write('debug', $shellCmd);
     }
-    
+
    //POCOR-7558 start
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
@@ -257,7 +257,7 @@ class AlertsTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-    
+
     public function onUpdateFieldFrequency(Event $event, array $attr, $action)
     {
         $freqOptions=["Daily"=>"Daily",
@@ -270,7 +270,7 @@ class AlertsTable extends ControllerActionTable
         return $attr;
     }
     public function editBeforeAction(Event $event)
-    {   
+    {
         $this->field('name',['type' => 'readonly']);
         $this->field('frequency',['after' => 'name']);
         $this->field('last_run_date', ['visible' => false]);

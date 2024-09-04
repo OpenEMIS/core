@@ -399,35 +399,65 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
     //         });
     // };
 
+    //POCOR-8567[START] this function is commented becouse KdSessionSvc.read('Auth.User.id') is not working due to version dependencies 
+
+    // function getCurrentUser() {
+    //     var deferred = $q.defer();
+    //     KdSessionSvc.read('Auth.User.id')
+    //         .then(function(response) {
+    //             // var staffId = response; // need to check why its not getting value from SessionController
+
+    //             var staffId = localStorage.getItem("login_user_id");
+    //             return StaffUserTable
+    //                 .get(staffId)
+    //                 .ajax({
+    //                     defer: true
+    //                 });
+
+    //         }, function(error) {
+    //             console.log(error);
+    //             deferred.reject(error);
+    //         })
+    //         // get staff data
+    //         .then(function(response) {
+    //             staffData = response.data;
+    //             deferred.resolve(staffData);
+
+    //         }, function(error) {
+    //             console.log(error);
+    //             deferred.reject(error);
+    //         });
+
+    //     return deferred.promise;
+    // };
+
     function getCurrentUser() {
         var deferred = $q.defer();
-        KdSessionSvc.read('Auth.User.id')
-            .then(function(response) {
-                // var staffId = response; // need to check why its not getting value from SessionController
-
-                var staffId = localStorage.getItem("login_user_id");
-                return StaffUserTable
-                    .get(staffId)
-                    .ajax({
-                        defer: true
-                    });
-
-            }, function(error) {
-                console.log(error);
-                deferred.reject(error);
-            })
-            // get staff data
-            .then(function(response) {
-                staffData = response.data;
-                deferred.resolve(staffData);
-
-            }, function(error) {
-                console.log(error);
-                deferred.reject(error);
-            });
-
+    
+        // Get staffId directly from localStorage
+        var staffId = localStorage.getItem("login_user_id");
+    
+        if (staffId) {
+            StaffUserTable
+                .get(staffId)
+                .ajax({ defer: true })
+                .then(function(response) {
+                    var staffData = response.data;
+                    deferred.resolve(staffData);
+                }, function(error) {
+                    console.log(error);
+                    deferred.reject(error);
+                });
+        } else {
+            // Handle the case where staffId is not available in localStorage
+            var errorMessage = "User ID not found in localStorage.";
+            console.log(errorMessage);
+            deferred.reject(errorMessage);
+        }
+    
         return deferred.promise;
     };
+    //POCOR-8567[END]
 
     function getColumnDefs(action, tab, currentUserName, _comments, commentCodeOptions, _commentTextEditor) {
         var deferred = $q.defer();

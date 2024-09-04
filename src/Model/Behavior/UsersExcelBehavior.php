@@ -44,7 +44,7 @@ class UsersExcelBehavior extends Behavior
     public function initialize(array $config): void
     {
         $this->getConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
-        if (!array_key_exists('filename', $config)) {
+        if (!isset($config['filename'])) {
             $this->getConfig('filename', $this->_table->getAlias());
         }
         $folder = WWW_ROOT . $this->getConfig('folder');
@@ -54,7 +54,7 @@ class UsersExcelBehavior extends Behavior
             mkdir($folder, 0777);
         } else {
             // $delete = true;
-            // if (array_key_exists('delete', $settings) &&  $settings['delete'] == false) {
+            // if (isset($settings['delete']) &&  $settings['delete'] == false) {
             //  $delete = false;
             // }
             // if ($delete) {
@@ -148,12 +148,12 @@ class UsersExcelBehavior extends Behavior
                                 'id' => $StudentCustomFields->aliasField('id'),
                                 'student_custom' => $StudentCustomFields->aliasField('name'),
                     ])->toArray();
-        
+
         $labelArray3 = [];
         foreach ($customFields as $key => $value) {
             $labelArray3[] = $value->student_custom;
         }
-        
+
         $labelArray = array("openEMIS_ID","first_name","middle_name","third_name","last_name","preferred_name","gender","date_of_birth","address","address_area","birth_area","nationality_name","identity_type","identity_number","email","postal_Code","user_type","username");
 
         $labelArray2 = array("staff_association_ID");
@@ -163,14 +163,14 @@ class UsersExcelBehavior extends Behavior
                 $headerRow[] = $this->getFields($this->_table, $settings, $label);
             }
         }
-        
+
         if ($userType == 'Staff') {
            $labelArray1 = array_merge($labelArray,$labelArray2);
                foreach($labelArray1 as $label) {
                     $headerRow[] = $this->getFields($this->_table, $settings, $label);
             }
         }
-        
+
         if ($userType == 'Student') {
            $labelArray4 = array_merge($labelArray,$labelArray3);
                 foreach($labelArray4 as $label) {
@@ -179,7 +179,7 @@ class UsersExcelBehavior extends Behavior
         }
 
         $data = $this->getData($settings);
-       
+
         $writer->writeSheetRow('UserList', $headerRow);
         foreach($data as $row) {
             if(array_filter($row)) {
@@ -268,12 +268,12 @@ class UsersExcelBehavior extends Behavior
                     if ($userType ==  'Others') {
                         $userList
                              ->where([$Users->aliasField('is_staff') => 0]);
-                    } 
+                    }
 
                     if ($userType == 'Guardian') {
-                        $userList 
+                        $userList
                             ->where([$Users->aliasField('is_guardian') => 1]);
-                    } 
+                    }
 
                     if ($userType == 'Staff') {
                         $StaffCustomFieldValues = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFieldValues');
@@ -340,7 +340,7 @@ class UsersExcelBehavior extends Behavior
                                     ])
                                     ->where([$StudentCustomFieldValues->aliasField('student_id =') => $value->id])
                                     ->toArray();
-                                    
+
                                     foreach ($customFieldData as $customField) {
                                         $result[$key][] = $customField->text_value;
                                     }
@@ -465,7 +465,7 @@ class UsersExcelBehavior extends Behavior
         $language = I18n::getLocale();
         $module = $this->_table->getAlias();
         //echo '<pre>';print_r($module);
-        
+
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGetLabel'), 'onExcelGetLabel', [$module, 'postal_code', $language], true);
         return $event;
     }

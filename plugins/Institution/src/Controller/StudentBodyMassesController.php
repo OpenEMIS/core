@@ -6,7 +6,7 @@ use Profile\Controller\BodyMassesController as BaseController;
 
 class StudentBodyMassesController extends BaseController
 {
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         $page = $this->Page;
         $session = $this->request->session();
@@ -43,7 +43,7 @@ class StudentBodyMassesController extends BaseController
         ]);
 
         $page->get('security_user_id')->setControlType('hidden')->setValue($studentId); // set value and hide the student_id
-    
+
         $this->setTooltip();
     }
 

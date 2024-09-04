@@ -107,7 +107,7 @@ class AppTable extends Table
             if ($schema->getColumnType($column) == 'date') {
                 $attr = $schema->getColumn($column);
                 // check if is nullable
-                if (array_key_exists('null', $attr) && $attr['null'] === true) {
+                if (isset($attr['null']) && $attr['null'] === true) {
                     $validator->allowEmptyString($column);
                 }
             }
@@ -162,7 +162,7 @@ class AppTable extends Table
         if (in_array('visible', $columns)) {
             $query->find('visible');
         }
-        
+
         return $query;
     }
 
@@ -281,10 +281,10 @@ class AppTable extends Table
                     ->first();
             if ($field == 'openemis_no' && !empty($fieldLabel['name'])) {
                  return $fieldLabel['name'];
-                 
+
             } else if ($field == 'openemis_no') {
                 return self::OpenEMIS;
-                
+
     		} else if ($field == 'fax' && !empty($fieldLabel['name'])) {
     		    return $fieldLabel['name'];
             }
@@ -296,7 +296,7 @@ class AppTable extends Table
     {
         $Labels = TableRegistry::getTableLocator()->get('Labels');
         $label = $Labels->getLabel($module, $field, $language);
-        
+
         if (!$label || $label == "" || $label == false ) { //POCOR-8074-6
             if($field != null){
                 $label = Inflector::humanize($field);
@@ -307,7 +307,7 @@ class AppTable extends Table
             }
             $label = __($label);
         }
-        
+
         if (substr($label, -1) == ')') {
             $label = $label.' ';
         }
@@ -335,7 +335,7 @@ class AppTable extends Table
     {
 
         // echo '<pre>';
-        // print_r($this->request->params); 
+        // print_r($this->request->params);
         // echo $this->request->url;
         // die;
         // needs clean up
@@ -438,7 +438,7 @@ class AppTable extends Table
                 }
             }
         }
-        
+
         // Start POCOR-5188
         if(($this->request->getParam('plugin') == 'Report' && $this->request->getParam('controller') == 'Reports' && $this->request->url == 'Reports/Directory')){
             $is_manual_exist = $this->getManualUrl('Reports','Directory');
@@ -789,7 +789,7 @@ class AppTable extends Table
 
         if(($this->request->getParam('plugin') == 'Directory' && $this->request->getParam('controller') == 'Directories' && !empty($parsedURL) && $parsedURL[2] == 'Accounts')){
             $is_manual_exist = $this->getManualUrl('Directory','Accounts','General');
-            if(!empty($is_manual_exist)){ 
+            if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
@@ -952,13 +952,13 @@ class AppTable extends Table
     {
         $id = $this->getEncodedKeys($entity);
 
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             $buttons['view']['url'][] = $id;
         }
-        if (array_key_exists('edit', $buttons)) {
+        if (isset($buttons['edit'])) {
             $buttons['edit']['url'][] = $id;
         }
-        if (array_key_exists('remove', $buttons)) {
+        if (isset($buttons['remove'])) {
             if (in_array($buttons['remove']['strategy'], ['cascade'])) {
                 $buttons['remove']['attr']['data-toggle'] = 'modal';
                 $buttons['remove']['attr']['data-target'] = '#delete-modal';
@@ -993,7 +993,7 @@ class AppTable extends Table
         $selectedId = null;
         if ($request->getData($this->aliasField($key))) {
             $selectedId = $request->getData($this->aliasField($key));
-            
+
         }
         return $selectedId;
     }

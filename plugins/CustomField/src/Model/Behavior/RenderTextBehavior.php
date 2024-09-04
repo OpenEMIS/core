@@ -37,7 +37,7 @@ class RenderTextBehavior extends RenderBehavior {
                 // url
                 if ($customField->has('params') && !empty($customField->params)) {
                     $params = json_decode($customField->params, true);
-                    if (array_key_exists('url', $params)) {
+                    if (isset($params['url'])) {
                         $value = $event->getSubject()->Html->link($savedValue, $savedValue, ['target' => '_blank', 'escape' => false]);
                     }
                 }
@@ -55,7 +55,7 @@ class RenderTextBehavior extends RenderBehavior {
             // input mask
             if ($customField->has('params') && !empty($customField->params)) {
                 $params = json_decode($customField->params, true);
-                if (array_key_exists('input_mask', $params) && !empty($params['input_mask'])) {
+                if (isset($params['input_mask']) && !empty($params['input_mask'])) {
                     $HtmlField = $event->getSubject();
                     $HtmlField->includes['jasny']['include'] = true;
                     $options['data-mask'] = $params['input_mask'];

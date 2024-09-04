@@ -377,7 +377,7 @@ class WorkflowCaseBehavior extends Behavior
             $value = '<span>&lt;'.$model->getMessage('general.unassigned').'&gt;</span>';
         }elseif($entity->assignee_id == -1){ //POCOR-7025
             $value = _('Auto Assign');
-        }elseif(!empty($entity->assignee_id)) {//POCOR-7668 
+        }elseif(!empty($entity->assignee_id)) {//POCOR-7668
             $value= $entity->assignee_id;
         }
 
@@ -467,7 +467,7 @@ class WorkflowCaseBehavior extends Behavior
             $this->workflowIds = $results->toArray();
             $this->hasWorkflow = true;
             $this->controller->Workflow->hasWorkflow = $this->hasWorkflow;
-            
+
             if ($this->isCAv4()) {
                 $extra = func_get_arg(1);
                 $elements = $extra['elements'];
@@ -557,7 +557,7 @@ class WorkflowCaseBehavior extends Behavior
                 $areaOptions = $Areas
                             ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
                             ->order([$Areas->aliasField('order')]);
-                $areaOptions = ['-1' => '-- ' . __('All Areas') . ' --'] + $areaOptions->toArray();            
+                $areaOptions = ['-1' => '-- ' . __('All Areas') . ' --'] + $areaOptions->toArray();
                 */
                 if (in_array($registryAlias, ['Training.TrainingSessions','Training.TrainingSessionResults'])) {
                     if($selectedLevel != -1){
@@ -582,7 +582,7 @@ class WorkflowCaseBehavior extends Behavior
                 $periodsOptions = $AcademicPeriods
                             ->find('list', ['keyField' => 'start_year', 'valueField' => 'start_year'])
                             ->order([$AcademicPeriods->aliasField('start_year') => 'DESC']);
-                $periodsOptions = ['-1' => '-- ' . __('Select Period') . ' --'] + $periodsOptions->toArray();            
+                $periodsOptions = ['-1' => '-- ' . __('Select Period') . ' --'] + $periodsOptions->toArray();
                 $selectedPeriods = $this->_table->queryString('period', $periodsOptions);
                 $this->_table->advancedSelectOptions($periodsOptions, $selectedPeriods);
                 $this->_table->controller->set(compact('periodsOptions','selectedPeriods'));
@@ -592,7 +592,7 @@ class WorkflowCaseBehavior extends Behavior
             if ($filterConfig['month']) {
                 // Month Options
                 $monthOptions = ['1'=> '1', '2'=> '2','3'=> '3','4'=> '4', '5'=> '5', '6'=> '6','7'=> '7','8'=> '8','9'=> '9','10'=> '10', '11'=>'11', '12'=> '12'];
-                $monthOptions = ['-1' => '-- ' . __('Select Month') . ' --'] + $monthOptions;            
+                $monthOptions = ['-1' => '-- ' . __('Select Month') . ' --'] + $monthOptions;
                 $selectedMonth = $this->_table->queryString('month', $monthOptions);
                 $this->_table->advancedSelectOptions($monthOptions, $selectedMonth);
                 $this->_table->controller->set(compact('monthOptions','selectedMonth'));
@@ -634,7 +634,7 @@ class WorkflowCaseBehavior extends Behavior
                     });
             }
         }
-        
+
         //POCOR-5695 starts
         if(($this->_table->getAlias() == 'Results') || ($this->_table->getAlias() == 'Sessions')){
             $TrainingSessions = TableRegistry::getTableLocator()->get('Training.TrainingSessions');
@@ -649,13 +649,13 @@ class WorkflowCaseBehavior extends Behavior
             if ($filterConfig['area']) {
                 $selectedArea = $this->_table->ControllerAction->getVar('selectedArea');
                 if (!is_null($selectedArea) && $selectedArea != -1) {
-                    $areaIds= []; 
+                    $areaIds= [];
                     $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
                     $AreasOptions = $Areas
                                     ->find()
                                     ->where([$Areas->aliasField('parent_id') => $selectedArea])
-                                    ->all();    
-                    $areaIds[] =  $selectedArea;              
+                                    ->all();
+                    $areaIds[] =  $selectedArea;
                     if(!empty($AreasOptions)){
                         foreach ($AreasOptions as $AreasOption) {
                             $areaIds[] = $AreasOption->id;
@@ -671,7 +671,7 @@ class WorkflowCaseBehavior extends Behavior
                             }
                         }
                     }
-                    $selectedArea = $areaIds;      
+                    $selectedArea = $areaIds;
                     if($this->_table->getAlias() == 'Results'){
                         $query->where([$TrainingSessions->aliasField('area_id IN') => $selectedArea]);
                     }else{
@@ -679,19 +679,19 @@ class WorkflowCaseBehavior extends Behavior
                     }
                 }
             }
-            if ($filterConfig['period'] && $filterConfig['month']) { 
+            if ($filterConfig['period'] && $filterConfig['month']) {
                 $selectedPeriods = $this->_table->ControllerAction->getVar('selectedPeriods');
                 $selectedMonth = $this->_table->ControllerAction->getVar('selectedMonth');
                 $checkFlag = 0;
                 if ((!is_null($selectedPeriods) && $selectedPeriods != -1) && ($selectedMonth == -1)) {
                     $compare_start_date = $selectedPeriods .'-01-01';
-                    $compare_end_date = $selectedPeriods .'-12-31';   
+                    $compare_end_date = $selectedPeriods .'-12-31';
                     $checkFlag =1;
                 }else if ((!is_null($selectedPeriods) && $selectedPeriods != -1) && (!is_null($selectedMonth) && $selectedMonth != -1)) {
 
                     $cal_date_in_month = cal_days_in_month(CAL_GREGORIAN, $selectedMonth, $selectedPeriods); //calcualte days in given month in given year
                     $compare_start_date = $selectedPeriods .'-'. $selectedMonth.'-'.'01';
-                    $compare_end_date = $selectedPeriods .'-'. $selectedMonth.'-'.$cal_date_in_month;   
+                    $compare_end_date = $selectedPeriods .'-'. $selectedMonth.'-'.$cal_date_in_month;
                     $checkFlag =1;
                 }
                 if($checkFlag == 1){
@@ -733,13 +733,13 @@ class WorkflowCaseBehavior extends Behavior
             if ($filterConfig['area']) {
                 $selectedArea = $this->_table->ControllerAction->getVar('selectedArea');
                 if (!is_null($selectedArea) && $selectedArea != -1) {
-                    $areaIds= []; 
+                    $areaIds= [];
                     $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
                     $AreasOptions = $Areas
                                     ->find()
                                     ->where([$Areas->aliasField('parent_id') => $selectedArea])
-                                    ->all();    
-                    $areaIds[] =  $selectedArea;              
+                                    ->all();
+                    $areaIds[] =  $selectedArea;
                     if(!empty($AreasOptions)){
                         foreach ($AreasOptions as $AreasOption) {
                             $areaIds[] = $AreasOption->id;
@@ -755,7 +755,7 @@ class WorkflowCaseBehavior extends Behavior
                             }
                         }
                     }
-                    $selectedArea = $areaIds;      
+                    $selectedArea = $areaIds;
                     if($this->_table->getAlias() == 'Results'){
                         $query->where([$TrainingSessions->aliasField('area_id IN') => $selectedArea]);
                     }else{
@@ -763,19 +763,19 @@ class WorkflowCaseBehavior extends Behavior
                     }
                 }
             }
-            if ($filterConfig['period'] && $filterConfig['month']) { 
+            if ($filterConfig['period'] && $filterConfig['month']) {
                 $selectedPeriods = $this->_table->ControllerAction->getVar('selectedPeriods');
                 $selectedMonth = $this->_table->ControllerAction->getVar('selectedMonth');
                 $checkFlag = 0;
                 if ((!is_null($selectedPeriods) && $selectedPeriods != -1) && ($selectedMonth == -1)) {
                     $compare_start_date = $selectedPeriods .'-01-01';
-                    $compare_end_date = $selectedPeriods .'-12-31';   
+                    $compare_end_date = $selectedPeriods .'-12-31';
                     $checkFlag =1;
                 }else if ((!is_null($selectedPeriods) && $selectedPeriods != -1) && (!is_null($selectedMonth) && $selectedMonth != -1)) {
 
                     $cal_date_in_month = cal_days_in_month(CAL_GREGORIAN, $selectedMonth, $selectedPeriods); //calcualte days in given month in given year
                     $compare_start_date = $selectedPeriods .'-'. $selectedMonth.'-'.'01';
-                    $compare_end_date = $selectedPeriods .'-'. $selectedMonth.'-'.$cal_date_in_month;   
+                    $compare_end_date = $selectedPeriods .'-'. $selectedMonth.'-'.$cal_date_in_month;
                     $checkFlag =1;
                 }
                 if($checkFlag == 1){
@@ -940,12 +940,12 @@ class WorkflowCaseBehavior extends Behavior
                                     'parent_case_id' => $entity->id
                                 ])
                                 ->toArray();
-                
+
                 foreach($LInkRecords as $k=> $LInkRecords1){
                     $LInkRecords11[$k]['case_number'] = $LInkRecords1->case_number;
                     $LInkRecords11[$k]['title'] = $LInkRecords1->title;
                     $LInkRecords11[$k]['status'] =$LInkRecords1->status;
-                }               
+                }
 
                 $ControllerAction->field('workflow_transitions', [
                     'type' => 'element',
@@ -1189,11 +1189,11 @@ class WorkflowCaseBehavior extends Behavior
                     $isDeletable = $workflowStep->is_removable == 1 ? true : false;
                 }
 
-                if (array_key_exists('edit', $buttons) && !$isEditable) {
+                if (isset($buttons['edit']) && !$isEditable) {
                     unset($buttons['edit']);
                 }
 
-                if (array_key_exists('remove', $buttons) && !$isDeletable) {
+                if (isset($buttons['remove']) && !$isDeletable) {
                     unset($buttons['remove']);
                 }
 
@@ -1262,8 +1262,8 @@ class WorkflowCaseBehavior extends Behavior
                 $attr['type'] = 'readonly';
                 $attr['value'] = $userEntity->id;
                 $attr['attr']['value'] = $userEntity->name_with_id;
-                
-            } 
+
+            }
             else if($request->getData('StaffPositionProfiles')['staff_change_type_id'] == 1 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 2 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 3 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 4){
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
@@ -1287,7 +1287,7 @@ class WorkflowCaseBehavior extends Behavior
             else {
                 $attr['type'] = 'hidden';
             }
-        } 
+        }
         //For allow to change assignee on edit(POCOR-7613 start)
         // elseif ($action == 'edit') {
         //     $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
@@ -1309,7 +1309,7 @@ class WorkflowCaseBehavior extends Behavior
         // } elseif ($action == 'approve') {
         //     $attr['type'] = 'hidden';
         // }
-         //POCOR-7613 end 
+         //POCOR-7613 end
         return $attr;
     }
 
@@ -1777,7 +1777,7 @@ class WorkflowCaseBehavior extends Behavior
                         'type' => 'hidden',
                         'value' => $entity->created_user_id
                 ],
-                
+
             ];
         $buttons = [
             '<button id="reassign-submit" type="submit" class="btn btn-default" >' . __('Save') . '</button>'
@@ -1789,7 +1789,7 @@ class WorkflowCaseBehavior extends Behavior
                     'rows'=>10,
                     'style'=>'height:200px',
                     'class' => 'workflow-reassign-comment'
-                   
+
                 ]
             ]);
 
@@ -1842,14 +1842,14 @@ class WorkflowCaseBehavior extends Behavior
             ];
 
             $contentFields = new ArrayObject([
-               
+
                 'case_id' => [
                     'label' => __('Case Number'),
                     'type' => 'select',
                     'class'=> 'workflow-case-link',
                     'link-url' => $caseUrl
                 ]
-                
+
             ]);
 
             // $model->dispatchEvent('Workflow.addCustomModalFields', [$entity, $contentFields, $alias], $this);
@@ -2171,7 +2171,7 @@ class WorkflowCaseBehavior extends Behavior
             } elseif ($action == 'view') {
                 //POCOR-7613 start
                 if($this->_table->request->getParam('controller')=="Profiles"&& $this->_table->request->getParam('action')=="Cases"){
-                            if(isset($_SESSION['Permissions']['Profiles']['Cases']['view']) && isset($_SESSION['Permissions']['Profiles']['Cases']['add'])){
+                        //if(isset($_SESSION['Permissions']['Profiles']['Cases']['view']) && isset($_SESSION['Permissions']['Profiles']['Cases']['add'])){ //POCOR-8155
                             unset($toolbarButtons['list']);
                             $addButtonAttr = [
                                 'escapeTitle' => false,
@@ -2199,13 +2199,35 @@ class WorkflowCaseBehavior extends Behavior
 
                                     $this->_table->controller->set('modals', $modals);
                                 }
-                            }}
-            }        
+                            }
+                            // POCOR-8155 Start
+                            $model = $this->_table;
+                            if (!$model->AccessControl->isAdmin()) {
+                                $workflowStep = $this->getWorkflowStep($entity);
+                                $isEditable = false;
+                                $isDeletable = false;
+                                if (!empty($workflowStep)) {
+                                    $isEditable = $workflowStep->is_editable == 1 ? true : false;
+                                    $isDeletable = $workflowStep->is_removable == 1 ? true : false;
+                                }
+                                if (isset($toolbarButtons['add']) && !$isEditable) {
+                                    unset($toolbarButtons['add']);
+                                }
+                                if (isset($toolbarButtons['edit']) && !$isEditable) {
+                                    unset($toolbarButtons['edit']);
+                                }
+                                
+                                if (isset($toolbarButtons['remove']) && !$isDeletable) {
+                                    unset($toolbarButtons['remove']);
+                                }
+                            } // POCOR-8155 Start
+                        //}
+            }
                 //POCOR-7613 end
 	        else{
                 $isEditable = false;
                 $isDeletable = false;
-                
+
                 $entity = $this->getRecord();
                 $workflowStep = $this->getWorkflowStep($entity);
                 //echo "<pre>";print_r($workflowStep);die;
@@ -2248,7 +2270,7 @@ class WorkflowCaseBehavior extends Behavior
                                 'is_school_based' => $isSchoolBased,
                                 'auto_assign_assignee' => 0,
                                 'case_id' => $entity->id,
-                                
+
                             ];
 
                             $json1 = json_encode($caseJsonObject, JSON_NUMERIC_CHECK);
@@ -2324,11 +2346,11 @@ class WorkflowCaseBehavior extends Behavior
                                 $getVarModel1 = $this->_table->controller->viewBuilder()->getVars()['modals'];
                                 if (!isset($getVarModel1)) {
                                     $this->_table->controller->set('modals', ['workflowCaseLinks' => $modal1]);
-                                    
+
                                 } else {
                                     $modals = array_merge($this->_table->controller->viewBuilder()->getVars()['modals'], ['workflowCaseLinks' => $modal1]);
-                                    
-                                    
+
+
                                     $this->_table->controller->set('modals', $modals);
                                 }
                             }
@@ -2338,7 +2360,7 @@ class WorkflowCaseBehavior extends Behavior
                                 $getVarModel2 = $this->_table->controller->viewBuilder()->getVars()['modals'];
                                 if (!isset($getVarModel2)) {
                                     $this->_table->controller->set('modals', ['workflowComment' => $modal2]);
-                                    
+
                                 } else {
                                     $modals = array_merge($this->_table->controller->viewBuilder()->getVars()['modals'], ['workflowComment' => $modal2]);
                                     $this->_table->controller->set('modals', $modals);
@@ -2414,7 +2436,7 @@ class WorkflowCaseBehavior extends Behavior
                             $buttonAttr = array_merge($attr, $buttonAttr);
 
                             if (is_null($actionType)) {
-                                if (array_key_exists('class', $buttonAttr)) {
+                                if (isset($buttonAttr['class'])) {
                                     unset($buttonAttr['class']);
                                 }
 
@@ -2511,7 +2533,7 @@ class WorkflowCaseBehavior extends Behavior
             }
         }
         }
-     
+
     }
 
     public function setAssigneeAsCreator(Entity $entity)
@@ -2667,7 +2689,7 @@ class WorkflowCaseBehavior extends Behavior
                 $model->save($entity);
             }
             //POCOR-5677 & POCOR-6028 ends
-        
+
     }
 
     public function deleteWorkflowTransitions(Entity $entity)
@@ -2700,7 +2722,7 @@ class WorkflowCaseBehavior extends Behavior
         else{
             $id = $requestData['WorkflowTransitions']['model_reference']; //POCOR-6588
             $entity = $model->get($id);
-            $this->setStatusId($entity, $requestData);            
+            $this->setStatusId($entity, $requestData);
         }
         //End POCOR-6722
 
@@ -2708,7 +2730,7 @@ class WorkflowCaseBehavior extends Behavior
         $entity = $model->find()->where([$model->aliasField('id') => $id])->first();
         $this->setAssigneeId($entity, $requestData);
     }
-    
+
 
     public function processWorkflow()
     {
@@ -2744,7 +2766,7 @@ class WorkflowCaseBehavior extends Behavior
                                         $WorkflowStepsTable->aliasField('name') => 'Withdrawn'
                                     ])
                                     ->first();
-                
+
                 if($entity->workflow_step_id == $WithdrawStudents->id){
                     //get user's data from `institution_student_withdraw` table
                     $StudentWithdrawTable = TableRegistry::getTableLocator()->get('Institution.StudentWithdraw');
@@ -2783,7 +2805,7 @@ class WorkflowCaseBehavior extends Behavior
                                     $SecurityGroupUsersTable->deleteAll(['id' => $id ]);
                             }
                         }
-                    }                    
+                    }
                 }//POCOR-6500 ends
 
 
@@ -2851,7 +2873,7 @@ class WorkflowCaseBehavior extends Behavior
     }
 
     public function processReassign()
-    { 
+    {
         $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
         $request = $model->controller->getRequest();
 
@@ -2883,7 +2905,7 @@ class WorkflowCaseBehavior extends Behavior
     }
 
     public function processComment()
-    { 
+    {
         $model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
         $request = $model->controller->getRequest();
 

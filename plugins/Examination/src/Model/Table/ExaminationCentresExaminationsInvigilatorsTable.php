@@ -92,7 +92,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         $this->setFieldOrder(['openemis_no', 'invigilator_id', 'examination_id', 'rooms']);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Exam Centre Invigilators','Examinations');       
+		$is_manual_exist = $this->getManualUrl('Administration','Exam Centre Invigilators','Examinations');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -441,7 +441,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         }
 
         if ($data->offsetExists($alias)) {
-            if (array_key_exists('invigilator_id', $data[$alias]) && !empty($data[$alias]['invigilator_id'])) {
+            if (isset($data[$alias]['invigilator_id']) && !empty($data[$alias]['invigilator_id'])) {
                 $id = $data[$alias]['invigilator_id'];
 
                 try {

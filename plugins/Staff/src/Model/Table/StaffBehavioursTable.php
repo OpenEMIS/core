@@ -53,7 +53,7 @@ class StaffBehavioursTable extends ControllerActionTable
 
         // Start POCOR-5188
 		if($this->request->getParam('controller') == 'Staff'){
-			$is_manual_exist = $this->getManualUrl('Institutions','Behaviour','Staff - Career');       
+			$is_manual_exist = $this->getManualUrl('Institutions','Behaviour','Staff - Career');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -62,7 +62,7 @@ class StaffBehavioursTable extends ControllerActionTable
 					'escape' => false,
 					'target'=>'_blank'
 				];
-		
+
 				$helpBtn['url'] = $is_manual_exist['url'];
 				$helpBtn['type'] = 'button';
 				$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -70,8 +70,8 @@ class StaffBehavioursTable extends ControllerActionTable
 				$helpBtn['attr']['title'] = __('Help');
 				$extra['toolbarButtons']['help'] = $helpBtn;
 			}
-		}elseif($this->request->getParam('controller') == 'Directories'){ 
-			$is_manual_exist = $this->getManualUrl('Directory','Behaviours','Staff - Career');       
+		}elseif($this->request->getParam('controller') == 'Directories'){
+			$is_manual_exist = $this->getManualUrl('Directory','Behaviours','Staff - Career');
 			if(!empty($is_manual_exist)){
 				$btnAttr = [
 					'class' => 'btn btn-xs btn-default icon-big',
@@ -97,7 +97,7 @@ class StaffBehavioursTable extends ControllerActionTable
     {
         parent::onUpdateActionButtons($event, $entity, $buttons);
 
-        if (array_key_exists('view', $buttons)) {
+        if (isset($buttons['view'])) {
             $url = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',

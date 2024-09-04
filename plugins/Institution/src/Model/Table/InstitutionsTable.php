@@ -196,7 +196,8 @@ class InstitutionsTable extends ControllerActionTable
         // POCOR-8219 added
         $advancedSearchFieldOrder = [
             'code', 'name', 'classification', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id',
-            'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'education_programmes', 'alternative_name', 'shift_type'
+            'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id',
+            'education_systems', 'education_levels', 'education_programmes', 'alternative_name', 'shift_type'
         ];
 
         $this->addBehavior('AdvanceSearch', [
@@ -311,11 +312,21 @@ class InstitutionsTable extends ControllerActionTable
                     'rule' => ['range', 1, 2],
                 ]
             ])
-            // ->add('address', 'ruleMaximum255', [
-            //      'rule' => ['maxLength', 255],
-            //      'message' => 'Maximum allowable character is 255',
-            //      'last' => true
-            //  ])
+            ->notEmpty('address')
+            ->add('address', 'ruleMaximum255', [
+                 'rule' => ['maxLength', 255],
+                 'message' => 'Maximum allowable character is 255',
+                 'last' => true
+             ])
+             ->add('address', [
+                'custom' => [
+                    'rule' => function ($value, $context) {
+                        // Regular expression to allow letters, numbers, spaces, commas, periods, hyphens, and apostrophes
+                        return (bool)preg_match('/^[a-zA-Z0-9\s,.\'-]+$/', $value);
+                    },
+                    'message' => __('The institution address cannot contain special characters.'),
+                ]
+            ])
 
             ->add('code', 'ruleCustomCode', [
                 'rule' => ['validateCustomPattern', 'institution_code'],
