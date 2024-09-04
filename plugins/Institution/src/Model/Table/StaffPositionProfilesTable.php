@@ -357,8 +357,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
         $StaffChangeTypesDataForShift = $StaffChangeTypes->find()
                         ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
                         ->first();
+        //POCOR-8447 Start This code write in editAfterAction function
         //POCOR 7289 tables updation start for homeroom
-        if ($entity->staff_change_type_id == 6) {
+        /*if ($entity->staff_change_type_id == 6) {
             $InstitutionStaff = TableRegistry::get('Institution.Staff');
             $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
             $SecurityGroups = TableRegistry::get('Security.SecurityGroups');
@@ -409,7 +410,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     ])->first();
                 if (!isset($id)) {
 
-                    $user = $SecurityGroupUsers->newEntity();
+                    $user = $SecurityGroupUsers->newEntity([]);
                     $user->id = Text::uuid();
                     $user->security_user_id = $entity->staff_id;
                     $user->security_group_id = $entity->security_group_id;
@@ -442,8 +443,9 @@ class StaffPositionProfilesTable extends ControllerActionTable
             //echo "<pre>"; print_r($url);die;
             //return $this->controller->redirect($url);
             return false;
-        }
+        }*/
         //POCOR-7289 ends
+        //POCOR-8447 END
 
         //POCOR-6979
 
@@ -528,7 +530,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
                         ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
                         ->first();
                 //POCOR-7006
-            if($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT'){
+            //POCOR-8447 Start This code write in editAfterAction function
+            /*if($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT'){
                 //End of POCOR-7006
                 $StaffChangeTypes = TableRegistry::get('Staff.StaffChangeTypes');
                 $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -537,7 +540,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                 $ShiftOptions = TableRegistry::get('Institution.ShiftOptions');
                 $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
                 $periodId = $AcademicPeriods->getCurrent();
-                if(!empty( $entity->new_shift)){ //POCOR-7109
+                if(!empty($entity->new_shift)){ //POCOR-7109
                     $shiftUpdate =   $InstitutionPositions->updateAll(
                                 ['shift_id' => $entity->new_shift,'modified_user_id' => 1,'modified' => new Time('NOW')],    //field
                                 [
@@ -560,7 +563,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     //return $this->controller->redirect($url);
                 }
                 //POCOR-6979[START]
-            }
+            }*/
+            // Pocor-8447 End
         }
         /**POCOR-6928 ends*/    
     }
@@ -648,6 +652,99 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     ->where([$StaffChangeTypes->aliasField('id') => $entity->staff_change_type_id])
                     ->first();
             if($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT' || $StaffChangeTypesDataForShift->code == 'HOMEROOM_TEACHER'){
+                if($StaffChangeTypesDataForShift->code == 'CHANGE_OF_SHIFT' && !empty($entity->new_shift)) {
+                    $InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+                    $shiftUpdate =   $InstitutionPositions->updateAll(
+                        ['shift_id' => $entity->new_shift,'modified_user_id' => 1,'modified' => new Time('NOW')],    //field
+                        [
+                         'id' => $entity->institution_position_id, //condition update
+                        ]
+                    );
+                    $StaffChangeTypesData = $StaffChangeTypes->find()
+                        ->where([$StaffChangeTypes->aliasField('id') => $this->request->getData()['StaffPositionProfiles']['staff_change_type_id']])
+                        ->first();
+                    if($StaffChangeTypesData['code'] != 'END_OF_ASSIGNMENT'){
+                        $event->stopPropagation();
+                    }
+                }
+                //POCOR 7289 tables updation start for homeroom
+                if ($entity->staff_change_type_id == 6) {
+                    $InstitutionStaff = TableRegistry::get('Institution.Staff');
+                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+                    $SecurityGroups = TableRegistry::get('Security.SecurityGroups');
+                    $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+                    $SecurityGroupInstitutionData = $SecurityGroupInstitutions->find()
+                        ->select(["security_group_id" => $SecurityGroups->aliasField('id')])
+                        ->innerJoin(
+                            [$SecurityGroups->getAlias() => $SecurityGroups->getTable()],
+                            [
+                                $SecurityGroups->aliasField('id=') . $SecurityGroupInstitutions->aliasField('security_group_id')
+                            ]
+                        )
+                        ->where([$SecurityGroupInstitutions->aliasField('institution_id') => $entity->institution_id])
+                        ->first();
+                    $entity->security_group_id = $SecurityGroupInstitutionData->security_group_id;
+                    //No homeroom teacher
+                    if ($entity->homeroom_teacher == 0) {
+                        $count = $InstitutionStaff->find()
+                            ->where([
+                                "institution_id" => $entity->institution_id,
+                                "staff_id" => $entity->staff_id,
+                                "is_homeroom" => 1,
+                                "staff_status_id" => 1,
+                                "id !=" => $entity->institution_staff_id
+
+                            ])->count();
+
+                        if ($count == 0) {
+
+                            $securityGroupEntry = $SecurityGroupUsers->find()
+                                ->where([
+                                    'security_user_id' => $entity->staff_id,
+                                    'security_group_id' => $entity->security_group_id,
+                                    'security_role_id' => 5
+                                ])->first();
+                            if (isset($securityGroupEntry)) {
+                                $SecurityGroupUsers->delete($securityGroupEntry);
+                            }
+                        }
+                    }
+                    // Homeroom Teacher
+                    if ($entity->homeroom_teacher == 1) {
+                        $id = $SecurityGroupUsers->find()
+                            ->where([
+                                'security_user_id' => $entity->staff_id,
+                                'security_group_id' =>  $entity->security_group_id,
+                                'security_role_id' => 5
+                            ])->first();
+                        if (!isset($id)) {
+
+                            $user = $SecurityGroupUsers->newEntity([]);
+                            $user->id = Text::uuid();
+                            $user->security_user_id = $entity->staff_id;
+                            $user->security_group_id = $entity->security_group_id;
+                            $user->created_user_id = $entity->created_user_id;
+                            $user->security_role_id = 5;
+                            $user->created = $entity->created;
+                            $SecurityGroupUsers->save($user);
+                        }
+                    } 
+                    //Both case
+                    //$query=$InstitutionStaff->getQuery();
+                    $query = $InstitutionStaff->find();//POCOR-8447
+                    $query->update()
+                        ->set(['is_homeroom' => $entity->homeroom_teacher])
+                        ->where(['id' => $entity->institution_staff_id])
+                        ->execute();
+                    $StaffChangeTypesData = $StaffChangeTypes->find()
+                                    ->where([$StaffChangeTypes->aliasField('id') => $this->request->getData()['StaffPositionProfiles']['staff_change_type_id']])
+                                    ->first();
+
+                    if($StaffChangeTypesData['code'] != 'END_OF_ASSIGNMENT'){
+                        $event->stopPropagation();
+                    }
+                }
+                //POCOR-7289 ends
                 $institutionId = $this->getQueryString('institution_id');
                 $url = $this->url('view');
                 $url['action'] = 'Staff';
