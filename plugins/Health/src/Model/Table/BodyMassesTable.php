@@ -90,6 +90,14 @@ class BodyMassesTable extends ControllerActionTable
                 'validateDecimal' => [
                     'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
                 ],
+                'validateMinHeight' => [
+                    'rule' => ['validateMinHeightValue', 'StudentMinimumHeight'],
+                    'provider' => 'table'
+                ],
+                'validateMaxHeight' => [
+                    'rule' => ['validateMaxHeightValue', 'StudentMaximumHeight'],
+                    'provider' => 'table'
+                ],
             ])
             ->add('weight', [
                 'notZero' => [
@@ -102,6 +110,14 @@ class BodyMassesTable extends ControllerActionTable
                 ],
                 'validateDecimal' => [
                     'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
+                ],
+                'validateMinWeight' => [
+                    'rule' => ['validateMinWeightValue', 'StudentMinimumWeight'],
+                    'provider' => 'table'
+                ],
+                'validateMaxWeight' => [
+                    'rule' => ['validateMaxWeightValue', 'StudentMaximumWeight'],
+                    'provider' => 'table'
                 ],
             ])
             ->add('date', [

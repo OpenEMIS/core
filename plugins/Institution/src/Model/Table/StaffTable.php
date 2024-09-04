@@ -1394,7 +1394,9 @@ class StaffTable extends ControllerActionTable
         $securityGroupId = $this->Institutions->get($institutionId)->security_group_id;
 
         if (!$entity->isNew()) { // edit operation
-            if ($entity->has('newFTE')) {
+            if ($entity->has('newFTE')
+                && ($entity->FTE != $entity->newFTE) // POCOR-8532 avoid duplicates
+            ) {
                 unset($entity->id);
                 $entity->FTE = $entity->newFTE;
                 $entity->start_date = $entity->end_date;
@@ -1563,12 +1565,15 @@ class StaffTable extends ControllerActionTable
         }
         *///POCOR-7238 Starts
         $InstitutionStaffTbl = TableRegistry::get('Institution.InstitutionStaff');
-        $InstitutionStaffEntity = $InstitutionStaffTbl->find()
-            ->where([
-                $InstitutionStaffTbl->aliasField('security_group_user_id') => $securityGroupUserId
-            ])
-            ->enableHydration(false)
-            ->toArray();
+        $InstitutionStaffEntity = []; //
+        if ($securityGroupUserId) { //
+            $InstitutionStaffEntity = $InstitutionStaffTbl->find()
+                ->where([
+                    $InstitutionStaffTbl->aliasField('security_group_user_id') => $securityGroupUserId
+                ])
+                ->disableHydration()
+                ->toArray();
+        } //
         $countSecurityGroupUserId = [];
         $countIsHomeroom = [];
         foreach ($InstitutionStaffEntity as $skey => $sval) {
@@ -1589,7 +1594,9 @@ class StaffTable extends ControllerActionTable
                         $SecurityGroupUserTbl->aliasField('security_user_id') => $staffEntity->staff_id,
                         $SecurityGroupUserTbl->aliasField('security_role_id') => $homeroomSecurityRoleId
                     ];
-                    $SecurityGroupUserData = $SecurityGroupUserTbl->find()->where($conditions)->enableHydration(false)->first();
+                    $SecurityGroupUserData = $SecurityGroupUserTbl->find()->where($conditions)
+                        ->disableHydration() // POCOR-8532
+                        ->first();
                     if (!is_null($SecurityGroupUserData)) {
                         $groupUserEntity = $SecurityGroupUsersTable->get($SecurityGroupUserData['id']);
                         $SecurityGroupUsersTable->delete($groupUserEntity);
@@ -2294,14 +2301,14 @@ class StaffTable extends ControllerActionTable
         $date7 = $valueBinder->bindings()[':c7']['value'];
         $staffStatusId1 = $valueBinder->bindings()[':c8']['value'];
         $staffStatusId2 = $valueBinder->bindings()[':c9']['value'];
-        
+
         $InstitutionStaffCount = $this
         ->find()
         ->select([
             'gender' => 'Genders.name',
             'gender_code' => 'Genders.code',
             'count' =>  $this->find()->func()->count('DISTINCT ' . $this->aliasField('staff_id'))
-        
+
         ])
         ->innerJoinWith('Users')
         ->matching('Users.Genders')
@@ -2354,7 +2361,7 @@ class StaffTable extends ControllerActionTable
         unset($InstitutionRecords);
         return $params;
     }
-    
+
     /*
      * Function to check whether Principal role view permission
     * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
