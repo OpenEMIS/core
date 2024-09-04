@@ -70,6 +70,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['staff_id'] = $d['staff_id'];
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['staff_leave_type'] = $d['staff_leave_type'];
                 $resp[$k]['user'] = $d['staff'];
                 $resp[$k]['url'] = $url;
@@ -123,6 +124,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['requester'] = $d['security_user']['name_with_id'];
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['survey_form'] = $d['survey_form'];
                 $resp[$k]['academic_period'] = $d['academic_period'];
                 $resp[$k]['url'] = $url;
@@ -177,6 +179,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['requester'] = $d['security_user']['name_with_id'];
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['user'] = $d['user'];
                 $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
@@ -230,6 +233,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['requester'] = $d['security_user']['name_with_id'];
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['user'] = $d['user'];
                 $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
@@ -286,6 +290,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['requester'] = $d['security_user']['name_with_id'];
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['user'] = $d['user'];
                 $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
@@ -340,6 +345,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['requester'] = $d['security_user']['name_with_id'];
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['user'] = $d['user'];
                 $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
@@ -393,6 +399,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['requester'] = $d['security_user']['name_with_id'];
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['student'] = $d['user'];
                 $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
@@ -446,6 +453,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['requester'] = $d['security_user']['name_with_id'];
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['staff'] = $d['user'];
                 $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
@@ -499,6 +507,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['requester'] = $d['security_user']['name_with_id'];
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['user'] = $d['user'];
                 $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
@@ -560,6 +569,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['requester'] = $d['security_user']['name_with_id'];
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['user'] = $d['user'];
                 $resp[$k]['created_user'] = $d['security_user'];
 
@@ -617,6 +627,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['requester'] = $d['security_user']['name_with_id'];
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['user'] = $d['user'];
                 $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
@@ -677,6 +688,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['requester'] = $d['security_user']['name_with_id'];
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['user'] = $d['user'];
                 $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
@@ -730,6 +742,7 @@ class WorkbenchService extends Controller
                 $resp[$k]['requester'] = $d['user']['name_with_id'];
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['user'] = $d['user'];
                 $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
@@ -802,10 +815,10 @@ class WorkbenchService extends Controller
                 $resp[$k]['type'] = $d['type'];
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['staff'] = $d['user'];
                 $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
-
             }
             
             $data['data'] = $resp; 
@@ -866,6 +879,7 @@ class WorkbenchService extends Controller
                 
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['user'] = $d['user'];
                 $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
@@ -924,6 +938,7 @@ class WorkbenchService extends Controller
                 
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
 
@@ -980,6 +995,7 @@ class WorkbenchService extends Controller
                 
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
 
@@ -1034,6 +1050,7 @@ class WorkbenchService extends Controller
                 
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
 
@@ -1098,6 +1115,7 @@ class WorkbenchService extends Controller
                 
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
 
@@ -1167,6 +1185,7 @@ class WorkbenchService extends Controller
                 
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
                 $resp[$k]['staff'] = $d['staff'];
@@ -1229,6 +1248,7 @@ class WorkbenchService extends Controller
                 
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
 
@@ -1286,6 +1306,7 @@ class WorkbenchService extends Controller
                 
                 $resp[$k]['status_id'] = $d['status_id'];
                 $resp[$k]['status'] = $d['status']['name'];
+                $resp[$k]['workflow_name'] = $d['status']['workflows']['name'];
                 $resp[$k]['url'] = $url;
                 $resp[$k]['created_user'] = $d['security_user'];
 
@@ -1380,4 +1401,24 @@ class WorkbenchService extends Controller
             return $this->sendErrorResponse('Failed to fetch list from DB');
         }
     }
+
+
+
+    //For POCOR-8519 Start...
+    public function getAllWorkbenches($params)
+    {
+        try {
+            $data = $this->workbenchRepository->getAllWorkbenches($params);
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+    //For POCOR-8519 End...
 }
