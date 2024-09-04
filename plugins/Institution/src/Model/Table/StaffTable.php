@@ -1324,6 +1324,9 @@ class StaffTable extends ControllerActionTable
                 $url = $toolbarButtons['edit']['url'];
                 $staffId = $url[1];
                 unset($url[1]);
+                if(isset($url[2])) { //POCOR-8447
+                    unset($url[2]);
+                }
                 $url[0] = 'add';
                 $url['institution_staff_id'] = $staffId;
                 $url['action'] = 'StaffPositionProfiles';
