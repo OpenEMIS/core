@@ -80,7 +80,6 @@ class POCOR8222 extends AbstractMigration
                       `academic_period_id` int(11) NOT NULL,
                       `start_date` datetime DEFAULT NULL,
                       `end_date` datetime DEFAULT NULL,
-                      `gpa_education_grade_id` int(11) NOT NULL,
                       `education_grade_id` int(11) NOT NULL,
                       `gpa_grading_type_id` int(11) NOT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
@@ -88,7 +87,7 @@ class POCOR8222 extends AbstractMigration
                       `created_user_id` int(11) NOT NULL,
                       `created` datetime NOT NULL,
                        PRIMARY KEY (`id`)
-                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1");
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
         $this->execute("CREATE TABLE `institution_students_gpa`
                       (`id` int(11) NOT NULL AUTO_INCREMENT,
@@ -103,7 +102,7 @@ class POCOR8222 extends AbstractMigration
                       `created_user_id` int(11) NOT NULL,
                       `created` datetime NOT NULL,
                        PRIMARY KEY (`id`)
-                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1");
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
         $this->execute("CREATE TABLE `gpa_grading_types`
                       (`id` int(11) NOT NULL AUTO_INCREMENT,
@@ -118,7 +117,7 @@ class POCOR8222 extends AbstractMigration
                       `created_user_id` int(11) NOT NULL,
                       `created` datetime NOT NULL,
                        PRIMARY KEY (`id`)
-                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1");
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
         $this->execute("CREATE TABLE `gpa_grading_options`
                       (`id` int(11) NOT NULL AUTO_INCREMENT,
@@ -131,8 +130,12 @@ class POCOR8222 extends AbstractMigration
                       `order` int(11) NOT NULL,
                       `visible` int(11) NOT NULL DEFAULT 1,
                       `gpa_grading_type_id` int(11) NOT NULL,
+                      `modified_user_id` int(11) DEFAULT NULL,
+                      `modified` datetime DEFAULT NULL,
+                      `created_user_id` int(11) NOT NULL,
+                      `created` datetime NOT NULL,
                        PRIMARY KEY (`id`)
-                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1");
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
         
         $this->execute("CREATE TABLE `education_grades_cumulative_gpa`
                       (`id` char(36) NOT NULL,
@@ -143,7 +146,7 @@ class POCOR8222 extends AbstractMigration
                       `created_user_id` int(11) NOT NULL,
                       `created` datetime NOT NULL,
                        PRIMARY KEY (`id`)
-                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1");
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
         // Bulk insert data from InstitutionStudentsReportCards to InstitutionStudentsGpa
         $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
@@ -152,13 +155,15 @@ class POCOR8222 extends AbstractMigration
         $StudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
         $dataToSave = [];
         foreach ($recordValue as $value) {
-            $dataToSave[] = $StudentsGpa->newEntity([
-                'student_id' => $value['student_id'],
-                'academic_period_id' => $value['academic_period_id'],
-                'institution_id' => $value['institution_id'],
-                'education_grade_id' => $value['education_grade_id'],
-                'gpa' => $value['gpa'] ?: 0.00
-            ]);
+            if($value['gpa'] != NULL) {
+                $dataToSave[] = $StudentsGpa->newEntity([
+                    'student_id' => $value['student_id'],
+                    'academic_period_id' => $value['academic_period_id'],
+                    'institution_id' => $value['institution_id'],
+                    'education_grade_id' => $value['education_grade_id'],
+                    'gpa' => $value['gpa'],
+                ]);
+            }
         }
 
         if (!empty($dataToSave)) {
