@@ -2346,6 +2346,15 @@ class AttendanceRepository extends Controller
                     $label = $results[0][1][0];
                     $errors[$label] = 'Date is required.';
                 } else {
+
+                    //For POCOR-8534 start...
+                    //Coverting into m/d/y because excel reads the date in m/d/y format...
+                    if(is_numeric($row[0])){
+                        $row[0] = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row[0])->format('m/d/Y');
+                    }
+                    //For POCOR-8534 end...
+
+
                     if(!preg_match('/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/', $row[0])){
                         $label = $results[0][1][0];
                         $errors[$label] = 'Invalid date format.';

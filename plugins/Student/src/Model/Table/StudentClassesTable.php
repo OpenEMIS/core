@@ -148,7 +148,42 @@ class StudentClassesTable extends ControllerActionTable
 
     }
 
+    //POCOR-8490
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $userData = $this->Session->read();
+        $session = $this->request->getSession(); //POCOR-6267
+
+        if ($userData['Auth']['User']['is_guardian'] == 1) {
+            /*POCOR-6267 starts*/
+            if ($this->request->getParam('controller') == 'GuardianNavs') {
+                $studentId = $this->getStudentID();
+            }/*POCOR-6267 ends*/ else {
+                $sId = $userData['Student']['ExaminationResults']['student_id'];
+                $studentId = $sId ? $this->ControllerAction->paramsDecode($sId)['id'] : $this->getUserID();
+            }
+        } else {
+            $studentId = $userData['Auth']['User']['id'];
+        }
+
+        $conditions = [];
+        /*POCOR-6267 starts*/
+        if ($this->request->getParam('controller') == 'GuardianNavs' || 
+            (empty($userData['System']['User']['roles']) && !empty($studentId))) {
+            // Set the condition for student_id if applicable
+            $conditions[$this->aliasField('student_id')] = $studentId;
+        }
+        /*POCOR-6267 ends*/
+
+        $query->contain([
+            'InstitutionClasses',
+            'StudentStatuses'
+        ])
+        ->where($conditions)
+        ->toArray();
+    }
+
+    public function indexBeforeQueryOld(Event $event, Query $query, ArrayObject $extra)
     {
 		$userData = $this->Session->read();
         $session = $this->request->getSession();//POCOR-6267
