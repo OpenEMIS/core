@@ -941,7 +941,7 @@ class NavigationComponent extends Component
                 'parent' => 'Institution.Performance',
                 'selected' => ['Institutions.ReportCardGpa',
                     'Institutions.ReportCardCumulativeGpa'],
-            ],
+            ], //POCOR-8222
             //POCOR-7458 start
             'Institutions.Messaging.index' => [
                 'title' => 'Messaging',
@@ -3726,7 +3726,7 @@ class NavigationComponent extends Component
                 'selected' => ['Gpa.GpaSystem',
                                 'Gpa.Cumulative',
                                 'Gpa.GpaGradingType']
-            ],
+            ], //POCOR-8222
 
         ];
         return $fullPerformanceNavigation;

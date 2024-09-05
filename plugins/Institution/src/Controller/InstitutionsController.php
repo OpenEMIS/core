@@ -8174,7 +8174,7 @@ class InstitutionsController extends AppController
             ],
             
         ];
-        //$tabElements = $this->TabPermission->checkTabPermission($tabElements);
+        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
         
         $this->set('tabElements', $tabElements);
         $action = !is_null($action) ? $action : $this->request->getParam('action');
