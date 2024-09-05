@@ -39,7 +39,10 @@ class TrainingService extends Controller
                 $resp[$k]['file_name'] = $d['file_name'];
                 $resp[$k]['file_content'] = "";
                 if(isset($d['file_content'])){
-                    $resp[$k]['file_content'] = json_encode($d['file_content'], true);
+                    //For POCOR-8569 Start...
+                    //$resp[$k]['file_content'] = json_encode($d['file_content'], true);
+                    $resp[$k]['file_content'] = base64_encode($d['file_content']);
+                    //For POCOR-8569 End...
                 }
                 $resp[$k]['training_field_of_study_id'] = $d['training_field_of_study_id'];
                 $resp[$k]['training_field_of_study_name'] = $d['training_field_of_study_name'];
@@ -103,7 +106,10 @@ class TrainingService extends Controller
                 $resp['file_name'] = $data['file_name'];
                 $resp['file_content'] = "";
                 if(isset($data['file_content'])){
-                    $resp['file_content'] = json_encode($data['file_content'], true);
+                    //For POCOR-8569 Start...
+                    //$resp['file_content'] = json_encode($data['file_content'], true);
+                    $resp['file_content'] = base64_encode($data['file_content']);
+                    //For POCOR-8569 End...
                 }
                 $resp['training_field_of_study_id'] = $data['training_field_of_study_id'];
                 $resp['training_field_of_study_name'] = $data['training_field_of_study_name'];
