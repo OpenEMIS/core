@@ -352,9 +352,16 @@ class OpenEmisBehavior extends Behavior
             // edit button
             $toolbarButtons['back']['url'] = $model->url($backAction, 'QUERY');
             if ($model->actions('edit')) {
+                // echo "<pre>";print_r($model->url($backAction, 'QUERY')['action']);die;
                 //POCOR-8549 start
                 $toolbarButtons['edit']['url'] = $model->url('index');
-                $toolbarButtons['edit']['url']['action'] = 'Institutions';
+                if($model->url($backAction, 'QUERY')['action'] == 'InstitutionStatus' ){
+                    $toolbarButtons['edit']['url']['action'] = 'Institutions';
+                }else{
+                    $toolbarButtons['edit']['url']['action'] = $model->url($backAction, 'QUERY')['action'];
+                }
+                // $toolbarButtons['edit']['url']['action'] = $model->url($backAction, 'QUERY')['action'];
+
                 $toolbarButtons['edit']['url'][0] = 'edit';
                 //POCOR-8549 end
                 $toolbarButtons['edit']['type'] = 'button';
