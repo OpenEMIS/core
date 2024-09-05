@@ -96,8 +96,18 @@ class InstitutionLandsTable extends ControllerActionTable
                 ]
             ])
             ->allowEmpty('area') //POCOR-8523
+            //POCOR-8523
             ->add('area', 'ruleValidateCustomLandSize', [
-                'rule' => ['validateCustomLandSize', 'Maximum_institution_infrastructure_land_size'],
+                'rule' => function ($value, $context) {
+                    // Check if datatype is 'copy'
+                    if (isset($context['data']['datatype']) && $context['data']['datatype'] == 'copy') {
+                        // Skip validation when datatype is 'copy'
+                        return true;
+                    }
+            
+                    // Proceed with validation when datatype is not 'copy'
+                    return $this->validateCustomLandSize($value, 'Maximum_institution_infrastructure_land_size', $context);
+                },
                 'provider' => 'table',
                 'last' => true
             ])
