@@ -74,7 +74,7 @@ class SurveyRulesTable extends ControllerActionTable
         }
 
     // Start POCOR-5188
-    $is_manual_exist = $this->getManualUrl('Administration','Rules','Survey');       
+    $is_manual_exist = $this->getManualUrl('Administration','Rules','Survey');
     if(!empty($is_manual_exist)){
         $btnAttr = [
             'class' => 'btn btn-xs btn-default icon-big',
@@ -97,7 +97,8 @@ class SurveyRulesTable extends ControllerActionTable
     public function onGetShowOptions(Event $event, Entity $entity)
     {
         $showOptions = $entity->show_options;
-        $showOptions = $event->subject()->HtmlField->decodeEscapeHtmlEntity($showOptions);
+        $showOptions = $event->getSubject() // POCOR-8465
+            ->HtmlField->decodeEscapeHtmlEntity($showOptions);
         $showOptions = json_decode($showOptions, true);
         $SurveyQuestionChoicesTable = TableRegistry::get('Survey.SurveyQuestionChoices');
         if (!empty($showOptions)) {
@@ -105,7 +106,7 @@ class SurveyRulesTable extends ControllerActionTable
                 ->find()
                 ->select([$SurveyQuestionChoicesTable->aliasField('name')])
                 ->where([$SurveyQuestionChoicesTable->aliasField('id').' IN' => $showOptions])
-                ->enabledHydration(false)
+                ->disableHydration() // POCOR-8465
                 ->extract('name')
                 ->toList();
             return implode('<br />', $options);

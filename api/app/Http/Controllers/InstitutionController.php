@@ -43,13 +43,6 @@ class InstitutionController extends Controller
      *     description="Returns a list of institutions based on the provided parameters",
      *     tags={"Institutions"},
      *     @OA\Parameter(
-     *         name="order",
-     *         in="query",
-     *         required=false,
-     *         description="Order",
-     *         @OA\Schema(type="integer", example="id")
-     *     ),
-     *     @OA\Parameter(
      *         name="institutionId",
      *         in="query",
      *         required=false,
@@ -90,6 +83,13 @@ class InstitutionController extends Controller
      *         required=false,
      *         description="Page number",
      *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="order",
+     *         in="query",
+     *         required=false,
+     *         description="Order",
+     *         @OA\Schema(type="integer", example="id")
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -1364,7 +1364,7 @@ class InstitutionController extends Controller
         }
     }
 
-     /**
+    /**
      * @OA\Get(
      *     path="/api/v4/institutions/{institutionId}/shifts/{shiftId}",
      *     summary="Get list of institution shift detail by shift id",
@@ -2660,6 +2660,29 @@ class InstitutionController extends Controller
      *                                 )
      *                             )
      *                          ),
+     *                          @OA\Property(
+     *                              property="custom_fields",
+     *                              type="array",
+     *                              @OA\Items(
+     *                                  type="object",
+     *                                  @OA\Property(property="id", type="string", example="0d66a4f8-a274-48cc-9520-967a07731ae8"),
+     *                                  @OA\Property(property="text_value", type="string", example=""),
+     *                                  @OA\Property(property="number_value", type="number", example=null),
+     *                                  @OA\Property(property="decimal_value", type="string", example=""),
+     *                                  @OA\Property(property="textarea_value", type="string", example=""),
+     *                                  @OA\Property(property="date_value", type="string", format="date", example=null),
+     *                                  @OA\Property(property="time_value", type="string", format="time", example=null),
+     *                                  @OA\Property(property="file", type="string", example=""),
+     *                                  @OA\Property(property="staff_custom_field_id", type="integer", example=1),
+     *                                  @OA\Property(property="staff_id", type="integer", example=573),
+     *                                  @OA\Property(
+     *                                      property="student_custom_field",
+     *                                      type="object",
+     *                                      @OA\Property(property="id", type="integer", example=1),
+     *                                      @OA\Property(property="name", type="string", example="Father Living With Student")
+     *                                  )
+     *                              )
+     *                          ),
      *                          @OA\Property(property="security_group_user_id", type="string", example="7a37caf1-b411-4db4-9402-1c3163e158c0"),
      *                          @OA\Property(property="modified_user_id", type="integer", example=null),
      *                          @OA\Property(property="modified", type="string", example=null),
@@ -2765,6 +2788,29 @@ class InstitutionController extends Controller
      *                                 )
      *                             )
      *                          ),
+     *                          @OA\Property(
+     *                              property="custom_fields",
+     *                              type="array",
+     *                              @OA\Items(
+     *                                  type="object",
+     *                                  @OA\Property(property="id", type="string", example="0d66a4f8-a274-48cc-9520-967a07731ae8"),
+     *                                  @OA\Property(property="text_value", type="string", example=""),
+     *                                  @OA\Property(property="number_value", type="number", example=null),
+     *                                  @OA\Property(property="decimal_value", type="string", example=""),
+     *                                  @OA\Property(property="textarea_value", type="string", example=""),
+     *                                  @OA\Property(property="date_value", type="string", format="date", example=null),
+     *                                  @OA\Property(property="time_value", type="string", format="time", example=null),
+     *                                  @OA\Property(property="file", type="string", example=""),
+     *                                  @OA\Property(property="staff_custom_field_id", type="integer", example=1),
+     *                                  @OA\Property(property="staff_id", type="integer", example=573),
+     *                                  @OA\Property(
+     *                                      property="student_custom_field",
+     *                                      type="object",
+     *                                      @OA\Property(property="id", type="integer", example=1),
+     *                                      @OA\Property(property="name", type="string", example="Father Living With Student")
+     *                                  )
+     *                              )
+     *                          ),
      *                          @OA\Property(property="security_group_user_id", type="string", example="7a37caf1-b411-4db4-9402-1c3163e158c0"),
      *                          @OA\Property(property="modified_user_id", type="integer", example=null),
      *                          @OA\Property(property="modified", type="string", example=null),
@@ -2853,6 +2899,29 @@ class InstitutionController extends Controller
      *                                     )
      *                                 )
      *                             )
+     *                          ),
+     *                 @OA\Property(
+     *                              property="custom_fields",
+     *                              type="array",
+     *                              @OA\Items(
+     *                                  type="object",
+     *                                  @OA\Property(property="id", type="string", example="0d66a4f8-a274-48cc-9520-967a07731ae8"),
+     *                                  @OA\Property(property="text_value", type="string", example=""),
+     *                                  @OA\Property(property="number_value", type="number", example=null),
+     *                                  @OA\Property(property="decimal_value", type="string", example=""),
+     *                                  @OA\Property(property="textarea_value", type="string", example=""),
+     *                                  @OA\Property(property="date_value", type="string", format="date", example=null),
+     *                                  @OA\Property(property="time_value", type="string", format="time", example=null),
+     *                                  @OA\Property(property="file", type="string", example=""),
+     *                                  @OA\Property(property="staff_custom_field_id", type="integer", example=1),
+     *                                  @OA\Property(property="staff_id", type="integer", example=573),
+     *                                  @OA\Property(
+     *                                      property="student_custom_field",
+     *                                      type="object",
+     *                                      @OA\Property(property="id", type="integer", example=1),
+     *                                      @OA\Property(property="name", type="string", example="Father Living With Student")
+     *                                  )
+     *                              )
      *                          ),
      *                 @OA\Property(property="security_group_user_id", type="string", example="7a37caf1-b411-4db4-9402-1c3163e158c0"),
      *                 @OA\Property(property="modified_user_id", type="integer", example=null),
@@ -4277,23 +4346,23 @@ class InstitutionController extends Controller
      *                 @OA\Items(
      *                     type="object",
      *                      @OA\Property(property="education_systems_name", type="string", example="National Education System 2023"),
- *                          @OA\Property(property="education_levels_name", type="string", example="Primary Education"),
- *                          @OA\Property(property="education_cycles_name", type="string", example="Primary - General"),
- *                          @OA\Property(property="education_programmes_code", type="string", example="Primary"),
- *                          @OA\Property(property="education_programmes_name", type="string", example="Primary"),
- *                          @OA\Property(property="education_grades_code", type="string", example="Primary 1"),
- *                          @OA\Property(property="education_grades_name", type="string", example="Primary 1"),
- *                          @OA\Property(property="education_subjects_code", type="string", example="SSMC"),
- *                          @OA\Property(property="education_subjects_name", type="string", example="Social Studies"),
- *                          @OA\Property(property="institutions_id", type="integer", example=6),
- *                          @OA\Property(property="institutions_code", type="string", example="P1002"),
- *                          @OA\Property(property="institutions_name", type="string", example="Avory Primary School"),
- *                          @OA\Property(property="institution_classes_name", type="string", example="Primary 1-A"),
- *                          @OA\Property(property="academic_periods_code", type="string", example="YR2023"),
- *                          @OA\Property(property="academic_periods_name", type="string", example="2023"),
- *                          @OA\Property(property="institution_subjects_id", type="integer", example=4516),
- *                          @OA\Property(property="institution_subjects_name", type="string", example="Social Studies"),
- *                          @OA\Property(property="security_users_openemis_no_subject_teachers", type="string", example="1522952429"),
+     *                          @OA\Property(property="education_levels_name", type="string", example="Primary Education"),
+     *                          @OA\Property(property="education_cycles_name", type="string", example="Primary - General"),
+     *                          @OA\Property(property="education_programmes_code", type="string", example="Primary"),
+     *                          @OA\Property(property="education_programmes_name", type="string", example="Primary"),
+     *                          @OA\Property(property="education_grades_code", type="string", example="Primary 1"),
+     *                          @OA\Property(property="education_grades_name", type="string", example="Primary 1"),
+     *                          @OA\Property(property="education_subjects_code", type="string", example="SSMC"),
+     *                          @OA\Property(property="education_subjects_name", type="string", example="Social Studies"),
+     *                          @OA\Property(property="institutions_id", type="integer", example=6),
+     *                          @OA\Property(property="institutions_code", type="string", example="P1002"),
+     *                          @OA\Property(property="institutions_name", type="string", example="Avory Primary School"),
+     *                          @OA\Property(property="institution_classes_name", type="string", example="Primary 1-A"),
+     *                          @OA\Property(property="academic_periods_code", type="string", example="YR2023"),
+     *                          @OA\Property(property="academic_periods_name", type="string", example="2023"),
+     *                          @OA\Property(property="institution_subjects_id", type="integer", example=4516),
+     *                          @OA\Property(property="institution_subjects_name", type="string", example="Social Studies"),
+     *                          @OA\Property(property="security_users_openemis_no_subject_teachers", type="string", example="1522952429"),
      *                     @OA\Property(property="security_users_openemis_no_students", type="array",
      *                         @OA\Items(type="integer", example=2382817279)
      *                      )
@@ -6068,7 +6137,7 @@ class InstitutionController extends Controller
         }
     }
 
-     /**
+    /**
      * @OA\Get(
      *      path="/api/v4/institutions/students/meals",
      *      summary="Get a list of student meals",
@@ -6533,7 +6602,7 @@ class InstitutionController extends Controller
         }
     }
 
-   /**
+    /**
      * @OA\Post(
      *     path="/api/v4/institutions/meals/distributions",
      *     summary="Add institution meal distribution",

@@ -1,0 +1,35 @@
+<kd-progressloader *ngIf="displayLoading" configtype="small-spinner" [configvalue]="null"></kd-progressloader>
+<!-- <kd-breadcrumb [config]="breadcrumbList"></kd-breadcrumb> -->
+<kd-pageheader [config]='pageheader'></kd-pageheader>
+<kd-wizard [config]="wizardConfig" [type]="wizardType" [api]="wizardApi" (activeStepEmitter)="_step=$event" >
+    <div [ngSwitch] = "_step">
+        <div *ngSwitchCase="'user-details'" class="mt-4 margin-left10 margin-bottom10 margin-right10">
+                <kd-view 
+                    displayType="form" 
+                    [inputData]="_questionBase"
+                    [api]="api"
+                    [button]="_formButtons"
+                    (detectFrom)="detectValue($event)">
+                </kd-view>
+        </div>
+        <div *ngSwitchCase="'internal-search'" class="margin-top10 margin-left10 margin-bottom10 margin-right10">
+            <app-internal-search [internalSearchData]="internalSearchData" *ngIf="internalSearchData"></app-internal-search>
+        </div>
+        <div *ngSwitchCase="'external-search'" class="margin-top10 margin-left10 margin-bottom10 margin-right10">
+            <app-external-search></app-external-search>
+        </div>
+        <div *ngSwitchCase="'confirmation'" class="mt-4 margin-left10 margin-bottom10 margin-right10">
+            <kd-view 
+                *ngIf="showConfirmation"
+                displayType="form" 
+                [inputData]="_confirmationData"
+                [api]="api"
+                [button]="_formButtons"
+                (detectFrom)="detectConfirmationValue($event)">
+            </kd-view>
+        </div>
+        <div *ngSwitchCase="'summary'" class="margin-top10 margin-left10 margin-bottom10 margin-right10">
+            <kd-view displayType='view' [inputData]='_viewQuestion'></kd-view>
+        </div>
+    </div>
+</kd-wizard>

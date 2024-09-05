@@ -209,7 +209,7 @@ class AssessmentsTable extends ControllerActionTable {
     {
         $class = __CLASS__;
         $line = __LINE__;
-        $entity = $this->setIdEntityFromQueryString($class, $line, $entity);
+        //$entity = $this->setIdEntityFromQueryString($class, $line, $entity);//POCOR-8520
         $this->setupFields($event, $entity); // POCOR-8074-3 entity needed for dependant select field
         // POCOR-7999 refactured
         if ($this->action == 'edit') {
@@ -347,13 +347,19 @@ class AssessmentsTable extends ControllerActionTable {
     public
     function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
-        //patch data to handle fail save because of validation error.
-        if (array_key_exists($this->getAlias(), $requestData)) {
-            if (array_key_exists('assessment_items', $requestData[$this->getAlias()])) {
+        if ($requestData->offsetExists($this->getAlias())) {
+        $assessmentItems = $requestData[$this->getAlias()]['assessment_items'] ?? null;
+        if ($assessmentItems) {
                 $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-                foreach ($requestData[$this->getAlias()]['assessment_items'] as $key => $item) {
-                    $subjectId = $item['education_subject_id'];
-                    $requestData[$this->getAlias()]['assessment_items'][$key]['education_subject'] = $EducationSubjects->get($subjectId);
+                foreach ($assessmentItems as $key => $item) {
+                    try {
+                        $subjectId = $item['education_subject_id'];
+                        $subject = $EducationSubjects->get($subjectId);
+                        $requestData[$this->getAlias()]['assessment_items'][$key]['education_subject'] = $subject;
+                    } catch (RecordNotFoundException $e) {
+                        // Handle missing subject, maybe log or set another error
+                        $requestData['errorMessage'] = 'Subject not found for id ' . $subjectId;
+                    }
                 }
             } else { //logic to capture error if no subject inside the grade.
                 $errorMessage = $this->aliasField('noSubjects');
@@ -733,6 +739,24 @@ class AssessmentsTable extends ControllerActionTable {
             $entityId = $data['id'];
             $queryString = $this->getQueryString();
             $data['id'] = $queryString['id'];
+        }
+    }
+    
+    //POCOR-8554
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+
+        $associatedRecordsExist = 
+            $this->AssessmentPeriods->exists(['assessment_id' => $entity->id]) ||
+            $this->AssessmentItems->exists(['assessment_id' => $entity->id]);
+
+        if ($associatedRecordsExist) { 
+                $message = __('Delete operation is not allowed as there are other information linked to this record.');
+                $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+                
+                $url = $this->request->referer();
+                $event->stopPropagation();
+                return $this->controller->redirect($url);
         }
     }
 
