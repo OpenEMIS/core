@@ -103,8 +103,18 @@ class InstitutionFloorsTable extends ControllerActionTable
             ])
             ->allowEmpty('area') //POCOR-8523
             ->add('area', 'ruleValidateCustomLandSize', [
-                'rule' => ['validateCustomLandSize', 'Maximum_institution_infrastructure_floor_size'],
-                'provider' => 'table'
+                'rule' => function ($value, $context) {
+                    // Check if datatype is 'copy'
+                    if (isset($context['data']['datatype']) && $context['data']['datatype'] == 'copy') {
+                        // Skip validation when datatype is 'copy'
+                        return true;
+                    }
+            
+                    // Proceed with validation when datatype is not 'copy'
+                    return $this->validateCustomLandSize($value, 'Maximum_institution_infrastructure_floor_size', $context);
+                },
+                'provider' => 'table',
+                'last' => true
             ])
             ->requirePresence('new_floor_type', function ($context) {
                 if (array_key_exists('change_type', $context['data'])) {
