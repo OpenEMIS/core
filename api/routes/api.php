@@ -507,5 +507,9 @@ Route::group(
         Route::get('survey/studentlist/xform/{surveyFormId}/{insCode}/{academicPeriodCode}', 'SurveyController@getStudentListForSurvey');
         Route::post('survey/upload', 'SurveyController@uploadXform');
         //POCOR-7429 end...
+        
+        //POCOR-8519 start...
+        Route::get('workbenches', 'WorkbenchController@getAllWorkbenches');
+        //POCOR-8519 end...
     }
 );

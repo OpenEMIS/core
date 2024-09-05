@@ -39,9 +39,18 @@ class InstitutionContactPersonsTable extends ControllerActionTable {
                 'rule' => ['validateCustomPattern', 'institution_contact_person_telephone'],
                 'provider' => 'table'
             ])
+            ->add('telephone', 'ruleContactNumberPattern', [
+                'rule' => ['validateContactNumberPattern', 'validate_contact_person_telephone'],
+                'provider' => 'table',
+                'last' => true
+            ])
             ->allowEmpty('mobile_number')
             ->add('mobile_number', 'ruleCustomMobile', [
                 'rule' => ['validateCustomPattern', 'institution_contact_person_mobile'],
+                'provider' => 'table'
+            ])
+            ->add('mobile_number', 'ruleMobileNumberPattern', [
+                'rule' => ['validateMobileNumberPattern', 'validate_contact_person_mobile_number'],
                 'provider' => 'table'
             ])
             ->allowEmpty('fax')

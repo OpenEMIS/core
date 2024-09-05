@@ -1109,7 +1109,7 @@ class StudentPromotionTable extends AppTable
             $repeatStatus = $statuses->getIdByCode('REPEATED');
 
             if (empty($errors)) {
-                if (array_key_exists($this->getAlias(), $data)) {
+                if (isset($data[$this->getAlias()])) { //POCOR-8490
                     $selectedStudent = false;
                     if (array_key_exists('students', $data[$this->getAlias()])) {
                         foreach ($data[$this->getAlias()]['students'] as $key => $value) {
