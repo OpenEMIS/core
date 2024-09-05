@@ -102,4 +102,17 @@ class SecurityUsers extends Authenticatable implements JWTSubject
         return $this->belongsTo(InstitutionStaff::class, 'id', 'staff_id');
 
     }
+
+
+    //For POCOR-8536 Start...
+    public function institutionStudents()
+    {
+        return $this->hasMany(InstitutionStudent::class, 'student_id', 'id')->orderBy('created', 'DESC');
+    }
+
+    public function institutionStaffs()
+    {
+        return $this->hasMany(InstitutionStaff::class, 'staff_id', 'id');
+    }
+    //For POCOR-8536 End...
 }

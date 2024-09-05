@@ -184,8 +184,13 @@ trait ControllerActionV4Trait {
  		} else if (isset($a['order']) && !isset($b['order'])) {
  			return false;
  		} else {
- 			return $a["order"] - $b["order"];
- 		}
+			//POCOR-8488 starts
+ 			//return $a["order"] - $b["order"];
+			$aOrder = isset($a['order']) ? (int)$a['order'] : PHP_INT_MAX;
+			$bOrder = isset($b['order']) ? (int)$b['order'] : PHP_INT_MAX;
+			return $aOrder - $bOrder;
+			//POCOR-8488 ends
+		}
 	}
 
 	private function _validateOptions($options) {

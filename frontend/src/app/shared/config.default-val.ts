@@ -22,9 +22,15 @@ export const updateTheme: () => void = (): void => {
 
         let theme: string = document.body.className.replace('openemis-', '');
         let tempElement: Element = document.querySelector('.kdx-brand-logo > h1');
-        tempElement.innerHTML = 'OpenEMIS ' + theme.charAt(0).toUpperCase() + theme.slice(1);
+        tempElement.innerHTML = 'OpenEMIS Community';
     });
 };
+
+const updateThemeColor: () => void = (): void => {
+    setTimeout(() => {
+        updateOpenEMISThemes();
+    });
+}
 
 export const DEFAULT_VAL: DefaultValueInterface = {
     user: {
@@ -459,6 +465,1582 @@ export const DEFAULT_TEMPLATE: DefaultTemplateInterface = {
                 'key': 'preference',
                 'title': 'This is the third hobby.'
             }]
+        }
+    ]
+};
+
+export const DEFAULT_TEMPLATE_THEME: any = {
+    btnGroup: [
+        {
+            btnIcon: 'kd-grid',
+            dropdownType: 'grid',
+            dropdownContent: [
+                {
+                    icon: 'kd-openemis kd-analyzer',
+                    text: '#000000',
+                    theme: 'openemis-darkBlack',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-assessments',
+                    text: '#000033',
+                    theme: 'openemis-mainlyBlue',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-community',
+                    text: '#000066',
+                    theme: 'openemis-navyMidnightBlue',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-connect',
+                    text: '#000099',
+                    theme: 'openemis-blueNavyBlue',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-core',
+                    text: '#0000CC',
+                    theme: 'openemis-darkWashedBlue',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-datamanager',
+                    text: '#0000FF',
+                    theme: 'openemis-blue1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-dashboard',
+                    text: '#003300',
+                    theme: 'openemis-deepFirGreen',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-exams',
+                    text: '#003333',
+                    theme: 'openemis-mainlyGreen',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-identity',
+                    text: '#003366',
+                    theme: 'openemis-darkBlueMidnight',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-insight',
+                    text: '#003399',
+                    theme: 'openemis-blue2',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-integrator',
+                    text: '#0033CC',
+                    theme: 'openemis-kleinBlue',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-learning',
+                    text: '#0033FF',
+                    theme: 'openemis-blue3',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-logistics',
+                    text: '#006600',
+                    theme: 'openemis-green1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-modelling',
+                    text: '#006633',
+                    theme: 'openemis-green2',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-monitoring',
+                    text: '#006666',
+                    theme: 'openemis-mosqueGreen',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-school',
+                    text: '#006699',
+                    theme: 'openemis-ceruleanBlue',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#0066CC',
+                    theme: 'openemis-navyBlue1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#0066FF',
+                    theme: 'openemis-navyBlue2',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#009900',
+                    theme: 'openemis-green3',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#009933',
+                    theme: 'openemis-pigmentGreen',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#009966',
+                    theme: 'openemis-shamrockGreen',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#009999',
+                    theme: 'openemis-persianGreen',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#0099CC',
+                    theme: 'openemis-pacificBlue',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#0099FF',
+                    theme: 'openemis-dodgerBlue1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#00CC00',
+                    theme: 'openemis-freeSpeechGreen',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#00CC33',
+                    theme: 'openemis-darkPastelGreen',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#00CC66',
+                    theme: 'openemis-Malachite',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#00CC99',
+                    theme: 'openemis-caribbeanGreen',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#00CCCC',
+                    theme: 'openemis-freeSpeechGreen1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#00CCFF',
+                    theme: 'openemis-deepSkyBlue1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#00FF00',
+                    theme: 'openemis-limeYellow',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#00FF33',
+                    theme: 'openemis-freeSpeechGreen2',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#00FF66',
+                    theme: 'openemis-springGreen1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#00FF99',
+                    theme: 'openemis-mediumSpringGreen1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#00FFCC',
+                    theme: 'openemis-brightTurquoise',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#00FFFF',
+                    theme: 'openemis-aqua1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#330000',
+                    theme: 'openemis-sealBrown',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#330033',
+                    theme: 'openemis-mardiGras',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#330066',
+                    theme: 'openemis-persianIndigo',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#330099',
+                    theme: 'openemis-persianIndigo1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#3300CC',
+                    theme: 'openemis-mediumBlue1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#3300FF',
+                    theme: 'openemis-hanPurple',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#333300',
+                    theme: 'openemis-karaka',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#333333',
+                    theme: 'openemis-nightRider',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#333366',
+                    theme: 'openemis-deepKoamaru',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#333399',
+                    theme: 'openemis-darkSlateBlue1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#3333CC',
+                    theme: 'openemis-persianBlue',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#3333FF',
+                    theme: 'openemis-neonBlue',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#336600',
+                    theme: 'openemis-verdunGreen',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#336633',
+                    theme: 'openemis-sanFelix',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#336666',
+                    theme: 'openemis-taxBreak',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#336699',
+                    theme: 'openemis-lochmara',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#3366CC',
+                    theme: 'openemis-royalBlue1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#3366FF',
+                    theme: 'openemis-royalBlue2',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#339900',
+                    theme: 'openemis-laPalma',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },
+                {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#339933',
+                    theme: 'openemis-forestGreen1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#339966',
+                    theme: 'openemis-eucalyptus',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#339999',
+                    theme: 'openemis-java',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#3399CC',
+                    theme: 'openemis-summerSky',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#3399FF',
+                    theme: 'openemis-dodgerBlue1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#33CC00',
+                    theme: 'openemis-kellyGreen',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#33CC33',
+                    theme: 'openemis-limeGreen1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#33CC66',
+                    theme: 'openemis-mediumSeaGreen1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#33CC99',
+                    theme: 'openemis-shamrock',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#33CCCC',
+                    theme: 'openemis-mediumTurquoise1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#33CCFF',
+                    theme: 'openemis-summerSky1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#33FF00',
+                    theme: 'openemis-harlequin',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#33FF33',
+                    theme: 'openemis-limeGreen2',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#33FF66',
+                    theme: 'openemis-screaminGreen',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#33FF99',
+                    theme: 'openemis-mediumSpringGreen2',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#33FFCC',
+                    theme: 'openemis-turquoise1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#33FFFF',
+                    theme: 'openemis-aqua2',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#660000',
+                    theme: 'openemis-maroon1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#660033',
+                    theme: 'openemis-tyrianPurple',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#660066',
+                    theme: 'openemis-purple1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#660099',
+                    theme: 'openemis-indigo1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#6600CC',
+                    theme: 'openemis-purpleHeart',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#6600FF',
+                    theme: 'openemis-electricIndigo',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#663300',
+                    theme: 'openemis-bakersChocolate',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#663333',
+                    theme: 'openemis-persianPlum',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#663366',
+                    theme: 'openemis-seance',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },{
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#663399',
+                    theme: 'openemis-royalPurple',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#6633CC',
+                    theme: 'openemis-purpleHeart1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#6633FF',
+                    theme: 'openemis-hanPurple1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#666600',
+                    theme: 'openemis-oliveGreen',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#666633',
+                    theme: 'openemis-verdigris',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#666666',
+                    theme: 'openemis-dimGray1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#666699',
+                    theme: 'openemis-scampi',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#6666CC',
+                    theme: 'openemis-slateBlue1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#6666FF',
+                    theme: 'openemis-mediumSlateBlue1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#669900',
+                    theme: 'openemis-christi',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#669933',
+                    theme: 'openemis-limeade',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#669966',
+                    theme: 'openemis-laurel',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#669999',
+                    theme: 'openemis-cadetBlue1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#6699CC',
+                    theme: 'openemis-pictonBlue',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#6699FF',
+                    theme: 'openemis-cornFlowerBlue1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#66CC00',
+                    theme: 'openemis-kellyGreen1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#66CC33',
+                    theme: 'openemis-apple',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#66CC66',
+                    theme: 'openemis-fern',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#66CC99',
+                    theme: 'openemis-silverTree',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#66CCCC',
+                    theme: 'openemis-downy',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#66CCFF',
+                    theme: 'openemis-mayaBlue',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#66FF00',
+                    theme: 'openemis-brightGreen',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#66FF33',
+                    theme: 'openemis-brightGreen1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#66FF66',
+                    theme: 'openemis-screaminGreen1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#66FF99',
+                    theme: 'openemis-lightGreen1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#66FFCC',
+                    theme: 'openemis-aquamarine1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#66FFFF',
+                    theme: 'openemis-babyBlue',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#990000',
+                    theme: 'openemis-darkRed1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#990033',
+                    theme: 'openemis-carmine',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#990066',
+                    theme: 'openemis-eggplant',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#990099',
+                    theme: 'openemis-darkMagenta1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#9900CC',
+                    theme: 'openemis-darkViolet1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#9900FF',
+                    theme: 'openemis-electricPurple',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#993300',
+                    theme: 'openemis-saddleBrown1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#993333',
+                    theme: 'openemis-milanoRed',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#993366',
+                    theme: 'openemis-lipstick',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#993399',
+                    theme: 'openemis-vividViolet',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#9933CC',
+                    theme: 'openemis-darkOrchid1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#9933FF',
+                    theme: 'openemis-blueViolet',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#996600',
+                    theme: 'openemis-goldenBrown',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#996633',
+                    theme: 'openemis-maiTai',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#996666',
+                    theme: 'openemis-copperRose',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#996699',
+                    theme: 'openemis-violetBlue',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#9966CC',
+                    theme: 'openemis-amethyst',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#9966FF',
+                    theme: 'openemis-lightSlateBlue',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#999900',
+                    theme: 'openemis-citrus',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#999933',
+                    theme: 'openemis-highball',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#999966',
+                    theme: 'openemis-avocado',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#999999',
+                    theme: 'openemis-nobel',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#9999CC',
+                    theme: 'openemis-blueBell',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#9999FF',
+                    theme: 'openemis-portage',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#99CC00',
+                    theme: 'openemis-citrus1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#99CC33',
+                    theme: 'openemis-yellowGreen1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#99CC66',
+                    theme: 'openemis-olivine',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#99CC99',
+                    theme: 'openemis-darkSeaGreen1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#99CCCC',
+                    theme: 'openemis-morningGlory',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#99CCFF',
+                    theme: 'openemis-lightSkyBlue1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#99FF00',
+                    theme: 'openemis-springBud',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#99FF33',
+                    theme: 'openemis-greenYellow1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#99FF66',
+                    theme: 'openemis-feijoa',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#99FF99',
+                    theme: 'openemis-mintGreen',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#99FFCC',
+                    theme: 'openemis-magicMint',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#99FFFF',
+                    theme: 'openemis-electricBlue',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC0000',
+                    theme: 'openemis-freeSpeechRed',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC0033',
+                    theme: 'openemis-crimson1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC0066',
+                    theme: 'openemis-ruby1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC0099',
+                    theme: 'openemis-mediumVioletRed1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC00CC',
+                    theme: 'openemis-deepMagenta',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC00FF',
+                    theme: 'openemis-electricPurple1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC3300',
+                    theme: 'openemis-harleyDavidsonOrange',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC3333',
+                    theme: 'openemis-persianRed',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC3366',
+                    theme: 'openemis-cerise',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC3399',
+                    theme: 'openemis-deepCerise',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC33CC',
+                    theme: 'openemis-fuchsia1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC33FF',
+                    theme: 'openemis-electricPurple2',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC6600',
+                    theme: 'openemis-tenne',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC6633',
+                    theme: 'openemis-ecstasy',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC6666',
+                    theme: 'openemis-indianRed1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC6699',
+                    theme: 'openemis-hopbush',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC66CC',
+                    theme: 'openemis-orchid1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC66FF',
+                    theme: 'openemis-heliotrope',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC9900',
+                    theme: 'openemis-gamboge',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC9933',
+                    theme: 'openemis-fuelYellow',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC9966',
+                    theme: 'openemis-fallow',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC9999',
+                    theme: 'openemis-petiteOrchid',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC99CC',
+                    theme: 'openemis-lilac',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CC99FF',
+                    theme: 'openemis-mauve',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CCCC00',
+                    theme: 'openemis-laRioja',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CCCC33',
+                    theme: 'openemis-wattle',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CCCC66',
+                    theme: 'openemis-wildWillow',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CCCC99',
+                    theme: 'openemis-greenMist',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CCCCCC',
+                    theme: 'openemis-veryLightGray',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CCCCFF',
+                    theme: 'openemis-lavenderBlue',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CCFF00',
+                    theme: 'openemis-electricLime',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CCFF33',
+                    theme: 'openemis-pear',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CCFF66',
+                    theme: 'openemis-mindaro',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CCFF99',
+                    theme: 'openemis-reef',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CCFFCC',
+                    theme: 'openemis-blueRomance',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#CCFFFF',
+                    theme: 'openemis-lightCyan1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF0000',
+                    theme: 'openemis-red1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF0033',
+                    theme: 'openemis-torchRed',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF0066',
+                    theme: 'openemis-razzmatazz',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },{
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF0099',
+                    theme: 'openemis-hollywoodCerise',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF00CC',
+                    theme: 'openemis-hotMagenta',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },{
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF00FF',
+                    theme: 'openemis-magenta1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF3300',
+                    theme: 'openemis-scarlet',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },{
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF3333',
+                    theme: 'openemis-redOrange',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF3366',
+                    theme: 'openemis-radicalRed',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },{
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF3399',
+                    theme: 'openemis-wildStrawberry',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF33CC',
+                    theme: 'openemis-razzleDazzleRose',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },{
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF33FF',
+                    theme: 'openemis-magenta2',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF6600',
+                    theme: 'openemis-safetyOrange',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },{
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF6633',
+                    theme: 'openemis-outrageousOrange',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF6666',
+                    theme: 'openemis-bittersweet',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },{
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF6699',
+                    theme: 'openemis-brilliantRose',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF66CC',
+                    theme: 'openemis-neonPink',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },{
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF66FF',
+                    theme: 'openemis-pinkFlamingo',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF9900',
+                    theme: 'openemis-orangePeel',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF9933',
+                    theme: 'openemis-neonCarrot',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF9966',
+                    theme: 'openemis-atomicTangerine',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },{
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF9999',
+                    theme: 'openemis-monaLisa',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF99CC',
+                    theme: 'openemis-carnationPink',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },{
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FF99FF',
+                    theme: 'openemis-violet1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FFCC00',
+                    theme: 'openemis-tangerineYellow',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },{
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FFCC33',
+                    theme: 'openemis-sunglow',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FFCC66',
+                    theme: 'openemis-grandis',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },{
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FFCC99',
+                    theme: 'openemis-peachOrange',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FFCCCC',
+                    theme: 'openemis-cosmos',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },{
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FFCCFF',
+                    theme: 'openemis-snuff',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FFFF00',
+                    theme: 'openemis-yellow1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },{
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FFFF33',
+                    theme: 'openemis-gorse',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FFFF66',
+                    theme: 'openemis-laserLemon',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },{
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FFFF99',
+                    theme: 'openemis-canary',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }, {
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FFFFCC',
+                    theme: 'openemis-cream1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                },{
+                    icon: 'kd-openemis kd-styleguide',
+                    text: '#FFFFFF',
+                    theme: 'openemis-white1',
+                    callback: (): void => {
+                        updateThemeColor();
+                    }
+                }
+            ]
+        }, {
+            btnIcon: 'kd-ellipsis',
+            dropdownType: 'list',
+            dropdownContent: [
+                {
+                    icon: 'fa fa-user',
+                    text: 'About',
+                    path: 'App/About'
+                }, {
+                    icon: 'fa fa-cog',
+                    text: 'Preferences'
+                }, {
+                    icon: 'fa fa-question-circle',
+                    text: 'Help',
+                    url: 'https://www.openemis.org/support/'
+                }, {
+                    icon: 'fa fa-power-off',
+                    text: 'Logout',
+                    path: 'Login'
+                }
+            ]
         }
     ]
 };

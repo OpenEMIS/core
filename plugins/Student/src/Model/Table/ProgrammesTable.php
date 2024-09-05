@@ -396,15 +396,21 @@ class ProgrammesTable extends ControllerActionTable
         $plugin = __($this->controller->getPlugin());
 		if($plugin != 'Profile' && $plugin != 'GuardianNav'){
 			$id = $this->request->getAttribute('params')['pass'][1];
-			$DecodedQueryString = $this->paramsDecode($id);
-			$userId = $DecodedQueryString['user_id'];
+			//POCOR-8489 --Start
+			if(isset($id)) {
+				$DecodedQueryString = $this->paramsDecode($id);
+				$userId = $DecodedQueryString['user_id'] ?? $DecodedQueryString['student_id'];
+			}else {
+				$queryString = $this->getQueryString();
+				$userId = $queryString['student_id'];
+			}
+			//POCOR-8489 --End
 			$Users = TableRegistry::get('User.Users');
 			$result = $Users
 				->find()
 				->select(['first_name','last_name'])
 				->where(['id' =>  $userId])
 				->first();
-
 			$fullName = $result->first_name.' '.$result->last_name;
 			try {
 

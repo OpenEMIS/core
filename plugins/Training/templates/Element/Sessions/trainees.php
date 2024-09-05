@@ -43,7 +43,14 @@
             0 => 'add'
         ]);
 
-        echo $this->Form->input('<i class="fa kd-import"></i> <span>'.__('Import Trainees').'</span>', [
+        // echo $this->Form->input('<i class="fa kd-import"></i> <span>'.__('Import Trainees').'</span>', [
+        //     'label' => __('Import Trainees'),
+        //     'type' => 'button',
+        //     'class' => 'btn btn-default',
+        //     'aria-expanded' => 'true',
+        //     'onclick' => "window.location.href = '$url'"
+        // ]); //POCOR-8347
+		echo $this->Form->input(__('Import Trainees'), [
             'label' => __('Import Trainees'),
             'type' => 'button',
             'class' => 'btn btn-default',
