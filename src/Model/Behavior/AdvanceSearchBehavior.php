@@ -386,8 +386,13 @@ class AdvanceSearchBehavior extends Behavior
             }
         }
 
+        $plugin = $request->getParam('plugin');
+        $ctlr = $request->getParam('controller');
+        $action = $request->getParam('action');
+        $furtherAction = isset($request->getParam('pass')[0]) ? $request->getParam('pass')[0] :'';
+        $checkInstitution = ($plugin == 'Institution' && $ctlr == 'Institutions' && $action == 'Institutions' && $furtherAction == 'index') ? true : false;
         $resetData = $request->getData('reset');
-        if ($resetData !== null && $resetData == 'Reset') {
+        if ($resetData !== null && $resetData == 'Reset' && ! $checkInstitution) {
             return false;
         }
         return $query;
