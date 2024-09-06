@@ -77,18 +77,18 @@ class WorkflowActionsTable extends AppTable
         $where[$this->aliasField('workflow_step_id')] = -1;
 
         $modelOptions = $this->getWorkflowModelOptions();
-        $selectedModel = $this->setQueryString('model', $modelOptions);
+        $selectedModel = $this->queryString('model', $modelOptions);
         $this->advancedSelectOptions($modelOptions, $selectedModel);
 
         $workflowOptions = $this->getWorkflowOptions($selectedModel);
         if (!empty($workflowOptions)) {
-            $selectedWorkflow = $this->setQueryString('workflow', $workflowOptions);
+            $selectedWorkflow = $this->queryString('workflow', $workflowOptions);
             $this->advancedSelectOptions($workflowOptions, $selectedWorkflow);
 
             $workflowStepOptions = $this->getWorkflowStepOptions($selectedWorkflow);
 
             if (!empty($workflowStepOptions)) {
-                $selectedWorkflowStep = $this->setQueryString('workflow_step', $workflowStepOptions);
+                $selectedWorkflowStep = $this->queryString('workflow_step', $workflowStepOptions);
                 $this->advancedSelectOptions($workflowStepOptions, $selectedWorkflowStep);
 
                 $where[$this->aliasField('workflow_step_id')] = $selectedWorkflowStep;

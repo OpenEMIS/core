@@ -1715,7 +1715,8 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'report_card_id' => $reportCardId,
                 'student_id' => $student->student_id,
                 'academic_period_id' => $student->academic_period_id,
-                'education_grade_id' => $student->education_grade_id
+                'education_grade_id' => $student->education_grade_id,
+                'institution_id' => $student->institution_id //POCOR-8522
             ];
             if ($this->StudentsReportCards->exists($recordIdKeys)) {
                 $studentsReportCardEntity = $this->StudentsReportCards->find()
@@ -1746,6 +1747,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $recordIdKeys['status'] = $StudentsReportCards::IN_PROGRESS;
                     $recordIdKeys['started_on'] = date('Y-m-d H:i:s');
                     $recordIdKeys['gpa'] = $getGpa;
+                    $recordIdKeys['institution_class_id'] = $student->institution_class_id;// POCOR-8522
                     $newEntity = $StudentsReportCards->newEntity($recordIdKeys);
                     $StudentsReportCards->save($newEntity);
                 } else {
@@ -1800,7 +1802,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllReportCards ' . $args;
             $logs = ROOT . DS . 'logs' . DS . 'GenerateAllReportCards.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
-            // print_r($shellCmd);die();
+             //print_r($shellCmd);die();
             try {
                 $pid = exec($shellCmd);
                 Log::write('debug', $shellCmd);
