@@ -21,6 +21,10 @@ class EducationSystemsTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->hasMany('EducationLevels', ['className' => 'Education.EducationLevels']);
         $this->setDeleteStrategy('restrict');
+        if ($this->behaviors()->has('ControllerAction')) {
+            $controllerActionBehavior = $this->behaviors()->get('ControllerAction');
+            $controllerActionBehavior->setConfig(['actions' => ['reorder' => false]]);
+        }
     }
     //POCOR-5696 start
     public function setupFields(Entity $entity)

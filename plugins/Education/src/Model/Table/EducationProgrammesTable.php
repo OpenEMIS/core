@@ -39,6 +39,10 @@ class EducationProgrammesTable extends ControllerActionTable {
             $reorderBehavior = $this->behaviors()->get('Reorder');
         	$reorderBehavior->setConfig('filter', 'education_cycle_id');
         }
+        if ($this->behaviors()->has('ControllerAction')) {
+            $controllerActionBehavior = $this->behaviors()->get('ControllerAction');
+            $controllerActionBehavior->setConfig(['actions' => ['reorder' => false]]);
+        }
 
         $this->setDeleteStrategy('restrict');
     }
