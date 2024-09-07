@@ -8,6 +8,7 @@ use Cake\Validation\Validator;
 use Cake\ORM\Entity;
 use Cake\Cache\Cache;
 use Cake\ORM\TableRegistry;
+use Cake\Http\ServerRequest;
 use Cake\I18n\Time;
 use Cake\ORM\Query;
 use App\Model\Table\ControllerActionTable;
@@ -25,14 +26,6 @@ class ThemesTable extends ControllerActionTable
     public function initialize(array $config): void
     {
         parent::initialize($config);
-        // $this->addBehavior('Page.FileUpload', [
-        //     'fieldMap' => ['value' => 'content', 'default_value' => 'default_content'],
-        //     'type' => 'image',
-        //     'compression' => 100,
-        //     'size' => '2MB',
-        //     'allowable_file_types' => ['jpeg', 'jpg', 'gif', 'png']
-        // ]);
-
         $this->addBehavior('ControllerAction.FileUpload', [
             // 'name' => 'file_name',
             // 'content' => 'file_content',
@@ -47,8 +40,6 @@ class ThemesTable extends ControllerActionTable
     {
         $this->field('content', ['visible' => false]);
         $this->field('default_content', ['visible' => false]);
-
-        // $this->setFieldOrder(['from_academic_period', 'to_academic_period', 'features', 'created_user_id', 'created']);
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
@@ -105,6 +96,9 @@ class ThemesTable extends ControllerActionTable
             $this->field('content', [
                 'visible' => 'false'
             ]);
+            $this->field('value', [ //POCOR-8268
+                'type' => 'select'
+            ]);
         }else{
             $this->field('name', [
                 'type' => 'readonly'
@@ -152,64 +146,13 @@ class ThemesTable extends ControllerActionTable
                 echo "File does not exist or could not be accessed.";
             }
         }
+        if($entity->id == 5){ //POCOR-8268
+            $colorValue = $this->request->getData($this->aliasField('value'));
+            $entity->default_value = $colorValue;
+            $entity->value = NULL;
+        }
     }
 
-    // public function validationDefault(Validator $validator): Validator
-    // {
-    //     $themes = $this;
-    //     return $validator
-    //         ->add('value', 'ruleNotHexadecimal', [
-    //             'rule' => function ($value, $context) use ($themes) {
-    //                 if ($context['data']['id'] == $themes::COLOUR) {
-    //                     return !$value || (ctype_xdigit($value) && strlen($value) == 6);
-    //                 } else {
-    //                     return true;
-    //                 }
-    //             },
-    //             'message' => __('Please enter a valid 6 digit hexadecimal code')
-    //         ])
-    //         ->allowEmpty('value')
-    //         ->allowEmpty('content')
-    //         ->allowEmpty('default_content')
-    //         ->allowEmpty('default_value');
-    // }
-
-    // public function findIndex(Query $query, array $options)
-    // {
-    //     return $query->where([$this->aliasField('name').' <> ' => 'Copyright Notice In Footer']);
-    // }
-
-    // public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
-    // {
-    //     switch ($data['id']) {
-    //         case self::LOGO:
-    //         case self::LOGINBGIMAGE:
-    //             $this->behaviors()->get('FileUpload')->config([
-    //                 'allowable_file_types' => [
-    //                     'value' => ['jpeg', 'jpg', 'gif', 'png'],
-    //                     'default_value' => ['jpeg', 'jpg', 'gif', 'png']
-    //                 ]
-    //             ]);
-    //             break;
-    //         case self::FAVICON:
-    //             $this->behaviors()->get('FileUpload')->config([
-    //                 'allowable_file_types' => [
-    //                     'value' => ['ico'],
-    //                     'default_value' => ['ico']
-    //                 ]
-    //             ]);
-    //             break;
-    //         case self::COLOUR:
-    //             $data['value'] = strtoupper($data['value']);
-    //             break;
-    //     }
-    //     if ($data->offsetExists('default_content')) {
-    //         $data->offsetUnset('default_content');
-    //     }
-    //     if ($data->offsetExists('default_value')) {
-    //         $data->offsetUnset('default_value');
-    //     }
-    // }
 
     public function onGetDefaultValue(Event $event, Entity $entity)
     {
@@ -219,8 +162,6 @@ class ThemesTable extends ControllerActionTable
         }
     }
 
-
-
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         Cache::delete('themes');
@@ -228,5 +169,23 @@ class ThemesTable extends ControllerActionTable
         $themeConfigItemRecord = $configItems->findByCode('themes')->first();
         $themeConfigItemRecord->value = Time::now()->toUnixString();
         $configItems->save($themeConfigItemRecord);
+    }
+
+    //POCOR-8268
+    public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request) 
+    {
+        $colorList = array('7FFFD4' => '7FFFD4', '808000' => '808000');
+        if ($action == 'add') {
+            $attr['type'] = 'select';
+            $attr['options'] = $colorList;
+            $attr['onChangeReload'] = true;
+        } else if ($action == 'edit') {
+            $entity = $attr['entity'];
+            $attr['type'] = 'select';
+            $attr['options'] = $colorList;
+            $attr['onChangeReload'] = true;
+        }
+        return $attr;
+
     }
 }
