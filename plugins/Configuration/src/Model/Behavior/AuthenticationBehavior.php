@@ -32,8 +32,10 @@ class AuthenticationBehavior extends Behavior
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        $authenticationType = $event->getSubject()->request->getQuery('authentication_type');
-        $type = $event->getSubject()->request->getQuery('type');
+        $controller = $event->getSubject()->getController(); // Get the controller
+        $request = $controller->getRequest(); // Get the request from the controller
+        $authenticationType = $request->getQuery('authentication_type');
+        $type = $request->getQuery('type');
         $typeValue = 'Authentication';
         $model = $this->_table;
         $alias = str_replace('Config', '', $model->getAlias());
@@ -115,7 +117,7 @@ class AuthenticationBehavior extends Behavior
     public function checkController()
     {
         $typeValue = $this->model->request->getQuery('type_value');
-        $typeValue = Inflector::camelize($typeValue, ' ');
+        $typeValue = !empty($typeValue) ? Inflector::camelize($typeValue, ' ') : 'Authentication';
         $url = $this->model->url('index');
         unset($url['authentication_type']);
         $action = $this->model->request->getParam('action');
