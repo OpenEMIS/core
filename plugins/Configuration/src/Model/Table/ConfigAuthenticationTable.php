@@ -155,7 +155,7 @@ class ConfigAuthenticationTable extends ControllerActionTable
                 return __('Disable');
             }
         }else{//POCOR-7156 ends
-            return __($this->options[$entity->value]);
+            return $this->options[$entity->value];
         }
     }
 
