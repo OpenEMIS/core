@@ -88,9 +88,9 @@ export class StudentMealImportComponent implements OnInit {
 
   ngOnInit(): void {
     this.institution_id = JSON.parse(localStorage.getItem("institution_id"));
-    this.institution_id = 6;
+    // this.institution_id = 6;
     this.academic_Period = JSON.parse(localStorage.getItem("academic_Period"));
-    this.academic_Period = 33;
+    // this.academic_Period = 33;
     this.institution_name = localStorage.getItem("institutionName");
     this.pageheader.pageheaderText = `${this.institution_name} - Import Student Attendances`
     this.loginData();
