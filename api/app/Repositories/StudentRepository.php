@@ -41,8 +41,11 @@ class StudentRepository extends Controller
             //For POCOR-7772 End
 
             $params = $request->all();
-
-            $list = InstitutionStudent::with('institution:id,code,name', 'educationGrade:id,name', 'securityUser', 'securityUser.gender:id,name', 'studentStatus', 'academicPeriod:id,name');
+            //For POCOR-8491 Start...
+            $list = InstitutionStudent::with('institution:id,code,name', 'educationGrade:id,name', 'securityUser', 'securityUser.gender:id,name', 'studentStatus', 'academicPeriod:id,name',
+                'studentCustomFieldValue:id,text_value,number_value,decimal_value,textarea_value,date_value,time_value,file,student_custom_field_id,student_id',
+                'studentCustomFieldValue.studentCustomField:id,name');
+            //For POCOR-8491 End...
 
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
@@ -70,7 +73,7 @@ class StudentRepository extends Controller
                 $list = $list->get()->toArray();
                 $resp['data'] = $list;
             }
-
+            
             return $resp;
 
         } catch (\Exception $e) {
@@ -105,8 +108,12 @@ class StudentRepository extends Controller
 
             $params = $request->all();
 
-            $list = InstitutionStudent::with('institution:id,code,name', 'educationGrade:id,name', 'securityUser', 'securityUser.gender:id,name', 'studentStatus', 'academicPeriod:id,name')->where('institution_id', $institutionId);
-
+            //For POCOR-8491 Start...
+            $list = InstitutionStudent::with('institution:id,code,name', 'educationGrade:id,name', 'securityUser', 'securityUser.gender:id,name', 'studentStatus', 'academicPeriod:id,name',
+                'studentCustomFieldValue:id,text_value,number_value,decimal_value,textarea_value,date_value,time_value,file,student_custom_field_id,student_id',
+                'studentCustomFieldValue.studentCustomField:id,name')->where('institution_id', $institutionId);
+            //For POCOR-8491 End...
+            
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
 
@@ -164,16 +171,21 @@ class StudentRepository extends Controller
             }
             //For POCOR-7772 End
 
+
+            //For POCOR-8491 Start...
             $data = InstitutionStudent::with(
                     'institution:id,code,name', 
                     'educationGrade:id,name', 
                     'securityUser', 
                     'securityUser.gender:id,name', 
                     'studentStatus', 
-                    'academicPeriod:id,name'
+                    'academicPeriod:id,name',
+                    'studentCustomFieldValue:id,text_value,number_value,decimal_value,textarea_value,date_value,time_value,file,student_custom_field_id,student_id',
+                    'studentCustomFieldValue.studentCustomField:id,name'
                 )
                 ->where('institution_id', $institutionId)
                 ->where('student_id', $studentId);
+            //For POCOR-8491 End...
 
             //For POCOR-7772 Start
             if(isset($institution_Ids)){
@@ -724,13 +736,20 @@ class StudentRepository extends Controller
         DB::beginTransaction();
         try {
             $param = $request->all();
-
             $isLinked = $this->checkIfStudentLinked($param);
             
             if(!$isLinked){
                 return 3;
             }
 
+            //Removing Student Absence Record when absence_type_id = 0...
+
+            if($param['absence_type_id'] == 0){
+                $this->deleteStudentAbsenceRecord($param);
+
+                DB::commit();
+                return 2;
+            }
 
             $check = InstitutionStudentAbsenceDetails::where([
                 'student_id' => $param['student_id'],
@@ -741,8 +760,6 @@ class StudentRepository extends Controller
                 'period' => $param['period'],
                 'subject_id' => $param['subject_id']
             ])->first();
-
-
 
             if($check){
                 $updateArr['academic_period_id'] = $param['academic_period_id'];
@@ -798,7 +815,8 @@ class StudentRepository extends Controller
                     'education_grade_id' => $param['education_grade_id'],
                     'date' => $param['date'],
                     'period' => $param['period'],
-                    'subject_id' => $param['subject_id']
+                    'subject_id' => $param['subject_id'],
+                    'no_scheduled_class' => 0
                 ])
                 ->first();
 
@@ -810,6 +828,7 @@ class StudentRepository extends Controller
                 $storeArr['date'] = $param['date'];
                 $storeArr['period'] = $param['period'];
                 $storeArr['subject_id'] = $param['subject_id'];
+                $storeArr['no_scheduled_class'] = 0;
 
                 $insert = StudentAttendanceMarkedRecords::insert($storeArr);
             }
@@ -822,7 +841,6 @@ class StudentRepository extends Controller
                 'Failed to add data in DB.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Student absences Not Added');
         }
     }
@@ -937,4 +955,62 @@ class StudentRepository extends Controller
             return false;
         }
     }
+
+
+    //For POCOR-8505 Start...
+    public function deleteStudentAbsenceRecord($param)
+    {
+        try {
+            $delete = InstitutionStudentAbsenceDetails::where([
+                    'student_id' => $param['student_id'],
+                    'institution_id' => $param['institution_id'],
+                    'academic_period_id' => $param['academic_period_id'],
+                    'institution_class_id' => $param['institution_class_id'],
+                    'date' => $param['date'],
+                    'period' => $param['period'],
+                    'subject_id' => $param['subject_id']
+                ])->delete();
+            return true;
+        } catch (\Exception $e) {
+
+        }
+    }
+    //For POCOR-8505 End...
+
+    
+    //For POCOR-8491 Start...
+    public function getStudentClasses($institutionId, $studentId)
+    {
+        try {
+            $studentClasses = InstitutionClassStudents::with('institutionClass', 'institutionClass.subjects.institutionSubject')
+                    ->where('institution_id', $institutionId)
+                    ->where('student_id', $studentId)
+                    ->get()
+                    ->toArray();
+
+            $list = [];
+
+            foreach ($studentClasses as $key => $studentClass) {
+                $list[$key]['id'] = $studentClass['institution_class']['id'];
+                $list[$key]['name'] = $studentClass['institution_class']['name'];
+                $subjects = [];
+                foreach ($studentClass['institution_class']['subjects'] as $s => $subject) {
+                    $subjects[$s]['id'] = $subject['institution_subject']['id'];
+                    $subjects[$s]['name'] = $subject['institution_subject']['name'];
+                }
+                $list[$key]['subjects'] = $subjects;
+                
+            }
+
+            return $list;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed in getStudentClasses method.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return false;
+        }
+    }
+    //For POCOR-8491 End...
 }

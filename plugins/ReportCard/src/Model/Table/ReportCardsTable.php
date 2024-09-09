@@ -29,7 +29,8 @@ class ReportCardsTable extends ControllerActionTable
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->hasMany('ReportCardSubjects', ['className' => 'ReportCard.ReportCardSubjects', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']);
         $this->hasMany('StudentReportCards', ['className' => 'Institution.InstitutionStudentsReportCards', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('ReportCardExcludedSecurityRoles', ['className' => 'ReportsCard.ReportCardExcludedSecurityRoles', 'foreignKey' => 'report_card_id']); //POCOR-7400
+        // $this->hasMany('ReportCardExcludedSecurityRoles', ['className' => 'ReportsCard.ReportCardExcludedSecurityRoles', 'foreignKey' => 'report_card_id']); //POCOR-7400
+        $this->hasMany('ReportCardExcludedSecurityRoles', ['className' => 'ReportCard.ReportCardExcludedSecurityRoles', 'foreignKey' => 'report_card_id']); //POCOR-8521
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'excel_template_name',
             'content' => 'excel_template',
@@ -66,12 +67,20 @@ class ReportCardsTable extends ControllerActionTable
 
     public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
 
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('code', 'ruleUniqueCode', [
                 'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
                 'provider' => 'table'
             ])
+            ->notEmpty('name')
+            ->notEmpty('academic_period_id')
+            ->notEmpty('education_grade_id')
+            ->notEmpty('principal_comments_required')
+            ->notEmpty('homeroom_teacher_comments_required')
+            ->notEmpty('teacher_comments_required')
             ->add('start_date', 'ruleInAcademicPeriod', [
                 'rule' => ['inAcademicPeriod', 'academic_period_id', []]
             ])
@@ -201,6 +210,8 @@ class ReportCardsTable extends ControllerActionTable
         $this->setupTabElements($entity);
     }
 
+    //POCOR-8521[START]
+
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         //POCOR-7400 start
@@ -322,6 +333,29 @@ class ReportCardsTable extends ControllerActionTable
         }
         return $attr;
     }
+    //POCOR-8521[START]
+    public function onUpdateFieldGenerateStartDate(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add') {
+            if(!empty( $request->getData('ReportCards')['generate_start_date'])){
+                $attr['type'] = 'date';
+                $attr['value'] = $request->getData('ReportCards')['generate_start_date'];
+            }
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldGenerateEndDate(Event $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add') {
+            if(!empty($request->getData('ReportCards')['generate_end_date'])){
+                $attr['type'] = 'date';
+                $attr['value'] = $request->getData('ReportCards')['generate_end_date'];
+            }
+        }
+        return $attr;
+    }
+    //POCOR-8521[END]
 
     public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -548,7 +582,7 @@ class ReportCardsTable extends ControllerActionTable
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (empty($entity->errors())) {
+        if (empty($entity->getErrors())) {
             // manually delete hasMany reportCardSubjects data
             $fieldKey = 'report_card_subjects';
             if (!array_key_exists($fieldKey, $data[$this->getAlias()])) {
@@ -570,6 +604,19 @@ class ReportCardsTable extends ControllerActionTable
     {
         $extra['excludedModels'] = [$this->ReportCardSubjects->getAlias()];
     }
+
+    // POCOR-8572 Start
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra) {
+        $extra['excludedModels'] = [$this->ReportCardSubjects->getAlias()];
+       
+        if ($this->hasAssociatedRecords($this, $entity, $extra)) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        } 
+    }
+    // POCOR-8572 End
+
 
     public function checkIfHasTemplate($reportCardId=0)
     {
@@ -599,6 +646,7 @@ class ReportCardsTable extends ControllerActionTable
         header("Content-Transfer-Encoding: binary");
         header("Content-Length: ".filesize($filepath));
         echo file_get_contents($filepath);
+        die;
     }
 
     // Added
@@ -611,13 +659,8 @@ class ReportCardsTable extends ControllerActionTable
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if (!empty($entity->generate_start_date)) {
-            $entity->generate_start_date = (new Date($entity->generate_start_date))->format('Y-m-d H:i:s');
-        }
-
-        if (!empty($entity->generate_end_date)) {
-            $entity->generate_end_date = (new Date($entity->generate_end_date))->format('Y-m-d H:i:s');
-        }        
+        $entity->generate_start_date =  (new Date($this->request->getData('ReportCards')['generate_start_date']))->modify('+1 day')->format('Y-m-d H:i:s');
+        $entity->generate_end_date =  (new Date($this->request->getData('ReportCards')['generate_end_date']))->modify('+1 day')->format('Y-m-d H:i:s');  
     } 
 
     /**

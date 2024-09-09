@@ -322,7 +322,9 @@ class StudentsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        if (array_key_exists('add', $extra['toolbarButtons'])) {
+        // Convert ArrayObject to an array
+        $toolbarButtons = (array)$extra['toolbarButtons'];
+        if (array_key_exists('add', $toolbarButtons)) {
             $extra['toolbarButtons']['add']['type'] = 'hidden';
         }
         $this->field('academic_period_id', ['visible' => false]);

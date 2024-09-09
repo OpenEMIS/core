@@ -166,7 +166,7 @@ class FieldOptionBehavior extends Behavior
     {
         $model = $this->_table;
         $fieldOptions = $this->buildFieldOptions();
-        $selectedOption = $model->getAlias();
+        $selectedOption = $model->alias;
         $this->addFieldOptionControl($extra, ['fieldOptions' => $fieldOptions, 'selectedOption' => $selectedOption]);
 
         $model->field('default', ['options' => $model->getSelectOptions('general.yesno'), 'after' => 'visible']);

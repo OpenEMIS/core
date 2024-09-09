@@ -18,6 +18,14 @@ class LocalesTable extends ControllerActionTable
        $this->toggle('edit', true);
        $this->toggle('delete', false);
        $this->toggle('remove', false);
+       $this->belongsToMany('System.LocaleContentsLanguage', [
+            'through' => 'LocaleContentTranslations',
+            'foreignKey' => 'locale_id',
+            'targetForeignKey' => 'locale_content_id',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+
     }
 
     public function implementedEvents(): array

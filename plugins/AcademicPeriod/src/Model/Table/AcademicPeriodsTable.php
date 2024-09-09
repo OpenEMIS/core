@@ -203,6 +203,20 @@ class AcademicPeriodsTable extends ControllerActionTable
                 ]])
             ->add('current', 'ruleValidateNeeded', [
                 'rule' => ['validateNeeded', 'current', $additionalParameters],
+            ])//POCOR-8284 -- start
+            ->add('name', [
+                'ruleUnique' => [
+                    'rule' => 'validateUnique',
+                    'provider' => 'table',
+                    'message' => __('This field has to be unique')
+                ]
+            ])
+            ->add('code', [
+                'ruleUnique' => [
+                    'rule' => 'validateUnique',
+                    'provider' => 'table',
+                    'message' => __('This field has to be unique')
+                ]//POCOR-8284 -- ends
             ]);
     }
 
@@ -812,6 +826,10 @@ class AcademicPeriodsTable extends ControllerActionTable
 
     public function getList($params = [])
     {
+        //POCOR-8480 starts
+        if (!is_array($params)) {
+            $params = [];
+        }//POCOR-8480 ends
         $withLevels = isset($params['withLevels']) ? $params['withLevels'] : true;
         $withSelect = isset($params['withSelect']) ? $params['withSelect'] : false;
         $isEditable = isset($params['isEditable']) ? $params['isEditable'] : null;
