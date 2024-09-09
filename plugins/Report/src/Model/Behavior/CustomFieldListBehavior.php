@@ -45,7 +45,7 @@ class CustomFieldListBehavior extends Behavior {
 		$this->CustomForms = $this->CustomFieldValues->CustomFields->CustomForms;
 		$model = $this->getConfig('model');
 		if (empty($model)) {
-			$this->getConfig('model', $this->_table->registryAlias());
+			$this->setConfig('model', $this->_table->getRegistryAlias());
 		}
 		$this->_condition = $this->getConfig('condition');
 	}
@@ -140,7 +140,23 @@ class CustomFieldListBehavior extends Behavior {
 				}
 			}
 		}
-
+		//POCOR-8562[START]
+		$excelFields = array_filter($excelFields, function($fieldValue) {
+			// Check if the 'customField' key exists and if the 'field_type' is 'REPEATER'
+			if (isset($fieldValue['customField']) && $fieldValue['customField']['field_type'] === 'REPEATER') {
+				return false; // Exclude this element
+			}
+			// Check if the 'customField' key exists and if the 'field_type' is 'STUDENT_LIST'
+			if (isset($fieldValue['customField']) && $fieldValue['customField']['field_type'] === 'STUDENT_LIST') {
+				return false; // Exclude this element
+			}
+			// Check if the 'customField' key exists and if the 'field_type' is 'STAFF_LIST'
+			if (isset($fieldValue['customField']) && $fieldValue['customField']['field_type'] === 'STAFF_LIST') {
+				return false; // Exclude this element
+			}
+			return true;
+		});
+		//POCOR-8562[END]
 		if (!empty($tableCustomFieldIds)) {
 			$excelFields[$fieldCount]['tableCustomFieldIds'] = $tableCustomFieldIds;
 		}
@@ -491,7 +507,7 @@ class CustomFieldListBehavior extends Behavior {
 				'groupField' => $customFieldValueTable->aliasField($customRecordsForeignKey),
 			])
 			->innerJoin(
-				[$customFieldValueTable->alias() => $customFieldValueTable->table()],
+				[$customFieldValueTable->getAlias() => $customFieldValueTable->getTable()],
 				[$customFieldValueTable->aliasField($customFieldsForeignKey).'='.$customFieldsTable->aliasField('id')]
 			)
 			->select($selectedColumns)

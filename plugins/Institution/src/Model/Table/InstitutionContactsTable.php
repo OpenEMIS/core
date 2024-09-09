@@ -56,11 +56,17 @@ class InstitutionContactsTable extends ControllerActionTable {
                 ])
 
             ->allowEmpty('telephone')
-            ->add('telephone', 'ruleCustomTelephone', [
-                    'rule' => ['validateCustomPattern', 'institution_telephone'],
-                    'provider' => 'table',
-                    'last' => true
-                ])
+            // ->add('telephone', 'ruleCustomTelephone', [
+            //         'rule' => ['validateCustomPattern', 'institution_telephone'],
+            //         'provider' => 'table',
+            //         'last' => true
+            //     ])
+
+            ->add('telephone', 'ruleContactNumberPattern', [
+                'rule' => ['validateContactNumberPattern', 'validate_contact_person_telephone'],
+                'provider' => 'table',
+                'last' => true
+            ])
 
             ->allowEmpty('fax')
             ->add('fax', 'ruleCustomFax', [

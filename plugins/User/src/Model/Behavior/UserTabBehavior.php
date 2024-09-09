@@ -214,6 +214,25 @@ class UserTabBehavior extends Behavior
     {
         $buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
         $buttons = $this->fixActionButtons($entity, $buttons);
+        // POCOR-8155 Start
+        if($this->_table->getAlias() == "InstitutionCases") {
+            if (!$this->_table->AccessControl->isAdmin()) {
+                $workflowStep = $this->_table->getWorkflowStep($entity);
+                $isEditable = false;
+                $isDeletable = false;
+                if (!empty($workflowStep)) {
+                    $isEditable = $workflowStep->is_editable == 1 ? true : false;
+                    $isDeletable = $workflowStep->is_removable == 1 ? true : false;
+                }
+                if (isset($buttons['edit']) && !$isEditable) {
+                    unset($buttons['edit']);
+                }
+                if (isset($buttons['remove']) && !$isDeletable) {
+                    unset($buttons['remove']);
+                }
+            }
+        }
+        // POCOR-8155 End
         return $buttons;
     }
 

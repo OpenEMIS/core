@@ -328,6 +328,105 @@ class AttendanceService extends Controller
     //For POCOR-8363 Ends...
 
 
+
+    //For POCOR-8397 Starts...
+    public function getArchiveAcademicPeriods($params)
+    {
+        try {
+            $data = $this->attendanceRepository->getArchiveAcademicPeriods($params);
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get archive academic periods.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to get archive academic periods.');
+        }
+    }
+
+
+    public function getStudentAttendanceMarkedRecordArchiveList($params, $institutionId, $gradeId, $classId)
+    {
+        try {
+            $data = $this->attendanceRepository->getStudentAttendanceMarkedRecordArchiveList($params, $institutionId, $gradeId, $classId);
+            
+            $resp = [];
+
+            if(count($data['data']) > 0){
+                foreach ($data['data'] as $k => $d) {
+                    $resp[$k]['institution_id'] = $d['institution_id'];
+                    $resp[$k]['academic_period_id'] = $d['academic_period_id'];
+                    $resp[$k]['institution_class_id'] = $d['institution_class_id'];
+                    $resp[$k]['education_grade_id'] = $d['education_grade_id'];
+                    $resp[$k]['date'] = date('F d, Y', strtotime($d['date']));
+                    $resp[$k]['period'] = $d['period'];
+                    $resp[$k]['subject_id'] = $d['subject_id'];
+                    $resp[$k]['no_scheduled_class'] = $d['no_scheduled_class'];
+                }
+            }
+
+            $data['data'] = $resp;
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get student attendance marked archive.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to get student attendance marked archive.');
+        }
+    }
+
+
+    public function getStudentAttendanceArchiveList($params, $institutionId, $gradeId, $classId)
+    {
+        try {
+            $data = $this->attendanceRepository->getStudentAttendanceArchiveList($params, $institutionId, $gradeId, $classId);
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get student attendance archive list.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to get student attendance archive list.');
+        }
+    }
+
+
+    public function getStudentAttendanceArchiveExport($params)
+    {
+        try {
+            $data = $this->attendanceRepository->getStudentAttendanceArchiveExport($params);
+            
+            $resp = [];
+
+            foreach($data as $k => $d){
+                $resp[$k]['Student'] = $d['first_name']. ' '.$d['last_name'];
+                $resp[$k]['Academic Period'] = $d['academic_period_name'];
+                $resp[$k]['Institution Class'] = $d['class_name'];
+                $resp[$k]['Education Grade'] = $d['education_grade_name'];
+                $resp[$k]['Date'] = date('F d, Y', strtotime($d['date']));
+                $resp[$k]['Period'] = $d['period'];
+                $resp[$k]['Comment'] = $d['comment'];
+                $resp[$k]['Absence Type'] = $d['absence_type_name'];
+                $resp[$k]['Student Absence Reason'] = $d['student_absence_reason_name'];
+                $resp[$k]['Subject'] = $d['institution_subject_name'];
+            }
+            
+            return $resp;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to export students attendances archive from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to export students attendances archive from DB.');
+        }
+    }
+    //For POCOR-8397 Ends...
+    
     //For POCOR-8396 Start...
     public function getDataForSheet($params)
     {

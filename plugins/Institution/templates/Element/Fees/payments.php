@@ -14,15 +14,9 @@
 </script>
 <div class="input clearfix">
 	<div class="clearfix">
-	<?php
-		echo $this->Form->input('<i class="fa fa-plus"></i> <span>'.__('Add New Payment').'</span>', [
-			'label' => __('Payments'),
-			'type' => 'button',
-			'class' => 'btn btn-default',
-			'aria-expanded' => 'true',
-			'onclick' => "$('#reload').val('reload').click();"
-		]);
-	?>
+		<button type="button" class="btn btn-default" aria-expanded="true" onclick="$('#reload').val('reload').click();">
+			<i class="fa fa-plus"></i> <span><?php echo __('Add New Payment'); ?></span>
+		</button>
 	</div>
 	<div class="table-wrapper full-width">
 		<div class="table-responsive">
@@ -96,16 +90,9 @@
 							<?php endforeach ?>
 
 							<td>
-								<?php
-								echo $this->Form->input('<i class="fa fa-trash"></i> <span>Delete</span>', [
-									'label' => false,
-									'type' => 'button',
-									'class' => 'btn btn-dropdown action-toggle btn-single-action',
-									'title' => "Delete",
-									'aria-expanded' => 'true',
-									'onclick' => "jsTable.doRemove(this); jsTable.computeTotalForMoney('total_payments'); jsForm.compute(this); "
-								]);
-								?>
+								<button type="button" class="btn btn-dropdown action-toggle btn-single-action" title="<?php echo __('Delete'); ?>" aria-expanded="true" onclick="jsTable.doRemove(this); jsTable.computeTotalForMoney('total_payments'); jsForm.compute(this);">
+									<i class="fa fa-trash"></i> <span><?php echo __('Delete'); ?></span>
+								</button>
 							</td>
 						</tr>
 

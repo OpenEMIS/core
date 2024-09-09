@@ -150,8 +150,12 @@ class ReportListBehavior extends Behavior {
 			$query = $this->ReportProgress->find('all')
 			//START:POCOR-6629
 			// ->where(['JSON_EXTRACT(params, "$.current_institution_id")=' . "'".$institutionId."'",'module'=>'InstitutionStandards'])
-			->where(['JSON_EXTRACT(params, "$.institution_id")=' . $institutionId,'module'=>'InstitutionStandards'])
+			//->where(['JSON_EXTRACT(params, "$.institution_id")=' . $institutionId,'module'=>'InstitutionStandards'])
 			//END:POCOR-6629
+			->where([
+				'JSON_UNQUOTE(JSON_EXTRACT(params, "$.institution_id")) =' => $institutionId,
+				'module' => 'InstitutionStandards'
+			]) //POCOR-8485
 			->order([
 				$this->ReportProgress->aliasField('created') => 'DESC',
 				$this->ReportProgress->aliasField('expiry_date') => 'DESC'
@@ -312,7 +316,7 @@ class ReportListBehavior extends Behavior {
 			if (in_array($obj['type'], ['select', 'chosenSelect']) && !in_array($key, ['feature', 'format'])) {
 				$selectedOption = $data[$alias][$key];
 
-				if (array_key_exists($selectedOption, $obj['options']) && !empty($obj['options'][$selectedOption])) {
+				if (isset($obj['options'][$selectedOption]) && !empty($obj['options'][$selectedOption])) {
 					$value = $obj['options'][$selectedOption];
 
 					// used for institution rubrics
@@ -530,7 +534,9 @@ class ReportListBehavior extends Behavior {
 		$controller = $this->_table->controller->getName();
 		$table = $this->_table->getAlias();
 		$this->_table->Alert->success('general.delete.success');
-		$url = ['controller' => $controller, 'action' => $table, 'index'];
+		$institution_id = $this->_table->request->getQuery('institution_id');
+		$queryString = $this->_table->paramsEncode(['institution_id' => $institution_id]); 
+		$url = ['controller' => $controller, 'action' => $table, 'index', $queryString];
 
 		return $this->_table->controller->redirect($url);
     }
