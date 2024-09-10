@@ -1,0 +1,17 @@
+
+table {
+    font-size: 18px;
+    border: 1px solid #DDD;
+    width: -webkit-fill-available;
+}
+table thead th {
+    text-align: center;
+    border: 1px solid #DDD;
+    padding: 10px;
+}
+
+table tbody td {
+    border: 1px solid #DDD;  
+    padding: 10px;
+    text-align: center;
+}

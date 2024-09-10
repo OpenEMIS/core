@@ -30,6 +30,9 @@ import { StudentAttendanceReportComponent } from './student-attendance-report/st
 import { StaffAttendanceReportComponent } from './staff-attendance-report/staff-attendance-report.component';
 import { StudentMealImportComponent } from './student-meal-import/student-meal-import.component';
 import { StudentMealResultComponent } from './student-meal-result/student-meal-result.component';
+import { StudentTimetableComponent } from './student-timetable/student-timetable.component';
+import { MatDialogModule } from "@angular/material/dialog";
+import { DialogOpenComponent } from './dialog-open/dialog-open.component';
 
 export const appRoutes: Routes = [
   { path: 'Dashboard', component: WorkbenchComponent },
@@ -49,7 +52,8 @@ export const appRoutes: Routes = [
   { path: `Institution/Institutions/${setEncodedId()}/InstitutionStaffAttendances/index`, component: StaffAttendanceComponent },
   { path: `Institution/Institutions/${setEncodedId()}/ImportStaffAttendances/add`, component: StaffAttendanceReportComponent },
   { path: 'Institution/Institutions/Classes', component: ClassesComponent },
-  { path: 'Institution/Institutions/Subjects', component: SubjectsComponent }
+  { path: 'Institution/Institutions/Subjects', component: SubjectsComponent },
+  { path: 'Institution/Institutions/ScheduleTimetable/view', component: StudentTimetableComponent }
 ];
 
 function setEncodedId() {
@@ -116,7 +120,9 @@ function getBaseUrl() {
     StudentAttendanceReportComponent,
     StaffAttendanceReportComponent,
     StudentMealImportComponent,
-    StudentMealResultComponent
+    StudentMealResultComponent,
+    StudentTimetableComponent,
+    DialogOpenComponent
   ],
   imports: [
     BrowserModule,
@@ -124,7 +130,8 @@ function getBaseUrl() {
     CommonModule,
     BrowserAnimationsModule,
     HttpClientModule,
-    RouterModule.forRoot(appRoutes)
+    RouterModule.forRoot(appRoutes),
+    MatDialogModule
   ],
   providers: [{ provide: APP_BASE_HREF, useValue: getBaseUrl() },
     ApiService],

@@ -1,0 +1,140 @@
+<kd-progressloader *ngIf="displayLoading" configtype="small-spinner" [configvalue]="null"></kd-progressloader>
+<kd-pageheader [config]='pageheader'></kd-pageheader>
+<table class="m-4" *ngIf="displayTable">
+    <thead>
+        <tr>
+            <th colspan="6">Timetable<br><span style="font-size: 15px;">Grade: Primary 1 | Class: Primary 1-A</span>
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Time</td>
+            <td *ngFor="let day of days">
+                {{day?.day | uppercase}}
+            </td>
+        </tr>
+        <tr *ngFor="let schedule of timetableData; let indexOfElement=index">
+            <td style="width: 20%;">{{schedule.time}}</td>
+            <td style="background-color: #eeeeee;" (mouseenter)="setMouseOver(indexOfElement, inedxOfData)"
+                (mouseleave)="resetMouseOver()" *ngFor="let scheduleData of schedule.data; let inedxOfData = index">
+                <div style="display: flex; justify-content: space-between; cursor: pointer;">
+                    <div (click)="openDialog(indexOfElement, inedxOfData)">
+                        <div *ngIf="scheduleData?.subject != null && scheduleData?.room != null;"
+                            style="text-align: left;">
+                            <div>
+                                {{scheduleData.subject}} <br>
+                                <span style="font-size: 15px;">{{scheduleData.room}}</span>
+                            </div>
+                        </div>
+                        <div *ngIf="scheduleData?.subject == null && scheduleData?.room == null;"
+                            style="text-align: left;">
+                            <span style="color: #000000;">--no data--</span>
+                        </div>
+                    </div>
+                    <div *ngIf="scheduleData?.subject != null && scheduleData?.room != null">
+                        <span style="font-size: 12px; cursor: pointer;"
+                            [style]="isMouseOver && indexOfElement == currentRowIndex && currentCellIndex == inedxOfData ? 'color: red' : 'color: #eeeeee'"
+                            (click)="onRemoveClick(indexOfElement, inedxOfData)">
+                            <i class="fa fa-trash" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                </div>
+            </td>
+            <!-- <td style="background-color: #eeeeee;" (mouseenter)="setMouseOver(indexOfElement, 1)" (mouseleave)="resetMouseOver()">
+                <div style="display: flex; justify-content: space-between; cursor: pointer;">
+                    <div (click)="openDialog(indexOfElement, 1, schedule)">
+                        <div *ngIf="schedule.data[1].subject != null && schedule.data[1].room != null;"
+                            style="text-align: left;">
+                            <div>
+                                {{schedule.data[1].subject}} <br>
+                                <span style="font-size: 15px;">{{schedule.data[1].room}}</span>
+                            </div>
+                        </div>
+                        <div *ngIf="schedule.data[1].subject == null && schedule.data[1].room == null;"
+                            style="text-align: left;">
+                            <span style="color: #000000;">--no data--</span>
+                        </div>
+                    </div>
+                    <div *ngIf="schedule.data[1].subject != null && schedule.data[1].room != null;">
+                        <span style="font-size: 12px; cursor: pointer;" [style]=" isMouseOver && indexOfElement == currentRowIndex && currentCellIndex == 1 ? 'color: red' : 'color: #eeeeee'"
+                            (click)="onRemoveClick(indexOfElement, 1)">
+                            <i class="fa fa-trash" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                </div>
+            </td>
+            <td style="background-color: #eeeeee;" (mouseenter)="setMouseOver(indexOfElement, 2)" (mouseleave)="resetMouseOver()">
+                <div style="display: flex; justify-content: space-between; cursor: pointer;">
+                    <div (click)="openDialog(indexOfElement, 2)">
+                        <div *ngIf="schedule.data[2].subject != null && schedule.data[2].room != null;"
+                            style="text-align: left;">
+                            <div>
+                                {{schedule.data[2].subject}} <br>
+                                <span style="font-size: 15px;">{{schedule.data[2].room}}</span>
+                            </div>
+                        </div>
+                        <div *ngIf="schedule.data[2].subject == null && schedule.data[2].room == null;"
+                            style="text-align: left;">
+                            <span style="color: #000000;">--no data--</span>
+                        </div>
+                    
+                    </div>
+                    <div *ngIf="schedule.data[2].subject != null && schedule.data[2].room != null;">
+                        <span style="font-size: 12px; cursor: pointer;" [style]=" isMouseOver && indexOfElement == currentRowIndex && currentCellIndex == 2 ? 'color: red' : 'color: #eeeeee'"
+                            (click)="onRemoveClick(indexOfElement, 2)">
+                            <i class="fa fa-trash" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                </div>
+            </td>
+            <td style="background-color: #eeeeee;" (mouseenter)="setMouseOver(indexOfElement, 3)" (mouseleave)="resetMouseOver()">
+                <div style="display: flex; justify-content: space-between; cursor: pointer;">
+                    <div (click)="openDialog(indexOfElement, 3)">
+                        <div *ngIf="schedule.data[3].subject != null && schedule.data[3].room != null;"
+                            style="text-align: left;">
+                            <div>
+                                {{schedule.data[3].subject}} <br>
+                                <span style="font-size: 15px;">{{schedule.data[3].room}}</span>
+                            </div>
+                        </div>
+                        <div *ngIf="schedule.data[3].subject == null && schedule.data[3].room == null;"
+                            style="text-align: left;">
+                            <span style="color: #000000;">--no data--</span>
+                        </div>
+                    </div>
+                    <div *ngIf="schedule.data[3].subject != null && schedule.data[3].room != null;">
+                        <span style="font-size: 12px; cursor: pointer;" [style]=" isMouseOver && indexOfElement == currentRowIndex && currentCellIndex == 3 ? 'color: red' : 'color: #eeeeee'"
+                            (click)="onRemoveClick(indexOfElement, 3)">
+                            <i class="fa fa-trash" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                </div>
+            </td>
+            <td style="background-color: #eeeeee;" (mouseenter)="setMouseOver(indexOfElement, 4)" (mouseleave)="resetMouseOver()">
+                <div style="display: flex; justify-content: space-between; cursor: pointer;">
+                    <div (click)="openDialog(indexOfElement, 4)">
+                        <div *ngIf="schedule.data[4].subject != null && schedule.data[4].room != null;"
+                            style="text-align: left;">
+                            <div>
+                                {{schedule.data[4].subject}} <br>
+                                <span style="font-size: 15px;">{{schedule.data[4].room}}</span>
+                            </div>
+                        </div>
+                        <div *ngIf="schedule.data[4].subject == null && schedule.data[4].room == null;"
+                            style="text-align: left;">
+                            <span style="color: #000000;">--no data--</span>
+                        </div>
+                    </div>
+                    <div *ngIf="schedule.data[4].subject != null && schedule.data[4].room != null;">
+                        <span style="font-size: 12px; cursor: pointer;" [style]=" isMouseOver && indexOfElement == currentRowIndex && currentCellIndex == 4 ? 'color: red' : 'color: #eeeeee'"
+                            (click)="onRemoveClick(indexOfElement, 4)">
+                            <i class="fa fa-trash" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                </div>
+            </td> -->
+            
+        </tr>
+    </tbody>
+</table>
