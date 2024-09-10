@@ -6121,8 +6121,8 @@ class InstitutionsController extends AppController
             $staff = $this->handleStaffInstitutionData($requestData, $userRecordId, $userId);
             $this->handleShifts($requestData, $userRecordId);
             $this->triggerWebhooks($userRecordId, $requestData);
-            Log::debug(print_r($staff,true));
-            Log::debug(print_r($staffData,true));
+//            Log::debug(print_r($staff,true)); // POCOR-8532
+//            Log::debug(print_r($staffData,true)); // POCOR-8532
             return $this->sendJsonResponse(['message' => 'success', 'staff' => $staff->toArray()], 200);
         } else {
 //            Log::debug(print_r($staffData,true));
@@ -6702,7 +6702,8 @@ class InstitutionsController extends AppController
             $previousInstitutionId = $requestData['previous_institution_id'] ?? null;
             $previousInstitutionStaffId = $requestData['previous_institution_staff_id'] ?? "";
             $staffTransferReasonId = $requestData['staff_transfer_reason_id'] ?? null;
-
+            $is_homeroom =$requestData['is_homeroom'] ?? null; // POCOR-8532
+            $fte =$requestData['fte'] ?? null; // POCOR-8532
             if (!$previousInstitutionId) {
                 return ['error' => 'no previous_institution_id'];
             }
@@ -6736,7 +6737,7 @@ class InstitutionsController extends AppController
                     'assignee_id' => $this->Auth->user('id'), //POCOR-7080
                     'new_institution_position_id' => $institutionPositionId,
                     'new_staff_type_id' => $staffTypeId,
-                    'new_FTE' => $fte,
+                    'new_FTE' => $fte ?? 1, // POCOR-8532
                     'is_homeroom' => $is_homeroom ?? 0, // POCOR-7870
                     'new_start_date' => $startDate,
                     'new_end_date' => $endDate,
