@@ -35,9 +35,14 @@ class MoodleCreateUserBehavior extends Behavior
         if ($isNew) { // For Add action only
             $moodleApi = new MoodleApi();
             if ($moodleApi->enableUserCreation()) {
-                $response = $moodleApi->createUser($entity);
-                if ($response->getStatusCode() != 200) {  // Use getStatusCode() instead of accessing $code directly
-                    throw new Exception("Network Error");
+                try { // POCOR-8532
+                    $response = $moodleApi->createUser($entity);
+                } catch (\Exception $exception) {
+
+                }
+                if (!$response || !$response->getStatusCode() != 200) {  // Use getStatusCode() instead of accessing $code directly
+//                    throw new Exception("Network Error"); // POCOR-8532
+                    Log::debug('Network Error in Moodle'); // POCOR-8532
                 }
             }
         }
