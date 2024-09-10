@@ -49,14 +49,16 @@ class AuthenticationBehavior extends Behavior
         }
         $this->model->controller->set('field_type', $fieldType);//POCOR-7156 Ends
         if ($authenticationType && $authenticationType != $alias) {
-            return $model->controller->redirect([
+            $url = [
                 'plugin' => 'Configuration',
                 'controller' => 'Configurations',
                 'action' => 'Auth'.$authenticationType,
-                'authentication_type' => $authenticationType,
+                '?'=>['authentication_type' => $authenticationType,
                 'type_value' => 'Authentication',
-                'type' => $type
-            ]);
+                'type' => $type],
+                
+            ];
+            return $model->controller->redirect($url);
         } elseif ($model->getTable() != 'config_items' && !$authenticationType) {
             return $model->controller->redirect([
                 'plugin' => 'Configuration',

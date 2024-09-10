@@ -46,7 +46,7 @@ class OAuthAuthenticationBehavior extends Behavior
         $this->model->field('jwks_uri', ['attr' => ['required' => true, 'label' => __('JSON Web Token Keys Uri')]]);
         if ($entity->getErrors('code')) {
             $code = uniqid('IDP');
-            $this->model->request->data[$this->getAlias()]['code'] = $code;
+            $this->model->request->getData()[$this->model->getAlias()]['code'] = $code;
             //$entity->invalid('code', $code, true);
             $entity->getErrors('redirect_uri', $entity->getErrors('code'), true);
         }
