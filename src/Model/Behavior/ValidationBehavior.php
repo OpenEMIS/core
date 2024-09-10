@@ -346,6 +346,7 @@ class ValidationBehavior extends Behavior
      */
     public static function compareDate($field, $compareField, $equals, array $globalData)
     {
+
         $type = self::_getFieldType($compareField);
         $startDate = new DateTime($field);
         if ($compareField) {
@@ -2044,6 +2045,80 @@ class ValidationBehavior extends Behavior
         }
         return true;
     }
+    //POCOR-8487[START]
+    public static function validateContactNumberPattern($field, $code, array $globalData)
+    {
+        $pattern = '';
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $valuePattern = $ConfigItems->value($code);
+        if (!empty($valuePattern) && !preg_match($valuePattern, $field)) {
+            return $model->getMessage('general.custom_validation_pattern');
+        }
+        return true;
+    }
+
+    public static function validateMobileNumberPattern($field, $code, array $globalData)
+    {
+        $pattern = '';
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $valuePattern = $ConfigItems->value($code);
+        if (!empty($valuePattern) && !preg_match($valuePattern, $field)) {
+            return $model->getMessage('general.custom_validation_pattern');
+        }
+        return true;
+    }
+
+    public static function validateMinHeightValue($field, $code, array $globalData)
+    {
+        $pattern = '';
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $StudentMinimumHeight = $ConfigItems->value($code);
+        if ($field < $StudentMinimumHeight) {
+            return $model->getMessage('general.validation_minimum_height');
+        }
+        return true;
+    }
+
+    public static function validateMaxHeightValue($field, $code, array $globalData)
+    {
+        $pattern = '';
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $StudentMaximumHeight = $ConfigItems->value($code);
+        if($field > $StudentMaximumHeight){
+            return $model->getMessage('general.validation_maximum_height');
+        }
+        return true;
+    }
+
+    public static function validateMinWeightValue($field, $code, array $globalData)
+    {
+        $pattern = '';
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $StudentMinimumWeight = $ConfigItems->value($code);
+        if ($field < $StudentMinimumWeight) {
+            return $model->getMessage('general.validation_minimum_weight');
+        }
+        return true;
+    }
+
+    public static function validateMaxWeightValue($field, $code, array $globalData)
+    {
+        $pattern = '';
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $StudentMinimumWeight = $ConfigItems->value($code);
+        if ($field > $StudentMinimumWeight) {
+            return $model->getMessage('general.validation_maximum_weight');
+        }
+        return true;
+    }
+
+     //POCOR-8487[END]
 
     public static function validateCustomPattern($field, $code, array $globalData)
     {
