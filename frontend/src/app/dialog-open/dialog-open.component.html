@@ -1,0 +1,53 @@
+<div class="dialog" *ngIf="displayDialog">
+    <div>
+        <div style="display: flex; justify-content: space-between;">
+            <h2>Lesson</h2>
+            <span (click)="onCloseClick()" class="close-icon"><i class="fa fa-times" aria-hidden="true"></i></span>
+        </div>
+        <label for="curriculumType">Type:</label> <br>
+        <select #curriculum name="curriculumType" class="select-section" id="curriculumType"
+            (change)="curriculumChanged(curriculum)">
+            <option [value]="lesson.id" [selected]="lesson.id == 1" *ngFor="let lesson of lessonType">{{ lesson?.name }}</option>
+            <!-- <option value="nonCurriculum">Non Curriculum Lesson</option> -->
+        </select>
+    </div>
+
+    <div *ngIf="!toggleCurriculum" style="margin-top: 50px;">
+        <div style="border: 1px solid #DDD;">
+            <p class="curriculum-non-curricuium">Non Curriculum</p>
+            <div class="sub-section-main">
+                <label for="nonCurriculumName">Name</label><br>
+                <input #nonCurriculumName class="select-section" value="Activity" type="text" name="nonCurriculumName" id="nonCurriculumName"
+                    (input)="onNonCurriculumInput(nonCurriculumName)">
+                <br>
+                <label for="nonCurriculumRoom" style="margin-top: 10px;">Room</label><br>
+                <select #roomSelect name="nonCurriculumRoom" id="nonCurriculumRoom"
+                    class="select-section" (change)="onRoomSelect(roomSelect)">
+                    <option [value]="room.id" *ngFor="let room of institutionRoomData">{{ room.name }}</option>
+                </select>
+                <button class="btn btn-primary" (click)="onAddClick()">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="toggleCurriculum" style="margin-top: 50px;">
+        <div style="border: 1px solid #DDD;">
+            <p class="curriculum-non-curricuium">Curriculum</p>
+            <div class="sub-section-main">
+                <label for="subject">Subject</label><br>
+                <select #pickSubject name="subject" id="subject" class="select-section"
+                    (change)="onSubjectChanged(pickSubject)">
+                    <option [value]="subject?.id" *ngFor="let subject of institutionSubject">{{ subject?.name }}
+                    </option>
+                </select>
+                <br>
+                <label for="curriculumRoom" class="mt-4">Room</label><br>
+                <select #roomSelect class="select-section" name="curriculumRoom" id="curriculumRoom"
+                    (change)="onRoomSelect(roomSelect)">
+                    <option [value]="room.id" *ngFor="let room of institutionRoomData">{{ room.name }}</option>
+                </select>
+                <button class="btn btn-primary mt-3" (click)="onAddClick()">Add</button>
+            </div>
+        </div>
+    </div>
+</div>
