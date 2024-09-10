@@ -1,3 +1,30 @@
+### [4.2.0] - 2024-09-06
+- Implemented: Develop APIs for student attendance archive
+- Implemented: Develop a default Laravel page for OpenEMIS Core
+- Bug Fixed: Administration>Performance>Report Cards(Bahamas): Delete should check against associated records
+- Bug Fixed: Institutions > Performance > Assessments > Reports:Assessment Report generation did take awhile however, report did got generated v4
+
+### [4.1.7] - 2024-09-04
+- Bug Fixed: Survey App: Code is missing in latest master
+
+### [4.1.6] - 2024-09-04
+- Implemented: Develop Workbench feature v4 APIs - Part 2
+- Bug Fixed: Administration>Calendar: Institution Shift id should not appear
+- Bug Fixed: Develop system validations for v4
+- Bug Fixed: Reports > Surveys > Surveys Report: User should be able to generate report when repeater is used
+- Bug Fixed: Institutions > Staff > Transfer: Whenever user go through different workflow for staff transfer a 404 error will show but changes is changed successfully
+- Bug Fixed: Administration>Performance>Assessment(Bahamas): User should be only able to delete records if there are no associated records
+- Bug Fixed: API: Need full file name with the URL to let us download the file
+
+### [4.1.5] - 2024-09-02
+- Implemented: Develop changes to add Education Subject column to the existing Institution Subjects report
+- Bug Fixed: Personal > Cases > View page : Missing Add comment button
+- Bug Fixed: Administration>Survey>Forms>Rules: Rule page should be showing and can create rules and sections
+- Bug Fixed: Administration>Performance>Report Cards(Bahamas): Getting 404 error when adding, viewing, editing and deleting
+- Bug Fixed: Reports>Survey>Institution: Survey should not include repeater, student list and staff list
+- Bug Fixed: Institutions>Students>Add(Automation): Unable to detect element in automation
+- Bug Fixed: Institutions>Performance>Assessments(Bahamas): PDF and Report getting 404 error
+
 ### [4.1.4] - 2024-08-28
 - Implemented: Changes to the Administration > System Setup > APIs > Credentials page
 - Implemented: Develop additional advanced search filters
