@@ -268,7 +268,9 @@ class InstitutionsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        $validator = $this->LatLongValidation(); //POCOR-6625 incomment <vikas.rathore@mail.valocoders.com>
+        if(isset($this->request->getParam('pass')[0]) && $this->request->getParam('pass')[0] != 'edit') { //POCOR-8585
+            $validator = $this->LatLongValidation(); //POCOR-6625 incomment <vikas.rathore@mail.valocoders.com>
+        }
         $validator
             ->setProvider('custom', $this)
             ->add('date_opened', [
