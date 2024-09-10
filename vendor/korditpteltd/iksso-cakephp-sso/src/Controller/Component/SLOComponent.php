@@ -11,10 +11,11 @@ class SLOComponent extends Component
     public function login()
     {
         //Log::write('debug', $this->request);
-        $request = new ServerRequest();
+       // $request = new ServerRequest();
+         $request = $this->getController()->getRequest();
         if ($request->is('post')) {
-            $username = $this->request->data('username');
-            $sessionId = $this->request->data('session_id');
+            $username = $this->request->getData('username');
+            $sessionId = $this->request->getData('session_id');
             // Commit session
             if (session_id()) {
                 // Same as session_write_close()
@@ -47,9 +48,9 @@ class SLOComponent extends Component
 
     private function captureLogin()
     {
-        $url = $this->request->data('url');
-        $sessionId = $this->request->data('session_id');
-        $username = $this->request->data('username');
+        $url = $this->request->getData('url');
+        $sessionId = $this->request->getData('session_id');
+        $username = $this->request->getData('username');
         if (!empty($url) && !empty($sessionId) && !empty($username)) {
             TableRegistry::get('SSO.SingleLogout')->addRecord($url, $username, $sessionId);
         }

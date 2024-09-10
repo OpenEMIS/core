@@ -92,6 +92,47 @@ class StudentController extends Controller
      *                      @OA\Property(property="academic_period_id", type="integer", example=28),
      *                      @OA\Property(property="academic_period_name", type="string", example="2019"),
      *                      @OA\Property(property="previous_institution_student_id", type="string", example="6546009d-815f-42e6-8db5-76050a4f95d9"),
+     *                      @OA\Property(
+     *                          property="classes",
+     *                          type="array",
+     *                          @OA\Items(
+     *                              type="object",
+     *                              @OA\Property(property="id", type="integer", example=593),
+     *                              @OA\Property(property="name", type="string", example="Primary 1-C"),
+     *                              @OA\Property(
+     *                                  property="subjects",
+     *                                  type="array",
+     *                                  @OA\Items(
+     *                                      type="object",
+     *                                      @OA\Property(property="id", type="integer", example=4732),
+     *                                      @OA\Property(property="name", type="string", example="Expressive Arts")
+     *                                  )
+     *                              )
+     *                          )
+     *                       ),
+     *                       @OA\Property(
+     *                          property="custom_fields",
+     *                          type="array",
+     *                          @OA\Items(
+     *                              type="object",
+     *                              @OA\Property(property="id", type="string", example="0d66a4f8-a274-48cc-9520-967a07731ae8"),
+     *                              @OA\Property(property="text_value", type="string", example=""),
+     *                              @OA\Property(property="number_value", type="number", example=null),
+     *                              @OA\Property(property="decimal_value", type="string", example=""),
+     *                              @OA\Property(property="textarea_value", type="string", example=""),
+     *                              @OA\Property(property="date_value", type="string", format="date", example=null),
+     *                              @OA\Property(property="time_value", type="string", format="time", example=null),
+     *                              @OA\Property(property="file", type="string", example=""),
+     *                              @OA\Property(property="student_custom_field_id", type="integer", example=17),
+     *                              @OA\Property(property="student_id", type="integer", example=14663),
+     *                              @OA\Property(
+     *                                  property="student_custom_field",
+     *                                  type="object",
+     *                                  @OA\Property(property="id", type="integer", example=17),
+     *                                  @OA\Property(property="name", type="string", example="Father Living With Student")
+     *                              )
+     *                          )
+     *                      ),
      *                      @OA\Property(property="modified_user_id", type="integer", example=null),
      *                      @OA\Property(property="modified", type="string", example=null),
      *                      @OA\Property(property="created_user_id", type="integer", example=2),
@@ -201,6 +242,47 @@ class StudentController extends Controller
      *                      @OA\Property(property="academic_period_id", type="integer", example=28),
      *                      @OA\Property(property="academic_period_name", type="string", example="2019"),
      *                      @OA\Property(property="previous_institution_student_id", type="string", example="6546009d-815f-42e6-8db5-76050a4f95d9"),
+     *                      @OA\Property(
+     *                          property="classes",
+     *                          type="array",
+     *                          @OA\Items(
+     *                              type="object",
+     *                              @OA\Property(property="id", type="integer", example=593),
+     *                              @OA\Property(property="name", type="string", example="Primary 1-C"),
+     *                              @OA\Property(
+     *                                  property="subjects",
+     *                                  type="array",
+     *                                  @OA\Items(
+     *                                      type="object",
+     *                                      @OA\Property(property="id", type="integer", example=4732),
+     *                                      @OA\Property(property="name", type="string", example="Expressive Arts")
+     *                                  )
+     *                              )
+     *                          )
+     *                       ),
+     *                       @OA\Property(
+     *                          property="custom_fields",
+     *                          type="array",
+     *                          @OA\Items(
+     *                              type="object",
+     *                              @OA\Property(property="id", type="string", example="0d66a4f8-a274-48cc-9520-967a07731ae8"),
+     *                              @OA\Property(property="text_value", type="string", example=""),
+     *                              @OA\Property(property="number_value", type="number", example=null),
+     *                              @OA\Property(property="decimal_value", type="string", example=""),
+     *                              @OA\Property(property="textarea_value", type="string", example=""),
+     *                              @OA\Property(property="date_value", type="string", format="date", example=null),
+     *                              @OA\Property(property="time_value", type="string", format="time", example=null),
+     *                              @OA\Property(property="file", type="string", example=""),
+     *                              @OA\Property(property="student_custom_field_id", type="integer", example=17),
+     *                              @OA\Property(property="student_id", type="integer", example=14663),
+     *                              @OA\Property(
+     *                                  property="student_custom_field",
+     *                                  type="object",
+     *                                  @OA\Property(property="id", type="integer", example=17),
+     *                                  @OA\Property(property="name", type="string", example="Father Living With Student")
+     *                              )
+     *                          )
+     *                      ),
      *                      @OA\Property(property="modified_user_id", type="integer", example=null),
      *                      @OA\Property(property="modified", type="string", example=null),
      *                      @OA\Property(property="created_user_id", type="integer", example=2),
@@ -286,6 +368,47 @@ class StudentController extends Controller
      *                 @OA\Property(property="academic_period_id", type="integer", example=28),
      *                 @OA\Property(property="academic_period_name", type="string", example="2019"),
      *                 @OA\Property(property="previous_institution_student_id", type="string", example="6546009d-815f-42e6-8db5-76050a4f95d9"),
+     *                 @OA\Property(
+     *                          property="classes",
+     *                          type="array",
+     *                          @OA\Items(
+     *                              type="object",
+     *                              @OA\Property(property="id", type="integer", example=593),
+     *                              @OA\Property(property="name", type="string", example="Primary 1-C"),
+     *                              @OA\Property(
+     *                                  property="subjects",
+     *                                  type="array",
+     *                                  @OA\Items(
+     *                                      type="object",
+     *                                      @OA\Property(property="id", type="integer", example=4732),
+     *                                      @OA\Property(property="name", type="string", example="Expressive Arts")
+     *                                  )
+     *                              )
+     *                          )
+     *                       ),
+     *                       @OA\Property(
+     *                          property="custom_fields",
+     *                          type="array",
+     *                          @OA\Items(
+     *                              type="object",
+     *                              @OA\Property(property="id", type="string", example="0d66a4f8-a274-48cc-9520-967a07731ae8"),
+     *                              @OA\Property(property="text_value", type="string", example=""),
+     *                              @OA\Property(property="number_value", type="number", example=null),
+     *                              @OA\Property(property="decimal_value", type="string", example=""),
+     *                              @OA\Property(property="textarea_value", type="string", example=""),
+     *                              @OA\Property(property="date_value", type="string", format="date", example=null),
+     *                              @OA\Property(property="time_value", type="string", format="time", example=null),
+     *                              @OA\Property(property="file", type="string", example=""),
+     *                              @OA\Property(property="student_custom_field_id", type="integer", example=17),
+     *                              @OA\Property(property="student_id", type="integer", example=14663),
+     *                              @OA\Property(
+     *                                  property="student_custom_field",
+     *                                  type="object",
+     *                                  @OA\Property(property="id", type="integer", example=17),
+     *                                  @OA\Property(property="name", type="string", example="Father Living With Student")
+     *                              )
+     *                          )
+     *                      ),
      *                 @OA\Property(property="modified_user_id", type="integer", example=null),
      *                 @OA\Property(property="modified", type="string", example=null),
      *                 @OA\Property(property="created_user_id", type="integer", example=2),
@@ -923,9 +1046,9 @@ class StudentController extends Controller
             $data = $this->studentService->addStudentAbsences($request);
             
             if($data == 1){
-                return $this->sendSuccessResponse("Student absences data added.", $data);
+                return $this->sendSuccessResponse("Student absences data added.");
             } elseif($data == 2) {
-                return $this->sendSuccessResponse("Student absences data updated.", $data);
+                return $this->sendSuccessResponse("Student absences data updated.");
             } elseif($data == 3) {
                 return $this->sendErrorResponse("Student is not assigned to the class, grade and academic period for which attendance/absence is marked");
             } else {

@@ -8,6 +8,7 @@ use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\ORM\TableRegistry;
+use Cake\Event\EventInterface;//POCOR-8470
 
 class FieldOptionsController extends AppController
 {

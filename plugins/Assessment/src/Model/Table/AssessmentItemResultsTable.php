@@ -177,10 +177,13 @@ class AssessmentItemResultsTable extends AppTable
     {
         $academicPeriodId = $options['academic_period_id'];
         $controller = $options['_controller'];
-        $session = $controller->request->session();
-        $institutionId = $session->read('Institution.Institutions.id'); //POCOR-6823
-
-
+        // Ensure $controller and $controller->request are set
+        if (isset($controller) && isset($controller->request)) {
+            $session = $controller->request->session();
+            $institutionId = $session->read('Institution.Institutions.id'); // POCOR-6823
+        }
+        //$session = $controller->request->session();
+        //$institutionId = $session->read('Institution.Institutions.id'); //POCOR-6823
         $studentId = -1;
         if ($session->check('Student.Results.student_id')) {
             $studentId = $session->read('Student.Results.student_id');
