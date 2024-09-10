@@ -340,7 +340,7 @@ Route::group(
 
         //POCOR-7852 starts...
         Route::get('assessments/{assessment_id}/assessmentperiods', 'AssessmentController@getAssessmentUniquePeriodList');
-        Route::get('assessments/{assessment_id}', 'AssessmentController@getAssessmentData');
+        Route::get('assessments/{assessment_id}', 'AssessmentController@getAssessmentData')->where('assessment_id', '[0-9]+');
         Route::get('assessments/{assessment_id}/assessmentitems', 'AssessmentController@assessmentItemsList');
 
         Route::get('institutions/subject/student', 'AssessmentController@getInstitutionSubjectStudent');
@@ -498,5 +498,17 @@ Route::group(
         Route::post('/institutions/students/attendances/import', 'AttendanceController@studentAttendancesImport');
         Route::get('/institutions/students/attendances/no-scheduled-class', 'AttendanceController@studentAttendancesNoScheduledClass');
         //POCOR-8363 end...
+
+
+        //POCOR-8397 start...
+        Route::get('/academic-period/archive', 'AttendanceController@getArchiveAcademicPeriods');
+        Route::get('/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-marked/archive', 'AttendanceController@getStudentAttendanceMarkedRecordArchiveList');
+        Route::get('/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance/archive', 'AttendanceController@getStudentAttendanceArchiveList');
+        Route::get('/institutions/students/attendances/export/archive', 'AttendanceController@getStudentAttendanceArchiveExport');
+        //POCOR-8397 end...
+        
+        //POCOR-8519 start...
+        Route::get('workbenches', 'WorkbenchController@getAllWorkbenches');
+        //POCOR-8519 end...
     }
 );

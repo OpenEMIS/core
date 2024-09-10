@@ -87,6 +87,8 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
                     'rule' => ['range', 0, 9999.99]
                 ]
             ])
+			->requirePresence('name')
+			->requirePresence('result_type')
 			->requirePresence('grading_options');
 	}
 
@@ -135,6 +137,8 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 **
 ******************************************************************************************************************/
 	public function addEditBeforeAction(Event $event, ArrayObject $extra) {
+		$connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
 		if ($this->action=='edit') {
 			$this->fields['visible']['visible'] = false;
 		}
@@ -154,7 +158,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 			foreach ($entity->grading_options as $key => $gradingOption) {
 				$gradingOptionId = $gradingOption->id;
 				$gradingOptions[$gradingOptionId] = 0;
-				if ($this->hasAssociatedRecords($AssessmentGradingOptions, $gradingOption, $extra)) {
+				if (!empty($gradingOptionId) && $this->hasAssociatedRecords($AssessmentGradingOptions, $gradingOption, $extra)) {
 					$gradingOptions[$gradingOptionId] = 1;
 				}
 			}
@@ -341,7 +345,7 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
         }elseif ($field == 'max') {
             return __('Max');
         }elseif ($field == 'result_type') {
-            return __('Result');
+            return __('Result Type');
         }elseif ($field == 'grading_options') {
             return __('Grading Options');
         }elseif ($field == 'visible') {
@@ -350,4 +354,27 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    //POCOR-8554
+	public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+	{
+	    $checkRecord = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemsGradingTypes');
+	    $data = $checkRecord->find()
+	        ->where(['assessment_grading_type_id' => $entity->id])
+	        ->toArray();
+
+	    $associatedRecordsExist = 
+	        $this->GradingOptions->exists(['assessment_grading_type_id' => $entity->id]);
+
+	    if ($associatedRecordsExist || !empty($data)) {
+	        $message = __('Delete operation is not allowed as there are other information linked to this record.');
+	        $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+	        
+	        // Redirect to the referring URL
+	        $url = $this->request->referer();
+	        $event->stopPropagation();
+	        return $this->controller->redirect($url);
+	    }
+
+	}
 }

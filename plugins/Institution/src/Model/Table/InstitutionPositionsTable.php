@@ -93,7 +93,84 @@ class InstitutionPositionsTable extends ControllerActionTable
                 'rule' => 'checkNoSpaces',
                 'provider' => 'custom'
             ])
-            ->requirePresence('shift_id')
+           // ->requirePresence('shift_id')
+            /*POCOR-5069 Starts
+            ->add('staff_position_grade_id', 'custom', [
+                'rule' => function ($value, $context) {
+                    $StaffPositionTitlesGrades = TableRegistry::get('Institution.StaffPositionTitlesGrades');
+                    $staffPositionTitleId = $context['data']['staff_position_title_id'];
+
+                    $result = $StaffPositionTitlesGrades
+                        ->find()
+                        ->where([
+                            'AND' => [
+                                [$StaffPositionTitlesGrades->aliasField('staff_position_title_id') => $staffPositionTitleId],
+                                'OR' => [
+                                    [$StaffPositionTitlesGrades->aliasField('staff_position_grade_id') => $value],
+                                    [$StaffPositionTitlesGrades->aliasField('staff_position_grade_id') => -1]
+                                ]
+                            ]
+                        ])
+                        ->all();
+
+                    return !$result->isEmpty();
+                },
+                'message' => $this->getMessage('Import.staff_title_grade_not_match')
+            ])POCOR-5069 Ends*/
+            //Remove is_homeroom from position table-POCOR-5070
+            // ->requirePresence('is_homeroom', function ($context) {
+            //     if (array_key_exists('staff_position_title_id', $context['data']) && strlen($context['data']['staff_position_title_id']) > 0) {
+            //         $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+            //         $titleId = $context['data']['staff_position_title_id'];
+
+            //         $titleEntity = $StaffPositionTitles
+            //             ->find()
+            //             ->select([$StaffPositionTitles->aliasField('type')])
+            //             ->where([$StaffPositionTitles->aliasField('id') => $titleId])
+            //             ->first();
+
+            //         if (!is_null($titleEntity)) {
+            //             $positionType = $titleEntity->type;
+            //             return $positionType == 1;
+            //         } else {
+            //             return false;
+            //         }
+            //     }
+            //     return false;
+            // })
+            // ->add('is_homeroom', 'ruleCheckHomeRoomTeacherAssignments', [
+            //     'rule' => 'checkHomeRoomTeacherAssignments',
+            //     'on' => function ($context) {
+            //         //trigger validation only when homeroom teacher set to no and edit operation
+            //         return ($context['data']['is_homeroom'] == 0 && !$context['newRecord']);
+            //     }
+            // ])
+            // ->add('is_homeroom', 'ruleIsHomeroomEmpty', [
+            //     // validations to ensure no value for is_homeroom field, if the selected title type is non-teaching type (0), for position import - POCOR-4258
+            //     'rule' => function ($value, $context) {
+            //         return strlen($value) == 0;
+            //     },
+            //     'on' => function ($context) {
+            //         if (array_key_exists('staff_position_title_id', $context['data']) && strlen($context['data']['staff_position_title_id']) > 0) {
+            //             $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+            //             $titleId = $context['data']['staff_position_title_id'];
+
+            //             $titleEntity = $StaffPositionTitles
+            //                 ->find()
+            //                 ->select([$StaffPositionTitles->aliasField('type')])
+            //                 ->where([$StaffPositionTitles->aliasField('id') => $titleId])
+            //                 ->first();
+
+            //             if (!is_null($titleEntity)) {
+            //                 $positionType = $titleEntity->type;
+            //                 return $positionType == 0;
+            //             } else {
+            //                 return false;
+            //             }
+            //         }
+            //         return false;
+            //     }
+            // ])
             ->add('shift_id', 'rulecheckShiftPresent', [ //POCOR-6971
                 'rule' => function ($value, $context) {
                     if ($value == 0) {
@@ -147,6 +224,56 @@ class InstitutionPositionsTable extends ControllerActionTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
+        /*POCOR-5069 Starts
+        if ($entity->has('is_homeroom') && $entity->dirty('is_homeroom')) {
+            $currIsHomeroom = $entity->is_homeroom;
+            // have to find all the staff that is holding this institution position
+            $InstitutionStaffTable = $this->InstitutionStaff;
+            $staffInvolved = $InstitutionStaffTable->find()
+                ->where([
+                    $InstitutionStaffTable->aliasField('institution_position_id') => $entity->id,
+                    $InstitutionStaffTable->aliasField('security_group_user_id IS NOT NULL')
+                ])
+                ->where([
+                    'OR' => [
+                        [function ($exp) use ($InstitutionStaffTable) {
+                            return $exp->gte($InstitutionStaffTable->aliasField('end_date'), $InstitutionStaffTable->find()->func()->now('date'));
+                        }],
+                        [$InstitutionStaffTable->aliasField('end_date').' IS NULL']
+                    ]
+                ])
+                ;
+            if (!empty($staffInvolved)) {
+                $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+                $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+                $homeroomSecurityRoleId = $SecurityRoles->getHomeroomRoleId();
+                try {
+                    $securityGroupId = $this->Institutions->get($entity->institution_id)->security_group_id;
+                    foreach ($staffInvolved as $key => $value) {
+                        $homeRoomData = [
+                            'security_role_id' => $homeroomSecurityRoleId,
+                            'security_group_id' => $securityGroupId,
+                            'security_user_id' => $value->staff_id
+                        ];
+                        if ($currIsHomeroom) {
+                            // add 1 homeroom value
+                            $newHomeroomEntity = $SecurityGroupUsers->newEntity($homeRoomData);
+                            $entity = $SecurityGroupUsers->save($newHomeroomEntity);
+                        } else {
+                            // remove homeroom value - find 1 entry and delete it
+                            $homeroomEntity = $SecurityGroupUsers->find()
+                                ->where($homeRoomData)
+                                ->first();
+                            if (!empty($homeroomEntity)) {
+                                $SecurityGroupUsers->delete($homeroomEntity);
+                            }
+                        }
+                    }
+                } catch (InvalidPrimaryKeyException $ex) {
+                    Log::write('error', __METHOD__ . ': ' . $this->Institutions->getAlias() . ' primary key not found (' . $entity->institution_id . ')');
+                }
+            }
+        }POCOR-5069 Ends*/
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -385,7 +512,7 @@ class InstitutionPositionsTable extends ControllerActionTable
                     $this->StaffPositionTitles->aliasField('type') => 'DESC',
                     $this->StaffPositionTitles->aliasField('order'),
                 ])
-                ->enableAutoFields(true)
+                ->enableAutoFields()
                 ->toArray();
 
             // Filter by role previlege
@@ -452,8 +579,12 @@ class InstitutionPositionsTable extends ControllerActionTable
             }
         }
         if (is_null($this->request->getQuery('sort'))) {
-            $this->request->getQuery['sort'] = 'created';
-            $this->request->getQuery['direction'] = 'desc';
+            //POCOR-8475 starts
+            //$this->request->getQuery['sort'] = 'created';
+            //$this->request->getQuery['direction'] = 'desc';
+            $this->request = $this->request->withQueryParams( array_merge( $this->request->getQueryParams(), ['sort' => 'created'] ));
+            $this->request = $this->request->withQueryParams( array_merge( $this->request->getQueryParams(), ['direction' => 'desc'] ));
+            //POCOR-8475 ends
         }
     }
 
@@ -652,7 +783,10 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
             ])->leftJoin([$institutionStaff->getAlias() => $institutionStaff->getTable()],
                 [$institutionStaff->aliasField('institution_position_id = ') . $this->aliasField('id')])
             ->distinct([$this->aliasField('position_no')])
-            ->where([$this->aliasField('institution_id') => $institutionID]);
+            ->where([$this->aliasField('institution_id') => $institutionID])
+            ->order([
+                $this->aliasField($this->request->getQuery('sort'))
+                => $this->request->getQuery('direction')]); //POCOR-8475
 
         $sortList = ['position_no', 'StaffPositionTitles.order'/*,POCOR-5069 'StaffPositionGrades.order'*/, 'created','Assignees.first_name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {

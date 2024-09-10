@@ -344,7 +344,7 @@ class DataManagementCopyTable extends ControllerActionTable
                 $this->Alert->error('CopyData.genralerror', ['reset' => true]);
                 return false;
             }
-            $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
+            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
             $EducationSystems = TableRegistry::get('Education.EducationSystems');
             if($entity->to_academic_period){
                 $ToAcademicPeriodsData = $AcademicPeriods
@@ -356,6 +356,7 @@ class DataManagementCopyTable extends ControllerActionTable
                 $CompetencyCriteriasTable = TableRegistry::get('Competency.CompetencyCriterias');
                 $CompetencyTemplatesTable = TableRegistry::get('Competency.CompetencyTemplates');
                 $CompetencyItemsTable = TableRegistry::get('Competency.CompetencyItems');
+                $CompetencyPeriodsTable = TableRegistry::get('Competency.CompetencyPeriods'); //POCOR-8504
 
                 $CompetencyCriteriasData = $CompetencyCriteriasTable
                     ->find('all')
@@ -372,7 +373,12 @@ class DataManagementCopyTable extends ControllerActionTable
                 ->where(['academic_period_id' => $entity->to_academic_period])
                 ->toArray();
 
-                if(!empty($CompetencyCriteriasData) && !empty($CompetencyTemplatesData) && !empty($CompetencyItemsData)){
+                $CompetencyPeriodsData = $CompetencyPeriodsTable
+                ->find('all')
+                ->where(['academic_period_id' => $entity->to_academic_period])
+                ->toArray();   //POCOR-8504
+
+                if(!empty($CompetencyCriteriasData) && !empty($CompetencyTemplatesData) && !empty($CompetencyItemsData) && !empty($CompetencyPeriodsData)){ //POCOR-8504
                     $this->Alert->error('CopyData.alreadyexist', ['reset' => true]);
                     return false;
                 }
@@ -390,6 +396,11 @@ class DataManagementCopyTable extends ControllerActionTable
                     $entity->competency_items_value = 0;
                 }else{
                     $entity->competency_items_value = 1;
+                }
+                if(empty($CompetencyPeriodsData)){  //POCOR-8504
+                    $entity->competency_periods_value = 0;
+                }else{
+                    $entity->competency_periods_value = 1;
                 }
             }
             if($entity->to_academic_period){
@@ -772,7 +783,7 @@ class DataManagementCopyTable extends ControllerActionTable
         // End POCOR-5337
         if ($entity->features == self::PERFORMANCE_COMPETENCIES) {
             $this->log('=======>Before triggerPerformanceCompetenciesShell', 'debug');
-            $this->triggePerformanceCompetenciesShell('PerformanceCompetencies',$entity->from_academic_period, $entity->to_academic_period, $entity->competency_criterias_value, $entity->competency_templates_value, $entity->competency_items_value);
+        $this->triggePerformanceCompetenciesShell('PerformanceCompetencies',$entity->from_academic_period, $entity->to_academic_period, $entity->competency_criterias_value, $entity->competency_templates_value, $entity->competency_items_value,$entity->competency_periods_value); //POCOR-8504
             $this->log(' <<<<<<<<<<======== After triggerPerformanceCompetenciesShell', 'debug');
         }
         //POCOR-7568 start
@@ -895,7 +906,7 @@ class DataManagementCopyTable extends ControllerActionTable
     * @ticket POCOR-6424
     */
     
-    public function triggePerformanceCompetenciesShell($shellName, $from_academic_period, $to_academic_period = null, $competency_criterias_value = null, $competency_templates_value = null, $competency_items_value = null)
+    public function triggePerformanceCompetenciesShell($shellName, $from_academic_period, $to_academic_period = null, $competency_criterias_value = null, $competency_templates_value = null, $competency_items_value = null, $competency_periods_value = null)
     {
         $args = '';
         $args .= !is_null($from_academic_period) ? ' '.$from_academic_period : '';
@@ -903,6 +914,7 @@ class DataManagementCopyTable extends ControllerActionTable
         $args .= !is_null($competency_criterias_value) ? ' '.$competency_criterias_value : '';
         $args .= !is_null($competency_templates_value) ? ' '.$competency_templates_value : '';
         $args .= !is_null($competency_items_value) ? ' '.$competency_items_value : '';
+        $args .= !is_null($competency_periods_value) ? ' '.$competency_periods_value : ''; //POCOR-8504
 
         $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.$args;
         $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';

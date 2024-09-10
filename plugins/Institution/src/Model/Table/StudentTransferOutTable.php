@@ -50,7 +50,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     'rule' => ['inAcademicPeriod', 'previous_academic_period_id', []]
                 ],
                 'ruleCompareDate' => [
-                    'rule' => ['compareDate', 'start_date', false],
+                    'rule' => ['compareDate', 'start_date', true],
                     'on' => function ($context) {
                         return array_key_exists('start_date', $context['data']) && !empty($context['data']['start_date']);
                     }
