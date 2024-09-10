@@ -29,7 +29,15 @@ class EditBehavior extends Behavior
         if($model->getAlias() == 'AcademicPeriods'){
             $model->setEntityClass(\Cake\ORM\Entity::class);
         }// end
+        // POCOR-8543 START
+
         $request = $model->request;
+        $editAccess = $this->getEditAccess($request, $model);
+        if (!$editAccess) {
+//            $logoutUrl = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'logout'], true);
+            return $this->redirectToDashboard($mainEvent, $model);
+        }
+        // POCOR-8543 END
         $extra['config']['form'] = true;
         $extra['patchEntity'] = true;
 
@@ -195,4 +203,44 @@ class EditBehavior extends Behavior
         }
         return $entity;
     }
+
+
+    /**
+     * // POCOR-8534
+     * @param Event $mainEvent
+     * @param Table $model
+     * @return mixed
+     */
+    private function redirectToDashboard(Event $mainEvent, Table $model)
+    {
+        $mainEvent->stopPropagation();
+        $model->Alert->warning('general.notAccess');
+        Log::debug('Undefined Edit Access');
+        return $model->controller->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
+    }
+
+    /**
+     * @return mixed
+     */
+    private function getEditAccess($request, Table $model)
+    {
+
+        $controllerName = $request->getParam('controller');
+        $plugin = $request->getParam('plugin');
+        $action = $request->getParam('action');
+        $toCheck = [
+            'controller' => $controllerName,
+            'plugin' => $plugin,
+            'action' => $action,
+            'edit'];
+        if ($action == 'edit') {
+            unset($toCheck['edit']);
+        }
+        if (!$action) {
+            unset($toCheck['action']);
+        }
+        $editAccess = $model->AccessControl->check($toCheck);
+        return $editAccess;
+    }
+
 }

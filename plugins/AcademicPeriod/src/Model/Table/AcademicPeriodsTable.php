@@ -203,6 +203,20 @@ class AcademicPeriodsTable extends ControllerActionTable
                 ]])
             ->add('current', 'ruleValidateNeeded', [
                 'rule' => ['validateNeeded', 'current', $additionalParameters],
+            ])//POCOR-8284 -- start
+            ->add('name', [
+                'ruleUnique' => [
+                    'rule' => 'validateUnique',
+                    'provider' => 'table',
+                    'message' => __('This field has to be unique')
+                ]
+            ])
+            ->add('code', [
+                'ruleUnique' => [
+                    'rule' => 'validateUnique',
+                    'provider' => 'table',
+                    'message' => __('This field has to be unique')
+                ]//POCOR-8284 -- ends
             ]);
     }
 

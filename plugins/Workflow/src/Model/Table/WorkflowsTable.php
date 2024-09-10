@@ -222,7 +222,7 @@ class WorkflowsTable extends AppTable {
     }
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-        if (array_key_exists($this->getAlias(), $data)) {
+        if (isset($data[$this->getAlias()])) {
             if (array_key_exists('workflow_model_id', $data[$this->getAlias()])) {
                 $selectedModel = $data[$this->getAlias()]['workflow_model_id'];
                 $this->addAssociation($selectedModel);
