@@ -1553,7 +1553,7 @@ class InstitutionsController extends AppController
             //POCOR-8500 do not remove it. used in angular start
             $user = $this->getRequest()->getSession()->read('sbn');
             $pass = $this->getRequest()->getSession()->read('nbn');
-            $pass = $this->paramsEncode($pass);
+            $pass = $this->paramsEncode([$pass]);
             //end
             $this->set('_edit', $_edit);
             $this->set('_excel', $_excel);
