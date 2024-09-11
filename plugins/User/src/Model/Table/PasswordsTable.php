@@ -16,7 +16,7 @@ class PasswordsTable extends AppTable
 {
     public function initialize(array $config)
     {
-        $this->table('security_users');
+        $this->setTable('security_users');
         parent::initialize($config);
 
         $this->addBehavior('User.Password', [
