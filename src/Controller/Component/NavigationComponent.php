@@ -2236,7 +2236,10 @@ class NavigationComponent extends Component
                 'title' => 'Scholarships',
                 'parent' => 'Profiles.Personal',
                 'params' => ['plugin' => 'Profile'],
-                'selected' => ['Profiles.ScholarshipsDirectory']
+                'selected' => ['Profiles.ScholarshipApplications',
+                                'Profiles.ScholarshipsDirectory',
+                                'Profiles.ScholarshipApplicationInstitutionChoices',
+                                'Profiles.ScholarshipApplicationAttachments']
             ],
 
             // 'Scholarships.Scholarships' => [
@@ -3917,7 +3920,7 @@ class NavigationComponent extends Component
                         'title' => 'Applications',
                         'parent' => 'Administration.Scholarships',
                         'params' => ['plugin' => 'Scholarship'],
-                        'selected' => ['Scholarships.Applications',
+                        'selected' => ['Scholarships.Applications.index',
                             'UsersDirectory.index',
                             'UsersDirectory.view',
                             'Scholarships.Identities.index',
@@ -3929,16 +3932,10 @@ class NavigationComponent extends Component
                             'Scholarships.Guardians.index',
                             'Scholarships.Guardians.view',
                             'Scholarships.Histories',
-                            'ScholarshipApplicationInstitutionChoices.index',
-                            'ScholarshipApplicationInstitutionChoices.view',
-                            'ScholarshipApplicationInstitutionChoices.add',
-                            'ScholarshipApplicationInstitutionChoices.edit',
-                            'ScholarshipApplicationInstitutionChoices.delete',
-                            'ScholarshipApplicationAttachments.index',
-                            'ScholarshipApplicationAttachments.view',
-                            'ScholarshipApplicationAttachments.add',
-                            'ScholarshipApplicationAttachments.edit',
-                            'ScholarshipApplicationAttachments.delete']
+                            'Scholarships.ScholarshipApplicationInstitutionChoices.index',
+                            'Scholarships.ScholarshipApplicationInstitutionChoices.add',
+                            'Scholarships.ScholarshipApplicationAttachments',
+                            ]
                     ],
                     // 'ScholarshipRecipients.index' => [
                     //     'title' => 'Recipients',
@@ -3992,7 +3989,7 @@ class NavigationComponent extends Component
                     'title' => 'Applications',
                     'parent' => 'Administration.Scholarships',
                     'params' => ['plugin' => 'Scholarship'],
-                    'selected' => ['Scholarships.Applications',
+                    'selected' => ['Scholarships.Applications.index',
                         'UsersDirectory.index',
                         'UsersDirectory.view',
                         'Scholarships.Identities.index',
@@ -4004,16 +4001,12 @@ class NavigationComponent extends Component
                         'Scholarships.Guardians.index',
                         'Scholarships.Guardians.view',
                         'Scholarships.Histories',
-                        'ScholarshipApplicationInstitutionChoices.index',
-                        'ScholarshipApplicationInstitutionChoices.view',
-                        'ScholarshipApplicationInstitutionChoices.add',
-                        'ScholarshipApplicationInstitutionChoices.edit',
-                        'ScholarshipApplicationInstitutionChoices.delete',
-                        'ScholarshipApplicationAttachments.index',
-                        'ScholarshipApplicationAttachments.view',
-                        'ScholarshipApplicationAttachments.add',
-                        'ScholarshipApplicationAttachments.edit',
-                        'ScholarshipApplicationAttachments.delete']
+                        'Scholarships.ScholarshipApplicationInstitutionChoices.index',
+                        'Scholarships.ScholarshipApplicationInstitutionChoices.add',
+                        'Scholarships.ScholarshipApplicationInstitutionChoices.view',
+                        'Scholarships.ScholarshipApplicationInstitutionChoices.edit',
+                        'Scholarships.ScholarshipApplicationAttachments',
+                        ]
                 ],
                 // 'ScholarshipRecipients.index' => [
                 //     'title' => 'Recipients',
