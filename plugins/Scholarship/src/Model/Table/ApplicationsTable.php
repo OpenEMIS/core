@@ -228,7 +228,7 @@ class ApplicationsTable extends ControllerActionTable
         $this->field('date_of_birth');
         $this->field('gender');
         $this->field('identity_type');
-        $this->field('identity_number');
+        $this->field('identity_number', ['visible' => false]);
         $this->field('requested_amount', ['visible' => false]);
         $this->field('comments', ['visible' => false]);
 
