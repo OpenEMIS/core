@@ -223,7 +223,7 @@ class UsersController extends AppController
                         'plugin' => 'User',
                         'controller' => 'Users',
                         'action' => 'resetPassword',
-                        'token' => $checksum
+                        '?' => ['token' => $checksum]
                     ], true);
 
                     /*POCOR-5284 Starts*/
@@ -252,7 +252,7 @@ class UsersController extends AppController
                     'plugin' => 'User',
                     'controller' => 'Users',
                     'action' => 'resetPassword',
-                    'token' => $checksum
+                    '?' => ['token' => $checksum]
                 ], true);
 
                 /*POCOR-5284 Starts*/
