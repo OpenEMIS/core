@@ -6,9 +6,11 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use App\Model\Table\AppTable;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Behavior;
-use Cake\Network\Session;
+use Cake\Http\Session;
+use Cake\ORM\Table;
+use Cake\Routing\Router;
 
 class StudentBehavioursTable extends AppTable {
 
@@ -39,37 +41,41 @@ class StudentBehavioursTable extends AppTable {
         
 	public function beforeFind(Event $event, Query $query, $options)
 	{
-		//$userData = $this->Session->read();
-		if ($this->controller->getName() != null && $this->controller->getName() == 'Profiles' && $this->request->getQuery('type') == 'student') {
-			//if ($this->Session->read('Auth.User.is_guardian') == 1) {
-			if ($_SESSION['Auth']['User']['is_guardian'] == 1) {
-				$userData = $this->Session->read();
-				$sId = $this->Session->read('Student.ExaminationResults.student_id');
-				//$sId = $_SESSION['Student']['ExaminationResults']['student_id'];
-				/**
-                 * Need to add current login id as param when no data found in existing variable
-                 * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
-				 * @ticket POCOR-6548
-                 */
-                //# START: [POCOR-6548] Check if user data not found then add current login user data
-                if ($sId == null || empty($sId) || $sId == '') {
-                    $studentId = $userData['Student']['ExaminationResults']['student_id'];
-                } else {
-					$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
-                }
-                //# END: [POCOR-6548] Check if user data not found then add current login user data
-			} else {
-				//$studentId = $this->Session->read('Auth.User.id');
-				$studentId = $_SESSION['Auth']['User']['id'];
+		$table = $this->_table;
+        $request = Router::getRequest();
+        $this->controller = $request->getParam('controller');
+		if($this->controller != NULL){
+			if ($this->controller != null && $this->controller == 'Profiles' && $this->request->getQuery('type') == 'student') {
+				//if ($this->Session->read('Auth.User.is_guardian') == 1) {
+				if ($_SESSION['Auth']['User']['is_guardian'] == 1) {
+					$userData = $this->Session->read();
+					$sId = $this->Session->read('Student.ExaminationResults.student_id');
+					//$sId = $_SESSION['Student']['ExaminationResults']['student_id'];
+					/**
+	                 * Need to add current login id as param when no data found in existing variable
+	                 * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+					 * @ticket POCOR-6548
+	                 */
+	                //# START: [POCOR-6548] Check if user data not found then add current login user data
+	                if ($sId == null || empty($sId) || $sId == '') {
+	                    $studentId = $userData['Student']['ExaminationResults']['student_id'];
+	                } else {
+						$studentId = $this->ControllerAction->paramsDecode($sId)['id'];
+	                }
+	                //# END: [POCOR-6548] Check if user data not found then add current login user data
+				} else {
+					//$studentId = $this->Session->read('Auth.User.id');
+					$studentId = $_SESSION['Auth']['User']['id'];
+				}
 			}
 		}
 
 		/*POCOR-6267 starts*/
-	    if ($this->controller->getName()!= null && $this->controller->getName() == 'GuardianNavs') {
+	    if ($this->controller!= null && $this->controller == 'GuardianNavs') {
 	    	$session = $this->request->getSession();
 	        $studentId = $session->read('Student.Students.id');
 	    }/*POCOR-6267 ends*/
-		if($this->controller->getName()!= null && ($this->controller->getName() == 'Students' || $this->controller->getName() == 'Directories')) {
+		if($this->controller != null && ($this->controller == 'Students' || $this->controller == 'Directories')) {
 			$studentId = $this->getQueryString('student_id');
 		}
 	    if(!empty($studentId)){ //POCOR-7196
