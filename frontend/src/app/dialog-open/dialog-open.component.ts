@@ -10,6 +10,8 @@ import { ApiService } from '../api.service';
 export class DialogOpenComponent implements OnInit {
   public toggleCurriculum: boolean = true;
   public displayDialog: boolean = false;
+  selectLesson: any = '';
+  addNewLesson: any = [];
 
   public nonCurriculum = {
     type: 'nonCurriculum',
@@ -29,6 +31,8 @@ export class DialogOpenComponent implements OnInit {
   institutionRoomData: any[] = [];
   institutionSubject: any = [];
   lessonType: any = [];
+  showDropdownErrorMsg: boolean = false;
+  showTextErrorMsg: boolean = false;
 
   constructor(
     private Rest: ApiService,
@@ -38,7 +42,9 @@ export class DialogOpenComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.getInstitutionRooms();
+    // this.getInstitutionRooms();
+    this.getLessonType();
+    this.displayDialog = true;
   }
 
   getInstitutionRooms() {
@@ -52,11 +58,12 @@ export class DialogOpenComponent implements OnInit {
               name: element.name
             }
             this.institutionRoomData.push(obj);
-            this.curriculum.room = this.institutionRoomData[0].name;
-            this.curriculum.roomId = this.institutionRoomData[0].id;
-            this.nonCurriculum.room = this.institutionRoomData[0].name;
-            this.nonCurriculum.roomId = this.institutionRoomData[0].id;
+            // this.curriculum.room = this.institutionRoomData[0].name;
+            // this.curriculum.roomId = this.institutionRoomData[0].id;
+            // this.nonCurriculum.room = this.institutionRoomData[0].name;
+            // this.nonCurriculum.roomId = this.institutionRoomData[0].id;
           });
+          this.institutionRoomData.unshift({ id: '', name: 'Select room' })
           console.log(this.institutionRoomData, "institutionRoomData");
           this.getInstitutionSubject();
         }
@@ -81,10 +88,10 @@ export class DialogOpenComponent implements OnInit {
               name: element?.institution_subject?.name
             }
             this.institutionSubject.push(obj);
-            this.curriculum.subject = this.institutionSubject[0].name;
-            this.curriculum.subjectId = this.institutionSubject[0].id;
+            // this.curriculum.subject = this.institutionSubject[0].name;
+            // this.curriculum.subjectId = this.institutionSubject[0].id;
           });
-          this.getLessonType();
+          this.institutionSubject.unshift({id: '', name: 'Select Subject'});
         }
       },
       error: (error: any) => {
@@ -109,8 +116,9 @@ export class DialogOpenComponent implements OnInit {
             this.lessonType.push(obj);
           }
         });
-        this.curriculum.type = this.lessonType[1].name;
-        this.curriculum.typeId = this.lessonType[1].id;
+        this.lessonType.unshift({ id: '', name: '--Select--'});
+        // this.curriculum.type = this.lessonType[0].name;
+        // this.curriculum.typeId = this.lessonType[0].id;
         console.log(this.lessonType, "lessonType");
         this.displayDialog = true;
       },
@@ -132,34 +140,61 @@ export class DialogOpenComponent implements OnInit {
     this.nonCurriculum.name = nonCurriculumName.value;
   }
 
-  onRoomSelect(roomSelect: HTMLSelectElement) {
-    let indexData = this.institutionRoomData.findIndex(obj => obj.id == roomSelect.value);
-    if (this.toggleCurriculum) {
-      this.curriculum.room = this.institutionRoomData[indexData].name;
-      this.curriculum.roomId = this.institutionRoomData[indexData].id;
-    } else {
-      this.nonCurriculum.room = this.institutionRoomData[indexData].name;
-      this.nonCurriculum.roomId = this.institutionRoomData[indexData].id;
-    }
+  onRoomSelect(roomSelect: HTMLSelectElement, index: any) {
+    // let indexData = this.institutionRoomData.findIndex(obj => obj.id == roomSelect.value);
+    // if (this.toggleCurriculum) {
+    //   this.curriculum.room = this.institutionRoomData[indexData].name;
+    //   this.curriculum.roomId = this.institutionRoomData[indexData].id;
+    // } else {
+    //   this.nonCurriculum.room = this.institutionRoomData[indexData].name;
+    //   this.nonCurriculum.roomId = this.institutionRoomData[indexData].id;
+    // }
+    this.addNewLesson[index].room = roomSelect.value;
   }
 
   onCloseClick() {
     this.dialogRef.close()
   }
 
-  onSubjectChanged(pickSubject: HTMLSelectElement) {
-    let indexData = this.institutionSubject.findIndex(obj => obj.id == pickSubject.value);
-    this.curriculum.subject = this.institutionSubject[indexData].name;
-    this.curriculum.subjectId = this.institutionSubject[indexData].id;
+  onSubjectChanged(pickSubject: HTMLSelectElement, index: any) {
+    // let indexData = this.institutionSubject.findIndex(obj => obj.id == pickSubject.value);
+    // this.curriculum.subject = this.institutionSubject[indexData].name;
+    // this.curriculum.subjectId = this.institutionSubject[indexData].id;
+    this.addNewLesson[index].subject = pickSubject.value;
+    this.showDropdownErrorMsg = false;
   }
 
-  onAddClick() {
-    if (this.toggleCurriculum) {
-      this.dialogRef.close(this.curriculum);
-    } else {
-      this.nonCurriculum.name = this.nonCurriculum.name.length ? this.nonCurriculum.name : 'Activity'
-      this.dialogRef.close(this.nonCurriculum);
+  onAddClick(index: any, status: any) {
+    // if (this.toggleCurriculum) {
+    //   this.dialogRef.close(this.curriculum);
+    // } else {
+    //   this.nonCurriculum.name = this.nonCurriculum.name.length ? this.nonCurriculum.name : 'Activity'
+    //   this.dialogRef.close(this.nonCurriculum);
+    // }
+
+    if(status == 'curriculum' && (this.addNewLesson[index].subject == '' || this.addNewLesson[index].subject == undefined)){
+      this.showDropdownErrorMsg = true;
+    } else if (status == 'nonCurriculum' && (this.addNewLesson[index].subject == '' || this.addNewLesson[index].subject == undefined)) {
+      this.showTextErrorMsg = true;
     }
+    else {
+      this.dialogRef.close(this.addNewLesson[index]);
+    }
+  }
+
+  addLesson() {
+    if (this.selectLesson == 2) {
+      this.addNewLesson.push({ 'type': 'nonCurriculum', 'subject': '', 'room': '' });
+      this.getInstitutionRooms();
+    } else if (this.selectLesson == 1) {
+      this.addNewLesson.push({ 'type': 'curriculum', 'subject': '', 'room': '' });
+      this.getInstitutionRooms();
+    }
+    console.log(this.addNewLesson, "this.addNewLesson");
+  }
+
+  removeData(index: any) {
+    this.addNewLesson.splice(index, 1);
   }
 
 }

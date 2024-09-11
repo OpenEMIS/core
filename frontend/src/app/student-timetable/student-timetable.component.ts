@@ -211,7 +211,8 @@ export class StudentTimetableComponent implements OnInit {
       next: (response: any) => {
         if (response) {
           this.days = response?.data;
-          this.timeTableById();
+          // this.timeTableById();
+          this.timeSlotById(); //just for testing after that remove this
         }
 
       },
@@ -227,7 +228,7 @@ export class StudentTimetableComponent implements OnInit {
   }
 
   timeTableById() {
-    this.Rest.getWithToken('schedules/timetables/1').subscribe({
+    this.Rest.getWithToken('schedules/timetables/3').subscribe({
       next: (response: any) => {
         if (response) {
           console.log(response, "response");
@@ -257,28 +258,23 @@ export class StudentTimetableComponent implements OnInit {
               data: [
                 {
                   day: this.days[0],
-                  subject: "Spanish",
-                  room: "Room 3",
+                  subject: []
                 },
                 {
                   day: this.days[1],
-                  subject: "Science",
-                  room: "Room 1",
+                  subject: [],
                 },
                 {
                   day: this.days[2],
-                  subject: null,
-                  room: null,
+                  subject: [],
                 },
                 {
                   day: this.days[3],
-                  subject: null,
-                  room: null,
+                  subject: [],
                 },
                 {
                   day: this.days[4],
-                  subject: null,
-                  room: null,
+                  subject: []
                 },
               ]
             }
@@ -367,19 +363,20 @@ export class StudentTimetableComponent implements OnInit {
 
     const dialogRef = this.dialog.open(DialogOpenComponent, {
       disableClose: true,
-      width: '40%'
+      width: '30%'
     }).afterClosed().subscribe((res) => {
       console.log(res, "res Data");
       if (res) {
         console.log(res,"dialog res");
+        this.timetableData[indexOfRow].data[indexOfDay].subject.push(res);
         
-        if (res.typeId == 1) {
-          this.timetableData[indexOfRow].data[indexOfDay].subject = res.subject;
-          this.timetableData[indexOfRow].data[indexOfDay].room = res.room;
-        } else {
-          this.timetableData[indexOfRow].data[indexOfDay].subject = res.name;
-          this.timetableData[indexOfRow].data[indexOfDay].room = res.room;
-        }
+        // if (res.typeId == 1) {
+        //   this.timetableData[indexOfRow].data[indexOfDay].subject = res.subject;
+        //   this.timetableData[indexOfRow].data[indexOfDay].room = res.room;
+        // } else {
+        //   this.timetableData[indexOfRow].data[indexOfDay].subject = res.name;
+        //   this.timetableData[indexOfRow].data[indexOfDay].room = res.room;
+        // }
 
         this.addLesson(res);
       }
@@ -419,10 +416,8 @@ export class StudentTimetableComponent implements OnInit {
     })
   }
 
-  onRemoveClick(indexOfRow: number, indexOfDay: number) {
-    this.timetableData[indexOfRow].data[indexOfDay].subject = null;
-    this.timetableData[indexOfRow].data[indexOfDay].room = null;
-
+  onRemoveClick(indexOfRow: number, indexOfDay: number, rowIndex: number) {
+    this.timetableData[indexOfRow].data[indexOfDay].subject.splice(rowIndex, 1);
     // this.Rest.deleteWithToken(`institutions/6/schedules/timetables/lessons/95`).subscribe({
     //   next: (res: any) => {
     //     console.log(res, "delete res");
@@ -442,6 +437,12 @@ export class StudentTimetableComponent implements OnInit {
     console.log(this.timetableData)
   }
 
+  closeDialog() {
+    setTimeout(() => {
+      this.dialog.closeAll();      
+    }, 0);
+  }
+
   resetMouseOver() {
     this.isMouseOver = false;
     this.currentRowIndex = null;
@@ -451,6 +452,6 @@ export class StudentTimetableComponent implements OnInit {
   setMouseOver(rowIndex: number, cellIndex: number) {
     this.isMouseOver = true
     this.currentRowIndex = rowIndex;
-    this.currentCellIndex = cellIndex
+    this.currentCellIndex = cellIndex;
   }
 }

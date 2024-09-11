@@ -31,7 +31,6 @@ import { StaffAttendanceReportComponent } from './staff-attendance-report/staff-
 import { StudentMealImportComponent } from './student-meal-import/student-meal-import.component';
 import { StudentMealResultComponent } from './student-meal-result/student-meal-result.component';
 import { StudentTimetableComponent } from './student-timetable/student-timetable.component';
-import { MatDialogModule } from "@angular/material/dialog";
 import { DialogOpenComponent } from './dialog-open/dialog-open.component';
 
 export const appRoutes: Routes = [
@@ -131,7 +130,6 @@ function getBaseUrl() {
     BrowserAnimationsModule,
     HttpClientModule,
     RouterModule.forRoot(appRoutes),
-    MatDialogModule
   ],
   providers: [{ provide: APP_BASE_HREF, useValue: getBaseUrl() },
     ApiService],
