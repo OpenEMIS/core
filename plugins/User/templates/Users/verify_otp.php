@@ -84,7 +84,7 @@ $icon = strpos($_productName, 'School') !== false ? '_school' : '';
 
 		<?= $this->element('OpenEmis.footer') ?>
 	</div>
-	<?php die(''); //need to find fix solution. not remove it, until not find
+	<?php die(''); //need to find fix solution. not remove it, until not find the sol.
 	?>
 </body>
 </html>
