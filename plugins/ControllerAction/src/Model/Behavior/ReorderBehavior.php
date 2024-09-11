@@ -77,7 +77,7 @@ class ReorderBehavior extends Behavior {
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
 		/** POCOR-6677 starts- added AND condition to not do anything when model is SecurityRoles*/
 		$model = $this->_table;
-		if ($entity->isNew() && $model->alias() != 'SecurityRoles') {
+		if ($entity->isNew() && $model->getAlias() != 'SecurityRoles') {
 			$orderField = $this->getConfig('orderField');
 			$filter = $this->getConfig('filter');
 			$filterValues = $this->getConfig('filterValues');
