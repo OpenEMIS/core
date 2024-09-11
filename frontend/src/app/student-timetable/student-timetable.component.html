@@ -17,8 +17,9 @@
         <tr *ngFor="let schedule of timetableData; let indexOfElement=index">
             <td style="width: 20%;">{{schedule.time}}</td>
             <td style="background-color: #eeeeee;" (mouseenter)="setMouseOver(indexOfElement, inedxOfData)"
+                (click)="openDialog(indexOfElement, inedxOfData)"
                 (mouseleave)="resetMouseOver()" *ngFor="let scheduleData of schedule.data; let inedxOfData = index">
-                <div style="display: flex; justify-content: space-between; cursor: pointer;">
+                <!-- <div style="display: flex; justify-content: space-between; cursor: pointer;">
                     <div (click)="openDialog(indexOfElement, inedxOfData)">
                         <div *ngIf="scheduleData?.subject != null && scheduleData?.room != null;"
                             style="text-align: left;">
@@ -39,6 +40,26 @@
                             <i class="fa fa-trash" aria-hidden="true"></i>
                         </span>
                     </div>
+                </div> -->
+                <div *ngIf="schedule.data[inedxOfData].subject?.length > 0">
+                    <div *ngFor="let curriculumData of schedule.data[inedxOfData].subject; let ind = index"
+                        style="text-align: left;">
+                        <div *ngIf="curriculumData?.subject">
+                            <div class="mt-1 d-flex justify-content-between" style="border: 1px solid #CCC; border-radius: 5px; padding: 5px; background-color: #FFFFFF;">
+                                <div style="font-size: 12px;">
+                                    <span style="font-weight: 700;">
+                                        {{curriculumData.subject}} </span>
+                                    <div>{{curriculumData.room}}</div>
+                                </div>
+                                <span style="font-size: 12px; cursor: pointer;"
+                                    [style]=" isMouseOver && indexOfElement == currentRowIndex && currentCellIndex == inedxOfData ? 'color: red' : 'color: #FFFFFF'"
+                                    (click)="onRemoveClick(indexOfElement, inedxOfData, ind); closeDialog();">
+                                    <i class="fa fa-trash" aria-hidden="true"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </td>
             <!-- <td style="background-color: #eeeeee;" (mouseenter)="setMouseOver(indexOfElement, 1)" (mouseleave)="resetMouseOver()">

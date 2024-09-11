@@ -1,3 +1,5 @@
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
 /* ------------------------for search button left side---------------------------------- */
 .kdx-toolbar .kdx-toolbar-right {
   position: absolute;
