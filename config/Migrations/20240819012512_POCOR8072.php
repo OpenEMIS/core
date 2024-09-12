@@ -91,7 +91,7 @@ class POCOR8072 extends AbstractMigration
         $this->table('security_functions')->insert($record)->save();
     }
 
-    // Rollback
+    // Rollback table
     public function down()
     {
         $this->execute('RENAME TABLE `z_8072_security_functions` TO `security_functions`');
