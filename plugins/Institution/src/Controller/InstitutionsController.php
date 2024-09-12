@@ -2554,6 +2554,12 @@ class InstitutionsController extends AppController
 
     public function beforeFilter(EventInterface $event)
     {
+        //POCOR-8587 start
+        $session = $this->getRequest()->getSession();
+        if (!$session->check('Auth.User.id')) {
+            // Session has expired or user is not logged in
+            return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+        } //POCOR-8587 end
         parent::beforeFilter($event);
         $header = __('Institutions');
         $indexUrl = ['plugin' => 'Institution',
