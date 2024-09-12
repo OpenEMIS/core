@@ -39,6 +39,10 @@ class EducationProgrammesTable extends ControllerActionTable {
             $reorderBehavior = $this->behaviors()->get('Reorder');
         	$reorderBehavior->setConfig('filter', 'education_cycle_id');
         }
+        if ($this->behaviors()->has('ControllerAction')) {
+            $controllerActionBehavior = $this->behaviors()->get('ControllerAction');
+            $controllerActionBehavior->setConfig(['actions' => ['reorder' => false]]);
+        }
 
         $this->setDeleteStrategy('restrict');
     }
@@ -536,5 +540,14 @@ class EducationProgrammesTable extends ControllerActionTable {
         }else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    // POCOR-8507
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra) {
+        if ($this->hasAssociatedRecords($this, $entity, $extra)) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        } 
     }
 }
