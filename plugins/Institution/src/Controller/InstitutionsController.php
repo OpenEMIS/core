@@ -3089,6 +3089,11 @@ class InstitutionsController extends AppController
                     $params = [];
                     $params[$model->aliasField('feeder_institution_id')] = $institutionID;
                     $exists = $model->exists($params);
+                }elseif (in_array($alias, ['InstitutionAssociations'])) { //POCOR-8556
+                    $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+                    $activeInstitution = $this->Institutions->get($institutionId);
+                    $institutionName = $activeInstitution->name;
+                    $header = $institutionName.''.$header;
                 } else {
                     $params = [];
                     $checkExists = function ($model, $params) {
