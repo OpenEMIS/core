@@ -6,9 +6,9 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use App\Model\Table\AppTable;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Behavior;
-use Cake\Network\Session;
+use Cake\Http\Session;
 use App\Model\Table\ControllerActionTable;
 class StudentBehavioursTable extends ControllerActionTable
 {
@@ -16,7 +16,7 @@ class StudentBehavioursTable extends ControllerActionTable
         'controller' => null,
     ];
 
-    protected $controller;
+    public $controller;
 
 	public function initialize(array $config): void {
 		parent::initialize($config);
@@ -32,13 +32,14 @@ class StudentBehavioursTable extends ControllerActionTable
             'appliedAction' => ['StudentBehaviours' =>['id']
             ]
         ]);
+
 		$this->controller = $config['controller']; //POCOR-8507
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$this->ControllerAction->field('student_id', ['visible' => false]);
 		$this->ControllerAction->field('student_behaviour_category_id', ['type' => 'select']);
-		$this->ControllerAction->field('description', ['visible' => false]);
+		$this->ControllerAction->field('description', ['visible' => true]);
 		$this->ControllerAction->field('action', ['visible' => false]);
 
 		$this->ControllerAction->setFieldOrder(['institution_id', 'date_of_behaviour', 'time_of_behaviour', 'title', 'student_behaviour_category_id']);
@@ -47,6 +48,7 @@ class StudentBehavioursTable extends ControllerActionTable
 	public function beforeFind(Event $event, Query $query, $options)
 	{
 		if ($this->controller != null) { //POCOR-8507
+
 			//$userData = $this->Session->read();
 			if ($this->controller->getName() != null && $this->controller->getName() == 'Profiles' && $this->request->getQuery('type') == 'student') {
 				//if ($this->Session->read('Auth.User.is_guardian') == 1) {
@@ -87,6 +89,7 @@ class StudentBehavioursTable extends ControllerActionTable
 				$query ;
 			}
 		}
+		//echo "<pre>"; print_r($query->toArray()); die;
 		
 	}
 
