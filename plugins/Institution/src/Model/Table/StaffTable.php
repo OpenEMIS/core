@@ -3183,7 +3183,6 @@ class StaffTable extends ControllerActionTable
         $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
 
         $homeroomRoleId = $SecurityRoles->getHomeroomRoleId();
-
         $SecurityGroupInsTbl = TableRegistry::get('Security.SecurityGroupInstitutions');
         // $SecurityGroupsTbl = TableRegistry::get('Security.SecurityGroups');
         $SecurityGroupsLocator = new TableLocator();
@@ -3250,12 +3249,31 @@ class StaffTable extends ControllerActionTable
                     $InstitutionClassesSecondary = 0;
                     if ($InstitutionClassesSecondary > 0) {
                         $homeroomTeacherPermissionArr = ['result' => 3];
+                    }else{
+                        $InstitutionClassesSecondary = $InstitutionClassesSecondaryStaff
+                        ->find()
+                        ->select([
+                            $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
+                        ])
+                        ->innerJoin([$InstitutionClasses->getAlias() => $InstitutionClasses->getTable()], [
+                            $InstitutionClassesSecondaryStaff->aliasField('institution_class_id') . ' = ' . $institutionClassesTbl->aliasField('id')
+                        ])
+                        ->where([
+                            $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId,
+                            $InstitutionClassesSecondaryStaff->aliasField('institution_class_id') => $classId,
+                            $InstitutionClasses->aliasField('academic_period_id') => $academicPeriodId,
+                            $InstitutionClasses->aliasField('institution_id') => $institutionId
+                        ])->count();
+                        if($InstitutionClassesSecondary > 0){
+                            $homeroomTeacherPermissionArr = ['result' => 4];
+                        }else{
+                            $homeroomTeacherPermissionArr = ['result' => 'Not homeroom class'];
+                        }
                     }
                 }
             }
 
             $getCommentPermission = $this->checkCommentPermissionForReportCards($homeroomRoleId);
-
             $data = array_merge($homeroomTeacherPermissionArr, $getCommentPermission);
             echo json_encode($data, true);
             die;
@@ -3357,8 +3375,10 @@ class StaffTable extends ControllerActionTable
             echo json_encode($data, true);
             die;
         } else {
-            $permissionModule = ['All Subjects', 'Comments'];
-            $categories = ['Academic', 'Report Cards'];
+            // $permissionModule = ['All Subjects', 'Comments']; //Anubhav
+            $permissionModule = ['All Subjects'];
+            // $categories = ['Academic', 'Report Cards']; //Anubhav
+            $categories = ['Academic'];
             $SecurityFunctionsTbl = TableRegistry::get('Security.SecurityFunctions');
             $SecurityFunctions = $SecurityFunctionsTbl->find()
                 ->select([$SecurityFunctionsTbl->aliasField('id')])
@@ -3374,7 +3394,7 @@ class StaffTable extends ControllerActionTable
             }
             //get staff id roles POCOR-6814 Starts
             $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
-            $SecurityGroupTbl = TableRegistry::get('security_groups');
+            $SecurityGroupTbl = TableRegistry::get('Security.UserGroups');
             $SecurityGroupUserTbl = TableRegistry::get('Security.SecurityGroupUsers');
             $SecurityGroup = $SecurityGroupTbl->find()
                 ->select([
@@ -3401,7 +3421,7 @@ class StaffTable extends ControllerActionTable
             $RoleArr = [];
             if (!empty($SecurityGroup)) {
                 foreach ($SecurityGroup as $SecurityGroup_k => $SecurityGroup_v) {
-                    $RoleArr[] = $SecurityGroup_v['security_group_users']['security_role_id'];
+                    $RoleArr[] = $SecurityGroup_v['SecurityGroupUsers']['security_role_id'];
                 }
             } //POCOR-6814 Ends
             $SecurityRoleFunctionsTbl = TableRegistry::get('Security.SecurityRoleFunctions');
@@ -3420,7 +3440,8 @@ class StaffTable extends ControllerActionTable
                     }
                 }
             }
-            if ($count >= 2) {
+            
+            if ($count >= 1) {
                 $data = array('result' => 1);
                 echo json_encode($data, true);
                 die;
@@ -3429,6 +3450,66 @@ class StaffTable extends ControllerActionTable
                 echo json_encode($data, true);
                 die;
             }
+        }
+    }
+
+    public function findgetCurrentUserRole(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $staffId = $options['staff_id'];
+        $superAdmin = $options['super_admin'];
+        if($superAdmin == 1){
+            $SecurityRolesNames[] = 'SUPER_ADMIN';
+            echo json_encode($SecurityRolesNames, true);
+            die;
+        }else{
+            $SecurityFunctionsTbl = TableRegistry::get('Security.SecurityFunctions');
+            //get staff id roles POCOR-6814 Starts
+            $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+            $SecurityGroupTbl = TableRegistry::get('Security.UserGroups');
+            $SecurityGroupUserTbl = TableRegistry::get('Security.SecurityGroupUsers');
+            $SecurityGroup = $SecurityGroupTbl->find()
+                ->select([
+                    $SecurityGroupUserTbl->aliasField('security_group_id'),
+                    $SecurityGroupUserTbl->aliasField('security_user_id'),
+                    $SecurityGroupUserTbl->aliasField('security_role_id'),
+                ])
+                ->leftJoin(
+                    [$SecurityGroupInstitutions->getAlias() => $SecurityGroupInstitutions->getTable()],
+                    [
+                        $SecurityGroupInstitutions->aliasField('institution_id = ') . $SecurityGroupTbl->aliasField('id')
+                    ]
+                )
+                ->leftJoin(
+                    [$SecurityGroupUserTbl->getAlias() => $SecurityGroupUserTbl->getTable()],
+                    [
+                        $SecurityGroupUserTbl->aliasField('security_group_id = ') . $SecurityGroupInstitutions->aliasField('security_group_id')
+                    ]
+                )
+                ->where([
+                    $SecurityGroupTbl->aliasField('id') => $institutionId,
+                    $SecurityGroupUserTbl->aliasField('security_user_id') => $staffId,
+                ])->enableHydration(false)->toArray();
+            $RoleArr = [];
+            if (!empty($SecurityGroup)) {
+                foreach ($SecurityGroup as $SecurityGroup_k => $SecurityGroup_v) {
+                    $RoleArr[] = $SecurityGroup_v['SecurityGroupUsers']['security_role_id'];
+                }
+            }
+            $SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
+            if (!empty($RoleArr)) { //POCOR-7068
+                $SecurityRolesData = $SecurityRolesTable->find()
+                    ->where([
+                        $SecurityRolesTable->aliasField('id IN') => $RoleArr
+                    ])->enableHydration(false)->toArray();
+            }
+            if (!empty($SecurityRolesData)) {   
+                foreach ($SecurityRolesData as $SecurityRolesvalue) {
+                    $SecurityRolesNames[] = $SecurityRolesvalue['code'];
+                }
+            }
+            echo json_encode($SecurityRolesNames, true);
+            die;
         }
     }
 
