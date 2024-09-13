@@ -35,7 +35,7 @@ class ContactExcelBehavior extends Behavior
 
     public function initialize(array $config): void
     {
-        $this->getConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
+        $this->setConfig('excludes', array_merge($this->getConfig('default_excludes'), $this->getConfig('excludes')));
         if (!isset($config['filename'])) {
             $this->setConfig('filename', $this->_table->getAlias());
         }
@@ -55,7 +55,7 @@ class ContactExcelBehavior extends Behavior
         }
         $pages = $this->getConfig('pages');
         if ($pages !== false && empty($pages)) {
-            $this->getConfig('pages', ['index', 'view']);
+            $this->setConfig('pages', ['index', 'view']);
         }
     }
 
@@ -200,7 +200,7 @@ class ContactExcelBehavior extends Behavior
             // if the primary key of the record is given, only generate that record
             if (isset($settings['id'])) {
                 $id = $settings['id'];
-                if ($id != 0) {
+                if ($id != 0 && $this->_table->request->getParam('action') != 'InstitutionCalendars') {//POCOR-8469
                     $primaryKey = $table->getPrimaryKey();
                     $query->where([$table->aliasField($primaryKey) => $id]);
                 }
