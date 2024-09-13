@@ -350,6 +350,7 @@ Route::group(
         Route::post('schedules/timetables/lessons', 'ScheduleController@addLesson');
         Route::delete('institutions/{institutionId}/schedules/timetables/lessons/{id}', 'ScheduleController@deleteTimeTableLessonById');
         Route::get('schedules/timetables/statuses', 'ScheduleController@getTimeTableStatus');
+        Route::get('schedules/timetables/{id}', 'ScheduleController@getTimeTableById');
         Route::get('schedules/timetables/{id}/lessons', 'ScheduleController@getLessonsByTimeTableId');
         Route::get('schedules/lessons/types', 'ScheduleController@getLessonType');
         Route::get('schedules/timeslots/{intervalId}', 'ScheduleController@getTimeSlotsByIntervalId');
