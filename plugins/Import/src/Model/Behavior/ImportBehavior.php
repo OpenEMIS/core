@@ -696,12 +696,12 @@ class ImportBehavior extends Behavior
         if (function_exists('imagecreatefromjpeg')) {
             //POCOR-7474-HINDOL - in case that imagecreatefromjpeg is not available
             $gdImage = imagecreatefromjpeg(ROOT . DS . 'plugins' . DS . 'Import' . DS . 'webroot' . DS . 'img' . DS . 'openemis_logo.jpg');
-            $objDrawing = new \PHPExcel_Worksheet_MemoryDrawing();
+            $objDrawing = new \PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing();
             $objDrawing->setName('OpenEMIS Logo');
             $objDrawing->setDescription('OpenEMIS Logo');
             $objDrawing->setImageResource($gdImage);
-            $objDrawing->setRenderingFunction(\PHPExcel_Worksheet_MemoryDrawing::RENDERING_JPEG);
-            $objDrawing->setMimeType(\PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_DEFAULT);
+            $objDrawing->setRenderingFunction(\PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing::RENDERING_JPEG);
+            $objDrawing->setMimeType(\PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing::MIMETYPE_DEFAULT);
             $objDrawing->setHeight(100);
             $objDrawing->setCoordinates('A1');
             $objDrawing->setWorksheet($activeSheet);
