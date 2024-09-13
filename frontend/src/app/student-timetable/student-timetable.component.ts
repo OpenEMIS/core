@@ -339,7 +339,25 @@ export class StudentTimetableComponent implements OnInit {
         console.log(response, "response 09");
 
         this.displayTable = true;
+        this.getSchedulesTimetableLesson();
+      },
+      error: (error: any) => {
+        if (error) {
+          if (error.message == "Token has expired") {
+            localStorage.removeItem("loginToken");
+            this.loginData();
+          }
+        }
+      }
+    })
+  }
 
+  getSchedulesTimetableLesson(){
+    this.Rest.getWithToken('schedules/timetables/1/lessons').subscribe({
+      next: (response: any) => {
+        console.log(response,"response Topaaa");
+        
+      
       },
       error: (error: any) => {
         if (error) {
