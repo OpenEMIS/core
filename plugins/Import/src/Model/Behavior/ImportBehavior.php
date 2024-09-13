@@ -439,8 +439,11 @@ class ImportBehavior extends Behavior
 
                 // $tempRow['entity'] must exists!!! should be set in individual model's onImportCheckUnique function
                 if (!isset($tempRow['entity'])) {
-                    $tableEntity = $activeModel->newEntity();
+                    $tableEntity = $activeModel->newEntity([]);
                 } else {
+                    if(!isset($tempRow['institution_class_id']) && $activeModel->getAlias() == 'StudentAdmission') {
+                        $tempRow['entity']['institution_class_id'] = NULL;
+                    }
                     $tableEntity = $tempRow['entity'];
                     unset($tempRow['entity']);
                 }

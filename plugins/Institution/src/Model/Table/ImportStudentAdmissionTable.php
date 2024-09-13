@@ -202,7 +202,7 @@ class ImportStudentAdmissionTable extends AppTable
             return false;
         }
 
-        $tempRow['entity'] = $this->StudentAdmission->newEntity([]);//dd( $tempRow['entity']);
+        $tempRow['entity'] = $this->StudentAdmission->newEntity([]);
         $tempRow['end_date'] = false;
         $tempRow['assignee_id'] = $this->Auth->user('id'); //POCOR-7282
         $tempRow['institution_id'] = $this->institutionId;
