@@ -13,6 +13,7 @@ use Cake\I18n\Time;
 use Cake\ORM\Query;
 use App\Model\Table\ControllerActionTable;
 use Laminas\Diactoros\UploadedFile;
+use Cake\Filesystem\File;
 
 class ThemesTable extends ControllerActionTable
 {
@@ -174,7 +175,12 @@ class ThemesTable extends ControllerActionTable
     //POCOR-8268
     public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request) 
     {
-        $colorList = array('7FFFD4' => '7FFFD4', '808000' => '808000');
+        $colorListPath = WWW_ROOT . 'themecolor' . DS . 'color.php';
+        if (file_exists($colorListPath)) {
+            $colorList = include($colorListPath);
+        } else {
+            throw new \Exception("Color file not found at " . $colorListPath);
+        }
         if ($action == 'add') {
             $attr['type'] = 'select';
             $attr['options'] = $colorList;
