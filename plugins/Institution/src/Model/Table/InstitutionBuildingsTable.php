@@ -107,9 +107,20 @@ class InstitutionBuildingsTable extends ControllerActionTable
                     'rule' => ['compareDateReverse', 'start_date', false]
                 ]
             ])
+            ->allowEmpty('area') //POCOR-8523
             ->add('area', 'ruleValidateCustomLandSize', [
-                'rule' => ['validateCustomLandSize', 'Maximum_institution_infrastructure_building_size'],
-                'provider' => 'table'
+                'rule' => function ($value, $context) {
+                    // Check if datatype is 'copy'
+                    if (isset($context['data']['datatype']) && $context['data']['datatype'] == 'copy') {
+                        // Skip validation when datatype is 'copy'
+                        return true;
+                    }
+            
+                    // Proceed with validation when datatype is not 'copy'
+                    return $this->validateCustomLandSize($value, 'Maximum_institution_infrastructure_building_size', $context);
+                },
+                'provider' => 'table',
+                'last' => true
             ])
             ->requirePresence('new_building_type', function ($context) {
                 if (array_key_exists('change_type', $context['data'])) {
@@ -166,7 +177,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         }
         if($entity['area'] >= $InstitutionLand['area']){
 
-            if(Router::getRequest()->params['action']=="CopyData"){}
+            if(Router::getRequest()->getParam('action') == "CopyData"){}
             else{//POCOR_7657
             $this->Alert->warning('InstitutionBuildings.sizeGreater', ['reset' => true]);
             return false;
@@ -946,6 +957,8 @@ class InstitutionBuildingsTable extends ControllerActionTable
             'institutionId' => $institutionId
         ];
         $url = array_merge($url, $this->request->getQuery());
+        $paramsArr = $this->request->getParam('?'); //POCOR-8523
+        $url = is_array($paramsArr) ? array_merge($url, $paramsArr) : $url; //POCOR-8523
         //$url = $this->setQueryString($url, ['institution_building_id' => $entity->id, 'institution_building_name' => $entity->name]);
         return $event->getSubject()->HtmlField->link($entity->code, $url);
     }
