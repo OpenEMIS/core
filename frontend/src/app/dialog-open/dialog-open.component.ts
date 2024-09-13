@@ -136,8 +136,14 @@ export class DialogOpenComponent implements OnInit {
     this.toggleCurriculum = !this.toggleCurriculum
   }
 
-  onNonCurriculumInput(nonCurriculumName: HTMLInputElement) {
-    this.nonCurriculum.name = nonCurriculumName.value;
+  onNonCurriculumInput(nonCurriculumName: HTMLInputElement, index: any) {
+    this.addNewLesson[index].subject = nonCurriculumName.value;
+    this.showTextErrorMsg = false;
+    // this.nonCurriculum.name = nonCurriculumName.value;
+  }
+
+  onRoomSelectNonCurriculum(roomSelect: HTMLSelectElement, index: any) {
+    this.addNewLesson[index].room = roomSelect.value;
   }
 
   onRoomSelect(roomSelect: HTMLSelectElement, index: any) {
