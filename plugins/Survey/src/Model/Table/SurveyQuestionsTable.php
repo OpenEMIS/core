@@ -57,16 +57,30 @@ class SurveyQuestionsTable extends CustomFieldsTable
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
+        
         $this->field('code');
+        $this->field('params', ['attr' => ['style' => __('display:none;')]]); 
+    
+        // echo "<pre>";
+        // print_r($this->request);die;
+        if($this->request == 'params'){
+            // echo "<pre>";
+            // print_r($attr['field']);//die;
+            
+        }
+        
+    
     }
 
     public function onUpdateFieldCode(Event $event, array $attr, $action, ServerRequest $request)
     {
+    //    echo "<pre>";print_r($event);die;
         if ($action == 'add') {
             if (!$request->is('post')) {
                 $textValue = substr(Text::uuid(), 0, 8);
                 $attr['attr']['value'] = $textValue;
             }
+            
             return $attr;
         }
     }
@@ -159,7 +173,7 @@ class SurveyQuestionsTable extends CustomFieldsTable
         }elseif ($field == 'description') {
             return __('Description');
         }elseif ($field == 'params') {
-            return __('Params');
+            return;
         }else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
