@@ -44,12 +44,26 @@
                 <div *ngIf="schedule.data[inedxOfData].subject?.length > 0">
                     <div *ngFor="let curriculumData of schedule.data[inedxOfData].subject; let ind = index"
                         style="text-align: left;">
-                        <div *ngIf="curriculumData?.subject">
+                        <div *ngIf="curriculumData?.schedule_curriculum_lesson?.institution_subject?.name">
                             <div class="mt-1 d-flex justify-content-between" style="border: 1px solid #CCC; border-radius: 5px; padding: 5px; background-color: #FFFFFF;">
                                 <div style="font-size: 12px;">
                                     <span style="font-weight: 700;">
-                                        {{curriculumData.subject}} </span>
-                                    <div>{{curriculumData.room}}</div>
+                                        {{curriculumData?.schedule_curriculum_lesson?.institution_subject?.name}} </span>
+                                    <div>{{curriculumData?.schedule_lesson_room?.institution_room?.name}}</div>
+                                </div>
+                                <span style="font-size: 12px; cursor: pointer;"
+                                    [style]=" isMouseOver && indexOfElement == currentRowIndex && currentCellIndex == inedxOfData ? 'color: red' : 'color: #FFFFFF'"
+                                    (click)="onRemoveClick(indexOfElement, inedxOfData, ind); closeDialog();">
+                                    <i class="fa fa-trash" aria-hidden="true"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div *ngIf="curriculumData?.schedule_non_curriculum_lesson?.name">
+                            <div class="mt-1 d-flex justify-content-between" style="border: 1px solid #CCC; border-radius: 5px; padding: 5px; background-color: #FFFFFF;">
+                                <div style="font-size: 12px;">
+                                    <span style="font-weight: 700;">
+                                        {{curriculumData?.schedule_non_curriculum_lesson?.name}} </span>
+                                    <div>{{curriculumData?.schedule_lesson_room?.institution_room?.name}}</div>
                                 </div>
                                 <span style="font-size: 12px; cursor: pointer;"
                                     [style]=" isMouseOver && indexOfElement == currentRowIndex && currentCellIndex == inedxOfData ? 'color: red' : 'color: #FFFFFF'"
