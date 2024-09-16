@@ -22,13 +22,15 @@ class PeriodBehavior extends Behavior
                 if ($periodObj->start_date instanceof Time || $periodObj->start_date instanceof Date) {
                     $startDate = $periodObj->start_date->format('Y-m-d');
                 } else {
-                    $startDate = date('Y-m-d', strtotime($periodObj->start_date));
+                    //$startDate = date('Y-m-d', strtotime($periodObj->start_date->format('Y-m-d')));
+                    $startDate = is_object($periodObj->start_date) ? date('Y-m-d', strtotime($periodObj->start_date->format('Y-m-d'))) : date('Y-m-d', strtotime($periodObj->start_date));
                 }
 
                 if ($periodObj->end_date instanceof Time || $periodObj->end_date instanceof Date) {
                     $endDate = $periodObj->end_date->format('Y-m-d');
                 } else {
-                    $endDate = date('Y-m-d', strtotime($periodObj->end_date));
+                    //$endDate = date('Y-m-d', strtotime($periodObj->end_date));
+                    $endDate =  is_object($periodObj->end_date) ? date('Y-m-d', strtotime($periodObj->end_date->format('Y-m-d'))) :date('Y-m-d', strtotime($periodObj->end_date));
                 }
 
                 if (isset($options['beforeEndDate'])) {
