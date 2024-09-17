@@ -2748,7 +2748,10 @@ class InstitutionsController extends AppController
             return true;
         }
         // POCOR-7799 start
-        if ($furtherAction == 'downloadPassed' || 'downloadFailed') {
+        if ($furtherAction == 'downloadPassed' ) {
+            return true;
+        }
+        if ($furtherAction == 'downloadFailed') {
             return true;
         }
         // POCOR-7799 end
