@@ -362,7 +362,32 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
                 
             }
         }
+    }
 
+    public function deleteBeforeAction(Event $event, ArrayObject $extra)
+    {
+        if($this->action == 'remove'){
+            $applicantId = $this->getQueryString('applicant_id');
+            $scholarshipId = $this->getQueryString('scholarship_id');
+            $encodedQueryString = $this->paramsEncode(['applicant_id' => $applicantId,'scholarship_id' => $scholarshipId,'security_user_id' => $applicantId]);
+             if(!empty($encodedQueryString)){
+                $session = $this->request->getSession();
+                $session->write('urlRequest', $encodedQueryString);
+            }
+            if(empty($encodedQueryString)){
+                $session = $this->request->getSession();
+                $encodedQueryString = $session->read('urlRequest');
+            }
+            $url = [
+                'plugin' => 'Profile',
+                'controller' => 'Profiles',
+                'action' => 'ScholarshipApplicationAttachments',
+                0 => 'index',
+                1 => $encodedQueryString
+            ];
+            $extra['redirect'] = $url;
+        }
+        
     }
 
 }

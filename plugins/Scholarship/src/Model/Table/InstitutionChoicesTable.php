@@ -47,6 +47,7 @@ class InstitutionChoicesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        //echo "<pre>"; print_r($this->getQueryString()); die;
         $queryString  = $this->getQueryString('scholarship_id');
         $scholarshipId = $queryString;
 
@@ -177,6 +178,7 @@ class InstitutionChoicesTable extends ControllerActionTable
         return $validator
             ->requirePresence('country_id')
             ->requirePresence('location_type')
+            ->requirePresence('scholarship_institution_choice_type_id')
             ->add('end_date', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'start_date', true],
                 'message' => __('End Date should not be earlier than Start Date')
@@ -245,7 +247,7 @@ class InstitutionChoicesTable extends ControllerActionTable
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $applicantId = $this->getQueryString('applicant_id');
         $scholarshipId = $this->getQueryString('scholarship_id');
-        $encodedQueryString = $this->paramsEncode(['id' => $entity->id,'applicant_id' => $applicantId,'scholarship_id' => $scholarshipId]);
+        $encodedQueryString = $this->paramsEncode(['id' => $entity->id,'security_user_id' => $applicantId, 'applicant_id' => $applicantId,'scholarship_id' => $scholarshipId]);
         $url['plugin'] = 'Scholarship';
         $url['controller'] = 'Scholarships';
         $url['action'] = 'ScholarshipApplicationInstitutionChoices';
@@ -269,7 +271,6 @@ class InstitutionChoicesTable extends ControllerActionTable
             'tabindex' => '-1',
             'escape' => false,
         ];
-        if ($entity) {
         $encodedQueryStrings = $this->paramsEncode(['id' => $entity->id]);
 
         // Setup the remove button
@@ -280,26 +281,35 @@ class InstitutionChoicesTable extends ControllerActionTable
             0 => 'remove',
             1 => $encodedQueryStrings
         ];
-
-
-        // Set label and attributes
-        $buttons['remove']['label'] = $buttons['remove']['label'] ?? '<i class="fa fa-trash"></i>' . __('Delete');
-        $buttons['remove']['attr'] = $buttons['remove']['attr'] ?? [
-                'data-toggle' => 'tooltip',
-                'data-placement' => 'bottom',
-                'escape' => false,
-                'title' => __('Delete')
-        ];
-
-    } else {
-        Log::error('Entity is null when setting up action buttons.');
-    }
+        
         return $buttons;
 
     }
 
     public function deleteBeforeAction(Event $event, ArrayObject $extra)
     {
+        
+        if($this->action == 'remove'){
+            $applicantId = $this->getQueryString('applicant_id');
+            $scholarshipId = $this->getQueryString('scholarship_id');
+            $encodedQueryString = $this->paramsEncode(['applicant_id' => $applicantId,'scholarship_id' => $scholarshipId,'security_user_id' => $applicantId]);
+             if(!empty($encodedQueryString)){
+                $session = $this->request->getSession();
+                $session->write('urlRequest', $encodedQueryString);
+            }
+            if(empty($encodedQueryString)){
+                $session = $this->request->getSession();
+                $encodedQueryString = $session->read('urlRequest');
+            }
+            $url = [
+                'plugin' => 'Scholarship',
+                'controller' => 'Scholarships',
+                'action' => 'ScholarshipApplicationInstitutionChoices',
+                0 => 'index',
+                1 => $encodedQueryString
+            ];
+            $extra['redirect'] = $url;
+        }
         
     }
 
