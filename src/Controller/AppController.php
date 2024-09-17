@@ -339,6 +339,10 @@ class AppController extends Controller
         parent::beforeFilter($event);
         $session = $this->request->getSession();
         $superAdmin = $session->read('Auth.User.super_admin');
+        //POCOR-8595 starts
+        if(!is_null($_COOKIE['Restful'])){
+            return true;
+        }//POCOR-8595 ends
         if ($superAdmin == 0) {
             $UserData = $session->read('Auth.User')['id'];
             // POCOR-8534 start
