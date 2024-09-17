@@ -32,21 +32,26 @@ class StudentBehavioursTable extends ControllerActionTable
             'appliedAction' => ['StudentBehaviours' =>['id']
             ]
         ]);
+        $this->toggle('add', false); //POCOR-8596
+        $this->toggle('edit', false); //POCOR-8596
+        $this->toggle('remove', false);//POCOR-8596
 
 		$this->controller = $config['controller']; //POCOR-8507
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $settings) {
-		$this->ControllerAction->field('student_id', ['visible' => false]);
-		$this->ControllerAction->field('student_behaviour_category_id', ['type' => 'select']);
-		$this->ControllerAction->field('description', ['visible' => true]);
-		$this->ControllerAction->field('action', ['visible' => false]);
+		$this->field('student_id', ['visible' => false]);
+		$this->field('assignee_id', ['visible' => false]);
+		$this->field('student_behaviour_category_id', ['type' => 'select','visible' => false]);
+		$this->field('description', ['visible' => false]);
+		$this->field('action', ['visible' => false]);
 
-		$this->ControllerAction->setFieldOrder(['institution_id', 'date_of_behaviour', 'time_of_behaviour', 'title', 'student_behaviour_category_id']);
+		$this->setFieldOrder(['institution_id', 'date_of_behaviour', 'time_of_behaviour', 'title', 'student_behaviour_category_id']);
 	}
         
 	public function beforeFind(Event $event, Query $query, $options)
 	{
+
 		if ($this->controller != null) { //POCOR-8507
 
 			//$userData = $this->Session->read();
@@ -54,8 +59,8 @@ class StudentBehavioursTable extends ControllerActionTable
 				//if ($this->Session->read('Auth.User.is_guardian') == 1) {
 				if ($_SESSION['Auth']['User']['is_guardian'] == 1) {
 					$userData = $this->Session->read();
-					$sId = $this->Session->read('Student.ExaminationResults.student_id');
-					//$sId = $_SESSION['Student']['ExaminationResults']['student_id'];
+					//$sId = $this->Session->read('Student.ExaminationResults.student_id');
+					$sId = $this->getQueryString('student_id');
 					/**
 					 * Need to add current login id as param when no data found in existing variable
 					 * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
@@ -77,7 +82,7 @@ class StudentBehavioursTable extends ControllerActionTable
 			/*POCOR-6267 starts*/
 			if ($this->controller->getName()!= null && $this->controller->getName() == 'GuardianNavs') {
 				$session = $this->request->getSession();
-				$studentId = $session->read('Student.Students.id');
+				$studentId = $this->getQueryString('student_id');
 			}/*POCOR-6267 ends*/
 			if($this->controller->getName()!= null && ($this->controller->getName() == 'Students' || $this->controller->getName() == 'Directories')) {
 				$studentId = $this->getQueryString('student_id');
@@ -89,7 +94,6 @@ class StudentBehavioursTable extends ControllerActionTable
 				$query ;
 			}
 		}
-		//echo "<pre>"; print_r($query->toArray()); die;
 		
 	}
 
