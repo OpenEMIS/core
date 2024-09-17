@@ -769,6 +769,8 @@ class AppController extends Controller
             ])) {
             return $skip;
         }
+        
+
 //        if ($params['controller'] == 'Users' &&
 //            $params['action'] == 'logout') {
 //            return $skip;
