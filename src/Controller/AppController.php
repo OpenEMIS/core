@@ -928,7 +928,7 @@ class AppController extends Controller
         //POCOR-7731 end
 
         $check = $this->AccessControl->check($params);
-        if (!$check) {
+        if (!$check && $params['plugin'] != 'GuardianNav') { //POCOR-8596
             $this->log(__FUNCTION__, 'debug');
             if ($params !== null) {
                 $this->log((string)$params, 'debug');
