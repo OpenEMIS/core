@@ -769,8 +769,6 @@ class AppController extends Controller
             ])) {
             return $skip;
         }
-        
-
 //        if ($params['controller'] == 'Users' &&
 //            $params['action'] == 'logout') {
 //            return $skip;
@@ -918,6 +916,7 @@ class AppController extends Controller
             $params['action'] == 'StaffAttendancesArchived') {
             $params['action'] = 'InstitutionStaffAttendances';
         }
+        
 
         // POCOR-7895 END
 
