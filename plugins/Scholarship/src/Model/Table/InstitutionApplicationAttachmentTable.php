@@ -173,9 +173,15 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
         $url[0] = 'view';
         $url[1] = $encodedQueryString; 
         $buttons['view']['url'] = $url;
-        if (is_null($buttons['edit'])) {
-            $buttons['edit'] = [];
-        }
+        
+        $buttons['remove']['url'] = [
+            'plugin' => 'Scholarship',
+            'controller' => 'Scholarships',
+            'action' => 'ScholarshipApplicationAttachments',
+            0 => 'remove',
+            1 => $encodedQueryString
+        ];
+        
         $buttons['edit']['url'] = [
             'plugin' => 'Scholarship',
             'controller' => 'Scholarships',
@@ -190,33 +196,11 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
             'tabindex' => '-1',
             'escape' => false,
         ];
-        if (is_null($buttons['remove'])) {
-            $buttons['remove'] = [];
-        }
-        if ($entity) {
+        
         $encodedQueryString = $this->paramsEncode(['id' => $entity->id, 'applicant_id' => $entity->applicant_id, 'scholarship_id' => $entity->scholarship_id]);
 
         // Setup the remove button
-        $buttons['remove']['url'] = [
-            'plugin' => 'Scholarship',
-            'controller' => 'Scholarships',
-            'action' => 'ScholarshipApplicationAttachments',
-            0 => 'remove',
-            1 => $encodedQueryString
-        ];
-
-        // Set label and attributes
-        $buttons['remove']['label'] = $buttons['remove']['label'] ?? '<i class="fa fa-trash"></i>' . __('Delete');
-        $buttons['remove']['attr'] = $buttons['remove']['attr'] ?? [
-                'data-toggle' => 'tooltip',
-                'data-placement' => 'bottom',
-                'escape' => false,
-                'title' => __('Delete')
-        ];
-    } else {
-        // Handle the case where entity is null (optional: log an error or take other action)
-        Log::error('Entity is null when setting up action buttons.');
-    }
+        
         return $buttons;
 
     }
@@ -362,7 +346,33 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
                 
             }
         }
+    }
 
+    public function deleteBeforeAction(Event $event, ArrayObject $extra)
+    {
+        
+        if($this->action == 'remove'){
+            $applicantId = $this->getQueryString('applicant_id');
+            $scholarshipId = $this->getQueryString('scholarship_id');
+            $encodedQueryString = $this->paramsEncode(['applicant_id' => $applicantId,'scholarship_id' => $scholarshipId,'security_user_id' => $applicantId]);
+             if(!empty($encodedQueryString)){
+                $session = $this->request->getSession();
+                $session->write('urlRequest', $encodedQueryString);
+            }
+            if(empty($encodedQueryString)){
+                $session = $this->request->getSession();
+                $encodedQueryString = $session->read('urlRequest');
+            }
+            $url = [
+                'plugin' => 'Scholarship',
+                'controller' => 'Scholarships',
+                'action' => 'ScholarshipApplicationAttachments',
+                0 => 'index',
+                1 => $encodedQueryString
+            ];
+            $extra['redirect'] = $url;
+        }
+        
     }
 
 }

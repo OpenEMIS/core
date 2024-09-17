@@ -57,11 +57,12 @@ class InstitutionPositionsTable extends AppTable
         //End POCOR-6605
         //Start POCOR-6887
         $birth_certificate_code_id = $IdentityTypesTable
-                                    ->find()
-                                    ->select(['id'])
-                                    ->where(['visible' => 1, 'editable' => 1, 'default' => 1])
-                                    ->enableHydration(false)
-                                    ->first();
+                                ->find()
+                                ->select(['id'])
+                                ->where(['visible' => 1, 'editable' => 1])
+                                ->enableHydration(false)
+                                ->first();
+
         $identity_id = 0;
         if(!empty($birth_certificate_code_id)){
             $identity_id = $birth_certificate_code_id->id;

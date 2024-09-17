@@ -178,6 +178,7 @@ class InstitutionChoicesTable extends ControllerActionTable
         return $validator
             ->requirePresence('country_id')
             ->requirePresence('location_type')
+            ->requirePresence('scholarship_institution_choice_type_id')
             ->add('end_date', 'ruleCompareDateReverse', [
                 'rule' => ['compareDateReverse', 'start_date', true],
                 'message' => __('End Date should not be earlier than Start Date')
@@ -246,7 +247,7 @@ class InstitutionChoicesTable extends ControllerActionTable
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $applicantId = $this->getQueryString('applicant_id');
         $scholarshipId = $this->getQueryString('scholarship_id');
-        $encodedQueryString = $this->paramsEncode(['id' => $entity->id,'applicant_id' => $applicantId,'scholarship_id' => $scholarshipId]);
+        $encodedQueryString = $this->paramsEncode(['id' => $entity->id,'applicant_id' => $applicantId,'security_user_id' =>$applicantId ,'scholarship_id' => $scholarshipId]);
         $url['plugin'] = 'Profile';
         $url['controller'] = 'Profiles';
         $url['action'] = 'ScholarshipApplicationInstitutionChoices';
@@ -270,6 +271,13 @@ class InstitutionChoicesTable extends ControllerActionTable
             'tabindex' => '-1',
             'escape' => false,
         ];
+        $buttons['remove']['url'] = [
+            'plugin' => 'Profile',
+            'controller' => 'Profiles',
+            'action' => 'ScholarshipApplicationInstitutionChoices',
+            0 => 'remove',
+            1 => $encodedQueryString
+        ];
         if ($entity) {
         $encodedQueryStrings = $this->paramsEncode(['id' => $entity->id]);
 
@@ -279,7 +287,7 @@ class InstitutionChoicesTable extends ControllerActionTable
             'controller' => 'Profiles',
             'action' => 'ScholarshipApplicationInstitutionChoices',
             0 => 'remove',
-            1 => $encodedQueryStrings
+            1 => $encodedQueryString
         ];
 
 
@@ -302,7 +310,28 @@ class InstitutionChoicesTable extends ControllerActionTable
     public function deleteBeforeAction(Event $event, ArrayObject $extra)
     {
         
+        if($this->action == 'remove'){
+            $applicantId = $this->getQueryString('applicant_id');
+            $scholarshipId = $this->getQueryString('scholarship_id');
+            $encodedQueryString = $this->paramsEncode(['applicant_id' => $applicantId,'scholarship_id' => $scholarshipId,'security_user_id' => $applicantId]);
+             if(!empty($encodedQueryString)){
+                $session = $this->request->getSession();
+                $session->write('urlRequest', $encodedQueryString);
+            }
+            if(empty($encodedQueryString)){
+                $session = $this->request->getSession();
+                $encodedQueryString = $session->read('urlRequest');
+            }
+            $url = [
+                'plugin' => 'Profile',
+                'controller' => 'Profiles',
+                'action' => 'ScholarshipApplicationInstitutionChoices',
+                0 => 'index',
+                1 => $encodedQueryString
+            ];
+            $extra['redirect'] = $url;
+        }
+        
     }
-
 
 }

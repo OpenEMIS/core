@@ -132,6 +132,17 @@ class ScholarshipTabsComponent extends Component
     public function getScholarshipProfileTabs($options = [])
     {
         $urlRequest = $this->queryString;
+        if (empty($urlRequest)) {
+            $urlRequest = $this->getController()->getRequest()->getParam('pass')[1];
+        }
+        if(!empty($urlRequest)){
+            $session = $this->getController()->getRequest()->getSession();
+            $session->write('urlRequest', $urlRequest);
+        }
+        if (empty($urlRequest)) {
+            $session = $this->getController()->getRequest()->getSession();
+            $urlRequest = $session->read('urlRequest');
+        }
         if(empty($urlRequest)){
             $urlRequest = $this->getController()->getRequest()->getParam('pass')[1];
         }

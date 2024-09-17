@@ -105,6 +105,7 @@ class ScholarshipsController extends AppController
                 /*$queryString = $this->request->getQuery('queryString');
                 echo "<pre>"; print_r($queryString);die;*/
                 $queryString = $this->getQueryString();
+           //     echo "<pre>"; print_r($queryString); die;
                 if(isset($queryString)){
                     $applicantId = $this->getQueryString('applicant_id');
                     $header = $this->Users->get($applicantId)->name;
