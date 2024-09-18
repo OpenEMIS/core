@@ -2707,6 +2707,7 @@ class InstitutionsController extends AppController
             || $action == 'studentCustomFields'
             || $action == 'staffCustomFields'
            || $furtherAction == 'removeReport'
+            || $furtherAction == 'downloadFailed' || $furtherAction == 'downloadPassed'
         ) {
             return true;
         }
