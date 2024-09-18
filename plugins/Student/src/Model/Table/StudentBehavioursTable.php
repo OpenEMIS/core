@@ -16,7 +16,7 @@ class StudentBehavioursTable extends ControllerActionTable
         'controller' => null,
     ];
 
-    protected $controller;
+    public $controller;
 
 	public function initialize(array $config): void {
 		parent::initialize($config);
