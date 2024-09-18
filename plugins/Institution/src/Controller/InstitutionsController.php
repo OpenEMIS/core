@@ -182,7 +182,7 @@ class InstitutionsController extends AppController
         // End
 
         parent::initialize();
-
+        $this->loadComponent('Cookie'); //POCOR-8551
         $data = $this->loadModel('Calendars');
         // $this->viewBuilder()->setHelpers(['HtmlField']);
 

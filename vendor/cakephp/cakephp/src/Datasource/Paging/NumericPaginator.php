@@ -449,7 +449,7 @@ class NumericPaginator implements PaginatorInterface
         if ($allowed !== null) {
             return $allowed;
         }
-        $deprecated = $config['sortWhitelist'] ?? null;
+        $deprecated = $config['sortableFields'] ?? null;
         if ($deprecated !== null) {
             deprecationWarning('The `sortWhitelist` option is deprecated. Use `sortableFields` instead.');
         }
