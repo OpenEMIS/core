@@ -71,8 +71,8 @@ class SurveysReportTable extends AppTable
         }
 
         $repeaterListCountResult = $this->checkSurveyExistanceInRepeater($instArr, $academicPeriodId, $surveyFormId);
-        $staffListCountResult = $this->checkSurveyExistanceInStaff($instArr, $academicPeriodId, $surveyFormId);
-        $studentListCountResult = $this->checkSurveyExistanceInStudent($instArr, $academicPeriodId, $surveyFormId);
+        $staffListCountResult = $this->checkSurveyExistanceInStaff($instArr, $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion);
+        $studentListCountResult = $this->checkSurveyExistanceInStudent($instArr, $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion);
         
         // if exists                        
         if((count($repeaterListCountResult) > 0) && ((count($staffListCountResult) <= 0) && (count($studentListCountResult) <= 0))){
@@ -478,7 +478,7 @@ class SurveysReportTable extends AppTable
                                     ])
                                     ->where([
                                         $InstitutionStaffSurveyAnswers->aliasField('institution_staff_survey_id') => $InstitutionStaffSurveysId,
-                                        $InstitutionStaffSurveyAnswers->aliasField('parent_survey_question_id') => $tableQuestion,
+                                        //$InstitutionStaffSurveyAnswers->aliasField('parent_survey_question_id') => $tableQuestion,
                                         $InstitutionStaffSurveyAnswers->aliasField('survey_question_id') => $sfq_val->survey_question_id,
                                     ])
                                     ->first();
@@ -698,7 +698,7 @@ class SurveysReportTable extends AppTable
                                     ])
                                     ->where([
                                         $InstitutionStudentSurveyAnswers->aliasField('institution_student_survey_id') => $InstitutionStudentSurveysId,
-                                        $InstitutionStudentSurveyAnswers->aliasField('parent_survey_question_id') => $tableQuestion,
+                                       // $InstitutionStudentSurveyAnswers->aliasField('parent_survey_question_id') => $tableQuestion,
                                         $InstitutionStudentSurveyAnswers->aliasField('survey_question_id') => $sfq_val->survey_question_id,
                                     ])
                                     ->first();
@@ -911,25 +911,70 @@ class SurveysReportTable extends AppTable
         return $InstitutionRepeaterSurveysRes;
     }
 
-    public function checkSurveyExistanceInStaff($institutions=[], $academicPeriodId, $surveyFormId){
+    public function checkSurveyExistanceInStaff($institutions=[], $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion){
         $StaffSurveys = TableRegistry::get('Staff.StaffSurveys');
-        $StaffSurveysRes = $StaffSurveys->find()
-                            ->where([
-                                $StaffSurveys->aliasField('institution_id IN') => $institutions,
-                                $StaffSurveys->aliasField('academic_period_id') => $academicPeriodId,
-                                $StaffSurveys->aliasField('parent_form_id') => $surveyFormId,
-                            ])->toArray();
+        $surveySectionId = "$surveySection";
+        $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
+        $surveySectionData = $surveySection->find()->where([ $surveySection->aliasField('id') => $surveySectionId ])->first();
+        
+        $SurveyFormsQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
+        $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
+        $StaffSurveysRes = $SurveyFormsQuestions->find()
+            ->select([
+                'id' => $StaffSurveys->aliasField('id'),
+                'parent_form_id' => $StaffSurveys->aliasField('parent_form_id'),
+            ])
+            ->innerJoin([$surveyQuestion->getAlias() => $surveyQuestion->getTable()],
+            [
+                $surveyQuestion->aliasField('id') . ' = '. $SurveyFormsQuestions->aliasField('survey_question_id')
+            ])
+            ->innerJoin([$StaffSurveys->getAlias() => $StaffSurveys->getTable()],
+            [
+                $SurveyFormsQuestions->aliasField('survey_form_id') . ' = '. $StaffSurveys->aliasField('parent_form_id')
+            ])
+            ->where([
+                $SurveyFormsQuestions->aliasField('survey_form_id') => $surveyFormId,
+                $SurveyFormsQuestions->aliasField('section IS') => $surveySectionData->section,
+                $surveyQuestion->aliasField('field_type') => 'STAFF_LIST',
+                $surveyQuestion->aliasField('id') => $tableQuestion,
+                $StaffSurveys->aliasField('institution_id IN') => $institutions,
+                $StaffSurveys->aliasField('academic_period_id') => $academicPeriodId,
+                $StaffSurveys->aliasField('parent_form_id') => $surveyFormId        
+            ])->toArray();  
+        
         return $StaffSurveysRes;
     }
 
-    public function checkSurveyExistanceInStudent($institutions=[], $academicPeriodId, $surveyFormId){
+    public function checkSurveyExistanceInStudent($institutions=[], $academicPeriodId, $surveyFormId, $surveySection, $tableQuestion){
         $StudentSurveys = TableRegistry::get('Student.StudentSurveys');
-        $StudentSurveysRes = $StudentSurveys->find()
-                            ->where([
-                                $StudentSurveys->aliasField('institution_id IN') => $institutions,
-                                $StudentSurveys->aliasField('academic_period_id') => $academicPeriodId,
-                                $StudentSurveys->aliasField('parent_form_id') => $surveyFormId,
-                            ])->toArray();
+        $surveySectionId = "$surveySection";
+        $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
+        $surveySectionData = $surveySection->find()->where([ $surveySection->aliasField('id') => $surveySectionId ])->first();
+        
+        $SurveyFormsQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
+        $surveyQuestion = TableRegistry::get('Survey.SurveyQuestions');
+        $StudentSurveysRes = $SurveyFormsQuestions->find()
+            ->select([
+                'id' => $StudentSurveys->aliasField('id'),
+                'parent_form_id' => $StudentSurveys->aliasField('parent_form_id'),
+            ])
+            ->innerJoin([$surveyQuestion->getAlias() => $surveyQuestion->getTable()],
+            [
+                $surveyQuestion->aliasField('id') . ' = '. $SurveyFormsQuestions->aliasField('survey_question_id')
+            ])
+            ->innerJoin([$StudentSurveys->getAlias() => $StudentSurveys->getTable()],
+            [
+                $SurveyFormsQuestions->aliasField('survey_form_id') . ' = '. $StudentSurveys->aliasField('parent_form_id')
+            ])
+            ->where([
+                $SurveyFormsQuestions->aliasField('survey_form_id') => $surveyFormId,
+                $SurveyFormsQuestions->aliasField('section IS') => $surveySectionData->section,
+                $surveyQuestion->aliasField('field_type') => 'STUDENT_LIST',
+                $surveyQuestion->aliasField('id') => $tableQuestion,
+                $StudentSurveys->aliasField('institution_id IN') => $institutions,
+                $StudentSurveys->aliasField('academic_period_id') => $academicPeriodId,
+                $StudentSurveys->aliasField('parent_form_id') => $surveyFormId        
+            ])->toArray();  
         return $StudentSurveysRes;
     }
 
@@ -937,6 +982,7 @@ class SurveysReportTable extends AppTable
     {
         $requestData = json_decode($settings['process']['params']);
         $tableQuestion = $requestData->table_question;
+        $surveySection = $requestData->survey_section;
         //POCOR-8525 starts find record is exist in `institution_repeater_surveys` table for Repeater case
         $institutionID = $requestData->institution_id;
         if($institutionID <= 0){
@@ -953,10 +999,10 @@ class SurveysReportTable extends AppTable
         }
         
         $repeaterListCountResult = $this->checkSurveyExistanceInRepeater($instArr, $requestData->academic_period_id, $requestData->survey_form);
-        $staffListCountResult = $this->checkSurveyExistanceInStaff($instArr, $requestData->academic_period_id, $requestData->survey_form);
-        $studentListCountResult = $this->checkSurveyExistanceInStudent($instArr, $requestData->academic_period_id, $requestData->survey_form);
+        $staffListCountResult = $this->checkSurveyExistanceInStaff($instArr, $requestData->academic_period_id, $requestData->survey_form, $surveySection, $tableQuestion);
+        $studentListCountResult = $this->checkSurveyExistanceInStudent($instArr, $requestData->academic_period_id, $requestData->survey_form, $surveySection, $tableQuestion);
         //if record exists
-        if((count($repeaterListCountResult) > 0) || (count($staffListCountResult) > 0)){
+        if((count($repeaterListCountResult) > 0) || (count($staffListCountResult) > 0) || (count($studentListCountResult) > 0)){
             foreach ($fields as $key => $field) {
                 if ($field['field'] == 'survey_form_id') {
                     unset($fields[$key]);
@@ -1053,11 +1099,11 @@ class SurveysReportTable extends AppTable
             }else if((count($staffListCountResult) > 0)){
                 $SurveyFormId = $staffListCountResult[0]->parent_form_id;
                 $fieldType = 'STAFF_LIST';
-            }else if((count($staffListCountResult) > 0)){
-                $SurveyFormId = $staffListCountResult[0]->parent_form_id;
+            }else if((count($studentListCountResult) > 0)){
+                $SurveyFormId = $studentListCountResult[0]->parent_form_id;
                 $fieldType = 'STUDENT_LIST';
             }
-
+            
             $surveySectionId = "$requestData->survey_section";
             $surveySection = TableRegistry::get('Survey.SurveyFormsQuestions');
             $surveySectionData = $surveySection->find()->where([ $surveySection->aliasField('id') => $surveySectionId ])->first();
