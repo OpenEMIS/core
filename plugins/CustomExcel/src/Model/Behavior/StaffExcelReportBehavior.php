@@ -339,6 +339,66 @@ class StaffExcelReportBehavior extends Behavior
         $objDrawing = new MemoryDrawing();
 
         if (!isset($extra['image_resource']) && $imagePath) {
+            if (!file_exists($imagePath)) {
+                throw new \Exception("Image file does not exist: $imagePath");
+            }
+
+            switch ($attr['mime_type']) {
+                case 'image/png':
+                    $imageResource = imagecreatefrompng($imagePath);
+                    if ($imageResource === false) {
+                        throw new \Exception("Failed to create image from PNG: $imagePath");
+                    }
+                    $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_PNG);
+                    $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_PNG);
+                    break;
+                case 'image/jpeg':
+                    $imageResource = imagecreatefromjpeg($imagePath);
+                    if ($imageResource === false) {
+                        throw new \Exception("Failed to create image from JPEG: $imagePath");
+                    }
+                    $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_JPEG);
+                    $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_JPEG);
+                    break;
+                case 'image/gif':
+                    $imageResource = imagecreatefromgif($imagePath);
+                    if ($imageResource === false) {
+                        throw new \Exception("Failed to create image from GIF: $imagePath");
+                    }
+                    $objDrawing->setMimeType(MemoryDrawing::MIMETYPE_GIF);
+                    $objDrawing->setRenderingFunction(MemoryDrawing::RENDERING_GIF);
+                    break;
+                default:
+                    throw new \Exception("Unsupported image type: " . $attr['mime_type']);
+            }
+
+            $extra['image_resource'] = $imageResource;
+        }
+
+        if (isset($extra['image_resource']) && is_resource($extra['image_resource'])) {
+            // Retain transparency on png/gif files
+            imageAlphaBlending($extra['image_resource'], true);
+            imageSaveAlpha($extra['image_resource'], true);
+
+            $objDrawing->setImageResource($extra['image_resource']);
+            $objDrawing->setWidth($imageWidth);
+            $objDrawing->setCoordinates($cellCoordinate);
+            $objDrawing->setOffsetX($imageMarginLeft);
+            $objDrawing->setOffsetY($imageMarginTop);
+            $objDrawing->setWorksheet($objSpreadsheet->getActiveSheet());
+        }
+    }
+
+    //POCOR-8551
+    public function renderImage_old($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $imagePath, $attr, $extra)
+    {
+        $imageWidth = $attr['imageWidth'];
+        $imageMarginLeft = $attr['imageMarginLeft'];
+        $imageMarginTop = $attr['imageMarginTop'];
+
+        $objDrawing = new MemoryDrawing();
+
+        if (!isset($extra['image_resource']) && $imagePath) {
             switch ($attr['mime_type']) {
                 case 'image/png':
                     $imageResource = imagecreatefrompng($imagePath);
@@ -688,6 +748,9 @@ class StaffExcelReportBehavior extends Behavior
             foreach ($this->advancedTypes as $function => $keyword) {
                 $value = $this->getAdvancedTypeKeyword($keyword);
                 $pos = strpos($cellValue, $value);
+                if($function == 'table') {//POCOR-8551
+                    $function = 'tableData';
+                }
                 if ($pos !== false) {
                     if (method_exists($this, $function)) {
                         $jsonArray = $this->convertPlaceHolderToArray($cellValue);
@@ -1020,7 +1083,7 @@ class StaffExcelReportBehavior extends Behavior
         }
     }
 
-    public function table($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra) : Table
+    public function tableData($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra) : Table
     {
         $rowValue = $attr['rowValue'];
         $columnIndex = $attr['columnIndex'];
