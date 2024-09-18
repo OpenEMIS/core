@@ -1498,18 +1498,17 @@ class DirectoriesTable extends ControllerActionTable
             ]);
         } else {
             $this->behaviors()->get('AdvanceSearch')->setConfig([
-                'showOnLoad' => 1,
+                'showOnLoad' => 0,
             ]);
-
             // Inject the reset button click script only when showOnLoad is 1
-            echo '<script>
+            echo '<script defer>
                     document.addEventListener("DOMContentLoaded", function() {
                         var resetButton = document.getElementById("reset");
                         if (resetButton) {
                             resetButton.click();
                         }
                     });
-                </script>';
+                </script><style>.table-wrapper, .pagination-wrapper{display:none;}</style>';
         }
         // POCOR-8558 ends
 
