@@ -15,7 +15,7 @@ class TrainingSessionTraineeResultsTable extends AppTable {
     public function validationDefault(Validator $validator): Validator 
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         return $validator
             ->add('result', 'ruleMaxLength', [
                 'rule' => ['maxLength', 10]
