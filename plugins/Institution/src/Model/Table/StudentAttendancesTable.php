@@ -1043,6 +1043,18 @@ class StudentAttendancesTable extends ControllerActionTable
         $subjectId = $options['subject_id'];
 
         $studentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
+        //POCOR-8383 start
+        $check  = $studentAttendanceMarkedRecords->updateAll(
+            ['no_scheduled_class' => 0], // Fields to update
+            [   // Conditions for which records to update
+                'institution_class_id' => $institutionClassId,
+                'education_grade_id' => $educationGradeId,
+                'institution_id' => $institutionId,
+                'academic_period_id' => $academicPeriodId,
+                'date' => $day,
+                'period' => $attendancePeriodId
+            ]
+        ); //POCOR-8383 end
         $AttendanceMarkedData = $studentAttendanceMarkedRecords->find()
             ->where([
                 $studentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
