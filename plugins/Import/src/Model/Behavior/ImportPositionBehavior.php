@@ -769,8 +769,9 @@ class ImportPositionBehavior extends Behavior
                 foreach ($sets as $key => $value) {
                     $alpha = Coordinate::stringFromColumnIndex($key + $firstColumn);
                     $cellAddress = $alpha . ($index + 3);
-                    if($i == 0){
-                        $modelData[$index]['lookupStartAddress'] = $cellAddress;
+                    if($i == 1){
+                        $startCell = $alpha . ($index + 4);
+                        $modelData[$index]['lookupStartAddress'] = $startCell;
                     }
                     $i++;
                     // Set cell value
@@ -793,7 +794,7 @@ class ImportPositionBehavior extends Behavior
                 $endAddress = $modelData[count($modelData) - 1]['lookupEndAddress']; // Example: 'C72'
                 $listLocation = "'References'!$" . $lookupColumnAlpha . "$" . substr($startAddress, 1) . ":$" . $lookupColumnAlpha . "$" . substr($endAddress, 1);
                 $spreadsheet->setActiveSheetIndex(0);
-                for ($i = $lookupStart; $i < 10; $i++) {
+                for ($i = $lookupStart; $i < 103; $i++) {
 
                     $objValidation = $spreadsheet->getActiveSheet()->getCell($alpha . $i)->getDataValidation();
                     $objValidation->setType(DataValidation::TYPE_LIST);
