@@ -25,7 +25,7 @@ class ReportShell extends Shell
 
         try {
             $entity = $this->ReportProgress->get($id);
-            $this->out('Start Processing Record For Ehteram'.$entity);
+           // $this->out('Start Processing Record For Ehteram'.$entity);
             if ($entity->status == 1) {
                 $params = json_decode($entity->params, true);
                 $format = $params['format'];
