@@ -368,7 +368,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                                                 
                                     } else {
                                         try{
-                                            $connection = ConnectionManager::get('default');
+                                            /*$connection = ConnectionManager::get('default');
                                             $sql = "INSERT INTO student_attendance_marked_records (
                                                 institution_class_id,
                                                 education_grade_id,
@@ -388,18 +388,18 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                                                 0,
                                                 1
                                             )";
-                                            $result = $connection->execute($sql);
-                                            // $newRecord = $this->newEntity([
-                                            //     'institution_class_id' => $institutionClassId,
-                                            //     'education_grade_id' => $educationGradeId,
-                                            //     'institution_id' => $institutionId,
-                                            //     'academic_period_id' => $academicPeriodId,
-                                            //     'date' => $day,
-                                            //     'period' => 0,
-                                            //     'subject_id' => 0,
-                                            //     'no_scheduled_class' => 1
-                                            // ]);
-                                            // $this->save($newRecord);
+                                            $result = $connection->execute($sql);*/
+                                            $newRecord = $this->newEntity([
+                                                'institution_class_id' => $institutionClassId,
+                                                'education_grade_id' => $educationGradeId,
+                                                'institution_id' => $institutionId,
+                                                'academic_period_id' => $academicPeriodId,
+                                                'date' => $day,
+                                                'period' => $period,
+                                                'subject_id' => 0,
+                                                'no_scheduled_class' => 1
+                                            ]);
+                                            $this->save($newRecord);
                                         } catch (\Exception $e) {
                                             echo "<pre>";print_r($e);die;
                                         }
