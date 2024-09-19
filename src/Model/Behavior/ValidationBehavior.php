@@ -815,8 +815,8 @@ class ValidationBehavior extends Behavior
                         'Genders.code', 'Genders.name'
                     ])
                     ->first();
-            $institutionGender = $query->Genders->name;
-            $institutionGenderCode = $query->Genders->code;
+            $institutionGender = $query->gender->name;//POCOR-8343
+            $institutionGenderCode = $query->gender->code;//POCOR-8343
 
             if ($institutionGenderCode == 'X') { //if mixed then always true
                 return true;
