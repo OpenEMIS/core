@@ -9,7 +9,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\ResultSet;
 use Cake\Event\Event;
-use Cake\I18n\Time;
+use Cake\I18n\FrozenTime;
 use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
@@ -107,7 +107,7 @@ class ClassesProfilesTable extends ControllerActionTable
             $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
             $params = [
                 'class_profile_template_id' => $reportCardId,
-                'institution_id' => $entity->id,
+                'institution_id' => $entity->id ?? $this->getQueryString('institution_id'), //POCOR-8551
                 'academic_period_id' => $academicPeriodId,
                 'institution_class_id' => $entity->institution_class_id,
             ];
@@ -152,7 +152,7 @@ class ClassesProfilesTable extends ControllerActionTable
                 if (!empty($reportCard->generate_end_date)) {
                     $generateEndDate = $reportCard->generate_end_date->format('Y-m-d');
                 }
-                $date = Time::now()->format('Y-m-d');
+                $date = FrozenTime::now()->format('Y-m-d');
 
                 if ((!empty($generateStartDate) && !empty($generateEndDate)) && ($date >= $generateStartDate && $date <= $generateEndDate)) {
                     $buttons['generate'] = [
@@ -385,7 +385,7 @@ class ClassesProfilesTable extends ControllerActionTable
                 if (!empty($ReportCardsData->generate_end_date)) {
                     $generateEndDate = $ReportCardsData->generate_end_date->format('Y-m-d');
                 }
-                $date = Time::now()->format('Y-m-d');
+                $date = FrozenTime::now()->format('Y-m-d');
 
                 if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {
                     $extra['toolbarButtons']['generateAll'] = $generateButton;
@@ -484,7 +484,7 @@ class ClassesProfilesTable extends ControllerActionTable
     {
         $value = '';
         if ($entity->has('report_card_started_on')) {
-            $startedOnValue = new Time($entity->report_card_started_on);
+            $startedOnValue = new FrozenTime($entity->report_card_started_on);
             $value = $this->formatDateTime($startedOnValue);
         }
         return $value;
@@ -494,7 +494,7 @@ class ClassesProfilesTable extends ControllerActionTable
     {
         $value = '';
         if ($entity->has('report_card_completed_on')) {
-            $completedOnValue = new Time($entity->report_card_completed_on);
+            $completedOnValue = new FrozenTime($entity->report_card_completed_on);
             $value = $this->formatDateTime($completedOnValue);
         }
         return $value;
@@ -871,10 +871,10 @@ class ClassesProfilesTable extends ControllerActionTable
     
     private function addReportCardsToProcesses($academicPeriodId, $reportCardId, $institutionId = null, $institutionClassId = null)
     {
-        Log::write('debug', 'Initialize Add All Class Report Cards '.$reportCardId.' for Institution '.$institutionId.' to processes ('.Time::now().')');
+        Log::write('debug', 'Initialize Add All Class Report Cards '.$reportCardId.' for Institution '.$institutionId.' to processes ('.FrozenTime::now().')');
         
         $ClassProfileProcesses = TableRegistry::getTableLocator()->get('ReportCard.ClassProfileProcesses');
-        $InstitutionTable = TableRegistry::getTableLocator()->get('Institutions');
+        $InstitutionTable = TableRegistry::getTableLocator()->get('Institution.Institutions');//POCOR-8551
         $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         $where = [];
         if (!is_null($institutionId)) {
@@ -888,7 +888,7 @@ class ClassesProfilesTable extends ControllerActionTable
                 $InstitutionTable->aliasField('id'),
                 'institution_class_id' => $InstitutionClasses->aliasField('id'),
             ])
-            ->innerJoin([$InstitutionClasses->alias() => $InstitutionClasses->table()],
+            ->innerJoin([$InstitutionClasses->getAlias() => $InstitutionClasses->getTable()],//POCOR-8551
                 [
                     $InstitutionClasses->aliasField('institution_id = ') . $InstitutionTable->aliasField('id'),
                     $InstitutionClasses->aliasField('academic_period_id = ') . $academicPeriodId,
@@ -941,20 +941,20 @@ class ClassesProfilesTable extends ControllerActionTable
                 $newEntity = $this->ClassProfiles->patchEntity($classesReportCardEntity, $newData);
 
                 if (!$this->ClassProfiles->save($newEntity)) {
-                    Log::write('debug', 'Error Add All Class profile Report Cards '.$reportCardId.' for Class '.$institution->institution_class_id.' of Institution'.$institution->id.' to processes ('.Time::now().')');
+                    Log::write('debug', 'Error Add All Class profile Report Cards '.$reportCardId.' for Class '.$institution->institution_class_id.' of Institution'.$institution->id.' to processes ('.FrozenTime::now().')');
                     Log::write('debug', $newEntity->errors());
                 }
             }
             // end
         }
 
-        Log::write('debug', 'End Add All Class profile Report Cards '.$reportCardId.' for Class '.$institution->institution_class_id.' of Institution'.$institution->id.' to processes ('.Time::now().')');
+        Log::write('debug', 'End Add All Class profile Report Cards '.$reportCardId.' for Class '.$institution->institution_class_id.' of Institution'.$institution->id.' to processes ('.FrozenTime::now().')');
     }
 
     private function triggerGenerateAllReportCardsShell($academicPeriodId, $reportCardId, $institutionId = null, $institutionClassId = null)
     {
         $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
-        $runningProcess = $SystemProcesses->getRunningProcesses($this->registryAlias());
+        $runningProcess = $SystemProcesses->getRunningProcesses($this->getRegistryAlias());//POCOR-8551
 
         foreach ($runningProcess as $key => $processData) {
             $systemProcessId = $processData['id'];
@@ -963,16 +963,16 @@ class ClassesProfilesTable extends ControllerActionTable
 
             $expiryDate = clone($createdDate);
             $expiryDate->addMinutes(30);
-            $today = Time::now();
+            $today = FrozenTime::now();
 
             if ($expiryDate < $today) {
-                $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::COMPLETED);
+                $SystemProcesses->updateProcess($systemProcessId, FrozenTime::now(), $SystemProcesses::COMPLETED);
                 $SystemProcesses->killProcess($pId);
             }
         }
 
         if (count($runningProcess) <= self::MAX_PROCESSES) {
-            $processModel = $this->registryAlias();
+            $processModel = $this->getRegistryAlias();//POCOR-8551
             $passArray = [
                 'institution_id' => $institutionId,
                 'class_profile_template_id' => $reportCardId,

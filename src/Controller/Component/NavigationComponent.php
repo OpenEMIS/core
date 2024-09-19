@@ -1314,21 +1314,21 @@ class NavigationComponent extends Component
         $studentID = $this->getStudentID($debugString);
         $institutionID = $this->getInstitutionIDForStudent($debugString);
         $institutionStudentId = $this->controller->getQueryString('institution_student_id');
+        //POCOR-8551
         if (empty($institutionStudentId)) {
             $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
-            $institutionStudentId = $InstitutionStudentsTable->find()
+            $query = $InstitutionStudentsTable->find()
+                ->select(['id']) // Specify the field you want to extract
                 ->where([
                     $InstitutionStudentsTable->aliasField('student_id') => $studentID,
                     $InstitutionStudentsTable->aliasField('institution_id') => $institutionID,
                 ])
-                ->order([$InstitutionStudentsTable->aliasField('created') => 'DESC'])
-                ->extract('id')
-                ->first();
-            if (empty($institutionStudentId)) {
-                $institutionStudentId = null;
-            }
-
+                ->order([$InstitutionStudentsTable->aliasField('created') => 'DESC']);
+            
+            $results = $query->all()->extract('id')->toArray();
+            $institutionStudentId = !empty($results) ? $results[0] : null;
         }
+        
 
         $queryString = $this->controller->paramsEncode([
             'id' => $studentID,
