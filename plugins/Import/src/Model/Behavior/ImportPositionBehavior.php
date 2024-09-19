@@ -26,6 +26,7 @@ use Cake\Log\Log;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use Laminas\Diactoros\UploadedFile;
@@ -728,6 +729,7 @@ class ImportPositionBehavior extends Behavior
 
     public function setCodesDataTemplate($spreadsheet)
     {
+
         $sheetName = __('References');
         $spreadsheet->createSheet(1);
         $spreadsheet->setActiveSheetIndex(1);
@@ -763,34 +765,51 @@ class ImportPositionBehavior extends Behavior
             }
 
             foreach ($modelData as $index => $sets) {
+                $i = 0;
                 foreach ($sets as $key => $value) {
-                    $alpha = Coordinate::stringFromColumnIndex($key + $firstColumn );
-                    $spreadsheet->getActiveSheet()->setCellValue($alpha . ($index + 3), $value);
+                    $alpha = Coordinate::stringFromColumnIndex($key + $firstColumn);
+                    $cellAddress = $alpha . ($index + 3);
+                    if($i == 0){
+                        $modelData[$index]['lookupStartAddress'] = $cellAddress;
+                    }
+                    $i++;
+                    // Set cell value
+                    $spreadsheet->getActiveSheet()->setCellValue($cellAddress, $value);
                     $spreadsheet->getActiveSheet()->getColumnDimension($alpha)->setAutoSize(true);
+                    // Always update the end address for lookup
                 }
+                $modelData[$index]['lookupEndAddress'] = $cellAddress;
+
             }
 
             if (count($modelData) > 1 && !isset($modelArr['noDropDownList'])) {
                 $lookupColumn = $firstColumn + intval($modelArr['lookupColumn']) - 1;
                 $alpha = Coordinate::stringFromColumnIndex($columnOrder);
-                $lookupColumnAlpha = Coordinate::stringFromColumnIndex($lookupColumn + 1);
+                $lookupColumnAlpha = Coordinate::stringFromColumnIndex($lookupColumn);
                 $lookupStart = $this->isCustomText() ? 4 : 3;
 
-                for ($i = $lookupStart; $i < 103; $i++) {
-                    $spreadsheet->setActiveSheetIndex(0);
+                // Use the stored start and end addresses for the list range
+                $startAddress = $modelData[0]['lookupStartAddress']; // Example: 'C4'
+                $endAddress = $modelData[count($modelData) - 1]['lookupEndAddress']; // Example: 'C72'
+                $listLocation = "'References'!$" . $lookupColumnAlpha . "$" . substr($startAddress, 1) . ":$" . $lookupColumnAlpha . "$" . substr($endAddress, 1);
+                $spreadsheet->setActiveSheetIndex(0);
+                for ($i = $lookupStart; $i < 10; $i++) {
+
                     $objValidation = $spreadsheet->getActiveSheet()->getCell($alpha . $i)->getDataValidation();
-                    $objValidation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_LIST);
-                    $objValidation->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_INFORMATION);
+                    $objValidation->setType(DataValidation::TYPE_LIST);
+                    $objValidation->setErrorStyle(DataValidation::STYLE_INFORMATION);
                     $objValidation->setAllowBlank(false);
                     $objValidation->setShowInputMessage(true);
                     $objValidation->setShowErrorMessage(true);
                     $objValidation->setShowDropDown(true);
-                    $listLocation = "'" . $sheetName . "'!$" . $lookupColumnAlpha . "$4:$" . $lookupColumnAlpha . "$" . (count($modelData) + 2);
+
+                    // Apply the list location formula
                     $objValidation->setFormula1($listLocation);
                 }
 
                 $spreadsheet->setActiveSheetIndex(1);
             }
+
         }
 
         if ($lastColumn > -1) {
