@@ -149,8 +149,8 @@ class ThemesTable extends ControllerActionTable
         }
         if($entity->id == 5){ //POCOR-8268
             $colorValue = $this->request->getData($this->aliasField('value'));
-            $entity->default_value = $colorValue;
-            $entity->value = NULL;
+            //$entity->default_value = '';
+            $entity->value = $colorValue;
         }
     }
 
@@ -160,6 +160,14 @@ class ThemesTable extends ControllerActionTable
         if($entity->name == 'Colour'){
             $entity->default_value = '<div style="float: left; width: 150px; height: 20px; margin: 5px; border: 1px solid rgba(0, 0, 0, .2); background-color: #'.$entity->default_value.';"></div>';
             return $entity->default_value;
+        }
+    }
+
+    public function onGetValue(Event $event, Entity $entity)
+    {
+        if($entity->name == 'Colour'){
+            $entity->value = '<div style="float: left; width: 150px; height: 20px; margin: 5px; border: 1px solid rgba(0, 0, 0, .2); background-color: #'.$entity->value.';"></div>';
+            return $entity->value;
         }
     }
 
@@ -192,6 +200,14 @@ class ThemesTable extends ControllerActionTable
             $attr['onChangeReload'] = true;
         }
         return $attr;
+
+    }
+     public function validationDefault(Validator $validator): Validator 
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
+         return $validator
+            ->requirePresence('value');
 
     }
 }
