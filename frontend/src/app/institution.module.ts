@@ -31,7 +31,6 @@ import { StaffAttendanceReportComponent } from './staff-attendance-report/staff-
 import { StudentMealImportComponent } from './student-meal-import/student-meal-import.component';
 import { StudentMealResultComponent } from './student-meal-result/student-meal-result.component';
 import { StudentTimetableComponent } from './student-timetable/student-timetable.component';
-import { DialogOpenComponent } from './dialog-open/dialog-open.component';
 
 export const appRoutes: Routes = [
   { path: 'Dashboard', component: WorkbenchComponent },
@@ -120,8 +119,7 @@ function getBaseUrl() {
     StaffAttendanceReportComponent,
     StudentMealImportComponent,
     StudentMealResultComponent,
-    StudentTimetableComponent,
-    DialogOpenComponent
+    StudentTimetableComponent
   ],
   imports: [
     BrowserModule,
