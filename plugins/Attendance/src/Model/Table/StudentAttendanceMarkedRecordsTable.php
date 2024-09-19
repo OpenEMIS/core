@@ -333,34 +333,36 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $row = [];
         
         return $query
-                ->formatResults(function (ResultSetInterface $results) use ($institutionClassId, $educationGradeId, $institutionId, $academicPeriodId, $day) { 
-                            return $results->map(function ($row) use ($institutionClassId, $educationGradeId, $institutionId, $academicPeriodId, $day) {
+                ->formatResults(function (ResultSetInterface $results) use ($institutionClassId, $educationGradeId, $institutionId, $academicPeriodId, $day,$period) { 
+                            return $results->map(function ($row) use ($institutionClassId, $educationGradeId, $institutionId, $academicPeriodId, $day,$period) {
                                     $getRecord = $this->find('all')
                                             ->where([
                                                 $this->aliasField('institution_class_id') => $institutionClassId,
                                                 $this->aliasField('education_grade_id') => $educationGradeId,
                                                 $this->aliasField('institution_id') => $institutionId,
                                                 $this->aliasField('academic_period_id') => $academicPeriodId,
-                                                $this->aliasField('date') => $day
+                                                $this->aliasField('date') => $day,
+                                                $this->aliasField('period IS') => $period //POCOR-8383
                                         ])->toArray();
                                     if (!empty($getRecord)) {
-                                        $this->deleteAll([
+                                        /*$this->deleteAll([
                                             $this->aliasField('institution_class_id') => $institutionClassId,
                                             $this->aliasField('education_grade_id') => $educationGradeId,
                                             $this->aliasField('institution_id') => $institutionId,
                                             $this->aliasField('academic_period_id') => $academicPeriodId,
                                             $this->aliasField('date') => $day,
                                             $this->aliasField('no_scheduled_class') => 0,
-                                        ]);
+                                        ]);*/
                                             $query = $this->query();
                                             $query ->update()
-                                                    ->set(['period' => 0, 'subject_id' => 0, 'no_scheduled_class' => 1])
+                                                    ->set(['period' => $period, 'subject_id' => 0, 'no_scheduled_class' => 1])
                                                     ->where([
                                                         $this->aliasField('institution_class_id') => $institutionClassId,
                                                         $this->aliasField('education_grade_id') => $educationGradeId,
                                                         $this->aliasField('institution_id') => $institutionId,
                                                         $this->aliasField('academic_period_id') => $academicPeriodId,
-                                                        $this->aliasField('date') => $day
+                                                        $this->aliasField('date') => $day,
+                                                        $this->aliasField('period') => $period //POCOR-8383
                                                     ])
                                                     ->execute();
                                                 
@@ -382,7 +384,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                                                 $institutionId,
                                                 $academicPeriodId,
                                                 '$day', -- Make sure the date is formatted correctly and enclosed in quotes
-                                                0,
+                                                $period,
                                                 0,
                                                 1
                                             )";
@@ -413,7 +415,8 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                                             $StudentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
                                             $StudentAttendanceMarkedRecords->aliasField('institution_class_id') => $institutionClassId,
                                             $StudentAttendanceMarkedRecords->aliasField('education_grade_id') => $educationGradeId,
-                                            $StudentAttendanceMarkedRecords->aliasField('date') => $day 
+                                            $StudentAttendanceMarkedRecords->aliasField('date') => $day,
+                                            $StudentAttendanceMarkedRecords->aliasField('period IS') => $period, 
                                         ])
                                         ->first();
                                         if(!empty($totalMarkedCount)){
