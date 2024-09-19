@@ -352,7 +352,8 @@ class StudentAttendancesTable extends ControllerActionTable
                                 $StudentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
                                 $StudentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
                                 $StudentAttendanceMarkedRecords->aliasField('date') => $findDay,
-                                $StudentAttendanceMarkedRecords->aliasField('no_scheduled_class') => 1
+                                $StudentAttendanceMarkedRecords->aliasField('no_scheduled_class') => 1,
+                                $StudentAttendanceMarkedRecords->aliasField('period IS') => $attendancePeriodId //POCOR-8383
                             ])->first();
                         if (!empty($getRecord)) {
                             $row->is_NoClassScheduled = 1;
