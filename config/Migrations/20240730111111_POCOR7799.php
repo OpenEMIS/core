@@ -16,6 +16,18 @@ class POCOR7799 extends AbstractMigration
         $this->execute("DELETE FROM import_mapping WHERE
                                `model` = 'Institution.InstitutionPositions' AND
                                `column_name` = 'is_homeroom'");
+        $this->execute("UPDATE import_mapping SET `order` = 1 WHERE
+                                          `model` = 'Institution.InstitutionPositions' AND
+                               `column_name` = 'position_no'");
+        $this->execute("UPDATE import_mapping SET `order` = 2 WHERE
+                                          `model` = 'Institution.InstitutionPositions' AND
+                               `column_name` = 'staff_position_title_id'");
+        $this->execute("UPDATE import_mapping SET `order` = 3 WHERE
+                                          `model` = 'Institution.InstitutionPositions' AND
+                               `column_name` = 'status_id'");
+        $this->execute("UPDATE import_mapping SET `order` = 4 WHERE
+                                          `model` = 'Institution.InstitutionPositions' AND
+                               `column_name` = 'shift_id'");
     }
 
     //rollback
