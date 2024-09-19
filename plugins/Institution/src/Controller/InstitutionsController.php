@@ -182,7 +182,7 @@ class InstitutionsController extends AppController
         // End
 
         parent::initialize();
-
+        $this->loadComponent('Cookie'); //POCOR-8551
         $data = $this->loadModel('Calendars');
         // $this->viewBuilder()->setHelpers(['HtmlField']);
 
@@ -2707,6 +2707,7 @@ class InstitutionsController extends AppController
             || $action == 'studentCustomFields'
             || $action == 'staffCustomFields'
            || $furtherAction == 'removeReport'
+            || $furtherAction == 'downloadFailed' || $furtherAction == 'downloadPassed'
         ) {
             return true;
         }
