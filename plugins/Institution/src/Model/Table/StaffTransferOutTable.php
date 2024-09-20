@@ -305,7 +305,12 @@ class StaffTransferOutTable extends InstitutionStaffTransfersTable
 
                 if ($visible) {
                     $url = $this->url('view');
+                    //POCOR-8604 starts add id in queryString
+                    $newQueryString = array_merge($queryString,['id' => $pendingTransfer->id]);
+                    $url['?']['queryString'] = $this->paramsEncode($newQueryString);
                     $url[1] = $this->paramsEncode(['id' => $pendingTransfer->id]);
+                    $url['queryString'] = $this->paramsEncode($newQueryString); 
+                    //POCOR-8604 ends
                     $event->stopPropagation();
                     return $this->controller->redirect($url);
                 } else {
