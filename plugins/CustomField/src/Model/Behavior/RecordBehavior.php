@@ -999,6 +999,29 @@ class RecordBehavior extends Behavior
                                 // End
                             } else if ($model->request->is(['post', 'put'])) {
                                 // onPost, no actions
+                                // POCOR-8352 Start
+                                $fieldData['text_value'] = $obj->text_value;
+                                $fieldData['number_value'] = $obj->number_value;
+                                $fieldData['decimal_value'] = $obj->decimal_value;
+                                $fieldData['textarea_value'] = $obj->textarea_value;
+                                $fieldData['date_value'] = $obj->date_value;
+                                $fieldData['time_value'] = $obj->time_value;
+                                $fieldData['file'] = $obj->file;
+
+                                // logic for Initialize
+                                $fieldType = Inflector::camelize(strtolower($obj->custom_field->field_type));
+                                $settings = new ArrayObject([
+                                    'recordKey' => $this->getConfig('recordKey'),
+                                    'fieldKey' => $this->getConfig('fieldKey'),
+                                    'tableColumnKey' => $this->getConfig('tableColumnKey'),
+                                    'tableRowKey' => $this->getConfig('tableRowKey'),
+                                    'customValue' => $obj
+                                ]);
+                                $event = $model->dispatchEvent('Render.on'.$fieldType.'Initialize', [$entity, $settings], $model);
+                                if ($event->isStopped()) {
+                                    return $event->getResult();
+                                }
+                                // POCOR-8352 End
                             }
                             $values[$fieldId] = $fieldData;
                         }
