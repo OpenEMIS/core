@@ -65,7 +65,7 @@ class AccessControlComponent extends Component
 
             foreach ($actions as $action => $value) {
                 if ($value == true && in_array($action, $allowedActions)) {
-                    $check = $this->check(['controller' => $this->controller->getName(), 'action' => $action]);
+                    $check = $this->check(['controller' => $this->getController()->getRequest()->getParam('controller'), 'action' => $action]);
                     if ($check == false) {
                         $disabledActions[] = $action;
                     }
@@ -249,7 +249,7 @@ class AccessControlComponent extends Component
             return true;
         }
         //POCOR-8379 Starts use if condition only
-        if($this->controller->getName() != 'GuardianNavs'){
+        if($this->getController()->getRequest()->getParam('controller') != 'GuardianNavs'){
             $superUser = $this->isSuperRole();//V4 POCOR-8385
             if ($superUser || !is_array($url)) { // if $url is a string, then skip checking of permission
                 return true;
@@ -258,21 +258,23 @@ class AccessControlComponent extends Component
 
         // we only need controller and action
         foreach ($url as $i => $val) {
+
             if (($i != 'controller' && $i != 'action' && !is_numeric($i)) || is_numeric($val) || empty($val) || $this->isUuid($val) || $this->isSHA256($val) || $this->isEncodedParam($val) || $this->isHex($val)) {
                 unset($url[$i]);
             }
         }
         // Log::write('debug', $url);
          //POCOR-8087:: Allow all user for survey app
-         if(($this->controller->getName() == 'Rest') && ($this->action == 'survey')){
+         if(($this->getController()->getRequest()->getParam('controller') == 'Rest') && ($this->action == 'survey')){
             return true;
         }
+        
         //POCOR-8087::End
         if (empty($url)) {
-            $url = ['controller' => $this->controller->getName(), 'action' => $this->action];
+            $url = ['controller' => $this->getController()->getRequest()->getParam('controller'), 'action' => $this->action];
         } else {
             if (!isset($url['controller'])) {
-                $url['controller'] = $this->controller->getName();
+                $url['controller'] = $this->getController()->getRequest()->getParam('controller');
             }
         }
         $url = $this->checkAccessMap($url);
@@ -326,7 +328,7 @@ class AccessControlComponent extends Component
         $permissionKey = implode('.', $url);
         // Log::write('debug', $permissionKey);
 
-        if ($controller == $this->controller->getName()) {
+        if ($controller == $this->getController()->getRequest()->getParam('controller')) {
             $event = $this->controller->dispatchEvent('Controller.SecurityAuthorize.isActionIgnored', [$action], $this);
             if ($event->getResult() == true) {
                 return true;
@@ -355,7 +357,7 @@ class AccessControlComponent extends Component
     // the purpose of this function is to allow multiple actions linked to the same permission
     public function addAccessMap($key)
     {
-        $controller = $this->controller->getName();
+        $controller = $this->getController()->getRequest()->getParam('controller');
         $this->accessMap["$controller.$key"] = "$controller.%s";
     }
 
