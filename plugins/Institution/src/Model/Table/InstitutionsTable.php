@@ -1069,9 +1069,7 @@ class InstitutionsTable extends ControllerActionTable
     //POCOR-7271 changed survey condition
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        if($entity->isNew()){
-            return;
-        }
+        
         //Start POCOR-7697
         $hasSecurityGroupInstitution = $this->checkSecurityGroupInstitution($entity);
         if (!$hasSecurityGroupInstitution) {
@@ -1332,19 +1330,20 @@ class InstitutionsTable extends ControllerActionTable
                 $count++;
             }
             $body = array_merge($bodys, $custom_field); //POCOR-6805 end
-            if ($this->webhookAction == 'add' && empty($event->data['entity']->security_group_id)) {
-                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
+            if ($this->webhookAction == 'add' ) {
+                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.WebhookEvents');
+                // echo "<pre>";print_r($body);die;
                 if ($this->Auth->user()) {
-                    $Webhooks->triggerShell('institutions_create', ['username' => $username], $body);
+                    $Webhooks->triggerShell('institutions_create', ['username' => ''], $body);
                 }
             }
             // Webhook institution create -- end
 
             // Webhook institution update --start
             if ($this->webhookAction == 'edit') {
-                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.Webhooks');
+                $Webhooks = TableRegistry::getTableLocator()->get('Webhook.WebhookEvents');
                 if ($this->Auth->user()) {
-                    $Webhooks->triggerShell('institutions_update', ['username' => $username], $body);
+                    $Webhooks->triggerShell('institutions_update', ['username' => ''], $body);
                 }
             }
             // webhook institution update --end
