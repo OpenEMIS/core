@@ -1492,23 +1492,13 @@ class DirectoriesTable extends ControllerActionTable
         $parsedUrl = parse_url($referer);
 
         // Check if 'page' is set in the query string or 'AdvanceSearch' is present
-        if (isset($_GET['page']) || isset($_REQUEST['AdvanceSearch']) || isset($parsedUrl['query'])) {
+        if (isset($_GET['page']) || isset($_REQUEST['AdvanceSearch'])) {
             $this->behaviors()->get('AdvanceSearch')->setConfig([
                 'showOnLoad' => 0,
             ]);
         } else {
-            $this->behaviors()->get('AdvanceSearch')->setConfig([
-                'showOnLoad' => 0,
-            ]);
-            // Inject the reset button click script only when showOnLoad is 1
-            echo '<script defer>
-                    document.addEventListener("DOMContentLoaded", function() {
-                        var resetButton = document.getElementById("reset");
-                        if (resetButton) {
-                            resetButton.click();
-                        }
-                    });
-                </script><style>.table-wrapper, .pagination-wrapper{display:none;}</style>';
+            $event->stopPropagation();
+            return;
         }
         // POCOR-8558 ends
 
