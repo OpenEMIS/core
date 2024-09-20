@@ -1070,7 +1070,7 @@ class InstitutionsTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if($entity->isNew()){
-            $this->triggerWebhookShell($entity,'institutions_create');
+            $this->triggerWebhookShell($entity,'institutions_create'); //POCOR-7971
             return;
         }
         //Start POCOR-7697
