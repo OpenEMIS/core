@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Text;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Controller\Component;
 use App\Model\Table\ControllerActionTable;
 use Cake\I18n\Time;
@@ -20,8 +20,8 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
 
     private $examCentreId = null;
 
-    public function initialize(array $config) {
-        $this->table('examination_centre_students');
+    public function initialize(array $config): void {
+        $this->setTable('examination_centre_students');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);

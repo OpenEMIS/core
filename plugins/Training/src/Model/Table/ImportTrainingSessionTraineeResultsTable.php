@@ -19,8 +19,8 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
 {
     private $institutionId = false;
 
-    public function initialize(array $config) {
-        $this->table('import_mapping');
+    public function initialize(array $config): void {
+        $this->setTable('import_mapping');
         parent::initialize($config);
         $this->addBehavior('Import.Import', [
             'plugin'=>'Training', 
