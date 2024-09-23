@@ -43,6 +43,7 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 			->matching('CustomFields', function ($q) {
 				return $q->where(['field_type' => 'DROPDOWN']);
 			});
+			return $query;
 	}
 
 	public function findSurveyFormChoices(Query $query, array $options)
@@ -54,8 +55,9 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 				['SurveyQuestionChoices.survey_question_id = '.$this->aliasField('survey_question_id')]
 			)
 			->order(['SurveyQuestionChoices.order'])
-			->autoFields(true)
+			->enableAutoFields(true)
 			;
+			return $query;
 	}
 
 	public function findSurveyRules(Query $query, array $options)
@@ -73,7 +75,8 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 				'dependent_question' => 'SurveyRules.dependent_question_id',
 				'show_options' => 'SurveyRules.show_options',
 			])
-			->autoFields(true)
+			->enableAutoFields(true) // POCOR-8465
 			;
+		return $query;
 	}
 }

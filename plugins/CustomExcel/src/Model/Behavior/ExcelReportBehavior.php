@@ -94,7 +94,8 @@ class ExcelReportBehavior extends Behavior
         $this->renderExcelTemplate($extra, $event);
     }
 
-    public function renderExcelTemplate(ArrayObject $extra)
+    //POCOR-8568[Here added  Event $event]
+    public function renderExcelTemplate(ArrayObject $extra, Event $event = null) //POCOR-8588
     {
         $model = $this->_table;
         $format = $this->getConfig('format');
@@ -182,7 +183,8 @@ class ExcelReportBehavior extends Behavior
         gc_collect_cycles();
     }
 
-    public function loadExcelTemplate(ArrayObject $extra)
+    //POCOR-8568[Here added  Event $event]
+    public function loadExcelTemplate(ArrayObject $extra, Event $event = null) //POCOR-8588
     {
         $model = $this->_table;
         if (isset($extra['requestQuery']) && isset($extra['requestQuery'][$this->getConfig('templateTableKey')])) {
@@ -1053,68 +1055,6 @@ class ExcelReportBehavior extends Behavior
             $this->mergeRange($columnIndex, $rowValue, $mergeColumnIndex, $rowValue, $objWorksheet, $attr);
         }
     }
-
-    /*public function table($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra): Table
-    {
-        $rowValue = $attr['rowValue'];
-        $columnIndex = $attr['columnIndex'];
-        $source = $attr['source'];
-        $displayColumns = $attr['displayColumns'];
-        $showHeaders = $attr['showHeaders'];
-        $insertRows = $attr['insertRows'];
-
-        if ($showHeaders) {
-            foreach($displayColumns as $key => $column) {
-                $header = Inflector::humanize($key);
-
-                $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
-                $cellCoordinate = $columnValue.$rowValue;
-                $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $header, $attr, $extra);
-                $columnIndex++;
-            }
-
-            $rowValue++;
-        }
-
-        if (isset($extra['vars'][$source]) && !empty($extra['vars'][$source])) {
-            $sourceVars = $extra['vars'][$source];
-
-            foreach ($sourceVars as $vars) {
-                // reset columnIndex after every loop of row
-                $columnIndex = $attr['columnIndex'];
-
-                // skip first row don't need to auto insert new row
-                if ($insertRows && $rowValue != $attr['rowValue']) {
-                    $objWorksheet->insertNewRowBefore($rowValue);
-                    $this->updatePlaceholderCoordinate(null, $rowValue, $extra);
-                }
-
-                foreach ($displayColumns as $column) {
-                    $value = null;
-                    if (isset($column['displayValue'])) {
-                        $field = $this->splitDisplayValue($column['displayValue'])[1];
-                        $value = Hash::get($vars, $field);
-                    }
-
-                    $attr['type'] = isset($column['type']) ? $column['type'] : null;
-                    $attr['format'] = isset($column['format']) ? $column['format'] : null;
-
-                    $columnValue = Coordinate::stringFromColumnIndex($columnIndex);
-                    $cellCoordinate = $columnValue.$rowValue;
-                    $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
-
-                    $columnIndex++;
-                }
-
-                $rowValue++;
-            }
-        } else {
-            // replace placeholder as blank if data is empty
-            $columnValue = $attr['columnValue'];
-            $cellCoordinate = $columnValue.$rowValue;
-            $this->renderCell($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
-        }
-    }*/
 
     public function tableData($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra): Table
     {
