@@ -95,8 +95,19 @@ class InstitutionLandsTable extends ControllerActionTable
                     'provider' => 'table'
                 ]
             ])
+            ->allowEmpty('area') //POCOR-8523
+            //POCOR-8523
             ->add('area', 'ruleValidateCustomLandSize', [
-                'rule' => ['validateCustomLandSize', 'Maximum_institution_infrastructure_land_size'],
+                'rule' => function ($value, $context) {
+                    // Check if datatype is 'copy'
+                    if (isset($context['data']['datatype']) && $context['data']['datatype'] == 'copy') {
+                        // Skip validation when datatype is 'copy'
+                        return true;
+                    }
+            
+                    // Proceed with validation when datatype is not 'copy'
+                    return $this->validateCustomLandSize($value, 'Maximum_institution_infrastructure_land_size', $context);
+                },
                 'provider' => 'table',
                 'last' => true
             ])
@@ -253,7 +264,10 @@ class InstitutionLandsTable extends ControllerActionTable
             '1' => $encodedQueryString,
             'institutionId' => $institutionId
         ];
+        $paramsArr = $this->request->getParam('?'); //POCOR-8523
+        
         $url = array_merge($url, $this->request->getQuery());
+        $url = is_array($paramsArr) ? array_merge($url, $paramsArr) : $url; //POCOR-8523
         //$url = $this->setQueryString($url, ['institution_land_id' => $entity->id, 'institution_land_name' => $entity->code]);
 
         return $event->getSubject()->HtmlField->link($entity->code, $url);

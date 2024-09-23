@@ -22,16 +22,23 @@ class InstitutionAccessControlComponent extends Component {
 	}
 
 	private function onUpdateRole() {
-		$session = $this->getController()->getRequest()->getSession();
-		if (!$this->controller->AccessControl->isAdmin() && $session->check('Institution.Institutions.id')){
+        // POCOR-8527 Check based on Institution_id;
+        $queryString = $this->getController()->getQueryString();
+        if(isset($queryString['institution_id'])){
+            $institutionId = $queryString['institution_id'];
+        }
+
+		if (!$this->controller->AccessControl->isAdmin() && $institutionId){
 			$userId = $this->controller->Auth->user('id');
-			$institutionId = $session->read('Institution.Institutions.id');
-			return $this->Institutions->getInstitutionRoles($userId, $institutionId);
+            $institutionRoles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+            return $institutionRoles;
 		}
 	}
 
 	public function onNavigationUpdateRoles(Event $event) {
+
 		$roles = $this->onUpdateRole();
+
 		$restrictedTo = [
 			['controller' => 'Institutions'],
 			['controller' => 'Students'],

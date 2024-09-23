@@ -182,7 +182,7 @@ class InstitutionsController extends AppController
         // End
 
         parent::initialize();
-
+        $this->loadComponent('Cookie'); //POCOR-8551
         $data = $this->loadModel('Calendars');
         // $this->viewBuilder()->setHelpers(['HtmlField']);
 
@@ -1893,7 +1893,10 @@ class InstitutionsController extends AppController
                     return $this->redirect($url);
                 }
             }
-            $queryString = $this->ControllerAction->getQueryString();
+            //POCOR-8566[START]
+            // $queryString = $this->ControllerAction->getQueryString();
+            $queryString = $this->getQueryString();
+            //POCOR-8566[END]
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'StudentOutcomes';
             $viewUrl[0] = 'view';
@@ -2551,6 +2554,12 @@ class InstitutionsController extends AppController
 
     public function beforeFilter(EventInterface $event)
     {
+        //POCOR-8587 start
+        $session = $this->getRequest()->getSession();
+        if (!$session->check('Auth.User.id')) {
+            // Session has expired or user is not logged in
+            return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+        } //POCOR-8587 end
         parent::beforeFilter($event);
         $header = __('Institutions');
         $indexUrl = ['plugin' => 'Institution',
@@ -2698,6 +2707,7 @@ class InstitutionsController extends AppController
             || $action == 'studentCustomFields'
             || $action == 'staffCustomFields'
            || $furtherAction == 'removeReport'
+            || $furtherAction == 'downloadFailed' || $furtherAction == 'downloadPassed'
         ) {
             return true;
         }
@@ -3080,6 +3090,11 @@ class InstitutionsController extends AppController
                     $params = [];
                     $params[$model->aliasField('feeder_institution_id')] = $institutionID;
                     $exists = $model->exists($params);
+                }elseif (in_array($alias, ['InstitutionAssociations'])) { //POCOR-8556
+                    $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+                    $activeInstitution = $this->Institutions->get($institutionId);
+                    $institutionName = $activeInstitution->name;
+                    $header = $institutionName.''.$header;
                 } else {
                     $params = [];
                     $checkExists = function ($model, $params) {
@@ -6118,8 +6133,8 @@ class InstitutionsController extends AppController
             $staff = $this->handleStaffInstitutionData($requestData, $userRecordId, $userId);
             $this->handleShifts($requestData, $userRecordId);
             $this->triggerWebhooks($userRecordId, $requestData);
-            Log::debug(print_r($staff,true));
-            Log::debug(print_r($staffData,true));
+//            Log::debug(print_r($staff,true)); // POCOR-8532
+//            Log::debug(print_r($staffData,true)); // POCOR-8532
             return $this->sendJsonResponse(['message' => 'success', 'staff' => $staff->toArray()], 200);
         } else {
 //            Log::debug(print_r($staffData,true));
@@ -6699,7 +6714,8 @@ class InstitutionsController extends AppController
             $previousInstitutionId = $requestData['previous_institution_id'] ?? null;
             $previousInstitutionStaffId = $requestData['previous_institution_staff_id'] ?? "";
             $staffTransferReasonId = $requestData['staff_transfer_reason_id'] ?? null;
-
+            $is_homeroom =$requestData['is_homeroom'] ?? null; // POCOR-8532
+            $fte =$requestData['fte'] ?? null; // POCOR-8532
             if (!$previousInstitutionId) {
                 return ['error' => 'no previous_institution_id'];
             }
@@ -6733,7 +6749,7 @@ class InstitutionsController extends AppController
                     'assignee_id' => $this->Auth->user('id'), //POCOR-7080
                     'new_institution_position_id' => $institutionPositionId,
                     'new_staff_type_id' => $staffTypeId,
-                    'new_FTE' => $fte,
+                    'new_FTE' => $fte ?? 1, // POCOR-8532
                     'is_homeroom' => $is_homeroom ?? 0, // POCOR-7870
                     'new_start_date' => $startDate,
                     'new_end_date' => $endDate,

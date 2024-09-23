@@ -56,7 +56,7 @@ class ProfilesController extends AppController
 
             // Student
             // 'StudentAbsences'       => ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
-            'StudentBehaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
+            //'StudentBehaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
             //'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],//POCOR-6700
             // Staff
             'StaffPositions' => ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],

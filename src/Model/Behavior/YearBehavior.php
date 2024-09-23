@@ -48,11 +48,12 @@ class YearBehavior extends Behavior
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $lowestYear = $ConfigItems->value('lowest_year');
         $currentYear = date("Y");
-
-        for ($i=$currentYear; $i >= $lowestYear; $i--) {
-            $yearOptions[$i] = $i;
+        $yearOptions = [];
+        if(!empty($lowestYear)) {
+            for ($i=$currentYear; $i >= $lowestYear; $i--) {
+                $yearOptions[$i] = $i;
+            }
         }
-
         return $yearOptions;
     }
 }
