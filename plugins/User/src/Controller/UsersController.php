@@ -39,7 +39,7 @@ class UsersController extends AppController
     {
         parent::beforeFilter($event);
 
-        $this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote', 'patchPasswords', 'forgotPassword', 'forgotUsername', 'resetPassword', 'postForgotPassword', 'postForgotUsername', 'postResetPassword', 'twoFactorAuthentication', 'sendOtp', 'verifyOtp']);
+        $this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote', 'patchPasswords', 'forgotPassword', 'forgotUsername', 'resetPassword', 'postForgotPassword', 'postForgotUsername', 'postResetPassword', 'twoFactorAuthentication', 'sendOtp', 'verifyOtp', 'verifyOtpView']);
         $request = $this->request;
         $action = $this->request->getParam('action');
         

@@ -407,7 +407,7 @@ class UsersTable extends AppTable
 
     public function setTabElements()
     {
-        if ($this->alias() != 'Users') {
+        if ($this->getAlias() != 'Users') {
             return;
         }
 
