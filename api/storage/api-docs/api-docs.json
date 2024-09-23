@@ -26712,6 +26712,206 @@
                 }
             }
         },
+        "/pocor-openemis-core/api/v4/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/pdf": {
+            "get": {
+                "tags": [
+                    "Report card"
+                ],
+                "summary": "Get a student's report card in PDF format",
+                "description": "Retrieve a student's report card for a specific academic period and report card ID in PDF format.",
+                "operationId": "c1067c96f065b64e83524d6c953d5973",
+                "parameters": [
+                    {
+                        "name": "institutionId",
+                        "in": "path",
+                        "description": "The ID of the institution",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 6
+                        }
+                    },
+                    {
+                        "name": "classId",
+                        "in": "path",
+                        "description": "The ID of the class",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 591
+                        }
+                    },
+                    {
+                        "name": "studentId",
+                        "in": "path",
+                        "description": "The ID of the student",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 13685
+                        }
+                    },
+                    {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "The ID of the academic period",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 33
+                        }
+                    },
+                    {
+                        "name": "report_card_id",
+                        "in": "query",
+                        "description": "The ID of the report card",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 8
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 75
+                                                },
+                                                "file_name": {
+                                                    "type": "string",
+                                                    "example": "P1002_Report Card_2382817301_Asher Ayers.pdf"
+                                                },
+                                                "file_content": {
+                                                    "type": "string",
+                                                    "example": "JVBERi0xLjQKJeLjz9MKMyAwIG9iago8PC9UeXBlIC9QYWdlCi9QYXJlbnQgMSAwIFIKL01lZGlhQm94IFswIDAgNjIzLjYyMiAxMTMzLjg1OF0KL1RyaW1Cb3ggWzAuMDAwIDAuMDAwIDYyMy42MjIgMTEzMy44NThdCi9SZXNvdXJjZXMgMiAwIFIKL0dyb3VwIDw8IC9UeXBlIC9Hcm91cCAvUyAvVHJhbnNwYXJlbmN5IC9DUyAvRGV2aWNlUkdCID4+IAovQ29udGVudHMgNCAwIFIl"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
+        "/pocor-openemis-core/api/v4/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/xls": {
+            "get": {
+                "tags": [
+                    "Report card"
+                ],
+                "summary": "Get a student's report card in excel format",
+                "description": "Retrieve a student's report card for a specific academic period and report card ID in excel format.",
+                "operationId": "63e0fc27ba246af8740a203915cfe60f",
+                "parameters": [
+                    {
+                        "name": "institutionId",
+                        "in": "path",
+                        "description": "The ID of the institution",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 6
+                        }
+                    },
+                    {
+                        "name": "classId",
+                        "in": "path",
+                        "description": "The ID of the class",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 591
+                        }
+                    },
+                    {
+                        "name": "studentId",
+                        "in": "path",
+                        "description": "The ID of the student",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 13685
+                        }
+                    },
+                    {
+                        "name": "academic_period_id",
+                        "in": "query",
+                        "description": "The ID of the academic period",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 33
+                        }
+                    },
+                    {
+                        "name": "report_card_id",
+                        "in": "query",
+                        "description": "The ID of the report card",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 8
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successful."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 75
+                                                },
+                                                "file_name": {
+                                                    "type": "string",
+                                                    "example": "P1002_Report Card_2382817301_Asher Ayers.xlsx"
+                                                },
+                                                "file_content": {
+                                                    "type": "string",
+                                                    "example": "JVBERi0xLjQKJeLjz9MKMyAwIG9iago8PC9UeXBlIC9QYWdlCi9QYXJlbnQgMSAwIFIKL01lZGlhQm94IFswIDAgNjIzLjYyMiAxMTMzLjg1OF0KL1RyaW1Cb3ggWzAuMDAwIDAuMDAwIDYyMy42MjIgMTEzMy44NThdCi9SZXNvdXJjZXMgMiAwIFIKL0dyb3VwIDw8IC9UeXBlIC9Hcm91cCAvUyAvVHJhbnNwYXJlbmN5IC9DUyAvRGV2aWNlUkdCID4+IAovQ29udGVudHMgNCAwIFIl"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unsuccessful."
+                    }
+                }
+            }
+        },
         "/api/v4/institutions/{institutionId}/schedules/timetables/lessons/{id}": {
             "delete": {
                 "tags": [
