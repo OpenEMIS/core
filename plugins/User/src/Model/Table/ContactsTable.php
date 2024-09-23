@@ -458,7 +458,7 @@ class ContactsTable extends ControllerActionTable
     function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $userId = $this->getUserID();
-        $query->where([$this->aliasField('security_user_id') => $userId])->orderDesc('preferred');
+        $query->where([$this->aliasField('security_user_id IS') => $userId])->orderDesc('preferred');
 
         $query->where([$this->aliasField('security_user_id IS') => $userId]);
     }
