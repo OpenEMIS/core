@@ -2682,6 +2682,7 @@ class NavigationComponent extends Component
                     'title' => 'System Configurations',
                     'parent' => 'SystemSetup',
                     'selected' => ['Configurations.Themes',
+                        'Configurations.Webhooks',
                         'Configurations.add',
                         'Configurations.view',
                         'Configurations.edit',
