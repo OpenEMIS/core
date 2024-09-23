@@ -56,7 +56,7 @@ $description = __d('open_emis', $_productName);
             ?>
             
             <?php 
-            echo $this->Form->create('Users', [
+            echo $this->Form->create($Users, [
                 'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'postResetPassword', 'token' => $token],
                 'class' => 'form-horizontal'
             ]);
@@ -85,3 +85,4 @@ $description = __d('open_emis', $_productName);
     </div>
 </body>
 </html>
+<?php die(); ?>
