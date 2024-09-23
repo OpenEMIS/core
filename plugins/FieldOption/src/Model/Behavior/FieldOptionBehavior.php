@@ -150,6 +150,7 @@ class FieldOptionBehavior extends Behavior
                 $keyName = Inflector::humanize(Inflector::underscore($key));
             }
             $fieldOptions[$parent][$key] = __($keyName);
+            asort($fieldOptions[$parent]); // POCOR-8147
         }
         return $fieldOptions;
     }
