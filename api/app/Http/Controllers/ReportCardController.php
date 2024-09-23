@@ -458,4 +458,52 @@ class ReportCardController extends Controller
         }
     }
     //For pocor-8270 end...
+
+
+
+    //For POCOR-8617 Start...
+    public function studentReportCardPdfDownload(Request $request, $institutionId, $classId, $studentId)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->reportCardService->studentReportCardPdfDownload($params, $institutionId, $classId, $studentId);
+
+            if(!empty($data)){
+                return $this->sendSuccessResponse("Report card pdf file found.", $data);
+            } else {
+                return $this->sendErrorResponse('Report card pdf file not found.');
+            }
+            
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to generate student report card in PDF.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to generate student report card in PDF.');
+        }
+    }
+
+    public function studentReportCardExcelDownload(Request $request, $institutionId, $classId, $studentId)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->reportCardService->studentReportCardExcelDownload($params, $institutionId, $classId, $studentId);
+
+            if(!empty($data)){
+                return $this->sendSuccessResponse("Report card excel file found.", $data);
+            } else {
+                return $this->sendErrorResponse('Report card excel file not found.');
+            }
+            
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to generate student report card in excel.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to generate student report card in excel.');
+        }
+    }
+    //For POCOR-8617 End...
 }
