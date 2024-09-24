@@ -25,9 +25,9 @@ class ReportCardStatusProgressTable extends ControllerActionTable
 {
     use MessagesTrait;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_classes');
+        $this->SetTable('institution_classes');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
