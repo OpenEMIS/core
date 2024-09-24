@@ -291,7 +291,7 @@ class MessagingTable extends ControllerActionTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-        if ($entity->status == "Send" || $entity->status == self::SEND) {
+        if ($entity->status == "Sent" || $entity->status == "Send" || $entity->status == self::SEND) {
             unset($buttons['edit']);
         }
         return $buttons;
@@ -361,7 +361,7 @@ class MessagingTable extends ControllerActionTable
         if ($entity->status == self::DRAFT) {
             return "Draft";
         } else if ($entity->status == self::SEND) {
-            return "Send";
+            return "Sent";
         }
     }
     public function onGetSecurityRoleId(Event $event, Entity $entity)

@@ -87,7 +87,6 @@ class NavigationComponent extends Component
                 $navigations = $this->buildNavigation();
                 $this->checkSelectedLink($navigations);
                 $this->checkPermissions($navigations);
-//                die('<pre>' . print_r($navigations, true) );
                 $controller->set('_navigations', $navigations);
             } catch (SecurityException $ex) {
                 return $ex;
@@ -1315,21 +1314,21 @@ class NavigationComponent extends Component
         $studentID = $this->getStudentID($debugString);
         $institutionID = $this->getInstitutionIDForStudent($debugString);
         $institutionStudentId = $this->controller->getQueryString('institution_student_id');
+        //POCOR-8551
         if (empty($institutionStudentId)) {
             $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
-            $institutionStudentId = $InstitutionStudentsTable->find()
+            $query = $InstitutionStudentsTable->find()
+                ->select(['id']) // Specify the field you want to extract
                 ->where([
                     $InstitutionStudentsTable->aliasField('student_id') => $studentID,
                     $InstitutionStudentsTable->aliasField('institution_id') => $institutionID,
                 ])
-                ->order([$InstitutionStudentsTable->aliasField('created') => 'DESC'])
-                ->extract('id')
-                ->first();
-            if (empty($institutionStudentId)) {
-                $institutionStudentId = null;
-            }
-
+                ->order([$InstitutionStudentsTable->aliasField('created') => 'DESC']);
+            
+            $results = $query->all()->extract('id')->toArray();
+            $institutionStudentId = !empty($results) ? $results[0] : null;
         }
+        
 
         $queryString = $this->controller->paramsEncode([
             'id' => $studentID,
@@ -4288,6 +4287,7 @@ class NavigationComponent extends Component
         // if ($superAdmin) {
         //     return;
         // }
+
         $user_id = $this->getCurrentUserId();
         $superAdmin = self::isSuperUser($user_id);
         if ($superAdmin) {
@@ -4297,6 +4297,7 @@ class NavigationComponent extends Component
         $roles = [];
         $restrictedTo = [];
         $event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', null, $this);
+
         if ($event->getResult()) {
             $roles = $event->getResult('roles');
             $restrictedTo = $event->getResult('restrictedTo');
@@ -4357,11 +4358,21 @@ class NavigationComponent extends Component
         $roles = [];
         $restrictedTo = [];
         $event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', null, $this);
+//        dd($event->getResult());
+        // POCOR-8527 start fix roles for navs
         if ($event->getResult()) {
-            $roles = $event->getResult('roles');
-            $restrictedTo = $event->getResult('restrictedTo');
+            $result = $event->getResult();
+            $roles = $result['roles'];
+            $restrictedTo = $result['restrictedTo'];
+            $isRestricted = false;
+        } else{
+            $rolesByUser = $this->AccessControl->getRolesByUser()->toArray();
+            foreach ($rolesByUser as $key => $role) {
+                $roles[$role->security_role_id] = $role->security_role_id;
+            }
+            $isRestricted = true;
         }
-
+        // POCOR-8527 end
         // Unset the children
         $linkOnly = [];
         foreach ($navigations as $key => $value) {
@@ -4393,7 +4404,7 @@ class NavigationComponent extends Component
                 }
 
                 // Check if the role is only restricted to a certain page
-                $isRestricted = false;
+//                $isRestricted = false; // POCOR-8527
                 foreach ($restrictedTo as $restrictedURLs) {
                     if (!is_array($restrictedURLs)) {
                         // Log or handle the case where $restrictedURLs is not an array

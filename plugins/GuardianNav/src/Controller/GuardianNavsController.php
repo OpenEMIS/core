@@ -53,7 +53,7 @@ class GuardianNavsController extends AppController
         $this->ControllerAction->models = [
             // Student
             //'StudentAbsences'       => ['className' => 'Student.Absences', 'actions' => ['index']],
-            'StudentBehaviours'     => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
+           // 'StudentBehaviours'     => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']], //POCOR-8596 comment this
             'StudentExtracurriculars' => ['className' => 'Student.GuardianExtracurriculars'],
         ];
         $this->loadComponent('Training.Training');
@@ -513,4 +513,11 @@ class GuardianNavsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Insurances']);
     }
     //POCOR-8293 End Student Health tab in Guardian
+    //POCOR-8596
+    public
+    function StudentBehaviours()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentBehaviours']);
+    }
+
 }
