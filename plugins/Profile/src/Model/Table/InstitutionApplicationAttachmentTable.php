@@ -238,7 +238,9 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $applicantId = $this->getQueryString('applicant_id');
+
         $scholarshipId = $this->getQueryString('scholarship_id');
+
         $this->AttachmentTypes = TableRegistry::get('Scholarship.AttachmentTypes');
         $listOptions = $this->AttachmentTypes
             ->find('availableAttachmentTypes', [
@@ -255,8 +257,8 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
                     $returnArr[$result->id] = $name;
                 }
                   return $returnArr; // Ensure the array is returned
-            })
-            ->toArray();
+            });
+            
             $this->field('scholarship_attachment_type_id', [
             'type' => 'select',
             'options' => $listOptions,
