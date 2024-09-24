@@ -376,10 +376,10 @@ return [
 
     'Application' => [
         'public' => [
-            'key' => file_get_contents(CONFIG . 'public.key')
+            'key' => @file_get_contents(CONFIG . 'public.key')
         ],
         'private' => [
-            'key' => file_get_contents(CONFIG . 'private.key')
+            'key' => @file_get_contents(CONFIG . 'private.key')
         ],
     ],
 ];
