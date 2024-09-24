@@ -646,7 +646,7 @@ class UsersController extends AppController
         //$session->write('auth_password', base64_encode($this->request->getData('password')));
         //POCOR-8127 ends
         if ($this->request->is('post') && $this->request->getData('submit') == 'login' && $ConfigItemsEntity->value == 1) {
-            if ($this->request->getData['username'] == '' || $this->request->getData['password'] == '') {
+            if ($this->request->getData()['username'] == '' || $this->request->getData()['password'] == '') {
                 $this->Alert->error('security.login.fail', ['reset' => true]);
                 return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
             }
@@ -662,7 +662,7 @@ class UsersController extends AppController
                     $this->Users->aliasField('last_name'),
                     $this->Users->aliasField('preferred_name')
                 ])->where([
-                    $this->Users->aliasField('username') => $this->request->getData['username']
+                    $this->Users->aliasField('username') => $this->request->getData()['username']
                 ])->first();
             if ($userEntity->email == "") {
                 $message = __('An email address is not registered for this account. Please contact your system administrator.');
@@ -710,14 +710,15 @@ class UsersController extends AppController
             $emailSubject = __('OpenEMIS - One-time Password (OTP)');
             $emailMessage = "Dear " . $name . ",\n\nOne-time Password (OTP) is " . $six_digit_random_number . " . This OTP expires in 1 hour. \n\nBest regards,\nOpenEMIS Support\n\nThis is a system - generated email. Please do not reply to this email address.";
             $email
-                ->to($userEmail)
-                ->subject($emailSubject)
+                ->setTo($userEmail)
+                ->setSubject($emailSubject)
                 ->send($emailMessage);
             $message = __('A verification code has been sent to your registered email address.');
             $this->Alert->success($message, ['type' => 'string', 'reset' => true]);
             $userName = $this->encrypt($userEntity->username, Security::getSalt());
             $userEmail = $this->encrypt($userEntity->email, Security::getSalt());
             $userPass = $this->encrypt($this->request->getData('password'), Security::getSalt());
+            $id = $this->encrypt($userEntity->id, Security::getSalt());
             $encodedUserData = $this->paramsEncode(['username' => $userName, 'email'=>$userEmail, 'password' => $userPass]);
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'verifyOtp', $encodedUserData]);
         } else {//POCOR-7156 ends
@@ -781,6 +782,7 @@ class UsersController extends AppController
                 $this->set('encryptdata', $this->request->getParam('pass')[0]);
                 $this->set('username', $userData['username']);
                 $this->set('password', $userData['password']);
+                $this->set('id', $userData['id']);
                 if ($this->request->is('post') && $this->request->getData('submit') == 'login') {
                     $SystemUserOtpTbl = TableRegistry::getTableLocator()->get('User.SecurityUserCodes');
                     $SystemUserOtpEntity = $SystemUserOtpTbl
@@ -805,9 +807,13 @@ class UsersController extends AppController
             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
         }
-        // $this->viewBuilder()->layout(false);
+        
         $this->viewBuilder()->disableAutoLayout();
-    }//POCOR-7156 ends
+        //POCOR-8589 add render verify otp
+        if($this->request->getQuery('type') != 'otp'){ 
+            $this->render('verify_otp');
+        }
+    }
 
     public function logout($username = null)
     {
