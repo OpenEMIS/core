@@ -20,7 +20,7 @@ class CustomFieldValuesTable extends AppTable
 	{
 		$validator = parent::validationDefault($validator);
 		$scope = $this->extra['scope'];
-
+		$validator->setProvider('custom', $this);
 		$validator
 			// TEXT validation
 			->allowEmpty('text_value', function ($context) {
@@ -68,7 +68,7 @@ class CustomFieldValuesTable extends AppTable
 				'on' => function ($context) {
 					if (array_key_exists('params', $context['data']) && !empty($context['data']['params'])) {
 						$params = json_decode($context['data']['params'], true);
-						return array_key_exists('url', $params);
+						return isset($params['url']);
 					}
 				}
 			])

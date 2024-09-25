@@ -176,7 +176,7 @@ class ExaminationsTable extends AppTable
 
     public function addOnChangeExaminationId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (array_key_exists($this->getAlias(), $data)) {
+        if (array_key_exists($this->getAlias(), (array)$data)) {
             if (array_key_exists('examination_centre_id', $data[$this->getAlias()])) {
                 unset($data[$this->getAlias()]['examination_centre_id']);
             }

@@ -28,9 +28,9 @@ class ScheduleTermsTable extends ControllerActionTable
         ]);
 
         $this->hasMany('Timetables', [
-            'className' => 'Schedule.ScheduleTimetables', 
-            'foreignKey' => 'institution_schedule_term_id', 
-            'dependent' => true, 
+            'className' => 'Schedule.ScheduleTimetables',
+            'foreignKey' => 'institution_schedule_term_id',
+            'dependent' => true,
             'cascadeCallbacks' => true
         ]);
 
@@ -68,12 +68,12 @@ class ScheduleTermsTable extends ControllerActionTable
     //                 if(isset($context['data']['id']) && $context['data']['id'] > 0){
     //                     $termIdCondition = array('ScheduleTerms.id !=' => $context['data']['id']);
     //                 }
-                    
-    //                 $count = $ScheduleTermsTable 
+
+    //                 $count = $ScheduleTermsTable
     //                     ->find()
     //                     ->where([
     //                         $ScheduleTermsTable->aliasField('institution_id') => $institutionId,
-    //                         $ScheduleTermsTable->aliasField('academic_period_id') => $academicPeriodId,                                                            
+    //                         $ScheduleTermsTable->aliasField('academic_period_id') => $academicPeriodId,
     //                         'OR' => [
     //                             [
     //                                 $ScheduleTermsTable->aliasField('start_date <= ') => $startDate,
@@ -101,15 +101,15 @@ class ScheduleTermsTable extends ControllerActionTable
     //         ]);
 
     //     return $validator;
-    // } 
+    // }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->order([$this->aliasField('start_date') => 'ASC']);
 
-        if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
+        if (isset($extra['selectedAcademicPeriodOptions'])) {
             $query->where([
-                $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']  
+                $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']
             ]);
         }
     }
@@ -123,7 +123,7 @@ class ScheduleTermsTable extends ControllerActionTable
         $institutionId = $this->getInstitutionID();
 
         $requestQuery = $this->request->getQuery();
-        if (isset($requestQuery) && array_key_exists('period', $requestQuery)) {
+        if (isset($requestQuery) && isset($requestQuery['period'])) {
             $selectedPeriodId = $requestQuery['period'];
         } else {
             $selectedPeriodId = $this->AcademicPeriods->getCurrent();
@@ -141,7 +141,7 @@ class ScheduleTermsTable extends ControllerActionTable
         ];
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Terms','Schedules');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Terms','Schedules');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -212,7 +212,7 @@ class ScheduleTermsTable extends ControllerActionTable
         $attr['type'] = 'date';
         $attr['date_options']['startDate'] = $selectedPeriod->start_date->format('d-m-Y');
         $attr['date_options']['endDate'] = $selectedPeriod->end_date->format('d-m-Y');
-        
+
         if (!array_key_exists($this->getAlias(), $requestData) || !array_key_exists($key, $requestData[$this->getAlias()])) {
             if ($selectedPeriodId != $this->AcademicPeriods->getCurrent()) {
                 $attr['value'] = $selectedPeriod->start_date;
@@ -227,7 +227,7 @@ class ScheduleTermsTable extends ControllerActionTable
     private function setupField($entity = null)
     {
         $this->field('academic_period_id', [
-            'entity' => $entity, 
+            'entity' => $entity,
             'visible' => ['index' => false, 'view' => true, 'add' => true, 'edit' => true]
         ]);
         $this->field('code');

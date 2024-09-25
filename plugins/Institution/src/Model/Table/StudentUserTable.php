@@ -14,6 +14,7 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
+use Cake\Http\ServerRequest;
 
 class StudentUserTable extends ControllerActionTable
 {
@@ -76,10 +77,10 @@ class StudentUserTable extends ControllerActionTable
         $this->toggle('index', false);
         $this->toggle('remove', false);
         $this->addBehavior('Institution.InstitutionTab');
-
+        
         $studentID = $this->getStudentID();
         //$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
-        $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => $studentID]);
+        $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
     }
 
     public static function handleAssociations($model)
@@ -645,7 +646,7 @@ class StudentUserTable extends ControllerActionTable
 
     public function pullBeforePatch(Event $event, Entity $entity, ArrayObject $queryString, ArrayObject $patchOption, ArrayObject $extra)
     {
-        if (!array_key_exists('institution_id', $queryString)) {
+        if (!isset($queryString['institution_id'])) {
             $session = $this->request->getSession();
             $queryString['institution_id'] = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
         }
@@ -1187,11 +1188,11 @@ class StudentUserTable extends ControllerActionTable
     //PCOOR-8388 starts
     // public function getAcademicTabElements($options = [])
     // {
-    //     $id = (array_key_exists('id', $options)) ? $options['id'] : 0;
+    //     $id = (isset($options['id'])) ? $options['id'] : 0;
     //     $studentID = $this->getStudentID();
 
     //     $institutionID = $this->getInstitutionID();
-    //     $type = (array_key_exists('type', $options)) ? $options['type'] : null;
+    //     $type = (isset($options['type'])) ? $options['type'] : null;
     //     $tabElements = [];
     //     $studentTabElements = [
     //         'Programmes' => ['text' => __('Programmes')],
@@ -1262,15 +1263,15 @@ class StudentUserTable extends ControllerActionTable
     {
         $query->where([$this->aliasField('super_admin') . ' <> ' => 1]);
 
-        $limit = (array_key_exists('limit', $options)) ? $options['limit'] : null;
-        $page = (array_key_exists('page', $options)) ? $options['page'] : null;
+        $limit = (isset($options['limit'])) ? $options['limit'] : null;
+        $page = (isset($options['page'])) ? $options['page'] : null;
 
         // conditions
-        $firstName = (array_key_exists('first_name', $options)) ? $options['first_name'] : null;
-        $lastName = (array_key_exists('last_name', $options)) ? $options['last_name'] : null;
-        $openemisNo = (array_key_exists('openemis_no', $options)) ? $options['openemis_no'] : null;
-        $identityNumber = (array_key_exists('identity_number', $options)) ? $options['identity_number'] : null;
-        $dateOfBirth = (array_key_exists('date_of_birth', $options)) ? $options['date_of_birth'] : null;
+        $firstName = (isset($options['first_name'])) ? $options['first_name'] : null;
+        $lastName = (isset($options['last_name'])) ? $options['last_name'] : null;
+        $openemisNo = (isset($options['openemis_no'])) ? $options['openemis_no'] : null;
+        $identityNumber = (isset($options['identity_number'])) ? $options['identity_number'] : null;
+        $dateOfBirth = (isset($options['date_of_birth'])) ? $options['date_of_birth'] : null;
 
         if (is_null($firstName) && is_null($lastName) && is_null($openemisNo) && is_null($identityNumber) && is_null($dateOfBirth)) {
             return $query->where(['1 = 0']);

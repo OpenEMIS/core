@@ -115,7 +115,7 @@ class WorkflowRulesTable extends ControllerActionTable
         $this->setFieldOrder(['feature', 'workflow_id', 'rule', 'rule_events']);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Rules','Workflows');       
+		$is_manual_exist = $this->getManualUrl('Administration','Rules','Workflows');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -217,7 +217,7 @@ class WorkflowRulesTable extends ControllerActionTable
             }
 
             foreach ($ruleConfig as $key => $attr) {
-                if (array_key_exists('type', $attr) && $attr['type'] == 'select') {
+                if (isset($attr['type']) && $attr['type'] == 'select') {
                     $options = $this->getOptionsByConfig($attr);
                     $attr['options'] = $options;
                 }
@@ -230,9 +230,9 @@ class WorkflowRulesTable extends ControllerActionTable
     public function getOptionsByConfig($attr)
     {
         $options = [];
-        if (array_key_exists('options', $attr) && !empty($attr['options'])) {
+        if (isset($attr['options']) && !empty($attr['options'])) {
             $options = $this->getSelectOptions($this->getAlias().".".$attr['options']);
-        } else if (array_key_exists('lookupModel', $attr) && !empty($attr['lookupModel'])) {
+        } else if (isset($attr['lookupModel']) && !empty($attr['lookupModel'])) {
             $modelTable = TableRegistry::getTableLocator()->get($attr['lookupModel']);
             $options = $modelTable->getList()->toArray();
         }
@@ -456,7 +456,7 @@ class WorkflowRulesTable extends ControllerActionTable
     {
         $features = $this->getSelectOptions($this->aliasField('features'));
         $classNames = $this->array_column($features, 'className');
-        
+
         return $classNames;
     }
 
@@ -505,7 +505,7 @@ class WorkflowRulesTable extends ControllerActionTable
         $registryAlias = false;
         $features = $this->getSelectOptions($this->aliasField('features'));
         if (array_key_exists($featureName, $features)) {
-            if (array_key_exists('className', $features[$featureName])) {
+            if (isset($features[$featureName]['className'])) {
                 $registryAlias = $features[$featureName]['className'];
             }
         }
@@ -516,7 +516,7 @@ class WorkflowRulesTable extends ControllerActionTable
     {
         $ruleArray = json_decode($entity->rule, true);
 
-        if (array_key_exists('where', $ruleArray)) {
+        if (isset($ruleArray['where'])) {
             $where = $ruleArray['where'];
             foreach ($where as $field => $value) {
                 $entity->{$field} = $value;
@@ -601,9 +601,9 @@ class WorkflowRulesTable extends ControllerActionTable
             foreach ($eventOptions as $key => $eventObj) {
                 if ($key === 0) {
                     continue;
-                } 
-                
-                if (array_key_exists('roleCode', $eventObj)) {
+                }
+
+                if (isset($eventObj['roleCode'])) {
                     $roleCode = $eventObj['roleCode'];
 
                     if (in_array($roleCode, $securityRoleList)) {
@@ -612,7 +612,7 @@ class WorkflowRulesTable extends ControllerActionTable
                 }
             }
         }
-        
+
         return $availableOptions;
     }
 

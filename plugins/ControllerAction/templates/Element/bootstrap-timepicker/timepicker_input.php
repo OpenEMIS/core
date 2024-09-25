@@ -6,12 +6,12 @@
     <div class="input-group time <?= isset($attr['class']) ? $attr['class'] : '' ?>" id="<?= $attr['id'] ?>">
         <?php
             $errorMsg = '';
-            if (array_key_exists('fieldName', $attr)) {
+            if (isset($attr['fieldName'])) {
                 $errorMsg = $this->Form->error($attr['fieldName']);
             } else {
                 $errorMsg = $this->Form->error($attr['field']);
             }
-            $fieldName = (array_key_exists('fieldName', $attr))? $attr['fieldName']: $attr['model'].'.'.$attr['field'];
+            $fieldName = (isset($attr['fieldName']))? $attr['fieldName']: $attr['model'].'.'.$attr['field'];
 
             echo $this->Form->input($fieldName, [
                     'type' => 'text',

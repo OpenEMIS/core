@@ -25,6 +25,10 @@ class StudentService extends Controller
             $list = [];
             if(count($data['data']) > 0){
                 foreach($data['data'] as $k => $d){
+                    //For POCOR-8491 Start...
+                    $studentClasses = $this->studentRepository->getStudentClasses($d['institution_id'], $d['student_id']);
+                    //For POCOR-8491 End...
+
                     $list[$k]['student_id'] = $d['student_id'];
                     $list[$k]['first_name'] = $d['security_user']['first_name'];
                     $list[$k]['middle_name'] = $d['security_user']['middle_name'];
@@ -52,6 +56,12 @@ class StudentService extends Controller
                     $list[$k]['academic_period_id'] = $d['academic_period_id'];
                     $list[$k]['academic_period_name'] = $d['academic_period']['name'];
                     $list[$k]['previous_institution_student_id'] = $d['previous_institution_student_id'];
+
+                    //For POCOR-8491 Start...
+                    $list[$k]['classes'] = $studentClasses;
+                    $list[$k]['custom_fields'] = $d['student_custom_field_value'];
+                    //For POCOR-8491 End...
+
                     $list[$k]['modified_user_id'] = $d['modified_user_id'];
                     $list[$k]['modified'] = $d['modified'];
                     $list[$k]['created_user_id'] = $d['created_user_id'];
@@ -81,6 +91,10 @@ class StudentService extends Controller
             $list = [];
             if(count($data['data']) > 0){
                 foreach($data['data'] as $k => $d){
+                    //For POCOR-8491 Start...
+                    $studentClasses = $this->studentRepository->getStudentClasses($d['institution_id'], $d['student_id']);
+                    //For POCOR-8491 End...
+
                     $list[$k]['student_id'] = $d['student_id'];
                     $list[$k]['first_name'] = $d['security_user']['first_name'];
                     $list[$k]['middle_name'] = $d['security_user']['middle_name'];
@@ -108,6 +122,12 @@ class StudentService extends Controller
                     $list[$k]['academic_period_id'] = $d['academic_period_id'];
                     $list[$k]['academic_period_name'] = $d['academic_period']['name'];
                     $list[$k]['previous_institution_student_id'] = $d['previous_institution_student_id'];
+
+                    //For POCOR-8491 Start...
+                    $list[$k]['classes'] = $studentClasses;
+                    $list[$k]['custom_fields'] = $d['student_custom_field_value'];
+                    //For POCOR-8491 End...
+
                     $list[$k]['modified_user_id'] = $d['modified_user_id'];
                     $list[$k]['modified'] = $d['modified'];
                     $list[$k]['created_user_id'] = $d['created_user_id'];
@@ -138,6 +158,11 @@ class StudentService extends Controller
             
             $resp = [];
             if($data){
+
+                //For POCOR-8491 Start...
+                $studentClasses = $this->studentRepository->getStudentClasses($data['institution_id'], $data['student_id']);
+                //For POCOR-8491 End...
+
                 $resp['student_id'] = $data['student_id'];
                 $resp['first_name'] = $data['security_user']['first_name'];
                 $resp['middle_name'] = $data['security_user']['middle_name'];
@@ -165,6 +190,12 @@ class StudentService extends Controller
                 $resp['academic_period_id'] = $data['academic_period_id'];
                 $resp['academic_period_name'] = $data['academic_period']['name'];
                 $resp['previous_institution_student_id'] = $data['previous_institution_student_id'];
+
+                //For POCOR-8491 Start...
+                $resp['classes'] = $studentClasses;
+                $resp['custom_fields'] = $data['student_custom_field_value'];
+                //For POCOR-8491 End...
+
                 $resp['modified_user_id'] = $data['modified_user_id'];
                 $resp['modified'] = $data['modified'];
                 $resp['created_user_id'] = $data['created_user_id'];

@@ -380,7 +380,6 @@ class InstitutionRepository extends Controller
         }
     }
 
-
     public function getInstitutionGradeData(int $institutionId, int $gradeId)
     {
         try {
@@ -424,7 +423,13 @@ class InstitutionRepository extends Controller
     {
         try {
             $params = $request->all();
+
             //$classes = new InstitutionClasses();
+
+            //For POCOR-8540 Start
+            $loggedInUser = JWTAuth::user();
+            //For POCOR-8540 End
+
 
             //For POCOR-7772 Start
             $permissions = checkAccess();
@@ -441,18 +446,29 @@ class InstitutionRepository extends Controller
             //For POCOR-7772 End
 
 
-            $classes = InstitutionClasses::with(
+            $classes = InstitutionClasses::select('institution_classes.*')
+                ->with(
                 'grades:institution_class_id,education_grade_id as grade_id', 
                 'subjects:institution_class_id,institution_subject_id as subject_id',
                 'students:institution_class_id,student_id',
                 'secondary_teachers:institution_class_id,secondary_staff_id as staff_id'
             );
 
+            //For POCOR-8540 Start
+            if($loggedInUser->is_student == 1 && $loggedInUser->super_admin == 0){
+                $classes = $classes->join('institution_class_students', 'institution_class_students.institution_class_id', '=', 'institution_classes.id')
+                    ->where('institution_class_students.student_id', $loggedInUser->id);
+            } 
+
+            if($loggedInUser->is_staff == 1 && $loggedInUser->super_admin == 0){
+                $classes = $classes->where('staff_id', $loggedInUser->id);
+            } 
+            //For POCOR-8540 End
+
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
-                $classes = $classes->where('academic_period_id', $academic_period_id);
+                $classes = $classes->where('institution_classes.academic_period_id', $academic_period_id);
             }
-
 
             //For POCOR-7772 Start
             if(isset($institution_Ids)){
@@ -465,7 +481,6 @@ class InstitutionRepository extends Controller
                 $col = $params['order'];
                 $classes = $classes->orderBy($col, $orderBy);
             }
-
 
 
             //For POCOR-8215/8216 start...
@@ -484,7 +499,6 @@ class InstitutionRepository extends Controller
                 'Failed to fetch data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Classes List Not Found');
         }
     }
@@ -493,6 +507,10 @@ class InstitutionRepository extends Controller
     {
         try {
             $params = $request->all();
+
+            //For POCOR-8540 Start
+            $loggedInUser = JWTAuth::user();
+            //For POCOR-8540 End
 
             //For POCOR-7772 Start
             $permissions = checkAccess();
@@ -515,6 +533,20 @@ class InstitutionRepository extends Controller
                 'secondary_teachers:institution_class_id,secondary_staff_id as staff_id'
             );
 
+
+            //For POCOR-8540 Start
+            if($loggedInUser->is_student == 1 && $loggedInUser->super_admin == 0){
+                $institutionClasses = $institutionClasses->join('institution_class_students', 'institution_class_students.institution_class_id', '=', 'institution_classes.id')
+                    ->where('institution_class_students.student_id', $loggedInUser->id);
+            } 
+
+            if($loggedInUser->is_staff == 1 && $loggedInUser->super_admin == 0){
+                $institutionClasses = $institutionClasses->where('staff_id', $loggedInUser->id);
+            } 
+            //For POCOR-8540 End
+
+
+
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
                 $institutionClasses = $institutionClasses->where('academic_period_id', $academic_period_id);
@@ -534,6 +566,13 @@ class InstitutionRepository extends Controller
 
             $institutionClasses = $institutionClasses->where('institution_id', $institutionId);
 
+            if(isset($params['education_grade_id'])){
+                $gradeId  = $params['education_grade_id'];
+                $institutionClasses = $institutionClasses->whereHas('grades', function ($query) use ($gradeId){
+                    $query->where('education_grade_id', '=', $gradeId); 
+                });
+            }
+
 
             //For POCOR-8215/8216 start...
             if(isset($params['limit'])){
@@ -544,14 +583,13 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-8215/8216 end...
 
+
             return $list;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Classes List Not Found');
         }
     }
@@ -576,13 +614,14 @@ class InstitutionRepository extends Controller
             //For POCOR-7772 End
 
             $data = InstitutionClasses::with(
-                    'grades:institution_class_id,education_grade_id as grade_id', 
+                    'grades.educationGrades', 
                     'subjects:institution_class_id,institution_subject_id as subject_id',
-                    'students:institution_class_id,student_id',
+                    'students.user.gender','students.status', 'students.educationGrade',
+                    'students.user.specialNeed',
                     'secondary_teachers:institution_class_id,secondary_staff_id as staff_id'
                 )->where('id', $classId);
 
-
+                
             //For POCOR-7772 Start
             if(isset($institution_Ids)){
                 $data = $data->whereIn('institution_classes.institution_id', $institution_Ids);
@@ -592,7 +631,7 @@ class InstitutionRepository extends Controller
             $data = $data->first();
 
             return $data;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch data from DB',
@@ -612,6 +651,10 @@ class InstitutionRepository extends Controller
 
             //For POCOR-7772 Start
             $permissions = checkAccess();
+
+            //For POCOR-8540 Start...
+            $loggedInUser = JWTAuth::user();
+            //For POCOR-8540 End...
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
@@ -624,7 +667,8 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
-            $subjects = InstitutionSubjects::with(
+            $subjects = InstitutionSubjects::select('institution_subjects.*')
+                ->with(
                     'educationGrades:id,name', 'educationSubjects:id,name', 
                     'classes:institution_subject_id,institution_class_id as class_id', 
                     'rooms:institution_subject_id,institution_room_id as room_id',
@@ -632,9 +676,24 @@ class InstitutionRepository extends Controller
                     'students:institution_subject_id,student_id as user_id'
                 );
 
+
+            //For POCOR-8540 Start...
+            if($loggedInUser->is_staff == 1 && $loggedInUser->super_admin == 0){
+                $subjects = $subjects->join('institution_class_subjects', 'institution_class_subjects.institution_subject_id', '=', 'institution_subjects.id')
+                ->join('institution_classes', 'institution_classes.id', '=', 'institution_class_subjects.institution_class_id')
+                ->where('institution_classes.staff_id', $loggedInUser->id);
+            }
+
+            if($loggedInUser->is_student == 1 && $loggedInUser->super_admin == 0){
+                $subjects = $subjects->join('institution_subject_students', 'institution_subject_students.institution_subject_id', '=', 'institution_subjects.id')
+                ->where('institution_subject_students.student_id', $loggedInUser->id);
+            }
+            //For POCOR-8540 End...
+
+
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
-                $subjects = $subjects->where('academic_period_id', $academic_period_id);
+                $subjects = $subjects->where('institution_subjects.academic_period_id', $academic_period_id);
             }
 
             //For POCOR-7772 Start
@@ -666,7 +725,6 @@ class InstitutionRepository extends Controller
                 'Failed to fetch data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Subjects List Not Found');
         }
     }
@@ -680,6 +738,10 @@ class InstitutionRepository extends Controller
 
             //For POCOR-7772 Start
             $permissions = checkAccess();
+
+            //For POCOR-8540 Start...
+            $loggedInUser = JWTAuth::user();
+            //For POCOR-8540 End...
             
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
@@ -700,9 +762,25 @@ class InstitutionRepository extends Controller
                     'students:institution_subject_id,student_id as user_id'
                 );
 
+
+            //For POCOR-8540 Start...
+            if($loggedInUser->is_staff == 1 && $loggedInUser->super_admin == 0){
+                $subjects = $subjects->join('institution_class_subjects', 'institution_class_subjects.institution_subject_id', '=', 'institution_subjects.id')
+                ->join('institution_classes', 'institution_classes.id', '=', 'institution_class_subjects.institution_class_id')
+                ->where('institution_classes.staff_id', $loggedInUser->id);
+            }
+
+            if($loggedInUser->is_student == 1 && $loggedInUser->super_admin == 0){
+                $subjects = $subjects->join('institution_subject_students', 'institution_subject_students.institution_subject_id', '=', 'institution_subjects.id')
+                ->where('institution_subject_students.student_id', $loggedInUser->id);
+            }
+            //For POCOR-8540 End...
+
+
+
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
-                $subjects = $subjects->where('academic_period_id', $academic_period_id);
+                $subjects = $subjects->where('institution_subjects.academic_period_id', $academic_period_id);
             }
 
             //For POCOR-7772 Start
@@ -714,10 +792,10 @@ class InstitutionRepository extends Controller
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
                 $col = $params['order'];
-                $subjects = $subjects->orderBy($col, $orderBy);
+                $subjects = $subjects->orderBy('institution_subjects.'.$col, $orderBy);
             }
 
-            $subjects = $subjects->where('institution_id', $institutionId);
+            $subjects = $subjects->where('institution_subjects.institution_id', $institutionId);
 
             //For POCOR-8215/8216 start...
             if(isset($params['limit'])){
@@ -735,7 +813,6 @@ class InstitutionRepository extends Controller
                 'Failed to fetch data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Subjects List Not Found');
         }
     }
@@ -764,20 +841,31 @@ class InstitutionRepository extends Controller
                     'classes:institution_subject_id,institution_class_id as class_id', 
                     'rooms:institution_subject_id,institution_room_id as room_id',
                     'staff:institution_subject_id,staff_id',
-                    'students:institution_subject_id,student_id as user_id'
+                    'students.securityUser.specialNeed','students.class',
+                    'students.securityUser.gender'
                 )->where('id', $subjectId);
 
-
+            
             //For POCOR-7772 Start
             if(isset($institution_Ids)){
                 $subjects = $subjects->whereIn('institution_subjects.institution_id', $institution_Ids);
             }
             //For POCOR-7772 End
 
-            $subjects = $subjects->get();
+            $subjects = $subjects->first();
+
+            // $educationSubjectId = $subjects[0]['education_subject_id'];
+            // $educationGradeId = $subjects[0]['education_grade_id'];
+            // $academicYearId = $subjects[0]['academic_period_id'];
+            // $classes = $this->institutionSubjectClasses($institutionId, $academicYearId , $educationGradeId);
+            // $classesArray = array_column($classes, 'institution_class_id');
+
+            // $unassignedStudents = $this->unassignedStudentsInSubject($educationSubjectId, $classesArray, $academicYearId);
+            // $subjects['unassigned_students'] = $unassignedStudents;
             return $subjects;
             
         } catch (\Exception $e) {
+
             Log::error(
                 'Failed to fetch data from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -795,7 +883,7 @@ class InstitutionRepository extends Controller
 
             //For POCOR-7772 Start
             $permissions = checkAccess();
-            
+
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
                     //For POCOR-8077 Start...
@@ -842,7 +930,7 @@ class InstitutionRepository extends Controller
 
 
             return $list;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch data from DB',
@@ -861,7 +949,7 @@ class InstitutionRepository extends Controller
 
             //For POCOR-7772 Start
             $permissions = checkAccess();
-            
+
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
                     //For POCOR-8077 Start...
@@ -897,6 +985,10 @@ class InstitutionRepository extends Controller
 
             $institutionShifts = $institutionShifts->where('institution_id', $institutionId);
 
+            if(isset($params['location_institution_id'])){
+                $institutionShifts = $institutionShifts->where('location_institution_id', $params['location_institution_id']);
+            }
+
 
             //For POCOR-8215/8216 start...
             if(isset($params['limit'])){
@@ -907,7 +999,6 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-8215/8216 end...
 
-            
             return $list;
 
         } catch (\Exception $e) {
@@ -1804,14 +1895,18 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
+
+            //For POCOR-8491 Start...
             $staffs = InstitutionStaff::with('institution:id,code,name', 
                 'staffStatus:id,name as staff_status_name', 
                 'institutionPosition:id,staff_position_title_id', 
                 'institutionPosition.staffPositionTitle:id,name', 
                 'staffType:id,name as staff_type_name',
                 'classes:id,name,staff_id',
-                'staffPositionGrade:id,name');
-            
+                'staffPositionGrade:id,name',
+                'staffCustomFieldValue:id,text_value,number_value,decimal_value,textarea_value,date_value,time_value,file,staff_custom_field_id,staff_id',
+                'staffCustomFieldValue.staffCustomField:id,name');
+            //For POCOR-8491 End...
 
             //For POCOR-7772 Start
             if(isset($institution_Ids)){
@@ -1846,7 +1941,6 @@ class InstitutionRepository extends Controller
         }
     }
 
-
     public function getInstitutionStaffList($request, int $institutionId)
     {
         try {
@@ -1866,14 +1960,18 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
+
+            //For POCOR-8491 Start...
             $staffs = InstitutionStaff::with('institution:id,code,name', 
                     'staffStatus:id,name as staff_status_name', 
                     'institutionPosition:id,staff_position_title_id', 
                     'institutionPosition.staffPositionTitle:id,name', 
                     'staffType:id,name as staff_type_name',
                     'classes:id,name,staff_id',
-                    'staffPositionGrade:id,name');
-            
+                    'user:id,openemis_no,first_name,middle_name,third_name,last_name',
+                    'staffPositionGrade:id,name',
+                    'staffCustomFieldValue:id,text_value,number_value,decimal_value,textarea_value,date_value,time_value,file,staff_custom_field_id,staff_id',
+                    'staffCustomFieldValue.staffCustomField:id,name');
 
             //For POCOR-7772 Start
             if(isset($institution_Ids)){
@@ -1890,6 +1988,55 @@ class InstitutionRepository extends Controller
 
             $staffs = $staffs->where('institution_staff.institution_id', $institutionId);
 
+            if(isset($params['is_homeroom'])){
+                $currentDate = Carbon::now()->toDateString();
+                $staffs->where('institution_staff.is_homeroom', $params['is_homeroom'])
+                ->where('institution_staff.start_date','<=', $currentDate)
+                ->where(function($query) use ($currentDate) {
+                    $query->where('institution_staff.end_date', '>=', $currentDate)
+                          ->orWhereNull('end_date');
+                });
+            }
+
+            if(isset($params['academic_period_id'])){
+                $academicPeriod = AcademicPeriod::where('id', $params['academic_period_id'])->first()->toArray();
+            }
+            if(isset($params['institution_position_type'])){
+                $positionType = $params['institution_position_type'];
+                $currentDate = Carbon::now()->toDateString();
+                $staffs->whereHas(
+                    'institutionPosition.staffPositionTitle',
+                    function ($q) use($positionType){
+                        $q->where('type', $positionType);
+                    }
+                )
+                ->where(function ($query) use ($academicPeriod) {
+                    $query->whereNotNull('institution_staff.end_date')
+                        ->where('institution_staff.start_date', '<=', $academicPeriod['start_date'])
+                        ->where('institution_staff.end_date', '>=', $academicPeriod['start_date'])
+                        ->orWhere(function ($query) use ($academicPeriod) {
+                            $query->whereNotNull('institution_staff.end_date')
+                                ->where('institution_staff.start_date', '<=', $academicPeriod['end_date'])
+                                ->where('institution_staff.end_date', '>=', $academicPeriod['end_date'])
+                                ->orWhere(function ($query) use ($academicPeriod) {
+                                    $query->whereNotNull('institution_staff.end_date')
+                                        ->where('institution_staff.start_date', '>=', $academicPeriod['start_date'])
+                                        ->where('institution_staff.end_date', '<=', $academicPeriod['end_date']);
+                                });
+                        })
+                        ->orWhere(function ($query) use ($academicPeriod) {
+                            $query->whereNull('institution_staff.end_date')
+                                ->where('institution_staff.start_date', '<=', $academicPeriod['end_date']);
+                        });
+                })
+                ->whereNotNull('institution_staff.institution_position_id')
+                ->where(function ($query) use ($currentDate) {
+                    $query->where('institution_staff.end_date', '>', $currentDate)
+                        ->orWhereNull('institution_staff.end_date');
+                });
+            }
+
+
             //For POCOR-8215/8216 start...
             if(isset($params['limit'])){
                 $limit = $params['limit'];
@@ -1898,9 +2045,8 @@ class InstitutionRepository extends Controller
                 $list['data'] = $staffs->get()->toArray();
             }
             //For POCOR-8215/8216 end...
-            
+
             return $list;
-            
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -1928,15 +2074,18 @@ class InstitutionRepository extends Controller
             }
             //For POCOR-7772 End
 
+            //For POCOR-8491 Start...
             $staffs = InstitutionStaff::with('institution:id,code,name', 
                     'staffStatus:id,name as staff_status_name', 
                     'institutionPosition:id,staff_position_title_id', 
                     'institutionPosition.staffPositionTitle:id,name', 'staffType:id,name as staff_type_name',
                     'classes:id,name,staff_id',
-                    'staffPositionGrade:id,name')
+                    'staffPositionGrade:id,name',
+                    'staffCustomFieldValue:id,text_value,number_value,decimal_value,textarea_value,date_value,time_value,file,staff_custom_field_id,staff_id',
+                    'staffCustomFieldValue.staffCustomField:id,name')
                 ->where('institution_staff.institution_id', $institutionId)
                 ->where('institution_staff.staff_id', $staffId);
-
+            //For POCOR-8491 End...
 
             //For POCOR-7772 Start
             if(isset($institution_Ids)){
@@ -4867,23 +5016,40 @@ class InstitutionRepository extends Controller
     }
 
 
-    public function institutionUnits()
+    public function institutionUnits($params)
     {
-        return InstitutionUnits::get();
+        $list = InstitutionUnits::select('id', 'name');
+
+        $resp = [];
+        if(isset($params['limit'])){
+            $limit = $params['limit'];
+            $resp = $list->paginate($limit)->toArray();
+        } else {
+            $resp['data'] = $list->get();
+        }
+
+        return $resp;
     }
 
-    public function institutionCourses()
+    public function institutionCourses($params)
     {
-        return InstitutionCourses::get();
+        $list =  InstitutionCourses::select('id', 'name');
+
+        $resp = [];
+        if(isset($params['limit'])){
+            $limit = $params['limit'];
+            $resp = $list->paginate($limit)->toArray();
+        } else {
+            $resp['data'] = $list->get()->toArray();
+        }
+
+        return $resp;
     }
 
     public function institutionShifts($institutionId, $academicPeriodId)
     {
         $sql = "SELECT
         `InstitutionShifts`.`id` AS `institution_shift_id`,
-        `Institutions`.`id` AS `institution_id`,
-        `Institutions`.`code` AS `institution_code`,
-        `Institutions`.`name` AS `institution_name`,
         `ShiftOptions`.`name` AS `shift_option_name`
         FROM
             `institution_shifts` `InstitutionShifts`
@@ -4902,17 +5068,14 @@ class InstitutionRepository extends Controller
         return DB::select(DB::raw($sql));
     }
 
-    public function institutionStaffs($institutionId)
+    public function staffs($institutionId)
     {
         $currentDate = Carbon::now()->toDateString();
         $sql = "SELECT
         `Users`.`id` AS `users_id`,
         `Users`.`openemis_no` AS `users_openemis_no`,
         `Users`.`first_name` AS `users_first_name`,
-        `Users`.`middle_name` AS `users_middle_name`,
-        `Users`.`third_name` AS `users_third_name`,
-        `Users`.`last_name` AS `users_last_name`,
-        `Users`.`preferred_name` AS `users_preferred_name`
+        `Users`.`last_name` AS `users_last_name`
         FROM
             `institution_staff` `Staff`
             LEFT JOIN `security_users` `Users` ON `Users`.`id` = (`Staff`.`staff_id`)
@@ -4942,41 +5105,47 @@ class InstitutionRepository extends Controller
         return ConfigItem::where('code', 'max_students_per_subject')->first();
     }
 
-    public function institutionRooms($institutionId, $academicPeriodId)
+    public function institutionRooms($institutionId, $params)
     {
-        $sql = "SELECT
-        `InstitutionRooms`.*,
-        `RoomTypes`.`id` AS `room_types_id`,
-        `RoomTypes`.`name` AS `room_types_name`,
-        `RoomTypes`.`order` AS `room_types_order`,
-        `RoomTypes`.`visible` AS `room_types_visible`,
-        `RoomTypes`.`editable` AS `room_types_editable`,
-        `RoomTypes`.`default` AS `room_types_default`,
-        `RoomTypes`.`classification` AS `room_types_classification`,
-        `RoomTypes`.`international_code` AS `room_types_international_code`,
-        `RoomTypes`.`national_code` AS `room_types_national_code`,
-        `RoomTypes`.`modified_user_id` AS `room_types_modified_user_id`,
-        `RoomTypes`.`modified` AS `room_types_modified`,
-        `RoomTypes`.`created_user_id` AS `room_types_created_user_id`,
-        `RoomTypes`.`created` AS `room_types_created`
-        FROM
-            `institution_rooms` `InstitutionRooms`
-            LEFT JOIN `room_types` `RoomTypes` ON `RoomTypes`.`id` = (
-            `InstitutionRooms`.`room_type_id`
-            )
-        WHERE
-            (
-            `InstitutionRooms`.`institution_id` = $institutionId
-            AND `InstitutionRooms`.`academic_period_id` = $academicPeriodId
-            AND `InstitutionRooms`.`room_status_id` = 1
-            AND `RoomTypes`.`classification` = 1
-            )
-        ORDER BY
-            `RoomTypes`.`order`,
-            `InstitutionRooms`.`code`,
-            `InstitutionRooms`.`name`";
+        $academicPeriodId = $params['academic_period_id'];
+        $rooms = InstitutionRooms::select(
+            'institution_rooms.*',
+            'room_types.id as room_types_id',
+            'room_types.name as room_types_name',
+            'room_types.order as room_types_order',
+            'room_types.visible as room_types_visible',
+            'room_types.editable as room_types_editable',
+            'room_types.default as room_types_default',
+            'room_types.classification as room_types_classification',
+            'room_types.international_code as room_types_international_code',
+            'room_types.national_code as room_types_national_code',
+            'room_types.modified_user_id as room_types_modified_user_id',
+            'room_types.modified as room_types_modified',
+            'room_types.created_user_id as room_types_created_user_id',
+            'room_types.created as room_types_created'
+        )
+        ->leftJoin('room_types', 'room_types.id', '=', 'institution_rooms.room_type_id')
+        ->where('institution_rooms.institution_id', $institutionId)
+        ->where('institution_rooms.academic_period_id', $academicPeriodId);
 
-        return DB::select(DB::raw($sql));
+        if (isset($params['status'])){
+            $rooms = $rooms->where('institution_rooms.room_status_id', $params['status']);
+        }
+
+        if (isset($params['classification'])) {
+            $rooms = $rooms->where('room_types.classification', $params['classification']);
+        }
+
+        $rooms = $rooms->orderBy('room_types.order')
+        ->orderBy('institution_rooms.code')
+        ->orderBy('institution_rooms.name');
+
+        if(isset($params['limit'])) {
+            $list = $rooms->paginate($params['limit']);
+        } else {
+            $list['data'] = $rooms->get();
+        }
+        return $list;
     }
 
     public function getClass($classId)
@@ -4989,8 +5158,10 @@ class InstitutionRepository extends Controller
         return InstitutionSubjects::where('id', $subjectId)->first();
     }
 
-    public function studentsNotInClass($institutionId, $academicPeriodId, $gradesArray, $studentStatus)
+    public function studentsNotInClass($institutionId, $academicPeriodId, $gradesArray)
     {
+        $studentStatus = $this->getStudentStatusId('CURRENT')->id;
+        
         $grades = join(',', $gradesArray);
         $sql = "SELECT `InstitutionStudents`.`academic_period_id` AS `academic_period_id`,
         `InstitutionStudents`.`student_id`  AS `student_id`,
@@ -5006,7 +5177,8 @@ class InstitutionRepository extends Controller
         `Users`.`middle_name`                      AS `users_middle_name`,
         `Users`.`third_name`                       AS `users_third_name`,
         `Users`.`last_name`                        AS `users_last_name`,
-        `Users`.`preferred_name`                   AS `users_preferred_name`
+        `Users`.`preferred_name`                   AS `users_preferred_name`,
+        `user_special_needs_assessments`.`id`      AS `user_special_needs_assessments_id`
         FROM   `security_users` `Users`
         INNER JOIN `institution_students` `InstitutionStudents`
                 ON `Users`.`id` = ( `InstitutionStudents`.`student_id` )
@@ -5025,8 +5197,8 @@ class InstitutionRepository extends Controller
                     AND `InstitutionClassStudents`.`student_status_id` = ".$studentStatus."
                     AND `Users`.`id` =
                         ( `InstitutionClassStudents`.`student_id` ) )
-        INNER JOIN `genders` `Genders`
-                        ON `Genders`.`id` = ( `Users`.`gender_id` )
+        INNER JOIN `genders` `Genders` ON `Genders`.`id` = ( `Users`.`gender_id` )
+        LEFT JOIN `user_special_needs_assessments` ON `Users`.`id` =  `user_special_needs_assessments`.`security_user_id`
         WHERE  ( `InstitutionStudents`.`institution_id` = ".$institutionId."
                 AND `InstitutionStudents`.`education_grade_id` IN (".$grades.")
                 AND `InstitutionStudents`.`student_status_id` = ".$studentStatus."
@@ -5067,6 +5239,7 @@ class InstitutionRepository extends Controller
         `Users`.`third_name` AS `users_third_name`,
         `Users`.`last_name` AS `users_last_name`,
         `Users`.`preferred_name` AS `users_preferred_name`,
+        `Genders`.`name`         AS `gender_name`,
         `StudentStatuses`.`id` AS `student_statuses_id`,
         `StudentStatuses`.`code` AS `student_statuses_code`,
         `StudentStatuses`.`name` AS `student_statuses_name`,
@@ -5085,7 +5258,8 @@ class InstitutionRepository extends Controller
         `InstitutionClasses`.`modified_user_id` AS `institution_classes_modified_user_id`,
         `InstitutionClasses`.`modified` AS `institution_classes_modified`,
         `InstitutionClasses`.`created_user_id` AS `institution_classes_created_user_id`,
-        `InstitutionClasses`.`created` AS `institution_classes_created`
+        `InstitutionClasses`.`created` AS `institution_classes_created`,
+        `user_special_needs_assessments`.`id`      AS `user_special_needs_assessments_id`
         FROM   `institution_class_students` `InstitutionClassStudents`
         INNER JOIN `security_users` `Users`
                 ON `Users`.`id` = ( `InstitutionClassStudents`.`student_id` )
@@ -5105,6 +5279,7 @@ class InstitutionRepository extends Controller
         INNER JOIN `institution_classes` `InstitutionClasses`
                 ON `InstitutionClasses`.`id` =
                 ( `InstitutionClassStudents`.`institution_class_id` )
+        LEFT JOIN `user_special_needs_assessments` ON `Users`.`id` =  `user_special_needs_assessments`.`security_user_id`
         WHERE  ( `InstitutionClassStudents`.`institution_class_id` IN ( $classes )
                 AND ( SubjectStudents.student_id IS NULL
                         OR `SubjectStudents`.`student_status_id` IN ( 3,4 ) ) )
@@ -5121,24 +5296,30 @@ class InstitutionRepository extends Controller
         return DB::select(DB::raw($sql));
     }
 
-    public function institutionSubjectClasses($institutionId, $academicPeriodId, $gradeId)
+    public function institutionSubjectClasses($institutionId, $gradeId, $institutionSubjectId)
     {
         $sql ="SELECT
-        `InstitutionClasses`.`id` AS `institution_class_id`, 
-        `InstitutionClasses`.`name` AS `institution_class_name` 
-        FROM
-            `institution_classes` `InstitutionClasses` 
-            INNER JOIN `institution_class_grades` `InstitutionClassGrades` ON (
-            InstitutionClassGrades.institution_class_id = InstitutionClasses.id
-            AND InstitutionClassGrades.education_grade_id = $gradeId
-            )
-        WHERE
-            (
-            `InstitutionClasses`.`academic_period_id` = $academicPeriodId
-            AND `InstitutionClasses`.`institution_id` = $institutionId
-            )
-        GROUP BY
-            `InstitutionClasses`.`id`";
+        institution_classes.institution_id
+        ,institution_class_grades.education_grade_id
+        ,education_grades.name education_grade_name
+        ,institution_subjects.id institution_subject_id
+        ,institution_subjects.name institution_subject_name
+        ,institution_subjects.education_subject_id
+        ,education_subjects.name education_subject_id
+        ,institution_classes.id institution_class_id
+        ,institution_classes.name institution_class_name
+        FROM institution_subjects
+        INNER JOIN education_grades_subjects ON education_grades_subjects.education_subject_id = institution_subjects.education_subject_id
+        INNER JOIN education_grades ON education_grades.id = education_grades_subjects.education_grade_id
+        INNER JOIN institution_class_grades ON institution_class_grades.education_grade_id = education_grades_subjects.education_grade_id
+        AND institution_class_grades.education_grade_id = institution_subjects.education_grade_id
+        INNER JOIN education_subjects ON education_subjects.id = institution_subjects.education_subject_id
+        INNER JOIN institution_classes ON institution_classes.id = institution_class_grades.institution_class_id
+        AND institution_classes.id = institution_class_grades.institution_class_id
+        AND institution_classes.institution_id = institution_subjects.institution_id
+        AND institution_classes.academic_period_id = institution_subjects.academic_period_id
+        WHERE institution_classes.institution_id = ".$institutionId." AND institution_class_grades.education_grade_id = ".$gradeId." AND
+        institution_subjects.id = ".$institutionSubjectId;
 
         return DB::select(DB::raw($sql));
     }
@@ -5241,7 +5422,6 @@ class InstitutionRepository extends Controller
                 'Failed in getStaffPositionGrade.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            dd($e);
             return false;
         }
     }

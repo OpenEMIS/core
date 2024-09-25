@@ -150,22 +150,22 @@ class SetupTableBehavior extends SetupBehavior
             if (!$entity->isNew()) {
                 if ($entity->has('params') && !empty($entity->params)) {
                     $params = json_decode($entity->params, true);
-                    if (array_key_exists('number', $params)) {
+                    if (isset($params['number'])) {
                         $entity->table_validation_rule = 'number';
 
                         $numberAttr = $params['number'];
                         if (is_array($numberAttr)) {
-                            if (array_key_exists('min_value', $numberAttr)) {
+                            if (isset($numberAttr['min_value'])) {
                                 $entity->table_number_validation = 'min_value';
                                 $entity->table_minimum_value = $numberAttr['min_value'];
                             }
 
-                            if (array_key_exists('max_value', $numberAttr)) {
+                            if (isset($numberAttr['max_value'])) {
                                 $entity->table_number_validation = 'max_value';
                                 $entity->table_maximum_value = $numberAttr['max_value'];
                             }
 
-                            if (array_key_exists('range', $numberAttr)) {
+                            if (isset($numberAttr['range'])) {
                                 $entity->table_number_validation = 'range';
 
                                 if (array_key_exists('lower', $numberAttr['range'])) {
@@ -179,15 +179,15 @@ class SetupTableBehavior extends SetupBehavior
                         } else {
                             $entity->table_number_validation = 1;
                         }
-                    } else if (array_key_exists('decimal', $params)) {
+                    } else if (isset($params['decimal'])) {
                         $entity->table_validation_rule = 'decimal';
 
                         $decimalAttr = $params['decimal'];
-                        if (array_key_exists('length', $decimalAttr)) {
+                        if (isset($decimalAttr['length'])) {
                             $entity->table_decimal_length = $decimalAttr['length'];
                         }
 
-                        if (array_key_exists('precision', $decimalAttr)) {
+                        if (isset($decimalAttr['precision'])) {
                             $entity->table_decimal_precision = $decimalAttr['precision'];
                         }
                     } else {
@@ -474,7 +474,7 @@ class SetupTableBehavior extends SetupBehavior
                                 $selectedNumberValidation = $data['table_number_validation'];
                                 switch ($selectedNumberValidation) {
                                     case 'min_value':
-                                        $minValue = array_key_exists('table_minimum_value', $data) ? $data['table_minimum_value']: null;
+                                        $minValue = isset($data['table_minimum_value']) ? $data['table_minimum_value']: null; //POCOR-8460
 
                                         if (!is_null($minValue)) {
                                             $params['number']['min_value'] = $minValue;
@@ -482,7 +482,7 @@ class SetupTableBehavior extends SetupBehavior
                                         break;
 
                                     case 'max_value':
-                                        $maxValue = array_key_exists('table_maximum_value', $data) ? $data['table_maximum_value']: null;
+                                        $maxValue = isset($data['table_maximum_value']) ? $data['table_maximum_value']: null; //POCOR-8460
 
                                         if (!is_null($maxValue)) {
                                             $params['number']['max_value'] = $maxValue;
@@ -490,8 +490,8 @@ class SetupTableBehavior extends SetupBehavior
                                         break;
 
                                     case 'range':
-                                        $lowerLimit = array_key_exists('table_lower_limit', $data) ? $data['table_lower_limit']: null;
-                                        $upperLimit = array_key_exists('table_upper_limit', $data) ? $data['table_upper_limit']: null;
+                                        $lowerLimit = isset($data['table_lower_limit']) ? $data['table_lower_limit']: null; //POCOR-8460
+                                        $upperLimit = isset($data['table_upper_limit']) ? $data['table_upper_limit']: null; //POCOR-8460
 
                                         if (!is_null($lowerLimit) && !is_null($upperLimit)) {
                                             $params['number']['range'] = [
@@ -511,8 +511,8 @@ class SetupTableBehavior extends SetupBehavior
                             break;
 
                         case 'decimal':
-                            $length = array_key_exists('table_decimal_length', $data) ? $data['table_decimal_length'] : null;
-                            $precision = array_key_exists('table_decimal_precision', $data) ? $data['table_decimal_precision'] : null;
+                            $length = isset($data['table_decimal_length']) ? $data['table_decimal_length'] : null; //POCOR-8460
+                            $precision = isset($data['table_decimal_precision']) ? $data['table_decimal_precision'] : null; //POCOR-8460
 
                             $params['decimal'] = [
                                 'length' => $length,

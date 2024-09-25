@@ -22,6 +22,7 @@ use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\I18n\FrozenTime;
+use Firebase\JWT\Key;
 
 class UsersController extends AppController
 {
@@ -126,7 +127,6 @@ class UsersController extends AppController
             if ($session->check('login.password')) {
                 $password = $session->read('login.password');
             }
-
             $this->set('username', $username);
             $this->set('password', $password);
         }
@@ -149,7 +149,7 @@ class UsersController extends AppController
 
         $this->autoRender = false;
         if ($this->request->is('post')) {
-            $userIdentifier = $this->request->getData('username');
+            $userIdentifier = $this->request->getData()['username'];
 
             if (strlen($userIdentifier) === 0) {
                 $message = __('This field cannot be left empty');
@@ -170,33 +170,33 @@ class UsersController extends AppController
                 ])
                 ->where([
                     'OR' => [
-                        [$this->Users->aliasField('username') => $userIdentifier],
-                        [$this->Users->aliasField('email') => $userIdentifier]
+                        [$this->Users->aliasField('username') => trim($userIdentifier)],
+                        [$this->Users->aliasField('email') => trim($userIdentifier)]
                     ]
                 ])
                 ->first();
 
             if (!is_null($userEntity) && !is_null($userEntity->email)) {
-//                Log::write('debug', "1");
+                //Log::write('debug', "1");
                 $userId = $userEntity->id;
                 $now = new DateTime();
                 $expiry = (new DateTime())->modify('+ 1hour');
                 $expiryFormat = $expiry->format('Y-m-d H:i:s');
-//                Log::write('debug', "2");
+                //Log::write('debug', "2");
 
                 // remove any request that is passed expiry date
                 $SecurityUserPasswordRequests = TableRegistry::getTableLocator()->get('User.SecurityUserPasswordRequests');
                 $SecurityUserPasswordRequests->deleteAll([
                     $SecurityUserPasswordRequests->aliasField('expiry_date < ') => $now
                 ]);
-//                Log::write('debug', "3");
+                //Log::write('debug', "3");
 
                 // check if the user previously requested for reset password that is not expired. If requested before, reject the current request
                 $userRequestCount = $SecurityUserPasswordRequests
                     ->find()
                     ->where([$SecurityUserPasswordRequests->aliasField('user_id') => $userId])
                     ->count();
-//                Log::write('debug', "4");
+                    //Log::write('debug', "4");
 
                 // user still have active reset request - redirect to login page with info message
                 if ($userRequestCount > 0) {
@@ -204,8 +204,14 @@ class UsersController extends AppController
                     $this->Alert->info($message, ['type' => 'string', 'reset' => true]);
                     return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
                 }
-//                Log::write('debug', "5");
-
+                //Log::write('debug', "5");
+                $checksum = Security::hash($userId . $expiryFormat, 'sha256');
+                $storedChecksum = Security::hash($checksum, 'sha256');
+                $passwordRequestData = [
+                    'user_id' => $userId,
+                    'expiry_date' => $expiry,
+                    'id' => $storedChecksum
+                ];
 
                     $saveEntity = $SecurityUserPasswordRequests->newEntity($passwordRequestData);
                     $SecurityUserPasswordRequests->save($saveEntity);
@@ -216,7 +222,7 @@ class UsersController extends AppController
                         'plugin' => 'User',
                         'controller' => 'Users',
                         'action' => 'resetPassword',
-                        'token' => $checksum
+                        '?' => ['token' => $checksum]
                     ], true);
 
                     /*POCOR-5284 Starts*/
@@ -235,7 +241,7 @@ class UsersController extends AppController
                     'expiry_date' => $expiry,
                     'id' => $storedChecksum
                 ];
-//                Log::write('debug', "6");
+                //Log::write('debug', "6");
                 $saveEntity = $SecurityUserPasswordRequests->newEntity($passwordRequestData);
                 $SecurityUserPasswordRequests->save($saveEntity);
 
@@ -245,7 +251,7 @@ class UsersController extends AppController
                     'plugin' => 'User',
                     'controller' => 'Users',
                     'action' => 'resetPassword',
-                    'token' => $checksum
+                    '?' => ['token' => $checksum]
                 ], true);
 
                 /*POCOR-5284 Starts*/
@@ -282,8 +288,8 @@ class UsersController extends AppController
                     }
                     try {
                         $e = $email
-                            ->to($userEmail)
-                            ->subject($emailSubject)
+                            ->setTo($userEmail)
+                            ->setSubject($emailSubject)
                             ->send($emailMessage);
             
                     } catch (\Exception $exception) {
@@ -706,6 +712,8 @@ class UsersController extends AppController
         } else {//POCOR-7156 ends
             $this->SSO->doAuthentication($authenticationType, $code);
         } 
+        $this->getRequest()->getSession()->write('nbn', $this->request->getData()['password']);
+        $this->getRequest()->getSession()->write('sbn', $this->request->getData()['username']);
     }
 
     //POCOR-7156 starts
@@ -841,53 +849,65 @@ class UsersController extends AppController
             ->where(
                 [$SecurityUser->aliasField('username') => $this->request->getData('username')]
             )->first();
-        // if (!$extra['loginStatus']) {
-        //     if (!$extra['status']) {
-        //         $this->Alert->error('security.login.inactive', ['reset' => true]);
-        //     } else if ($extra['fallback']) {
-        //         $url = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', 'submit' => 'retry']);
-        //         $retryMessage = 'Remote authentication failed. <br>Please try local login or <a href="' . $url . '">Click here</a> to try again';
-        //         $this->Alert->error($retryMessage, ['type' => 'string', 'reset' => true]);
-        //     } else {
-        //         //POCOR-2976 start
-        //         if ($userData->status == 0) {
-        //             if (empty($userData)) {
-        //                 $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
-        //             } else {
-        //                 $this->Alert->error('security.login.locked_account', ['reset' => true]);
-        //             }
-        //             return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
-        //         }
-        //         // $this->Alert->error('security.login.fail', ['reset' => true]);
-        //         $session = $this->request->getSession();
-        //         $noOfPendingAttempts = $session->read('login.attempts');
-        //         // echo "<pre>";print_r($noOfPendingAttempts);die;
-        //         $noOfPendingAttempts--;
-        //         $session->write('login.attempts', $noOfPendingAttempts);
-        //         if ($noOfPendingAttempts <= 0) {
-        //             $SecurityUser->updateAll(['status' => 0],
-        //                 ['username' => $this->request->getData('username')]);
-        //             if (empty($userData)) {
-        //                 $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
-        //             } else {
-        //                 $this->Alert->error('security.login.locked_account', ['reset' => true]);
-        //             }
-        //         } else {
-        //             $message = "You have {$noOfPendingAttempts} more login attempts before your account will be locked.";
-        //             $this->Alert->warning($message, ['type' => 'string', 'reset' => true]);
-        //         }
-        //         //POCOR-2976 end
-        //     }
-        //     $event->stopPropagation();
-        //     return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
-        // }
+        if (!$extra['loginStatus']) {
+            if (!$extra['status']) {
+                $this->Alert->error('security.login.inactive', ['reset' => true]);
+            } else if ($extra['fallback']) {
+                $url = Router::url(['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin', 'submit' => 'retry']);
+                $retryMessage = 'Remote authentication failed. <br>Please try local login or <a href="' . $url . '">Click here</a> to try again';
+                $this->Alert->error($retryMessage, ['type' => 'string', 'reset' => true]);
+            } else {
+                //POCOR-2976 start
+                if ($userData->status == 0) {
+                    if (empty($userData)) {
+                        $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
+                    } else {
+                        $this->Alert->error('security.login.locked_account', ['reset' => true]);
+                    }
+                    return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+                }
+                // $this->Alert->error('security.login.fail', ['reset' => true]);
+                $session = $this->request->getSession();
+                $noOfPendingAttempts = $session->read('login.attempts');
+                // echo "<pre>";print_r($noOfPendingAttempts);die;
+                $noOfPendingAttempts--;
+                $session->write('login.attempts', $noOfPendingAttempts);
+                if ($noOfPendingAttempts <= 0) {
+                    $SecurityUser->updateAll(['status' => 0],
+                        ['username' => $this->request->getData('username')]);
+                    if (empty($userData)) {
+                        $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
+                    } else {
+                        $this->Alert->error('security.login.locked_account', ['reset' => true]);
+                    }
+                } else {
+                    $message = "You have {$noOfPendingAttempts} more login attempts before your account will be locked.";
+                    $this->Alert->warning($message, ['type' => 'string', 'reset' => true]);
+                }
+                //POCOR-2976 end
+            }
+            $event->stopPropagation();
+            return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+        }
     }
 
     public function afterAuthenticate(EventInterface $event, ArrayObject $extra)
     {
-        if ($this->Cookie->check('Restful.Call')) {
+        //echo "<pre>"; print_r($_COOKIE['Restful']); die;
+        //if ($this->Cookie->check('Restful')) {
+        if (isset($_COOKIE['Restful'])) {
+            //echo "<pre>"; print_r($this->generateToken()); die;
             $event->stopPropagation();
-            return $this->redirect(['plugin' => null, 'controller' => 'Rest', 'action' => 'auth', 'payload' => $this->generateToken(), 'version' => '2.0']);
+            //return $this->redirect(['plugin' => null, 'controller' => 'Rest', 'action' => 'auth', 'payload' => $this->generateToken(), 'version' => '2.0']);
+            return $this->redirect([
+                'plugin' => null,
+                    'controller' => 'Rest',
+                    'action' => 'auth',
+                    '?' => [
+                        'payload' => $this->generateToken(),
+                        'version' => '2.0'
+                    ]
+                ]); 
         } else {
             $user = $this->Auth->user();
 
@@ -916,12 +936,20 @@ class UsersController extends AppController
     public function generateToken()
     {
         $user = $this->Auth->user();
+        $privateKey = Configure::read('Application.private.key');
 
-        // Expiry change to 24 hours
-        return JWT::encode([
-            'sub' => $user['id'],
-            'exp' => time() + 10800
-        ], Configure::read('Application.private.key'), 'RS256');
+        try {
+            $token = JWT::encode([
+                'sub' => $user['id'],
+                'exp' => time() + 86400 // 24 hours
+            ], $privateKey, 'RS256');
+
+            return $token;
+        } catch (\Exception $e) {
+            // Log the error or handle it accordingly
+            error_log('JWT Error: ' . $e->getMessage());
+            throw $e;
+        }
     }
 
     public function afterIdentify(EventInterface $event, $user)

@@ -32,7 +32,7 @@ class ReorderBehavior extends Behavior {
 			$primaryKey = $model->getPrimaryKey();
 			$orderField = $this->getConfig('orderField');
 
-			$encodedIds = json_decode($request->data("ids"));
+			$encodedIds = json_decode($request->getData("ids"));
 
 			$ids = [];
 			$idKeys = [];
@@ -50,18 +50,18 @@ class ReorderBehavior extends Behavior {
 					->select($orderField)
 					->where(['OR' => $idKeys])
 					->order([$model->aliasField($orderField)])
-					->hydrate(false)
+					->enableHydration(false)
 					->toArray();
 
 				$originalOrder = array_reverse($originalOrder);
 				foreach ($ids as $id) {
 					$orderValue = array_pop($originalOrder);
 					/** POCOR-6677 starts - storing order as per reorder numbering to overcome duplication of order no*/
-					if ($model->alias() == 'SecurityRoles') {
+					if ($model->getAlias() == 'SecurityRoles') {
 						$model->updateAll([$orderField => $init], [$id]);
 						$init++; 
 					} else {
-						$model->updateAll([$orderField => $orderValue[$orderField]], [$id]);
+						$model->updateAll(["`$orderField`" => $orderValue[$orderField]], [$id]);
 					}
 					/** POCOR-6677 ends*/ 
 				}
@@ -77,7 +77,7 @@ class ReorderBehavior extends Behavior {
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
 		/** POCOR-6677 starts- added AND condition to not do anything when model is SecurityRoles*/
 		$model = $this->_table;
-		if ($entity->isNew() && $model->alias() != 'SecurityRoles') {
+		if ($entity->isNew() && $model->getAlias() != 'SecurityRoles') {
 			$orderField = $this->getConfig('orderField');
 			$filter = $this->getConfig('filter');
 			$filterValues = $this->getConfig('filterValues');
@@ -142,14 +142,14 @@ class ReorderBehavior extends Behavior {
 		}
 		$counter = 1;
 		foreach ($reorderItems as $key => $item) {
-			$table->updateAll([$orderField => $counter++], [$table->primaryKey() => $key]);
+			$table->updateAll([$orderField => $counter++], [$table->getPrimaryKey() => $key]);
 		}
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
 		/** POCOR-6677 starts- added AND condition to not do anything when model is SecurityRoles*/
 		$model = $this->_table;
-		if ($model->alias() != 'SecurityRoles') {
+		if ($model->getAlias() != 'SecurityRoles') {
 			$orderField = $this->getConfig('orderField');
 			$filter = $this->getConfig('filter');
 			$filterValues = $this->getConfig('filterValues');

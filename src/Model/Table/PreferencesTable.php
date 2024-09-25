@@ -76,12 +76,12 @@ class PreferencesTable extends ControllerActionTable
 
         $session = $this->request->session();
         if (!$session->read('System.language_menu')) {
-            if (array_key_exists('edit', $toolbarButtonsArray)) {
+            if (isset($toolbarButtonsArray['edit'])) {
                 unset($toolbarButtonsArray['edit']);
             }
         }
 
-        if (array_key_exists('back', $toolbarButtonsArray)) {
+        if (isset($toolbarButtonsArray['back'])) {
             unset($toolbarButtonsArray['back']);
         }
 
@@ -93,7 +93,7 @@ class PreferencesTable extends ControllerActionTable
         // remove the list toolbarButton
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
 
-        if (array_key_exists('list', $toolbarButtonsArray)) {
+        if (isset($toolbarButtonsArray['list'])) {
             unset($toolbarButtonsArray['list']);
         }
 

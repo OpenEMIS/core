@@ -192,7 +192,7 @@ class UserGroupsTable extends ControllerActionTable
     //POCOR-7168
     public function findByInstitutionAreaNameCode(Query $query, array $options)
     {
-        if (array_key_exists('search', $options)) {
+        if (isset($options['search'])) {
             $search = $options['search'];
             $query
                 ->join([

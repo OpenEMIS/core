@@ -5,7 +5,7 @@
         <div class="input text<?= $required ?>">
             <?= $this->Form->input($name, $options) ?>
         </div>
-        <?php if (!array_key_exists('disabled', $options)) : ?>
+        <?php if (!isset($options['disabled'])) : ?>
         <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
         <?php endif ?>
     </div>

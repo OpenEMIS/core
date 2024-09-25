@@ -18,7 +18,7 @@
 			</thead>
 
 			<tbody data-link="row">
-				<?php if (count($attr['data'])>0) : ?>
+				<?php if (count($attr['data']->toArray())>0) : //POCOR-8457 ?>
 					<?php foreach ($attr['data'] as $i => $obj) : ?>
 						<?php if (!is_object($obj->user)): ?>
 							<tr><td>There is an error with this user data. User might have been deleted from users table.</td></tr>

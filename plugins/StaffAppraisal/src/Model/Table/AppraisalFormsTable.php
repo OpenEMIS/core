@@ -45,7 +45,7 @@ class AppraisalFormsTable extends ControllerActionTable
                     $hasNoSectionCriteriasKey = [];
                     $hasSection = true;
                     $hasEnteredfirstCriteria = false;
-                    
+
                     foreach ($value as $appraisalCriteriasKey => $criteria) {
                         $criteria = $criteria['_joinData'];
                         if (!$hasEnteredfirstCriteria) {
@@ -151,7 +151,7 @@ class AppraisalFormsTable extends ControllerActionTable
                 }
             } elseif ($this->request->is(['post', 'put'])) {
                 $requestData = $this->request->getData();
-                if (array_key_exists('appraisal_criterias', $requestData[$this->getAlias()])) {                    
+                if (array_key_exists('appraisal_criterias', $requestData[$this->getAlias()])) {
                     foreach ($requestData[$this->getAlias()]['appraisal_criterias'] as $key => $obj) {
                         if (array_key_exists('appraisal_criterias_section_error', $requestData[$this->getAlias()]) && array_key_exists($key, $requestData[$this->getAlias()]['appraisal_criterias_section_error'])) {
 
@@ -183,9 +183,9 @@ class AppraisalFormsTable extends ControllerActionTable
                             ];
                             if (!empty($obj['_joinData']['id'])) {
                                 $arrayData['id'] = $obj['_joinData']['id'];
-                            } 
+                            }
                         }
-                       
+
                         $arrayFields[] = $arrayData;
                     }
                 }
@@ -212,7 +212,7 @@ class AppraisalFormsTable extends ControllerActionTable
             $order = 0;
             $sectionName = "";
             $printSection = false;
-            foreach ($arrayFields as $key => $obj) {                
+            foreach ($arrayFields as $key => $obj) {
                 $fieldPrefix = $this->getAlias() . '.appraisal_criterias.' . $cellCount++;
                 $joinDataPrefix = $fieldPrefix . '._joinData';
                 $customFieldName = $obj['name'];
@@ -221,7 +221,7 @@ class AppraisalFormsTable extends ControllerActionTable
                 $customFieldId = $obj['appraisal_criteria_id'];
                 $customFormId = $obj['appraisal_form_id'];
                 $customTooltip = "";
-                if (array_key_exists('tooltip', $obj)) {
+                if (isset($obj['tooltip'])) {
                     $customTooltip = $obj['tooltip'];
                 }
                 $customSection = "";
@@ -262,7 +262,7 @@ class AppraisalFormsTable extends ControllerActionTable
                 $rowData[] = $customFieldName.$cellData.$customTooltip;
                 $rowData[] = $customFieldType;
 
-                if(array_key_exists('field_type', $obj) && !is_null($obj['field_type']) && strtoupper($obj['field_type']) != self::FIELD_TYPE_SCORE) {
+                if(isset($obj['field_type']) && !is_null($obj['field_type']) && strtoupper($obj['field_type']) != self::FIELD_TYPE_SCORE) {
                     $rowData[] = $form->checkbox("$joinDataPrefix.is_mandatory", ['checked' => $obj['is_mandatory'], 'class' => 'no-selection-label', 'kd-checkbox-radio' => '']);
                 }else {
                     $rowData[] = $form->hidden("$joinDataPrefix.is_mandatory", ['value' => 0]);
@@ -314,7 +314,7 @@ class AppraisalFormsTable extends ControllerActionTable
     // Start POCOR-5188
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $is_manual_exist = $this->getManualUrl('Administration','Forms','Staff Appraisals');       
+        $is_manual_exist = $this->getManualUrl('Administration','Forms','Staff Appraisals');
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',

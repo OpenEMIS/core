@@ -132,7 +132,7 @@ class CompetenciesController extends AppController
         $this->set('contentHeader', $header);
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         if ($this->getPlugin() == 'Competency') {
             $this->Security->setConfig('validatePost', false);

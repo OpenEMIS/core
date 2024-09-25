@@ -88,18 +88,27 @@ class FieldOptionBehavior extends Behavior
             $addUniqueName = true;
         }
 
-        if ($addUniqueName) {
-            $validator
-                ->add('name', [
-                    'ruleUnique' => [
-                        'rule' => 'validateUnique',
-                        'provider' => 'table',
-                        'message' => __('This field has to be unique')
-                    ]
-                ]);
-        }
-        //POCOR-5668 add external validation starts
+        //POCOR-8166 [Remove validation for contact types of unique name rule] STARTS
         $tableAlias = $this->_table->getAlias();
+        
+        if(isset($tableAlias) && $tableAlias != 'ContactTypes'){
+        
+            if ($addUniqueName) {
+                $validator
+                    ->add('name', [
+                        'ruleUnique' => [
+                            'rule' => 'validateUnique',
+                            'provider' => 'table',
+                            'message' => __('This field has to be unique')
+                        ]
+                    ]);
+            }
+        }
+        //POCOR-8166 [Remove validation for contact types of unique name rule] END
+
+        
+        //POCOR-5668 add external validation starts
+
         if(isset($tableAlias) && $tableAlias == 'Nationalities'){
             $validator
                 ->requirePresence('external_validation')
@@ -166,7 +175,7 @@ class FieldOptionBehavior extends Behavior
     {
         $model = $this->_table;
         $fieldOptions = $this->buildFieldOptions();
-        $selectedOption = $model->getAlias();
+        $selectedOption = $model->alias;
         $this->addFieldOptionControl($extra, ['fieldOptions' => $fieldOptions, 'selectedOption' => $selectedOption]);
 
         $model->field('default', ['options' => $model->getSelectOptions('general.yesno'), 'after' => 'visible']);

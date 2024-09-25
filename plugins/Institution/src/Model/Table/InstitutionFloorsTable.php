@@ -101,9 +101,20 @@ class InstitutionFloorsTable extends ControllerActionTable
                     'rule' => ['compareDateReverse', 'start_date', false]
                 ]
             ])
+            ->allowEmpty('area') //POCOR-8523
             ->add('area', 'ruleValidateCustomLandSize', [
-                'rule' => ['validateCustomLandSize', 'Maximum_institution_infrastructure_floor_size'],
-                'provider' => 'table'
+                'rule' => function ($value, $context) {
+                    // Check if datatype is 'copy'
+                    if (isset($context['data']['datatype']) && $context['data']['datatype'] == 'copy') {
+                        // Skip validation when datatype is 'copy'
+                        return true;
+                    }
+            
+                    // Proceed with validation when datatype is not 'copy'
+                    return $this->validateCustomLandSize($value, 'Maximum_institution_infrastructure_floor_size', $context);
+                },
+                'provider' => 'table',
+                'last' => true
             ])
             ->requirePresence('new_floor_type', function ($context) {
                 if (array_key_exists('change_type', $context['data'])) {
@@ -145,7 +156,7 @@ class InstitutionFloorsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         //Start:POCOR-6693
-        $this->field('area', ['attr' => ['label' => __('Size')]]); 
+        $this->field('area', ['attr' => ['label' => __('Size')]]);
         //End:POCOR-6693
         $this->Navigation->substituteCrumb(__('Institution Floors'), __('Institution Floors'));
     }
@@ -247,7 +258,7 @@ class InstitutionFloorsTable extends ControllerActionTable
 
         // unset edit_type so that will always default to Update Details
         foreach ($buttons as $action => $attr) {
-            if (array_key_exists('url', $attr) && array_key_exists('edit_type', $attr['url'])) {
+            if (isset($attr['url']) && array_key_exists('edit_type', $attr['url'])) {
                 unset($buttons[$action]['url']['edit_type']);
             }
         }
@@ -642,13 +653,13 @@ class InstitutionFloorsTable extends ControllerActionTable
             $attr['date_options']['endDate'] = $endDate;
         } elseif ($action == 'edit') {
             $entity = $attr['entity'];
-            /**POCOR-6904 starts - modified condition to get start date at the time of edit*/ 
+            /**POCOR-6904 starts - modified condition to get start date at the time of edit*/
             $sDate = '';
             if (!empty($entity->start_date)) {
                 $sDate = $entity->start_date;
             } else {
                 $sDate = $this->currentAcademicPeriod->start_date;
-            } 
+            }
             $attr['type'] = 'readonly';
             $attr['value'] = $sDate->format('Y-m-d');
             $attr['attr']['value'] = $this->formatDate($sDate);
@@ -870,6 +881,8 @@ class InstitutionFloorsTable extends ControllerActionTable
             'institutionId' => $institutionId
         ];
         $url = array_merge($url, $this->request->getQuery());
+        $paramsArr = $this->request->getParam('?'); //POCOR-8523
+        $url = is_array($paramsArr) ? array_merge($url, $paramsArr) : $url; //POCOR-8523
         //$url = $this->setQueryString($url, ['institution_floor_id' => $entity->id, 'institution_floor_name' => $entity->name]);
         return $event->getSubject()->HtmlField->link($entity->code, $url);
     }
@@ -921,19 +934,19 @@ class InstitutionFloorsTable extends ControllerActionTable
         if (isset($url[1])) {
             unset($url[1]);
         }
-        
+
         $institutionId = $this->getQueryString('institution_id');
-        
+
         $buildingUrl = $url;
         $buildingUrl['action'] = 'InstitutionBuildings';
         $buildingUrl[1] = $encodedQueryString;
-        
+
         $buildingUrl = $this->setQueryString($buildingUrl, [
             'institution_land_id' => $entity->institution_land->id,
             'institution_land_name' => $entity->institution_land->code,
             'institution_id' => $institutionId
         ]);
-       
+
         $crumbs[] = [
             'name' => $entity->institution_land->code,
             'url' => $buildingUrl
@@ -984,7 +997,7 @@ class InstitutionFloorsTable extends ControllerActionTable
     {
         $periodOptions = $this->AcademicPeriods->getYearList();
         $periodId = $this->request->getQuery('period_id');
-        
+
         if (is_null($periodId)) {
             $periodId = $this->AcademicPeriods->getCurrent();
         }
@@ -999,7 +1012,7 @@ class InstitutionFloorsTable extends ControllerActionTable
 
     public function getTypeOptions($params = [])
     {
-        $withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
+        $withAll = isset($params['withAll']) ? $params['withAll'] : false;
 
         $typeOptions = $this->FloorTypes
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
@@ -1020,8 +1033,8 @@ class InstitutionFloorsTable extends ControllerActionTable
 
     public function getStatusOptions($params = [])
     {
-        $conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
-        $withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
+        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
+        $withAll = isset($params['withAll']) ? $params['withAll'] : false;
 
         $statusOptions = $this->FloorStatuses
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
@@ -1130,8 +1143,8 @@ class InstitutionFloorsTable extends ControllerActionTable
 
     public function findInUse(Query $query, array $options)
     {
-        $institutionId = array_key_exists('institution_id', $options) ? $options['institution_id'] : null;
-        $academicPeriodId = array_key_exists('academic_period_id', $options) ? $options['academic_period_id'] : null;
+        $institutionId = isset($options['institution_id']) ? $options['institution_id'] : null;
+        $academicPeriodId = isset($options['academic_period_id']) ? $options['academic_period_id'] : null;
         $inUseId = $this->FloorStatuses->getIdByCode('IN_USE');
 
         $query->where([

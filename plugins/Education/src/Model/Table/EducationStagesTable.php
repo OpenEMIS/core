@@ -13,7 +13,7 @@ class EducationStagesTable extends ControllerActionTable
     {
 		parent::initialize($config);
 		$this->addBehavior('Education.Setup');
-		$this->hasMany('EducationGrades', ['className' => 'Institution.EducationGrades', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('EducationGrades', ['className' => 'Education.EducationGrades', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->setDeleteStrategy('restrict');
 	}

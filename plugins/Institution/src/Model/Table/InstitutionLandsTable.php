@@ -95,8 +95,19 @@ class InstitutionLandsTable extends ControllerActionTable
                     'provider' => 'table'
                 ]
             ])
+            ->allowEmpty('area') //POCOR-8523
+            //POCOR-8523
             ->add('area', 'ruleValidateCustomLandSize', [
-                'rule' => ['validateCustomLandSize', 'Maximum_institution_infrastructure_land_size'],
+                'rule' => function ($value, $context) {
+                    // Check if datatype is 'copy'
+                    if (isset($context['data']['datatype']) && $context['data']['datatype'] == 'copy') {
+                        // Skip validation when datatype is 'copy'
+                        return true;
+                    }
+            
+                    // Proceed with validation when datatype is not 'copy'
+                    return $this->validateCustomLandSize($value, 'Maximum_institution_infrastructure_land_size', $context);
+                },
                 'provider' => 'table',
                 'last' => true
             ])
@@ -191,7 +202,7 @@ class InstitutionLandsTable extends ControllerActionTable
     {
         $data['name'] = $data['code'];
         //POCOR-7769
-        if(array_key_exists('custom_table_cells',$data)){
+        if(isset($data['custom_table_cells'])){
             if(empty($data['start_date'])){
                 $data['start_date'] = date('Y-m-d',strtotime($data['start_date']));
                 $event->stopPropagation();
@@ -253,7 +264,10 @@ class InstitutionLandsTable extends ControllerActionTable
             '1' => $encodedQueryString,
             'institutionId' => $institutionId
         ];
+        $paramsArr = $this->request->getParam('?'); //POCOR-8523
+        
         $url = array_merge($url, $this->request->getQuery());
+        $url = is_array($paramsArr) ? array_merge($url, $paramsArr) : $url; //POCOR-8523
         //$url = $this->setQueryString($url, ['institution_land_id' => $entity->id, 'institution_land_name' => $entity->code]);
 
         return $event->getSubject()->HtmlField->link($entity->code, $url);
@@ -310,7 +324,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
         // unset edit_type so that will always default to Update Details
         foreach ($buttons as $action => $attr) {
-            if (array_key_exists('url', $attr) && array_key_exists('edit_type', $attr['url'])) {
+            if (isset($attr['url']) && array_key_exists('edit_type', $attr['url'])) {
                 unset($buttons[$action]['url']['edit_type']);
             }
         }
@@ -1099,7 +1113,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
     public function getTypeOptions($params = [])
     {
-        $withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
+        $withAll = isset($params['withAll']) ? $params['withAll'] : false;
         $typeOptions = $this->LandTypes
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->find('visible')
@@ -1108,7 +1122,7 @@ class InstitutionLandsTable extends ControllerActionTable
         if ($withAll && count($typeOptions) > 1) {
             $typeOptions = ['-1' => __('All Land Types')] + $typeOptions;
         }
-        
+
         if (!is_null($this->request->getAttribute('params')['?']['type'])) {
             $type = $this->request->getAttribute('params')['?']['type'];
             $this->request = $this->request->withQueryParams(['type' => $type]);
@@ -1121,8 +1135,8 @@ class InstitutionLandsTable extends ControllerActionTable
 
     public function getStatusOptions($params = [])
     {
-        $conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
-        $withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
+        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
+        $withAll = isset($params['withAll']) ? $params['withAll'] : false;
 
         $statusOptions = $this->LandStatuses
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
@@ -1217,8 +1231,8 @@ class InstitutionLandsTable extends ControllerActionTable
 
     public function findInUse(Query $query, array $options)
     {
-        $institutionId = array_key_exists('institution_id', $options) ? $options['institution_id'] : null;
-        $academicPeriodId = array_key_exists('academic_period_id', $options) ? $options['academic_period_id'] : null;
+        $institutionId = isset($options['institution_id']) ? $options['institution_id'] : null;
+        $academicPeriodId = isset($options['academic_period_id']) ? $options['academic_period_id'] : null;
         $inUseId = $this->LandStatuses->getIdByCode('IN_USE');
 
         $query->where([

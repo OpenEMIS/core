@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Http\ServerRequest;
+use Cake\Event\EventInterface;
 
 class RubricsController extends AppController
 {
@@ -41,7 +42,7 @@ class RubricsController extends AppController
 
     // end CAv4
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(EventInterface $event)
     {
         $serverRequest = $this->request;
         parent::beforeFilter($event);
