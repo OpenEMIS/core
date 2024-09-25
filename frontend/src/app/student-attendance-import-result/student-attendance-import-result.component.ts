@@ -7,6 +7,7 @@ import { TABLE_COLUMN_LIST } from './student-attendance-import-report.config';
 import { ITableApi, ITableConfig, KdAlertEvent } from 'openemis-styleguide-lib';
 import { Router } from '@angular/router';
 import { timer } from 'rxjs';
+import { ExcelService } from '../shared/excel.service';
 
 @Component({
   selector: 'app-student-attendance-import-result',
@@ -31,9 +32,17 @@ export class StudentAttendanceImportResultComponent implements OnInit {
     {
       custom: true,
       icon: 'fa fa-download',
-      tooltip: 'Download',
+      tooltip: 'Failed download',
       callback: (): void => {
-        this.generateExcel();
+        this.generateFailExcel();
+      }
+    },
+    {
+      custom: true,
+      icon: 'fa fa-download',
+      tooltip: 'Success download',
+      callback: (): void => {
+        this.generateSuccessExcel();
       }
     },
     ],
@@ -69,11 +78,14 @@ export class StudentAttendanceImportResultComponent implements OnInit {
     private Rest: ApiService,
     public router: Router,
     private _kdAlertEvent: KdAlertEvent,
+    private excelSvc: ExcelService,
   ) {
     this.dataFromRoute = this.router.getCurrentNavigation().extras.state?.['importData'];
   }
 
   ngOnInit(): void {
+    console.log(this.dataFromRoute, "this.dataFromRoute");
+
     if (!this.dataFromRoute) {
       let toasterConfig: any = {
         title: 'Please fill all fields',
@@ -93,7 +105,7 @@ export class StudentAttendanceImportResultComponent implements OnInit {
       this.institution_name = localStorage.getItem("institutionName");
       this.pageheader.pageheaderText = `${this.institution_name} - Import Student Attendances`;
       this.institution_id = localStorage.getItem("institution_id");
-      // this.institution_id = 6;
+      this.institution_id = 6;
       this.loginData();
     }
   }
@@ -269,24 +281,400 @@ export class StudentAttendanceImportResultComponent implements OnInit {
     }
   }
 
-  generateExcel() {
-    this.Rest.getItemExport(`institutions/students/attendances/import/template?institution_id=${this.institution_id}&institution_class_id=${this.selectedClassId}`).subscribe({
-      next: (response: any) => {
-        let url = window.URL.createObjectURL(response);
-        let a = document.createElement('a');
-        document.body.appendChild(a);
-        a.setAttribute('style', 'display: none');
-        a.href = url;
-        a.download = response.filename || 'Student attendance';
-        a.click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
+  generateFailExcel() {
+    let dataValidationHeadings = {};
 
-      },
-      error: (error: any) => {
+    let dataColumnHeadings = [
+      "Date ( DD/MM/YYYY )",
+      "OpenEMIS ID",
+      "Absence Type Code",
+      "Institution Subject Name",
+      "Period",
+      "Student Absence Reason Code",
+      "Student Attendance Type Code",
+      "Errors"
+    ];
+    let data = {
+      header: [],
+      References: {}
+    }
 
+    if (this.attendance_import_result.records_failed.count > 0) {
+      for (var key in this.attendance_import_result.records_failed.rows[0].data) {
+        data.header.push(key);
+        data.References[key] = {
+          data: [],
+          header: []
+        }
       }
-    })
+      data.References["Errors"] = {
+        data: [],
+        header: []
+      }
+      this.attendance_import_result.records_failed.rows.forEach((element: any, index: any) => {
+        if (element.data['Date ( DD/MM/YYYY )']) {
+          let obj = {
+            Name: element.data['Date ( DD/MM/YYYY )']
+          }
+          data.References['Date ( DD/MM/YYYY )'].data.push(obj);
+        } else {
+          let obj = {
+            Name: ''
+          }
+          data.References['Date ( DD/MM/YYYY )'].data.push(obj);
+        }
+
+        if (element.data['Absence Type Code']) {
+          let obj = {
+            Name: element.data['Absence Type Code']
+          }
+          data.References['Absence Type Code'].data.push(obj);
+        } else {
+          let obj = {
+            Name: ''
+          }
+          data.References['Absence Type Code'].data.push(obj);
+        }
+
+        if (element.data['Institution Subject Name']) {
+          let obj = {
+            Name: element.data['Institution Subject Name']
+          }
+          data.References['Institution Subject Name'].data.push(obj);
+        } else {
+          let obj = {
+            Name: ''
+          }
+          data.References['Institution Subject Name'].data.push(obj);
+        }
+
+        if (element.data['Period']) {
+          let obj = {
+            Name: element.data['Period']
+          }
+          data.References['Period'].data.push(obj);
+        } else {
+          let obj = {
+            Name: ''
+          }
+          data.References['Period'].data.push(obj);
+        }
+
+        if (element.data['Student Absence Reason Code']) {
+          let obj = {
+            Name: element.data['Student Absence Reason Code']
+          }
+          data.References['Student Absence Reason Code'].data.push(obj);
+        } else {
+          let obj = {
+            Name: ''
+          }
+          data.References['Student Absence Reason Code'].data.push(obj);
+        }
+
+        if (element.data['Student Attendance Type Code']) {
+          let obj = {
+            Name: element.data['Student Attendance Type Code']
+          }
+          data.References['Student Attendance Type Code'].data.push(obj);
+        } else {
+          let obj = {
+            Name: ''
+          }
+          data.References['Student Attendance Type Code'].data.push(obj);
+        }
+
+        //For error code
+        let dateObj: any = {};
+        let programObj: any = {};
+        let receivedObj: any = {};
+        let periodObj: any = {};
+        let typeCodeObj: any = {};
+        if (element.errors['Date ( DD/MM/YYYY )']) {
+          dateObj = {
+            error: element.errors['Date ( DD/MM/YYYY )']
+          }
+          // data.References['Errors'].data.push(obj);
+        }
+        if (element.errors['Absence Type Code']) {
+          programObj = {
+            error: element.errors['Absence Type Code']
+          }
+          // data.References['Errors'].data.push(obj);
+        }
+        if (element.errors['Institution Subject Name']) {
+          receivedObj = {
+            error: element.errors['Institution Subject Name']
+          }
+          // data.References['Errors'].data.push(obj);
+        }
+        if (element.errors['Period']) {
+          periodObj = {
+            error: element.errors['Period']
+          }
+        }
+        if (element.errors['Student Attendance Type Code']) {
+          typeCodeObj = {
+            error: element.errors['Student Attendance Type Code']
+          }
+        }
+        if(dateObj?.error || programObj?.error || receivedObj?.error || periodObj?.error || typeCodeObj?.error ){
+          let dateData = dateObj?.error != undefined ? dateObj?.error : '';
+          let programData = programObj?.error != undefined ? programObj?.error : '';
+          let receivedData = receivedObj?.error != undefined ? receivedObj?.error : '';
+          let periodData = periodObj?.error != undefined ? periodObj?.error : '';
+          let typeCodeData = typeCodeObj?.error != undefined ? typeCodeObj?.error : '';
+
+          let str = `${dateData} ${programData} ${receivedData} ${periodData} ${typeCodeData}`;
+          data.References['Errors'].data.push(str)
+        }
+      });
+    }
+
+    let referenceNames = Object.keys(data.References);
+    let temp2 = {}; let temp3 = {}; let temp4 = {}; let temp5 = {}; let temp6 = {}; let temp7 = {};
+    let assetsArr = data.References["Absence Type Code"].data;
+    let statusArr = data.References["Date ( DD/MM/YYYY )"].data;
+    let levelArr = data.References["Institution Subject Name"].data;
+    let parentArr = data.References["Period"].data;
+    let receivedArr = data.References["Student Attendance Type Code"].data;
+    let reasonArr = data.References["Student Absence Reason Code"].data;
+
+    let responseArr = [
+      {
+        key: 1,
+        value: 'Multiple Choice'
+      },
+      {
+        key: 2,
+        value: 'Open Ended'
+      },
+      {
+        key: 3,
+        value: 'Short Answer'
+      }
+    ];
+    for (let x in assetsArr) {
+      temp2[assetsArr[x].Name] = assetsArr[x].Name;
+    }
+    for (let x in statusArr) {
+      temp3[statusArr[x].Name] = statusArr[x].Name;
+    }
+    for (let x in levelArr) {
+      temp4[levelArr[x].Name] = levelArr[x].Name;
+    }
+    for (let x in parentArr) {
+      temp5[parentArr[x].Name] = parentArr[x].Name;
+    }
+    for (let x in receivedArr) {
+      temp5[receivedArr[x].Name] = receivedArr[x].Name;
+    }
+    if (!Object.keys(temp2).length) {
+      temp2 = { '': '' }
+    }
+    if (!Object.keys(temp3).length) {
+      temp3 = { '': '' }
+    }
+    if (!Object.keys(temp4).length) {
+      temp4 = { '': '' }
+    }
+    if (!Object.keys(temp5).length) {
+      temp5 = { '': '' }
+    }
+    let referenceData = data.References;    
+    this.excelSvc.init('OpenEMIS_Core_Failed_Students_Attendance_Data_Template', 'Failed Student Attendance Data', dataColumnHeadings, referenceNames, data.References, dataValidationHeadings);
+  }
+
+  generateSuccessExcel() {
+    let dataValidationHeadings = {};
+    let updatedMealRecord: any = [];
+    updatedMealRecord.push(...this.attendance_import_result.records_added.rows, ...this.attendance_import_result.records_updated.rows);
+    
+    // updatedMealRecord.push(this.meal_report.records_updated.rows);
+    let dataColumnHeadings = [
+      "Date ( DD/MM/YYYY )",
+      "Absence Type Code",
+      "Institution Subject Name",
+      "Period",
+      "Student Absence Reason Code",
+      "Student Attendance Type Code"
+    ];
+    let data = {
+      header: [],
+      References: {}
+    }
+
+    if (updatedMealRecord.length > 0) {
+      for (var key in updatedMealRecord[0].data) {
+        data.header.push(key);
+        data.References[key] = {
+          data: [],
+          header: []
+        }
+      }
+      // data.References["Errors"] = {
+      //   data: [],
+      //   header: []
+      // }
+      updatedMealRecord.forEach((element: any, index: any) => {
+        if (element.data['Date ( DD/MM/YYYY )']) {
+          let obj = {
+            Name: element.data['Date ( DD/MM/YYYY )']
+          }
+          data.References['Date ( DD/MM/YYYY )'].data.push(obj);
+        } else {
+          let obj = {
+            Name: ''
+          }
+          data.References['Date ( DD/MM/YYYY )'].data.push(obj);
+        }
+
+        if (element.data['Student Attendance Type Code']) {
+          let obj = {
+            Name: element.data['Student Attendance Type Code']
+          }
+          data.References['Student Attendance Type Code'].data.push(obj);
+        } else {
+          let obj = {
+            Name: ''
+          }
+          data.References['Student Attendance Type Code'].data.push(obj);
+        }
+
+        if (element.data['Period']) {
+          let obj = {
+            Name: element.data['Period']
+          }
+          data.References['Period'].data.push(obj);
+        } else {
+          let obj = {
+            Name: ''
+          }
+          data.References['Period'].data.push(obj);
+        }
+
+        if (element.data['Institution Subject Name']) {
+          let obj = {
+            Name: element.data['Institution Subject Name']
+          }
+          data.References['Institution Subject Name'].data.push(obj);
+        } else {
+          let obj = {
+            Name: ''
+          }
+          data.References['Institution Subject Name'].data.push(obj);
+        }
+
+        if (element.data['Absence Type Code']) {
+          let obj = {
+            Name: element.data['Absence Type Code']
+          }
+          data.References['Absence Type Code'].data.push(obj);
+        } else {
+          let obj = {
+            Name: ''
+          }
+          data.References['Absence Type Code'].data.push(obj);
+        }
+
+        if (element.data['Student Absence Reason Code']) {
+          let obj = {
+            Name: element.data['Student Absence Reason Code']
+          }
+          data.References['Student Absence Reason Code'].data.push(obj);
+        } else {
+          let obj = {
+            Name: ''
+          }
+          data.References['Student Absence Reason Code'].data.push(obj);
+        }
+
+        //For error code
+        let dateObj: any = {};
+        let programObj: any = {};
+        let receivedObj: any = {};
+        if (element.errors['Date ( DD/MM/YYYY )']) {
+          dateObj = {
+            error: element.errors['Date ( DD/MM/YYYY )']
+          }
+        }
+        if (element.errors['Absence Type Code']) {
+          programObj = {
+            error: element.errors['Absence Type Code']
+          }
+        }
+        if (element.errors['Institution Subject Name']) {
+          receivedObj = {
+            error: element.errors['Institution Subject Name']
+          }
+          // data.References['Errors'].data.push(obj);
+        }
+        if(dateObj?.error || programObj?.error || receivedObj?.error){
+          let dateData = dateObj?.error != undefined ? dateObj?.error : '';
+          let programData = programObj?.error != undefined ? programObj?.error : '';
+          let receivedData = receivedObj?.error != undefined ? receivedObj?.error : '';
+
+          let str = `${dateData} ${programData} ${receivedData}`;
+          data.References['Errors'].data.push(str)
+        }
+      });
+    }
+
+    let referenceNames = Object.keys(data.References);
+
+    let temp2 = {}; let temp3 = {}; let temp4 = {}; let temp5 = {}; let temp6 = {}; let temp7 = {};
+    let assetsArr = data.References["Absence Type Code"]?.data;
+    let statusArr = data.References["Date ( DD/MM/YYYY )"]?.data;
+    let levelArr = data.References["Institution Subject Name"]?.data;
+    let parentArr = data.References["Period"]?.data;
+    let receivedArr = data.References["Student Absence Reason Code"]?.data;
+    let typeCodeArr = data.References["Student Attendance Type Code"]?.data;
+    let responseArr = [
+      {
+        key: 1,
+        value: 'Multiple Choice'
+      },
+      {
+        key: 2,
+        value: 'Open Ended'
+      },
+      {
+        key: 3,
+        value: 'Short Answer'
+      }
+    ];
+    for (let x in assetsArr) {
+      temp2[assetsArr[x].Name] = assetsArr[x].Name;
+    }
+    for (let x in statusArr) {
+      temp3[statusArr[x].Name] = statusArr[x].Name;
+    }
+    for (let x in levelArr) {
+      temp4[levelArr[x].Name] = levelArr[x].Name;
+    }
+    for (let x in parentArr) {
+      temp5[parentArr[x].Name] = parentArr[x].Name;
+    }
+    for (let x in receivedArr) {
+      temp5[receivedArr[x].Name] = receivedArr[x].Name;
+    }
+    for (let x in typeCodeArr) {
+      temp5[typeCodeArr[x].Name] = typeCodeArr[x].Name;
+    }
+    if (!Object.keys(temp2).length) {
+      temp2 = { '': '' }
+    }
+    if (!Object.keys(temp3).length) {
+      temp3 = { '': '' }
+    }
+    if (!Object.keys(temp4).length) {
+      temp4 = { '': '' }
+    }
+    if (!Object.keys(temp5).length) {
+      temp5 = { '': '' }
+    }
+    let referenceData = data.References;
+    this.excelSvc.init('OpenEMIS_Core_Success_Students_Attendance_Data_Template', 'Success Student Attendance Data', dataColumnHeadings, dataColumnHeadings, data.References, dataValidationHeadings);
   }
 
 }

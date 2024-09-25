@@ -38,7 +38,7 @@ export const appRoutes: Routes = [
   { path: 'Institution/Institutions/Results', component: AssessmentComponent },
   { path: 'Institution/Institutions/ResultsReport', component: AssessmentReportComponent },
   { path: `Institution/Institutions/StudentAttendances/index`, component: StudentAttendanceComponent },
-  { path: `Institution/Institutions/${setEncodedId()}/ImportStudentAttendances/add`, component: StudentAttendanceReportComponent },
+  { path: `Institution/Institutions/ImportStudentAttendances/add`, component: StudentAttendanceReportComponent },
   { path: `Institution/Institutions/ImportStudentAttendance/results`, component: StudentAttendanceImportResultComponent },
   { path: `Institution/Institutions/StudentMeals/index/${setEncodedId()}`, component: StudentMealsComponent },
   { path: `Institution/Institutions/${setEncodedData()}/ImportStudentMeals/add`, component: StudentMealImportComponent },
