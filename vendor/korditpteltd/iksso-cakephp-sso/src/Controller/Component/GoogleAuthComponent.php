@@ -119,7 +119,14 @@ class GoogleAuthComponent extends Component
             // Check if the access token is expired, if it is expired reauthenticate
             if (!$client->isAccessTokenExpired()) {
                 $this->session->write('Google.accessToken', $client->getAccessToken());
-                $tokenData = $client->verifyIdToken()->getAttributes();
+                //POCOR-8498 start
+                //  $tokenData = $client->verifyIdToken()->getAttributes();
+                $tokenData = $client->verifyIdToken();
+        
+                if (is_object($tokenData) && method_exists($tokenData, 'getAttributes')) {
+                    $tokenData = $tokenData->getAttributes();
+                }
+                //POCOR-8498 End
             } else {
                 $authUrl = $client->createAuthUrl();
             }
@@ -135,7 +142,7 @@ class GoogleAuthComponent extends Component
           data only if the hosted domain matches our setting.
          ************************************************************************************************/
         if (isset($tokenData)) {
-            $username = $tokenData['payload']['email'];
+            $username = isset($tokenData['payload']['email']) ? $tokenData['payload']['email']: $tokenData['email'] ;
             return $this->checkLogin($username);
         }
         return false;

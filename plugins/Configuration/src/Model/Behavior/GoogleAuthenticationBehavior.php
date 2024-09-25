@@ -40,7 +40,7 @@ class GoogleAuthenticationBehavior extends Behavior
         $this->model->field('client_secret', ['attr' => ['required' => true]]);
         $this->model->field('redirect_uri', ['type' => 'readonly', 'attr' => ['required' => true]]);
         $this->model->field('hd', ['attr' => ['label' => __('Hosted Domain')]]);
-        $entity->code = $requestData['code'];
+        $this->model->fields['code']['value'] = $entity->code = $requestData['code'];
         if ($entity->getErrors('code')) {
             $code = uniqid('IDP');
            // $this->model->request->getData()[$this->getAlias()]['code'] = $code;
