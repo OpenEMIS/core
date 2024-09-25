@@ -98,11 +98,13 @@ class ReportCardCommentsTable extends ControllerActionTable
                     $ReportCards->aliasField('academic_period_id') => $selectedAcademicPeriod,
                     $ReportCards->aliasField('education_grade_id IN ') => $availableGrades,
                     // only show record if at least one comment type is needed
-                    'OR' => [
-                        $ReportCards->aliasField('principal_comments_required') => 1,
-                        $ReportCards->aliasField('homeroom_teacher_comments_required') => 1,
-                        $ReportCards->aliasField('teacher_comments_required') => 1
-                    ]
+                    //Commented for POCOR-8579[START]
+                    // 'OR' => [
+                    //     $ReportCards->aliasField('principal_comments_required') => 1,
+                    //     $ReportCards->aliasField('homeroom_teacher_comments_required') => 1,
+                    //     $ReportCards->aliasField('teacher_comments_required') => 1
+                    // ]
+                    //Commented for POCOR-8579[END]
                 ])
                 ->toArray();
             $reportCardOptions = ['0' => __('All Report Cards')] + $reportCardOptions;
@@ -197,11 +199,13 @@ class ReportCardCommentsTable extends ControllerActionTable
             ->where([
                 $where,$conditions, //POCOR-6821
                 // only show record if at least one comment type is needed
-                'OR' => [
-                    $ReportCards->aliasField('principal_comments_required') => 1,
-                    $ReportCards->aliasField('homeroom_teacher_comments_required') => 1,
-                    $ReportCards->aliasField('teacher_comments_required') => 1
-                ]
+                //Commented for POCOR-8579[START]
+                // 'OR' => [
+                //     $ReportCards->aliasField('principal_comments_required') => 1,
+                //     $ReportCards->aliasField('homeroom_teacher_comments_required') => 1,
+                //     $ReportCards->aliasField('teacher_comments_required') => 1
+                // ]
+                //Commented for POCOR-8579[END]
             ])
             // ->orWhere([$orWhere]) // POCOR-7485
             ->group([

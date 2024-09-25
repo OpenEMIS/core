@@ -711,6 +711,26 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                             }, tabs);
                         }
                     }
+
+                    if(isHomeRoomClass == 0){
+                        subjects = response.data;
+                        console.log('subjects svc===>>>>>>>');
+                        console.log(response.data);
+                        if (angular.isObject(subjects) && subjects.length > 0) {
+                            angular.forEach(subjects, function(subject, key) {
+                                editable = /*(angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id)) || isSuperAdmin || (angular.isObject(nonTeacherPermission) && nonTeacherPermission.length > 0) ||*/ (allCommentsEditRequired == 1) || (myteacherEditPermission == 1);//POCOR-8007 add myteacherEditPermission
+                                if((myteacherPermission == 1) && (teacherCommentsRequired == 0) && currentUserId == subject.staff_id){
+                                    this.push({
+                                        tabName: subject.name + " Teacher",
+                                        type: roles.TEACHER,
+                                        id: subject.id,
+                                        education_subject_id: subject.education_subject_id,
+                                        editable: editable
+                                    });   
+                                }
+                            }, tabs);
+                        }
+                    }
                 }
                 //HomeRoom Teacher[END]
 
