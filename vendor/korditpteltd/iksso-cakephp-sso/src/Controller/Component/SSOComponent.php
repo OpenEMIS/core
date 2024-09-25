@@ -96,7 +96,7 @@ class SSOComponent extends Component
 
     public function afterAuthenticate(Event $event, ArrayObject $extra)
     {
-        $request = new ServerRequest();
+        $request = $this->getController()->getRequest();
         $user = $this->Auth->user();
         if ($user) {
             $request->trustProxy = true;

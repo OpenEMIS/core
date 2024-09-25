@@ -31,7 +31,7 @@ class InstitutionTripsTable extends ControllerActionTable
 
         $this->hasMany('InstitutionTripDays', ['className' => 'Institution.InstitutionTripDays', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']);
         $this->hasMany('InstitutionTripPassengers', ['className' => 'Institution.InstitutionTripPassengers', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']);
-    
+
         $this->addBehavior('Excel', [
             'excludes' => ['comment', 'institution_id'],
             'pages' => ['index'],
@@ -74,8 +74,8 @@ class InstitutionTripsTable extends ControllerActionTable
                     if (isset($value['_ids']) && !empty($value['_ids'])) {
                         $passengerCount = sizeof($value['_ids']);
 
-                        $data = array_key_exists('data', $context) ? $context['data'] : [];
-                        if (array_key_exists('institution_bus_id', $data) && !empty($data['institution_bus_id'])) {
+                        $data = isset($context['data']) ? $context['data'] : [];
+                        if (isset($data['institution_bus_id']) && !empty($data['institution_bus_id'])) {
                             $busId = $data['institution_bus_id'];
 
                             try {
@@ -106,7 +106,7 @@ class InstitutionTripsTable extends ControllerActionTable
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         $tripDays = [];
-        if (array_key_exists('days', $data) && array_key_exists('_ids', $data['days']) && !empty($data['days']['_ids'])) {
+        if (isset($data['days']) && array_key_exists('_ids', $data['days']) && !empty($data['days']['_ids'])) {
             foreach ($data['days']['_ids'] as $day) {
                 $tripDays[] = [
                     'day' => $day
@@ -117,7 +117,7 @@ class InstitutionTripsTable extends ControllerActionTable
         $data['institution_trip_days'] = $tripDays;
 
         $tripPassengers = [];
-        if (array_key_exists('assigned_students', $data) && array_key_exists('_ids', $data['assigned_students']) && !empty($data['assigned_students']['_ids'])) {
+        if (isset($data['assigned_students']) && array_key_exists('_ids', $data['assigned_students']) && !empty($data['assigned_students']['_ids'])) {
             foreach ($data['assigned_students']['_ids'] as $value) {
                 $decodedKeys = $this->paramsDecode($value);
 
@@ -197,7 +197,7 @@ class InstitutionTripsTable extends ControllerActionTable
         ->toArray();
 
         $tripTypeOptions = [-1 => __('All Trip Types')] + $tripTypes;
-        $extra['tripTypes'] = $this->request->getQuery('trip_types'); 
+        $extra['tripTypes'] = $this->request->getQuery('trip_types');
         // trips filter
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
@@ -222,15 +222,15 @@ class InstitutionTripsTable extends ControllerActionTable
         $this->field('trip_type_id', ['visible' => true, 'attr' => ['label' => __('Trip Type')]]);
         $this->field('provider', ['visible' => true, 'attr' => ['label' => __('provider')]]);
         $this->field('bus', ['visible' => true, 'attr' => ['label' => __('Bus')]]);
-        $this->field('repeat', ['visible' => true, 'attr' => ['label' => __('Repeat')]]);
+        $this->field('trip_repeat', ['visible' => true, 'attr' => ['label' => __('Repeat')]]);
         $this->field('days', ['visible' => true, 'attr' => ['label' => __('Days')]]);
         $this->field('institution_transport_provider_id', ['visible' => false]);
         $this->field('institution_bus_id', ['visible' => false]);
         // POCOR-6169 end
 
-        $this->field('comment',['visible' => false]);    
+        $this->field('comment',['visible' => false]);
         // Start POCOR-5188
-        $is_manual_exist = $this->getManualUrl('Institutions','Trips','Transport');       
+        $is_manual_exist = $this->getManualUrl('Institutions','Trips','Transport');
         if(!empty($is_manual_exist)){
             $btnAttr = [
                 'class' => 'btn btn-xs btn-default icon-big',
@@ -239,7 +239,7 @@ class InstitutionTripsTable extends ControllerActionTable
                 'escape' => false,
                 'target'=>'_blank'
             ];
-    
+
             $helpBtn['url'] = $is_manual_exist['url'];
             $helpBtn['type'] = 'button';
             $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -263,23 +263,23 @@ class InstitutionTripsTable extends ControllerActionTable
         $institutionProvider = TableRegistry::get('Institution.InstitutionTransportProviders');
         $institutionBuses = TableRegistry::get('Institution.InstitutionBuses');
 
-        if (array_key_exists('selectedAcademicPeriodOptions', $extra)) {
+        if (isset($extra['selectedAcademicPeriodOptions'])) {
             $query->where([
                         $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodOptions']
                     ], [], true); //this parameter will remove all where before this and replace it with new where.
         }
 
         $query->select([
-            $this->aliasField('id') , 
-            $this->aliasField('name'), 
-            $this->aliasField('repeat'), 
+            $this->aliasField('id') ,
+            $this->aliasField('name'),
+            $this->aliasField('trip_repeat'),
             $this->aliasField('academic_period_id'),
             $this->aliasField('trip_type_id'),
             $this->aliasField('institution_id'),
             'provider' => $institutionProvider->aliasField('name'),
             'bus' => $institutionBuses->aliasField('plate_number'),
             $this->aliasField('modified_user_id'),
-            $this->aliasField('modified'), 
+            $this->aliasField('modified'),
             $this->aliasField('created_user_id'),
             $this->aliasField('created')
         ])
@@ -297,16 +297,16 @@ class InstitutionTripsTable extends ControllerActionTable
         if($tripTypes > 0){
             $query
             ->where([
-                $this->aliasField('trip_type_id') => $tripTypes 
+                $this->aliasField('trip_type_id') => $tripTypes
             ]);
         }
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
                 if($row->repeat == 1){
-                    $row['repeat'] = 'Yes';
+                    $row['trip_repeat'] = 'Yes';
                 }else{
-                    $row['repeat'] = 'No';
+                    $row['trip_repeat'] = 'No';
                 }
 
                 $dayOptions = $this->getDays();
@@ -339,7 +339,7 @@ class InstitutionTripsTable extends ControllerActionTable
             $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
         }
         return $selectedAcademicPeriod;
-    } 
+    }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
@@ -353,16 +353,16 @@ class InstitutionTripsTable extends ControllerActionTable
         $institutionBuses = TableRegistry::get('Institution.InstitutionBuses');
 
         $query->select([
-            $this->aliasField('id') , 
-            $this->aliasField('name'), 
-            $this->aliasField('repeat'), 
+            $this->aliasField('id') ,
+            $this->aliasField('name'),
+            $this->aliasField('trip_repeat'),
             $this->aliasField('academic_period_id'),
             $this->aliasField('trip_type_id'),
             $this->aliasField('institution_id'),
             'provider' => $institutionProvider->aliasField('name'),
             'bus' => $institutionBuses->aliasField('plate_number'),
             $this->aliasField('modified_user_id'),
-            $this->aliasField('modified'), 
+            $this->aliasField('modified'),
             $this->aliasField('created_user_id'),
             $this->aliasField('created')
         ])
@@ -381,16 +381,16 @@ class InstitutionTripsTable extends ControllerActionTable
         if($tripTypes > 0){
             $query
             ->where([
-                $this->aliasField('trip_type_id') => $tripTypes 
+                $this->aliasField('trip_type_id') => $tripTypes
             ]);
         }
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
                 if($row->repeat == 1){
-                    $row['repeat'] = 'Yes';
+                    $row['trip_repeat'] = 'Yes';
                 }else{
-                    $row['repeat'] = 'No';
+                    $row['trip_repeat'] = 'No';
                 }
 
                 $dayOptions = $this->getDays();
@@ -429,7 +429,7 @@ class InstitutionTripsTable extends ControllerActionTable
             'type'  => 'string',
             'label' => __('Trip Type')
         ];
-        
+
         $extraField[] = [
             'key'   => 'provider',
             'field' => 'provider',
@@ -445,8 +445,8 @@ class InstitutionTripsTable extends ControllerActionTable
         ];
 
         $extraField[] = [
-            'key'   => 'repeat',
-            'field' => 'repeat',
+            'key'   => 'trip_repeat',
+            'field' => 'trip_repeat',
             'type'  => 'string',
             'label' => __('Repeat')
         ];
@@ -463,16 +463,16 @@ class InstitutionTripsTable extends ControllerActionTable
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        
+
 
         if (($entity->toArray())) {
             if ($entity->has('institution_transport_provider_id')) {
                 $this->fields['institution_transport_provider_id']['default'] = $entity->institution_transport_provider_id;
-            } 
+            }
         }else {
             // 1st instance of add
             $entity->institution_transport_provider_id = '';
-        } 
+        }
 
         $InstitutionBuses = $this->InstitutionBuses
             ->find('optionList')
@@ -480,9 +480,9 @@ class InstitutionTripsTable extends ControllerActionTable
                 $this->InstitutionBuses->aliasField('institution_transport_provider_id') => $entity->institution_transport_provider_id
             ])
             ->toArray();
-            
+
         unset($InstitutionBuses[0]);
-        
+
         $this->fields['institution_bus_id']['type'] = 'select';
         $this->fields['institution_bus_id']['options'] = $InstitutionBuses;
 
@@ -507,31 +507,31 @@ class InstitutionTripsTable extends ControllerActionTable
         $this->fields['institution_transport_provider_id']['type'] = 'select';
         $this->fields['institution_transport_provider_id']['options'] = $providerOptions;
         $this->field('institution_transport_provider_id', ['attr' => ['label' => __('Provider')] , 'onChangeReload' => true]); // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
-        
+
         $this->field('institution_bus_id', ['attr' => ['label' => __('Bus')]]);
-        
+
         $repeatOptions = [
             1 => __('Yes'),
             0 => __('No')
         ];
-        $this->fields['repeat']['type'] = 'select';
-        $this->fields['repeat']['default'] = '1';
-        $this->fields['repeat']['options'] = $repeatOptions;
-        $this->fields['repeat']['required'] = true;
-        $this->field('repeat', ['attr' => ['label' => __('Repeat')]]);
+        $this->fields['trip_repeat']['type'] = 'select';
+        $this->fields['trip_repeat']['default'] = '1';
+        $this->fields['trip_repeat']['options'] = $repeatOptions;
+        $this->fields['trip_repeat']['required'] = true;
+        $this->field('trip_repeat', ['attr' => ['label' => __('Repeat')]]);
 
         $dayOptions = $this->getDays();
-        
+
         // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
         $this->fields['days']['options'] = $dayOptions;
-        
+
         $this->field('days', [
             'type' => 'chosenSelect',
             'attr' => ['label' => __('Days')],
             'visible' => ['index' => true, 'view' => true, 'edit' => true, 'add' => true]
         ]);
         // POCOR-6169 <vikas.rathore@mail.valuecoders.com>
-    
+
         // dump($this->fields);die;
     }
     // POCOR-6169 end
@@ -563,13 +563,13 @@ class InstitutionTripsTable extends ControllerActionTable
 
     // setup fields for view and edit POCOR-6152
     public function setupFields(Entity $entity, ArrayObject $extra)
-    { 
+    {
         // academic field view
         if($entity->academic_period_id){
             $entity['academic_period_id'] = $entity->academic_period->name;
         }
         $this->field('academic_period_id',['before' => 'name','attr' => ['label' => __('Academic Period')],'visible' => ['view' => true]]);
-        
+
         $this->field('trip_type_id',['after' => 'name','visible' => ['view' => true]]);//trip type field
 
         $this->field('institution_transport_provider_id',['after' => 'trip_type_id','visible' => ['view' => true]]); //provider field
@@ -579,14 +579,14 @@ class InstitutionTripsTable extends ControllerActionTable
             $entity['institution_buss'] = $entity->institution_bus->plate_number;
         }
         $this->field('institution_buss',['after' => 'institution_transport_provider_id','attr' => ['label' => __('Bus')],'visible' => ['view' => true]]);
-        
+
         // repeat field view
-        if($entity->repeat == 1){
-            $entity['repeat'] = 'Yes';
+        if($entity->trip_repeat == 1){
+            $entity['trip_repeat'] = 'Yes';
         }else{
-            $entity['repeat'] = 'No';
+            $entity['trip_repeat'] = 'No';
         }
-        $this->field('repeat',['after' => 'institution_buss','visible' => ['view' => true]]);
+        $this->field('trip_repeat',['after' => 'institution_buss','visible' => ['view' => true]]);
 
         $this->field('institution_bus_id',['visible' => ['view' => false]]);
 
@@ -601,7 +601,7 @@ class InstitutionTripsTable extends ControllerActionTable
         $institutionId  = $this->getInstitutionID();
 
         return $this->InstitutionTransportProviders
-        ->find('list', ['keyField' => 'id', 'valueField' => 'name']) 
+        ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
         ->where([
             $this->InstitutionTransportProviders->aliasField('institution_id') => $institutionId
         ])
@@ -620,7 +620,7 @@ class InstitutionTripsTable extends ControllerActionTable
                     $this->InstitutionBuses->aliasField('institution_transport_provider_id') => $parentId
                 ])
                 ->toArray();
-           
+
                 $attr['options'] = $InstitutionBuses;
                 unset($attr['options'][0]);
 
@@ -640,27 +640,27 @@ class InstitutionTripsTable extends ControllerActionTable
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
-    { 
+    {
         switch ($field) {
             case 'institution_transport_provider_id':
                 return __('Provider');
-            case 'transport_status_id': 
+            case 'transport_status_id':
                 return __('Status');
-            case 'academic_period_id': 
+            case 'academic_period_id':
                 return __('Academic Period');
-            case 'trip_type_id': 
-                return __('Trip Type'); 
-            case 'repeat': 
-                return __('Repeat');        
-            case 'provider': 
+            case 'trip_type_id':
+                return __('Trip Type');
+            case 'trip_repeat':
+                return __('Repeat');
+            case 'provider':
                 return __('Provider');
-            case 'bus': 
+            case 'bus':
                 return __('Bus');
-            case 'days': 
+            case 'days':
                 return __('Days');
-            case 'name': 
+            case 'name':
                 return __('Name');
-            case 'comment': 
+            case 'comment':
                 return __('Comment');
             case 'modified':
                 return __('Modified');

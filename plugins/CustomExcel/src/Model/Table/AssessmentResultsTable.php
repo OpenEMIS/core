@@ -12,6 +12,8 @@ use Cake\Datasource\ResultSetInterface;
 use Cake\Utility\Text;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\ORM\Table; // POCOR-8578
+use Cake\Utility\Inflector; // POCOR-8578
 
 class AssessmentResultsTable extends AppTable
 {
@@ -24,7 +26,7 @@ class AssessmentResultsTable extends AppTable
         $this->setTable('institution_class_students');
         parent::initialize($config);
 
-        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
+        $this->belongsTo('Users', ['className' => 'API.Students', 'foreignKey' => 'student_id']); // POCOR-8578
         $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
@@ -51,10 +53,10 @@ class AssessmentResultsTable extends AppTable
             'variables' => [
                 'Assessments',
                 'EducationGrades',
-                // 'AssessmentItems',
-                // 'AssessmentItemsGradingTypes',
-                // 'AssessmentPeriods',
-                // 'AssessmentItemResults',
+//                // 'AssessmentItems',
+//                // 'AssessmentItemsGradingTypes',
+//                // 'AssessmentPeriods',
+//                // 'AssessmentItemResults',
                 'GroupAssessmentPeriods',
                 'GroupAssessmentPeriodsWithTerms',
                 'GroupAssessmentItems',
@@ -119,7 +121,7 @@ class AssessmentResultsTable extends AppTable
             && isset($params['assessment_id'])
             && isset($params['institution_id'])) {
 
-            $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+            $AssessmentItemResults = self::getDynamicTableInstance('Assessment.AssessmentItemResults'); // POCOR-8578
             $institution_class_id = $params['class_id'];
             $assessment_id = $params['assessment_id'];
             $institution_id = $params['institution_id'];
@@ -165,7 +167,7 @@ class AssessmentResultsTable extends AppTable
                         return $row;
                     });
                 })
-                ->hydrate(false)
+                ->disableHydration() // POCOR-8578
                 ->all();
 
             return $results->toArray();
@@ -176,10 +178,10 @@ class AssessmentResultsTable extends AppTable
     {
         if (isset($params['assessment_id']) && isset($params['class_id'])) {
 //            $start_time = microtime(true);
-            $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
-            $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-            $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-            $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+            $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems'); // POCOR-8578
+            $EducationSubjects = self::getDynamicTableInstance('Education.EducationSubjects'); // POCOR-8578
+            $ClassSubjects = self::getDynamicTableInstance('Institution.InstitutionClassSubjects'); // POCOR-8578
+            $InstitutionSubjects = self::getDynamicTableInstance('Institution.InstitutionSubjects'); // POCOR-8578
 
             $query = $AssessmentItems->find();
             $selectedColumns = [
@@ -206,7 +208,7 @@ class AssessmentResultsTable extends AppTable
                 ->where([$AssessmentItems->aliasField('assessment_id') => $params['assessment_id']])
                 ->order(['subject_order', 'subject_classification', $EducationSubjects->aliasField('code'), $EducationSubjects->aliasField('name')])
                 ->group(['subject_classification'])
-                ->enableHydration(false)
+                ->disableHydration() // POCOR-8578
                 ->all();
 //            $functionName = __FUNCTION__;
 //            $end_time = microtime(true);
@@ -222,11 +224,11 @@ class AssessmentResultsTable extends AppTable
     {
         if (isset($params['assessment_id'])) {
 //            $start_time = microtime(true);
-            $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
-            $AssessmentGradingTypes = TableRegistry::get('Assessment.AssessmentGradingTypes');
-            $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
-            $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-            $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+            $AssessmentItemsGradingTypes = self::getDynamicTableInstance('Assessment.AssessmentItemsGradingTypes'); // POCOR-8578
+            $AssessmentGradingTypes = self::getDynamicTableInstance('Assessment.AssessmentGradingTypes'); // POCOR-8578
+            $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods'); // POCOR-8578
+            $EducationSubjects = self::getDynamicTableInstance('Education.EducationSubjects'); // POCOR-8578
+            $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems'); // POCOR-8578
 
             $query = $AssessmentItemsGradingTypes->find();
 
@@ -328,7 +330,7 @@ class AssessmentResultsTable extends AppTable
     {
         if (isset($params['assessment_id'])) {
 //            $start_time = microtime(true);
-            $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+            $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods'); // POCOR-8578
             $query = $AssessmentPeriods->find();
             $selectedColumns = [
                 'academic_term_value' => '(
@@ -381,7 +383,7 @@ class AssessmentResultsTable extends AppTable
     {
         if (isset($params['assessment_id'])) {
 //            $start_time = microtime(true);
-            $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+            $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods'); // POCOR-8578
             $query = $AssessmentPeriods->find();
 
             $withoutTerm = $query
@@ -462,7 +464,7 @@ class AssessmentResultsTable extends AppTable
                 $options['grade_id'] = $params['grade_id'];
             }
             $groupAssessmentItemResults = self::getGroupAssessmentItemResults($options, $archive);
-            
+
 //            $functionName = __FUNCTION__;
 //            $end_time = microtime(true);
 //            $executionTimeMs = ($end_time - $start_time) * 1000;
@@ -493,7 +495,8 @@ class AssessmentResultsTable extends AppTable
 //            $start_time = microtime(true);
             $entity = $this->find()
                 ->contain([
-                    'Users' => [
+                    'Users'
+                    => [
                         'fields' => [
                             'id',
                             'username',
@@ -566,9 +569,11 @@ class AssessmentResultsTable extends AppTable
                     $this->aliasField('institution_class_id') => $params['class_id'],
                     $where
                 ])
+                ->enableAutoFields() // POCOR-8578
                 ->order(['Users.first_name', 'Users.last_name'])
-                // ->hydrate(false)
+//                ->disableHydration() // POCOR-8578
                 ->all();
+//            dd($entity);
 //            $functionName = __FUNCTION__;
 //            $end_time = microtime(true);
 //            $executionTimeMs = ($end_time - $start_time) * 1000;
@@ -582,7 +587,7 @@ class AssessmentResultsTable extends AppTable
     {
         if (isset($params['institution_id'])) {
 //            $start_time = microtime(true);
-            $Institutions = TableRegistry::get('Institution.Institutions');
+            $Institutions = self::getDynamicTableInstance('Institution.Institutions'); // POCOR-8578
             $entity = $Institutions->get($params['institution_id'], [
                 'contain' => ['Areas', 'AreaAdministratives']
             ]);
@@ -599,7 +604,7 @@ class AssessmentResultsTable extends AppTable
     {
         if (isset($params['class_id'])) {
 //            $start_time = microtime(true);
-            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            $InstitutionClasses = self::getDynamicTableInstance('Institution.InstitutionClasses'); // POCOR-8578
             $entity = $InstitutionClasses->get($params['class_id']);
 //            $functionName = __FUNCTION__;
 //            $end_time = microtime(true);
@@ -613,12 +618,12 @@ class AssessmentResultsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionStudentAbsences(Event $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['class_id']) && 
-            isset($params['assessment_id']) && 
+        if (isset($params['class_id']) &&
+            isset($params['assessment_id']) &&
             isset($params['institution_id']) &&
             isset($params['institution_id'])) {
 //            $start_time = microtime(true);
-            $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+            $InstitutionStudentAbsences = self::getDynamicTableInstance('Institution.InstitutionStudentAbsences'); // POCOR-8578
             $studentAbsenceResults = $InstitutionStudentAbsences
                 ->find()
                 ->innerJoin(
@@ -665,7 +670,7 @@ class AssessmentResultsTable extends AppTable
     {
         if (isset($params['grade_id'])) {
 //            $start_time = microtime(true);
-            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $EducationGrades = self::getDynamicTableInstance('Education.EducationGrades'); // POCOR-8578
             $entity = $EducationGrades->get($params['grade_id']);
 //            $functionName = __FUNCTION__;
 //            $end_time = microtime(true);
@@ -704,7 +709,7 @@ class AssessmentResultsTable extends AppTable
         $education_grade_id = self::getFromArray($params, 'grade_id');
         $student_id = self::getFromArray($params, 'student_id');
 //        $student_ids = self::getDistinctStudents($institution_class_id);
-        $Results = TableRegistry::get('Assessment.AssessmentItemResults');
+        $Results = self::getDynamicTableInstance('Assessment.AssessmentItemResults'); // POCOR-8578
         $marks = [];
 //        foreach ($student_ids as $student_id) {
         $education_subject_id = -1;
@@ -755,6 +760,10 @@ class AssessmentResultsTable extends AppTable
     private static function getMarksWithSubjectClassificationWeight(array $marks)
     {
 //        $start_time = microtime(true);
+//        dd($marks);
+        $assessment_items = []; // POCOR-8578
+        $education_subjects = []; // POCOR-8578
+        $assessment_periods = []; // POCOR-8578
         $new_marks = [];
         foreach ($marks as $mark) {
             $assessment_id = $mark['assessment_id'];
@@ -762,9 +771,33 @@ class AssessmentResultsTable extends AppTable
             $assessment_period_id = $mark['assessment_period_id'];
             $where = ['education_subject_id' => $education_subject_id,
                 'assessment_id' => $assessment_id];
-            $assessment_item = self::getRecordByOptions('Assessment.AssessmentItems', $where);
-            $education_subject = self::getRelatedRecord('Education.EducationSubjects', $education_subject_id);
-            $assessment_period = self::getRelatedRecord('Assessment.AssessmentPeriods', $assessment_period_id);
+            // POCOR-8578: start
+            if(isset($assessment_items[$education_subject_id])
+                && isset($assessment_items[$education_subject_id][$assessment_id])){
+                $assessment_item = $assessment_items[$education_subject_id][$assessment_id];
+            }
+            if(!isset($assessment_items[$education_subject_id])){
+                $assessment_items[$education_subject_id] = [];
+            }
+            if(!isset($assessment_items[$education_subject_id][$assessment_id])){
+                $assessment_item = self::getRecordByOptions('Assessment.AssessmentItems', $where);
+                $assessment_items[$education_subject_id][$assessment_id] = $assessment_item;
+            }
+            if(isset($education_subjects[$education_subject_id])){
+                $education_subject = $education_subjects[$education_subject_id];
+            }
+            if(!isset($education_subjects[$education_subject_id])){
+                $education_subject = self::getRelatedRecord('Education.EducationSubjects', $education_subject_id);
+                $education_subjects[$education_subject_id] = $education_subject;
+            }
+            if(isset($assessment_periods[$assessment_period_id])){
+                $assessment_period = $assessment_periods[$assessment_period_id];
+            }
+            if(!isset($assessment_periods[$assessment_period_id])){
+                $assessment_period = self::getRelatedRecord('Assessment.AssessmentPeriods', $assessment_period_id);
+                $assessment_periods[$assessment_period_id] = $assessment_period;
+            }
+            // POCOR-8578: end
             $weight = floatval($assessment_period['weight']);
             $simple_mark = floatval($mark['marks']);
             $weighted_mark = $simple_mark * $weight;
@@ -883,7 +916,7 @@ class AssessmentResultsTable extends AppTable
     {
 //        $start_time = microtime(true);
         $assessment_ids = array_unique(array_column($marks, 'assessment_id'));
-        $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+        $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods'); // POCOR-8578
         $query = $AssessmentPeriods->find();
         $selectedColumns = [
             'academic_term_value' => '(
@@ -1018,6 +1051,7 @@ class AssessmentResultsTable extends AppTable
 //        Log::write('debug', "{$functionName}\n
 //            Function execution time: {$executionTimeMs} ms");
         return $studentsSubjectResults;
+
     }
 
     /**
@@ -1031,7 +1065,7 @@ class AssessmentResultsTable extends AppTable
         if (!$relatedField) {
             return null;
         }
-        $Table = TableRegistry::get($tableName);
+        $Table = self::getDynamicTableInstance($tableName); // POCOR-8578
         try {
             $related = $Table->get($relatedField);
             return $related->toArray();
@@ -1055,7 +1089,10 @@ class AssessmentResultsTable extends AppTable
         $Table = TableRegistry::get($tableName);
         try {
             $related = $Table->find()->where($where)->first();
-            return $related->toArray();
+            //POCOR-8483[START]
+            // return $related->toArray();
+            return $related;
+            //POCOR-8483[END]
         } catch (RecordNotFoundException $e) {
             return null;
         }
@@ -1084,7 +1121,7 @@ class AssessmentResultsTable extends AppTable
     private function initialiseAssessments(array $params)
     {
         if (isset($params['assessment_id'])) {
-            $Assessments = TableRegistry::get('Assessment.Assessments');
+            $Assessments = self::getDynamicTableInstance('Assessment.Assessments'); // POCOR-8578
             $assessment_id = $params['assessment_id'];
             $entity = $Assessments->get($assessment_id, [
                 'contain' => ['AcademicPeriods', 'EducationGrades']
@@ -1102,7 +1139,7 @@ class AssessmentResultsTable extends AppTable
     private function initialiseAssessmentItems(array $params)
     {
         if (isset($params['assessment_id'])) {
-            $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+            $AssessmentItems = self::getDynamicTableInstance('Assessment.AssessmentItems'); // POCOR-8578
             $assessment_id = $params['assessment_id'];
             $results = $AssessmentItems->find()
                 ->contain(['EducationSubjects'])
@@ -1122,7 +1159,7 @@ class AssessmentResultsTable extends AppTable
     {
         if (isset($params['assessment_id'])) {
 //            $start_time = microtime(true);
-            $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
+            $AssessmentItemsGradingTypes = self::getDynamicTableInstance('Assessment.AssessmentItemsGradingTypes'); // POCOR-8578
             $assessment_id = $params['assessment_id'];
             $results = $AssessmentItemsGradingTypes->find()
                 ->contain(['AssessmentGradingTypes', 'AssessmentPeriods', 'EducationSubjects'])
@@ -1171,7 +1208,7 @@ class AssessmentResultsTable extends AppTable
     private function initialiseAssessmentPeriods(array $params)
     {
         if (isset($params['assessment_id'])) {
-            $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+            $AssessmentPeriods = self::getDynamicTableInstance('Assessment.AssessmentPeriods'); // POCOR-8578
             $assessment_id = $params['assessment_id'];
             $results = $AssessmentPeriods->find()
                 ->where([$AssessmentPeriods->aliasField('assessment_id') => $assessment_id])
@@ -1180,5 +1217,52 @@ class AssessmentResultsTable extends AppTable
             return $results->toArray();
         }
     }
+    /**
+     * POCOR-8391 added
+     * Get a dynamic table instance with all associations.
+     *
+     * @param string $tableName
+     * @return \Cake\ORM\Table
+     */
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
 
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
 }

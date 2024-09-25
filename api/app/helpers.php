@@ -106,31 +106,31 @@ if(!function_exists('checkAccess')){
 					$secFuncView = $func['security_function_view'];
 					if($secFuncView != ""){
 
-						$accessArray = getRoleAccess($controller, $secFuncView, $func['_view'], $func['security_role_id'], $accessArray);
+						$accessArray = getRoleAccess($controller, $secFuncView, $func['security_role_id'], $accessArray, $func['_view']);
 
 					}
 
 					$secFuncAdd = $func['security_function_add'];
 					if($secFuncAdd != ""){
-						$accessArray = getRoleAccess($controller, $secFuncAdd, $func['_add'], $func['security_role_id'], $accessArray);
+						$accessArray = getRoleAccess($controller, $secFuncAdd, $func['security_role_id'], $accessArray, $func['_add']);
 					}
 
 
 					$secFuncEdit = $func['security_function_edit'];
 					if($secFuncEdit != ""){
-						$accessArray = getRoleAccess($controller, $secFuncEdit, $func['_edit'], $func['security_role_id'], $accessArray);
+						$accessArray = getRoleAccess($controller, $secFuncEdit, $func['security_role_id'], $accessArray, $func['_edit']);
 					}
 
 
 					$secFuncDelete = $func['security_function_delete'];
 					if($secFuncDelete != ""){
-						$accessArray = getRoleAccess($controller, $secFuncDelete, $func['_delete'], $func['security_role_id'], $accessArray);
+						$accessArray = getRoleAccess($controller, $secFuncDelete, $func['security_role_id'], $accessArray, $func['_delete']);
 					}
 
 
 					$secFuncExecute = $func['security_function_execute'];
 					if($secFuncExecute != ""){
-						$accessArray = getRoleAccess($controller, $secFuncExecute, $func['_execute'], $func['security_role_id'], $accessArray);
+						$accessArray = getRoleAccess($controller, $secFuncExecute, $func['security_role_id'], $accessArray, $func['_execute']);
 					}
 					
 				}
@@ -178,7 +178,7 @@ if(!function_exists('checkAccess')){
 
 	
 	if(!function_exists('getRoleAccess')){
-		function getRoleAccess($controller, $accessType, $action = 0, $roleId, $accessArray)
+		function getRoleAccess($controller, $accessType, $roleId, $accessArray, $action = 0)
 		{
 			$accessArr = explode("|", $accessType);
 						

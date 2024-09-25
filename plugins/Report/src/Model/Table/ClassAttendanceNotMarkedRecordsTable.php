@@ -220,17 +220,17 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                 });
             })
         ;
-         
+
     }
 
 
-    
+
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
     {
         $sheetData = $settings['sheet']['sheetData'];
         $newFields = $this->getClassFields();
-        
+
         $year = $sheetData['year'];
         $month = $sheetData['month'];
         $startDay = $sheetData['startDay'];
@@ -274,7 +274,7 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
 
     public function findByGrades(Query $query, array $options)
     {
-        $sortable = array_key_exists('sort', $options) ? $options['sort'] : false;
+        $sortable = isset($options['sort']) ? $options['sort'] : false;
 
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $EducationStages = TableRegistry::get('Education.EducationStages');
@@ -373,8 +373,8 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         //     'field' => 'total_unmark',
         //     'type' => 'string',
         //     'label' => 'Unmarked'
-        // ]; 
-                     
+        // ];
+
         //End of POCOR-7039
         $newFields[] = [
             'key' => 'InstitutionClasses.staff_id',
@@ -401,7 +401,7 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
                 'institution_field_alias' => $this->aliasField($this->association('Institutions')->foreignKey())
             ]);
         }
-            
+
         $institutionListData = $query
                     ->select(['institution_id'])
                     ->distinct(['institution_id']);

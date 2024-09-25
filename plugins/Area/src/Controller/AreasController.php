@@ -25,7 +25,7 @@ class AreasController extends AppController
     public function Areas() 				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Area.Areas']); }
     public function Administratives() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Area.AreaAdministratives']); }
 
-	public function beforeFilter(Event $event) {
+	public function beforeFilter(Event|\Cake\Event\EventInterface $event) {
 		parent::beforeFilter($event);
 		$tabElements = [
 			'Levels' => [
@@ -56,8 +56,27 @@ class AreasController extends AppController
 		$header = __('Area');
 
 		$header .= ' - ' . $model->getHeader($model->alias);
+		// POCOR-8507 Start
+		$tabElements = [
+			'Levels' => [
+				'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'Levels'],
+				'text' => __('Area Levels (Education)')
+			],
+			'Areas' => [
+				'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'Areas'],
+				'text' => __('Areas (Education)')
+			],
+			'AdministrativeLevels' => [
+				'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'AdministrativeLevels'],
+				'text' => __('Area Levels (Administrative)')
+			],
+			'Administratives' => [
+				'url' => ['plugin' => 'Area', 'controller' => 'Areas', 'action' => 'Administratives'],
+				'text' => __('Areas (Administrative)')
+			]
+		]; // POCOR-8507 End
 		$this->Navigation->addCrumb('Administrative Boundaries', ['plugin' => 'Area', 'controller' => 'Areas', 'action' => $model->alias]);
-		$this->Navigation->addCrumb($this->viewVars['tabElements'][$model->alias]['text']);
+		$this->Navigation->addCrumb($tabElements[$model->alias]['text']);
 
 		$this->set('contentHeader', $header);
 	}

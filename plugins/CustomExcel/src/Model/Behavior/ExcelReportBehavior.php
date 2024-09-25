@@ -94,7 +94,8 @@ class ExcelReportBehavior extends Behavior
         $this->renderExcelTemplate($extra, $event);
     }
 
-    public function renderExcelTemplate(ArrayObject $extra, Event $event)
+    //POCOR-8568[Here added  Event $event]
+    public function renderExcelTemplate(ArrayObject $extra, Event $event = null) //POCOR-8588
     {
         $model = $this->_table;
         $format = $this->getConfig('format');
@@ -182,7 +183,8 @@ class ExcelReportBehavior extends Behavior
         gc_collect_cycles();
     }
 
-    public function loadExcelTemplate(ArrayObject $extra, Event $event)
+    //POCOR-8568[Here added  Event $event]
+    public function loadExcelTemplate(ArrayObject $extra, Event $event = null) //POCOR-8588
     {
         $model = $this->_table;
         if (isset($extra['requestQuery']) && isset($extra['requestQuery'][$this->getConfig('templateTableKey')])) {
@@ -724,6 +726,9 @@ class ExcelReportBehavior extends Behavior
                 $value = $this->getAdvancedTypeKeyword($keyword);
                 $pos = strpos($cellValue, $value);
                 if ($pos !== false) {
+                    if($function == 'table') {
+                        $funstion = 'tableData';
+                    }
                     if (method_exists($this, $function)) {
                         $jsonArray = $this->convertPlaceHolderToArray($cellValue);
                         if (!empty($jsonArray)) {
@@ -1051,7 +1056,7 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    public function table($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra): Table
+    public function tableData($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra): Table
     {
         $rowValue = $attr['rowValue'];
         $columnIndex = $attr['columnIndex'];

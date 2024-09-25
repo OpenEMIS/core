@@ -8,6 +8,7 @@ use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\ORM\TableRegistry;
+use Cake\Event\EventInterface;//POCOR-8470
 
 class FieldOptionsController extends AppController
 {
@@ -17,7 +18,7 @@ class FieldOptionsController extends AppController
         $this->loadComponent('FieldOption.FieldOption');
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         if ($this->getPlugin() == 'FieldOption') {
             $this->Security->setConfig('validatePost', false);
@@ -795,7 +796,7 @@ class FieldOptionsController extends AppController
     }
     //POCOR-7363 end
 
-    public function beforeRender(Event $event)
+    public function beforeRender(Event|\Cake\Event\EventInterface $event)
     {
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
@@ -808,6 +809,6 @@ class FieldOptionsController extends AppController
     public function CasePriorities()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => $this->FieldOption->getClassName(__FUNCTION__)]);
-    } 
+    }
     //POCOR-7613 end
 }

@@ -100,7 +100,7 @@ class ReportProgressTable extends AppTable  {
 			}
 			
 			$shellCmd = $cmd . ' >> ' . $logs;
-			// print_r($shellCmd); die('pk');
+			// print_r($shellCmd);die();
 			try {
 				$entity = $this->get($id);
 				$pid = exec($shellCmd);

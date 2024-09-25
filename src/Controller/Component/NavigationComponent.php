@@ -87,7 +87,6 @@ class NavigationComponent extends Component
                 $navigations = $this->buildNavigation();
                 $this->checkSelectedLink($navigations);
                 $this->checkPermissions($navigations);
-//                die('<pre>' . print_r($navigations, true) );
                 $controller->set('_navigations', $navigations);
             } catch (SecurityException $ex) {
                 return $ex;
@@ -154,7 +153,8 @@ class NavigationComponent extends Component
                 'StudentBehaviourAttachments',
                 'StaffBehaviourAttachments',
                 'Guardians',
-                'GuardianComments'
+                'GuardianComments',
+                'InstitutionStandards'
             ];
 
             $profileControllers = ['ProfileBodyMasses',
@@ -786,7 +786,7 @@ class NavigationComponent extends Component
             ],
 
             'Institutions.InstitutionCurriculars.index' => [ //POCOR-6673
-                'title' => 'Curriculars',
+                'title' => 'Institution Curriculars',
                 'parent' => 'Institution.Academic',
                 'selected' => ['Institutions.InstitutionCurriculars', 'Institutions.InstitutionCurricularStudents'],
                 'action' => 'index',
@@ -1273,7 +1273,7 @@ class NavigationComponent extends Component
             'Institutions.InstitutionStandards.index' => [
                 'title' => 'Standard',
                 'parent' => 'Institutions.Statistics',
-                'selected' => ['InstitutionStandards']
+                'selected' => ['Institutions.InstitutionStandards','Institutions.ViewReport']
             ],
             'Institutions.InstitutionStatistics.index' => [
                 'title' => 'Custom',
@@ -1290,6 +1290,9 @@ class NavigationComponent extends Component
         ];
 
         $institutionID = $this->controller->getQueryString('institution_id');
+        if(empty($institutionID) && $this->getController()->getRequest()->getParam('action') == 'ViewReport') {
+            $institutionID = $this->getController()->getRequest()->getQuery('institution_id');
+        } //POCOR-8485
         $encodedInstitutionID = $this->controller->paramsEncode([
             'id' => $institutionID,
             'institution_id' => $institutionID,]);
@@ -1311,21 +1314,21 @@ class NavigationComponent extends Component
         $studentID = $this->getStudentID($debugString);
         $institutionID = $this->getInstitutionIDForStudent($debugString);
         $institutionStudentId = $this->controller->getQueryString('institution_student_id');
+        //POCOR-8551
         if (empty($institutionStudentId)) {
             $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
-            $institutionStudentId = $InstitutionStudentsTable->find()
+            $query = $InstitutionStudentsTable->find()
+                ->select(['id']) // Specify the field you want to extract
                 ->where([
                     $InstitutionStudentsTable->aliasField('student_id') => $studentID,
                     $InstitutionStudentsTable->aliasField('institution_id') => $institutionID,
                 ])
-                ->order([$InstitutionStudentsTable->aliasField('created') => 'DESC'])
-                ->extract('id')
-                ->first();
-            if (empty($institutionStudentId)) {
-                $institutionStudentId = null;
-            }
-
+                ->order([$InstitutionStudentsTable->aliasField('created') => 'DESC']);
+            
+            $results = $query->all()->extract('id')->toArray();
+            $institutionStudentId = !empty($results) ? $results[0] : null;
         }
+        
 
         $queryString = $this->controller->paramsEncode([
             'id' => $studentID,
@@ -1381,6 +1384,7 @@ class NavigationComponent extends Component
                 'selected' => ['Students.Classes.index',
                     'Students.Subjects',
                     'Students.Absences.index',
+                    'Students.Absences.view',
                     'Students.ArchivedAbsences',
                     'Students.Behaviours.index',
                     //POCOR-7474-HINDOL TYPO FIX
@@ -4253,13 +4257,14 @@ class NavigationComponent extends Component
         }
     }
 
-    public function checkPermissions(array &$navigations)
+    public function checkPermissionsOne(array &$navigations)
     {
         // $session = $this->request->session();
         // $superAdmin = $session->read('Auth.User.super_admin');
         // if ($superAdmin) {
         //     return;
         // }
+
         $user_id = $this->getCurrentUserId();
         $superAdmin = self::isSuperUser($user_id);
         if ($superAdmin) {
@@ -4269,6 +4274,7 @@ class NavigationComponent extends Component
         $roles = [];
         $restrictedTo = [];
         $event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', null, $this);
+
         if ($event->getResult()) {
             $roles = $event->getResult('roles');
             $restrictedTo = $event->getResult('restrictedTo');
@@ -4291,14 +4297,107 @@ class NavigationComponent extends Component
 
                 // Check if the role is only restricted to a certain page
                 foreach ($restrictedTo as $restrictedURL) {
+                    if(!$restrictedURL){
+                        $restrictedURL = [];
+                    }
                     if (count(array_intersect($restrictedURL, $url)) > 0) {
                         break;
                     } else {
                         $rolesRestrictedTo = [];
                     }
                 }
-                // $ignoredAction will be excluded from permission checking
-                if (array_key_exists('controller', $url) && !in_array($url['plugin'])) {
+                // POCOR-8436 removed strange option
+                if (isset($url['controller'])) {
+                    if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
+                        unset($navigations[$key]);
+                    }
+                }
+            }
+        }
+
+        // unset empty links in reverse order
+        $linkOnly = array_reverse($linkOnly);
+        foreach ($linkOnly as $link) {
+            if (!array_search($link, $this->array_column($navigations, 'parent'))) {
+                unset($navigations[$link]);
+            }
+        }
+    }
+
+    public function checkPermissions(array &$navigations)
+    {
+        $user_id = $this->getCurrentUserId();
+        $superAdmin = self::isSuperUser($user_id);
+        if ($superAdmin) {
+            return;
+        }
+
+        $roles = [];
+        $restrictedTo = [];
+        $event = $this->controller->dispatchEvent('Controller.Navigation.onUpdateRoles', null, $this);
+//        dd($event->getResult());
+        // POCOR-8527 start fix roles for navs
+        if ($event->getResult()) {
+            $result = $event->getResult();
+            $roles = $result['roles'];
+            $restrictedTo = $result['restrictedTo'];
+            $isRestricted = false;
+        } else{
+            $rolesByUser = $this->AccessControl->getRolesByUser()->toArray();
+            foreach ($rolesByUser as $key => $role) {
+                $roles[$role->security_role_id] = $role->security_role_id;
+            }
+            $isRestricted = true;
+        }
+        // POCOR-8527 end
+        // Unset the children
+        $linkOnly = [];
+        foreach ($navigations as $key => $value) {
+            $rolesRestrictedTo = $roles;
+
+            if (isset($value['link']) && !$value['link']) {
+                $linkOnly[] = $key;
+            } else {
+                $params = [];
+                if (isset($value['params'])) {
+                    $params = $value['params'];
+                }
+                $url = $this->getLink($key, $params);
+
+                // Ensure $url is an array and has necessary keys
+                if (!is_array($url) || !isset($url['controller'], $url['action'], $url['plugin'])) {
+                    // Log or handle the case where $url is not as expected
+                    // Example: Log error and continue or skip this navigation item
+                    unset($navigations[$key]);
+                    continue;
+                }
+
+                // Check if $restrictedTo is an array
+                if (!is_array($restrictedTo)) {
+                    // Log or handle the case where $restrictedTo is not an array
+                    // Example: Log error and continue or skip this navigation item
+                    unset($navigations[$key]);
+                    continue;
+                }
+
+                // Check if the role is only restricted to a certain page
+//                $isRestricted = false; // POCOR-8527
+                foreach ($restrictedTo as $restrictedURLs) {
+                    if (!is_array($restrictedURLs)) {
+                        // Log or handle the case where $restrictedURLs is not an array
+                        // Example: Log error and continue or skip this navigation item
+                        continue;
+                    }
+
+                    $intersection = array_intersect($restrictedURLs, $url);
+                    if (count($intersection) > 0) {
+                        $isRestricted = true;
+                        break;
+                    }
+                }
+
+                // If roles are restricted, check permissions
+                if ($isRestricted) {
                     if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
                         unset($navigations[$key]);
                     }
@@ -4352,7 +4451,7 @@ class NavigationComponent extends Component
                 }
 
                 // $ignoredAction will be excluded from permission checking
-                if (array_key_exists('controller', $url) && !in_array($url['plugin'])) {
+                if (isset($url['controller']) && !in_array($url['plugin'])) {
                     //   print_r($url);die();
                     if (!$this->AccessControl->check($url, $rolesRestrictedTo)) {
                         unset($navigations[$key]);

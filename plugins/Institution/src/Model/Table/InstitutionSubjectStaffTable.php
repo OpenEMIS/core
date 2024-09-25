@@ -241,17 +241,17 @@ class InstitutionSubjectStaffTable extends AppTable
         $academicPeriodId = $options['academic_period_id'];
         $institutionId = $options['institution_id']; // current institution POCOR-4981
         $userId = $options['user']['id']; // current user
-        
+
         if ($options['user']['super_admin'] == 0) { // if he is not super admin
             $allSubjectPermission = $this->getRoleEditPermissionAccessForAllSubjects($userId, $institutionId); //POCOR-4983
             $query
                 ->find('bySecurityAccess')
                 ->matching('InstitutionSubjects', function ($q) use (
-                    $subjectId, 
-                    $academicPeriodId, 
-                    $institutionId, 
+                    $subjectId,
+                    $academicPeriodId,
+                    $institutionId,
                     $allSubjectPermission) {
-                    
+
                     if($allSubjectPermission) {
                         return $q->where([
                             'InstitutionSubjects.academic_period_id' => $academicPeriodId,
@@ -264,7 +264,7 @@ class InstitutionSubjectStaffTable extends AppTable
                             'InstitutionSubjects.institution_id' => $institutionId // POCOR-4981
                         ]);
                     }
-                    
+
                 })
                 ->where([
                     $this->aliasField('staff_id') => $userId
@@ -274,10 +274,10 @@ class InstitutionSubjectStaffTable extends AppTable
             $query
                 ->find('bySecurityRoleAccess');
         }
-        
+
         // POCOR-4981
-        if( isset($institutionId) 
-            && $institutionId > 0 
+        if( isset($institutionId)
+            && $institutionId > 0
             && $options['user']['super_admin'] == 1) // if he is super admin
         {
             $query->where([$this->aliasField('institution_id') => $institutionId]);
@@ -372,7 +372,7 @@ class InstitutionSubjectStaffTable extends AppTable
         // This logic is dependent on SecurityAccessBehavior because it relies on SecurityAccess join table
         // This logic will only be triggered when the table is accessed by RestfulController
 
-        if (array_key_exists('user', $options) && is_array($options['user'])) { // the user object is set by RestfulComponent
+        if (isset($options['user']) && is_array($options['user'])) { // the user object is set by RestfulComponent
             $user = $options['user'];
             if ($user['super_admin'] == 0) { // if he is not super admin
                 $userId = $user['id'];
@@ -381,7 +381,7 @@ class InstitutionSubjectStaffTable extends AppTable
                 $query->innerJoin(['SecurityRoleFunctions' => 'security_role_functions'], [
                     'SecurityRoleFunctions.security_role_id = SecurityAccess.security_role_id',
                     'SecurityRoleFunctions.`_view` = 1' // check if the role have view access
-                ])                
+                ])
                 ->innerJoin(['SecurityFunctions' => 'security_functions'], [
                     'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
                     "SecurityFunctions.controller = 'Institutions'" // only restricted to permissions of Institutions
@@ -442,7 +442,7 @@ class InstitutionSubjectStaffTable extends AppTable
             }
         }
     }
-    
+
     /*
      * Function Name: getRoleEditPermissionAccessForAllSubjects
      * Parameters : userId, institutionId
@@ -450,13 +450,13 @@ class InstitutionSubjectStaffTable extends AppTable
      * Purpose: Any role have permission to edit all subjects marks of the assessment
      * Date: 26 June 2019
     */
-    
+
     public function getRoleEditPermissionAccessForAllSubjects($userId, $institutionId)
     {
-        $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId); 
+        $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
         $userAccessRoles = implode(', ', $roles);
-        
-        $QueryResult = TableRegistry::getTableLocator()->get('SecurityRoleFunctions')->find()              
+
+        $QueryResult = TableRegistry::getTableLocator()->get('SecurityRoleFunctions')->find()
                 ->innerJoin(['SecurityFunctions' => 'security_functions'], [
                     [
                         'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
@@ -465,7 +465,7 @@ class InstitutionSubjectStaffTable extends AppTable
                 ->where([
                     'SecurityFunctions.controller' => 'Institutions',
                     'SecurityRoleFunctions.security_role_id IN'=>$userAccessRoles,
-                    'AND' => [ 'OR' => [ 
+                    'AND' => [ 'OR' => [
                                         "SecurityFunctions.`_view` LIKE '%AllSubjects.index%'",
                                         "SecurityFunctions.`_view` LIKE '%AllSubjects.view%'"
                                     ]
@@ -474,11 +474,11 @@ class InstitutionSubjectStaffTable extends AppTable
                     'SecurityRoleFunctions._edit' => 1
                 ])
                 ->toArray();
-       
+
         if(!empty($QueryResult)){
             return true;
         }
-          
+
         return false;
     }
 
@@ -486,7 +486,7 @@ class InstitutionSubjectStaffTable extends AppTable
     * API to fetch staff's subject records
     * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
     * @return json
-    * @ticket - POCOR-6807 
+    * @ticket - POCOR-6807
     */
     public function findStaffInstitutionSubjects(Query $query, array $options)
     {
@@ -520,7 +520,7 @@ class InstitutionSubjectStaffTable extends AppTable
                         'Users',
                         'Institutions',
                         'InstitutionSubjects',
-                        'InstitutionSubjects.EducationSubjects', 
+                        'InstitutionSubjects.EducationSubjects',
                         'InstitutionSubjects.EducationGrades',
                         'InstitutionSubjects.EducationGrades.EducationProgrammes',
                         'InstitutionSubjects.EducationGrades.EducationProgrammes.EducationCycles',
@@ -589,14 +589,14 @@ class InstitutionSubjectStaffTable extends AppTable
     * This function will validate whether the mandatory fields has exist or not
     * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
     * @return json
-    * @ticket - POCOR-6807 
+    * @ticket - POCOR-6807
     */
     public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
     {
         $url = $_SERVER['REQUEST_URI'];
         $url_components = parse_url($url);
         parse_str($url_components['query'], $params);
-        $action = array_key_exists('_finder', $params);
+        $action = isset($params['_finder']);
         if ($primary && $action) {
             $param = preg_match_all('/\\[(.*?)\\]/', $params['_finder'], $matches);
             $paramsString = $matches[1];
@@ -607,8 +607,8 @@ class InstitutionSubjectStaffTable extends AppTable
                 $dataArr = array("data" => $response);
                 echo json_encode($dataArr);exit;
             }
-        }    
+        }
     }
-    /**POCOR-6807 ends*/ 
-    
+    /**POCOR-6807 ends*/
+
 }

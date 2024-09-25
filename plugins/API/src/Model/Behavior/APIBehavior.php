@@ -4,7 +4,8 @@ namespace API\Model\Behavior;
 use Cake\ORM\Behavior;
 
 class APIBehavior extends Behavior {
-	public function initialize(array $config) {
+	public function initialize(array $config): void // POCOR-8578
+    {
 		parent::initialize($config);
 	}
 
@@ -13,15 +14,16 @@ class APIBehavior extends Behavior {
 * other methods
 *
 ****************************************************************************************/
-    public function getErrorMessage($code, $params = []) {
+    public function getErrorMessage($code, $params = []): array|string // POCOR-8578
+    {
         if (array_key_exists($code, $this->_errorCodes)) {
-            if (!empty($params) && array_key_exists('identity_type', $params)) {
+            if (!empty($params) && isset($params['identity_type'])) {
                 if (empty($params['identity_type'])) {
                     $description = __(str_replace('{id_field}' , 'OpenEMIS' , $this->_errorCodes[$code]['description']));
                 } else {
                     $description = __(str_replace('{id_field}' , trim($params['identity_type'][key($params['identity_type'])]['name']) , $this->_errorCodes[$code]['description']));
                 }
-            } else if (!empty($params) && array_key_exists('organisation_administrator', $params)) {
+            } else if (!empty($params) && isset($params['organisation_administrator'])) {
                 if (empty($params['organisation_administrator'])) {
                     $description = __(str_replace('{organisation_administrator}' , 'Organisation Administrator' , $this->_errorCodes[$code]['description']));
                 } else {

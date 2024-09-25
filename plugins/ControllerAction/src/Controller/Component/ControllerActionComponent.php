@@ -120,10 +120,10 @@ class ControllerActionComponent extends Component
     // Is called before the controller's beforeFilter method.
     public function initialize(array $config): void
     {
-        if (array_key_exists('templates', $config)) {
+        if (isset($config['templates'])) {
             $this->templatePath = $config['templates'];
         }
-        if (array_key_exists('ignoreFields', $config)) {
+        if (isset($config['ignoreFields'])) {
             $this->ignoreFields = array_merge($this->ignoreFields, $config['ignoreFields']);
         }
         $controller = $this->_registry->getController();
@@ -237,7 +237,7 @@ class ControllerActionComponent extends Component
         if ($this->getController()->getRequest()->is('post')) {
             $requestCookie = $this->getController()->getRequest()->getCookie('csrfToken');
             $token = isset($requestCookie) ? $requestCookie : '';
-            $this->getController()->getRequest()->env('HTTP_X_CSRF_TOKEN', $token);
+            $this->getController()->getRequest()->getEnv('HTTP_X_CSRF_TOKEN', $token);
         }
         $controller->Security->setConfig('unlockedActions', [
             $action
@@ -250,12 +250,12 @@ class ControllerActionComponent extends Component
             if ($key == $this->orderField) {
                 $this->model->fields[$this->orderField]['visible'] = ['view' => false];
             }
-            if (array_key_exists('options', $attr)) {
+            if (isset($attr['options'])) {
                 if (in_array($attr['type'], ['string', 'integer'])) {
                     $this->model->fields[$key]['type'] = 'select';
                 }
                 if (empty($attr['options']) && empty($attr['attr']['empty'])) {
-                    if (!array_key_exists('empty', $attr)) {
+                    if (!isset($attr['empty'])) {
                         $this->model->fields[$key]['attr']['empty'] = $this->Alert->getMessage('general.select.noOptions');
                     }
                 }
@@ -265,7 +265,7 @@ class ControllerActionComponent extends Component
                 if ($attr['type'] == 'chosenSelect') {
                     $addSelect = false;
                 }
-                if (array_key_exists('select', $attr)) {
+                if (isset($attr['select'])) {
                     if ($attr['select'] === false) {
                         $addSelect = false;
                     } else {
@@ -283,15 +283,15 @@ class ControllerActionComponent extends Component
             }
 
             // make field sortable by default if it is a string data-type
-            if (!array_key_exists('type', $attr)) {
+            if (!isset($attr['type'])) {
                 $this->log($key, 'debug');
                 continue;
             }
 
             $sortableTypes = ['string', 'date', 'time', 'datetime'];
-            if (in_array($attr['type'], $sortableTypes) && !array_key_exists('sort', $attr) && $this->model->hasField($key)) {
+            if (in_array($attr['type'], $sortableTypes) && !isset($attr['sort']) && $this->model->hasField($key)) {
                 $this->model->fields[$key]['sort'] = true;
-            } elseif ($attr['type'] == 'select' && !array_key_exists('options', $attr)) {
+            } elseif ($attr['type'] == 'select' && !isset($attr['options'])) {
                 if ($this->isForeignKey($key)) {
                     // $associatedObjectName = Inflector::pluralize(str_replace('_id', '', $key));
                     // $associatedObject = $this->model->{Inflector::camelize($associatedObjectName)};
@@ -337,7 +337,7 @@ class ControllerActionComponent extends Component
                 }
             }
 
-            if (array_key_exists('onChangeReload', $attr)) {
+            if (isset($attr['onChangeReload'])) {
                 if (!array_key_exists('attr', $this->model->fields[$key])) {
                     $this->model->fields[$key]['attr'] = [];
                 }
@@ -354,7 +354,7 @@ class ControllerActionComponent extends Component
 
     public function model($model=null, $actions=[], $options=[])
     {
-        if (array_key_exists('deleteStrategy', $options)) {
+        if (isset($options['deleteStrategy'])) {
             $this->deleteStrategy = $options['deleteStrategy'];
         }
 
@@ -472,7 +472,7 @@ class ControllerActionComponent extends Component
     {
         $controller = $this->controller;
         $url = ['plugin' => $controller->getPlugin(), 'controller' => $controller->getName()];
-        
+
         if ($this->triggerFrom == 'Model') {
             $url['action'] = $this->model->alias;
             $url[0] = $action;
@@ -510,9 +510,9 @@ class ControllerActionComponent extends Component
                         }
                     }
                 } else { // field not presence in validator
-                    if (array_key_exists('null', $attr)) {
+                    if (isset($attr['null'])) {
                         if ($attr['null'] === false // not nullable
-                            && (array_key_exists('default', $attr) && strlen($attr['default']) == 0) // don't have a default value in database
+                            && (isset($attr['default']) && strlen($attr['default']) == 0) // don't have a default value in database
                             && $key !== 'id' // not a primary key
                             && !in_array($key, $this->ignoreFields) // fields not excluded
                         ) {
@@ -650,7 +650,7 @@ class ControllerActionComponent extends Component
             $reorderUrl = array_merge($reorderUrl, $named, $pass);
             $buttons['reorder'] = array('url' => $reorderUrl);
         } else {
-            if (array_key_exists('reorder', $buttons instanceof \ArrayObject ? $buttons->getArrayCopy() : $buttons)) {
+            if ($buttons->offsetExists('reorder')) {
                 unset($buttons['reorder']);
             }
         }
@@ -900,11 +900,11 @@ class ControllerActionComponent extends Component
         if ($request->is(['post', 'put'])) {
             $searchData = $request->getData('Search');
             if (isset($searchData)) {
-                if (array_key_exists('searchField', $searchData)) {
+                if (isset($searchData['searchField'])) {
                     $search = trim($searchData['searchField']);
                 }
 
-                if (array_key_exists('limit', $searchData)) {
+                if (isset($searchData['limit'])) {
                     $limit = $searchData['limit'];
                     $this->Session->write($alias.'.search.limit', $limit);
                 }
@@ -1041,7 +1041,7 @@ class ControllerActionComponent extends Component
         } catch (NotFoundException $e) {
             $this->log($e->getMessage(), 'debug');
             $action = $this->url('index');
-            if (array_key_exists('page', $action)) {
+            if (isset($action['page'])) {
                 unset($action['page']);
             }
             return $this->controller->redirect($action);
@@ -2040,10 +2040,10 @@ class ControllerActionComponent extends Component
         $model->fieldOrder = $model->fieldOrder + 1;
 
         $order = false;
-        if (array_key_exists('after', $attr)) {
+        if (isset($attr['after'])) {
             $after = $attr['after'];
             $order = $this->getOrderValue($model, $after, 'after');
-        } elseif (array_key_exists('before', $attr)) {
+        } elseif (isset($attr['before'])) {
             $before = $attr['before'];
             $order = $this->getOrderValue($model, $before, 'before');
         }
@@ -2112,7 +2112,7 @@ class ControllerActionComponent extends Component
         }
 
         if (is_array($model->getPrimaryKey())) {
-            if (array_key_exists('id', $fields)) {
+            if (isset($fields['id'])) {
                 $fields['id']['type'] = 'hidden';
             }
             foreach ($model->getPrimaryKey() as $value) {

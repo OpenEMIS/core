@@ -67,7 +67,7 @@ class StudentsController extends AppController
             'Accounts' => ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
             'Nationalities' => ['className' => 'User.Nationalities'],
             // 'Absences'          => ['className' => 'Student.Absences', 'actions' => ['index', 'view','remove']],
-            'Behaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
+           // 'Behaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
             'Extracurriculars' => ['className' => 'Student.Extracurriculars', 'actions' => ['index', 'add', 'edit', 'remove', 'view']],//POCOR-6700
 //            'History' => ['className' => 'User.UserActivities', 'actions' => ['index']], //POCOR-7485 cakephp4 use as a function
             'ImportStudents' => ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
@@ -535,7 +535,7 @@ class StudentsController extends AppController
         }
     }
 
-    public function beforeFilter(Event $event)
+    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         parent::beforeFilter($event);
         $isInstitutionIDSkipped = $this->isStudentIDSkipped();
@@ -635,7 +635,7 @@ class StudentsController extends AppController
     //  $plugin = $this->plugin;
     //  $name = $this->name;
 
-    //  $id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($name.'.id');
+    //  $id = (isset($options['id']))? $options['id']: $this->request->session()->read($name.'.id');
 
     //  $tabElements = [
     //      $this->name => [
@@ -654,7 +654,7 @@ class StudentsController extends AppController
     //Related getGuardianTabElements function in GuardiansController
 //    public function getGuardianTabElements($options = [])
 //    {
-//        if (array_key_exists('userRole', $options) && $options['userRole'] == 'Guardians' && array_key_exists('entity', $options)) {
+//        if (isset($options['userRole']) && $options['userRole'] == 'Guardians' && isset($options['entity'])) {
 //            $session = $this->request->getSession();
 //            $session->write('Guardian.Guardians.name', $options['entity']->user->name);
 //            $session->write('Guardian.Guardians.id', $options['entity']->user->id);
@@ -949,7 +949,7 @@ class StudentsController extends AppController
     public
     function getStudentGuardianTabElements($options = [])
     {
-        $type = (array_key_exists('type', $options)) ? $options['type'] : null;
+        $type = (isset($options['type'])) ? $options['type'] : null;
         $plugin = $this->getPlugin();
         $name = $this->getName();
         $tabElements = [
@@ -1103,10 +1103,12 @@ class StudentsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']);
     }
 
-    // public
-    // function StudentBehaviours()
-    // {
-    //     $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentBehaviours']);
-    // }
+    //POCOR-8596
+    public
+    function Behaviours()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentBehaviours']);
+    }
+
 
 }

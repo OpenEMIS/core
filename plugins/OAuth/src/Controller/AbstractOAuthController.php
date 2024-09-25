@@ -12,7 +12,7 @@ abstract class AbstractOAuthController extends Controller
 {
     protected $tokenExpiry = 3600; // To set to one hour expiry
 
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->loadComponent('RequestHandler');
@@ -37,7 +37,7 @@ abstract class AbstractOAuthController extends Controller
     private function _requestCodeFields()
     {
         foreach (['response_type', 'client_id', 'redirect_uri'] as $field) {
-            $value = $this->request->query($field);
+            $value = $this->request->getQuery($field);
             if (empty($value) || !is_string($value)) {
                 return false;
             }
@@ -48,7 +48,7 @@ abstract class AbstractOAuthController extends Controller
     private function _requestTokenFields()
     {
         foreach (['client_id', 'client_secret', 'redirect_uri'] as $field) {
-            $value = $this->request->data($field);
+            $value = $this->request->getData($field);
             if (empty($value) || !is_string($value)) {
                 return false;
             }
@@ -58,9 +58,9 @@ abstract class AbstractOAuthController extends Controller
 
     public function auth()
     {
-        $responseType = $this->request->query('response_type');
-        $clientId = $this->request->query('client_id');
-        $redirectUri = $this->request->query('redirect_uri');
+        $responseType = $this->request->getQuery('response_type');
+        $clientId = $this->request->getQuery('client_id');
+        $redirectUri = $this->request->getQuery('redirect_uri');
         if ($this->request->is('post')) {
             if ($this->_requestCodeFields()) {
                 $user = $this->Auth->identify();
@@ -85,7 +85,7 @@ abstract class AbstractOAuthController extends Controller
     public function login()
     {
         if ($this->request->is('post')) {
-            $postData = $this->request->data;
+            $postData = $this->request->getData();
             $password = $postData['password'];
             $userName = $postData['username'];
             if(!isset($userName) && !isset($password)){
@@ -102,8 +102,8 @@ abstract class AbstractOAuthController extends Controller
             else{
                 $enableLocalLogin = TableRegistry::get('Configuration.ConfigItems')->value('enable_local_login');
                 $authentications = TableRegistry::get('SSO.SystemAuthentications')->getActiveAuthentications();
-                $apiSecuritiesScopes = TableRegistry::get('AcademicPeriod.ApiSecuritiesScopes');
-                $apiSecurities = TableRegistry::get('AcademicPeriod.ApiSecurities');
+                $apiSecuritiesScopes = TableRegistry::get('ApiSecuritiesScopes');
+                $apiSecurities = TableRegistry::get('ApiSecurities');
                 $apiSecuritiesData = $apiSecurities->find('all')
                 ->select([
                     'ApiSecurities.id','ApiSecurities.name','ApiSecurities.execute'
@@ -131,10 +131,11 @@ abstract class AbstractOAuthController extends Controller
                     $dataArr = array("data"=>$response);
                 } elseif (is_null($code)) {
                     $authenticationType = 'Local';
-                    $postData = $this->request->data;
+                    $postData = $this->request->getData();
                     $password = $postData['password'];
-                    $hash = password_hash($password,  PASSWORD_DEFAULT); 
-                    $userData = TableRegistry::get('Report.Users');
+                    $hash = password_hash($password,  PASSWORD_DEFAULT);
+                    $userData = TableRegistry::get('Security.Users');
+                  //  echo "<pre>"; print_r($userData); die;
                     $getUserData = $userData->find('all')
                     ->select([
                         'Users.id','Users.password'
@@ -162,10 +163,10 @@ abstract class AbstractOAuthController extends Controller
     public function token()
     {
         if ($this->request->is('post')) {
-            $grantType = $this->request->data('grant_type');
+            $grantType = $this->request->getData('grant_type');
             switch ($grantType) {
                 case 'urn:ietf:params:oauth:grant-type:jwt-bearer':
-                    $assertion = $this->request->data('assertion');
+                    $assertion = $this->request->getData('assertion');
                     $tks = explode('.', $assertion);
                     if (count($tks) != 3) {
                         throw new UnauthorizedException('Wrong number of segments');
@@ -187,12 +188,12 @@ abstract class AbstractOAuthController extends Controller
                         throw new UnauthorizedException();
                     }
 
-                    if (!array_key_exists('public_key', $credentials)) {
+                    if (!isset($credentials['public_key'])) {
                         throw new UnauthorizedException('Public Key is missing from getApiCredential()');
                     }
 
                     $scope = [];
-                    if (array_key_exists('scope', $credentials)) {
+                    if (isset($credentials['scope'])) {
                         $scope = $credentials['scope'];
                     }
 

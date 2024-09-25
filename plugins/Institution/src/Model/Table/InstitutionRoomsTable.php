@@ -128,9 +128,20 @@ class InstitutionRoomsTable extends ControllerActionTable
 
                 return false;
             })
+            ->allowEmpty('area') //POCOR-8523
             ->add('area', 'ruleValidateCustomLandSize', [
-                'rule' => ['validateCustomLandSize', 'Maximum_institution_infrastructure_room_size'],
-                'provider' => 'table'
+                'rule' => function ($value, $context) {
+                    // Check if datatype is 'copy'
+                    if (isset($context['data']['datatype']) && $context['data']['datatype'] == 'copy') {
+                        // Skip validation when datatype is 'copy'
+                        return true;
+                    }
+            
+                    // Proceed with validation when datatype is not 'copy'
+                    return $this->validateCustomLandSize($value, 'Maximum_institution_infrastructure_room_size');
+                },
+                'provider' => 'table',
+                'last' => true
             ])
             ->requirePresence('new_start_date', function ($context) {
                 if (array_key_exists('change_type', $context['data'])) {
@@ -314,7 +325,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         // unset edit_type so that will always default to Update Details
         foreach ($buttons as $action => $attr) {
-            if (array_key_exists('url', $attr) && array_key_exists('edit_type', $attr['url'])) {
+            if (isset($attr['url']) && array_key_exists('edit_type', $attr['url'])) {
                 unset($buttons[$action]['url']['edit_type']);
             }
         }
@@ -1186,7 +1197,7 @@ class InstitutionRoomsTable extends ControllerActionTable
     {
         $periodOptions = $this->AcademicPeriods->getYearList();
         $periodId = $this->request->getQuery('period_id');
-        
+
         if (is_null($periodId)) {
             $periodId = $this->AcademicPeriods->getCurrent();
         }
@@ -1201,7 +1212,7 @@ class InstitutionRoomsTable extends ControllerActionTable
 
     public function getTypeOptions($params = [])
     {
-        $withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
+        $withAll = isset($params['withAll']) ? $params['withAll'] : false;
 
         $typeOptions = $this->RoomTypes
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
@@ -1222,8 +1233,8 @@ class InstitutionRoomsTable extends ControllerActionTable
 
     public function getStatusOptions($params = [])
     {
-        $conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
-        $withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
+        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
+        $withAll = isset($params['withAll']) ? $params['withAll'] : false;
 
         $statusOptions = $this->RoomStatuses
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
@@ -1244,8 +1255,8 @@ class InstitutionRoomsTable extends ControllerActionTable
 
     public function getSubjectOptions($params = [])
     {
-        $institutionId = array_key_exists('institution_id', $params) ? $params['institution_id'] : null;
-        $academicPeriodId = array_key_exists('academic_period_id', $params) ? $params['academic_period_id'] : null;
+        $institutionId = isset($params['institution_id']) ? $params['institution_id'] : null;
+        $academicPeriodId = isset($params['academic_period_id']) ? $params['academic_period_id'] : null;
 
         $options = [];
 
@@ -1293,8 +1304,8 @@ class InstitutionRoomsTable extends ControllerActionTable
 
     public function findInUse(Query $query, array $options)
     {
-        $institutionId = array_key_exists('institution_id', $options) ? $options['institution_id'] : null;
-        $academicPeriodId = array_key_exists('academic_period_id', $options) ? $options['academic_period_id'] : null;
+        $institutionId = isset($options['institution_id']) ? $options['institution_id'] : null;
+        $academicPeriodId = isset($options['academic_period_id']) ? $options['academic_period_id'] : null;
         $inUseId = $this->RoomStatuses->getIdByCode('IN_USE');
 
         $query->where([

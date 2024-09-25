@@ -71,9 +71,9 @@ class ExaminationsTable extends ControllerActionTable {
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
         $this->field('description', ['visible' => false]);
-        
+
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Exams','Examinations');       
+		$is_manual_exist = $this->getManualUrl('Administration','Exams','Examinations');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -145,7 +145,7 @@ class ExaminationsTable extends ControllerActionTable {
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         // used to do validation for examination item date
-        if (array_key_exists('examination_subjects', $data)) {
+        if (isset($data['examination_subjects'])) {
             $registrationEndDate = $data['registration_end_date'];
             foreach ($data['examination_subjects'] as $key => $value) {
                 $data['examination_subjects'][$key]['registration_end_date'] = $registrationEndDate;
@@ -231,11 +231,11 @@ class ExaminationsTable extends ControllerActionTable {
             $attr['visible'] = false;
 
         } else if ($action == 'add' || $action == 'edit') {
-			
+
             $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
 			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
-            
+
             if ($action == 'add') {
                 $programmeOptions = $EducationProgrammes
                     ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])

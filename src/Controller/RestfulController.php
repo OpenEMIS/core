@@ -61,26 +61,26 @@ class RestfulController extends BaseController
         $queryDatasource = true;
         $authorisationHeader = $this->request->getHeader('authorization');
         $token = '';
-        if ($authorisationHeader) {
-            $token = str_ireplace('Bearer ', '', $authorisationHeader);
-
+        if ($authorisationHeader && is_string($authorisationHeader)) {
+        // POCOR-8436 if authorisationHeader is a string, and not an empty array
             $tks = explode('.', $token);
             if (count($tks) == 3) {
                 list($headb64, $bodyb64, $cryptob64) = $tks;
                 $payload = JWT::jsonDecode(JWT::urlsafeB64Decode($bodyb64));
                 if (property_exists($payload, 'iss')) {
                     $queryDatasource = false;
-                    $this->Auth->config('storage', 'Memory');
+                    $this->Auth->setconfig('storage', 'Memory');
                 }
                 if (property_exists($payload, 'scope')) {
                     $this->controllerAction = $payload->scope;
                 }
-                
+
                 $isBearer = true;
             }
         }
 
-        $this->Auth->getConfig('authenticate', [
+
+        $this->Auth->setConfig('authenticate', [
             'ADmad/JwtAuth.Jwt' => [
                 'parameter' => 'token',
                 'userModel' => 'User.Users',
@@ -97,10 +97,13 @@ class RestfulController extends BaseController
         if (!empty($token) && true === $isBearer) {
             $this->getEventManager()->off($this->Csrf);
         }
-
-        if ($this->request->is(['put', 'post', 'delete', 'patch']) || !empty($this->request->data)) {
-            $token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
-            $this->request->getEnv('HTTP_X_CSRF_TOKEN', $token);
+        if ($this->request->is(['put', 'post', 'delete', 'patch']) || !empty($this->request->getData())) {
+             $header = $this->request->getHeaderLine('Authorization');
+            if ($header) {
+                $token = str_ireplace('Bearer ', '', $header);
+            }
+            //$token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
+            $this->request->withEnv('HTTP_X_CSRF_TOKEN', $token);
         }
     }
 
