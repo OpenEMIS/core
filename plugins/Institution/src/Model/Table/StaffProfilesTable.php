@@ -9,7 +9,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\ResultSet;
 use Cake\Event\Event;
-use Cake\I18n\Time;
+use Cake\I18n\FrozenTime;
 use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
@@ -117,7 +117,7 @@ class StaffProfilesTable extends ControllerActionTable
             $params = [
                 'staff_profile_template_id' => $reportCardId,
                 'staff_id' => $entity->staff_id,
-                'institution_id' => $institutionId,
+                'institution_id' => $institutionId ?? $entity->institution_id, //POCOR-8551
                 'academic_period_id' => $academicPeriodId,
             ];
             
@@ -163,7 +163,7 @@ class StaffProfilesTable extends ControllerActionTable
                 if (!empty($reportCard->generate_end_date)) {
                 $generateEndDate = $reportCard->generate_end_date->format('Y-m-d');
                 }
-                $date = Time::now()->format('Y-m-d');
+                $date = FrozenTime::now()->format('Y-m-d');
 
                 if ((!empty($generateStartDate) && !empty($generateEndDate)) && ($date >= $generateStartDate && $date <= $generateEndDate)) {
                             $buttons['generate'] = [
@@ -452,7 +452,7 @@ class StaffProfilesTable extends ControllerActionTable
                 if (!empty($ReportCardsData->generate_end_date)) {
                 $generateEndDate = $ReportCardsData->generate_end_date->format('Y-m-d');
                 }
-                $date = Time::now()->format('Y-m-d');
+                $date = FrozenTime::now()->format('Y-m-d');
 
                 if (!empty($generateStartDate) && !empty($generateEndDate) && $date >= $generateStartDate && $date <= $generateEndDate) {
                     
@@ -530,7 +530,7 @@ class StaffProfilesTable extends ControllerActionTable
         $value = '';
 
         if ($entity->has('report_card_started_on')) {
-            $startedOnValue = new Time($entity->report_card_started_on);
+            $startedOnValue = new FrozenTime($entity->report_card_started_on);
             $value = $this->formatDateTime($startedOnValue);
         }
 
@@ -542,7 +542,7 @@ class StaffProfilesTable extends ControllerActionTable
         $value = '';
 
         if ($entity->has('report_card_completed_on')) {
-            $completedOnValue = new Time($entity->report_card_completed_on);
+            $completedOnValue = new FrozenTime($entity->report_card_completed_on);
             $value = $this->formatDateTime($completedOnValue);
         }
 
@@ -623,7 +623,7 @@ class StaffProfilesTable extends ControllerActionTable
         $model = $this->StaffReportCards;
         $ids = $this->getQueryString();
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $session->read('Institution.Institutions.id') ?? $this->getQueryString('institution_id');
         $ids['institution_id'] = $institutionId;
         
         if ($model->exists($ids)) {
@@ -656,7 +656,7 @@ class StaffProfilesTable extends ControllerActionTable
         $model = $this->StaffReportCards;
         $ids = $this->getQueryString();
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $session->read('Institution.Institutions.id') ?? $this->getQueryString('institution_id');
         $ids['institution_id'] = $institutionId;
         if ($model->exists($ids)) {
             $data = $model->find()->where($ids)->first();
@@ -697,7 +697,7 @@ class StaffProfilesTable extends ControllerActionTable
         $model = $this->StaffReportCards;
         $ids = $this->getQueryString();
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $session->read('Institution.Institutions.id') ?? $this->getQueryString('institution_id');
         $ids['institution_id'] = $institutionId;
         if ($model->exists($ids)) {
             $data = $model->find()->where($ids)->first();
@@ -730,7 +730,7 @@ class StaffProfilesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $session->read('Institution.Institutions.id') ?? $this->getQueryString('institution_id');
 
         $hasTemplate = $this->StaffTemplates->checkIfHasTemplate($params['staff_profile_template_id']);
         if ($hasTemplate) {
@@ -748,7 +748,7 @@ class StaffProfilesTable extends ControllerActionTable
         $params = $this->getQueryString();
         $hasTemplate = $this->StaffTemplates->checkIfHasTemplate($params['staff_profile_template_id']);
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $session->read('Institution.Institutions.id') ?? $this->getQueryString('institution_id');
 
         if ($hasTemplate) {
             $StaffReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.StaffReportCardProcesses');
@@ -781,7 +781,7 @@ class StaffProfilesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $session->read('Institution.Institutions.id') ?? $this->getQueryString('institution_id');
         // only download report cards with generated or published status
         $statusArray = [self::GENERATED, self::PUBLISHED];
 
@@ -837,7 +837,7 @@ class StaffProfilesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $session = $this->request->getSession();
-        $institutionId = $session->read('Institution.Institutions.id');
+        $institutionId = $session->read('Institution.Institutions.id') ?? $this->getQueryString('institution_id');
         // only download report cards with generated or published status
         $statusArray = [self::GENERATED, self::PUBLISHED];
 
@@ -982,12 +982,14 @@ class StaffProfilesTable extends ControllerActionTable
 
     private function addReportCardsToProcesses($institutionId, $academicPeriodId, $reportCardId, $staffId = null)
     {
-        Log::write('debug', 'Initialize Add All Staff Profile Report Cards '.$reportCardId.' for Institution '.$institutionId.' to processes ('.Time::now().')');
+        Log::write('debug', 'Initialize Add All Staff Profile Report Cards '.$reportCardId.' for Institution '.$institutionId.' to processes ('.FrozenTime::now().')');
 
         $StaffReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.StaffReportCardProcesses');
-        $staffTable = TableRegistry::get('institution_staff');
+        $staffTable = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');//POCOR-8551
         $where = [];
-        $where[$staffTable->aliasField('institution_id')] = $institutionId;
+        if (!is_null($institutionId)) {
+            $where[$staffTable->aliasField('institution_id')] = $institutionId; //POCOR-8551
+        }
         if (!is_null($staffId)) {
             $where[$staffTable->aliasField('staff_id')] = $staffId;
         }
@@ -1051,20 +1053,20 @@ class StaffProfilesTable extends ControllerActionTable
                 $newEntity = $this->StaffReportCards->patchEntity($staffsReportCardEntity, $newData);
 
                 if (!$this->StaffReportCards->save($newEntity)) {
-                    Log::write('debug', 'Error Add All staff profile Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to processes ('.Time::now().')');
+                    Log::write('debug', 'Error Add All staff profile Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to processes ('.FrozenTime::now().')');
                     Log::write('debug', $newEntity->errors());
                 }
             }
             // end
         }
 
-        Log::write('debug', 'End Add All staff profile Report Cards '.$reportCardId.' for Institution '.$institutionId.' to processes ('.Time::now().')');
+        Log::write('debug', 'End Add All staff profile Report Cards '.$reportCardId.' for Institution '.$institutionId.' to processes ('.FrozenTime::now().')');
     }
 
     private function triggerGenerateAllReportCardsShell($institutionId, $academicPeriodId, $reportCardId, $staffId = null)
     {
         $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
-        $runningProcess = $SystemProcesses->getRunningProcesses($this->registryAlias());
+        $runningProcess = $SystemProcesses->getRunningProcesses($this->getRegistryAlias()); //POCOR-8551
 
         foreach ($runningProcess as $key => $processData) {
             $systemProcessId = $processData['id'];
@@ -1073,16 +1075,16 @@ class StaffProfilesTable extends ControllerActionTable
 
             $expiryDate = clone($createdDate);
             $expiryDate->addMinutes(30);
-            $today = Time::now();
+            $today = FrozenTime::now();
 
             if ($expiryDate < $today) {
-                $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::COMPLETED);
+                $SystemProcesses->updateProcess($systemProcessId, FrozenTime::now(), $SystemProcesses::COMPLETED);
                 $SystemProcesses->killProcess($pId);
             }
         }
 
         if (count($runningProcess) <= self::MAX_PROCESSES) {
-            $processModel = $this->registryAlias();
+            $processModel = $this->getRegistryAlias();//POCOR-8551
             $passArray = [
                 'institution_id' => $institutionId,
                 'staff_profile_template_id' => $reportCardId
@@ -1108,7 +1110,7 @@ class StaffProfilesTable extends ControllerActionTable
 
     private function addReportCardsToEmailProcesses($institutionId, $academicPeriodId, $reportCardId, $staffId = null)
     {
-        Log::write('debug', 'Initialize Add All Staff Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to email processes ('.Time::now().')');
+        Log::write('debug', 'Initialize Add All Staff Report Cards '.$reportCardId.' for Class '.$institutionClassId.' to email processes ('.FrozenTime::now().')');
         
         $staffTable = TableRegistry::getTableLocator()->get('institution_staff');
         $where = [];
@@ -1152,7 +1154,7 @@ class StaffProfilesTable extends ControllerActionTable
             // end
         }
 
-        Log::write('debug', 'End Add All Report Cards '.$reportCardId.' for Institution '.$institutionId.' to email processes ('.Time::now().')');
+        Log::write('debug', 'End Add All Report Cards '.$reportCardId.' for Institution '.$institutionId.' to email processes ('.FrozenTime::now().')');
     }
 
     private function triggerEmailAllReportCardsShell($institutionId, $institutionClassId, $reportCardId, $staffId = null)

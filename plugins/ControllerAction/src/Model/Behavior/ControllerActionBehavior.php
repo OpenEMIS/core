@@ -25,7 +25,7 @@ class ControllerActionBehavior extends Behavior
             'edit' => true,
             'remove' => 'cascade',
             'search' => ['orderField' => 'order'],
-            // 'reorder' => ['orderField' => 'order'],
+            'reorder' => ['orderField' => 'order'],
             'download' => ['show' => false, 'name' => 'file_name', 'content' => 'file_content']
         ],
         'fields' => [

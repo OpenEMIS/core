@@ -32,7 +32,7 @@ class DirectoriesController extends AppController
             // Student
             //'StudentAbsences'       => ['className' => 'Directory.Absences', 'actions' => ['index', 'view']],
             //'StudentAbsences'       => ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
-            'StudentBehaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
+           // 'StudentBehaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
             //'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
 
             // Staff
@@ -2222,6 +2222,13 @@ class DirectoriesController extends AppController
     public function StudentExtracurriculars()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Extracurriculars']);
+    }
+
+    //POCOR-8596
+    public
+    function StudentBehaviours()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentBehaviours']);
     }
 
 }

@@ -21,6 +21,10 @@ class EducationSystemsTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->hasMany('EducationLevels', ['className' => 'Education.EducationLevels']);
         $this->setDeleteStrategy('restrict');
+        if ($this->behaviors()->has('ControllerAction')) {
+            $controllerActionBehavior = $this->behaviors()->get('ControllerAction');
+            $controllerActionBehavior->setConfig(['actions' => ['reorder' => false]]);
+        }
     }
     //POCOR-5696 start
     public function setupFields(Entity $entity)
@@ -270,7 +274,7 @@ class EducationSystemsTable extends ControllerActionTable
         $education_levels = TableRegistry::get('Education.EducationLevels');
     	$educationLevelsData = $education_levels
 							    ->find()
-							    ->where([$education_levels->aliasField('education_system_id') => $entity->education_system_id])
+							    ->where([$education_levels->aliasField('education_system_id') => $entity->id])
 							    ->All()
 		                        ->toArray();
 
@@ -578,6 +582,15 @@ class EducationSystemsTable extends ControllerActionTable
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
+    }
+
+    // POCOR-8507
+    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra) {
+        if ($this->hasAssociatedRecords($this, $entity, $extra)) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        } 
     }
 
 }

@@ -1,3 +1,9 @@
+### [4.2.0] - 2024-09-06
+- Implemented: Develop APIs for student attendance archive
+- Implemented: Develop a default Laravel page for OpenEMIS Core
+- Bug Fixed: Administration>Performance>Report Cards(Bahamas): Delete should check against associated records
+- Bug Fixed: Institutions > Performance > Assessments > Reports:Assessment Report generation did take awhile however, report did got generated v4
+
 ### [4.1.7] - 2024-09-04
 - Bug Fixed: Survey App: Code is missing in latest master
 

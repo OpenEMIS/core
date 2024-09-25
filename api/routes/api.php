@@ -401,6 +401,17 @@ Route::group(
         Route::get('/system-configurations/{configId}', 'SystemConfigurationController@configurationItemById');
         //POCOR-8023 ends
 
+        ///POCOR-8121 start
+        Route::get('/institution-units', 'InstitutionController@units');
+        Route::get('/institution-courses', 'InstitutionController@courses');
+        Route::get('/institutions/{institutionId}/academic-period/{academicPeriodId}/shifts', 'InstitutionController@shifts');
+        Route::get('/institutions/{institutionId}/staffs', 'InstitutionController@staffs');
+        Route::get('/institutions/{institutionId}/rooms', 'InstitutionController@rooms');
+        Route::get('/institutions/{institutionId}/education-grades/{educationGradeId}/institution-subjects/{institutionSubjectId}/classes', 'InstitutionController@subjectClasses');
+        Route::get('/institutions/{institutionId}/classes/{classId}/unassigned-students', 'InstitutionController@unassignedStudentsInClass');
+        Route::get('/institutions/{institutionId}/subjects/{subjectId}/unassigned-students', 'InstitutionController@unassignedStudentsInSubject');
+
+        //POCOR-8121 end
 
         //POCOR-8104 Start...
         Route::get('user-types', 'DirectoryController@getUserTypeList');
@@ -500,6 +511,13 @@ Route::group(
         //POCOR-8363 end...
 
 
+        //POCOR-8397 start...
+        Route::get('/academic-period/archive', 'AttendanceController@getArchiveAcademicPeriods');
+        Route::get('/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance-marked/archive', 'AttendanceController@getStudentAttendanceMarkedRecordArchiveList');
+        Route::get('/institutions/{institutionId}/grades/{gradeId}/classes/{classId}/student-attendance/archive', 'AttendanceController@getStudentAttendanceArchiveList');
+        Route::get('/institutions/students/attendances/export/archive', 'AttendanceController@getStudentAttendanceArchiveExport');
+        //POCOR-8397 end...
+        
         //POCOR-8519 start...
         Route::get('workbenches', 'WorkbenchController@getAllWorkbenches');
         //POCOR-8519 end...

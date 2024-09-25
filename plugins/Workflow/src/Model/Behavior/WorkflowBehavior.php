@@ -2442,6 +2442,11 @@ class WorkflowBehavior extends Behavior
             }
 
             $params = $this->_table->getQueryString();
+            if(!isset($params['id'])){
+                if(isset($entity->id)){
+                    $params['id'] = $entity->id;
+                }
+            }
             $encodedQueryString = $this->_table->paramsEncode($params);
             $url['1'] = $encodedQueryString;
             return $this->_table->controller->redirect($url);
@@ -2474,9 +2479,22 @@ class WorkflowBehavior extends Behavior
             $this->WorkflowTransitions->trackChanges($workflowModelEntity, $entity, $assigneeId, $requestDataComment);
 
             $entity->assignee_id = $assigneeId;
-            $model->save($entity);
+            $entity = $model->save($entity);
 
             $url = $model->url('view');
+            $params = $this->_table->getQueryString();
+            $params = $this->_table->getQueryString();
+            if(!isset($params['id'])){
+                if(isset($entity->id)){
+                    $params['id'] = $entity->id;
+                }
+            }
+            $encodedQueryString = $this->_table->paramsEncode($params);
+            $url['1'] = $encodedQueryString;
+
+            $encodedQueryString = $this->_table->paramsEncode($params);
+            $url['1'] = $encodedQueryString;
+
             return $this->_table->controller->redirect($url);
         }
     }

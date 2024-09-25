@@ -84,7 +84,7 @@ class ContactTypesTable extends ControllerActionTable
 		return $attr;
 	}
 
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+	public function beforeSave(Event $event)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
