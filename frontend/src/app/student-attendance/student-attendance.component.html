@@ -21,9 +21,9 @@
             (change)="_submitEvent($event, 'class')"></kd-view>
         <kd-view displayType="stacked-form" [inputData]="educationGrade" [button]="filterButtons"
             (change)="_submitEvent($event, 'educationGrade')"></kd-view>
-        <kd-view displayType="stacked-form" [inputData]="period" [button]="filterButtons" *ngIf="selected_academic_class != 604"
+        <kd-view displayType="stacked-form" [inputData]="period" [button]="filterButtons" *ngIf="displayDaySubject"
             (change)="_submitEvent($event, 'educationGrade')"></kd-view>
-        <kd-view displayType="stacked-form" [inputData]="institutionSubject" [button]="filterButtons" *ngIf="selected_academic_class == 604"
+        <kd-view displayType="stacked-form" [inputData]="institutionSubject" [button]="filterButtons" *ngIf="!displayDaySubject"
             (change)="_submitEvent($event, 'institutionSubject')"></kd-view>
     </div>
 </div>

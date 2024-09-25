@@ -132,6 +132,11 @@ const COLUMN_INPUT_ATTENDANCE_DROPDOWN_NEW: any = {
           "id": 3,
           "name": "Late",
           "code": "LATE"
+        },
+        {
+          "id": 99,
+          "name": "No Lessons",
+          "code": "NOLESSONS"
         }
       ]
       let isMarked = params.context.isMarked ? params.context.isMarked : false;
@@ -171,7 +176,7 @@ const COLUMN_INPUT_REASON_OR_COMMENT_NEW: any = {
         let absenceTypeObj = absenceTypeList?.find(obj => obj.id == studentAbsenceTypeId);
         let html = '';
         if (mode == 'view') {
-          switch (absenceTypeObj.code) {
+          switch (absenceTypeObj?.code) {
             case attendanceType.PRESENT.code:
               // return '<i class=">' + icons.PRESENT + '"></i>';
               return '<div><i class="' + icons.PRESENT + '"></i></div>';
@@ -187,7 +192,7 @@ const COLUMN_INPUT_REASON_OR_COMMENT_NEW: any = {
           }
         } else if (mode == 'edit') {
           let api = params.api
-          switch (absenceTypeObj.code) {
+          switch (absenceTypeObj?.code) {
             case attendanceType.PRESENT.code:
               return '<div><i class="' + icons.PRESENT + '"></i></div>';
             case attendanceType.LATE.code:
@@ -286,6 +291,11 @@ const attendanceType = {
     code: 'NoScheduledClicked',
     icon: '',
     color: 'black',
+  },
+  'NOLESSONS': {
+    code: 'NOLESSONS',
+    icon: '',
+    color: 'black'
   }
 };
 
@@ -337,6 +347,9 @@ function getViewAttendanceElement(data, absenceTypeList, isMarked, isSchoolClose
         case attendanceType.NoScheduledClicked.code:
           html = '<div style="color: ' + attendanceType.NoScheduledClicked.color + '"> <span> ' + absenceTypeObj.name + ' </span></div>';
           break;
+        case attendanceType.NOLESSONS.code:
+          html = '<div style="color: ' + attendanceType.NoScheduledClicked.color + '"> <span> ' + absenceTypeObj.name + ' </span></div>';
+          break;
         default:
           break;
       }
@@ -357,12 +370,13 @@ function getViewAttendanceElement(data, absenceTypeList, isMarked, isSchoolClose
 }
 
 function getEditAttendanceElement(data, absenceTypeList, api, context) {
+  absenceTypeList.pop();
   let dataKey = 'absence_type_id';
   let eCell = document.createElement('div');
   eCell.setAttribute("class", "oe-select-wrapper input-select-wrapper");
   eCell.setAttribute("id", dataKey);
 
-  if (data.institution_student_absences[dataKey] == null) {
+  if (data.institution_student_absences[dataKey] == null || data.institution_student_absences[dataKey] == 99) {
     data.institution_student_absences[dataKey] = 0;
   }
 
