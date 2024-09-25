@@ -234,7 +234,7 @@ class WithdrawRequestsTable extends ControllerActionTable
     //POCOR-6925
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
-        if ($action == 'add' || $action == 'edit' || $action == 'approve') { // POCOR-8411 start
+        if (in_array($action, ['edit', 'add', 'approve'])) { // POCOR-8411 start
             $workflowModel = 'Institutions > Students > Student Withdraw';
             $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
             $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
