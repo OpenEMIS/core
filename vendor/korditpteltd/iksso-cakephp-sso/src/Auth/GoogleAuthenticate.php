@@ -44,7 +44,8 @@ class GoogleAuthenticate extends BaseAuthenticate
                     return $isFound;
                 } else {
                     if ($this->getConfig('createUser')) {
-                        $ServiceOAuth2Object = new Google_Service_Oauth2($client);
+                        //POCOR-8498 Start
+                        /*$ServiceOAuth2Object = new Google_Service_Oauth2($client);
                         $me = $ServiceOAuth2Object->userinfo->get();
                         $userInfo = [
                             'id' => $me->getId(),
@@ -57,10 +58,23 @@ class GoogleAuthenticate extends BaseAuthenticate
                             'link' => $me->getLink(),
                             'picture' => $me->getPicture(),
                             'role' => ''
+                        ];*/
+                        $userInfo = [
+                            'id' => $tokenData['iat'],
+                            'firstName' => $tokenData['given_name'],
+                            'lastName' => $tokenData['family_name'],
+                            'gender' => '',
+                            'email' => $tokenData['email'],
+                            'verifiedEmail' => $tokenData['email_verified'],
+                            'locale' => '',
+                            'link' => '',
+                            'picture' =>  $tokenData['picture'],
+                            'role' => ''
                         ];
+                        //POCOR-8498 End
                         $User = TableRegistry::get($this->_config['userModel']);
                         $event = $User->dispatchEvent('Model.Auth.createAuthorisedUser', [$userName, $userInfo], $this);
-                        if ($event->result === false) {
+                        if ($event->getResult() === false) {
                             return false;
                         } else {
                             return $this->_findUser($event->result);
