@@ -838,10 +838,15 @@ class UsersController extends AppController
     {
         //POCOR-2976 start
         $SecurityUser = TableRegistry::getTableLocator()->get('User.Users');
-        $userData = $SecurityUser->find()
+        //POCOR-8498 Start
+        $userData = '';
+        if(!empty($this->request->getData()['username'])) {
+            $userData = $SecurityUser->find()
             ->where(
-                [$SecurityUser->aliasField('username') => $this->request->getData('username')]
+                [$SecurityUser->aliasField('username') => $this->request->getData()['username']]
             )->first();
+        }
+        //POCOR-8498 End
         if (!$extra['loginStatus']) {
             if (!$extra['status']) {
                 $this->Alert->error('security.login.inactive', ['reset' => true]);
