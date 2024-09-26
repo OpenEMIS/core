@@ -502,4 +502,23 @@ class StudentService extends Controller
     //POCOR-7547 Ends...
 
 
+    //POCOR-8221 Starts...
+    public function getStudentTransferData($params, $institutionId, $studentId)
+    {
+        try {
+            $data = $this->studentRepository->getStudentTransferData($params, $institutionId, $studentId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Student Transfer List Not Found');
+        }
+    }
+    //POCOR-8221 Ends...
+
+
 }
