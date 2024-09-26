@@ -15,6 +15,7 @@ use App\Models\StudentAttendanceMarkedRecords;
 use App\Models\InstitutionStaffAttendances;
 use App\Models\SecurityUsers;
 use App\Models\InstitutionClassStudents;
+use App\Models\InstitutionStudentTransfers;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -1013,4 +1014,25 @@ class StudentRepository extends Controller
         }
     }
     //For POCOR-8491 End...
+
+
+    //POCOR-8221 Starts...
+    public function getStudentTransferData($params, $institutionId, $studentId)
+    {
+        try {
+            $list = InstitutionStudentTransfers::where('student_id', $studentId)
+                        ->where('institution_id', $institutionId)
+                        ->get()
+                        ->toArray();
+            return $list;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Student Transfer List Not Found');
+        }
+    }
+    //POCOR-8221 Ends...
 }
