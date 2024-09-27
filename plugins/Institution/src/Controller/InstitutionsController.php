@@ -35,7 +35,16 @@ class InstitutionsController extends AppController
 {
     use OptionsTrait;
     use UtilityTrait;
-
+    // POCOR-8231 start
+    const STUDENT = 1;
+    const STAFF = 2;
+    const GUARDIAN = 3;
+    const OTHER = 4;
+    public $savingDirectoryData = 0;
+    public $savingGuardianData = 0;
+    public $savingStudentData = 0;
+    public $savingStaffData = 0;
+    // POCOR-8231 end
     public $activeInstitution = null;
 
     private $features = [
@@ -173,7 +182,7 @@ class InstitutionsController extends AppController
         // End
 
         parent::initialize();
-
+        $this->loadComponent('Cookie'); //POCOR-8551
         $data = $this->loadModel('Calendars');
         // $this->viewBuilder()->setHelpers(['HtmlField']);
 
@@ -443,7 +452,7 @@ class InstitutionsController extends AppController
             case 'Addguardian':
                 $this->Angular->addModules([
                     'directory.directoryaddguardian.ctrl',
-                    'directory.directoryaddguardian.svc'
+                    'directory.directoryadd.svc'
                 ]);
                 break;
         }
@@ -1367,12 +1376,12 @@ class InstitutionsController extends AppController
             ];
             // POCOR-7895: start
             if ($_excel) {
-                if ($_archive_1 or $_archive_2 or $_archive_3) {
-                    $_excel = $_archive_1;
-                } else {
+//                if ($_archive_1 or $_archive_2 or $_archive_3) {
+//                    $_excel = $_archive_1;
+//                } else {
                     $_excel = false;
                     $excelUrl = null;
-                }
+//                }
             }
             // POCOR-7895: end
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
@@ -1395,7 +1404,7 @@ class InstitutionsController extends AppController
     private
     function getInstitutionClasses($institutionId)
     {
-        $tableClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $tableClasses = self::getDynamicTableInstance('Institution.InstitutionClasses');
         $distinctClasses = $tableClasses->find('all')
             ->where(['institution_id' => $institutionId])
             ->select(['id'])
@@ -1419,7 +1428,7 @@ class InstitutionsController extends AppController
             $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
 
             //POCOR-8148:Start Check if institution is active
-            $Institutions = TableRegistry::get('Institution.Institutions');
+            $Institutions = self::getDynamicTableInstance('Institution.Institutions');
             $data = $Institutions->find()
             ->where(['id' => $institutionId])
             ->first();
@@ -1512,7 +1521,7 @@ class InstitutionsController extends AppController
              $encodedPart = substr($url, $startPos);
 
              //POCOR-8051 end
-             
+
             $_edit = $this->AccessControl->check(['Institutions', 'StudentMeals', 'edit']);
             $_excel = $this->AccessControl->check(['Institutions', 'StudentMeals', 'excel']);
             $_import = $this->AccessControl->check(['Institutions', 'ImportStudentMeals', 'add']);
@@ -1884,7 +1893,10 @@ class InstitutionsController extends AppController
                     return $this->redirect($url);
                 }
             }
-            $queryString = $this->ControllerAction->getQueryString();
+            //POCOR-8566[START]
+            // $queryString = $this->ControllerAction->getQueryString();
+            $queryString = $this->getQueryString();
+            //POCOR-8566[END]
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'StudentOutcomes';
             $viewUrl[0] = 'view';
@@ -1951,7 +1963,7 @@ class InstitutionsController extends AppController
             //$viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $classId['id'], 'institution_id' => $institutionId]);//POCOR-8323
             $viewUrl[1] = $this->ControllerAction->paramsEncode(['id' => $classId['id'], 'institution_id' => $institutionId, 'institution_class_id' => $classId['id']]);//POCOR-8323
             //POCOR-8107
-            $configItems = TableRegistry::get('Configuration.ConfigItems');
+            $configItems = self::getDynamicTableInstance('Configuration.ConfigItems');
             $configItemsData = $configItems->find()->where(['type' => 'Fields for Institutions Classes Details Page'])->toArray();
             foreach ($configItemsData as $configItemsData1) {
                 if (($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 0)) {
@@ -2073,7 +2085,7 @@ class InstitutionsController extends AppController
             $session->write('Institution.Institutions.id', $institutionId);
             $institutionName = $this->Institutions->get($institutionId)->name;
             if (!$this->AccessControl->isAdmin()) {
-                $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+                $roles = self::getDynamicTableInstance('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
             }
             $this->set('institutionId', $institutionId);
             $this->set('institutionName', $institutionName);
@@ -2110,7 +2122,7 @@ class InstitutionsController extends AppController
             $session->write('Institution.Institutions.id', $institutionId);
             $institutionName = $this->Institutions->get($institutionId)->name;
             if (!$this->AccessControl->isAdmin()) {
-                $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+                $roles = self::getDynamicTableInstance('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
             }
             $this->set('institutionId', $institutionId);
             $this->set('institutionName', $institutionName);
@@ -2542,6 +2554,12 @@ class InstitutionsController extends AppController
 
     public function beforeFilter(EventInterface $event)
     {
+        //POCOR-8587 start
+        $session = $this->getRequest()->getSession();
+        if (!$session->check('Auth.User.id')) {
+            // Session has expired or user is not logged in
+            return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+        } //POCOR-8587 end
         parent::beforeFilter($event);
         $header = __('Institutions');
         $indexUrl = ['plugin' => 'Institution',
@@ -2619,7 +2637,7 @@ class InstitutionsController extends AppController
         }
 
         if ($action == 'dashboard') {
-            $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($this->Auth->user('id'), $institutionId);
+            $roles = self::getDynamicTableInstance('Institution.Institutions')->getInstitutionRoles($this->Auth->user('id'), $institutionId);
             $havePermissionToViewCompleteness = $this->AccessControl->check([
                 'Institutions',
                 'InstitutionProfileCompletness',
@@ -2635,7 +2653,7 @@ class InstitutionsController extends AppController
         //POCOR-8333 starts
         if ($action == 'StudentHistories') {
             $queryString = $this->getQueryString();
-            $studentId = $queryString['security_user_id'];
+            $studentId = $queryString['security_user_id'] ?? $queryString['student_id'];
             $Students = TableRegistry::getTableLocator()->get('Security.Users');
             $activeStudent = $Students->get($studentId);
             $studentName = $activeStudent->name;
@@ -2682,7 +2700,14 @@ class InstitutionsController extends AppController
 //            true));
         if ($action == 'checkUserAlreadyExistByIdentity'
            || $action == 'saveGuardianData'
+            || $action == 'saveStudentData'
+            || $action == 'saveStaffData'
+            || $action == 'saveDirectoryData'
+            || $action == 'checkConfigurationForExternalSearch'
+            || $action == 'studentCustomFields'
+            || $action == 'staffCustomFields'
            || $furtherAction == 'removeReport'
+            || $furtherAction == 'downloadFailed' || $furtherAction == 'downloadPassed'
         ) {
             return true;
         }
@@ -2810,7 +2835,7 @@ class InstitutionsController extends AppController
     function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
         $isInstitutionIndex = $this->isInstitutionIDSkipped();
-
+        $alias = $model->getAlias();
         if ($isInstitutionIndex) {
             return;
         }
@@ -2837,7 +2862,7 @@ class InstitutionsController extends AppController
         }
         $isDownload = $action == 'downloadFile' ? true : false;
 
-        $alias = $model->alias;
+
         $humanTitle = __(Inflector::humanize(Inflector::underscore($alias)));
         //POCOR-8333 starts
         if ($alias == 'StudentHistories') {
@@ -2866,7 +2891,7 @@ class InstitutionsController extends AppController
             'StudentCurriculars' => __('Curriculars') //POCOR-6673 in student tab breadcrumb
         ];
 
-        if (array_key_exists($alias, $studentModels)) {
+        if (isset($studentModels[$alias])) {
             $studentID = $this->getStudentID(__FUNCTION__ . __LINE__);
             $Students = TableRegistry::getTableLocator()->get('Security.Users');
 
@@ -3065,6 +3090,11 @@ class InstitutionsController extends AppController
                     $params = [];
                     $params[$model->aliasField('feeder_institution_id')] = $institutionID;
                     $exists = $model->exists($params);
+                }elseif (in_array($alias, ['InstitutionAssociations'])) { //POCOR-8556
+                    $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+                    $activeInstitution = $this->Institutions->get($institutionId);
+                    $institutionName = $activeInstitution->name;
+                    $header = $institutionName.''.$header;
                 } else {
                     $params = [];
                     $checkExists = function ($model, $params) {
@@ -3299,7 +3329,7 @@ class InstitutionsController extends AppController
 
         if (!$this->AccessControl->isAdmin()) {
             $userId = $this->Auth->user('id');
-            $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionID);
+            $roles = self::getDynamicTableInstance('Institution.Institutions')->getInstitutionRoles($userId, $institutionID);
             $isActive = $Institutions->isActive($institutionID);
             if ($isActive) {
                 $this->set('haveProfilePermission', $this->AccessControl->check(['Institutions', 'InstitutionProfileCompletness', 'view'], $roles));
@@ -5296,7 +5326,7 @@ class InstitutionsController extends AppController
     /**
      * Retrieves institution positions based on the request data. POCOR-8231
      *
-     * @return void
+
      * @throws \Exception If there is an error in decoding the request data
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
@@ -5515,6 +5545,7 @@ class InstitutionsController extends AppController
                     'id' => 'Positions.id',
                     'institution_id' => 'Positions.institution_id',
                     'status_id' => 'Positions.status_id',
+                    'position_no' => 'Positions.position_no',
                     'security_role_id' => 'SecurityRoles.id',
                     'security_role_name' => 'SecurityRoles.name',
                     'staff_position_tytle_id' => 'StaffPositionTitles.id',
@@ -5586,7 +5617,7 @@ class InstitutionsController extends AppController
         $options = [];
         foreach ($staffPositionsOptions as $key => $position) {
 //        Log::debug(print_r($position, true));
-            $name = $position['position_name'];
+            $name = $position['position_no'] . ' - ' . $position['position_name'];
             $type = $types[$position['type']] ? $types[$position['type']] : "";
             $options[] = [
                 'value' => $position['id'],
@@ -5680,7 +5711,11 @@ class InstitutionsController extends AppController
             ->where(['id' => $academicPeriodId])
             ->toArray();
         foreach ($academic_periods_result as $result) {
-            $result_array[] = array("id" => $result['id'], "name" => $result['name'], "start_date" => date('Y-m-d', strtotime($result['start_date'])), "start_year" => $result['start_year'], "end_date" => date('Y-m-d', strtotime($result['end_date'])), "end_year" => $result['end_year']);
+            $result_array[] = array("id" => $result['id'], "name" => $result['name'],
+                "start_date" => date('Y-m-d', strtotime($result['start_date'])),
+                "start_year" => $result['start_year'] ?? date('Y', strtotime($result['start_date'])),
+                "end_date" => date('Y-m-d', strtotime($result['end_date'])),
+                "end_year" => $result['end_date'] ? ($result['end_year'] ?? date('Y', strtotime($result['end_date']))) : null);
         }
         echo json_encode($result_array);
         die;
@@ -5984,9 +6019,52 @@ class InstitutionsController extends AppController
      * @return \Cake\Http\Response|null
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
+    public function saveDirectoryData()
+    {
+
+        if($this->savingDirectoryData > 0) {
+            return;
+        }
+        $this->savingDirectoryData = $this->savingDirectoryData + 1;
+        $requestData = $this->getRequestData();
+        $userType = $requestData['user_type'];
+
+        if($userType === self::STUDENT){
+            return $this->saveStudentData();
+        }
+        if($userType === self::GUARDIAN){
+            return $this->saveGuardianData();
+        }
+        if($userType === self::OTHER){
+            return $this->saveOtherData();
+        }
+        if($userType === self::STAFF){
+            return $this->saveStaffData();
+        }
+        if (empty($requestData)) {
+            return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
+        }
+        return;
+    }
+
+    /**
+     * Saves student data. POCOR-8231
+     *
+     * @return \Cake\Http\Response|null
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
     public function saveStudentData()
     {
+
+        if($this->savingStudentData > 0) {
+            self::debug('>0');
+            return;
+        }
+        $this->savingStudentData = $this->savingStudentData + 1;
+
         $requestData = $this->getRequestData();
+//        Log::debug(__FUNCTION__);
+//        self::debug($requestData);
         if (empty($requestData)) {
             return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
         }
@@ -5996,7 +6074,7 @@ class InstitutionsController extends AppController
         if ($requestData['is_diff_school'] == 1) {
             $userRecordId = $requestData['student_id'];
             $result = $this->handleStudentTransfer($requestData, $userRecordId, $userId);
-            return $this->sendJsonResponse(['message' => 'success'], 200);
+            return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
         }
         $securityUserResult = $this->saveSecurityUser($studentData);
         if ($securityUserResult) {
@@ -6006,13 +6084,60 @@ class InstitutionsController extends AppController
             $this->handleContacts($requestData, $userRecordId, $userId);
             $this->handleCustomFields('student', $requestData, $userRecordId, $userId);
             if ($requestData['student_admission_status_value'] == 0 || strtolower($requestData['student_admission_status']) == "enrolled") {
-                $this->handleInstitutionData($requestData, $userRecordId, $userId);
+                $saved_student = $this->handleStudentInstitutionData($requestData, $userRecordId, $userId);
             }
             $this->triggerWebhooks($userRecordId, $requestData);
 //            Log::debug(print_r($studentData,true));
-            return $this->sendJsonResponse(['message' => 'success'], 200);
+            return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId, 'saved_student' => $saved_student], 200);
         } else {
 //            Log::debug(print_r($studentData,true));
+            return $this->sendJsonResponse(['message' => 'Failed to save user Webhooks.'], 500);
+            }
+    }
+
+    /**
+     * Saves staff data. POCOR-8231
+     *
+     * @return \Cake\Http\Response|null
+     * @throws Exception
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public function saveStaffData()
+    {
+
+        if($this->savingStaffData > 0) {
+            return;
+        }
+        $this->savingStaffData = $this->savingStaffData + 1;
+
+        $requestData = $this->getRequestData();
+        if (empty($requestData)) {
+            return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
+        }
+        Log::debug(print_r($requestData, true));
+        $userId = $this->request->getSession()->read('Auth.User.id') ?? 1;
+        $staffData = $this->extractSecurityUserData($requestData, $userId, false,true);
+
+        if ($requestData['is_diff_school'] == 1) {
+            $userRecordId = $requestData['staff_id'];
+            $result = $this->handleStaffTransfer($requestData, $userRecordId, $userId);
+            return $this->sendJsonResponse(['message' => 'success', 'staff' => $result], 200);
+        }
+        $securityUserResult = $this->saveSecurityUser($staffData);
+        if ($securityUserResult) {
+            $userRecordId = $securityUserResult->id;
+            $this->handleNationalities($requestData, $userRecordId, $userId);
+            $this->handleIdentities($requestData, $userRecordId, $userId);
+            $this->handleContacts($requestData, $userRecordId, $userId);
+            $this->handleCustomFields('staff', $requestData, $userRecordId, $userId);
+            $staff = $this->handleStaffInstitutionData($requestData, $userRecordId, $userId);
+            $this->handleShifts($requestData, $userRecordId);
+            $this->triggerWebhooks($userRecordId, $requestData);
+//            Log::debug(print_r($staff,true)); // POCOR-8532
+//            Log::debug(print_r($staffData,true)); // POCOR-8532
+            return $this->sendJsonResponse(['message' => 'success', 'staff' => $staff->toArray()], 200);
+        } else {
+//            Log::debug(print_r($staffData,true));
             return $this->sendJsonResponse(['message' => 'Failed to save user Webhooks.'], 500);
         }
     }
@@ -6073,7 +6198,7 @@ class InstitutionsController extends AppController
     {
         $securityUsers = self::getDynamicTableInstance('security_users');
         $checkStudentExist = $securityUsers->find()->where(['openemis_no' => $userData['openemis_no']])->first();
-
+//        self::debug($userData);
         if ($checkStudentExist) {
             $userData['id'] = $checkStudentExist->id;
             unset($userData['username'], $userData['password']);
@@ -6085,6 +6210,8 @@ class InstitutionsController extends AppController
         try {
             return $securityUsers->save($entity);
         } catch (\Exception $e) {
+            Log::debug(__FUNCTION__);
+
             Log::debug('Error: ' . $e->getMessage());
 //            Log::debug($entity);
             return false;
@@ -6142,6 +6269,8 @@ class InstitutionsController extends AppController
         try {
             return $nationalitiesTbl->save($entityNationalityData);
         } catch (\Exception $e) {
+            Log::debug(__FUNCTION__);
+
             Log::debug('Error  create nationality1: ' . $e->getMessage());
             return false;
         }
@@ -6187,6 +6316,8 @@ class InstitutionsController extends AppController
             try {
                 $userNationalities->save($entityNationalData);
             } catch (\Exception $e) {
+                Log::debug(__FUNCTION__);
+
                 Log::debug('Error create nationality: ' . $e->getMessage());
             }
         }
@@ -6230,6 +6361,8 @@ class InstitutionsController extends AppController
                     try {
                         return $userIdentities->save($entityIdentitiesData, ['associated' => false]);
                     } catch (\Exception $e) {
+                        Log::debug(__FUNCTION__);
+
                         Log::debug('Error: ' . $e->getMessage());
                         return $e;
                     }
@@ -6306,6 +6439,8 @@ class InstitutionsController extends AppController
             try {
                 return $userContacts->save($presentContact);
             } catch (\Exception $e) {
+                Log::debug(__FUNCTION__);
+
                 Log::debug('Error: ' . $e->getMessage());
                 return $e;
             }
@@ -6369,12 +6504,21 @@ class InstitutionsController extends AppController
 
                 // Only create and save the entity if at least one relevant field has a value
                 if ($hasValue) {
+                    if (isset($fieldData['custom_field_id'])) {
+                        // Copy the value from 'custom_field_id' to 'student_custom_field_id'
+                        $fieldData[$userType . '_custom_field_id'] = $fieldData['custom_field_id'];
+                        // Remove the old 'custom_field_id' key
+                        unset($fieldData['custom_field_id']);
+                    }
+
 //                    Log::debug(print_r($fieldData, true));
                     $fieldEntity = $customFieldValuesTable->newEntity($fieldData);
                     try {
                         $cv[] = $customFieldValuesTable->save($fieldEntity);
 
                     } catch (\Exception $e) {
+                        Log::debug(__FUNCTION__);
+
                         Log::debug('Error: ' . $e->getMessage());
                     }
                 }
@@ -6412,7 +6556,7 @@ class InstitutionsController extends AppController
      * @param int $userId
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    private function handleInstitutionData(array $requestData, $userRecordId, $userId)
+    private function handleStudentInstitutionData(array $requestData, $userRecordId, $userId)
     {
         $institutionId = $requestData['institution_id'] ?? null;
         $institutionClassId = $requestData['institution_class_id'] ?? null;
@@ -6420,7 +6564,7 @@ class InstitutionsController extends AppController
         $academicPeriodId = $requestData['academic_period_id'] ?? null;
         $startDate = !empty($requestData['start_date']) ? date('Y-m-d', strtotime($requestData['start_date'])) : null;
         $endDate = !empty($requestData['end_date']) ? date('Y-m-d', strtotime($requestData['end_date'])) : null;
-
+        $saved_student = [];
         if (!empty($educationGradeId) && !empty($academicPeriodId) && !empty($institutionId) && !empty($startDate) && !empty($endDate)) {
             $institutionStudents = self::getDynamicTableInstance('institution_students');
             $entityStudentsData = [
@@ -6439,8 +6583,10 @@ class InstitutionsController extends AppController
             ];
             $entityStudentsData = $institutionStudents->newEntity($entityStudentsData);
             try {
-                $institutionStudents->save($entityStudentsData);
+                $saved_student['institution_student'] = $institutionStudents->save($entityStudentsData)->toArray();
             } catch (\Exception $exception) {
+                Log::debug(__FUNCTION__);
+
                 Log::debug('Error: ' . $exception->getMessage());
             }
         }
@@ -6462,11 +6608,13 @@ class InstitutionsController extends AppController
             ];
             $entityClassData = $institutionClassStudents->newEntity($entityClassData);
             try {
-                $institutionClassStudents->save($entityClassData);
+                $saved_student['institution_class_student'] = $institutionClassStudents->save($entityClassData)->toArray();
             } catch (\Exception $exception) {
+                Log::debug(__FUNCTION__);
                 Log::debug('Error: ' . $exception->getMessage());
             }
         }
+        return $saved_student;
     }
 
     /**
@@ -6519,6 +6667,8 @@ class InstitutionsController extends AppController
 
             if ($existingTransfer) {
                 // Record already exists, handle accordingly
+                Log::debug(__FUNCTION__);
+
                 Log::debug('Student transfer record already exists.');
                 return ['error' => 'Student transfer record already exists.'];
 
@@ -6539,10 +6689,101 @@ class InstitutionsController extends AppController
                 try {
                     return $institutionStudentTransfers->save($entity1);
                 } catch (\Exception $exception) {
+                    Log::debug(__FUNCTION__);
+
                     Log::debug('Error in Transfer: ' . $exception->getMessage());
                 }
             }
         }
+    }
+
+    /**
+     * Handles staff transfer between institutions.
+     *
+     * @param array $requestData
+     * @param int $userRecordId
+     * @param int $userId
+     * @return array|null
+     */
+    private function handleStaffTransfer(array $requestData, $userRecordId, $userId)
+    {
+        if ($requestData['is_diff_school'] == 1) {
+            $institutionId = $requestData['institution_id'] ?? null;
+            $institutionPositionId = $requestData['institution_position_id'] ?? null;
+            $staffTypeId = $requestData['staff_type_id'] ?? null;
+            $previousInstitutionId = $requestData['previous_institution_id'] ?? null;
+            $previousInstitutionStaffId = $requestData['previous_institution_staff_id'] ?? "";
+            $staffTransferReasonId = $requestData['staff_transfer_reason_id'] ?? null;
+            $is_homeroom =$requestData['is_homeroom'] ?? null; // POCOR-8532
+            $fte =$requestData['fte'] ?? null; // POCOR-8532
+            if (!$previousInstitutionId) {
+                return ['error' => 'no previous_institution_id'];
+            }
+
+            $startDate = !empty($requestData['start_date']) ? date('Y-m-d', strtotime($requestData['start_date'])) : null;
+            $endDate = !empty($requestData['end_date']) ? date('Y-m-d', strtotime($requestData['end_date'])) : null;
+
+            $institutionStaffTransfers = self::getDynamicTableInstance('institution_staff_transfers');
+            $datatocheck = [
+                'new_start_date' => $startDate,
+                'staff_id' => $userRecordId,
+                'status_id' => $this->getWorkflowStepId('Staff Transfer - Receiving', 'Open'),
+                'new_institution_id' => $institutionId,
+                'new_institution_position_id' => $institutionPositionId,
+                'new_staff_type_id' => $staffTypeId,
+                'previous_institution_id' => $previousInstitutionId,
+//                'previous_institution_staff_id' => $previousInstitutionStaffId,
+            ];
+
+            $existingTransfer = $institutionStaffTransfers->find()
+                ->where($datatocheck)
+                ->first();
+
+            if ($existingTransfer) {
+                Log::debug(__FUNCTION__);
+                Log::debug('Staff transfer record already exists.');
+                return ['error' => 'Staff transfer record already exists.'];
+            } else {
+
+                $entityTransferData = array_merge($datatocheck, [
+                    'assignee_id' => $this->Auth->user('id'), //POCOR-7080
+                    'new_institution_position_id' => $institutionPositionId,
+                    'new_staff_type_id' => $staffTypeId,
+                    'new_FTE' => $fte ?? 1, // POCOR-8532
+                    'is_homeroom' => $is_homeroom ?? 0, // POCOR-7870
+                    'new_start_date' => $startDate,
+                    'new_end_date' => $endDate,
+                    'previous_institution_staff_id' => '',
+                    'previous_staff_type_id' => '',
+                    'previous_FTE' => '',
+                    'previous_end_date' => '',
+                    'previous_effective_date' => '',
+                    'previous_institution_staff_id' => '',
+                    'requested_date' => null,
+                    'assignee_id' => $userId,
+                    'comment' => $requestData['comment'] ?? '',
+                    'transfer_type' => 0,
+                    'all_visible' => 1,
+                    'modified_user_id' => '',
+                    'modified' => '',
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s')
+                ]);
+//                Log::debug(print_r($entityTransferData, true));
+                $entity = $institutionStaffTransfers->newEntity($entityTransferData);
+                try {
+                    $result = $institutionStaffTransfers->save($entity);
+                        return $result->toArray();
+                } catch (\Exception $exception) {
+                    Log::debug(__FUNCTION__);
+
+                    Log::debug('Error in Transfer: ' . $exception->getMessage());
+                    return ['error' => 'Error in Transfer: ' . $exception->getMessage()];
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -6613,7 +6854,7 @@ class InstitutionsController extends AppController
 
     /**
      * Prepares the webhook body. returns empty string yet
-     *
+     * POCOR-8231
      * @param array $student
      * @return array
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
@@ -6626,13 +6867,167 @@ class InstitutionsController extends AppController
     }
 
     /**
-     * Saves student data. POCOR-8337
+     * Handles institution data for a staff member.
+     * POCOR-8231
+     *
+     * @param array $requestData
+     * @param int $userRecordId
+     * @param int $userId
+     * @return void
+     * @throws \Cake\ORM\Exception\PersistenceFailedException
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private function handleStaffInstitutionData($requestData, $userRecordId, $userId)
+    {
+        $institutionId = $requestData['institution_id'] ?? null;
+        if (!empty($institutionId)) {
+        $institutionPositionId = $requestData['institution_position_id'] ?? null;
+            $staffTypeId = $requestData['staff_type_id'] ?? null;
+            $fte = $requestData['fte'] ?? null;
+            $startDate = !empty($requestData['start_date']) ? date('Y-m-d', strtotime($requestData['start_date'])) : null;
+            $endDate = !empty($requestData['end_date']) ? date('Y-m-d', strtotime($requestData['end_date'])) : null;
+            $endYear = !empty($requestData['end_date']) ? date('Y', strtotime($requestData['end_date'])) : null;
+            $staff_position_grade_id = (array_key_exists('staff_position_grade_id', $requestData)) ? $requestData['staff_position_grade_id'] : '';//POCOR-7238
+            $startYear = date('Y', strtotime($startDate));
+            $is_homeroom = (array_key_exists('is_homeroom', $requestData)) ? $requestData['is_homeroom'] : 0; //POCOR-5070
+
+            $institutionStaffs = self::getDynamicTableInstance('institution_staff');
+            $institutionPositions = self::getDynamicTableInstance('institution_positions');
+            $securityGroupUsers = self::getDynamicTableInstance('security_group_users');
+            $StaffStatuses = self::getDynamicTableInstance('Staff.StaffStatuses');
+            $statuses = $StaffStatuses->findCodeList();
+            $position = $institutionPositions->get($institutionPositionId);
+            $securityRole = $this->getSecurityRole($position->staff_position_title_id);
+
+            $entityStaffData = [
+                'FTE' => $fte,
+                'start_date' => $startDate,
+                'start_year' => $startYear,
+                'end_date' => $endDate,
+                'end_year' => $endYear,
+                'staff_id' => $userRecordId,
+                'staff_type_id' => $staffTypeId,
+                'staff_status_id' => $statuses['ASSIGNED'],
+                'is_homeroom' => $is_homeroom, //POCOR-5070
+                'institution_id' => $institutionId,
+                'institution_position_id' => $institutionPositionId,
+                'security_group_user_id' => $this->getSecurityGroupUserId($securityGroupUsers, $institutionId, $userRecordId, $userId, $securityRole) ?? null,
+                'staff_position_grade_id' => $staff_position_grade_id,//POCOR-7238
+                'created_user_id' => $userId,
+                'created' => date('Y-m-d H:i:s')
+            ];
+
+            $entity = $institutionStaffs->newEntity($entityStaffData);
+            return $institutionStaffs->save($entity);
+        }
+    }
+    /**
+     * Retrieves or creates the security group user ID.
+     * POCOR-8231
+     *
+     * @param \Cake\ORM\Table $securityGroupUsers
+     * @param int $institutionId
+     * @param int $userRecordId
+     * @param int $userId
+     * @param \Cake\Datasource\EntityInterface $securityRole
+     * @return string|null
+     * @throws \Cake\ORM\Exception\PersistenceFailedException
+     * @throws \Cake\Datasource\Exception\RecordNotFoundException
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private function getSecurityGroupUserId($securityGroupUsers, $institutionId, $userRecordId, $userId, $securityRole)
+    {
+        $securityGroupInstitutions = self::getDynamicTableInstance('security_group_institutions');
+        $groupInstitution = $securityGroupInstitutions->find()
+            ->where(['institution_id' => $institutionId])
+            ->first();
+
+        $groupUser = $securityGroupUsers->find()
+            ->where([
+                'security_user_id' => $userRecordId,
+                'security_role_id' => $securityRole->id,
+                'security_group_id' => $groupInstitution->security_group_id
+            ])
+            ->first();
+
+        if (empty($groupUser)) {
+            $groupUserData = [
+                'id' => Text::uuid(),
+                'security_group_id' => $groupInstitution->security_group_id,
+                'security_user_id' => $userRecordId,
+                'security_role_id' => $securityRole->id,
+                'created_user_id' => $userId,
+                'created' => date('Y-m-d H:i:s')
+            ];
+            $entity = $securityGroupUsers->newEntity($groupUserData);
+            $securityGroupUsers->save($entity);
+            return $entity->id;
+        }
+
+        return $groupUser->id;
+    }
+
+    /**
+     * Retrieves the security role based on the position title ID.
+     * POCOR-8231
+     *
+     * @param int $staffPositionTitleId
+     * @return \Cake\Datasource\EntityInterface
+     * @throws \Cake\Datasource\Exception\RecordNotFoundException
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private function getSecurityRole($staffPositionTitleId)
+    {
+        $staffPositionTitles = self::getDynamicTableInstance('staff_position_titles');
+        $title = $staffPositionTitles->get($staffPositionTitleId);
+        $securityRoles = self::getDynamicTableInstance('security_roles');
+        return $securityRoles->get($title->security_role_id);
+    }
+
+    /**
+     * Handles shifts for a staff member.
+     * POCOR-8231
+     *
+     * @param array $requestData
+     * @param int $userRecordId
+     * @return void
+     * @throws \Cake\ORM\Exception\PersistenceFailedException
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    private function handleShifts($requestData, $userRecordId)
+    {
+        $shiftIds = $requestData['shift_ids'] ?? [];
+
+        if (!empty($shiftIds)) {
+            $institutionStaffShifts = self::getDynamicTableInstance('institution_staff_shifts');
+
+            foreach ($shiftIds as $shiftId) {
+                $shiftData = [
+                    'staff_id' => $userRecordId,
+                    'shift_id' => $shiftId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
+
+                $entity = $institutionStaffShifts->newEntity($shiftData);
+                $institutionStaffShifts->save($entity);
+            }
+        }
+    }
+
+    /**
+     * Saves guardian data. POCOR-8337
      *
      * @return \Cake\Http\Response|null
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     public function saveGuardianData()
     {
+
+        if($this->savingGuardianData > 0) {
+            return;
+        }
+        $this->savingGuardianData = $this->savingGuardianData + 1;
+
 //        Log::debug('saveGuardianData');
         $this->autoRender = false;
         $requestData = $this->getRequestData();
@@ -6653,8 +7048,55 @@ class InstitutionsController extends AppController
             $r1 = $this->handleNationalities($requestData, $userRecordId, $userId);
             $r2 = $this->handleIdentities($requestData, $userRecordId, $userId);
             $r3 = $this->handleContacts($requestData, $userRecordId, $userId);
+            if ($studentOpenemisNo) {
             $r4 = $this->handleGuardians($guardianRelationId, $studentOpenemisNo, $userRecordId, $userId);
-            $r5 = $this->handleCustomFields('guardian', $requestData, $userRecordId, $userId);
+            }
+//            Log::debug('handleNationalities');
+//            Log::debug(print_r($r1, true));
+//            Log::debug('handleIdentities');
+//            Log::debug(print_r($r2, true));
+//            Log::debug('handleContacts');
+//            Log::debug(print_r($r3, true));
+//            Log::debug('handleGuardians');
+//            Log::debug(print_r($r4, true));
+            return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
+        } else {
+//            Log::debug(print_r($userData,true));
+            return $this->sendJsonResponse(['message' => 'Failed to save user Guardian.'], 500);
+        }
+    }
+
+    /**
+     * Saves other user data. POCOR-8337
+     *
+     * @return \Cake\Http\Response|null
+     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     */
+    public function saveOtherData()
+    {
+//        Log::debug(__FUNCTION__);
+//
+//        Log::debug('saveOtherData');
+        $this->autoRender = false;
+        $requestData = $this->getRequestData();
+//        Log::debug(print_r($requestData, true));
+        if (empty($requestData)) {
+            return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
+        }
+
+        $userId = $this->request->getSession()->read('Auth.User.id') ?? 1;
+        $userData = $this->extractSecurityUserData($requestData, $userId, false, false, true);
+        $studentOpenemisNo = (array_key_exists('student_openemis_no', $requestData)) ? $requestData['student_openemis_no'] : null;
+        $guardianRelationId = (array_key_exists('guardian_relation_id', $requestData)) ? $requestData['guardian_relation_id'] : null;
+//        Log::debug(print_r($userData, true));
+        $securityUserResult = $this->saveSecurityUser($userData);
+//        Log::debug(print_r($securityUserResult, true));
+        if ($securityUserResult) {
+            $userRecordId = $securityUserResult->id;
+            $r1 = $this->handleNationalities($requestData, $userRecordId, $userId);
+            $r2 = $this->handleIdentities($requestData, $userRecordId, $userId);
+            $r3 = $this->handleContacts($requestData, $userRecordId, $userId);
+//            $r5 = $this->handleCustomFields('guardian', $requestData, $userRecordId, $userId);
 //            Log::debug('handleNationalities');
 //            Log::debug(print_r($r1, true));
 //            Log::debug('handleIdentities');
@@ -6665,10 +7107,10 @@ class InstitutionsController extends AppController
 //            Log::debug(print_r($r4, true));
 //            Log::debug('handleCustomFields');
 //            Log::debug(print_r($r5, true));
-            return $this->sendJsonResponse(['message' => 'success'], 200);
+            return $this->sendJsonResponse(['message' => 'success', 'id' => $userRecordId], 200);
         } else {
 //            Log::debug(print_r($userData,true));
-            return $this->sendJsonResponse(['message' => 'Failed to save user Guardian.'], 500);
+            return $this->sendJsonResponse(['message' => 'Failed to save user Other.'], 500);
         }
     }
 
@@ -6733,6 +7175,8 @@ class InstitutionsController extends AppController
             try {
                 return $StudentGuardians->save($entityGuardiansData, ['checkExisting' => true]);
             } catch (\Exception $e) {
+                Log::debug(__FUNCTION__);
+
                 Log::debug('Error: ' . $e->getMessage());
                 return $e;
             }
@@ -6742,6 +7186,10 @@ class InstitutionsController extends AppController
 
     public function checkUserAlreadyExistByIdentity()
     {
+        if($this->savingDirectoryData > 0) {
+            return;
+        }
+        $this->savingDirectoryData = $this->savingDirectoryData + 1;
 
         $requestData = $this->getRequestData();
 
@@ -6749,7 +7197,7 @@ class InstitutionsController extends AppController
             return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 400, 'message' => __('Invalid data.')]);
 
         }
-
+//        self::debug($requestData);
         $identityTypeId = $this->getValue($requestData, 'identity_type_id');
         $identityNumber = $this->getValue($requestData, 'identity_number');
         $nationalityId = $this->getValue($requestData, 'nationality_id');
@@ -6757,7 +7205,7 @@ class InstitutionsController extends AppController
         if ($this->isIdentityValid($identityTypeId, $identityNumber)) {
             $userIdentitiesTable = $this->getUserIdentitiesTable();
             $userExists = $this->checkUserExistence($userIdentitiesTable, $identityTypeId, $identityNumber, $nationalityId);
-
+//            self::debug(__FUNCTION__);
             if ($userExists) {
                 return $this->sendJsonResponse(['user_exist' => 1, 'status_code' => 200, 'message' => __('User already exists with this nationality, identity type & identity number.')]);
 
@@ -6889,7 +7337,7 @@ class InstitutionsController extends AppController
         $this->autoRender = false;
         $requestData = $this->request->input('json_decode', true);
         $requestData = $requestData['params'];
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
 
         //POCOR-8209 -- Start
         $configItemResult = $ConfigItems->find()
@@ -6979,44 +7427,8 @@ class InstitutionsController extends AppController
     public
     function Lands()
     {
-        $session = $this->request->getSession();
-        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
-        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId]);
-        $studentId = $session->read('Student.Students.id');
-        $studentName = $session->read('Student.Students.name');
-        $UsersTable = TableRegistry::getTableLocator()->get('User.Users');
-        $InstitutionTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
-        $UserData = $UsersTable->find('all', ['conditions' => ['id' => $studentId]])->first();
-        $InstitutionData = $InstitutionTable->find('all', ['conditions' => ['id' => $institutionId]])->first();
-        $queryStng = $this->paramsEncode(['id' => $UserData->id]);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Lands']);
 
-        //POCOR-7485 starts for localstorage for angular 11
-        $userId = $this->Auth->user('id');
-        $institutionName = $this->Institutions->get($institutionId)->name;
-        $this->set('institutionId', $institutionId);
-        $this->set('institutionName', $institutionName);
-        $this->set('loginUserId', $userId);
-        $this->set('studentId', $UserData->id);
-        //POCOR-7485 ends
-
-        $this->Navigation->addCrumb(__('Students'), ['plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'institutionId' => $encodedInstitutionId,
-            'action' => 'Students',
-        ]);
-        $this->Navigation->addCrumb($studentName, ['plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'institutionId' => $encodedInstitutionId,
-            'action' => 'StudentUser',
-            'view',
-            $this->ControllerAction->paramsEncode(['id' => $studentId])]);
-        $this->Navigation->addCrumb(__('Add Guardians'), []);
-        $this->set('InstitutionData', $InstitutionData);
-        $this->set('UserData', $UserData);
-        $this->set('StudentID', $institutionId);
-        $this->set('StudentID1', $studentId);
-        $this->set('queryStng', $queryStng);
-        $this->set('ngController', 'DirectoryaddguardianCtrl as $ctrl');
     }
 
     public
@@ -7115,7 +7527,7 @@ class InstitutionsController extends AppController
             '0' => 'index',
             '1' => $this->paramsEncode(['institution_id'=> $institutionId])
         ]);
-        
+
         $header = __('Reports') . ' - ' . $data['module'];
 
         $inputFileName = $replace_data;
@@ -7293,7 +7705,7 @@ class InstitutionsController extends AppController
             $search_by_name = true;
         }
         if ($search_by_id || $search_by_name) {
-            $externalDataSourceAttributesTbl = TableRegistry::get('external_data_source_attributes');
+            $externalDataSourceAttributesTbl = self::getDynamicTableInstance('external_data_source_attributes');
             $externalDataSourceAttributesData = $externalDataSourceAttributesTbl
                 ->find()
                 ->select(['id', 'external_data_source_type', 'attribute_field', 'attribute_name', 'value'])
@@ -7402,7 +7814,7 @@ class InstitutionsController extends AppController
                         $fieldKey = 'last_name';
                     } else if ($ex_val['attribute_field'] == 'gender_mapping') {
                         $fieldKey = 'gender_name';
-                        $genders_types = TableRegistry::get('genders');
+                        $genders_types = self::getDynamicTableInstance('genders');
                         $genders_types_result = $genders_types
                             ->find()
                             ->select(['id', 'name'])
@@ -7413,7 +7825,7 @@ class InstitutionsController extends AppController
                         $fieldKey = 'date_of_birth';
                         $externalPerson[$value] = date('Y-m-d', strtotime($externalPerson[$value]));
                     } else if ($ex_val['attribute_field'] == 'identity_type_mapping') {
-                        $identity_types = TableRegistry::get('identity_types');
+                        $identity_types = self::getDynamicTableInstance('identity_types');
                         $identity_types_result = $identity_types
                             ->find()
                             ->select(['id', 'name'])
@@ -7429,7 +7841,7 @@ class InstitutionsController extends AppController
                     } else if ($ex_val['attribute_field'] == 'postal_mapping') {
                         $fieldKey = 'postal_code';
                     } else if ($ex_val['attribute_field'] == 'nationality_mapping') {
-                        $nationalitiesTbl = TableRegistry::get('nationalities');
+                        $nationalitiesTbl = self::getDynamicTableInstance('nationalities');
                         $nationalities = $nationalitiesTbl->find()
                             ->select(['id', 'name'])
                             ->where([
@@ -7443,7 +7855,7 @@ class InstitutionsController extends AppController
                     }
                     $result_Array[$fieldKey] = $externalPerson[$value];
 
-                    $guardian_relations = TableRegistry::get('guardian_relations');
+                    $guardian_relations = self::getDynamicTableInstance('guardian_relations');
                     $guardian_relations_result = $guardian_relations
                         ->find()
                         ->where([$guardian_relations->aliasField('international_code !=') => ''])
@@ -7519,19 +7931,28 @@ class InstitutionsController extends AppController
         $UsersTable = self::getDynamicTableInstance('User.Users');
         $InstitutionTable = self::getDynamicTableInstance('Institution.Institutions');
 
-        if (isset($requestDataa['student_id'])) {
-            $UserData = $UsersTable->find('all', ['conditions' => ['id' => $requestDataa['student_id']]])->first();
+        $student_id = $requestDataa['student_id'];
+        $UserData = [];
+        if (isset($student_id)) {
+            $UserData = $UsersTable->find('all', ['conditions' => ['id' => $student_id]])->first();
         }
+        if (empty($UserData)) {
         if (isset($requestDataa['openemis_no'])) {
             $UserData = $UsersTable->find('all', ['conditions' => ['openemis_no' => $requestDataa['openemis_no']]])->first();
         }
-        if (isset($requestDataa['institution_id'])) {
-            $InstitutionData = $InstitutionTable->find('all', ['conditions' => ['id' => $requestDataa['institution_id']]])->first();
+        }
+        if(!empty($UserData)){
+            $studentName = $UserData->name;
+            $student_id = $UserData->id;
+        }
+        $institution_id = $requestDataa['institution_id'];
+        if (isset($institution_id)) {
+            $InstitutionData = $InstitutionTable->find('all', ['conditions' => ['id' => $institution_id]])->first();
         }
 
-        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
-        $encodedQueryString = $this->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId]);
-        $queryStng = $this->paramsEncode(['id' => $UserData->id]);
+//        $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
+        $encodedQueryString = $this->paramsEncode(['id' => $institution_id, 'institution_id' => $institution_id]);
+        $queryStng = $this->paramsEncode(['id' => $student_id]);
         $this->Navigation->addCrumb(__('Students'), ['plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'Students',
@@ -7540,10 +7961,12 @@ class InstitutionsController extends AppController
         ]);
         $this->Navigation->addCrumb($studentName, ['plugin' => 'Institution',
             'controller' => 'Institutions',
-            'institutionId' => $encodedInstitutionId,
             'action' => 'StudentUser',
-            'view',
-            $this->ControllerAction->paramsEncode(['id' => $studentId, 'institution_id' => $institutionId])]);
+            '0' => 'view',
+            '1' => $this->ControllerAction->paramsEncode([
+                'id' => $student_id,
+                'student_id' => $student_id,
+                'institution_id' => $institution_id])]);
         $this->Navigation->addCrumb(__('Add Guardians'), []);
         $this->set('InstitutionData', $InstitutionData);
         $this->set('UserData', $UserData);
@@ -7661,12 +8084,12 @@ class InstitutionsController extends AppController
     public
     function getStudentAdmissionStatus()
     {
-        $configItems = TableRegistry::get('Configuration.ConfigItems');
+        $configItems = self::getDynamicTableInstance('Configuration.ConfigItems');
         $configItemResult = $configItems->find()->where([
             $configItems->aliasField('code') => "student_admission_status"
         ])->first();
         $studentStatus = !empty($configItemResult->value) ? $configItemResult->value : $configItemResult->default_value;
-        $WorkflowStepsTable = TableRegistry::get('workflow.WorkflowSteps');
+        $WorkflowStepsTable = self::getDynamicTableInstance('workflow.WorkflowSteps');
         if ($studentStatus == 0) {
             $result_array[] = array("id" => 0, "name" => "Enrolled");// setting 0 for enrolled as zero is not any id in workflow step
         } else {

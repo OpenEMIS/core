@@ -110,7 +110,7 @@ class ClassesProfilesTable extends ControllerActionTable
             $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
             $params = [
                 'class_profile_template_id' => $reportCardId,
-				'institution_id' => $institution_id,
+				'institution_id' => $entity->id ?? $this->getQueryString('institution_id'),//POCOR-8393
 				'academic_period_id' => $academicPeriodId,
                 'institution_class_id' => $entity->institution_class_id,
                 'area_id' => $areaId//POCOR-7382
@@ -277,9 +277,9 @@ class ClassesProfilesTable extends ControllerActionTable
                 $this->ClassProfileProcesses->aliasField('academic_period_id'),
                 $this->ClassProfileProcesses->aliasField('institution_class_id')
             ])
-            ->where([
-                $this->ClassProfileProcesses->aliasField('status') => $this->ClassProfileProcesses::NEW_PROCESS
-            ])
+            // ->where([
+            //     $this->ClassProfileProcesses->aliasField('status') => $this->ClassProfileProcesses::NEW_PROCESS
+            // ])//POCOR-8393
             ->order([
                 $this->ClassProfileProcesses->aliasField('created'),
             ])
@@ -391,6 +391,7 @@ class ClassesProfilesTable extends ControllerActionTable
                 'institution_class_id' => $InstitutionClasses->aliasField('id'),
                 'class_name' => $InstitutionClasses->aliasField('name'),
                 'institution_name' => $this->aliasField('name'),
+                'institution_id' => $InstitutionClasses->aliasField('institution_id'),//POCOR-8393
                 'class_profile_template_id' => $this->ClassProfiles->aliasField('class_profile_template_id'),
                 'report_card_status' => $this->ClassProfiles->aliasField('status'),
                 'report_card_started_on' => $this->ClassProfiles->aliasField('started_on'),
@@ -633,12 +634,12 @@ class ClassesProfilesTable extends ControllerActionTable
     {
         if ($entity->has('class_profile_template_id')) {
             $reportCardId = $entity->class_profile_template_id;
-        } else if (!is_null($this->request->getQuery['class_profile_template_id'])) {
-            $reportCardId = $this->request->getQuery['class_profile_template_id'];
+        } else if (!is_null($this->request->getQuery('class_profile_template_id'))) {
+            $reportCardId = $this->request->getQuery('class_profile_template_id');
         }
 		
 		$academicPeriodId = $this->request->getQuery('academic_period_id');
-        $institution_id = $this->request->getQuery('institution_id');
+        $institution_id = $entity->institution_id ?? $this->getQueryString('institution_id');//POCOR-8393
         $search = [
             'class_profile_template_id' => $reportCardId,
             'institution_class_id' => $entity->institution_class_id,
@@ -793,16 +794,20 @@ class ClassesProfilesTable extends ControllerActionTable
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['class_profile_template_id']);
          
         if ($hasTemplate) {
-            $InstitutionReportCardProcesses = TableRegistry::get('ReportCard.ClassProfileProcesses');
-            $inProgress = $InstitutionReportCardProcesses->find()
+            $InstitutionReportCardProcesses = TableRegistry::get('ReportCard.ClassProfileProcesses'); 
+            //POCOR-8393 start
+            $query = $InstitutionReportCardProcesses->find() 
                 ->where([
                     $InstitutionReportCardProcesses->aliasField('class_profile_template_id') => $params['class_profile_template_id'],
-                    $InstitutionReportCardProcesses->aliasField('institution_id') => $params['institution_id'],
+                    // $InstitutionReportCardProcesses->aliasField('institution_id') => $params['institution_id'],
                     // $InstitutionReportCardProcesses->aliasField('institution_class_id') => $params['institution_class_id'],
                     $InstitutionReportCardProcesses->aliasField('academic_period_id') => $params['academic_period_id']
-                ])
-                ->count();
-
+                ]);
+            if (isset($params['institution_id'])) {
+                    $query->where([$InstitutionReportCardProcesses->aliasField('institution_id') => $params['institution_id']]);
+            }
+            $inProgress = $query->count();
+            //POCOR-8393 end
             if (!$inProgress) {                   
                 $this->addReportCardsToProcesses($params['academic_period_id'], $params['class_profile_template_id'], $params['institution_id'], $params['institution_class_id']);
 				$this->triggerGenerateAllReportCardsShell($params['academic_period_id'], $params['class_profile_template_id'], $params['institution_id'], $params['institution_class_id'], $params['area_id']);//POCOR-7382 add area_id

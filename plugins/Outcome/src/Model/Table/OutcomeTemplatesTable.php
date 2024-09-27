@@ -261,7 +261,7 @@ class OutcomeTemplatesTable extends ControllerActionTable
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
-        if (empty($entity->getRrrors())) {
+        if (empty($entity->getErrors())) {
             // set redirect url to view page
             $url = $this->url('view');
             $url[1] = $this->paramsEncode(['id' => $entity->id, 'academic_period_id' => $entity->academic_period_id]);
@@ -285,7 +285,7 @@ class OutcomeTemplatesTable extends ControllerActionTable
             $message = __('Delete operation is not allowed as there are other information linked to this record.');
             $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
             
-            $url = $this->controller->request->referer();
+            $url = $this->request->referer();
             $event->stopPropagation();
             return $this->controller->redirect($url);
         }
