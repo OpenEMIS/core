@@ -53,7 +53,7 @@ class GuardianNavsController extends AppController
         $this->ControllerAction->models = [
             // Student
             //'StudentAbsences'       => ['className' => 'Student.Absences', 'actions' => ['index']],
-            'StudentBehaviours'     => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
+           // 'StudentBehaviours'     => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']], //POCOR-8596 comment this
             'StudentExtracurriculars' => ['className' => 'Student.GuardianExtracurriculars'],
         ];
         $this->loadComponent('Training.Training');
@@ -450,5 +450,12 @@ class GuardianNavsController extends AppController
 
     /**POCOR-6845 - modified _FUNCTION_ to __FUNCTION__ as PHP function name is case sesitive and ealier it was not recognition function */
     public function StudentReportCards()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentReportCards']); }
+
+    //POCOR-8596
+    public
+    function StudentBehaviours()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentBehaviours']);
+    }
 
 }

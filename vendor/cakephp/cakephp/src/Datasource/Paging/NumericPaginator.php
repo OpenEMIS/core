@@ -55,7 +55,7 @@ class NumericPaginator implements PaginatorInterface
     protected $_defaultConfig = [
         'page' => 1,
         'limit' => 20,
-        'maxLimit' => 100,
+        'maxLimit' => 200, //POCOR-8611
         'allowedParameters' => ['limit', 'sort', 'page', 'direction'],
     ];
 
@@ -174,6 +174,30 @@ class NumericPaginator implements PaginatorInterface
      */
     public function paginate(object $object, array $params = [], array $settings = []): ResultSetInterface
     {
+        //POCOR-8611 start
+        if (isset($_POST['Search']['limit'])) {
+            $defaults = $_POST['Search']['limit'];
+            } else {
+                $defaults = 0; // POCOR-8446
+            }
+            
+            if ($defaults == 0) {
+                $defaultvals = 10;
+            } elseif ($defaults == 1) {
+                $defaultvals = 20;
+            } elseif ($defaults == 2) {
+                $defaultvals = 30;
+            } elseif ($defaults == 3) {
+                $defaultvals = 40;
+            } elseif ($defaults == 4) {
+                $defaultvals = 50;
+            } elseif ($defaults == 5) {
+                $defaultvals = 100;
+            } elseif ($defaults == 6) {
+                $defaultvals = 200;
+            }
+        $settings['limit'] = $defaultvals; 
+        //POCOR-8611 end
         $query = null;
         if ($object instanceof QueryInterface) {
             $query = $object;
@@ -268,7 +292,7 @@ class NumericPaginator implements PaginatorInterface
     protected function buildParams(array $data): array
     {
         $limit = $data['options']['limit'];
-        $limit = 10;
+        // $limit = 10;
         $paging = [
             'count' => $data['count'],
             'current' => $data['numResults'],
@@ -449,7 +473,7 @@ class NumericPaginator implements PaginatorInterface
         if ($allowed !== null) {
             return $allowed;
         }
-        $deprecated = $config['sortWhitelist'] ?? null;
+        $deprecated = $config['sortableFields'] ?? null;
         if ($deprecated !== null) {
             deprecationWarning('The `sortWhitelist` option is deprecated. Use `sortableFields` instead.');
         }
