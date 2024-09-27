@@ -2318,7 +2318,6 @@ class AttendanceRepository extends Controller
                 'Failed to import students attendances in DB.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-
             return $this->sendErrorResponse('Failed to import students attendances in DB.');
         }
     }
@@ -2334,7 +2333,7 @@ class AttendanceRepository extends Controller
             $updated_data = [];
             $add_data = [];
             $importResponse = [];
-
+            
             foreach ($results[0] as $key => $row) {
                 $errors = [];
                 $i++;
@@ -2342,6 +2341,13 @@ class AttendanceRepository extends Controller
                 if ($i < 2) {
                     continue;
                 }
+
+                //For POCOR-8628 Start...
+                if (!array_filter($row)) {
+                    // Skip empty rows
+                    continue;
+                }
+                //For POCOR-8628 End...
                 
                 if(is_numeric($row[0])){
                     $row[0] = Date::excelToDateTimeObject($row[0])->format('d/m/Y');
@@ -2641,6 +2647,7 @@ class AttendanceRepository extends Controller
                 'Failed in importStudentAttendances method.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
+            
             return false;
         }
     }
