@@ -838,12 +838,85 @@ class InstitutionPositionsTable extends ControllerActionTable
         return true;
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->fields['created_user_id']['options'] = [$entity->created_user_id => $entity->created_user->name];
         if (!empty($entity->modified_user_id)) {
             $this->fields['modified_user_id']['options'] = [$entity->modified_user_id => $entity->modified_user->name];
         }
+         //POCOR-8561 Start
+         $statusId = $entity['status']->id;
+         $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+         $editCheck = $WorkflowSteps->find()
+                         ->where([$WorkflowSteps->aliasField('id') => $statusId])
+                         ->first();
+                         
+                         if (!empty($editCheck)) {
+                             $isEditable = $editCheck->is_editable;
+                             $isRemovable = $editCheck->is_removable;
+                             //hide edit button
+                             if ($isEditable == 0) {
+                                 $btnAttr = [
+                                     'class' => 'btn btn-xs btn-default',
+                                     'data-toggle' => 'tooltip',
+                                     'data-placement' => 'bottom',
+                                     'escape' => false
+                                 ];
+                                 $extraButtons = [
+                                     'edit' => [
+                                         'Institution' => ['Institutions', 'Institutions', 'index'],
+                                         'action' => 'Institutions',
+                                         'icon' => '<i class="fa kd-edit"></i>',
+                                         'title' => __('Edit')
+                                     ]
+                                 ];
+                                 foreach ($extraButtons as $key => $attr) {
+                                     if ($this->AccessControl->check($attr['permission'])) {
+                                        
+                                         $button = [
+                                             'type' => 'hidden',
+                                             'attr' => $btnAttr,
+                                             'url' => [0 => 'index']
+                                         ];
+                                         $button['url']['action'] = $attr['action'];
+                                         $button['attr']['title'] = $attr['title'];
+                                         $button['label'] = $attr['icon'];
+                                         $extra['toolbarButtons'][$key] = $button;
+                                     }
+                                 }
+                             }
+                             //hide delete button
+                             if ($isRemovable == 0) {
+                                 $btnAttr = [
+                                     'class' => 'btn btn-xs btn-default',
+                                     'data-toggle' => 'tooltip',
+                                     'data-placement' => 'bottom',
+                                     'escape' => false
+                                 ];
+                                 $extraButtons = [
+                                     'remove' => [
+                                         'Institution' => ['Institutions', 'Institutions', 'index'],
+                                         'action' => 'Institutions',
+                                         'icon' => '<i class="fa fa-trash"></i>',
+                                         'title' => __('Delete')
+                                     ]
+                                 ];
+                                 foreach ($extraButtons as $key => $attr) {
+                                     if ($this->AccessControl->check($attr['permission'])) {
+                                         $button = [
+                                             'type' => 'hidden',
+                                             'attr' => $btnAttr,
+                                             'url' => [0 => 'index']
+                                         ];
+                                         $button['url']['action'] = $attr['action'];
+                                         $button['attr']['title'] = $attr['title'];
+                                         $button['label'] = $attr['icon'];
+                                         $extra['toolbarButtons'][$key] = $button;
+                                     }
+                                 }
+                             }
+                         }
+        //POCOR-8561 End
         return $entity;
     }
 
