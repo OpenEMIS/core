@@ -26,7 +26,7 @@ class StudentTransferTable extends ControllerActionTable
     private $institutionClasses = null;
     private $institutionId = null;
     private $currentPeriod = null;
-    private $statuses = [];	// Student Status
+    private $statuses = []; // Student Status
 
     public function initialize(array $config): void
     {
@@ -151,7 +151,7 @@ class StudentTransferTable extends ControllerActionTable
     {
 //        $this->log('addBeforeSave', 'debug');
 //        $this->log($requestData[$this->getAlias()], 'debug');
-
+        $requestDataArray = $requestData->getArrayCopy();
         if (array_key_exists($this->getAlias(), $requestData)) {
             $nextAcademicPeriodId = null;
             $currentAcademicPeriodId = null;
@@ -923,10 +923,11 @@ class StudentTransferTable extends ControllerActionTable
         unset($this->request->getQuery['institution_class']);
 
         if ($this->request->is(['post', 'put'])) {
-            if (array_key_exists($this->getAlias(), $data)) {
-                if (array_key_exists('class', $data[$this->getAlias()])) {
+            $dataArray = $this->request->getData();
+            if (array_key_exists($this->getAlias(), $dataArray)) {
+                if (array_key_exists('class', $dataArray[$this->getAlias()])) {
                     //$this->request->query['institution_class'] = $data[$this->getAlias()]['class'];
-                    $this->request = $this->request->withQueryParams(['institution_class' => $data[$this->getAlias()]['class']]);
+                    $this->request = $this->request->withQueryParams(['institution_class' => $dataArray[$this->getAlias()]['class']]);
                 }
             }
         }
@@ -1026,13 +1027,16 @@ class StudentTransferTable extends ControllerActionTable
         unset($this->request->getQuery['next_education_grade_id']);
 
         if ($this->request->is(['post', 'put'])) {
-            if (array_key_exists($this->getAlias(), $data)) {
-                if (array_key_exists('education_grade_id', $data[$this->getAlias()])) {
-                    //$this->request->query['education_grade_id'] = $data[$this->getAlias()]['education_grade_id'];
-                    $this->request = $this->request->withQueryParams(['education_grade_id' => $data[$this->getAlias()]['education_grade_id']]);
+            //POCOR-8624
+            $dataArray = $this->request->getData();
+        
+            if (array_key_exists($this->getAlias(), $dataArray)) {
+                if (array_key_exists('education_grade_id', $dataArray[$this->getAlias()])) {
+                    $this->request = $this->request->withQueryParams(['education_grade_id' => $dataArray[$this->getAlias()]['education_grade_id']]);
                 }
             }
         }
+        
     }
 
     public function addOnChangeNextPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
@@ -1041,10 +1045,11 @@ class StudentTransferTable extends ControllerActionTable
         unset($this->request->getQuery['next_education_grade_id']);
 
         if ($this->request->is(['post', 'put'])) {
-            if (array_key_exists($this->getAlias(), $data)) {
-                if (array_key_exists('next_academic_period_id', $data[$this->getAlias()])) {
+            $dataArray = $this->request->getData();
+            if (array_key_exists($this->getAlias(), $dataArray)) {
+                if (array_key_exists('next_academic_period_id', $dataArray[$this->getAlias()])) {
                     //$this->request->query['next_academic_period_id'] = $data[$this->getAlias()]['next_academic_period_id'];
-                    $this->request = $this->request->withQueryParams(['next_academic_period_id' => $data[$this->getAlias()]['next_academic_period_id']]);
+                    $this->request = $this->request->withQueryParams(['next_academic_period_id' => $dataArray[$this->getAlias()]['next_academic_period_id']]);
                 }
             }
         }
@@ -1055,10 +1060,11 @@ class StudentTransferTable extends ControllerActionTable
         unset($this->request->getQuery['next_education_grade_id']);
 
         if ($this->request->is(['post', 'put'])) {
-            if (array_key_exists($this->getAlias(), $data)) {
-                if (array_key_exists('next_education_grade_id', $data[$this->getAlias()])) {
+            $dataArray = $this->request->getData();
+            if (array_key_exists($this->getAlias(), $dataArray)) {
+                if (array_key_exists('next_education_grade_id', $dataArray[$this->getAlias()])) {
                     //$this->request->query['next_education_grade_id'] = $data[$this->getAlias()]['next_education_grade_id'];
-                    $this->request = $this->request->withQueryParams(['next_education_grade_id' => $data[$this->getAlias()]['next_education_grade_id']]);
+                    $this->request = $this->request->withQueryParams(['next_education_grade_id' => $dataArray[$this->getAlias()]['next_education_grade_id']]);
                 }
             }
         }
