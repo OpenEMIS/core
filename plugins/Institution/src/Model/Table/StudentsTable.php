@@ -3551,9 +3551,8 @@ class StudentsTable extends ControllerActionTable
      */
     private function addUserBasicFields(Query $query)
     {
-
         $query = $query->select([
-            'student_name' => 'CONCAT(`Users`.`first_name`, " ", `Users`.`last_name`)',
+            'student_name' => 'CONCAT_WS(" ", `Users`.`first_name`, `Users`.`middle_name`, `Users`.`third_name`, `Users`.`last_name`)',//POCOR-8582
             'student_openemis_no' => 'Users.openemis_no',
             'student_username' => 'Users.username',
             'student_date_of_birth' => 'Users.date_of_birth',
