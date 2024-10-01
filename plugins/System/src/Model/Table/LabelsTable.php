@@ -13,7 +13,6 @@ use Cake\ORM\Entity;
 class LabelsTable extends ControllerActionTable
 {
     private $fieldsOrder = ['created', 'message'];
-    private $excludeList = ['created_user_id', 'created', 'modified_user_id', 'modified'];
     public function initialize(array $config): void
     {
        parent::initialize($config);
