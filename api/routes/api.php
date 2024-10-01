@@ -525,6 +525,7 @@ Route::group(
 
         //POCOR-8221 start...
         Route::get('institutions/{institutionId}/students/{studentId}/student-transfer', 'StudentController@getStudentTransferData');
+        Route::post('institutions/{institutionId}/student-transfer', 'StudentController@addStudentTransferData');
         //POCOR-8221 end...
     }
 );

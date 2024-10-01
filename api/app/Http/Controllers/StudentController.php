@@ -9,6 +9,7 @@ use App\Http\Requests\ClassAttendanceAdd;
 use App\Http\Requests\StudentAbsenceAdd;
 use App\Http\Requests\StaffAttendanceAdd;
 use App\Http\Requests\UpdateStaffDetails;
+use App\Http\Requests\StudentTransferAddRequest;
 
 
 class StudentController extends Controller
@@ -1212,6 +1213,34 @@ class StudentController extends Controller
             );
 
             return $this->sendErrorResponse('Student Transfer List Not Found');
+        }
+    }
+
+
+    public function addStudentTransferData(StudentTransferAddRequest $request, $institutionId)
+    {
+        try {
+            $params = $request->all();
+
+            $data = $this->studentService->addStudentTransferData($params, $institutionId);
+
+            if($data == 0){
+                return $this->sendErrorResponse('Invalid Institution Id.');
+            } elseif($data == 1){
+                return $this->sendSuccessResponse("Student Transfer In Added Successfully.");
+            } elseif($data == 2){
+                return $this->sendSuccessResponse("Student Transfer Out Added Successfully.");
+            } else{
+                return $this->sendErrorResponse('Failed to add student tranfer data.');
+            }
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add student tranfer data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add student tranfer data.');
         }
     }
     //POCOR-8221 Ends...
