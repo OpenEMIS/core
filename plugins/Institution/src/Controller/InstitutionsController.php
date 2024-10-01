@@ -1653,6 +1653,12 @@ class InstitutionsController extends AppController
             $exportPDF_Url['?'] = ['queryString' => $queryString];
             $this->set('exportPDF', Router::url($exportPDF_Url));
         }
+        //POCOR-8146 Start
+        $labelsTable = TableRegistry::getTableLocator()->get('System.Labels');
+        $labelsData = $labelsTable->find()->where(['module_name' => 'Institutions > Performance > Assessments', 'field_name' => 'Total Mark'])->first();
+        $dynamicTotalMarkHeader = $labelsData->name;
+        $this->set('dynamicTotalMarkHeader', $dynamicTotalMarkHeader);
+        //POCOR-8146 End
         $this->set('excelUrl', Router::url($url));
         $this->set('ngController', 'InstitutionsResultsCtrl');
     }
