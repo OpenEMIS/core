@@ -135,34 +135,44 @@ class MoodleApi
     }
 
     private function _apiLog($action, $param, $response, $callback, $callbackData)
-{
-    $apiLogTable = TableRegistry::get("MoodleApi.MoodleApiLog");
-    // Pass an empty array to newEntity() if you don't have initial data to populate
-    $apiInstance = $apiLogTable->newEntity([]);
+    {
+        $apiLogTable = TableRegistry::get("MoodleApi.MoodleApiLog");
+        // Pass an empty array to newEntity() if you don't have initial data to populate
+        $apiInstance = $apiLogTable->newEntity([]);
 
-    if ($response->isOk()) {
-        $status = MoodleApiLogTable::STATUS_SUCCESS;
-    } else {
-        $status = MoodleApiLogTable::STATUS_FAILED;
+        if ($response->isOk()) {
+            $status = MoodleApiLogTable::STATUS_SUCCESS;
+        } else {
+            $status = MoodleApiLogTable::STATUS_FAILED;
+        }
+
+        $apiInstance->action = $action;
+        $apiInstance->params = json_encode($param);
+      //  $apiInstance->response = json_encode($response);
+        $apiInstance->status = $status;
+        $apiInstance->callback = $callback;
+        $apiInstance->callback_param = serialize($callbackData);
+
+        $apiLogTable->save($apiInstance);
     }
-
-    $apiInstance->action = $action;
-    $apiInstance->params = json_encode($param);
-    $apiInstance->response = json_encode($response);
-    $apiInstance->status = $status;
-    $apiInstance->callback = $callback;
-    $apiInstance->callback_param = serialize($callbackData);
-
-    $apiLogTable->save($apiInstance);
-}
-
 
     private function _loadConfig()
     {
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $this->_token = $ConfigItems->value("api_token");
-        $this->_baseURL = $ConfigItems->value("base_url");
-        $this->_enableUserCreation = $ConfigItems->value("core_user_create_users");
+        //POCOR-8386 new changes
+        $ConfigItemsTable = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
+        $ConfigItems = $ConfigItemsTable->find()->where(['external_data_source_type' => 'External Data Source - LMS'])->toArray();
+        $this->_token = null;
+        $this->_baseURL = null;
+        $this->_enableUserCreation = null;
+        foreach ($ConfigItems as $configItem) {
+            if($configItem->attribute_field == 'api_token'){
+                $this->_token = $configItem->value;
+            }elseif($configItem->attribute_field == 'base_url'){
+                $this->_baseURL = $configItem->value;
+            }elseif($configItem->attribute_field == 'enable_user_creation'){
+                $this->_enableUserCreation = $configItem->value;
+            }
+        }
     }
 
     private function _constructBasicParams($function)
