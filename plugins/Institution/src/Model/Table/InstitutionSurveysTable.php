@@ -753,20 +753,24 @@ class InstitutionSurveysTable extends ControllerActionTable
         $prams = $this->paramsDecode($pass);
         $institutionSurveyId = $prams['id'];
         $institutionSurvey = $this->get($institutionSurveyId);
-        $SurveyStatusData = $SurveyStatusTable->find('all',['conditions'=>['survey_form_id'=>$institutionSurvey->survey_form_id,'date_disabled >' => date('Y-m-d')]])->order(['date_disabled'=>'DESC'])->first();//POCOR-7343
-        $SurveyStatusPeriodData = $SurveyStatusPeriodTable->find('all',['conditions'=>['survey_status_id'=>$SurveyStatusData->id]])->toArray();
-        $SurveyStatusPeriodDataIds='';
-        $totalSurveyStatusPeriodData = count($SurveyStatusPeriodData);
-        foreach($SurveyStatusPeriodData as $SurveyStatusPeriodData1){
-            $SurveyStatusPeriodDataIds .= $SurveyStatusPeriodData1->academic_period_id . ",";
-        }
+        $SurveyStatusData = $SurveyStatusTable->find('all',['conditions'=>['survey_form_id'=>$institutionSurvey->survey_form_id,'date_disabled >=' => date('Y-m-d')]])->order(['date_disabled'=>'DESC'])->first();;
+        if(!empty($SurveyStatusData)) {
+            $SurveyStatusPeriodData = $SurveyStatusPeriodTable->find('all',['conditions'=>['survey_status_id'=>$SurveyStatusData->id]])->toArray();
+            $SurveyStatusPeriodDataIds='';
+            $totalSurveyStatusPeriodData = count($SurveyStatusPeriodData);
+            foreach($SurveyStatusPeriodData as $SurveyStatusPeriodData1){
+                $SurveyStatusPeriodDataIds .= $SurveyStatusPeriodData1->academic_period_id . ",";
+            }
 
-        $SurveyStatusPeriodDataIds = rtrim($SurveyStatusPeriodDataIds, ",");
-        $SurveyStatusPeriodDataIdsArray = explode(",", $SurveyStatusPeriodDataIds);
-        if(in_array($institutionSurvey->academic_period_id, $SurveyStatusPeriodDataIdsArray)){
-
-        }else{
-            unset($extra['toolbarButtons']['edit']);
+            $SurveyStatusPeriodDataIds = rtrim($SurveyStatusPeriodDataIds, ",");
+            $SurveyStatusPeriodDataIdsArray = explode(",", $SurveyStatusPeriodDataIds);
+            if(in_array($institutionSurvey->academic_period_id, $SurveyStatusPeriodDataIdsArray)){
+    
+            }else{
+                unset($extra['toolbarButtons']['edit']); //POCOR-8095
+            }
+        } else {
+            unset($extra['toolbarButtons']['edit']); //POCOR-8095
         }
 
         // $startDate = date('Y-m-d', strtotime($SurveyStatusData->date_enabled));
@@ -801,7 +805,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $SurveyStatusTable = TableRegistry::getTableLocator()->get('Survey.SurveyStatuses');
         $SurveyStatusPeriodTable = TableRegistry::getTableLocator()->get('Survey.SurveyStatusPeriods');
-        $SurveyStatusData = $SurveyStatusTable->find('all',['conditions'=>['survey_form_id'=>$entity->survey_form_id,'date_disabled >' => date('Y-m-d')]])->order(['date_disabled'=>'DESC'])->first();
+        $SurveyStatusData = $SurveyStatusTable->find('all',['conditions'=>['survey_form_id'=>$entity->survey_form_id,'date_disabled >=' => date('Y-m-d')]])->order(['date_disabled'=>'DESC'])->first();
         //POCOR-8515 starts
         if(!empty($SurveyStatusData)){
             $SurveyStatusPeriodData = $SurveyStatusPeriodTable->find('all',['conditions'=>['survey_status_id'=>$SurveyStatusData->id]])->toArray();
@@ -815,11 +819,13 @@ class InstitutionSurveysTable extends ControllerActionTable
     
             $SurveyStatusPeriodDataIds = rtrim($SurveyStatusPeriodDataIds, ",");
             $SurveyStatusPeriodDataIdsArray = explode(",", $SurveyStatusPeriodDataIds);
-            if(in_array($institutionSurvey->academic_period_id, $SurveyStatusPeriodDataIdsArray)){
+            if(in_array($entity->academic_period_id, $SurveyStatusPeriodDataIdsArray)){
     
             }else{
-                unset($extra['toolbarButtons']['edit']);
+                unset($buttons['edit']);  //POCOR-8095
             }
+        } else {
+            unset($buttons['edit']);  //POCOR-8095
         }
         //POCOR-8515 ends
         return $buttons;
