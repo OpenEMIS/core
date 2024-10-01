@@ -148,7 +148,7 @@ class MoodleApi
 
         $apiInstance->action = $action;
         $apiInstance->params = json_encode($param);
-      //  $apiInstance->response = json_encode($response);
+        $apiInstance->response = json_encode($response);
         $apiInstance->status = $status;
         $apiInstance->callback = $callback;
         $apiInstance->callback_param = serialize($callbackData);
