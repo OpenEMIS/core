@@ -59,11 +59,11 @@ class ReorderBehavior extends Behavior {
 					/** POCOR-6677 starts - storing order as per reorder numbering to overcome duplication of order no*/
 					if ($model->getAlias() == 'SecurityRoles') {
 						$model->updateAll([$orderField => $init], [$id]);
-						$init++; 
+						$init++;
 					} else {
 						$model->updateAll(["`$orderField`" => $orderValue[$orderField]], [$id]);
 					}
-					/** POCOR-6677 ends*/ 
+					/** POCOR-6677 ends*/
 				}
 
 				$event = $model->dispatchEvent('ControllerAction.Model.afterReorder', [$ids], $model);

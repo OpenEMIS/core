@@ -630,7 +630,7 @@ class StaffAbsencesTable extends ControllerActionTable
                 $this->aliasField('date_to') . ' IS NOT NULL',
                 $conditions[$thresholdArray['condition']]
             ])
-            ->hydrate(false)
+            ->disableHydration() // POCOR-8533
             ;
 
         return $licenseData->toArray();

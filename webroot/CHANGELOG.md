@@ -1,3 +1,16 @@
+### [4.3.2] - 2024-10-02
+- Bug Fixed: Errors and Warnings showing up when running migrations 
+- Bug Fixed: Institutions > Students > Pending Transfer Out > Bulk Student Transfer Out: When doing bulk transfer student, the page gives a 404 error 
+- Bug Fixed: Administration>Appraisals: 404 error occurs
+- Bug Fixed: Institutions > General > Overview > Edit: Allow user to turn on and turn off this validation on address
+- Bug Fixed: Administration>Communication>Alerts: Adds "Never" to stop notifications
+- Bug Fixed: Institutions > Performance > Report Card > View PDF/Download PDF: When downloading pdf, the report card is showing hidden columns and rows even when there is excel formula input to not show hidden columns or rows
+- Bug Fixed: Institutions>Students>Academic>Textbook: Textbox is showing
+- Implemented: Develop an option to allow multiple external data source: Learning Management System - including "Moodle"
+- Bug Fixed: Institutions>Academic>Feeders>Outgoing>Edit: Page not showing correctly
+- Bug Fixed: Institutions > Staff > Career > Positions: The staff position grade name for staff position is showing ID instead of the staff position grade name
+- Bug Fixed: Institutions > Academic > Subjects: Table is missing when adding same subject name
+
 ### [4.3.1] - 2024-09-30
 - Bug Fixed: Forget password should be working
 - Bug Fixed: Institutions > General > Overview > Edit: When editing institution overview information, the system shows an error message but not indicating where is the error
