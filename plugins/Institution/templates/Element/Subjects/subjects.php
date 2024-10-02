@@ -213,17 +213,18 @@
 <?php endif ?>
 
 <script>
-	$(document).on("change", "#institutionsubjects-education-grade-id", function(event) {
-	    event.preventDefault();
-	    //alert('qweqwe')
-	    //alert($(this).val())
-	    //console.log('eee', $(this).val());
-	    if($(this).val() != '') {
-	        $('.subject_section').css('display', '');
-	    } else {
-	        $('.subject_section').css('display', 'none');        
-	    }
-
-	    return false;
-	});
+	// POCOR-7685 START
+	$(document).ready(function() {
+		if($('#institutionsubjects-education-grade-id').val()){
+			$('.subject_section').css('display', '');
+		}
+        $(document).on("change", "#institutionsubjects-education-grade-id", function(event) {
+            if ($(this).val() != '') {
+                $('.subject_section').css('display', '');
+            } else {
+                $('.subject_section').css('display', 'none');
+            }
+        });
+    });
+	// POCOR-7685 END
 </script>
