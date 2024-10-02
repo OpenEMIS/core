@@ -3,7 +3,8 @@ namespace CustomExcel\Model\Behavior;
 
 use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
-
+use DOMDocument;//POCOR-8529 
+use DOMXPath;//POCOR-8529 
 /*
     This trait is for ExcelReportBehavior.php
     To separate PDF logic
@@ -359,13 +360,16 @@ trait PdfReportTrait
                 // Remove all the redundant rows and columns
                 
                 $processedHtml = $this->processHtml($file, $sheetIndex);
+                //These functions are used to remove hidden columns(hide by excel formula) from PDF.
+                $hiddenClasses = $this->extractHiddenClasses($processedHtml);//POCOR-8529 
+                $filteredHtml = $this->removeHiddenElements($processedHtml, $hiddenClasses);//POCOR-8529 
                 $mpdf->SetFontSize(1);
                 $mpdf->SetDisplayMode('fullpage');
 
                 // Save the processed html into a temp pdf
                 $mpdf->AddPage('L');
 
-                $mpdf->WriteHTML($processedHtml);
+                $mpdf->WriteHTML($filteredHtml);
                 $filepath = $filepath.'.pdf';
 
                 $mpdf->Output($filepath,'F');
@@ -554,6 +558,86 @@ trait PdfReportTrait
         fclose($fp);
         unset($mpdf);
     }
+    //POCOR-8529 start(to remove hidden columns from pdf)
+    function extractHiddenClasses($html) {
+        $dom = new DOMDocument();
+        libxml_use_internal_errors(true);
+        $dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        libxml_clear_errors();
+    
+        // Extract CSS from <style> tags
+        $styles = '';
+        $styleTags = $dom->getElementsByTagName('style');
+        foreach ($styleTags as $styleTag) {
+            $styles .= $styleTag->nodeValue;
+        }
+    
+        // Regular expression to find CSS rules with display: none
+        $pattern = '/table\.(.*?)\s+\.column(\d+)\s*\{[^}]*display\s*:\s*none\s*;?\s*\}/i';
+        preg_match_all($pattern, $styles, $matches, PREG_SET_ORDER);
+    
+        $hiddenClasses = [];
+        foreach ($matches as $match) {
+            $sheetNumber = $match[1];
+            $columnNumber = $match[2];
+            $hiddenClasses[] = "table.{$sheetNumber} .column{$columnNumber}";
+        }
+    
+        return $hiddenClasses;
+    }
+    function removeHiddenElements($html, $hiddenClasses) {
+        $dom = new DOMDocument();
+        libxml_use_internal_errors(true);
+        $dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        libxml_clear_errors();
+    
+        $xpath = new DOMXPath($dom);
+        foreach ($hiddenClasses as $classSelector) {
+            // Convert CSS class selector to XPath
+            $xpathQuery = $this->convertCssSelectorToXpath($classSelector);
+    
+            // Find and remove elements
+            $elements = $xpath->query($xpathQuery);
+            foreach ($elements as $element) {
+                $element->parentNode->removeChild($element);
+            }
+        }
+    
+        return $dom->saveHTML();
+    } 
+    
+    function convertCssSelectorToXpath($selector) {
+        // Split the selector into parts (by spaces)
+        $parts = explode(' ', $selector);
+        $xpathParts = [];
 
+        foreach ($parts as $part) {
+            if (strpos($part, '.') !== false) {
+                // Handle classes
+                $element = '*';
+                if (strpos($part, '.') !== 0) {
+                    list($element, $class) = explode('.', $part, 2);
+                } else {
+                    $class = ltrim($part, '.');
+                }
+                $classes = explode('.', $class);
+                $xpathCondition = $element;
+                foreach ($classes as $cls) {
+                    $xpathCondition .= "[contains(concat(' ', normalize-space(@class), ' '), ' $cls ')]";
+                }
+                $xpathParts[] = $xpathCondition;
+            } elseif (strpos($part, '#') !== false) {
+                // Handle IDs if necessary
+            } else {
+                // Handle element names (e.g., 'table')
+                $xpathParts[] = $part;
+            }
+        }
+
+        // Combine into full XPath
+        return '//' . implode('//', $xpathParts);
+    }
+    // POCOR-8529  end
 }
+
 ?>
