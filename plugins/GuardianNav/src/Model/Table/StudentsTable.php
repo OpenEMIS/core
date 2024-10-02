@@ -324,7 +324,7 @@ class StudentsTable extends ControllerActionTable
     {
         // Convert ArrayObject to an array
         $toolbarButtons = (array)$extra['toolbarButtons'];
-        if (array_key_exists('add', $toolbarButtons)) {
+        if (isset($toolbarButtons['add'])) { // POCOR-8415
             $extra['toolbarButtons']['add']['type'] = 'hidden';
         }
         $this->field('academic_period_id', ['visible' => false]);
@@ -391,7 +391,7 @@ class StudentsTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('photo_content', ['type' => 'image', 'before' => 'openemis_no']);
+        $this->field('photo_content', ['type' => 'hidden', 'before' => 'openemis_no']);
         $this->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
         $this->fields['student_id']['order'] = 10;
         $extra['toolbarButtons']['back']['url']['action'] = 'StudentProgrammes';
