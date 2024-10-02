@@ -96,7 +96,8 @@ class InstitutionClassesTable extends ControllerActionTable
             'appliedAction' => ['Classes' =>['id']
             ]
         ]);
-        Log::write('debug', 'Here it us beforeFilter initialize End');
+// POCOR-8391 remove annoing log
+//        Log::write('debug', 'Here it us beforeFilter initialize End');
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -272,7 +273,8 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        Log::write('debug', 'Here it us beforeFilter beforeAction Start');
+// POCOR-8391 remove annoing log
+//        Log::write('debug', 'Here it us beforeFilter beforeAction Start');
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];

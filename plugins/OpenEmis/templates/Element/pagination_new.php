@@ -4,7 +4,7 @@ $totalRecords = isset($params['count']) ? $params['count'] : 0;
 ?>
 
 <?php if ($totalRecords > 0) : ?>
-<div class="pagination-wrapper" ng-class="disableElement">
+<div class="pagination-wrapper" style="display:none" ng-class="disableElement">
 	<?php
 	$totalPages = $params['pageCount'];
 	if ($totalPages >1) :

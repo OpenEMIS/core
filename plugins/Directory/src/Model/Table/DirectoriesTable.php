@@ -1089,6 +1089,7 @@ class DirectoriesTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
+        // echo "<pre>";print_r($_REQUEST);die;
         $this->setTable('security_users');
         $this->setEntityClass('User.User');
         parent::initialize($config);
@@ -1295,12 +1296,14 @@ class DirectoriesTable extends ControllerActionTable
         $this->addBehavior('ControllerAction.Image');
 
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Directory.Directories.id']);
-        $this->toggle('search', false);
+        $this->toggle('search', true);
         $this->setDeleteStrategy('restrict'); //POCOR-7083
     }
 
     public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
     {
+        // echo "<pre>";
+        // print_r( $primary);die;
         if ($primary) {
             $schema = $this->getSchema();
             $fields = $schema->columns();
@@ -1498,14 +1501,20 @@ class DirectoriesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $options)
     {
-        if (!$this->isAdvancedSearchEnabled()) {
-            $event->stopPropagation();
-            return [];
-        } else {
+        // POCOR-8558 start
+        $referer = $this->request->getEnv('HTTP_REFERER');
+        $parsedUrl = parse_url($referer);
+
+        // Check if 'page' is set in the query string or 'AdvanceSearch' is present
+        if (isset($_GET['page']) || isset($_REQUEST['AdvanceSearch'])) {
             $this->behaviors()->get('AdvanceSearch')->setConfig([
                 'showOnLoad' => 0,
             ]);
+        } else {
+            $event->stopPropagation();
+            return;
         }
+        // POCOR-8558 ends
 
         $conditions = [];
 
@@ -2071,7 +2080,7 @@ public function getIdentityTypeData($value_selection)
             ],
             'url' => '#',
             'label' => '<i class="fa fa-search-plus"></i>',
-        ];
+        ];    
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -2199,6 +2208,14 @@ public function getIdentityTypeData($value_selection)
 
     public function indexAfterAction(Event $event)
     {
+        // echo "<pre>";print_r($_REQUEST);die;
+        // $data  = $event->getData();
+        // $datas = $data['2'];
+        // unset($datas['toolbarButtons']['view']['url']['?']);
+        // unset($datas['indexButtons']['view']['url']['?']);
+        // unset($datas['indexButtons']['view']['url']['page']);
+        // unset($datas['toolbarButtons']['view']['url']['page']);
+        // echo "<pre>";print_r($datas);exit;
         $this->fields = [];
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
 
@@ -2232,6 +2249,7 @@ public function getIdentityTypeData($value_selection)
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
+        // echo '<pre>';print_r($extra);die;
         if ($this->action == 'index') {
             $userType = $this->Session->read('Directories.advanceSearch.belongsTo.user_type');
             //POCOR-6248 starts
