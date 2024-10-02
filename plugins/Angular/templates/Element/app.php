@@ -4,8 +4,15 @@ var APP_CONFIGS = {
 };
 
 agGrid.initialiseAgGridWithAngular1(angular);
+
+//POCOR-8483[START]
+<?php
+$ngModulesArray = json_decode($ng_modules, true) ?? [];
+?>
+//POCOR-8483[END]
+
 angular.module('<?= $ng_app ?>', <?= $ng_modules ?>).run(function() {
-    <?= in_array('agGrid', json_decode($ng_modules, true)) ? 'agGrid.LicenseManager.setLicenseKey("Community_Solutions_Foundation_CSF_Devs_13_October_2018__MTUzOTM4NTIwMDAwMA==500b28c724d110b0af8aa885bf13c66a");' : '' ?>
+    <?= in_array('agGrid', $ngModulesArray) ? 'agGrid.LicenseManager.setLicenseKey("Community_Solutions_Foundation_CSF_Devs_13_October_2018__MTUzOTM4NTIwMDAwMA==500b28c724d110b0af8aa885bf13c66a");' : '' ?>
 
     angular.baseUrl = '<?= $this->request->getAttribute('base') ?>';
     angular.url = function(url) {

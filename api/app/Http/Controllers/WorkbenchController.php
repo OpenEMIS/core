@@ -2516,7 +2516,7 @@ class WorkbenchController extends Controller
         }
     }
 
-     /**
+    /**
      * @OA\Get(
      *      path="/api/v4/institutions/positions",
      *      summary="Get a list of institution positions",
@@ -2630,4 +2630,146 @@ class WorkbenchController extends Controller
             return $this->sendErrorResponse('Failed to fetch list from DB');
         }
     }
+
+
+    //For POCOR-8519 Start...
+
+    /**
+     * @OA\Get(
+     *     path="/api/v4/workbenches",
+     *     summary="Get workbench data",
+     *     description="Retrieve workbench data for various workbench types.",
+     *     tags={"Workbench"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="institutionSurvey",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="id", type="integer", example=75),
+     *                         @OA\Property(property="institution_id", type="integer", example=6),
+     *                         @OA\Property(property="institution", type="string", example="Avory Primary School"),
+     *                         @OA\Property(property="request_title", type="string", example="Repeater List of 2024"),
+     *                         @OA\Property(property="received_date", type="string", example="Aug 19, 2024"),
+     *                         @OA\Property(property="requester", type="string", example="admin - System  Admin"),
+     *                         @OA\Property(property="status_id", type="integer", example=1),
+     *                         @OA\Property(property="status", type="string", example="Open"),
+     *                         @OA\Property(property="workflow_name", type="string", example="Institutions - Survey - General"),
+     *                         @OA\Property(
+     *                             property="survey_form",
+     *                             type="object",
+     *                             @OA\Property(property="id", type="integer", example=18),
+     *                             @OA\Property(property="name", type="string", example="Repeater List")
+     *                         ),
+     *                         @OA\Property(
+     *                             property="academic_period",
+     *                             type="object",
+     *                             @OA\Property(property="id", type="integer", example=33),
+     *                             @OA\Property(property="name", type="string", example="2024")
+     *                         ),
+     *                         @OA\Property(
+     *                             property="url",
+     *                             type="object",
+     *                             @OA\Property(property="plugin", type="string", example="Institution"),
+     *                             @OA\Property(property="controller", type="string", example="Institutions"),
+     *                             @OA\Property(property="action", type="string", example="Surveys"),
+     *                             @OA\Property(property="0", type="string", example="view"),
+     *                             @OA\Property(property="1", type="integer", example=75),
+     *                             @OA\Property(property="institution_id", type="integer", example=6)
+     *                         ),
+     *                         @OA\Property(
+     *                             property="created_user",
+     *                             type="object",
+     *                             @OA\Property(property="id", type="integer", example=2),
+     *                             @OA\Property(property="openemis_no", type="string", example="admin"),
+     *                             @OA\Property(property="first_name", type="string", example="System"),
+     *                             @OA\Property(property="middle_name", type="string", example=""),
+     *                             @OA\Property(property="third_name", type="string", example=""),
+     *                             @OA\Property(property="last_name", type="string", example="Admin"),
+     *                             @OA\Property(property="preferred_name", type="string", example=""),
+     *                             @OA\Property(property="full_name", type="string", example="System  Admin"),
+     *                             @OA\Property(property="name_with_id", type="string", example="admin - System  Admin")
+     *                         )
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unsuccessful."
+     *     )
+     * )
+     */
+    public function getAllWorkbenches(Request $request)
+    {
+        try {
+            $params = $request->all();
+            $resp = [];
+            $insSurvey = $this->workbenchService->getInstitutionStaffSurveys($request);
+            $insPositions = $this->workbenchService->getInstitutionPositions($request);
+            $studentTransferIn = $this->workbenchService->getInstitutionStudentTransferIn($request);
+            $studentTransferOut = $this->workbenchService->getInstitutionStudentTransferOut($request);
+            $insStaffLeave = $this->workbenchService->getInstitutionStaffLeave($request);
+            $insStudentWithdraw = $this->workbenchService->getInstitutionStudentWithdraw($request);
+            $insStudentAdmission = $this->workbenchService->getInstitutionStudentAdmission($request);
+            $insStudentBehaviour = $this->workbenchService->getInstitutionStudentBehaviour($request);
+            $insStaffBehaviour = $this->workbenchService->getInstitutionStaffBehaviour($request);
+            $staffAppraisals = $this->workbenchService->getStaffAppraisals($request);
+            $staffRelease = $this->workbenchService->getStaffRelease($request);
+            $staffTransferIn = $this->workbenchService->getStaffTransferIn($request);
+            $staffTransferOut = $this->workbenchService->getStaffTransferOut($request);
+            $changeInAssignment = $this->workbenchService->getChangeInAssignment($request);
+            $staffTrainingNeeds = $this->workbenchService->getStaffTrainingNeeds($request);
+            $staffLicenses = $this->workbenchService->getStaffLicenses($request);
+            $trainingCourses = $this->workbenchService->getTrainingCourses($request);
+            $trainingSessions = $this->workbenchService->getTrainingSessions($request);
+            $trainingResults = $this->workbenchService->getTrainingResults($request);
+            $visitRequests = $this->workbenchService->getVisitRequests($request);
+            $trainingApplications = $this->workbenchService->getTrainingApplications($request);
+            $scholarshipApplications = $this->workbenchService->getScholarshipApplications($request);
+            $institutionCases = $this->workbenchService->getInstitutionCases($request);
+
+            $resp['institutionSurvey'] = $insSurvey['data'];
+            $resp['institutionPositions'] = $insPositions['data'];
+            $resp['studentTransferIn'] = $studentTransferIn['data'];
+            $resp['studentTransferOut'] = $studentTransferOut['data'];
+            $resp['institutionStaffLeave'] = $insStaffLeave['data'];
+            $resp['institutionStudentWithdraw'] = $insStudentWithdraw['data'];
+            $resp['institutionStudentAdmission'] = $insStudentAdmission['data'];
+            $resp['institutionStudentBehaviour'] = $insStudentBehaviour['data'];
+            $resp['institutionStaffBehaviour'] = $insStaffBehaviour['data'];
+            $resp['staffAppraisals'] = $staffAppraisals['data'];
+            $resp['staffRelease'] = $staffRelease['data'];
+            $resp['staffTransferIn'] = $staffTransferIn['data'];
+            $resp['staffTransferOut'] = $staffTransferOut['data'];
+            $resp['changeInAssignment'] = $changeInAssignment['data'];
+            $resp['staffTrainingNeeds'] = $staffTrainingNeeds['data'];
+            $resp['staffLicenses'] = $staffLicenses['data'];
+            $resp['trainingCourses'] = $trainingCourses['data'];
+            $resp['trainingSessions'] = $trainingSessions['data'];
+            $resp['trainingResults'] = $trainingResults['data'];
+            $resp['visitRequests'] = $visitRequests['data'];
+            $resp['trainingApplications'] = $trainingApplications['data'];
+            $resp['scholarshipApplications'] = $scholarshipApplications['data'];
+            $resp['institutionCases'] = $institutionCases['data'];
+            
+            
+            return $this->sendSuccessResponse("Workbenches list found.", $resp);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to fetch list from DB');
+        }
+    }
+    //For POCOR-8519 End...
 }

@@ -87,6 +87,8 @@ class EducationSubjectsTable extends ControllerActionTable
     //POCOR-8142::Start
     public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
         $extra['excludedModels'] = [ //this will exclude checking during remove restrict
             $this->Assessments->getAlias()
         ];
@@ -279,12 +281,14 @@ class EducationSubjectsTable extends ControllerActionTable
         $educationSubjectId = $entity->id;
 
         $StaffQualificationsSubjects = TableRegistry::get('Staff.QualificationsSubjects');
-        $count = $StaffQualificationsSubjects->find()
+        $query = $StaffQualificationsSubjects->find()
             ->matching('StaffQualifications', function ($q) use ($educationFieldOfStudyId) {
                 return $q->where(['education_field_of_study_id' => $educationFieldOfStudyId]);
-            })
-            ->where([$StaffQualificationsSubjects->aliasField('education_subject_id') => $educationSubjectId])
-            ->count();
+            });
+        if(!empty( $educationSubjectId)) {
+            $query = $query->where([$StaffQualificationsSubjects->aliasField('education_subject_id') => $educationSubjectId]);
+        }
+        $count = $query->count();
 
         return $count > 0 ? true : false;
     }
@@ -293,8 +297,7 @@ class EducationSubjectsTable extends ControllerActionTable
     {
         $alias = $this->getAlias();
         $fieldKey = 'selected_field_of_study';
-
-        if (array_key_exists($alias, $data) && array_key_exists($fieldKey, $data[$alias])) {
+        if (isset($data[$alias][$fieldKey])) {
             $selectedFieldOfStudy = $data[$alias][$fieldKey];
             $fieldOfStudyEntity = $this->FieldOfStudies->get($selectedFieldOfStudy);
 
@@ -302,7 +305,7 @@ class EducationSubjectsTable extends ControllerActionTable
                 'id' => $selectedFieldOfStudy,
                 'name' => $fieldOfStudyEntity->name
             ];
-
+            $this->request = $this->request->withData($alias . '.field_of_studies', $data[$alias]['field_of_studies']);;
             unset($data[$alias][$fieldKey]);
         }
 
@@ -333,5 +336,11 @@ class EducationSubjectsTable extends ControllerActionTable
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
     }
 }

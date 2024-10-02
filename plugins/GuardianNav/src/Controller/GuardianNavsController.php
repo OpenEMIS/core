@@ -53,7 +53,7 @@ class GuardianNavsController extends AppController
         $this->ControllerAction->models = [
             // Student
             //'StudentAbsences'       => ['className' => 'Student.Absences', 'actions' => ['index']],
-            'StudentBehaviours'     => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
+           // 'StudentBehaviours'     => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']], //POCOR-8596 comment this
             'StudentExtracurriculars' => ['className' => 'Student.GuardianExtracurriculars'],
         ];
         $this->loadComponent('Training.Training');
@@ -260,6 +260,15 @@ class GuardianNavsController extends AppController
 
     public function getAcademicTabElements($options = [])
     {
+        // POCOR-8415:start
+        $queryString = $this->ControllerAction->getQueryString();
+        if (empty($queryString)) {
+            $queryString = $this->getQueryString();
+        }
+        $studentId = $queryString['student_id'] ?? null;
+        $institutionStudentID = $queryString['institution_student_id'] ?? null;
+        $encodedQueryString = !empty($queryString) ? $this->ControllerAction->paramsEncode($queryString) : null;
+        // POCOR-8415:end
         $id = (isset($options['id']))? $options['id']: 0;
         $type = (isset($options['type']))? $options['type']: null;
         $period = (isset($options['academic_period']))? $options['academic_period']: null;
@@ -275,6 +284,9 @@ class GuardianNavsController extends AppController
             if(empty($studentId)){
                 $studentId = $this->request->getQueryParams()['studentId'];
                 $studentId = $this->ControllerAction->paramsDecode($studentId);
+            }//POCOR-8379 ends
+            if(empty($studentId)){
+                $studentId = $queryString['student_id'];
             }//POCOR-8379 ends
             if(!empty($studentId)) {
                 $StudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
@@ -315,12 +327,23 @@ class GuardianNavsController extends AppController
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
-
+        // POCOR-8415:start
+        if($encodedQueryString){
+            $queryString = $encodedQueryString;
+        }
+        // POCOR-8415:end
         foreach ($studentTabElements as $key => $tab) {
             if(!empty($period) && $key == 'Absences') {
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key,  'queryString' => $queryString,'academic_period' => $period]);
+                $tabElements[$key]['url'] = array_merge($studentUrl, [
+                    'action' =>'Student'.$key,
+                    'queryString' => $queryString,
+                    'academic_period' => $period]);
             } else {
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'queryString' => $queryString, 'type' => $type]);
+                $tabElements[$key]['url'] = array_merge($studentUrl, [
+                    'action' =>'Student'.$key,
+                    '0' => 'index',
+                    '1' => $encodedQueryString,
+                'type' => $type]);
             }
         }
 
@@ -450,5 +473,12 @@ class GuardianNavsController extends AppController
 
     /**POCOR-6845 - modified _FUNCTION_ to __FUNCTION__ as PHP function name is case sesitive and ealier it was not recognition function */
     public function StudentReportCards()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentReportCards']); }
+
+    //POCOR-8596
+    public
+    function StudentBehaviours()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentBehaviours']);
+    }
 
 }

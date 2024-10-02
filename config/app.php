@@ -374,12 +374,12 @@ return [
     'STYLE_GUIDE' => define('STYLE_GUIDE', 'angular/main/styles.da9cec2553232f6df040'),
     'BUILD_STYLE' => define('BUILD_STYLE', 'angular/main/newStyles'),
 
-    // 'Application' => [
-    //     'public' => [
-    //         'key' => file_get_contents(CONFIG . 'public.key')
-    //     ],
-    //     'private' => [
-    //         'key' => file_get_contents(CONFIG . 'private.key')
-    //     ],
-    // ],
+    'Application' => [
+        'public' => [
+            'key' => file_get_contents(CONFIG . 'public.key')
+        ],
+        'private' => [
+            'key' => file_get_contents(CONFIG . 'private.key')
+        ],
+    ],
 ];
