@@ -9,7 +9,12 @@ interface TableColumns {
   student_attendance_select_new?: any;
   reasonOrComment?: any;
   reasonOrComment_select?: any;
-  reasonOrComment_select_new?: any
+  reasonOrComment_select_new?: any;
+  monday?: any;
+  tuesday?: any;
+  wednesday?: any;
+  thursday?: any;
+  friday?: any;
 }
 
 const COLUMN_OPENEMISID: any = {
@@ -17,11 +22,7 @@ const COLUMN_OPENEMISID: any = {
   field: "user.openemis_no",
   sortable: true,
   filterable: true,
-  filterValue: [
-    "First Primary School",
-    "Second Primary School",
-    "Last Primary School",
-  ],
+  filterValue: [],
   class: "ag-school-column",
   pinned: 'left',
   canEdit: false
@@ -32,10 +33,186 @@ const COLUMN_PERSONNAME: any = {
   field: "user.full_name",
   sortable: true,
   filterable: true,
-  filterValue: [
-    "First Primary School",
-    "Second Primary School",
-    "Last Primary School",
+  filterValue: [],
+  class: "ag-school-column",
+  canEdit: false,
+  pinned: 'left',
+  menuTabs: ['filterMenuTab']
+}
+
+const MONDAY: any = {
+  headerName: "Monday",
+  field: "monday",
+  sortable: false,
+  filterable: false,
+  filterValue: [],
+  children: [
+    {
+      headerName: '1',
+      field: "M1",
+      sortable: false,
+      filter: false,
+      filterValue: [],
+      width: 90,
+      headerClass: 'center-header',
+      canEdit: false,
+      menuTabs: []
+    },
+    {
+      headerName: '2',
+      field: "M2",
+      sortable: false,
+      filter: false,
+      filterValue: [],
+      width: 90,
+      headerClass: 'center-header',
+      canEdit: false,
+      menuTabs: []
+    },
+  ],
+  class: "ag-school-column",
+  canEdit: false,
+  pinned: 'left',
+  menuTabs: ['filterMenuTab']
+}
+
+const TUESDAY: any = {
+  headerName: "Tuesday",
+  field: "tuesday",
+  sortable: false,
+  filterable: false,
+  filterValue: [],
+  children: [
+    {
+      headerName: '1',
+      field: "T1",
+      sortable: false,
+      filter: false,
+      filterValue: [],
+      width: 90,
+      headerClass: 'center-header',
+      canEdit: false,
+      menuTabs: []
+    },
+    {
+      headerName: '2',
+      field: "T2",
+      sortable: false,
+      filter: false,
+      filterValue: [],
+      width: 90,
+      headerClass: 'center-header',
+      canEdit: false,
+      menuTabs: []
+    },
+  ],
+  class: "ag-school-column",
+  canEdit: false,
+  pinned: 'left',
+  menuTabs: ['filterMenuTab']
+}
+
+const WEDNESDAY: any = {
+  headerName: "Wednesday",
+  field: "wednesday",
+  sortable: false,
+  filterable: false,
+  filterValue: [],
+  children: [
+    {
+      headerName: '1',
+      field: "W1",
+      sortable: false,
+      filter: false,
+      filterValue: [],
+      width: 90,
+      headerClass: 'center-header',
+      canEdit: false,
+      menuTabs: []
+    },
+    {
+      headerName: '2',
+      field: "W2",
+      sortable: false,
+      filter: false,
+      filterValue: [],
+      width: 90,
+      headerClass: 'center-header',
+      canEdit: false,
+      menuTabs: []
+    },
+  ],
+  class: "ag-school-column",
+  canEdit: false,
+  pinned: 'left',
+  menuTabs: ['filterMenuTab']
+}
+
+const THURSDAY: any = {
+  headerName: "Thursday",
+  field: "thursday",
+  sortable: false,
+  filterable: false,
+  filterValue: [],
+  children: [
+    {
+      headerName: '1',
+      field: "TH1",
+      sortable: false,
+      filter: false,
+      filterValue: [],
+      width: 90,
+      headerClass: 'center-header',
+      canEdit: false,
+      menuTabs: []
+    },
+    {
+      headerName: '2',
+      field: "TH2",
+      sortable: false,
+      filter: false,
+      filterValue: [],
+      width: 90,
+      headerClass: 'center-header',
+      canEdit: false,
+      menuTabs: []
+    },
+  ],
+  class: "ag-school-column",
+  canEdit: false,
+  pinned: 'left',
+  menuTabs: ['filterMenuTab']
+}
+
+const FRIDAY: any = {
+  headerName: "Friday",
+  field: "friday",
+  sortable: false,
+  filterable: false,
+  filterValue: [],
+  children: [
+    {
+      headerName: '1',
+      field: "F1",
+      sortable: false,
+      filter: false,
+      filterValue: [],
+      width: 90,
+      headerClass: 'center-header',
+      canEdit: false,
+      menuTabs: []
+    },
+    {
+      headerName: '2',
+      field: "F2",
+      sortable: false,
+      filter: false,
+      filterValue: [],
+      width: 90,
+      headerClass: 'center-header',
+      canEdit: false,
+      menuTabs: []
+    },
   ],
   class: "ag-school-column",
   canEdit: false,
@@ -309,6 +486,11 @@ export const TABLE_COLUMN_LIST: TableColumns = {
   reasonOrComment: COLUMN_REASONORCOMMENT,
   reasonOrComment_select: COLUMN_INPUT_REASON_OR_COMMENT,
   reasonOrComment_select_new: COLUMN_INPUT_REASON_OR_COMMENT_NEW,
+  monday: MONDAY,
+  tuesday: TUESDAY,
+  wednesday: WEDNESDAY,
+  thursday: THURSDAY,
+  friday: FRIDAY
 };
 
 export const MINI_DASHBOARD_CONFIG: IMiniDashboardConfig = {
