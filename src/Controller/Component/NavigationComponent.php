@@ -819,6 +819,7 @@ class NavigationComponent extends Component
                     'Institutions.Transfer',
                     'Institutions.Undo',
                     'Institutions.StudentAdmission',
+                    'Institutions.StudentEnrolment',//POCOR-8434
                     'Institutions.StudentTransferIn',
                     'Institutions.StudentTransferOut',
                     'Institutions.StudentWithdraw',

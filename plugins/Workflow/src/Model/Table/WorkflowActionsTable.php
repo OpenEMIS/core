@@ -310,6 +310,26 @@ class WorkflowActionsTable extends AppTable
                     $selectedEventKeys = $this->convertEventKeysToEvents($entity);
                 }
             } else if ($request->is(['post', 'put'])) {
+                //POCOR-8434 starts
+                $methodKey = $request->getData()['WorkflowActions']['event_method_key'];
+                if (!empty($methodKey)) {
+                    $data = $request->getData();
+                    // Ensure 'post_events' exists in the 'WorkflowActions' array
+                    if (!isset($data['WorkflowActions']['post_events'])) {
+                        $data['WorkflowActions']['post_events'] = [];
+                    }
+
+                    // Add new event data to the 'post_events' array
+                    $data['WorkflowActions']['post_events'][] = [
+                        //'event_key' => 'Workflow.onAssignBack'
+                        'event_key' => $methodKey
+                    ];
+                    $data['WorkflowActions']['event_method_key'] = '';
+
+                    // Update the request object with the new 'WorkflowActions' data
+                    $request = $request->withData('WorkflowActions', $data['WorkflowActions']);
+                }//POCOR-8434 ends
+
                 $requestData = $request->getData();
 
                 if (array_key_exists($this->getAlias(), $requestData)) {
@@ -412,7 +432,7 @@ class WorkflowActionsTable extends AppTable
 
     public function addEditOnAddEvent(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (array_key_exists($this->getAlias(), $data)) {
+        if (array_key_exists($this->getAlias(), (array) $data)) {
             if (array_key_exists('event_method_key', $data[$this->getAlias()])) {
                 $methodKey = $data[$this->getAlias()]['event_method_key'];
                 if (!empty($methodKey)) {
@@ -426,7 +446,16 @@ class WorkflowActionsTable extends AppTable
     }
 
     private function setupFields(Entity $entity)
-    {
+    {   
+        //POCOR-8434 starts
+        if(isset($entity->event_method_key)){
+            $entity->post_events = [
+                [
+                    'event_key' => $entity->event_method_key
+                ]
+            ];
+        }//POCOR-8434 ends
+
         $this->ControllerAction->field('workflow_model_id');
         $this->ControllerAction->field('workflow_id');
         $this->ControllerAction->field('workflow_step_id', [
@@ -633,7 +662,7 @@ class WorkflowActionsTable extends AppTable
     private function convertEventsToEventKeys($data)
     {
         $eventKeys = [];
-        if (array_key_exists($this->getAlias(), $data)) {
+        if (array_key_exists($this->getAlias(), (array) $data)) {
             if (array_key_exists('post_events', $data[$this->getAlias()])) {
                 $eventKeys = [];
                 foreach ($data[$this->getAlias()]['post_events'] as $key => $event) {
