@@ -65,8 +65,8 @@ class RenderDropdownBehavior extends RenderBehavior {
                 if (is_null($this->postedData)) {
                     $requestData = $this->_table->request->getData();
                     if (array_key_exists($this->_table->getAlias(), $requestData instanceof \ArrayObject ? $requestData->getArrayCopy() : $requestData)) {
-                        if (array_key_exists('custom_field_values', (array) $this->_table->request->getData[$this->_table->getAlias()])) {
-                            $questions = $this->_table->request->getData[$this->_table->getAlias()]['custom_field_values'];
+                        if (array_key_exists('custom_field_values', (array) $this->_table->request->getData()[$this->_table->getAlias()])) {
+                            $questions = $this->_table->request->getData()[$this->_table->getAlias()]['custom_field_values'];
                             foreach ($questions as $question) {
                                 if (isset($question['number_value'])) {
                                     if (array_key_exists($fieldKey, $question instanceof \ArrayObject ? $question->getArrayCopy() : $question)) {

@@ -111,6 +111,9 @@ class ConfigItemsBehavior extends Behavior
         if($typeValue == 'ExternalDataSource-Exams'){
             $typeValue = 'ExternalDataSourceExams';
         }
+        if($typeValue == 'ExternalDataSource-LMS'){ //POCOR-8386
+            $typeValue = 'ExternalDataSourceLMS';
+        }
         //POCOR-7531 start
          // End POCOR-7507
 

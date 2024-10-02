@@ -861,8 +861,17 @@ class InstitutionController extends Controller
     public function getInstitutionClassData(int $institutionId, int $classId)
     {
         try {
+
+            $validateInstitution = $this->institutionService->validateInstitution($institutionId);
+
+            $validateClass = $this->institutionService->validateClass($classId);
+
+            if (!$validateInstitution || !$validateClass) {
+                return $this->sendErrorResponse('Unsuccessful-Invalid Parameters');
+            }
+
             $data = $this->institutionService->getInstitutionClassData($institutionId, $classId);
-            return $this->sendSuccessResponse("Class Data Found", $data);
+            return $this->sendSuccessResponse("Successful", $data);
             
         } catch (\Exception $e) {
             Log::error(
@@ -870,7 +879,7 @@ class InstitutionController extends Controller
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
-            return $this->sendErrorResponse('Class Data Not Found');
+            return $this->sendErrorResponse('Unsuccessful', $e->getMessage(), "", 500);
         }
     }
 
@@ -1168,8 +1177,15 @@ class InstitutionController extends Controller
     public function getInstitutionSubjectsData(int $institutionId, int $subjectId)
     {
         try {
+            $validateInstitution = $this->institutionService->validateInstitution($institutionId);
+
+            $validateClass = $this->institutionService->validateSubject($subjectId);
+
+            if (!$validateInstitution || !$validateClass) {
+                return $this->sendErrorResponse('Unsuccessful-Invalid Parameters');
+            }
             $data = $this->institutionService->getInstitutionSubjectsData($institutionId, $subjectId);
-            return $this->sendSuccessResponse("Subjects Data Found", $data);
+            return $this->sendSuccessResponse("Successful", $data);
             
         } catch (\Exception $e) {
             Log::error(
@@ -1177,7 +1193,7 @@ class InstitutionController extends Controller
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
 
-            return $this->sendErrorResponse('Subjects Data Not Found');
+            return $this->sendErrorResponse('Unsuccessful', $e->getMessage(), "", 500);
         }
     }
 
@@ -7188,6 +7204,16 @@ class InstitutionController extends Controller
      */
     public function institutionRooms($institutionId, $academicYearId, Request $request)
     {
+
+
+        $validateInstitution = $this->institutionService->validateInstitution($institutionId);
+
+        $validateAcademicPeriod = $this->institutionService->validateAcademicPeriod($academicYearId);
+
+        if (!$validateInstitution || !$validateAcademicPeriod) {
+            return $this->sendErrorResponse('Unsuccessful-Invalid Parameters');
+        }
+
         $rooms = InstitutionRooms::where('institution_id', $institutionId)->where('academic_period_id', $academicYearId);
 
         if (isset($request['limit'])) {
@@ -7196,7 +7222,7 @@ class InstitutionController extends Controller
             $rooms = $rooms->get();
         }
 
-        return $this->sendSuccessResponse('Institution rooms.', $rooms);
+        return $this->sendSuccessResponse('Successful', $rooms);
     }
 
     /**
@@ -7271,6 +7297,13 @@ class InstitutionController extends Controller
      */
     public function institutionClassSubjects($institutionClassId, Request $request)
     {
+
+        $validateClass = $this->institutionService->validateClass($institutionClassId);
+
+        if (!$validateClass) {
+            return $this->sendErrorResponse('Unsuccessful-Invalid Parameters');
+        }
+
         $subjects = InstitutionClassSubjects::with('institutionSubject')->where('institution_class_id', $institutionClassId);
 
         if (isset($request['limit'])) {
@@ -7279,7 +7312,197 @@ class InstitutionController extends Controller
             $subjects = $subjects->get();
         }
 
-        return $this->sendSuccessResponse('Institution Subjects.', $subjects);
+        return $this->sendSuccessResponse('Successful', $subjects);
+    }
+
+    public function shifts($institutionId, $academicPeriodId)
+    {
+        try {
+
+            $validateInstitution = $this->institutionService->validateInstitution($institutionId);
+
+            $validateAcademicPeriod = $this->institutionService->validateAcademicPeriod($academicPeriodId);
+
+            if (!$validateInstitution || !$validateAcademicPeriod) {
+                return $this->sendErrorResponse('Unsuccessful-Invalid Parameters');
+            }
+
+            $data = $this->institutionService->shifts($institutionId, $academicPeriodId);
+
+            return $this->sendSuccessResponse("Successful", $data);
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Unsuccessful', $e->getMessage());
+        }
+    }
+
+    public function staffs($institutionId)
+    {
+        try {
+
+            $validateInstitution = $this->institutionService->validateInstitution($institutionId);
+
+            if (!$validateInstitution) {
+                return $this->sendErrorResponse('Unsuccessful-Invalid Parameters');
+            }
+            $data = $this->institutionService->staffs($institutionId);
+
+            return $this->sendSuccessResponse("Successful", $data);
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Unsuccessful', $e->getMessage());
+        }
+    }
+
+    public function units(Request $request)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->institutionService->units($params);
+
+            return $this->sendSuccessResponse("Successful", $data);
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Unsuccessful', $e->getMessage());
+        }
+    }
+
+    public function courses(Request $request)
+    {
+        try {
+            $params = $request->all();
+            $data = $this->institutionService->courses($params);
+
+            return $this->sendSuccessResponse("Successful", $data);
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Unsuccessful', $e->getMessage());
+        }
+    }
+
+    public function rooms($institutionId, Request $request)
+    {
+        try {
+
+            $params = $request->all();
+            $validateInstitution = $this->institutionService->validateInstitution($institutionId);
+
+            $academicPeriodId = $params['academic_period_id'];
+            $validateAcademicPeriod = $this->institutionService->validateAcademicPeriod($academicPeriodId);
+
+            if (!$validateInstitution || !$validateAcademicPeriod) {
+                return $this->sendErrorResponse('Unsuccessful-Invalid Parameters');
+            }
+
+            $data = $this->institutionService->rooms($institutionId, $params);
+
+            return $this->sendSuccessResponse("Successful", $data);
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Unsuccessful', $e->getMessage());
+        }
+    }
+
+    public function subjectClasses($institutionId, $educationGradeId, $institutionSubjectId)
+    {
+        try {
+
+            $validateInstitution = $this->institutionService->validateInstitution($institutionId);
+
+            $validateEducationGrade = $this->institutionService->validateEducationGrade($educationGradeId);
+
+            if (!$validateInstitution || !$validateEducationGrade) {
+                return $this->sendErrorResponse('Unsuccessful-Invalid Parameters');
+            }
+
+            $data = $this->institutionService->subjectClasses($institutionId, $educationGradeId, $institutionSubjectId);
+
+            return $this->sendSuccessResponse("Successful", $data);
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Unsuccessful', $e->getMessage());
+        }
+    }
+
+    public function unassignedStudentsInClass($institutionId, $classId)
+    {
+        try {
+
+            $validateInstitution = $this->institutionService->validateInstitution($institutionId);
+
+            $validateClass = $this->institutionService->validateClass($classId);
+
+            if (!$validateInstitution || !$validateClass) {
+                return $this->sendErrorResponse('Unsuccessful-Invalid Parameters');
+            }
+
+            $data = $this->institutionService->unassignedStudentsInClass($institutionId, $classId);
+
+            return $this->sendSuccessResponse("Successful", $data);
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Unsuccessful', $e->getMessage());
+        }
+    }
+
+    public function unassignedStudentsInSubject($institutionId, $subjectId)
+    {
+        try {
+
+            $validateInstitution = $this->institutionService->validateInstitution($institutionId);
+
+            $validateClass = $this->institutionService->validateSubject($subjectId);
+
+            if (!$validateInstitution || !$validateClass) {
+                return $this->sendErrorResponse('Unsuccessful-Invalid Parameters');
+            }
+
+            $data = $this->institutionService->unassignedStudentsInSubject($institutionId, $subjectId);
+
+            return $this->sendSuccessResponse("Successful", $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Unsuccessful', $e->getMessage());
+        }
     }
 
 

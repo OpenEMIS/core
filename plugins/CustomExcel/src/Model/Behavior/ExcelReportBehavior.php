@@ -95,7 +95,7 @@ class ExcelReportBehavior extends Behavior
     }
 
     //POCOR-8568[Here added  Event $event]
-    public function renderExcelTemplate(ArrayObject $extra, Event $event)
+    public function renderExcelTemplate(ArrayObject $extra, Event $event = null) //POCOR-8588
     {
         $model = $this->_table;
         $format = $this->getConfig('format');
@@ -184,7 +184,7 @@ class ExcelReportBehavior extends Behavior
     }
 
     //POCOR-8568[Here added  Event $event]
-    public function loadExcelTemplate(ArrayObject $extra, Event $event)
+    public function loadExcelTemplate(ArrayObject $extra, Event $event = null) //POCOR-8588
     {
         $model = $this->_table;
         if (isset($extra['requestQuery']) && isset($extra['requestQuery'][$this->getConfig('templateTableKey')])) {
@@ -727,7 +727,7 @@ class ExcelReportBehavior extends Behavior
                 $pos = strpos($cellValue, $value);
                 if ($pos !== false) {
                     if($function == 'table') {
-                        $funstion = 'tableData';
+                        $function = 'tableData';//POCOR-8529 
                     }
                     if (method_exists($this, $function)) {
                         $jsonArray = $this->convertPlaceHolderToArray($cellValue);

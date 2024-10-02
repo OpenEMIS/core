@@ -621,7 +621,7 @@ class AssessmentItemResultsTable extends AppTable
                 $optionalCondition
             ])
             //->orWhere([$optionalCondition])
-            ->hydrate(false)
+            ->disableHydration() // POCOR-8533
             ->toArray();
         $response['result'] = $getRecord;
         $response['message'] = 'Successful Operation';

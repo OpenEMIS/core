@@ -101,7 +101,7 @@ class ImportStaffTable extends AppTable
             return false;
         }
 
-        $tempRow['entity'] = $this->InstitutionStaff->newEntity();
+        $tempRow['entity'] = $this->InstitutionStaff->newEntity([]);
         $tempRow['start_year'] = false;
         $tempRow['staff_status_id'] = 1;
         $tempRow['end_date'] = '';

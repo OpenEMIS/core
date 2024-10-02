@@ -359,7 +359,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                                             $IdentityTypes->aliasField('name')
                                         ])
                                         ->leftJoin(
-                                            [$IdentityTypes->alias() => $IdentityTypes->table()], [
+                                            [$IdentityTypes->getAlias() => $IdentityTypes->getTable()], [
                                                 $IdentityTypes->aliasField('id = ') . $nationality->aliasField('identity_type_id')
                                             ]
                                         )
@@ -772,7 +772,7 @@ class UserNationalitiesTable extends ControllerActionTable {
                                     $UserIdentities->aliasField('nationality_id'),
                                 ])
                                 ->leftJoin(
-                                    [$IdentityTypes->alias() => $IdentityTypes->table()], [
+                                    [$IdentityTypes->getAlias() => $IdentityTypes->getTable()], [
                                         $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id')
                                     ]
                                 )
