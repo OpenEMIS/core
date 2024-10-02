@@ -344,7 +344,8 @@ class StudentReportCardsTable extends AppTable
                         $AreasRecords = $Areas
                                         ->find()->select([$Areas->aliasField('name')])
                                         ->where([ $Areas->aliasField('id IN') => $allselectedAreas])
-                                        ->hydrate(false)->order([$Areas->aliasField('id DESC')])->toArray();
+                            ->disableHydration() // POCOR-8533
+                            ->order([$Areas->aliasField('id DESC')])->toArray();
                         if(!empty($AreasRecords)){
                             $area_name_array = [];
                             foreach ($AreasRecords as $key => $value) {
