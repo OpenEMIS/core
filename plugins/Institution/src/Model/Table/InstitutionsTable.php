@@ -320,7 +320,7 @@ class InstitutionsTable extends ControllerActionTable
                  'message' => 'Maximum allowable character is 255',
                  'last' => true
              ])
-             ->add('address', [
+             /*->add('address', [
                 'custom' => [
                     'rule' => function ($value, $context) {
                         // Regular expression to allow letters, numbers, spaces, commas, periods, hyphens, and apostrophes
@@ -328,8 +328,11 @@ class InstitutionsTable extends ControllerActionTable
                     },
                     'message' => __('The institution address cannot contain special characters.'),
                 ]
+            ])*/
+            ->add('address', 'rulecheckIfStringGotNoSpecialChar', [
+            'rule' => [$this, 'checkIfStringGotNoSpecialChar'], // POCOR-8597
+            'message' => 'The institution address cannot contain special characters.'
             ])
-
             ->add('code', 'ruleCustomCode', [
                 'rule' => ['validateCustomPattern', 'institution_code'],
                 'provider' => 'table',
