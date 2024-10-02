@@ -48,7 +48,7 @@ class GenerateReportCardsShell extends Shell
                         $this->ReportCardProcesses->aliasField('created'),
                         $this->ReportCardProcesses->aliasField('student_id')
                     ])
-                    ->hydrate(false)
+                    ->disableHydration() // POCOR-8533
                     ->first();
 
                 if (!empty($recordToProcess)) {

@@ -30,7 +30,7 @@ class AppraisalTypesTable extends ControllerActionTable
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
-            $this->AppraisalPeriods->alias()
+            $this->AppraisalPeriods->getAlias()
         ];
     }
     // Start POCOR-5188

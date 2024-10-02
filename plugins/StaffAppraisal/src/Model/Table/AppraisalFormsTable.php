@@ -296,7 +296,7 @@ class AppraisalFormsTable extends ControllerActionTable
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
-            $this->AppraisalCriterias->alias()
+            $this->AppraisalCriterias->getAlias()
         ];
     }
 
@@ -360,4 +360,18 @@ class AppraisalFormsTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+    
+    //POCOR-8620 -- Start
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+    //POCOR-8620 -- End
 }

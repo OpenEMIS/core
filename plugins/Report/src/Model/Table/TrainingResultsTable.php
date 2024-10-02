@@ -373,10 +373,10 @@ class TrainingResultsTable extends AppTable
             ])
             ->first()
         ;
-		
+
         return $institutionDetails;
     }
- 
+
     /**
      * Concat the user name
      * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
@@ -384,7 +384,7 @@ class TrainingResultsTable extends AppTable
      */
     public function onExcelGetTraineeInfoTraineeName(Event $event, Entity $entity)
     {
-        return 
+        return
             $entity->trainee_info_first_name  . ' ' .
             $entity->trainee_info_middle_name . ' ' .
             $entity->trainee_info_third_name  . ' ' .
@@ -407,7 +407,8 @@ class TrainingResultsTable extends AppTable
             ])
             ->where([$userIdentities->aliasField('security_user_id') => $entity->trainee_id])
             ->order([$userIdentities->aliasField('id DESC')])
-            ->hydrate(false)->toArray();
+            ->disableHydration() // POCOR-8533
+            ->toArray();
             $entity->custom_identity_number = '';
             $other_identity_array = [];
             if (!empty($userIdentitiesResult)) {

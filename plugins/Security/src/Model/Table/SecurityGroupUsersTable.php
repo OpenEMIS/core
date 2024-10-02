@@ -165,7 +165,7 @@ class SecurityGroupUsersTable extends AppTable {
                         ]
                 )
                 ->where([$this->aliasField('security_user_id') => $userId, $this->aliasField('security_group_id') => $securityGroupId])
-                ->hydrate(false)
+                ->disableHydration() // POCOR-8533
                 ->toArray();
         return $results;
     }

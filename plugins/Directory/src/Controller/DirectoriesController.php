@@ -1735,7 +1735,9 @@ class DirectoriesController extends AppController
                 ])
             ->where([
                 $studentCustomFieldValues->aliasField('student_id') => $student_id,
-            ])->hydrate(false)->toArray();
+            ])
+            ->disableHydration() // POCOR-8533
+            ->toArray();
         $custom_field = array();
         $count = 0;
         if (!empty($studentCustomData)) {
