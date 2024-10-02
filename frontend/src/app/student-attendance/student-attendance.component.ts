@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { ITableApi, ITableColumn, KdPageBase, KdPageBaseEvent, KdTable, KdToolbarEvent } from 'openemis-styleguide-lib';
+import { ITableApi, ITableColumn, KdAlertEvent, KdPageBase, KdPageBaseEvent, KdTable, KdToolbarEvent } from 'openemis-styleguide-lib';
 import { MINI_DASHBOARD_CONFIG, TABLE_COLUMN_LIST } from './student_attendance.config';
 import { IMiniDashboardConfig, IMiniDashboardItem } from 'openemis-styleguide-lib/kd-components/kd-angular-mini-dashboard/kd-angular-mini-dashboard-interface';
 import { Subscription, timer } from 'rxjs';
@@ -229,6 +229,7 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
     public pageEvent: KdPageBaseEvent,
     private Rest: ApiService,
     private _toolbarEvent: KdToolbarEvent,
+    private _kdAlertEvent: KdAlertEvent
 
   ) {
     super({
@@ -723,7 +724,43 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
 
   getStudentAttendanceData() {
     // insitutions/6/grades/206/classes/591/student-attendances?academic_period_id=33&day_id=2024-02-05&attendance_period_id=1&subject_id=0&week_id=6&week_start_day=2024-02-05&week_end_day=2024-02-11
-
+    if(this.academic_period_day == -1) {
+      console.log(this._column,"this._column");
+      this._column = [
+        TABLE_COLUMN_LIST.openEmisId,
+        TABLE_COLUMN_LIST.personName,
+        TABLE_COLUMN_LIST.monday,
+        TABLE_COLUMN_LIST.tuesday,
+        TABLE_COLUMN_LIST.wednesday,
+        TABLE_COLUMN_LIST.thursday,
+        TABLE_COLUMN_LIST.friday
+      ];
+    } else {
+      this._column = [
+        TABLE_COLUMN_LIST.openEmisId,
+        TABLE_COLUMN_LIST.personName,
+        TABLE_COLUMN_LIST.student_attendance_select_new,
+        TABLE_COLUMN_LIST.reasonOrComment_select_new
+      ];
+    }
+    this._row = [
+      { 
+        user: {
+          openemis_no: 111,
+          full_name: 'Abcd'
+        },
+        M1: 1,
+        M2: 2,
+        T1: '-',
+        T2: '-',
+        W1: 3,
+        W2: 4,
+        TH1: '-',
+        TH2: '-',
+        F1: 5,
+        F2: 6
+      }
+    ]
     this.Rest.getWithToken(`institutions/${this.institution_id}/grades/${this.selected_education_grade}/classes/${this.selected_academic_class}/student-attendances?academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&attendance_period_id=1&subject_id=${this.selected_institution_subject}&week_id=${this.academic_period_week}&week_start_day=${this.start_day}&week_end_day=${this.end_day}`).subscribe({
       next: (response: any) => {
         if (response) {
@@ -821,9 +858,11 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
       "comment": data?.institution_student_absences?.comment,
       "period": data?.institution_student_absences?.period,
       "date": data?.institution_student_absences?.date,
-      "subject_id": this.selectedInstitutionSubject,
+      "subject_id": this.selectedInstitutionSubject ? this.selectedInstitutionSubject : 0,
       "education_grade_id": this.education_grade_id
     }
+    console.log(obj,"obj");
+    
     this.Rest.postWithToken(`institutions/students/absences`, obj).subscribe({
       next: (response: any) => {
         if (response) {
@@ -882,6 +921,10 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
       let education_grade = this.educationGrade;
       education_grade[0].disabled = true;
       this.educationGrade = [...education_grade];
+
+      let periodData = this.period;
+      periodData[0].disabled = true;
+      this.period = [...periodData];
 
       let institution_Subject = this.institutionSubject;
       institution_Subject[0].disabled = true;
@@ -950,6 +993,10 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
       let education_grade = this.educationGrade;
       education_grade[0].disabled = false;
       this.educationGrade = [...education_grade];
+
+      let periodData = this.period;
+      periodData[0].disabled = false;
+      this.period = [...periodData];
 
       let institution_Subject = this.institutionSubject;
       institution_Subject[0].disabled = false;
@@ -1038,8 +1085,19 @@ export class StudentAttendanceComponent extends KdPageBase implements OnInit, On
       next: (response: any) => {
         if (response) {
           console.log(response, "response data");
-          this.studentAttendanceMarkedArchive();
-          this.studentAttendanceArchive();
+          if (response?.data?.original?.message == "Unsuccessful.") {
+            let toasterConfig: any = {
+              title: 'No Archive data available',
+              showCloseButton: true,
+              tapToDismiss: true,
+            };
+
+            this._kdAlertEvent.warn(toasterConfig);
+            return;
+          } else {
+            this.studentAttendanceMarkedArchive();
+            this.studentAttendanceArchive();
+          }
         }
 
       },

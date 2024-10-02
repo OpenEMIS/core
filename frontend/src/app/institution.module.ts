@@ -31,19 +31,24 @@ import { StaffAttendanceReportComponent } from './staff-attendance-report/staff-
 import { StudentMealImportComponent } from './student-meal-import/student-meal-import.component';
 import { StudentMealResultComponent } from './student-meal-result/student-meal-result.component';
 import { StudentAttendanceImportResultComponent } from './student-attendance-import-result/student-attendance-import-result.component';
+import { StudentAttendanceArchiveComponent } from './student-attendance-archive/student-attendance-archive.component';
 
 export const appRoutes: Routes = [
   { path: 'Dashboard', component: WorkbenchComponent },
   { path: `Institution/Institutions/Comments/${setEncodedId()}`, component: CommentsComponent },
   { path: 'Institution/Institutions/Results', component: AssessmentComponent },
   { path: 'Institution/Institutions/ResultsReport', component: AssessmentReportComponent },
+
   { path: `Institution/Institutions/StudentAttendances/index`, component: StudentAttendanceComponent },
   { path: `Institution/Institutions/ImportStudentAttendances/add`, component: StudentAttendanceReportComponent },
   { path: `Institution/Institutions/ImportStudentAttendance/results`, component: StudentAttendanceImportResultComponent },
+  { path: `Institution/Institutions/InstitutionStudentAbsencesArchived/index`, component: StudentAttendanceArchiveComponent },
+
   { path: `Institution/Institutions/StudentMeals/index/${setEncodedId()}`, component: StudentMealsComponent },
   { path: `Institution/Institutions/${setEncodedData()}/ImportStudentMeals/add`, component: StudentMealImportComponent },
   { path: `Institution/Institutions/ImportStudentMeals/results`, component: StudentMealResultComponent },
   { path: `Institution/Institutions/${setEncodedData()}/StudentMeals`, component: StudentMealsComponent },
+
   { path: 'Directory/Directories/Directories/add', component: AddDirectoryComponent },
   { path: `Institution/Institutions/${setEncodedId()}/Students/add`, component: AddStudentComponent },
   { path: `Institution/Institutions/${setEncodedId()}/Staff/add`, component: AddStaffComponent },
@@ -119,7 +124,8 @@ function getBaseUrl() {
     StaffAttendanceReportComponent,
     StudentMealImportComponent,
     StudentMealResultComponent,
-    StudentAttendanceImportResultComponent
+    StudentAttendanceImportResultComponent,
+    StudentAttendanceArchiveComponent
   ],
   imports: [
     BrowserModule,
