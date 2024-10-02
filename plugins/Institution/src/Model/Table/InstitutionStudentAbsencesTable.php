@@ -1275,7 +1275,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
             ])
             ->group(['institution_id', 'student_id', 'absence_type_id'])
             ->having(['total_days >= ' => $threshold])
-            ->hydrate(false)
+            ->disableHydration() // POCOR-8533
             ;
 
         return $unexcusedAbsenceResults->toArray();

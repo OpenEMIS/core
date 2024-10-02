@@ -685,7 +685,9 @@ class StudentsTable extends ControllerActionTable
                     ])
                     ->where([
                     $studentCustomFieldValues->aliasField('student_id') => $user_id,
-                    ])->hydrate(false)->toArray();
+                    ])
+                ->disableHydration() // POCOR-8533
+                ->toArray();
             $custom_field = array();
             $count = 0;
             if(!empty($studentCustomData)){
@@ -1129,7 +1131,7 @@ class StudentsTable extends ControllerActionTable
                 ->where($queryCondition)
                 ->group(['gender_name', $this->aliasField('academic_period_id')])
                 ->order('AcademicPeriods.order DESC')
-                ->hydrate(false)
+                ->disableHydration() // POCOR-8533
                 ->toArray()
                 ;
 

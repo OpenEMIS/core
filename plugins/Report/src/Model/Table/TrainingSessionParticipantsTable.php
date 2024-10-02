@@ -24,7 +24,7 @@ class TrainingSessionParticipantsTable extends AppTable
         parent::initialize($config);
         $this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
         $this->belongsTo('Trainees', ['className' => 'User.Users', 'foreignKey' => 'trainee_id']);
-        
+
         $this->addBehavior('Excel', [
             'autoFields' => false
         ]);
@@ -61,7 +61,7 @@ class TrainingSessionParticipantsTable extends AppTable
         $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $periodEntity = $AcademicPeriods->get($academicPeriodId);
         $startDate = $periodEntity->start_date->format('Y-m-d');
-        $endDate = $periodEntity->end_date->format('Y-m-d'); 
+        $endDate = $periodEntity->end_date->format('Y-m-d');
 
         $conditions = [];
         //POCOR-6828 Starts
@@ -94,7 +94,7 @@ class TrainingSessionParticipantsTable extends AppTable
                     ]
                 ];
         }//POCOR-6828 Ends
-      
+
         $query
             ->select([
                 $this->aliasField('trainee_id'),
@@ -121,7 +121,7 @@ class TrainingSessionParticipantsTable extends AppTable
             ->innerJoinWith('Trainees', function ($q) {
                 return $q->select([
                         'openemis_no' => 'Trainees.openemis_no',
-                        //POCOR-6594 starts <vikas.rathore@mail.valuecoders.com> 
+                        //POCOR-6594 starts <vikas.rathore@mail.valuecoders.com>
                         'trainee_name' => $this->Trainees->find()->func()->concat([
                             'Trainees.first_name' => 'literal',
                             " ",
@@ -131,7 +131,7 @@ class TrainingSessionParticipantsTable extends AppTable
                             " ",
                             'Trainees.last_name' => 'literal'
                         ]),
-                        //POCOR-6594 ends <vikas.rathore@mail.valuecoders.com> 
+                        //POCOR-6594 ends <vikas.rathore@mail.valuecoders.com>
                         'Trainees.preferred_name',
                         'identity_number' => 'Trainees.identity_number'
                     ])
@@ -202,7 +202,8 @@ class TrainingSessionParticipantsTable extends AppTable
                     ])
                     ->where([$userIdentities->aliasField('security_user_id') => $row->trainee_id])
                     ->order([$userIdentities->aliasField('id DESC')])
-                    ->hydrate(false)->toArray();
+                    ->disableHydration() // POCOR-8533
+                    ->toArray();
                     $row->custom_identity_number = '';
                     $other_identity_array = [];
                     if (!empty($userIdentitiesResult)) {
@@ -347,7 +348,7 @@ class TrainingSessionParticipantsTable extends AppTable
     {
         if ($entity->has('status')) {
             $status = $entity->status;
-            
+
             if ($status == self::ACTIVE_STATUS) {
                 return 'Active';
             } else if ($status == self::WITHDRAWN_STATUS) {
