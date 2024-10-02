@@ -22,10 +22,10 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
 
     private $authenticationTypeOptions;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         //print_r('hi'); die;
-        $this->table('system_authentications');
+        $this->setTable('system_authentications');
         parent::initialize($config);
         $this->hasOne('Google', ['className' => 'SSO.IdpGoogle', 'foreignKey' => 'system_authentication_id', 'dependent' => true]);
         $this->hasOne('Saml', ['className' => 'SSO.IdpSaml', 'foreignKey' => 'system_authentication_id', 'dependent' => true]);

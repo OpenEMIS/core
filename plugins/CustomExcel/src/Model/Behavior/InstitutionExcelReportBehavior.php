@@ -689,6 +689,9 @@ class InstitutionExcelReportBehavior extends Behavior
             foreach ($this->advancedTypes as $function => $keyword) {
                 $value = $this->getAdvancedTypeKeyword($keyword);
                 $pos = strpos($cellValue, $value);
+                if($function == 'table') {//POCOR-8551
+                    $function = 'tableData';
+                }
                 if ($pos !== false) {
                     if (method_exists($this, $function)) {
                         $jsonArray = $this->convertPlaceHolderToArray($cellValue);
@@ -1021,7 +1024,7 @@ class InstitutionExcelReportBehavior extends Behavior
         }
     }
 
-    public function table($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra): Table
+    public function tableData($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra): Table
     {
         $rowValue = $attr['rowValue'];
         $columnIndex = $attr['columnIndex'];
