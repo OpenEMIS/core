@@ -691,6 +691,9 @@ class ClassExcelReportBehavior extends Behavior
                 $value = $this->getAdvancedTypeKeyword($keyword);
                 $pos = strpos($cellValue, $value);
                 if ($pos !== false) {
+                    if($function == 'table') {//POCOR-8393
+                        $function = 'tableData';
+                    }
                     if (method_exists($this, $function)) {
                         $jsonArray = $this->convertPlaceHolderToArray($cellValue);
                         if (!empty($jsonArray)) {
@@ -1022,7 +1025,7 @@ class ClassExcelReportBehavior extends Behavior
         }
     }
 
-    public function table($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra): Table
+    public function tableData($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra): Table
     {
         $rowValue = $attr['rowValue'];
         $columnIndex = $attr['columnIndex'];
