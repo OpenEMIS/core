@@ -40,7 +40,14 @@ class StudentAdmissionTable extends ControllerActionTable
             'description' => 'Performing this action will remove the student from the institution.',
             'method' => 'onCancel',
             'unique' => true
-        ]
+        ],//POCOR-8434 starts
+        [
+            'value' => 'Workflow.onTriggerPendingEnrolment',
+            'text' => 'Trigger Pending Enrolment Workflow',
+            'description' => 'Performing this action will system will trigger pending enrolment workflow for the student.',
+            'method' => 'onTriggerPendingEnrolment',
+            'unique' => true
+        ]//POCOR-8434 ends        
     ];
 
     public function initialize(array $config): void
@@ -342,6 +349,52 @@ class StudentAdmissionTable extends ControllerActionTable
             $Students->delete($newStudentRecord);
         }
     }
+
+    //POCOR-8434 Starts
+    public function onTriggerPendingEnrolment(Event $event, $id, Entity $workflowTransitionEntity)
+    {
+        // add student into institution_students_enrolment
+        $entity = $this->get($id);
+        $this->triggerPendingEnrolmentForStudent($entity);
+    }
+
+    public function triggerPendingEnrolmentForStudent(Entity $entity)
+    {
+        $WorkflowsTbl = TableRegistry::get('Workflow.Workflows');
+        $WorkflowStepsTbl = TableRegistry::get('Workflow.WorkflowSteps');
+        $WorkflowsRes = $WorkflowStepsTbl
+                            ->find()
+                            ->innerJoin([$WorkflowsTbl->getAlias() => $WorkflowsTbl->getTable()], 
+                            [
+                                $WorkflowsTbl->aliasField('id = ') . $WorkflowStepsTbl->aliasField('workflow_id')
+                            ])
+                            ->where([
+                                $WorkflowsTbl->aliasField('code') => 'STUDENT-Enrolment-1001',
+                                $WorkflowStepsTbl->aliasField('name') => 'Open'
+                            ])->first();
+
+        $StudentEnrolments = TableRegistry::get('Institution.StudentEnrolment');
+        
+        $enrolmentArr = [
+            'start_date' => $entity->start_date,
+            'end_date' => $entity->end_date,
+            'student_id' => $entity->student_id,
+            'status_id' => $WorkflowsRes->id,
+            'assignee_id' => $this->Auth->user('id'),
+            'institution_id' => $entity->institution_id,
+            'academic_period_id' => $entity->academic_period_id,
+            'education_grade_id' => $entity->education_grade_id,
+            'test_score' => '',
+            'interview_score' => '',
+            'comment' => '',
+        ];
+        if (!empty($entity->institution_class_id)) {
+            $enrolmentArr['institution_class_id'] = $entity->institution_class_id;
+        }
+        $newEntity = $StudentEnrolments->newEntity($enrolmentArr);
+        $StudentEnrolments->save($newEntity);
+    }
+    //POCOR-8434 Ends
 
     public function addInstitutionStudent(Entity $entity)
     {

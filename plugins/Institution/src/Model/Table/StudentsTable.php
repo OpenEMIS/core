@@ -27,6 +27,7 @@ class StudentsTable extends ControllerActionTable
     const PENDING_TRANSFEROUT = -2;
     const PENDING_ADMISSION = -3;
     const PENDING_WITHDRAW = -4;
+    const PENDING_ENROLMENT = -5;//POCOR-8434
     const IN_QUEUE = -10;
 
     private $dashboardQuery = null;
@@ -1140,6 +1141,7 @@ class StudentsTable extends ControllerActionTable
         // To redirect to Pending statuses page
         $pendingStatuses = [
             self::PENDING_ADMISSION => 'StudentAdmission',
+            self::PENDING_ENROLMENT => 'StudentEnrolment',//POCOR-8434
             self::PENDING_TRANSFERIN => 'StudentTransferIn',
             self::PENDING_TRANSFEROUT => 'StudentTransferOut',
             self::PENDING_WITHDRAW => 'StudentWithdraw',
@@ -3627,6 +3629,7 @@ class StudentsTable extends ControllerActionTable
             self::PENDING_TRANSFERIN => __('Pending Transfer In'),
             self::PENDING_TRANSFEROUT => __('Pending Transfer Out'),
             self::PENDING_ADMISSION => __('Pending Admission'),
+            self::PENDING_ENROLMENT => __('Pending Enrolment'),//POCOR-8434
             self::PENDING_WITHDRAW => __('Pending Withdraw'),
             self::IN_QUEUE => __('In Queue'),
         ];

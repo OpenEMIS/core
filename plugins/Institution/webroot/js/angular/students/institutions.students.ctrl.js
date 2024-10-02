@@ -217,18 +217,22 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             return userSvc.getAcademicPeriods()
                 .then(resp => {
                     userCtrl.academicPeriodOptions = resp.data;
+                    console.log(userCtrl.academicPeriodOptions);
                     // Iterate over the array to find the current academic period
                     for (const period of resp.data) {
                         if (period.current === 1) {
                             userCtrl.currentAcademicPeriod = period.id;
                             userCtrl.currentAcademicPeriodName = period.name;
-                            userSvc.getStartDateFromAcademicPeriod({academic_period_id: academicPeriod}).then((response) => {
-                                    const startDateRangeResponse = response;
-                                    const {start_date, end_date} = startDateRangeResponse.data[0];
-                                    userCtrl.currentAcademicPeriodStartDate = userSvc.formatDate(start_date);
-                                    userCtrl.currentAcademicPeriodEndDate = userSvc.formatDate(end_date);
-                                }
-                            );
+                            //POCOR-8434 starts
+                            userCtrl.currentAcademicPeriodStartDate = userSvc.formatDate(period.start_date);
+                            userCtrl.currentAcademicPeriodEndDate = userSvc.formatDate(period.end_date);
+                            // userSvc.getStartDateFromAcademicPeriod({academic_period_id: academicPeriod}).then((response) => {
+                            //         const startDateRangeResponse = response;
+                            //         const {start_date, end_date} = startDateRangeResponse.data[0];
+                            //         userCtrl.currentAcademicPeriodStartDate = userSvc.formatDate(start_date);
+                            //         userCtrl.currentAcademicPeriodEndDate = userSvc.formatDate(end_date);
+                            //     }
+                            // );//POCOR-8434 ends
                             break; // Exit the loop once the current period is found
                         }
                     }
