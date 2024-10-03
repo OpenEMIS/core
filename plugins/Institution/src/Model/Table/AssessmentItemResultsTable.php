@@ -175,7 +175,8 @@ class AssessmentItemResultsTable extends AppTable
                 $this->aliasField('education_subject_id') => $subjectId,
                 $this->aliasField('student_id') => $studentId,
             ])
-            ->hydrate(false);
+            ->disableHydration() // POCOR-8533
+        ;
 
         $results = $query->toArray();
         $returnArray = [];

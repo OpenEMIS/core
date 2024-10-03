@@ -48,11 +48,11 @@ class TransferConnectionsTable extends ControllerActionTable
      * @param array $config The configuration for the Table.
      * @return void
      */
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         parent::initialize($config);
 
-        $this->table('data_management_connections');
+        $this->setTable('data_management_connections');
         $this->displayField('id');
         $this->primaryKey('id');
 

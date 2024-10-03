@@ -2375,25 +2375,36 @@ class NavigationComponent extends Component
 
     public function getGuardianNavNavigation()
     {
-        $request = $this->getController()->getRequest();
-        $session = $this->getController()->getRequest()->getSession();
-        $studentId = $session->read('Student.Students.id');
-        if(empty($studentId) && $request->getParam('action') == 'StudentUser') {
-            $studentId = $this->controller->paramsDecode($request->getParam('pass')[1])['id'];
+        // $request = $this->getController()->getRequest();
+        // $session = $this->getController()->getRequest()->getSession();
+        // $studentId = $session->read('Student.Students.id');
+        // if(empty($studentId) && $request->getParam('action') == 'StudentUser') {
+        //     $studentId = $this->controller->paramsDecode($request->getParam('pass')[1])['id'];
+        // }
+        // $queryString = $this->request->getQuery['queryString']; // comment cakephp4
+        // $queryString = '';
+        // if ($queryString != '') {
+        //     $session->write('queryString', $queryString);
+        // } else {
+        //     $queryString = $session->read('queryString');
+        // }
+        // POCOR-8415 start
+        $studentId = $this->getStudentID();
+        if(!$studentId){
+            $session = $this->getController()->getRequest()->getSession();
+            $studentId = $session->read('Student.Students.id');
         }
-        $queryString = $this->request->getQuery['queryString']; // comment cakephp4
-        $queryString = '';
-        if ($queryString != '') {
-            $session->write('queryString', $queryString);
-        } else {
-            $queryString = $session->read('queryString');
-        }
+        $decodedQueryString = $this->controller->getQueryString();
+        $decodedQueryString['id'] = $studentId;
+        $decodedQueryString['student_id'] = $studentId;
+        $queryString = $this->controller->paramsEncode($decodedQueryString);
+        // POCOR-8415 end
         $navigation = [
             'GuardianNavs.StudentUser.view' => [
                 'title' => 'General',
                 'parent' => 'GuardianNavs.GuardianNavs.index',
                 'params' => ['plugin' => 'GuardianNav',
-                    '1' => $this->controller->paramsEncode(['id' => $studentId]), 'queryString' => $queryString],
+                    '1' => $queryString], // POCOR-8415
                 'selected' => ['GuardianNavs.StudentUser']
             ],
             
@@ -2437,7 +2448,7 @@ class NavigationComponent extends Component
         ];
         foreach ($navigation as &$n) {
             if (isset($n['params'])) {
-                $n['params']['studentId'] = $this->controller->paramsEncode($studentId);
+                $n['params']['1'] = $queryString; // POCOR-8415
             }
         }
         return $navigation;
@@ -2703,6 +2714,7 @@ class NavigationComponent extends Component
                     'title' => 'System Configurations',
                     'parent' => 'SystemSetup',
                     'selected' => ['Configurations.Themes',
+                        'Configurations.Webhooks',
                         'Configurations.add',
                         'Configurations.view',
                         'Configurations.edit',

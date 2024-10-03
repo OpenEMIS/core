@@ -39,9 +39,9 @@ class ProfilesTable extends ControllerActionTable
         'zip'   => 'application/zip'
     ];
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_report_cards');
+        $this->setTable('institution_report_cards');
 
         parent::initialize($config);
 		
@@ -53,7 +53,7 @@ class ProfilesTable extends ControllerActionTable
         
     }
 	
-	public function implementedEvents()
+	public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.downloadExcel'] = 'downloadExcel';
