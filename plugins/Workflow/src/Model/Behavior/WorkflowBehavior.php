@@ -1519,7 +1519,11 @@ class WorkflowBehavior extends Behavior
     public function getWorkflowStep($entity = null)
     {
         if (!is_null($entity)) {
-            $workflowStepId = $entity->has('status_id') ? $entity->status_id : $entity->status_id;
+            // $workflowStepId = $entity->has('status_id') ? $entity->status_id : $entity->status_id;
+            //POCOR-8561 -- Start
+            $workflowStep = $entity->status;
+            $workflowStepId = $workflowStep ? $workflowStep->id : null;
+            //POCOR-8561 -- End
             $model = $this->_table;
             $userId = $model->Auth->user('id');
             $assigneeId = $entity->assignee_id;

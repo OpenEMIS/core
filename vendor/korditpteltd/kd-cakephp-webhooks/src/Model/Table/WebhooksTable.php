@@ -67,31 +67,30 @@ class WebhooksTable extends Table
 
     public function triggerShell($eventKey, $params = [], $body = [])
     { 
-        // $webhooks = $this->find()
-        //     ->innerJoinWith('Webhook.WebhookEvents')
-        //     ->where([
-        //         'WebhookEvents.event_key' => $eventKey,
-        //         $this->aliasField('status') => self::ACTIVE
-        //     ])
-        //     ->toArray();
-		
-		// if(!empty($body)) { 
-        //     $body = "'".json_encode($body)."'";
-        // }
+        $webhooks = $this->find()
+            ->innerJoinWith('WebhookEvents')
+            ->where([
+                'WebhookEvents.event_key' => trim($eventKey),
+                $this->aliasField('status') => self::ACTIVE
+            ])
+            ->toArray();
+		if(!empty($body)) { 
+            $body = json_encode($body);
+        }
 	
-        // $username = isset($params['username']) ? $params['username'] : null;
-        // foreach ($webhooks as $key => $value) {
-        //     $webhooks[$key]->url = str_replace('{username}', $username, $value->url);
-        // }
-        // foreach ($webhooks as $webhook) {
-        //     $cmd = ROOT . DS . 'bin' . DS . 'cake Webhook ' . $webhook->url . ' ' . $webhook->method . ' ' . $body ;
-        //     $logs = ROOT . DS . 'logs' . DS . 'Webhook.log & echo $!';
-        //     $shellCmd = $cmd . ' >> ' . $logs;
-        //     try {
-        //         $pid = exec($shellCmd);
-        //     } catch (Exception $ex) {
-        //         Log::write('error', __METHOD__ . ' exception when triggering : '. $ex);
-        //     }
-        // }
+        $username = isset($params['username']) ? $params['username'] : null;
+        foreach ($webhooks as $key => $value) {
+            $webhooks[$key]->url = str_replace('{username}', $username, $value->url);
+        }
+        foreach ($webhooks as $webhook) {
+            $cmd = ROOT . DS . 'bin' . DS . 'cake Webhook ' . $webhook->url . ' ' . $webhook->method . ' ' . $body ;
+            $logs = ROOT . DS . 'logs' . DS . 'Webhook.log & echo $!';
+            $shellCmd = $cmd . ' >> ' . $logs;
+            try {
+                $pid = exec($shellCmd);
+            } catch (Exception $ex) {
+                Log::write('error', __METHOD__ . ' exception when triggering : '. $ex);
+            }
+        }
     }
 }

@@ -1487,17 +1487,20 @@ class DirectoriesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $options)
     {
-        //POCOR-8558 start
-        if(!isset($_GET['page']) ){
-            $this->behaviors()->get('AdvanceSearch')->setConfig([
-                'showOnLoad' => 1,
-            ]);
-        }else{
+        // POCOR-8558 start
+        $referer = $this->request->getEnv('HTTP_REFERER');
+        $parsedUrl = parse_url($referer);
+
+        // Check if 'page' is set in the query string or 'AdvanceSearch' is present
+        if (isset($_GET['page']) || isset($_REQUEST['AdvanceSearch'])) {
             $this->behaviors()->get('AdvanceSearch')->setConfig([
                 'showOnLoad' => 0,
             ]);
+        } else {
+            $event->stopPropagation();
+            return;
         }
-        //POCOR-8558 ends
+        // POCOR-8558 ends
 
         $conditions = [];
 
@@ -2063,7 +2066,7 @@ public function getIdentityTypeData($value_selection)
             ],
             'url' => '#',
             'label' => '<i class="fa fa-search-plus"></i>',
-        ];
+        ];    
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
