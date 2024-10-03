@@ -352,7 +352,8 @@ class StudentAttendancesTable extends ControllerActionTable
                                 $StudentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
                                 $StudentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
                                 $StudentAttendanceMarkedRecords->aliasField('date') => $findDay,
-                                $StudentAttendanceMarkedRecords->aliasField('no_scheduled_class') => 1
+                                $StudentAttendanceMarkedRecords->aliasField('no_scheduled_class') => 1,
+                                $StudentAttendanceMarkedRecords->aliasField('period IS') => $attendancePeriodId //POCOR-8383
                             ])->first();
                         if (!empty($getRecord)) {
                             $row->is_NoClassScheduled = 1;
@@ -1042,6 +1043,18 @@ class StudentAttendancesTable extends ControllerActionTable
         $subjectId = $options['subject_id'];
 
         $studentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
+        //POCOR-8383 start
+        $check  = $studentAttendanceMarkedRecords->updateAll(
+            ['no_scheduled_class' => 0], // Fields to update
+            [   // Conditions for which records to update
+                'institution_class_id' => $institutionClassId,
+                'education_grade_id' => $educationGradeId,
+                'institution_id' => $institutionId,
+                'academic_period_id' => $academicPeriodId,
+                'date' => $day,
+                'period' => $attendancePeriodId
+            ]
+        ); //POCOR-8383 end
         $AttendanceMarkedData = $studentAttendanceMarkedRecords->find()
             ->where([
                 $studentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,

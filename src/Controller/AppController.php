@@ -758,7 +758,8 @@ class AppController extends Controller
                 'forgotUsername',
                 'postForgotUsername',
                 'forgotPassword',
-                'postForgotPassword'
+                'postForgotPassword',
+                'verifyOtp'
             ])) {
             return $skip;
         }

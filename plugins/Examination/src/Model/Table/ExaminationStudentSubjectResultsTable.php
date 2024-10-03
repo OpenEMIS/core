@@ -148,8 +148,8 @@ class ExaminationStudentSubjectResultsTable extends AppTable
                 $this->aliasField('student_id') => $studentId
             ])
             ->select(['grade_name' => 'ExaminationGradingOptions.name', 'grade_code' => 'ExaminationGradingOptions.code', 'examination_subject_id' => $this->aliasField('examination_subject_id')])
-            ->autoFields(true)
-            ->hydrate(false)
+            ->enableAutoFields() //POCOR-8533
+            ->disableHydration() // POCOR-8533
             ->toArray();
 
         $returnArray = [];
