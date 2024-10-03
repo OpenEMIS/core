@@ -61,7 +61,7 @@ class StudentBehavioursTable extends ControllerActionTable
 			$buttons['view']['url'] = $url;
 
 			// POCOR-1893 unset the view button on profiles controller
-			if ($this->request->getParam('controller')->getName() == 'Profiles') {
+			if ($this->request->getParam('controller') == 'Profiles') {
 				unset($buttons['view']);
 			}
 			// end POCOR-1893
