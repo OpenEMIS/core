@@ -401,6 +401,17 @@ Route::group(
         Route::get('/system-configurations/{configId}', 'SystemConfigurationController@configurationItemById');
         //POCOR-8023 ends
 
+        ///POCOR-8121 start
+        Route::get('/institution-units', 'InstitutionController@units');
+        Route::get('/institution-courses', 'InstitutionController@courses');
+        Route::get('/institutions/{institutionId}/academic-period/{academicPeriodId}/shifts', 'InstitutionController@shifts');
+        Route::get('/institutions/{institutionId}/staffs', 'InstitutionController@staffs');
+        Route::get('/institutions/{institutionId}/rooms', 'InstitutionController@rooms');
+        Route::get('/institutions/{institutionId}/education-grades/{educationGradeId}/institution-subjects/{institutionSubjectId}/classes', 'InstitutionController@subjectClasses');
+        Route::get('/institutions/{institutionId}/classes/{classId}/unassigned-students', 'InstitutionController@unassignedStudentsInClass');
+        Route::get('/institutions/{institutionId}/subjects/{subjectId}/unassigned-students', 'InstitutionController@unassignedStudentsInSubject');
+
+        //POCOR-8121 end
 
         //POCOR-8104 Start...
         Route::get('user-types', 'DirectoryController@getUserTypeList');

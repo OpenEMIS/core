@@ -31,9 +31,9 @@ class StaffSalariesTable extends ControllerActionTable
 
     private $dashboardQuery = null;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff');
+        $this->setTable('institution_staff');
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
@@ -156,7 +156,7 @@ class StaffSalariesTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
@@ -169,10 +169,10 @@ class StaffSalariesTable extends ControllerActionTable
         $searchableFields[] = 'openemis_no';
     }
 
-    public function validationDefault(Validator $validator)
+    public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        $validator->setProvider('custom', $this);
         $validator = $this->buildStaffValidation();
         return $validator
             ->allowEmpty('staff_name')
@@ -1510,7 +1510,7 @@ class StaffSalariesTable extends ControllerActionTable
                     ])
                     ->where($queryCondition)
                     ->group(['gender_name'])
-                    ->hydrate(false)
+                    ->disableHydration() // POCOR-8533
                     ->toArray();
 
                 if (!empty($staffByYear)) {
@@ -2012,7 +2012,7 @@ class StaffSalariesTable extends ControllerActionTable
                 $this->aliasField('end_date') . ' IS NOT NULL',
                 $conditions[$thresholdArray['condition']]
             ])
-            ->hydrate(false)
+            ->disableHydration() // POCOR-8533
             ;
 
         return $licenseData->toArray();
@@ -2080,7 +2080,7 @@ class StaffSalariesTable extends ControllerActionTable
                     ]
                 ]
             ])
-            ->hydrate(false)
+            ->disableHydration() // POCOR-8533
             ->toArray();
 
         $query = $query
@@ -2246,7 +2246,7 @@ class StaffSalariesTable extends ControllerActionTable
                 $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate."'",
                 $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate."'",
             ])
-            ->hydrate(false)
+            ->disableHydration() // POCOR-8533
             ->toArray();
 
         $allStaffLeaves = $StaffLeaveTable
@@ -2258,7 +2258,7 @@ class StaffSalariesTable extends ControllerActionTable
                 $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
                 $where
             ])
-            ->hydrate(false)
+            ->disableHydration() // POCOR-8533
             ->toArray();
 
         $attendanceByStaffIdRecords = Hash::combine($allStaffAttendances, '{n}.id', '{n}', '{n}.staff_id');

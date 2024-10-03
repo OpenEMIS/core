@@ -237,7 +237,7 @@ class ControllerActionComponent extends Component
         if ($this->getController()->getRequest()->is('post')) {
             $requestCookie = $this->getController()->getRequest()->getCookie('csrfToken');
             $token = isset($requestCookie) ? $requestCookie : '';
-            $this->getController()->getRequest()->env('HTTP_X_CSRF_TOKEN', $token);
+            $this->getController()->getRequest()->getEnv('HTTP_X_CSRF_TOKEN', $token);
         }
         $controller->Security->setConfig('unlockedActions', [
             $action
@@ -1953,7 +1953,7 @@ class ControllerActionComponent extends Component
                     ->select($orderField)
                     ->where(['OR' => $idKeys])
                     ->order([$model->aliasField($orderField)])
-                    ->hydrate(false)
+                    ->disableHydration() // POCOR-8533
                     ->toArray();
 
                 $originalOrder = array_reverse($originalOrder);

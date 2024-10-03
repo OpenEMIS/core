@@ -9,7 +9,7 @@ class InstitutionSubject extends Entity
 {
     protected $_virtual = ['teachers',
     'education_subject_code', 'class_name'];
-    
+
     // protected function _getTeachers() {
     //     pr($this);die;
     // $value = '';
@@ -38,7 +38,11 @@ class InstitutionSubject extends Entity
         } else {
             $table = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
             $id = $this->education_subject_id;
+            try{
             $value = $table->get($id)->code;
+                }catch (\Exception $exception){
+                $value = 'deleted';
+            }
         }
         return $value;
     }

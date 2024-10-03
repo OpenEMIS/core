@@ -46,7 +46,7 @@ class AlertRetirementWarningShell extends AlertShell
                             $this->Staff->aliasField('staff_id') => $vars['id'],
                             $this->Staff->StaffStatuses->aliasField('code') => 'ASSIGNED'
                         ])
-                        ->hydrate(false)
+                        ->disableHydration() // POCOR-8533
                         ->all();
 
                     if (!empty($institutionStaffRecords)) {

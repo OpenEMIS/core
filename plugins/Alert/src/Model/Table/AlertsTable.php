@@ -260,15 +260,19 @@ class AlertsTable extends ControllerActionTable
 
     public function onUpdateFieldFrequency(Event $event, array $attr, $action)
     {
-        $freqOptions=["Daily"=>"Daily",
-                         "Weekly"=>"Weekly",
-                         "Monthly"=>"Monthly",
-                         "Yearly"=>"Yearly"];
+        $freqOptions=[
+            "Never" => __("Never"), // POCOR-8533
+            "Daily" => __("Daily"),
+            "Weekly" => __("Weekly"),
+            "Monthly" => __("Monthly"),
+            "Yearly" => __("Yearly")
+        ];
         $attr['type'] = 'select';
         $attr['attr']['options'] = $freqOptions;
 	    $attr['onChangeReload'] = true;
         return $attr;
     }
+
     public function editBeforeAction(Event $event)
     {
         $this->field('name',['type' => 'readonly']);

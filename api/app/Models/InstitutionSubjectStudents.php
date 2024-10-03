@@ -22,4 +22,14 @@ class InstitutionSubjectStudents extends Model
     {
         return $this->belongsTo(StudentStatuses::class, 'student_status_id', 'id');
     }
+
+    public function educationGrades()
+    {
+        return $this->belongsTo(EducationGrades::class, 'education_grade_id', 'id');
+    }
+
+    public function class()
+    {
+        return $this->belongsTo(InstitutionClasses::class, 'institution_class_id', 'id');
+    }
 }
