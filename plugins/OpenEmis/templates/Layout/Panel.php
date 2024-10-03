@@ -9,6 +9,17 @@ $panelHeader = $this->fetch('panelHeader');
 <div class="panel">
 	<div class="panel-body">
 		<?= $this->element('OpenEmis.alert') ?>
+		<!-- POCOR-7742 start -->
+        <?php if($this->request->getParam('pass')[0] == 'add'){ ?>
+        <style>
+            .input.textarea > label[for='surveyquestions-params'] {
+                display: none;
+                border: none;
+                background: none;
+            }
+        </style>
+        <?php } ?>
+        <!-- POCOR-7742 start -->
 		<!--?= $this->element('data_overview') ?-->
 		<?php
 		// if (isset($indexDashboard)) {

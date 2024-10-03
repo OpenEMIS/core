@@ -394,7 +394,7 @@ use App\Model\Table\ControllerActionTable;
 use ArrayObject;
 use Cake\Core\Configure;
 use Cake\Event\Event;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -407,16 +407,16 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
     public $id;
     public $authenticationType;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('config_items');
+        $this->setTable('config_items');
         parent::initialize($config);
         $this->addBehavior('Configuration.ConfigItems');
         $this->toggle('remove', false);
         $this->hasMany('WebhookEvents', ['className' => 'Webhook.WebhookEvents', 'dependent' => true, 'cascadeCallBack' => true, 'saveStrategy' => 'replace', 'foreignKey' => 'webhook_id', 'joinType' => 'INNER']);
     }
 
-    public function validationCustom(Validator $validator)
+    public function validationCustom(Validator $validator): Validator
     {
         $validator = $this->validationDefault($validator);
         return $validator->requirePresence('url', false);

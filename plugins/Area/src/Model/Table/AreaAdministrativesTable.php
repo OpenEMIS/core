@@ -39,6 +39,10 @@ class AreaAdministrativesTable extends ControllerActionTable
             'Results' => ['index', 'view'] //POCOR-5672
         ]);
         $this->setDeleteStrategy('restrict');
+        if ($this->behaviors()->has('ControllerAction')) {
+            $controllerActionBehavior = $this->behaviors()->get('ControllerAction');
+            $controllerActionBehavior->setConfig(['actions' => ['reorder' => false]]);
+        }
     }
     //POCOR-5672 starts
     public function implementedEvents(): array
@@ -332,6 +336,8 @@ class AreaAdministrativesTable extends ControllerActionTable
                 $this->fields['is_main_country']['visible'] = false;
             }
         }
+        $this->field('lft', ['visible'=> false]);
+        $this->field('rght',['visible'=> false]);
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
