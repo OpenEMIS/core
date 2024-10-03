@@ -1308,10 +1308,15 @@ class StudentsTable extends ControllerActionTable
         $institutionId = $this->institution_id;
         $selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
         //POCOR-8092::start
+        Log::debug(print_r([$request->getQuery(),$request->getQueryString()],true));
         if (!empty($request->getQuery('academic_period_id'))) {
             $selectedAcademicPeriod = $request->getQuery('academic_period_id');
         }else{
-            $existCurrentAcademicStudent = $this->find('all', ['conditions'=>[ 'academic_period_id' => $this->AcademicPeriods->getCurrent(), 'institution_id' => $institutionId]])->toArray();
+            $existCurrentAcademicStudent = $this->find('all',
+                ['conditions'=>[
+                    'academic_period_id' => $this->AcademicPeriods->getCurrent(),
+                'institution_id' => $institutionId]
+                ])->toArray();
             if($existCurrentAcademicStudent){
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }else{
