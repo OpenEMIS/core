@@ -13,7 +13,9 @@ interface TableColumns {
 const textCheck: any = {
     "error-data-style": (params: any) => {
         if (params && params.value) {
-            return (params.value.includes("Invalid") || params.value.includes("required"))
+            if(isNaN(params.value)){
+                return (params.value.includes("Invalid") || params.value.includes("required") || params.value.includes("required."))
+            }
         }
     }
 }
@@ -41,7 +43,7 @@ const COLUMN_DATE: any = {
     filterable: false,
     class: "ag-school-column",
     canEdit: false,
-    // cellClassRules: textCheck,
+    cellClassRules: textCheck,
 }
 
 const COLUMN_STUDENT_ATTENDANCE_TYPE_CODE: any = {
@@ -52,7 +54,7 @@ const COLUMN_STUDENT_ATTENDANCE_TYPE_CODE: any = {
     width: 280,
     class: "ag-school-column",
     canEdit: false,
-    // cellClassRules: textCheck,
+    cellClassRules: textCheck,
 }
 
 const COLUMN_PERIOD: any = {
@@ -63,7 +65,7 @@ const COLUMN_PERIOD: any = {
     width: 150,
     class: "ag-school-column",
     canEdit: false,
-    // cellClassRules: textCheck,
+    cellClassRules: textCheck,
 }
 
 const COLUMN_INSTITUTION_SUBJECT_NAME: any = {
@@ -74,7 +76,7 @@ const COLUMN_INSTITUTION_SUBJECT_NAME: any = {
     width: 270,
     class: "ag-school-column",
     canEdit: false,
-    // cellClassRules: textCheck,
+    cellClassRules: textCheck,
 }
 
 const COLUMN_OPENEMIS_ID: any = {
@@ -85,7 +87,7 @@ const COLUMN_OPENEMIS_ID: any = {
     width: 200,
     class: "ag-school-column",
     canEdit: false,
-    // cellClassRules: textCheckId
+    cellClassRules: textCheckId
 }
 
 const COLUMN_ABSENCE_TYPE_CODE: any = {
@@ -96,7 +98,7 @@ const COLUMN_ABSENCE_TYPE_CODE: any = {
     width: 180,
     class: "ag-school-column",
     canEdit: false,
-    // cellClassRules: textCheck
+    cellClassRules: textCheck
 }
 
 const COLUMN_STUDENT_ABSENCE_REASON_CODE: any = {
@@ -106,7 +108,7 @@ const COLUMN_STUDENT_ABSENCE_REASON_CODE: any = {
     filterable: false,
     class: "ag-school-column",
     canEdit: false,
-    // cellClassRules: textCheckId
+    cellClassRules: textCheckId
 }
 
 const COLUMN_COMMENT: any = {
@@ -116,7 +118,7 @@ const COLUMN_COMMENT: any = {
     filterable: false,
     class: "ag-school-column",
     canEdit: false,
-    // cellClassRules: textCheck
+    cellClassRules: textCheck
 }
 
 export const TABLE_COLUMN_LIST: TableColumns = {
