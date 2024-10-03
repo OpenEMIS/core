@@ -372,7 +372,7 @@ class AppraisalScoresTable extends ControllerActionTable
                 $scoresParamsJSON = json_decode($appraisalFormsCriteriasScoresEntity->params);
 
                 if (!is_null($scoresParamsJSON)) {
-                    if(!is_null($scoresParamsJSON) && isset($scoresParamsJSON['formula']) && !is_null($scoresParamsJSON->formula)) {
+                    if(!is_null($scoresParamsJSON) && isset($scoresParamsJSON->formula) && !is_null($scoresParamsJSON->formula)) { //POCOR-8620
                         $attr2['attr']['value'] = $this->translateStepToReadableWords($scoresParamsJSON->formula);
                     }
                 }
@@ -497,7 +497,7 @@ class AppraisalScoresTable extends ControllerActionTable
             if (!is_null($appraisalFormsCriteriasScoresEntity) && !is_null($appraisalFormsCriteriasScoresEntity->params)) {
                 $scoresParamsJSON = json_decode($appraisalFormsCriteriasScoresEntity->params);
                 if (!is_null($scoresParamsJSON)) {
-                    if(!is_null($scoresParamsJSON) && isset($scoresParamsJSON['formula']) && !is_null($scoresParamsJSON->formula)) {
+                    if(!is_null($scoresParamsJSON) && isset($scoresParamsJSON->formula) && !is_null($scoresParamsJSON->formula)) { //POCOR-8620
                         $attr2['attr']['value'] = $scoresParamsJSON->formula;
                     }
                 }
