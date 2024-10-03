@@ -271,6 +271,15 @@ class GuardianNavsController extends AppController
 
     public function getAcademicTabElements($options = [])
     {
+        // POCOR-8415:start
+        $queryString = $this->ControllerAction->getQueryString();
+        if (empty($queryString)) {
+            $queryString = $this->getQueryString();
+        }
+        $studentId = $queryString['student_id'] ?? null;
+        $institutionStudentID = $queryString['institution_student_id'] ?? null;
+        $encodedQueryString = !empty($queryString) ? $this->ControllerAction->paramsEncode($queryString) : null;
+        // POCOR-8415:end
         $id = (isset($options['id']))? $options['id']: 0;
         $type = (isset($options['type']))? $options['type']: null;
         $period = (isset($options['academic_period']))? $options['academic_period']: null;
@@ -286,6 +295,9 @@ class GuardianNavsController extends AppController
             if(empty($studentId)){
                 $studentId = $this->request->getQueryParams()['studentId'];
                 $studentId = $this->ControllerAction->paramsDecode($studentId);
+            }//POCOR-8379 ends
+            if(empty($studentId)){
+                $studentId = $queryString['student_id'];
             }//POCOR-8379 ends
             if(!empty($studentId)) {
                 $StudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
@@ -326,12 +338,23 @@ class GuardianNavsController extends AppController
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
-
+        // POCOR-8415:start
+        if($encodedQueryString){
+            $queryString = $encodedQueryString;
+        }
+        // POCOR-8415:end
         foreach ($studentTabElements as $key => $tab) {
             if(!empty($period) && $key == 'Absences') {
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key,  'queryString' => $queryString,'academic_period' => $period]);
+                $tabElements[$key]['url'] = array_merge($studentUrl, [
+                    'action' =>'Student'.$key,
+                    'queryString' => $queryString,
+                    'academic_period' => $period]);
             } else {
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'queryString' => $queryString, 'type' => $type]);
+                $tabElements[$key]['url'] = array_merge($studentUrl, [
+                    'action' =>'Student'.$key,
+                    '0' => 'index',
+                    '1' => $encodedQueryString,
+                'type' => $type]);
             }
         }
 
@@ -348,7 +371,7 @@ class GuardianNavsController extends AppController
         ->where([
             'InstitutionStudents.student_id' => $userId
         ])
-        ->hydrate(false)
+        ->disableHydration() // POCOR-8533
         ->first();
 
         $institutionId = $InstitutionStudents['institution_id'];
@@ -363,7 +386,7 @@ class GuardianNavsController extends AppController
             'student_id' => $userId,
             'institution_id' => $institutionId
         ])
-        ->hydrate(false)
+        ->disableHydration() // POCOR-8533
         ->first();
 
         $institutionClassId = $InstitutionClassStudentsResult['institution_class_id'];
@@ -375,7 +398,7 @@ class GuardianNavsController extends AppController
             'institution_id' => $institutionId,
             'status' => 2
         ])
-        ->hydrate(false)
+        ->disableHydration() // POCOR-8533
         ->first();
 
         $this->set('userId', $userId);
