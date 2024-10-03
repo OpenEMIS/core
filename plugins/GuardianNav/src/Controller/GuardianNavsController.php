@@ -58,6 +58,7 @@ class GuardianNavsController extends AppController
         ];
         $this->loadComponent('Training.Training');
         $this->loadComponent('User.Image');
+        $this->loadComponent('TabPermission');
         $this->attachAngularModules();
 
         $this->set('contentHeader', 'Guardian');
