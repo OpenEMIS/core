@@ -3708,7 +3708,7 @@ class StudentsTable extends ControllerActionTable
         $institutionId = $this->getInstitutionID();
         //POCOR-8411 -- Start - avoid null in where
         if (empty($institutionId)) {
-            $institutionId = -1;
+            $institutionId = -1; // Use -1 to return zero records; behaves similarly to null in CakePHP 3, ensuring compatibility.
         }
         //POCOR-8411 -- End
         $this->institution_id = $institutionId;
