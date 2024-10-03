@@ -727,7 +727,7 @@ class ExcelReportBehavior extends Behavior
                 $pos = strpos($cellValue, $value);
                 if ($pos !== false) {
                     if($function == 'table') {
-                        $funstion = 'tableData';
+                        $function = 'tableData';//POCOR-8529 
                     }
                     if (method_exists($this, $function)) {
                         $jsonArray = $this->convertPlaceHolderToArray($cellValue);

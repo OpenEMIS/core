@@ -48,7 +48,7 @@ class AlertStaffEmploymentShell extends AlertShell
                             $this->Staff->aliasField('staff_id') => $vars['user']['id'],
                             $this->Staff->StaffStatuses->aliasField('code') => 'ASSIGNED'
                         ])
-                        ->hydrate(false)
+                        ->disableHydration() // POCOR-8533
                         ->all();
 
                     if (!empty($institutionStaffRecords)) {

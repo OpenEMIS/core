@@ -67,9 +67,7 @@ class ReportCardsTable extends ControllerActionTable
 
     public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
-        $validator->setProvider('custom', $this);
-
-        $validator->setProvider('custom', $this);
+        $validator->setProvider('custom', $this);//POCOR-8529 
         return $validator
             ->add('code', 'ruleUniqueCode', [
                 'rule' => ['validateUnique', ['scope' => 'academic_period_id']],

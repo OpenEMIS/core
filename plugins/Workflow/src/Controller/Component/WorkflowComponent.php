@@ -152,7 +152,7 @@ class WorkflowComponent extends Component
                 ])
                 ->select(['id' => $this->WorkflowStatusesSteps->aliasField('workflow_step_id')])
                 ->innerJoin(
-                    [$this->WorkflowStatuses->alias() => $this->WorkflowStatuses->table()],
+                    [$this->WorkflowStatuses->getAlias() => $this->WorkflowStatuses->getTable()],
                     [
                         $this->WorkflowStatuses->aliasField('id = ') . $this->WorkflowStatusesSteps->aliasField('workflow_status_id'),
                         $this->WorkflowStatuses->aliasField("code IN ('") . implode("','", $excludedStatus) . "')"
