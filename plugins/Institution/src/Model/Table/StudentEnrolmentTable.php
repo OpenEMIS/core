@@ -403,7 +403,7 @@ class StudentEnrolmentTable extends ControllerActionTable
                 // get the first step in 'REJECTED' workflow statuses
                 $workflowEntity = $this->getWorkflow($this->getRegistryAlias());
                 $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-                $statuses = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentAdmission', 'REJECTED');
+                $statuses = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentEnrolment', 'REJECTED');
                 ksort($statuses);
                 $rejectedStatusId = key($statuses);
                 $rejectedStatusEntity = $this->Statuses->get($rejectedStatusId);
@@ -576,14 +576,14 @@ class StudentEnrolmentTable extends ControllerActionTable
         $url = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
-            'action' => 'BulkStudentAdmission',
+            'action' => 'BulkStudentEnrolment',
             'edit'
         ];
-        $toolbarButtonsArray['bulkAdmission'] = $this->getButtonTemplate();
-        $toolbarButtonsArray['bulkAdmission']['label'] = '<i class="fa kd-transfer"></i>';
-        $toolbarButtonsArray['bulkAdmission']['attr']['title'] = __('Bulk Admission');
-        $toolbarButtonsArray['bulkAdmission']['url'] = $url;
-        $toolbarButtonsArray['bulkAdmission']['url'][1] = $encodedQueryString;
+        $toolbarButtonsArray['bulkEnrolment'] = $this->getButtonTemplate();
+        $toolbarButtonsArray['bulkEnrolment']['label'] = '<i class="fa kd-transfer"></i>';
+        $toolbarButtonsArray['bulkEnrolment']['attr']['title'] = __('Bulk Enrolment');
+        $toolbarButtonsArray['bulkEnrolment']['url'] = $url;
+        $toolbarButtonsArray['bulkEnrolment']['url'][1] = $encodedQueryString;
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 
@@ -745,7 +745,7 @@ class StudentEnrolmentTable extends ControllerActionTable
                     $workflowSteps->aliasField('name') => 'Approved'
                 ])
                 ->where([
-                    $workflows->aliasField('name') => 'Student Admission'
+                    $workflows->aliasField('name') => 'Student Enrolment'
                 ])
                 ->first();
             if ($studentStatus == 0) {// for enrolled
@@ -762,7 +762,7 @@ class StudentEnrolmentTable extends ControllerActionTable
         if ($entity->isNew()) {
             if ($entity->has('action_type') && $entity->action_type == 'imported') { // Import logic
                 $WorkflowActions = TableRegistry::get('Workflow.WorkflowActions');
-                $triggeringStep = $WorkflowActions->getEventTriggeringStep('Institution.StudentAdmission', 'Workflow.onApprove');
+                $triggeringStep = $WorkflowActions->getEventTriggeringStep('Institution.StudentEnrolment', 'Workflow.onApprove');
 
                 if(!empty($triggeringStep) && $entity->status_id == $triggeringStep) {
                     if ($this->save($entity)) {
@@ -772,15 +772,15 @@ class StudentEnrolmentTable extends ControllerActionTable
             } else if ($entity->has('action_type') && $entity->action_type == 'default') { // AngularJs logic
                 // auto approve admission and add student into the institution
                 $superAdmin = Hash::get($_SESSION['Auth'], 'User.super_admin');
-                $executePermission = isset($_SESSION['Permissions']) && Hash::check($_SESSION['Permissions'], 'Institutions.StudentAdmission.execute');
+                $executePermission = isset($_SESSION['Permissions']) && Hash::check($_SESSION['Permissions'], 'Institutions.StudentEnrolment.execute');
 
-                // creator must be admin or have 'Student Admission -> Execute' permission
+                // creator must be admin or have 'Student Enrolment -> Execute' permission
                 if ($superAdmin || $executePermission) {
                     $workflowEntity = $this->getWorkflow($this->getRegistryAlias());
 
                     // get the first step in 'APPROVED' workflow statuses
                     $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-                    $statuses = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentAdmission', 'APPROVED');
+                    $statuses = $WorkflowModelsTable->getWorkflowStatusSteps('Institution.StudentEnrolment', 'APPROVED');
                     ksort($statuses);
                     $approvedStatusId = key($statuses);
                     $approvedStatusEntity = $this->Statuses->get($approvedStatusId);
@@ -798,7 +798,7 @@ class StudentEnrolmentTable extends ControllerActionTable
 
                             // add workflow transition
                             $transition = [
-                                'comment' => __('On Auto Approve Student Admission'),
+                                'comment' => __('On Auto Approve Student Enrolment'),
                                 'prev_workflow_step_name' => $prevStepEntity->name,
                                 'workflow_step_name' => $approvedStatusEntity->name,
                                 'workflow_action_name' => 'Administration - Approve Record',
@@ -861,7 +861,7 @@ class StudentEnrolmentTable extends ControllerActionTable
                     $url = [
                         'plugin' => 'Institution',
                         'controller' => 'Institutions',
-                        'action' => 'StudentAdmission',
+                        'action' => 'StudentEnrolment',
                         'view',
                         $this->paramsEncode(['id' => $row->id]),
                         'institution_id' => $row->institution_id
@@ -895,7 +895,7 @@ class StudentEnrolmentTable extends ControllerActionTable
         if(!is_null($classId)){
             $query
                 ->select([
-                    'pending_queue' => $query->func()->count('StudentAdmission.id')
+                    'pending_queue' => $query->func()->count('StudentEnrolment.id')
                 ])
                 ->where([
                     $this->aliasField('institution_class_id') => $classId
@@ -933,7 +933,7 @@ class StudentEnrolmentTable extends ControllerActionTable
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            $workflowModel = 'Institutions > Students > Student Admission';
+            $workflowModel = 'Institutions > Students > Student Enrolment';
             $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
             $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
             $Workflows = TableRegistry::get('Workflow.Workflows');
