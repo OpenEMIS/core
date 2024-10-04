@@ -18,7 +18,7 @@ class LabelsTable extends ControllerActionTable
        parent::initialize($config);
        $this->toggle('view', true);
        $this->toggle('edit', true);
-       $this->toggle('add', true);
+       $this->toggle('add', false);
     }
 
     public function implementedEvents(): array
