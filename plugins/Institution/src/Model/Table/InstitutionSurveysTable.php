@@ -547,7 +547,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                 $this->aliasField('SurveyFormsFilters.survey_form_id IN') => $getdata,
                 //POCOR-5666 Condition[END]
                 'surveyStatuses.date_enabled <=' => $todayDate,
-                'surveyStatuses.date_disabled >=' => $todayDate,
+                // 'surveyStatuses.date_disabled >=' => $todayDate, //POCOR-8095
                 'OR' => [
                             $this->aliasField('SurveyFilterInstitutionTypes.institution_type_id IN')=>$type,
                             $this->aliasField('SurveyFilterInstitutionProviders.institution_provider_id IN')=>$providers,
@@ -624,7 +624,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                 $this->aliasField('Institutions.institution_status_id = ') => 1,
                 //POCOR-5666 Condition[END]
                 'surveyStatuses.date_enabled <=' => $todayDate,
-                'surveyStatuses.date_disabled >=' => $todayDate,
+                // 'surveyStatuses.date_disabled >=' => $todayDate, //POCOR-8095
                 'OR' => [
                             $this->aliasField('SurveyFilterInstitutionTypes.institution_type_id IN')=>$type,
                             $this->aliasField('SurveyFilterInstitutionProviders.institution_provider_id IN')=>$providers,
@@ -703,7 +703,7 @@ class InstitutionSurveysTable extends ControllerActionTable
                     $this->aliasField('Institutions.institution_status_id = ') => 1,
                     //POCOR-5666 Condition[END]
                     'surveyStatuses.date_enabled <=' => $todayDate,
-                    'surveyStatuses.date_disabled >=' => $todayDate,
+                    // 'surveyStatuses.date_disabled >=' => $todayDate,  //POCOR-8095
                     'OR' => [
                                 $this->aliasField('SurveyFilterInstitutionTypes.institution_type_id IN')=>$type,
                                 $this->aliasField('SurveyFilterInstitutionProviders.institution_provider_id IN')=>$providers,
