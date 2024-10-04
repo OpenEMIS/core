@@ -829,6 +829,7 @@ class NavigationComponent extends Component
                     'Institutions.Students',
                     'Institutions.StudentHistories.index',//POCOR-8333
                     'Institutions.BulkStudentAdmission',
+                    'Institutions.BulkStudentEnrolment',//POCOR-8434
                     'Institutions.ImportStudentBodyMasses',
                     'Institutions.ImportStudentGuardians',
                     'Institutions.StudentStatusUpdates', 'Institutions.ImportStudentExtracurriculars',

@@ -901,6 +901,7 @@ class WorkflowBehavior extends Behavior
                     }
                 }
 
+
                 $ControllerAction->field('workflow_transitions', [
                     'type' => 'element',
                     'element' => 'Workflow.transitions',
@@ -910,18 +911,35 @@ class WorkflowBehavior extends Behavior
                     'tableCells' => $tableCells
                 ]);
                 // End
-
+                //POCOR-8434 starts
+                if($entity->has('test_score') && $entity->has('interview_score')){
+                    $tableHeaders1[] = __('Shortlist') . '<i class="fa fa-history fa-lg"></i>';
+                    $ControllerAction->field('shortlist', [
+                        'type' => 'element',
+                        'element' => 'Workflow.shortlist',
+                        'override' => true,
+                        'rowClass' => 'transition-container',
+                        'tableHeaders' => $tableHeaders1,
+                       // 'tableCells' => $tableCells
+                    ]);
+                }//POCOR-8434 ends
                 // Reorder fields
                 $fieldOrder = [];
                 $fields = $model->fields;
                 foreach ($fields as $fieldKey => $fieldAttr) {
-                    if (!in_array($fieldKey, ['workflow_status', 'assignee_id', 'workflow_transitions'])) {
+                    if (!in_array($fieldKey, ['workflow_status', 'assignee_id', 'shortlist', 'test_score', 'interview_score', 'workflow_transitions'])) {
                         $fieldOrder[$fieldAttr['order']] = $fieldKey;
                     }
                 }
                 ksort($fieldOrder);
                 array_unshift($fieldOrder, 'assignee_id');  // Set workflow_status to second
                 array_unshift($fieldOrder, 'workflow_status');  // Set workflow_status to first
+                //POCOR-8434 starts
+                // Place 'test_score' and 'interview_score' just before 'workflow_transitions'
+                $fieldOrder[] = 'shortlist'; 
+                $fieldOrder[] = 'test_score';  // Set test_score before workflow_transitions
+                $fieldOrder[] = 'interview_score';  // Set interview_score before workflow_transitions
+                //POCOR-8434 ends
                 $fieldOrder[] = 'workflow_transitions'; // Set workflow_transitions to last
                 $ControllerAction->setFieldOrder($fieldOrder);
                 // End

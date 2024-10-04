@@ -1020,12 +1020,7 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentAdmission']);
     }
-    //POCOR-8434 start
-    public function StudentEnrolment()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentEnrolment']);
-    }
-    //POCOR-8434 Ends
+
     //POCOR-6028 start
 
     public function BulkStudentAdmission()
@@ -1034,7 +1029,18 @@ class InstitutionsController extends AppController
     }
 
     //POCOR-6028 ends
+    //POCOR-8434 start
+    public function StudentEnrolment()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentEnrolment']);
+    }
 
+    public function BulkStudentEnrolment()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.BulkStudentEnrolment']);
+    }
+    //POCOR-8434 Ends
+    
     public function StudentTransferIn()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentTransferIn']);
@@ -6607,47 +6613,124 @@ class InstitutionsController extends AppController
             }
         }
         //POCOR-8434 starts
-        $workflows = TableRegistry::get('Workflow.Workflows');
-        $workflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
-        $workflowResults = $workflows->find()
-            ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
-            ->LeftJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()], [
-                $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
-                $workflowSteps->aliasField('name') => 'Approved'
-            ])
-            ->where([
-                $workflows->aliasField('name') => 'Student Admission'
-            ])
-            ->first();
-
-        //POCOR-7716 start
-        $workflowStepId = $workflowResults->workflowSteps_id;
-        if ($studentAdmissionStatusValue !== 0 && strtolower($studentAdmissionStatus) !== "enrolled") {
+        if ($studentAdmissionStatusValue == 0 && strtolower($studentAdmissionStatus) == "enrolled") {
+            $workflows = TableRegistry::get('Workflow.Workflows');
+            $workflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+            $workflowResults = $workflows->find()
+                ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
+                ->LeftJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()], [
+                    $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
+                    $workflowSteps->aliasField('name') => 'Approved'
+                ])
+                ->where([
+                    $workflows->aliasField('name') => 'Student Enrolment'
+                ])
+                ->first();
+            $workflowStepId = $workflowResults->workflowSteps_id;
+            
+            if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($workflowResults)) {
+                $institutionStudentEnrolment = TableRegistry::get('Institution.StudentEnrolment');
+                $entityEnrolmentData = [
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
+                    'student_id' => $userRecordId,
+                    'status_id' => $workflowStepId,
+                    'assignee_id' => $this->Auth->user('id'), 
+                    'institution_id' => $institutionId,
+                    'academic_period_id' => $academicPeriodId,
+                    'education_grade_id' => $educationGradeId,
+                    'institution_class_id' => $institutionClassId,
+                    'test_score' => '',
+                    'interview_score' => '',
+                    'comment' => '',
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
+                //save in institution_student_enrolment table
+                $entityEnrolmentData = $institutionStudentEnrolment->newEntity($entityEnrolmentData);
+                $InstitutionEnrolmentResult = $institutionStudentEnrolment->save($entityEnrolmentData);
+                unset($entityEnrolmentData);
+                unset($InstitutionEnrolmentResult);
+            }
+        } else {
             $workflowStepId = $studentAdmissionStatusValue;
-        }
-        //POCOR-7716 end
-        if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($workflowResults)) {
-            $institutionStudentAdmission = TableRegistry::get('Institution.StudentAdmission');
-            $entityAdmissionData = [
-                'start_date' => $startDate,
-                'end_date' => $endDate,
-                'student_id' => $userRecordId,
-                'status_id' => $workflowStepId,//POCOR-7716
-                'assignee_id' => $this->Auth->user('id'), //POCOR7080
-                'institution_id' => $institutionId,
-                'academic_period_id' => $academicPeriodId,
-                'education_grade_id' => $educationGradeId,
-                'institution_class_id' => $institutionClassId,
-                'created_user_id' => $userId,
-                'created' => date('Y-m-d H:i:s')
-            ];
 
-            //save in institution_student_admission table
-            $entityAdmissionData = $institutionStudentAdmission->newEntity($entityAdmissionData);
-            $InstitutionAdmissionResult = $institutionStudentAdmission->save($entityAdmissionData);
-            unset($entityAdmissionData);//POCOR-7716
-            unset($InstitutionAdmissionResult);//POCOR-7716
+            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+            $workflowStepData = $workflowStepsTable->find()->contain('Workflows')
+                ->where([
+                    $workflowStepsTable->aliasField('id') => $workflowStepId
+                    ])->first();
+            
+            if($workflowStepData->workflow->name == 'Student Admission'){
+                if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId)) {
+                    $institutionStudentAdmission = TableRegistry::get('Institution.StudentAdmission');
+                    $entityAdmissionData = [
+                        'start_date' => $startDate,
+                        'end_date' => $endDate,
+                        'student_id' => $userRecordId,
+                        'status_id' => $workflowStepId,//POCOR-7716
+                        'assignee_id' => $this->Auth->user('id'), //POCOR7080
+                        'institution_id' => $institutionId,
+                        'academic_period_id' => $academicPeriodId,
+                        'education_grade_id' => $educationGradeId,
+                        'institution_class_id' => $institutionClassId,
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+                    //save in institution_student_admission table
+                    $entityAdmissionData = $institutionStudentAdmission->newEntity($entityAdmissionData);
+                    $InstitutionAdmissionResult = $institutionStudentAdmission->save($entityAdmissionData);
+                    unset($entityAdmissionData);//POCOR-7716
+                    unset($InstitutionAdmissionResult);//POCOR-7716
+                }
+            } else if($workflowStepData->workflow->name == 'Student Enrolment') {
+                if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId)) {
+                    $institutionStudentEnrolment = TableRegistry::get('Institution.StudentEnrolment');
+                    $entityEnrolmentData = [
+                        'start_date' => $startDate,
+                        'end_date' => $endDate,
+                        'student_id' => $userRecordId,
+                        'status_id' => $workflowStepId,
+                        'assignee_id' => $this->Auth->user('id'), 
+                        'institution_id' => $institutionId,
+                        'academic_period_id' => $academicPeriodId,
+                        'education_grade_id' => $educationGradeId,
+                        'institution_class_id' => $institutionClassId,
+                        'test_score' => '',
+                        'interview_score' => '',
+                        'comment' => '',
+                        'created_user_id' => $userId,
+                        'created' => date('Y-m-d H:i:s')
+                    ];
+                    //save in institution_student_enrolment table
+                    $entityEnrolmentData = $institutionStudentEnrolment->newEntity($entityEnrolmentData);
+                    $InstitutionEnrolmentResult = $institutionStudentEnrolment->save($entityEnrolmentData);
+                    unset($entityEnrolmentData);
+                    unset($InstitutionEnrolmentResult);
+                }
+            }       
         }
+        //previous code commented by Abhinav               
+        // $workflows = TableRegistry::get('Workflow.Workflows');
+        // $workflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+        // $workflowResults = $workflows->find()
+        //     ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
+        //     ->LeftJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()], [
+        //         $workflowSteps->aliasField('workflow_id =') . $workflows->aliasField('id'),
+        //         $workflowSteps->aliasField('name') => 'Approved'
+        //     ])
+        //     ->where([
+        //         $workflows->aliasField('name') => 'Student Admission'
+        //     ])
+        //     ->first();
+        
+        //POCOR-7716 start
+        //$workflowStepId = $workflowResults->workflowSteps_id;
+        // if ($studentAdmissionStatusValue !== 0 && strtolower($studentAdmissionStatus) !== "enrolled") {
+        //     $workflowStepId = $studentAdmissionStatusValue;
+        // }
+        //POCOR-7716 end
+        
         //POCOR-8434 ends
         if (!empty($educationGradeId) && !empty($institutionId) && !empty($academicPeriodId) && !empty($institutionClassId)) {
             $studentStatuses = self::getDynamicTableInstance('Student.StudentStatuses');
@@ -8137,8 +8220,7 @@ class InstitutionsController extends AppController
     //     $this->set('excelUrl', Router::url($excelUrl));
     // }
 
-//POCOR-7716 start
-
+    //POCOR-7716 start
     public
     function getStudentAdmissionStatus()
     {
@@ -8151,14 +8233,22 @@ class InstitutionsController extends AppController
         if ($studentStatus == 0) {
             $result_array[] = array("id" => 0, "name" => "Enrolled");// setting 0 for enrolled as zero is not any id in workflow step
         } else {
-            $status = $WorkflowStepsTable->get($studentStatus)->name;
+            //POCOR-8434 starts
+            //$status = $WorkflowStepsTable->get($studentStatus)->name;
+            $WorkflowRes = $WorkflowStepsTable->find()->contain('Workflows')
+                            ->where([$WorkflowStepsTable->aliasField('id') => $studentStatus])
+                            ->first();
+            if($WorkflowRes->workflow->name == 'Student Admission'){
+                $status = 'Pending Admission : '.$WorkflowRes->name;
+            }else{
+                $status = 'Pending Enrolment : '.$WorkflowRes->name;
+            }//POCOR-8434 ends
             $result_array[] = array("id" => $studentStatus, "name" => $status);
         }
         echo json_encode($result_array);
         die;
     }
-
-//POCOR-7716 end
+    //POCOR-7716 end
 
     public
     function getMessagingTabElements($options = [])
