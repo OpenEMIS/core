@@ -116,9 +116,14 @@ class UserService extends Controller
     {
         try {
             $data = $this->userRepository->getUsersData($userId);
+            //POCOR-8639 start
+            if(!empty($data->userContacts->isNotEmpty())){
+               $contactType =  $data['userContacts'][0]['value'];
+            }else{
+                $contactType = '';
+            } //POCOR-8639 end
+
             $resp = [];
-
-
             if(isset($data)){
                 if($data['photo_content']){
                     $photo_content = base64_encode($data['photo_content']);
@@ -199,6 +204,7 @@ class UserService extends Controller
                         "staff_position_grade_name" => $staff_position_grade_name,
                         "institution-staff" => $data['institution_staff'],
                         "institution-students" => $data['institution_students'],
+                        "user_contact" => $contactType, //POCOR-8639
                     ];
             }
             
